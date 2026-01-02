@@ -2,7 +2,13 @@ import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import React, { createContext, useCallback, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { supabase } from '../lib/supabase';
 
 // Allow browser sessions to complete

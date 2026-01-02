@@ -1,5 +1,5 @@
 import type { Database } from '@nozbe/watermelondb';
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, use, useEffect, useState } from 'react';
 import { database } from '../database';
 
 interface DatabaseContextType {
@@ -28,7 +28,9 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <DatabaseContext value={{ database, isReady }}>{children}</DatabaseContext>
+    <DatabaseContext value={{ database, isReady }}>
+      {children}
+    </DatabaseContext>
   );
 }
 
