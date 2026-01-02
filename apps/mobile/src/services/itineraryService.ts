@@ -1,14 +1,14 @@
-import { supabase } from "../lib/supabase";
 import type {
-  Itinerary,
-  ItineraryWithStats,
-  CreateItineraryInput,
-  UpdateItineraryInput,
-  ItineraryDay,
   ApiMeta,
-} from "@pathfinding/types";
+  CreateItineraryInput,
+  Itinerary,
+  ItineraryDay,
+  ItineraryWithStats,
+  UpdateItineraryInput,
+} from '@pathfinding/types';
+import { supabase } from '../lib/supabase';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface ListResponse {
   success: boolean;
@@ -29,11 +29,11 @@ async function getAuthHeader(): Promise<Record<string, string>> {
     data: { session },
   } = await supabase.auth.getSession();
   if (!session?.access_token) {
-    throw new Error("Not authenticated");
+    throw new Error('Not authenticated');
   }
   return {
     Authorization: `Bearer ${session.access_token}`,
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
 }
 
@@ -48,19 +48,19 @@ export const itineraryService = {
     const headers = await getAuthHeader();
 
     const response = await fetch(`${API_BASE_URL}/v1/itineraries`, {
-      method: "POST",
+      method: 'POST',
       headers,
       body: JSON.stringify({
         title: input.title,
         cityId: input.cityId,
         startDate:
-          typeof input.startDate === "string"
+          typeof input.startDate === 'string'
             ? input.startDate
-            : input.startDate.toISOString().split("T")[0],
+            : input.startDate.toISOString().split('T')[0],
         endDate:
-          typeof input.endDate === "string"
+          typeof input.endDate === 'string'
             ? input.endDate
-            : input.endDate.toISOString().split("T")[0],
+            : input.endDate.toISOString().split('T')[0],
         visibility: input.visibility,
         coverImageUrl: input.coverImageUrl,
       }),
@@ -68,7 +68,7 @@ export const itineraryService = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || "Failed to create itinerary");
+      throw new Error(error.error?.message || 'Failed to create itinerary');
     }
 
     const result = await response.json();
@@ -83,26 +83,26 @@ export const itineraryService = {
       page?: number;
       pageSize?: number;
       sortBy?: string;
-      sortOrder?: "asc" | "desc";
+      sortOrder?: 'asc' | 'desc';
     } = {}
   ): Promise<{ data: ItineraryWithStats[]; meta: ApiMeta }> {
     const headers = await getAuthHeader();
 
     const searchParams = new URLSearchParams();
-    if (params.page) searchParams.set("page", String(params.page));
-    if (params.pageSize) searchParams.set("pageSize", String(params.pageSize));
-    if (params.sortBy) searchParams.set("sortBy", params.sortBy);
-    if (params.sortOrder) searchParams.set("sortOrder", params.sortOrder);
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+    if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+    if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
 
     const url = `${API_BASE_URL}/v1/itineraries?${searchParams}`;
     const response = await fetch(url, {
-      method: "GET",
+      method: 'GET',
       headers,
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || "Failed to fetch itineraries");
+      throw new Error(error.error?.message || 'Failed to fetch itineraries');
     }
 
     const result: ListResponse = await response.json();
@@ -116,13 +116,13 @@ export const itineraryService = {
     const headers = await getAuthHeader();
 
     const response = await fetch(`${API_BASE_URL}/v1/itineraries/${id}`, {
-      method: "GET",
+      method: 'GET',
       headers,
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || "Failed to fetch itinerary");
+      throw new Error(error.error?.message || 'Failed to fetch itinerary');
     }
 
     const result: SingleResponse = await response.json();
@@ -139,29 +139,30 @@ export const itineraryService = {
     if (input.title !== undefined) body.title = input.title;
     if (input.cityId !== undefined) body.cityId = input.cityId;
     if (input.visibility !== undefined) body.visibility = input.visibility;
-    if (input.coverImageUrl !== undefined) body.coverImageUrl = input.coverImageUrl;
+    if (input.coverImageUrl !== undefined)
+      body.coverImageUrl = input.coverImageUrl;
     if (input.startDate !== undefined) {
       body.startDate =
-        typeof input.startDate === "string"
+        typeof input.startDate === 'string'
           ? input.startDate
-          : input.startDate.toISOString().split("T")[0];
+          : input.startDate.toISOString().split('T')[0];
     }
     if (input.endDate !== undefined) {
       body.endDate =
-        typeof input.endDate === "string"
+        typeof input.endDate === 'string'
           ? input.endDate
-          : input.endDate.toISOString().split("T")[0];
+          : input.endDate.toISOString().split('T')[0];
     }
 
     const response = await fetch(`${API_BASE_URL}/v1/itineraries/${id}`, {
-      method: "PATCH",
+      method: 'PATCH',
       headers,
       body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || "Failed to update itinerary");
+      throw new Error(error.error?.message || 'Failed to update itinerary');
     }
 
     const result = await response.json();
@@ -175,13 +176,13 @@ export const itineraryService = {
     const headers = await getAuthHeader();
 
     const response = await fetch(`${API_BASE_URL}/v1/itineraries/${id}`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers,
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || "Failed to delete itinerary");
+      throw new Error(error.error?.message || 'Failed to delete itinerary');
     }
   },
 };

@@ -1,19 +1,19 @@
-import React, { useState } from "react";
+import { Ionicons } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   Alert,
-} from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useItineraryStore } from "../../../store/itineraryStore";
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useItineraryStore } from '../../../store/itineraryStore';
 
 /**
  * Edit itinerary screen
@@ -22,20 +22,22 @@ export default function EditItineraryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { currentItinerary, updateItinerary, isLoading } = useItineraryStore();
 
-  const [title, setTitle] = useState(currentItinerary?.title || "");
-  const [description, setDescription] = useState(currentItinerary?.description || "");
-  const [visibility, setVisibility] = useState<"private" | "public" | "shared">(
-    currentItinerary?.visibility || "private"
+  const [title, setTitle] = useState(currentItinerary?.title || '');
+  const [description, setDescription] = useState(
+    currentItinerary?.description || ''
+  );
+  const [visibility, setVisibility] = useState<'private' | 'public' | 'shared'>(
+    currentItinerary?.visibility || 'private'
   );
 
   const hasChanges =
     title !== currentItinerary?.title ||
-    description !== (currentItinerary?.description || "") ||
+    description !== (currentItinerary?.description || '') ||
     visibility !== currentItinerary?.visibility;
 
   const handleSave = async () => {
     if (!id || !title.trim()) {
-      Alert.alert("错误", "请输入行程标题");
+      Alert.alert('错误', '请输入行程标题');
       return;
     }
 
@@ -47,15 +49,15 @@ export default function EditItineraryScreen() {
       });
       router.back();
     } catch {
-      Alert.alert("保存失败", "无法保存更改，请重试");
+      Alert.alert('保存失败', '无法保存更改，请重试');
     }
   };
 
   const handleCancel = () => {
     if (hasChanges) {
-      Alert.alert("放弃更改", "确定要放弃所有更改吗？", [
-        { text: "继续编辑", style: "cancel" },
-        { text: "放弃", style: "destructive", onPress: () => router.back() },
+      Alert.alert('放弃更改', '确定要放弃所有更改吗？', [
+        { text: '继续编辑', style: 'cancel' },
+        { text: '放弃', style: 'destructive', onPress: () => router.back() },
       ]);
     } else {
       router.back();
@@ -73,7 +75,7 @@ export default function EditItineraryScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         style={styles.scrollView}
@@ -109,9 +111,9 @@ export default function EditItineraryScreen() {
           <Text style={styles.label}>可见性</Text>
           <View style={styles.visibilityOptions}>
             {[
-              { value: "private", label: "仅自己可见", icon: "lock-closed" },
-              { value: "shared", label: "链接可见", icon: "link" },
-              { value: "public", label: "公开", icon: "globe" },
+              { value: 'private', label: '仅自己可见', icon: 'lock-closed' },
+              { value: 'shared', label: '链接可见', icon: 'link' },
+              { value: 'public', label: '公开', icon: 'globe' },
             ].map((option) => (
               <TouchableOpacity
                 key={option.value}
@@ -122,9 +124,9 @@ export default function EditItineraryScreen() {
                 onPress={() => setVisibility(option.value as typeof visibility)}
               >
                 <Ionicons
-                  name={option.icon as "lock-closed" | "link" | "globe"}
+                  name={option.icon as 'lock-closed' | 'link' | 'globe'}
                   size={20}
-                  color={visibility === option.value ? "#007AFF" : "#666"}
+                  color={visibility === option.value ? '#007AFF' : '#666'}
                 />
                 <Text
                   style={[
@@ -163,7 +165,7 @@ export default function EditItineraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: '#F8F9FA',
   },
   scrollView: {
     flex: 1,
@@ -173,30 +175,30 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorText: {
     fontSize: 16,
-    color: "#999",
+    color: '#999',
   },
   section: {
     marginBottom: 24,
   },
   label: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: '#E5E5E5',
     padding: 16,
     fontSize: 16,
-    color: "#333",
+    color: '#333',
   },
   multilineInput: {
     minHeight: 100,
@@ -205,62 +207,62 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   visibilityOption: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: '#E5E5E5',
   },
   selectedOption: {
-    borderColor: "#007AFF",
-    backgroundColor: "#F0F7FF",
+    borderColor: '#007AFF',
+    backgroundColor: '#F0F7FF',
   },
   optionLabel: {
     marginLeft: 12,
     fontSize: 16,
-    color: "#666",
+    color: '#666',
   },
   selectedOptionLabel: {
-    color: "#007AFF",
-    fontWeight: "500",
+    color: '#007AFF',
+    fontWeight: '500',
   },
   footer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     padding: 16,
     gap: 12,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: '#E5E5E5',
   },
   cancelButton: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 16,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: '#F0F0F0',
     borderRadius: 12,
   },
   cancelButtonText: {
     fontSize: 17,
-    fontWeight: "600",
-    color: "#666",
+    fontWeight: '600',
+    color: '#666',
   },
   saveButton: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 16,
-    backgroundColor: "#007AFF",
+    backgroundColor: '#007AFF',
     borderRadius: 12,
   },
   disabledButton: {
-    backgroundColor: "#CCC",
+    backgroundColor: '#CCC',
   },
   saveButtonText: {
     fontSize: 17,
-    fontWeight: "600",
-    color: "#fff",
+    fontWeight: '600',
+    color: '#fff',
   },
 });

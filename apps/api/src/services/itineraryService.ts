@@ -1,18 +1,18 @@
-import { getSupabaseClient } from "../lib/supabase.ts";
-import {
+import type {
   CreateItineraryInput,
-  UpdateItineraryInput,
   ItineraryListQuery,
-  ItineraryRow,
   ItineraryResponse,
-  toItineraryResponse,
-} from "../models/itinerary.ts";
-import {
-  ItineraryDayRow,
+  ItineraryRow,
+  UpdateItineraryInput,
+} from '../models/itinerary.ts';
+import type {
   ItineraryDayResponse,
-  toItineraryDayResponse,
-} from "../models/itineraryDay.ts";
-import { NotFoundError } from "../middleware/errorHandler.ts";
+  ItineraryDayRow,
+} from '../models/itineraryDay.ts';
+import { getSupabaseClient } from '../lib/supabase.ts';
+import { NotFoundError } from '../middleware/errorHandler.ts';
+import { toItineraryResponse } from '../models/itinerary.ts';
+import { toItineraryDayResponse } from '../models/itineraryDay.ts';
 
 /**
  * Calculate dates between start and end (inclusive)
@@ -24,7 +24,7 @@ function getDateRange(startDate: string, endDate: string): string[] {
   const current = new Date(start);
 
   while (current <= end) {
-    dates.push(current.toISOString().split("T")[0]);
+    dates.push(current.toISOString().split('T')[0]);
     current.setDate(current.getDate() + 1);
   }
 
@@ -47,14 +47,14 @@ export const ItineraryService = {
 
     // Create the itinerary
     const { data: itinerary, error: itineraryError } = await supabase
-      .from("itineraries")
+      .from('itineraries')
       .insert({
         user_id: userId,
         title: input.title,
         city_id: input.cityId,
         start_date: input.startDate,
         end_date: input.endDate,
-        visibility: input.visibility || "private",
+        visibility: input.visibility || 'private',
         cover_image_url: input.coverImageUrl || null,
       })
       .select()
@@ -72,11 +72,13 @@ export const ItineraryService = {
       date,
     }));
 
-    const { error: daysError } = await supabase.from("itinerary_days").insert(daysToInsert);
+    const { error: daysError } = await supabase
+      .from('itinerary_days')
+      .insert(daysToInsert);
 
     if (daysError) {
       // Rollback: delete the itinerary if days creation fails
-      await supabase.from("itineraries").delete().eq("id", itinerary.id);
+      await supabase.from('itineraries').delete().eq('id', itinerary.id);
       throw daysError;
     }
 
@@ -99,9 +101,9 @@ export const ItineraryService = {
 
     // Get total count
     const { count, error: countError } = await supabase
-      .from("itineraries")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId);
+      .from('itineraries')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
 
     if (countError) {
       throw countError;
@@ -110,15 +112,15 @@ export const ItineraryService = {
     // Get paginated data
     const offset = (page - 1) * pageSize;
     const { data, error } = await supabase
-      .from("itineraries")
+      .from('itineraries')
       .select(
         `
         *,
         cities:city_id (name)
       `
       )
-      .eq("user_id", userId)
-      .order(sortBy, { ascending: sortOrder === "asc" })
+      .eq('user_id', userId)
+      .order(sortBy, { ascending: sortOrder === 'asc' })
       .range(offset, offset + pageSize - 1);
 
     if (error) {
@@ -133,7 +135,8 @@ export const ItineraryService = {
         const start = new Date(row.start_date);
         const end = new Date(row.end_date);
         response.daysCount =
-          Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
+          1;
         return response;
       }
     );
@@ -156,7 +159,7 @@ export const ItineraryService = {
 
     // Get itinerary with days and items
     const { data: itinerary, error: itineraryError } = await supabase
-      .from("itineraries")
+      .from('itineraries')
       .select(
         `
         *,
@@ -170,19 +173,19 @@ export const ItineraryService = {
         )
       `
       )
-      .eq("id", itineraryId)
+      .eq('id', itineraryId)
       .single();
 
     if (itineraryError) {
-      if (itineraryError.code === "PGRST116") {
-        throw new NotFoundError("Itinerary not found");
+      if (itineraryError.code === 'PGRST116') {
+        throw new NotFoundError('Itinerary not found');
       }
       throw itineraryError;
     }
 
     // Check access (own itinerary or public)
-    if (itinerary.user_id !== userId && itinerary.visibility !== "public") {
-      throw new NotFoundError("Itinerary not found");
+    if (itinerary.user_id !== userId && itinerary.visibility !== 'public') {
+      throw new NotFoundError('Itinerary not found');
     }
 
     const response = toItineraryResponse(itinerary as ItineraryRow);
@@ -190,12 +193,15 @@ export const ItineraryService = {
 
     // Sort days by day_number and transform
     const days = (itinerary.itinerary_days || [])
-      .sort((a: ItineraryDayRow, b: ItineraryDayRow) => a.day_number - b.day_number)
+      .sort(
+        (a: ItineraryDayRow, b: ItineraryDayRow) => a.day_number - b.day_number
+      )
       .map((day: ItineraryDayRow & { itinerary_items?: unknown[] }) => {
         const dayResponse = toItineraryDayResponse(day);
         // Sort items by order_index
         dayResponse.items = (day.itinerary_items || []).sort(
-          (a: { order_index: number }, b: { order_index: number }) => a.order_index - b.order_index
+          (a: { order_index: number }, b: { order_index: number }) =>
+            a.order_index - b.order_index
         );
         return dayResponse;
       });
@@ -222,22 +228,24 @@ export const ItineraryService = {
     const updateData: Record<string, unknown> = {};
     if (input.title !== undefined) updateData.title = input.title;
     if (input.cityId !== undefined) updateData.city_id = input.cityId;
-    if (input.visibility !== undefined) updateData.visibility = input.visibility;
-    if (input.coverImageUrl !== undefined) updateData.cover_image_url = input.coverImageUrl;
+    if (input.visibility !== undefined)
+      updateData.visibility = input.visibility;
+    if (input.coverImageUrl !== undefined)
+      updateData.cover_image_url = input.coverImageUrl;
 
     // Handle date changes (would need to regenerate days)
     if (input.startDate !== undefined || input.endDate !== undefined) {
       // Get current itinerary to check dates
       const { data: current, error: currentError } = await supabase
-        .from("itineraries")
-        .select("start_date, end_date")
-        .eq("id", itineraryId)
-        .eq("user_id", userId)
+        .from('itineraries')
+        .select('start_date, end_date')
+        .eq('id', itineraryId)
+        .eq('user_id', userId)
         .single();
 
       if (currentError) {
-        if (currentError.code === "PGRST116") {
-          throw new NotFoundError("Itinerary not found");
+        if (currentError.code === 'PGRST116') {
+          throw new NotFoundError('Itinerary not found');
         }
         throw currentError;
       }
@@ -247,7 +255,7 @@ export const ItineraryService = {
 
       // Validate date range
       if (new Date(newStartDate) > new Date(newEndDate)) {
-        throw new Error("End date must be on or after start date");
+        throw new Error('End date must be on or after start date');
       }
 
       updateData.start_date = newStartDate;
@@ -258,16 +266,16 @@ export const ItineraryService = {
     }
 
     const { data, error } = await supabase
-      .from("itineraries")
+      .from('itineraries')
       .update(updateData)
-      .eq("id", itineraryId)
-      .eq("user_id", userId)
+      .eq('id', itineraryId)
+      .eq('user_id', userId)
       .select()
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        throw new NotFoundError("Itinerary not found");
+      if (error.code === 'PGRST116') {
+        throw new NotFoundError('Itinerary not found');
       }
       throw error;
     }
@@ -278,14 +286,18 @@ export const ItineraryService = {
   /**
    * Delete an itinerary
    */
-  async delete(itineraryId: string, userId: string, accessToken: string): Promise<void> {
+  async delete(
+    itineraryId: string,
+    userId: string,
+    accessToken: string
+  ): Promise<void> {
     const supabase = getSupabaseClient(accessToken);
 
     const { error } = await supabase
-      .from("itineraries")
+      .from('itineraries')
       .delete()
-      .eq("id", itineraryId)
-      .eq("user_id", userId);
+      .eq('id', itineraryId)
+      .eq('user_id', userId);
 
     if (error) {
       throw error;

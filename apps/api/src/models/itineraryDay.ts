@@ -1,12 +1,14 @@
-import { z } from "npm:zod";
+import { z } from 'npm:zod';
 
 /**
  * ItineraryDay creation input schema
  */
 export const CreateItineraryDaySchema = z.object({
-  itineraryId: z.string().uuid("Invalid itinerary ID"),
-  dayNumber: z.number().int().positive("Day number must be positive"),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format"),
+  itineraryId: z.string().uuid('Invalid itinerary ID'),
+  dayNumber: z.number().int().positive('Day number must be positive'),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
 });
 
 /**
@@ -15,7 +17,7 @@ export const CreateItineraryDaySchema = z.object({
 export const UpdateItineraryDaySchema = z.object({
   date: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
     .optional(),
 });
 
@@ -48,7 +50,9 @@ export interface ItineraryDayResponse {
 /**
  * Transform database row to API response
  */
-export function toItineraryDayResponse(row: ItineraryDayRow): ItineraryDayResponse {
+export function toItineraryDayResponse(
+  row: ItineraryDayRow
+): ItineraryDayResponse {
   return {
     id: row.id,
     itineraryId: row.itinerary_id,

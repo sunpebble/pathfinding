@@ -1,14 +1,15 @@
-import * as Sentry from "@sentry/react-native";
-import Constants from "expo-constants";
+import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 
-const SENTRY_DSN = Constants.expoConfig?.extra?.sentryDsn || process.env.EXPO_PUBLIC_SENTRY_DSN;
+const SENTRY_DSN =
+  Constants.expoConfig?.extra?.sentryDsn || process.env.EXPO_PUBLIC_SENTRY_DSN;
 
 /**
  * Initialize Sentry for error tracking
  */
 export function initSentry() {
   if (!SENTRY_DSN) {
-    console.warn("Sentry DSN not configured. Error tracking disabled.");
+    console.warn('Sentry DSN not configured. Error tracking disabled.');
     return;
   }
 
@@ -17,7 +18,7 @@ export function initSentry() {
     enableAutoSessionTracking: true,
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
     debug: __DEV__,
-    environment: __DEV__ ? "development" : "production",
+    environment: __DEV__ ? 'development' : 'production',
   });
 }
 
@@ -41,9 +42,12 @@ export function clearUser() {
 /**
  * Capture an exception
  */
-export function captureException(error: Error, context?: Record<string, unknown>) {
+export function captureException(
+  error: Error,
+  context?: Record<string, unknown>
+) {
   if (context) {
-    Sentry.setContext("extra", context);
+    Sentry.setContext('extra', context);
   }
   Sentry.captureException(error);
 }
@@ -51,18 +55,25 @@ export function captureException(error: Error, context?: Record<string, unknown>
 /**
  * Capture a message
  */
-export function captureMessage(message: string, level: Sentry.SeverityLevel = "info") {
+export function captureMessage(
+  message: string,
+  level: Sentry.SeverityLevel = 'info'
+) {
   Sentry.captureMessage(message, level);
 }
 
 /**
  * Add breadcrumb for debugging
  */
-export function addBreadcrumb(message: string, category: string, data?: Record<string, unknown>) {
+export function addBreadcrumb(
+  message: string,
+  category: string,
+  data?: Record<string, unknown>
+) {
   Sentry.addBreadcrumb({
     message,
     category,
     data,
-    level: "info",
+    level: 'info',
   });
 }

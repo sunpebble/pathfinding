@@ -1,18 +1,18 @@
-import React, { useEffect, useCallback } from "react";
+import type { ItineraryWithStats } from '@pathfinding/types';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React, { useCallback, useEffect } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
+  FlatList,
   RefreshControl,
-} from "react-native";
-import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { ItineraryCard } from "../../components/itinerary";
-import { useItineraryStore } from "../../store/itineraryStore";
-import type { ItineraryWithStats } from "@pathfinding/types";
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { ItineraryCard } from '../../components/itinerary';
+import { useItineraryStore } from '../../store/itineraryStore';
 
 /**
  * Screen for listing user's itineraries
@@ -47,12 +47,15 @@ export function ItineraryListScreen() {
   }, []);
 
   const handleCreatePress = useCallback(() => {
-    router.push("/(tabs)/itinerary/create");
+    router.push('/(tabs)/itinerary/create');
   }, []);
 
   const renderItem = useCallback(
     ({ item }: { item: ItineraryWithStats }) => (
-      <ItineraryCard itinerary={item} onPress={() => handleItineraryPress(item)} />
+      <ItineraryCard
+        itinerary={item}
+        onPress={() => handleItineraryPress(item)}
+      />
     ),
     [handleItineraryPress]
   );
@@ -73,7 +76,10 @@ export function ItineraryListScreen() {
         <Ionicons name="map-outline" size={80} color="#CCC" />
         <Text style={styles.emptyTitle}>还没有行程</Text>
         <Text style={styles.emptySubtitle}>创建你的第一个旅行攻略吧</Text>
-        <TouchableOpacity style={styles.emptyButton} onPress={handleCreatePress}>
+        <TouchableOpacity
+          style={styles.emptyButton}
+          onPress={handleCreatePress}
+        >
           <Ionicons name="add" size={20} color="#fff" />
           <Text style={styles.emptyButtonText}>创建行程</Text>
         </TouchableOpacity>
@@ -121,12 +127,12 @@ export function ItineraryListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: '#F8F9FA',
   },
   loadingContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listContent: {
     paddingVertical: 8,
@@ -134,51 +140,51 @@ const styles = StyleSheet.create({
   },
   footerLoader: {
     paddingVertical: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   emptyContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 40,
   },
   emptyTitle: {
     marginTop: 16,
     fontSize: 20,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
   },
   emptySubtitle: {
     marginTop: 8,
     fontSize: 15,
-    color: "#999",
+    color: '#999',
   },
   emptyButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 24,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: "#007AFF",
+    backgroundColor: '#007AFF',
     borderRadius: 24,
   },
   emptyButtonText: {
     marginLeft: 8,
     fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
+    fontWeight: '600',
+    color: '#fff',
   },
   fab: {
-    position: "absolute",
+    position: 'absolute',
     right: 16,
     bottom: 24,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#007AFF",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#007AFF",
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

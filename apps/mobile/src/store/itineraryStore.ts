@@ -1,5 +1,9 @@
-import { create } from "zustand";
-import type { Itinerary, ItineraryWithStats, ItineraryDay } from "@pathfinding/types";
+import type {
+  Itinerary,
+  ItineraryDay,
+  ItineraryWithStats,
+} from '@pathfinding/types';
+import { create } from 'zustand';
 
 interface ItineraryState {
   // Data
@@ -27,7 +31,9 @@ interface ItineraryState {
   // Actions
   setItineraries: (itineraries: ItineraryWithStats[]) => void;
   appendItineraries: (itineraries: ItineraryWithStats[]) => void;
-  setCurrentItinerary: (itinerary: (Itinerary & { days: ItineraryDay[] }) | null) => void;
+  setCurrentItinerary: (
+    itinerary: (Itinerary & { days: ItineraryDay[] }) | null
+  ) => void;
   addItinerary: (itinerary: ItineraryWithStats) => void;
   updateItinerary: (id: string, updates: Partial<Itinerary>) => void;
   removeItinerary: (id: string) => void;
@@ -88,7 +94,9 @@ export const useItineraryStore = create<ItineraryState>()((set, get) => ({
 
   updateItinerary: (id, updates) =>
     set((state) => ({
-      itineraries: state.itineraries.map((it) => (it.id === id ? { ...it, ...updates } : it)),
+      itineraries: state.itineraries.map((it) =>
+        it.id === id ? { ...it, ...updates } : it
+      ),
       currentItinerary:
         state.currentItinerary?.id === id
           ? { ...state.currentItinerary, ...updates }
@@ -99,7 +107,8 @@ export const useItineraryStore = create<ItineraryState>()((set, get) => ({
     set((state) => ({
       itineraries: state.itineraries.filter((it) => it.id !== id),
       totalCount: state.totalCount - 1,
-      currentItinerary: state.currentItinerary?.id === id ? null : state.currentItinerary,
+      currentItinerary:
+        state.currentItinerary?.id === id ? null : state.currentItinerary,
     })),
 
   setLoading: (isLoading) => set({ isLoading }),

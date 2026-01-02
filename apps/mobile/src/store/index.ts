@@ -1,18 +1,18 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 /**
  * App-wide settings and state
  */
 interface AppState {
   // Theme
-  theme: "light" | "dark" | "system";
-  setTheme: (theme: "light" | "dark" | "system") => void;
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
 
   // Language
-  locale: "zh" | "en";
-  setLocale: (locale: "zh" | "en") => void;
+  locale: 'zh' | 'en';
+  setLocale: (locale: 'zh' | 'en') => void;
 
   // Network status
   isOnline: boolean;
@@ -32,11 +32,11 @@ export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       // Theme
-      theme: "system",
+      theme: 'system',
       setTheme: (theme) => set({ theme }),
 
       // Language
-      locale: "zh",
+      locale: 'zh',
       setLocale: (locale) => set({ locale }),
 
       // Network (not persisted)
@@ -50,7 +50,7 @@ export const useAppStore = create<AppState>()(
       setLastSyncAt: (timestamp) => set({ lastSyncAt: timestamp }),
     }),
     {
-      name: "app-storage",
+      name: 'app-storage',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         theme: state.theme,

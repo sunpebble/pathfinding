@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 let supabaseClient: SupabaseClient | null = null;
 
@@ -11,11 +12,13 @@ export function getSupabaseClient(): SupabaseClient {
     return supabaseClient;
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_KEY");
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_KEY');
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables");
+    throw new Error(
+      'Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables'
+    );
   }
 
   supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
@@ -33,11 +36,13 @@ export function getSupabaseClient(): SupabaseClient {
  * Uses anon key with user's JWT for row-level security
  */
 export function getSupabaseClientWithAuth(accessToken: string): SupabaseClient {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables");
+    throw new Error(
+      'Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables'
+    );
   }
 
   return createClient(supabaseUrl, supabaseAnonKey, {

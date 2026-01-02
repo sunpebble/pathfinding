@@ -1,3 +1,3 @@
-export { CreateItineraryScreen } from "./CreateItineraryScreen";
-export { ItineraryListScreen } from "./ItineraryListScreen";
-export { ItineraryDetailScreen } from "./ItineraryDetailScreen";
+export { CreateItineraryScreen } from './CreateItineraryScreen';
+export { ItineraryDetailScreen } from './ItineraryDetailScreen';
+export { ItineraryListScreen } from './ItineraryListScreen';

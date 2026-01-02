@@ -1,4 +1,4 @@
-import { ItineraryDetailScreen } from "../../../screens/itinerary";
+import { ItineraryDetailScreen } from '../../../screens/itinerary';
 
 /**
  * Itinerary detail route with dynamic [id] parameter

@@ -1,4 +1,4 @@
-import { CreateItineraryScreen } from "../../../screens/itinerary";
+import { CreateItineraryScreen } from '../../../screens/itinerary';
 
 /**
  * Create itinerary route

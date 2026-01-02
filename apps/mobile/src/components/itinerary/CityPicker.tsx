@@ -1,16 +1,16 @@
-import React, { useState, useCallback } from "react";
+import type { City } from '@pathfinding/types';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useCallback, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  StyleSheet,
   Text,
   TextInput,
-  FlatList,
   TouchableOpacity,
-  StyleSheet,
-  Modal,
-  ActivityIndicator,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import type { City } from "@pathfinding/types";
+  View,
+} from 'react-native';
 
 interface CityPickerProps {
   selectedCity: City | null;
@@ -21,73 +21,73 @@ interface CityPickerProps {
 // Sample cities for development (will be replaced with API call)
 const SAMPLE_CITIES: City[] = [
   {
-    id: "1",
-    name: "北京",
-    timezone: "Asia/Shanghai",
-    countryCode: "CN",
+    id: '1',
+    name: '北京',
+    timezone: 'Asia/Shanghai',
+    countryCode: 'CN',
     latitude: 39.9042,
     longitude: 116.4074,
     createdAt: new Date(),
   },
   {
-    id: "2",
-    name: "上海",
-    timezone: "Asia/Shanghai",
-    countryCode: "CN",
+    id: '2',
+    name: '上海',
+    timezone: 'Asia/Shanghai',
+    countryCode: 'CN',
     latitude: 31.2304,
     longitude: 121.4737,
     createdAt: new Date(),
   },
   {
-    id: "3",
-    name: "广州",
-    timezone: "Asia/Shanghai",
-    countryCode: "CN",
+    id: '3',
+    name: '广州',
+    timezone: 'Asia/Shanghai',
+    countryCode: 'CN',
     latitude: 23.1291,
     longitude: 113.2644,
     createdAt: new Date(),
   },
   {
-    id: "4",
-    name: "深圳",
-    timezone: "Asia/Shanghai",
-    countryCode: "CN",
+    id: '4',
+    name: '深圳',
+    timezone: 'Asia/Shanghai',
+    countryCode: 'CN',
     latitude: 22.5431,
     longitude: 114.0579,
     createdAt: new Date(),
   },
   {
-    id: "5",
-    name: "成都",
-    timezone: "Asia/Shanghai",
-    countryCode: "CN",
+    id: '5',
+    name: '成都',
+    timezone: 'Asia/Shanghai',
+    countryCode: 'CN',
     latitude: 30.5728,
     longitude: 104.0668,
     createdAt: new Date(),
   },
   {
-    id: "6",
-    name: "杭州",
-    timezone: "Asia/Shanghai",
-    countryCode: "CN",
+    id: '6',
+    name: '杭州',
+    timezone: 'Asia/Shanghai',
+    countryCode: 'CN',
     latitude: 30.2741,
     longitude: 120.1551,
     createdAt: new Date(),
   },
   {
-    id: "7",
-    name: "西安",
-    timezone: "Asia/Shanghai",
-    countryCode: "CN",
+    id: '7',
+    name: '西安',
+    timezone: 'Asia/Shanghai',
+    countryCode: 'CN',
     latitude: 34.3416,
     longitude: 108.9398,
     createdAt: new Date(),
   },
   {
-    id: "8",
-    name: "重庆",
-    timezone: "Asia/Shanghai",
-    countryCode: "CN",
+    id: '8',
+    name: '重庆',
+    timezone: 'Asia/Shanghai',
+    countryCode: 'CN',
     latitude: 29.4316,
     longitude: 106.9123,
     createdAt: new Date(),
@@ -100,10 +100,10 @@ const SAMPLE_CITIES: City[] = [
 export function CityPicker({
   selectedCity,
   onSelect,
-  placeholder = "选择目的地城市",
+  placeholder = '选择目的地城市',
 }: CityPickerProps) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [_isLoading, _setIsLoading] = useState(false);
 
   // Filter cities based on search query
@@ -115,17 +115,22 @@ export function CityPicker({
     (city: City) => {
       onSelect(city);
       setModalVisible(false);
-      setSearchQuery("");
+      setSearchQuery('');
     },
     [onSelect]
   );
 
   const renderCityItem = useCallback(
     ({ item }: { item: City }) => (
-      <TouchableOpacity style={styles.cityItem} onPress={() => handleSelect(item)}>
+      <TouchableOpacity
+        style={styles.cityItem}
+        onPress={() => handleSelect(item)}
+      >
         <Ionicons name="location-outline" size={20} color="#666" />
         <Text style={styles.cityName}>{item.name}</Text>
-        {selectedCity?.id === item.id && <Ionicons name="checkmark" size={20} color="#007AFF" />}
+        {selectedCity?.id === item.id && (
+          <Ionicons name="checkmark" size={20} color="#007AFF" />
+        )}
       </TouchableOpacity>
     ),
     [selectedCity, handleSelect]
@@ -133,9 +138,18 @@ export function CityPicker({
 
   return (
     <>
-      <TouchableOpacity style={styles.selector} onPress={() => setModalVisible(true)}>
-        <Ionicons name="location" size={20} color={selectedCity ? "#007AFF" : "#999"} />
-        <Text style={[styles.selectorText, !selectedCity && styles.placeholder]}>
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => setModalVisible(true)}
+      >
+        <Ionicons
+          name="location"
+          size={20}
+          color={selectedCity ? '#007AFF' : '#999'}
+        />
+        <Text
+          style={[styles.selectorText, !selectedCity && styles.placeholder]}
+        >
           {selectedCity?.name || placeholder}
         </Text>
         <Ionicons name="chevron-forward" size={20} color="#999" />
@@ -167,7 +181,7 @@ export function CityPicker({
               autoCorrect={false}
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
                 <Ionicons name="close-circle" size={20} color="#999" />
               </TouchableOpacity>
             )}
@@ -180,7 +194,9 @@ export function CityPicker({
               data={filteredCities}
               keyExtractor={(item) => item.id}
               renderItem={renderCityItem}
-              ListEmptyComponent={<Text style={styles.emptyText}>未找到匹配的城市</Text>}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>未找到匹配的城市</Text>
+              }
             />
           )}
         </View>
@@ -191,49 +207,49 @@ export function CityPicker({
 
 const styles = StyleSheet.create({
   selector: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: '#E5E5E5',
   },
   selectorText: {
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
-    color: "#333",
+    color: '#333',
   },
   placeholder: {
-    color: "#999",
+    color: '#999',
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    borderBottomColor: '#E5E5E5',
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   cancelButton: {
     fontSize: 16,
-    color: "#007AFF",
+    color: '#007AFF',
   },
   searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     margin: 16,
     padding: 12,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#F5F5F5',
     borderRadius: 10,
   },
   searchInput: {
@@ -242,23 +258,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   cityItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: '#F0F0F0',
   },
   cityName: {
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
-    color: "#333",
+    color: '#333',
   },
   emptyText: {
-    textAlign: "center",
+    textAlign: 'center',
     marginTop: 40,
     fontSize: 16,
-    color: "#999",
+    color: '#999',
   },
   loader: {
     marginTop: 40,

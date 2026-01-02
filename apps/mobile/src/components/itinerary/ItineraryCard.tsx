@@ -1,8 +1,8 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { getRelativeTime, formatDate } from "@pathfinding/utils";
-import type { ItineraryWithStats } from "@pathfinding/types";
+import type { ItineraryWithStats } from '@pathfinding/types';
+import { Ionicons } from '@expo/vector-icons';
+import { formatDate, getRelativeTime } from '@pathfinding/utils';
+import React from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ItineraryCardProps {
   itinerary: ItineraryWithStats;
@@ -13,12 +13,20 @@ interface ItineraryCardProps {
 /**
  * Card component for displaying itinerary in list
  */
-export function ItineraryCard({ itinerary, onPress, onOptionsPress }: ItineraryCardProps) {
+export function ItineraryCard({
+  itinerary,
+  onPress,
+  onOptionsPress,
+}: ItineraryCardProps) {
   const startDate = new Date(itinerary.startDate);
   const endDate = new Date(itinerary.endDate);
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       {itinerary.coverImageUrl ? (
         <Image
           source={{ uri: itinerary.coverImageUrl }}
@@ -48,7 +56,9 @@ export function ItineraryCard({ itinerary, onPress, onOptionsPress }: ItineraryC
 
         <View style={styles.infoRow}>
           <Ionicons name="location-outline" size={16} color="#666" />
-          <Text style={styles.infoText}>{itinerary.cityName || "未知城市"}</Text>
+          <Text style={styles.infoText}>
+            {itinerary.cityName || '未知城市'}
+          </Text>
         </View>
 
         <View style={styles.infoRow}>
@@ -64,9 +74,13 @@ export function ItineraryCard({ itinerary, onPress, onOptionsPress }: ItineraryC
         <View style={styles.footer}>
           <View style={styles.statsRow}>
             <Ionicons name="list-outline" size={14} color="#999" />
-            <Text style={styles.statsText}>{itinerary.itemsCount || 0} 个景点</Text>
+            <Text style={styles.statsText}>
+              {itinerary.itemsCount || 0} 个景点
+            </Text>
           </View>
-          <Text style={styles.timeAgo}>{getRelativeTime(itinerary.updatedAt, "zh")}</Text>
+          <Text style={styles.timeAgo}>
+            {getRelativeTime(itinerary.updatedAt, 'zh')}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -75,84 +89,84 @@ export function ItineraryCard({ itinerary, onPress, onOptionsPress }: ItineraryC
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 16,
     marginHorizontal: 16,
     marginVertical: 8,
-    overflow: "hidden",
-    shadowColor: "#000",
+    overflow: 'hidden',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
   coverImage: {
-    width: "100%",
+    width: '100%',
     height: 140,
   },
   placeholderImage: {
-    backgroundColor: "#F5F5F5",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     padding: 16,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
     marginRight: 8,
   },
   infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
   },
   infoText: {
     marginLeft: 6,
     fontSize: 14,
-    color: "#666",
+    color: '#666',
   },
   badge: {
     marginLeft: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: '#E3F2FD',
     borderRadius: 10,
   },
   badgeText: {
     fontSize: 12,
-    color: "#007AFF",
-    fontWeight: "500",
+    color: '#007AFF',
+    fontWeight: '500',
   },
   footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
+    borderTopColor: '#F0F0F0',
   },
   statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statsText: {
     marginLeft: 4,
     fontSize: 12,
-    color: "#999",
+    color: '#999',
   },
   timeAgo: {
     fontSize: 12,
-    color: "#999",
+    color: '#999',
   },
 });

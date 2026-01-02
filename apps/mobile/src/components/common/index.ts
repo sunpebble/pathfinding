@@ -1,1 +1,1 @@
-export { OfflineIndicator, OfflineBadge } from "./OfflineIndicator";
+export { OfflineBadge, OfflineIndicator } from './OfflineIndicator';

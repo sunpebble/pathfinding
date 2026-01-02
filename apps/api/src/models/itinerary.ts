@@ -1,25 +1,32 @@
-import { z } from "npm:zod";
+import { z } from 'npm:zod';
 
 /**
  * Itinerary visibility enum schema
  */
-export const ItineraryVisibilitySchema = z.enum(["private", "team", "public"]);
+export const ItineraryVisibilitySchema = z.enum(['private', 'team', 'public']);
 
 /**
  * Itinerary creation input schema
  */
 export const CreateItinerarySchema = z
   .object({
-    title: z.string().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
-    cityId: z.string().uuid("Invalid city ID"),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format"),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format"),
-    visibility: ItineraryVisibilitySchema.optional().default("private"),
+    title: z
+      .string()
+      .min(1, 'Title is required')
+      .max(200, 'Title must be 200 characters or less'),
+    cityId: z.string().uuid('Invalid city ID'),
+    startDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
+    endDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
+    visibility: ItineraryVisibilitySchema.optional().default('private'),
     coverImageUrl: z.string().url().optional(),
   })
   .refine((data) => new Date(data.startDate) <= new Date(data.endDate), {
-    message: "End date must be on or after start date",
-    path: ["endDate"],
+    message: 'End date must be on or after start date',
+    path: ['endDate'],
   });
 
 /**
@@ -28,17 +35,17 @@ export const CreateItinerarySchema = z
 export const UpdateItinerarySchema = z.object({
   title: z
     .string()
-    .min(1, "Title is required")
-    .max(200, "Title must be 200 characters or less")
+    .min(1, 'Title is required')
+    .max(200, 'Title must be 200 characters or less')
     .optional(),
-  cityId: z.string().uuid("Invalid city ID").optional(),
+  cityId: z.string().uuid('Invalid city ID').optional(),
   startDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
     .optional(),
   endDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
     .optional(),
   visibility: ItineraryVisibilitySchema.optional(),
   coverImageUrl: z.string().url().nullable().optional(),
@@ -50,8 +57,11 @@ export const UpdateItinerarySchema = z.object({
 export const ItineraryListQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
-  sortBy: z.enum(["created_at", "updated_at", "start_date"]).optional().default("updated_at"),
-  sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+  sortBy: z
+    .enum(['created_at', 'updated_at', 'start_date'])
+    .optional()
+    .default('updated_at'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
 /**
@@ -64,7 +74,7 @@ export interface ItineraryRow {
   city_id: string;
   start_date: string;
   end_date: string;
-  visibility: "private" | "team" | "public";
+  visibility: 'private' | 'team' | 'public';
   cover_image_url: string | null;
   copied_from_id: string | null;
   created_at: string;
@@ -81,7 +91,7 @@ export interface ItineraryResponse {
   cityId: string;
   startDate: string;
   endDate: string;
-  visibility: "private" | "team" | "public";
+  visibility: 'private' | 'team' | 'public';
   coverImageUrl: string | null;
   copiedFromId: string | null;
   createdAt: string;

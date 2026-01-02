@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
 
 /**
  * Auth routes layout - no header, modal presentation
@@ -8,7 +8,7 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        presentation: "modal",
+        presentation: 'modal',
       }}
     />
   );

@@ -1,7 +1,12 @@
 /**
  * POI category enum
  */
-export type PoiCategory = "attraction" | "restaurant" | "hotel" | "shopping" | "other";
+export type PoiCategory =
+  | 'attraction'
+  | 'restaurant'
+  | 'hotel'
+  | 'shopping'
+  | 'other';
 
 /**
  * Business hours by day of week
@@ -43,12 +48,14 @@ export interface Poi {
 /**
  * POI input for creating a new POI
  */
-export type CreatePoiInput = Omit<Poi, "id" | "createdAt" | "updatedAt">;
+export type CreatePoiInput = Omit<Poi, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
  * POI update input for partial updates
  */
-export type UpdatePoiInput = Partial<Omit<Poi, "id" | "createdAt" | "updatedAt">>;
+export type UpdatePoiInput = Partial<
+  Omit<Poi, 'id' | 'createdAt' | 'updatedAt'>
+>;
 
 /**
  * POI search filters

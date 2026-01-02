@@ -1,11 +1,18 @@
-import React, { useEffect, useCallback, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { TimelineView } from "../../components/itinerary";
-import { useItineraryStore } from "../../store/itineraryStore";
-import { formatDate, getDaysBetween } from "@pathfinding/utils";
-import type { ItineraryItem } from "@pathfinding/types";
+import type { ItineraryItem } from '@pathfinding/types';
+import { Ionicons } from '@expo/vector-icons';
+import { formatDate, getDaysBetween } from '@pathfinding/utils';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { TimelineView } from '../../components/itinerary';
+import { useItineraryStore } from '../../store/itineraryStore';
 
 /**
  * Screen for displaying itinerary details
@@ -35,7 +42,7 @@ export function ItineraryDetailScreen() {
     (dayId: string) => {
       // Navigate to POI selection screen
       router.push({
-        pathname: "/(tabs)/itinerary/add-poi",
+        pathname: '/(tabs)/itinerary/add-poi',
         params: { dayId, itineraryId: id },
       });
     },
@@ -46,7 +53,7 @@ export function ItineraryDetailScreen() {
     (item: ItineraryItem) => {
       // Navigate to item detail/edit screen
       router.push({
-        pathname: "/(tabs)/itinerary/item/[itemId]",
+        pathname: '/(tabs)/itinerary/item/[itemId]',
         params: { itemId: item.id, itineraryId: id },
       });
     },
@@ -54,11 +61,11 @@ export function ItineraryDetailScreen() {
   );
 
   const handleDelete = useCallback(() => {
-    Alert.alert("删除行程", "确定要删除这个行程吗？此操作不可恢复。", [
-      { text: "取消", style: "cancel" },
+    Alert.alert('删除行程', '确定要删除这个行程吗？此操作不可恢复。', [
+      { text: '取消', style: 'cancel' },
       {
-        text: "删除",
-        style: "destructive",
+        text: '删除',
+        style: 'destructive',
         onPress: async () => {
           if (id) {
             await deleteItinerary(id);
@@ -71,7 +78,7 @@ export function ItineraryDetailScreen() {
 
   const handleEdit = useCallback(() => {
     router.push({
-      pathname: "/(tabs)/itinerary/edit",
+      pathname: '/(tabs)/itinerary/edit',
       params: { id },
     });
   }, [id]);
@@ -89,7 +96,10 @@ export function ItineraryDetailScreen() {
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle-outline" size={60} color="#CCC" />
         <Text style={styles.errorText}>行程不存在或已被删除</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backButtonText}>返回</Text>
         </TouchableOpacity>
       </View>
@@ -108,7 +118,9 @@ export function ItineraryDetailScreen() {
 
         <View style={styles.infoRow}>
           <Ionicons name="location-outline" size={16} color="#666" />
-          <Text style={styles.infoText}>{currentItinerary.cityName || "未知城市"}</Text>
+          <Text style={styles.infoText}>
+            {currentItinerary.cityName || '未知城市'}
+          </Text>
         </View>
 
         <View style={styles.infoRow}>
@@ -129,12 +141,12 @@ export function ItineraryDetailScreen() {
             onPress={() => setIsEditing(!isEditing)}
           >
             <Ionicons
-              name={isEditing ? "checkmark" : "pencil-outline"}
+              name={isEditing ? 'checkmark' : 'pencil-outline'}
               size={18}
-              color={isEditing ? "#fff" : "#007AFF"}
+              color={isEditing ? '#fff' : '#007AFF'}
             />
             <Text style={[styles.actionText, isEditing && styles.activeText]}>
-              {isEditing ? "完成" : "编辑"}
+              {isEditing ? '完成' : '编辑'}
             </Text>
           </TouchableOpacity>
 
@@ -164,91 +176,91 @@ export function ItineraryDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: '#F8F9FA',
   },
   loadingContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 40,
   },
   errorText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#999",
+    color: '#999',
   },
   backButton: {
     marginTop: 24,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: "#007AFF",
+    backgroundColor: '#007AFF',
     borderRadius: 20,
   },
   backButtonText: {
     fontSize: 16,
-    color: "#fff",
-    fontWeight: "500",
+    color: '#fff',
+    fontWeight: '500',
   },
   header: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    borderBottomColor: '#E5E5E5',
   },
   title: {
     fontSize: 24,
-    fontWeight: "700",
-    color: "#333",
+    fontWeight: '700',
+    color: '#333',
     marginBottom: 12,
   },
   infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 6,
   },
   infoText: {
     marginLeft: 8,
     fontSize: 14,
-    color: "#666",
+    color: '#666',
   },
   description: {
     marginTop: 12,
     fontSize: 14,
-    color: "#666",
+    color: '#666',
     lineHeight: 20,
   },
   actionRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginTop: 16,
     gap: 12,
   },
   actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#F0F7FF",
+    backgroundColor: '#F0F7FF',
     borderRadius: 16,
   },
   activeButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: '#007AFF',
   },
   actionText: {
     marginLeft: 6,
     fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "500",
+    color: '#007AFF',
+    fontWeight: '500',
   },
   activeText: {
-    color: "#fff",
+    color: '#fff',
   },
   deleteText: {
-    color: "#FF3B30",
+    color: '#FF3B30',
   },
 });
 

@@ -1,4 +1,4 @@
-import { ItineraryListScreen } from "../../../screens/itinerary";
+import { ItineraryListScreen } from '../../../screens/itinerary';
 
 /**
  * Main itinerary list route (tab root)

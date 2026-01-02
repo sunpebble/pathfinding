@@ -1,7 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { DaySection } from "./DaySection";
-import type { ItineraryDay, ItineraryItem } from "@pathfinding/types";
+import type { ItineraryDay, ItineraryItem } from '@pathfinding/types';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { DaySection } from './DaySection';
 
 interface TimelineViewProps {
   days: (ItineraryDay & { items?: ItineraryItem[] })[];
@@ -53,20 +53,20 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 40,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: "#999",
-    textAlign: "center",
+    color: '#999',
+    textAlign: 'center',
   },
   bottomSpacer: {
     height: 100,

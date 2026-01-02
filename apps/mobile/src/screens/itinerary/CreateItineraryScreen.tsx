@@ -1,35 +1,36 @@
-import React, { useState } from "react";
+import type { City } from '@pathfinding/types';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   Alert,
-} from "react-native";
-import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { CityPicker, DateRangePicker } from "../../components/itinerary";
-import { useItineraryStore } from "../../store/itineraryStore";
-import type { City } from "@pathfinding/types";
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { CityPicker, DateRangePicker } from '../../components/itinerary';
+import { useItineraryStore } from '../../store/itineraryStore';
 
 /**
  * Screen for creating a new itinerary
  */
 export function CreateItineraryScreen() {
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState('');
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState('');
 
   const { createItinerary, isCreating } = useItineraryStore();
 
-  const isFormValid = title.trim().length > 0 && selectedCity && startDate && endDate;
+  const isFormValid =
+    title.trim().length > 0 && selectedCity && startDate && endDate;
 
   const handleCreate = async () => {
     if (!isFormValid || !selectedCity || !startDate || !endDate) return;
@@ -38,24 +39,24 @@ export function CreateItineraryScreen() {
       const itinerary = await createItinerary({
         title: title.trim(),
         cityId: selectedCity.id,
-        startDate: startDate.toISOString().split("T")[0],
-        endDate: endDate.toISOString().split("T")[0],
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
         description: description.trim() || undefined,
-        visibility: "private",
+        visibility: 'private',
       });
 
       if (itinerary) {
         router.replace(`/(tabs)/itinerary/${itinerary.id}`);
       }
     } catch {
-      Alert.alert("创建失败", "无法创建行程，请重试");
+      Alert.alert('创建失败', '无法创建行程，请重试');
     }
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         style={styles.scrollView}
@@ -134,7 +135,7 @@ export function CreateItineraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: '#F8F9FA',
   },
   scrollView: {
     flex: 1,
@@ -147,44 +148,44 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: '#E5E5E5',
     padding: 16,
     fontSize: 16,
-    color: "#333",
+    color: '#333',
   },
   multilineInput: {
     minHeight: 100,
   },
   footer: {
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: '#E5E5E5',
   },
   createButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#007AFF",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF',
     paddingVertical: 16,
     borderRadius: 12,
   },
   disabledButton: {
-    backgroundColor: "#CCC",
+    backgroundColor: '#CCC',
   },
   createButtonText: {
     marginLeft: 8,
     fontSize: 17,
-    fontWeight: "600",
-    color: "#fff",
+    fontWeight: '600',
+    color: '#fff',
   },
 });
 

@@ -3,22 +3,22 @@
  */
 export const VISIBILITY_LEVELS = {
   private: {
-    label: "私密",
-    labelEn: "Private",
-    description: "仅自己可见",
-    descriptionEn: "Only visible to you",
+    label: '私密',
+    labelEn: 'Private',
+    description: '仅自己可见',
+    descriptionEn: 'Only visible to you',
   },
   team: {
-    label: "团队",
-    labelEn: "Team",
-    description: "团队成员可见",
-    descriptionEn: "Visible to team members",
+    label: '团队',
+    labelEn: 'Team',
+    description: '团队成员可见',
+    descriptionEn: 'Visible to team members',
   },
   public: {
-    label: "公开",
-    labelEn: "Public",
-    description: "所有人可见",
-    descriptionEn: "Visible to everyone",
+    label: '公开',
+    labelEn: 'Public',
+    description: '所有人可见',
+    descriptionEn: 'Visible to everyone',
   },
 } as const;
 

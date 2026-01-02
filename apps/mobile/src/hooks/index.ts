@@ -1,1 +1,1 @@
-export { useOfflineSync } from "./useOfflineSync";
+export { useOfflineSync } from './useOfflineSync';

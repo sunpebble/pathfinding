@@ -1,13 +1,15 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { database } from "../database";
-import { Database } from "@nozbe/watermelondb";
+import type { Database } from '@nozbe/watermelondb';
+import React, { createContext, useEffect, useState } from 'react';
+import { database } from '../database';
 
 interface DatabaseContextType {
   database: Database;
   isReady: boolean;
 }
 
-const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
+const DatabaseContext = createContext<DatabaseContextType | undefined>(
+  undefined
+);
 
 /**
  * Database provider for WatermelonDB
@@ -26,7 +28,7 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <DatabaseContext.Provider value={{ database, isReady }}>{children}</DatabaseContext.Provider>
+    <DatabaseContext value={{ database, isReady }}>{children}</DatabaseContext>
   );
 }
 
@@ -34,9 +36,9 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
  * Hook to access database context
  */
 export function useDatabase() {
-  const context = useContext(DatabaseContext);
+  const context = use(DatabaseContext);
   if (context === undefined) {
-    throw new Error("useDatabase must be used within a DatabaseProvider");
+    throw new Error('useDatabase must be used within a DatabaseProvider');
   }
   return context;
 }

@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { formatDate, getDaysBetween } from "@pathfinding/utils";
+import { Ionicons } from '@expo/vector-icons';
+import { formatDate, getDaysBetween } from '@pathfinding/utils';
+import React, { useCallback, useState } from 'react';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface DateRangePickerProps {
   startDate: Date | null;
@@ -19,7 +19,7 @@ export function DateRangePicker({
   startDate,
   endDate,
   onSelect,
-  placeholder = "选择出行日期",
+  placeholder = '选择出行日期',
   minDate = new Date(),
   maxDays = 30,
 }: DateRangePickerProps) {
@@ -61,7 +61,8 @@ export function DateRangePicker({
   const isDateSelected = useCallback(
     (date: Date) => {
       if (!tempStartDate) return false;
-      if (!tempEndDate) return date.toDateString() === tempStartDate.toDateString();
+      if (!tempEndDate)
+        return date.toDateString() === tempStartDate.toDateString();
       return date >= tempStartDate && date <= tempEndDate;
     },
     [tempStartDate, tempEndDate]
@@ -109,19 +110,23 @@ export function DateRangePicker({
     return (
       <View style={styles.calendar}>
         <View style={styles.calendarHeader}>
-          <TouchableOpacity onPress={() => setCurrentMonth(new Date(year, month - 1, 1))}>
+          <TouchableOpacity
+            onPress={() => setCurrentMonth(new Date(year, month - 1, 1))}
+          >
             <Ionicons name="chevron-back" size={24} color="#333" />
           </TouchableOpacity>
           <Text style={styles.monthTitle}>
             {year}年{month + 1}月
           </Text>
-          <TouchableOpacity onPress={() => setCurrentMonth(new Date(year, month + 1, 1))}>
+          <TouchableOpacity
+            onPress={() => setCurrentMonth(new Date(year, month + 1, 1))}
+          >
             <Ionicons name="chevron-forward" size={24} color="#333" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.weekDays}>
-          {["日", "一", "二", "三", "四", "五", "六"].map((day) => (
+          {['日', '一', '二', '三', '四', '五', '六'].map((day) => (
             <Text key={day} style={styles.weekDay}>
               {day}
             </Text>
@@ -135,7 +140,9 @@ export function DateRangePicker({
                 return <View key={dayIndex} style={styles.dayCell} />;
               }
 
-              const isPast = date < minDate && date.toDateString() !== minDate.toDateString();
+              const isPast =
+                date < minDate &&
+                date.toDateString() !== minDate.toDateString();
               const selected = isDateSelected(date);
               const isStart = isStartDate(date);
               const isEnd = isEndDate(date);
@@ -176,9 +183,18 @@ export function DateRangePicker({
 
   return (
     <>
-      <TouchableOpacity style={styles.selector} onPress={() => setModalVisible(true)}>
-        <Ionicons name="calendar" size={20} color={startDate ? "#007AFF" : "#999"} />
-        <Text style={[styles.selectorText, !startDate && styles.placeholder]}>{displayText}</Text>
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => setModalVisible(true)}
+      >
+        <Ionicons
+          name="calendar"
+          size={20}
+          color={startDate ? '#007AFF' : '#999'}
+        />
+        <Text style={[styles.selectorText, !startDate && styles.placeholder]}>
+          {displayText}
+        </Text>
         <Ionicons name="chevron-forward" size={20} color="#999" />
       </TouchableOpacity>
 
@@ -194,7 +210,10 @@ export function DateRangePicker({
               <Text style={styles.cancelButton}>取消</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>选择日期</Text>
-            <TouchableOpacity onPress={handleConfirm} disabled={!tempStartDate || !tempEndDate}>
+            <TouchableOpacity
+              onPress={handleConfirm}
+              disabled={!tempStartDate || !tempEndDate}
+            >
               <Text
                 style={[
                   styles.confirmButton,
@@ -208,9 +227,9 @@ export function DateRangePicker({
 
           <Text style={styles.hint}>
             {!tempStartDate
-              ? "请选择开始日期"
+              ? '请选择开始日期'
               : !tempEndDate
-                ? "请选择结束日期"
+                ? '请选择结束日期'
                 : `已选择 ${getDaysBetween(tempStartDate, tempEndDate)} 天`}
           </Text>
 
@@ -223,106 +242,106 @@ export function DateRangePicker({
 
 const styles = StyleSheet.create({
   selector: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: '#E5E5E5',
   },
   selectorText: {
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
-    color: "#333",
+    color: '#333',
   },
   placeholder: {
-    color: "#999",
+    color: '#999',
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    borderBottomColor: '#E5E5E5',
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   cancelButton: {
     fontSize: 16,
-    color: "#007AFF",
+    color: '#007AFF',
   },
   confirmButton: {
     fontSize: 16,
-    color: "#007AFF",
-    fontWeight: "600",
+    color: '#007AFF',
+    fontWeight: '600',
   },
   disabledButton: {
-    color: "#999",
+    color: '#999',
   },
   hint: {
-    textAlign: "center",
+    textAlign: 'center',
     padding: 16,
     fontSize: 14,
-    color: "#666",
+    color: '#666',
   },
   calendar: {
     padding: 16,
   },
   calendarHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
   monthTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   weekDays: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 8,
   },
   weekDay: {
     flex: 1,
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 14,
-    color: "#666",
+    color: '#666',
   },
   week: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   dayCell: {
     flex: 1,
     aspectRatio: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     margin: 2,
   },
   dayText: {
     fontSize: 16,
-    color: "#333",
+    color: '#333',
   },
   pastDay: {
-    color: "#CCC",
+    color: '#CCC',
   },
   selectedDay: {
-    backgroundColor: "#E3F2FD",
+    backgroundColor: '#E3F2FD',
   },
   selectedDayText: {
-    color: "#007AFF",
-    fontWeight: "600",
+    color: '#007AFF',
+    fontWeight: '600',
   },
   endpointDay: {
-    backgroundColor: "#007AFF",
+    backgroundColor: '#007AFF',
     borderRadius: 20,
   },
 });

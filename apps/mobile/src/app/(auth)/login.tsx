@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { useAuth } from "../../providers/AuthProvider";
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../../providers/AuthProvider';
 
 /**
  * Login screen - placeholder for auth UI
@@ -9,7 +9,7 @@ export default function LoginScreen() {
 
   const handleSignIn = async () => {
     // TODO: Implement actual sign in
-    await signInWithOAuth("google");
+    await signInWithOAuth('google');
   };
 
   return (
@@ -32,34 +32,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
   content: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: 48,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
-    color: "#666",
+    color: '#666',
   },
   buttonContainer: {
     paddingBottom: 40,
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 12,
-    alignItems: "center",
+    alignItems: 'center',
   },
   buttonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });

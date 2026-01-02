@@ -18,13 +18,21 @@ function toRadians(degrees: number): number {
  * Calculate distance between two coordinates using Haversine formula
  * @returns Distance in kilometers
  */
-export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+export function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -34,13 +42,16 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
 /**
  * Format distance for display
  */
-export function formatDistance(distanceKm: number, locale: "zh" | "en" = "zh"): string {
+export function formatDistance(
+  distanceKm: number,
+  locale: 'zh' | 'en' = 'zh'
+): string {
   if (distanceKm < 1) {
     const meters = Math.round(distanceKm * 1000);
-    return locale === "zh" ? `${meters}米` : `${meters}m`;
+    return locale === 'zh' ? `${meters}米` : `${meters}m`;
   }
   const formatted = distanceKm.toFixed(1);
-  return locale === "zh" ? `${formatted}公里` : `${formatted}km`;
+  return locale === 'zh' ? `${formatted}公里` : `${formatted}km`;
 }
 
 /**
@@ -80,12 +91,14 @@ export function isWithinRadius(
 /**
  * Calculate center point of multiple coordinates
  */
-export function calculateCenter(coordinates: Array<{ lat: number; lon: number }>): {
+export function calculateCenter(
+  coordinates: Array<{ lat: number; lon: number }>
+): {
   lat: number;
   lon: number;
 } {
   if (coordinates.length === 0) {
-    throw new Error("Cannot calculate center of empty coordinates array");
+    throw new Error('Cannot calculate center of empty coordinates array');
   }
 
   if (coordinates.length === 1) {
@@ -123,11 +136,9 @@ export function calculateCenter(coordinates: Array<{ lat: number; lon: number }>
 /**
  * Sort coordinates by distance from a reference point
  */
-export function sortByDistance<T extends { latitude: number; longitude: number }>(
-  items: T[],
-  refLat: number,
-  refLon: number
-): T[] {
+export function sortByDistance<
+  T extends { latitude: number; longitude: number },
+>(items: T[], refLat: number, refLon: number): T[] {
   return [...items].sort((a, b) => {
     const distA = calculateDistance(refLat, refLon, a.latitude, a.longitude);
     const distB = calculateDistance(refLat, refLon, b.latitude, b.longitude);
@@ -138,13 +149,16 @@ export function sortByDistance<T extends { latitude: number; longitude: number }
 /**
  * Filter items within radius
  */
-export function filterByRadius<T extends { latitude: number; longitude: number }>(
-  items: T[],
-  centerLat: number,
-  centerLon: number,
-  radiusKm: number
-): T[] {
+export function filterByRadius<
+  T extends { latitude: number; longitude: number },
+>(items: T[], centerLat: number, centerLon: number, radiusKm: number): T[] {
   return items.filter((item) =>
-    isWithinRadius(item.latitude, item.longitude, centerLat, centerLon, radiusKm)
+    isWithinRadius(
+      item.latitude,
+      item.longitude,
+      centerLat,
+      centerLon,
+      radiusKm
+    )
   );
 }
