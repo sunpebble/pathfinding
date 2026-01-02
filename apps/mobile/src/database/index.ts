@@ -13,12 +13,14 @@ import { schema } from './schema';
 
 /**
  * SQLite adapter for WatermelonDB
+ * Using JSI for high-performance synchronous native bridge (New Architecture)
  */
 const adapter = new SQLiteAdapter({
   schema,
   // Database file name
   dbName: 'pathfinding',
-  // Use JSI for better performance
+  // Enable JSI for better performance with React Native New Architecture
+  // Requires native build (expo prebuild or EAS Build), not compatible with Expo Go
   jsi: true,
   // Enable WAL mode for better concurrency
   onSetUpError: (error) => {

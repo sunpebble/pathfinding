@@ -32,6 +32,24 @@
     "plugins": [
       "expo-router",
       [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24,
+            "buildToolsVersion": "35.0.0",
+            "kotlinVersion": "1.9.24",
+            "packagingOptions": {
+              "pickFirst": ["**/libc++_shared.so"]
+            }
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
@@ -46,7 +64,8 @@
         }
       ],
       "expo-localization",
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

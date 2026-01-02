@@ -1,28 +1,17 @@
 # Dependencies
 node_modules/
-.pnpm-store/
 
 # Build outputs
 dist/
 build/
 .turbo/
-.next/
-out/
-
-# Deno
-deno.lock
 
 # React Native / Expo
 .expo/
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-*.orig.*
 web-build/
 ios/
 android/
+expo-env.d.ts
 
 # Environment variables
 .env
@@ -36,11 +25,6 @@ android/
 .idea/
 *.swp
 *.swo
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 
 # OS
 .DS_Store
