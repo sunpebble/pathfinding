@@ -1,0 +1,942 @@
+openapi: 3.1.0
+info:
+  title: 探路 Travel Itinerary API
+  description: API for managing travel itineraries, POIs, and recommendations
+  version: 1.0.0
+  contact:
+    name: Pathfinding Team
+
+servers:
+  - url: https://api.pathfinding.app/v1
+    description: Production
+  - url: http://localhost:8000/v1
+    description: Local development
+
+tags:
+  - name: Itineraries
+    description: Travel itinerary CRUD operations
+  - name: Items
+    description: Itinerary item management
+  - name: POIs
+    description: Point of Interest search and recommendations
+  - name: Sync
+    description: Offline sync endpoints
+
+paths:
+  /itineraries:
+    get:
+      tags: [Itineraries]
+      summary: List user's itineraries
+      operationId: listItineraries
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived]
+            default: active
+      responses:
+        "200":
+          description: List of itineraries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ItinerarySummary"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags: [Itineraries]
+      summary: Create new itinerary
+      operationId: createItinerary
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItineraryRequest"
+      responses:
+        "201":
+          description: Itinerary created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Itinerary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /itineraries/{id}:
+    get:
+      tags: [Itineraries]
+      summary: Get itinerary details
+      operationId: getItinerary
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+      responses:
+        "200":
+          description: Itinerary details with days and items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Itinerary"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags: [Itineraries]
+      summary: Update itinerary
+      operationId: updateItinerary
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateItineraryRequest"
+      responses:
+        "200":
+          description: Updated itinerary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Itinerary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: [Itineraries]
+      summary: Delete itinerary
+      operationId: deleteItinerary
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+      responses:
+        "204":
+          description: Itinerary deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /itineraries/{id}/copy:
+    post:
+      tags: [Itineraries]
+      summary: Copy itinerary to user's collection
+      operationId: copyItinerary
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - startDate
+              properties:
+                startDate:
+                  type: string
+                  format: date
+                  description: New start date for copied itinerary
+                title:
+                  type: string
+                  description: Optional new title (defaults to "Copy of {original}")
+      responses:
+        "201":
+          description: Copied itinerary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Itinerary"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /itineraries/{id}/days/{dayId}/items:
+    get:
+      tags: [Items]
+      summary: List items for a day
+      operationId: listDayItems
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+        - $ref: "#/components/parameters/DayId"
+      responses:
+        "200":
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ItineraryItem"
+
+    post:
+      tags: [Items]
+      summary: Add item to day
+      operationId: createDayItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+        - $ref: "#/components/parameters/DayId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItemRequest"
+      responses:
+        "201":
+          description: Item created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ItineraryItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Time conflict with existing item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeConflictError"
+
+  /itineraries/{id}/days/{dayId}/items/{itemId}:
+    patch:
+      tags: [Items]
+      summary: Update item
+      operationId: updateDayItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+        - $ref: "#/components/parameters/DayId"
+        - $ref: "#/components/parameters/ItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateItemRequest"
+      responses:
+        "200":
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ItineraryItem"
+
+    delete:
+      tags: [Items]
+      summary: Delete item
+      operationId: deleteDayItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+        - $ref: "#/components/parameters/DayId"
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "204":
+          description: Item deleted
+
+  /itineraries/{id}/days/{dayId}/items/reorder:
+    post:
+      tags: [Items]
+      summary: Reorder items within a day
+      operationId: reorderDayItems
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ItineraryId"
+        - $ref: "#/components/parameters/DayId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - itemIds
+              properties:
+                itemIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Item IDs in new order
+      responses:
+        "200":
+          description: Items reordered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ItineraryItem"
+
+  /pois/search:
+    get:
+      tags: [POIs]
+      summary: Search POIs by keyword
+      operationId: searchPOIs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Search keyword
+        - name: cityId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [attraction, restaurant, hotel, shopping, other]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/POI"
+
+  /pois/recommend:
+    get:
+      tags: [POIs]
+      summary: Get POI recommendations
+      operationId: getRecommendations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: cityId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [attraction, restaurant]
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [rating, popularity, distance]
+            default: rating
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+      responses:
+        "200":
+          description: Recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/POI"
+
+  /pois/nearby:
+    get:
+      tags: [POIs]
+      summary: Get POIs near location
+      operationId: getNearbyPOIs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: radius
+          in: query
+          schema:
+            type: integer
+            default: 5000
+            maximum: 50000
+          description: Search radius in meters
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [attraction, restaurant, hotel, shopping, other]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+      responses:
+        "200":
+          description: Nearby POIs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/POI"
+                        - type: object
+                          properties:
+                            distance:
+                              type: number
+                              description: Distance in meters
+
+  /sync:
+    post:
+      tags: [Sync]
+      summary: Sync offline changes
+      operationId: syncChanges
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: last_pulled_at
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Last sync timestamp (milliseconds)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncPushRequest"
+      responses:
+        "200":
+          description: Sync response with server changes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncPullResponse"
+        "409":
+          description: Conflict detected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncConflictError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase JWT token
+
+  parameters:
+    ItineraryId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DayId:
+      name: dayId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # Request schemas
+    CreateItineraryRequest:
+      type: object
+      required:
+        - title
+        - cityId
+        - startDate
+        - endDate
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        cityId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        coverImageUrl:
+          type: string
+          format: uri
+
+    UpdateItineraryRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        coverImageUrl:
+          type: string
+          format: uri
+        visibility:
+          type: string
+          enum: [private, team, public]
+
+    CreateItemRequest:
+      type: object
+      properties:
+        poiId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: time
+          example: "09:00"
+        endTime:
+          type: string
+          format: time
+          example: "12:00"
+        notes:
+          type: string
+          maxLength: 1000
+        transportMode:
+          type: string
+          enum: [walking, taxi, driving, transit]
+        transportMinutes:
+          type: integer
+          minimum: 0
+
+    UpdateItemRequest:
+      type: object
+      properties:
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        notes:
+          type: string
+          maxLength: 1000
+        transportMode:
+          type: string
+          enum: [walking, taxi, driving, transit]
+        transportMinutes:
+          type: integer
+          minimum: 0
+        orderIndex:
+          type: integer
+          minimum: 0
+
+    # Response schemas
+    ItinerarySummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        city:
+          $ref: "#/components/schemas/City"
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        coverImageUrl:
+          type: string
+          format: uri
+        visibility:
+          type: string
+          enum: [private, team, public]
+        itemCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Itinerary:
+      allOf:
+        - $ref: "#/components/schemas/ItinerarySummary"
+        - type: object
+          properties:
+            days:
+              type: array
+              items:
+                $ref: "#/components/schemas/ItineraryDay"
+            copiedFrom:
+              type: object
+              nullable: true
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+
+    ItineraryDay:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dayNumber:
+          type: integer
+        date:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItineraryItem"
+
+    ItineraryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        poi:
+          $ref: "#/components/schemas/POI"
+        orderIndex:
+          type: integer
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        notes:
+          type: string
+        transportMode:
+          type: string
+          enum: [walking, taxi, driving, transit]
+        transportMinutes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    POI:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        nameEn:
+          type: string
+        category:
+          type: string
+          enum: [attraction, restaurant, hotel, shopping, other]
+        address:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+        ratingCount:
+          type: integer
+        priceLevel:
+          type: integer
+          minimum: 1
+          maximum: 4
+        businessHours:
+          type: object
+          additionalProperties:
+            type: string
+        phone:
+          type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+
+    City:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        nameEn:
+          type: string
+        timezone:
+          type: string
+        countryCode:
+          type: string
+
+    # Sync schemas
+    SyncPushRequest:
+      type: object
+      properties:
+        changes:
+          type: object
+          properties:
+            itineraries:
+              $ref: "#/components/schemas/TableChanges"
+            itinerary_days:
+              $ref: "#/components/schemas/TableChanges"
+            itinerary_items:
+              $ref: "#/components/schemas/TableChanges"
+
+    SyncPullResponse:
+      type: object
+      properties:
+        changes:
+          type: object
+          properties:
+            itineraries:
+              $ref: "#/components/schemas/TableChanges"
+            itinerary_days:
+              $ref: "#/components/schemas/TableChanges"
+            itinerary_items:
+              $ref: "#/components/schemas/TableChanges"
+            pois:
+              $ref: "#/components/schemas/TableChanges"
+            cities:
+              $ref: "#/components/schemas/TableChanges"
+        timestamp:
+          type: integer
+          format: int64
+
+    TableChanges:
+      type: object
+      properties:
+        created:
+          type: array
+          items:
+            type: object
+        updated:
+          type: array
+          items:
+            type: object
+        deleted:
+          type: array
+          items:
+            type: string
+
+    # Error schemas
+    TimeConflictError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: TIME_CONFLICT
+        message:
+          type: string
+        conflictingItem:
+          $ref: "#/components/schemas/ItineraryItem"
+        suggestedTime:
+          type: object
+          properties:
+            startTime:
+              type: string
+              format: time
+            endTime:
+              type: string
+              format: time
+
+    SyncConflictError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: SYNC_CONFLICT
+        message:
+          type: string
+        experimentalRejectedIds:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        hasMore:
+          type: boolean
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: UNAUTHORIZED
+              message:
+                type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: NOT_FOUND
+              message:
+                type: string
+
+security:
+  - bearerAuth: []

@@ -1,0 +1,24 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --allow-read --watch src/index.ts",
+    "start": "deno run --allow-net --allow-env --allow-read src/index.ts",
+    "test": "deno test --allow-net --allow-env --allow-read",
+    "test:cov": "deno test --allow-net --allow-env --allow-read --coverage=coverage",
+    "lint": "deno lint",
+    "fmt": "deno fmt"
+  },
+  "imports": {
+    "hono": "npm:hono@^4.0.0",
+    "@hono/zod-validator": "npm:@hono/zod-validator@^0.2.0",
+    "zod": "npm:zod@^3.22.0",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.39.0",
+    "@opentelemetry/api": "npm:@opentelemetry/api@^1.7.0",
+    "@opentelemetry/sdk-trace-base": "npm:@opentelemetry/sdk-trace-base@^1.20.0",
+    "@opentelemetry/exporter-trace-otlp-http": "npm:@opentelemetry/exporter-trace-otlp-http@^0.47.0",
+    "@sentry/deno": "npm:@sentry/deno@^7.100.0"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.window", "ES2022"]
+  }
+}

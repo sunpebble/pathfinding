@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.turbo/
+.next/
+out/
+web-build/
+
+# Coverage
+coverage/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# iOS/Android native code (generated)
+ios/
+android/
+
+# Supabase migrations (SQL files)
+supabase/migrations/
+
+# Spec documents
+specs/
