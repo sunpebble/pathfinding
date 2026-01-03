@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { TimelineView } from '../../components/itinerary';
-import { useItineraryStore } from '../../store/itineraryStore';
+import { TimelineView } from '@/components/itinerary';
+import { useItineraryStore } from '@/store/itineraryStore';
 
 /**
  * Screen for displaying itinerary details

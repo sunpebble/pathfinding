@@ -14,8 +14,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { CityPicker, DateRangePicker } from '../../components/itinerary';
-import { useItineraryStore } from '../../store/itineraryStore';
+import { CityPicker, DateRangePicker } from '@/components/itinerary';
+import { useItineraryStore } from '@/store/itineraryStore';
 
 /**
  * Screen for creating a new itinerary

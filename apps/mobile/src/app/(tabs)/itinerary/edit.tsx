@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useItineraryStore } from '../../../store/itineraryStore';
+import { useItineraryStore } from '@/store/itineraryStore';
 
 /**
  * Edit itinerary screen

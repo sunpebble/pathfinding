@@ -24,9 +24,11 @@ export function DateRangePicker({
   maxDays = 30,
 }: DateRangePickerProps) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [tempStartDate, setTempStartDate] = useState<Date | null>(startDate);
-  const [tempEndDate, setTempEndDate] = useState<Date | null>(endDate);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [tempStartDate, setTempStartDate] = useState<Date | null>(
+    () => startDate
+  );
+  const [tempEndDate, setTempEndDate] = useState<Date | null>(() => endDate);
+  const [currentMonth, setCurrentMonth] = useState(() => new Date());
 
   const handleConfirm = useCallback(() => {
     if (tempStartDate && tempEndDate) {
@@ -133,45 +135,60 @@ export function DateRangePicker({
           ))}
         </View>
 
-        {weeks.map((week, weekIndex) => (
-          <View key={weekIndex} style={styles.week}>
-            {week.map((date, dayIndex) => {
-              if (!date) {
-                return <View key={dayIndex} style={styles.dayCell} />;
-              }
+        {weeks.map((week, weekIndex) => {
+          // Generate a stable key based on the first valid date in the week
+          const firstValidDate = week.find((d) => d !== null);
+          const weekKey = firstValidDate
+            ? `${firstValidDate.getFullYear()}-${firstValidDate.getMonth()}-w${weekIndex}`
+            : `empty-week-${weekIndex}`;
 
-              const isPast =
-                date < minDate &&
-                date.toDateString() !== minDate.toDateString();
-              const selected = isDateSelected(date);
-              const isStart = isStartDate(date);
-              const isEnd = isEndDate(date);
+          return (
+            <View key={weekKey} style={styles.week}>
+              {week.map((date, dayIndex) => {
+                // Empty calendar cells need index-based keys since they have no unique identifier
+                if (!date) {
+                  return (
+                    <View
+                      // eslint-disable-next-line react/no-array-index-key
+                      key={`${weekKey}-empty-${dayIndex}`}
+                      style={styles.dayCell}
+                    />
+                  );
+                }
 
-              return (
-                <TouchableOpacity
-                  key={dayIndex}
-                  style={[
-                    styles.dayCell,
-                    selected && styles.selectedDay,
-                    (isStart || isEnd) && styles.endpointDay,
-                  ]}
-                  onPress={() => !isPast && handleDatePress(date)}
-                  disabled={isPast}
-                >
-                  <Text
+                const isPast =
+                  date < minDate &&
+                  date.toDateString() !== minDate.toDateString();
+                const selected = isDateSelected(date);
+                const isStart = isStartDate(date);
+                const isEnd = isEndDate(date);
+
+                return (
+                  <TouchableOpacity
+                    key={date.toISOString()}
                     style={[
-                      styles.dayText,
-                      isPast && styles.pastDay,
-                      selected && styles.selectedDayText,
+                      styles.dayCell,
+                      selected && styles.selectedDay,
+                      (isStart || isEnd) && styles.endpointDay,
                     ]}
+                    onPress={() => !isPast && handleDatePress(date)}
+                    disabled={isPast}
                   >
-                    {date.getDate()}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
+                    <Text
+                      style={[
+                        styles.dayText,
+                        isPast && styles.pastDay,
+                        selected && styles.selectedDayText,
+                      ]}
+                    >
+                      {date.getDate()}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          );
+        })}
       </View>
     );
   };

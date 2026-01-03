@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { ItineraryCard } from '../../components/itinerary';
-import { useItineraryStore } from '../../store/itineraryStore';
+import { ItineraryCard } from '@/components/itinerary';
+import { useItineraryStore } from '@/store/itineraryStore';
 
 /**
  * Screen for listing user's itineraries
@@ -22,6 +22,7 @@ export function ItineraryListScreen() {
     itineraries,
     isLoading,
     isLoadingMore,
+    isRefreshing,
     hasMore,
     fetchItineraries,
     fetchMoreItineraries,
@@ -104,7 +105,7 @@ export function ItineraryListScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading && itineraries.length > 0}
+            refreshing={isRefreshing}
             onRefresh={handleRefresh}
             tintColor="#007AFF"
           />

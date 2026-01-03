@@ -56,7 +56,7 @@ const SAMPLE_POIS: Poi[] = [
  * Add POI to itinerary screen
  */
 export default function AddPoiScreen() {
-  const { dayId, itineraryId: _itineraryId } = useLocalSearchParams<{
+  const { dayId: _dayId, itineraryId: _itineraryId } = useLocalSearchParams<{
     dayId: string;
     itineraryId: string;
   }>();
@@ -68,14 +68,11 @@ export default function AddPoiScreen() {
     poi.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelectPoi = useCallback(
-    (poi: Poi) => {
-      // TODO: Add POI to itinerary day via API
-      console.log('Adding POI:', poi.id, 'to day:', dayId);
-      router.back();
-    },
-    [dayId]
-  );
+  const handleSelectPoi = useCallback((_poi: Poi) => {
+    // TODO: Add POI to itinerary day via API
+    // Implementation: Call itineraryService.addPoiToDay(poi.id, dayId)
+    router.back();
+  }, []);
 
   const renderPoiItem = useCallback(
     ({ item }: { item: Poi }) => (

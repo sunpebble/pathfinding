@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
-import { useAuth } from '../providers/AuthProvider';
+import { useAuth } from '@/providers/AuthProvider';
 
 /**
  * Root index - redirects to appropriate route based on auth state

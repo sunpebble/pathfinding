@@ -49,6 +49,7 @@ app.notFound((c) => {
 
 // Start server
 const port = Number.parseInt(Deno.env.get('PORT') || '8000');
+// eslint-disable-next-line no-console -- Server startup log is intentional
 console.log(`🚀 API server running at http://localhost:${port}`);
 
 Deno.serve({ port }, app.fetch);

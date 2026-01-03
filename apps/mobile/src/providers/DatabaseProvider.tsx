@@ -1,6 +1,6 @@
 import type { Database } from '@nozbe/watermelondb';
-import React, { createContext, use, useEffect, useState } from 'react';
-import { database } from '../database';
+import React, { createContext, useState } from 'react';
+import { database } from '@/database';
 
 interface DatabaseContextType {
   database: Database;
@@ -13,24 +13,18 @@ const DatabaseContext = createContext<DatabaseContextType | undefined>(
 
 /**
  * Database provider for WatermelonDB
+ * Database is initialized synchronously, so we don't need useEffect
  */
 export function DatabaseProvider({ children }: { children: React.ReactNode }) {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    // Database initialization is synchronous in WatermelonDB
-    // but we might want to run migrations here
-    setIsReady(true);
-  }, []);
+  // Database is ready immediately as WatermelonDB initialization is synchronous
+  const [isReady] = useState(true);
 
   if (!isReady) {
     return null;
   }
 
   return (
-    <DatabaseContext value={{ database, isReady }}>
-      {children}
-    </DatabaseContext>
+    <DatabaseContext value={{ database, isReady }}>{children}</DatabaseContext>
   );
 }
 

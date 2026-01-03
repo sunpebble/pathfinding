@@ -3,12 +3,12 @@ import type {
   UpdateItineraryInput,
 } from '@pathfinding/types';
 import type { NetInfoState } from '@react-native-community/netinfo';
-import type { Itinerary as ItineraryModel } from '../database/models/Itinerary';
-import type { SyncQueue } from '../database/models/SyncQueue';
+import type { Itinerary as ItineraryModel } from '@/database/models/Itinerary';
+import type { SyncQueue } from '@/database/models/SyncQueue';
 import NetInfo from '@react-native-community/netinfo';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { database } from '../database';
-import { useAppStore } from '../store';
+import { database } from '@/database';
+import { useAppStore } from '@/store';
 import { itineraryService } from './itineraryService';
 
 interface SyncState {

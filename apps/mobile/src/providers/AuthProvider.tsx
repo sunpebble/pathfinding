@@ -1,7 +1,5 @@
 import type { AuthError, Session, User } from '@supabase/supabase-js';
-import { makeRedirectUri } from 'expo-auth-session';
-import * as Linking from 'expo-linking';
-import * as WebBrowser from 'expo-web-browser';
+import Constants from 'expo-constants';
 import React, {
   createContext,
   use,
@@ -9,24 +7,57 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
-// Allow browser sessions to complete
-WebBrowser.maybeCompleteAuthSession();
+// Check if running in development mode
+const isDevelopment = __DEV__ || Constants.expoConfig?.extra?.isDevelopment;
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  signInWithOAuth: (provider: 'google' | 'apple') => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<{ needsVerification: boolean }>;
+  verifyOtp: (phone: string, otp: string) => Promise<void>;
   signOut: () => Promise<void>;
-  error: AuthError | null;
+  error: AuthError | Error | null;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+/**
+ * Create a mock user for development mode
+ */
+function createMockUser(phone: string): User {
+  return {
+    id: `dev-user-${phone.replace(/\D/g, '')}`,
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: undefined,
+    phone,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    app_metadata: {},
+    user_metadata: { phone },
+    identities: [],
+    factors: [],
+  } as User;
+}
+
+/**
+ * Create a mock session for development mode
+ */
+function createMockSession(user: User): Session {
+  return {
+    access_token: `dev-access-token-${user.id}`,
+    refresh_token: `dev-refresh-token-${user.id}`,
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: 'bearer',
+    user,
+  };
+}
 
 /**
  * Auth provider that manages Supabase authentication state
@@ -35,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<AuthError | null>(null);
+  const [error, setError] = useState<AuthError | Error | null>(null);
 
   // Initialize auth state
   useEffect(() => {
@@ -60,70 +91,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Handle deep link for OAuth callback
-  useEffect(() => {
-    const handleDeepLink = async (event: { url: string }) => {
-      const url = event.url;
-      if (url.includes('auth/callback')) {
-        // Extract tokens from URL and set session
-        const params = new URLSearchParams(url.split('#')[1]);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
+  /**
+   * Sign in with phone number
+   * In development mode, any phone number works without OTP verification
+   */
+  const signInWithPhone = useCallback(
+    async (phone: string): Promise<{ needsVerification: boolean }> => {
+      try {
+        setError(null);
+        setIsLoading(true);
 
-        if (accessToken && refreshToken) {
-          await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+        // Development mode: skip OTP and create mock session
+        if (isDevelopment) {
+          const mockUser = createMockUser(phone);
+          const mockSession = createMockSession(mockUser);
+          setUser(mockUser);
+          setSession(mockSession);
+          setIsLoading(false);
+          return { needsVerification: false };
         }
+
+        // Production mode: send OTP via Supabase
+        const { error } = await supabase.auth.signInWithOtp({
+          phone,
+        });
+
+        if (error) throw error;
+
+        return { needsVerification: true };
+      } catch (err) {
+        setError(err as AuthError);
+        return { needsVerification: false };
+      } finally {
+        setIsLoading(false);
       }
-    };
+    },
+    []
+  );
 
-    const subscription = Linking.addEventListener('url', handleDeepLink);
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-
-  const signInWithOAuth = useCallback(async (provider: 'google' | 'apple') => {
+  /**
+   * Verify OTP code sent to phone
+   */
+  const verifyOtp = useCallback(async (phone: string, otp: string) => {
     try {
       setError(null);
       setIsLoading(true);
 
-      const redirectUri = makeRedirectUri({
-        scheme: 'pathfinding',
-        path: 'auth/callback',
-      });
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: redirectUri,
-          skipBrowserRedirect: true,
-        },
+      const { error } = await supabase.auth.verifyOtp({
+        phone,
+        token: otp,
+        type: 'sms',
       });
 
       if (error) throw error;
-
-      if (data.url) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectUri
-        );
-
-        if (result.type === 'success' && result.url) {
-          const params = new URLSearchParams(result.url.split('#')[1]);
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token');
-
-          if (accessToken && refreshToken) {
-            await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-          }
-        }
-      }
     } catch (err) {
       setError(err as AuthError);
     } finally {
@@ -131,52 +151,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const signInWithEmail = useCallback(
-    async (email: string, password: string) => {
-      try {
-        setError(null);
-        setIsLoading(true);
-
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-      } catch (err) {
-        setError(err as AuthError);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
-
-  const signUpWithEmail = useCallback(
-    async (email: string, password: string) => {
-      try {
-        setError(null);
-        setIsLoading(true);
-
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-      } catch (err) {
-        setError(err as AuthError);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
-
   const signOut = useCallback(async () => {
     try {
       setError(null);
       setIsLoading(true);
+
+      // In development mode with mock session, just clear state
+      if (isDevelopment && session?.access_token?.startsWith('dev-')) {
+        setUser(null);
+        setSession(null);
+        setIsLoading(false);
+        return;
+      }
 
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -185,6 +171,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
+  }, [session]);
+
+  const clearError = useCallback(() => {
+    setError(null);
   }, []);
 
   const value: AuthContextType = {
@@ -192,11 +182,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     isLoading,
     isAuthenticated: !!session,
-    signInWithOAuth,
-    signInWithEmail,
-    signUpWithEmail,
+    signInWithPhone,
+    verifyOtp,
     signOut,
     error,
+    clearError,
   };
 
   return <AuthContext value={value}>{children}</AuthContext>;

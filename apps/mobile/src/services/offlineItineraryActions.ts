@@ -2,9 +2,9 @@ import type {
   CreateItineraryInput,
   UpdateItineraryInput,
 } from '@pathfinding/types';
-import type { Itinerary as ItineraryModel } from '../database/models/Itinerary';
-import type { ItineraryDay as ItineraryDayModel } from '../database/models/ItineraryDay';
-import { database } from '../database';
+import type { Itinerary as ItineraryModel } from '@/database/models/Itinerary';
+import type { ItineraryDay as ItineraryDayModel } from '@/database/models/ItineraryDay';
+import { database } from '@/database';
 
 /**
  * Offline itinerary actions using WatermelonDB
