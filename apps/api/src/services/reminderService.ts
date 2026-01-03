@@ -2,8 +2,24 @@ import type {
   CreateReminderInput,
   Reminder,
   UpdateReminderInput,
-} from '../models/reminder.ts';
-import { createClient } from '../lib/supabase.ts';
+} from '../models/reminder.js';
+import { getSupabaseClient } from '../lib/supabase.js';
+
+/**
+ * Map database row to Reminder type
+ */
+function mapReminder(row: Record<string, unknown>): Reminder {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    itemId: row.item_id as string,
+    minutesBefore: row.minutes_before as number,
+    scheduledAt: row.scheduled_at as string,
+    sentAt: (row.sent_at as string) || null,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
+}
 
 /**
  * Reminder service for managing item reminders
@@ -16,7 +32,7 @@ export const reminderService = {
     userId: string,
     input: CreateReminderInput
   ): Promise<Reminder> {
-    const supabase = createClient();
+    const supabase = getSupabaseClient();
 
     // Get the item to calculate scheduled time
     const { data: item, error: itemError } = await supabase
@@ -107,7 +123,7 @@ export const reminderService = {
     reminderId: string,
     input: UpdateReminderInput
   ): Promise<Reminder> {
-    const supabase = createClient();
+    const supabase = getSupabaseClient();
 
     // Get existing reminder
     const { data: reminder, error: fetchError } = await supabase
@@ -162,10 +178,10 @@ export const reminderService = {
   },
 
   /**
-   * Cancel (delete) a reminder
+   * Delete a reminder
    */
-  async cancel(userId: string, reminderId: string): Promise<void> {
-    const supabase = createClient();
+  async delete(userId: string, reminderId: string): Promise<void> {
+    const supabase = getSupabaseClient();
 
     const { error } = await supabase
       .from('reminders')
@@ -177,10 +193,10 @@ export const reminderService = {
   },
 
   /**
-   * Get reminder for a specific item
+   * Get reminder for an item
    */
   async getByItemId(userId: string, itemId: string): Promise<Reminder | null> {
-    const supabase = createClient();
+    const supabase = getSupabaseClient();
 
     const { data, error } = await supabase
       .from('reminders')
@@ -194,10 +210,10 @@ export const reminderService = {
   },
 
   /**
-   * Get all reminders for a user
+   * List all reminders for a user
    */
-  async listByUser(userId: string): Promise<Reminder[]> {
-    const supabase = createClient();
+  async listForUser(userId: string): Promise<Reminder[]> {
+    const supabase = getSupabaseClient();
 
     const { data, error } = await supabase
       .from('reminders')
@@ -206,56 +222,6 @@ export const reminderService = {
       .order('scheduled_at', { ascending: true });
 
     if (error) throw error;
-    return data.map(mapReminder);
-  },
-
-  /**
-   * Get pending reminders that need to be sent
-   * Used by the cron job
-   */
-  async getPendingReminders(cutoffTime: Date): Promise<Reminder[]> {
-    const supabase = createClient();
-
-    const { data, error } = await supabase
-      .from('reminders')
-      .select('*')
-      .is('sent_at', null)
-      .lte('scheduled_at', cutoffTime.toISOString())
-      .order('scheduled_at', { ascending: true });
-
-    if (error) throw error;
-    return data.map(mapReminder);
-  },
-
-  /**
-   * Mark reminder as sent
-   */
-  async markAsSent(reminderId: string): Promise<void> {
-    const supabase = createClient();
-
-    const { error } = await supabase
-      .from('reminders')
-      .update({ sent_at: new Date().toISOString() })
-      .eq('id', reminderId);
-
-    if (error) throw error;
+    return (data || []).map(mapReminder);
   },
 };
-
-/**
- * Map database row to Reminder type
- */
-function mapReminder(row: Record<string, unknown>): Reminder {
-  return {
-    id: row.id as string,
-    userId: row.user_id as string,
-    itemId: row.item_id as string,
-    minutesBefore: row.minutes_before as number,
-    scheduledAt: row.scheduled_at as string,
-    sentAt: (row.sent_at as string) || null,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
-  };
-}
-
-export default reminderService;

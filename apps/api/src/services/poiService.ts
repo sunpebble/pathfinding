@@ -1,7 +1,7 @@
 import type { Poi, PoiCategory } from '@pathfinding/types';
-import type { PoiSearchQuery } from '../models/poi.ts';
-import { getSupabaseClient } from '../lib/supabase.ts';
-import { NotFoundError } from '../middleware/errorHandler.ts';
+import type { PoiSearchQuery } from '../models/poi.js';
+import { getSupabaseClient } from '../lib/supabase.js';
+import { NotFoundError } from '../middleware/errorHandler.js';
 
 /**
  * POI database row type
@@ -159,18 +159,94 @@ export const PoiService = {
       });
     }
 
-    const total = count || 0;
-    const totalPages = Math.ceil(total / pageSize);
-
     return {
       data: pois,
       meta: {
         page,
         pageSize,
-        total,
-        totalPages,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / pageSize),
       },
     };
+  },
+
+  /**
+   * Get POI recommendations sorted by rating
+   */
+  async getRecommendations(
+    cityId: string,
+    category: PoiCategory | undefined,
+    limit: number,
+    accessToken: string
+  ): Promise<Poi[]> {
+    const supabase = getSupabaseClient(accessToken);
+
+    let query = supabase
+      .from('pois')
+      .select('*')
+      .eq('city_id', cityId)
+      .order('rating', { ascending: false, nullsFirst: false })
+      .limit(limit);
+
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    return (data as PoiRow[]).map(toPoiResponse);
+  },
+
+  /**
+   * Get nearby POIs
+   */
+  async getNearby(
+    lat: number,
+    lng: number,
+    radiusKm: number,
+    category: PoiCategory | undefined,
+    limit: number,
+    accessToken: string
+  ): Promise<Poi[]> {
+    const supabase = getSupabaseClient(accessToken);
+
+    // Calculate bounding box for rough filtering
+    const latDelta = radiusKm / 111; // ~111km per degree latitude
+    const lngDelta = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+
+    let query = supabase
+      .from('pois')
+      .select('*')
+      .gte('latitude', lat - latDelta)
+      .lte('latitude', lat + latDelta)
+      .gte('longitude', lng - lngDelta)
+      .lte('longitude', lng + lngDelta);
+
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    // Filter by exact distance and sort
+    const poisWithDistance = (data as PoiRow[])
+      .map((row) => ({
+        poi: toPoiResponse(row),
+        distance: calculateDistanceKm(lat, lng, row.latitude, row.longitude),
+      }))
+      .filter((item) => item.distance <= radiusKm)
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, limit);
+
+    return poisWithDistance.map((item) => item.poi);
   },
 
   /**
@@ -193,86 +269,5 @@ export const PoiService = {
     }
 
     return toPoiResponse(data as PoiRow);
-  },
-
-  /**
-   * Get recommended POIs for a city sorted by rating
-   */
-  async getRecommendations(
-    cityId: string,
-    category: PoiCategory | undefined,
-    limit: number,
-    accessToken: string
-  ): Promise<Poi[]> {
-    const supabase = getSupabaseClient(accessToken);
-
-    let dbQuery = supabase
-      .from('pois')
-      .select('*')
-      .eq('city_id', cityId)
-      .not('rating', 'is', null)
-      .order('rating', { ascending: false })
-      .order('rating_count', { ascending: false })
-      .limit(limit);
-
-    if (category) {
-      dbQuery = dbQuery.eq('category', category);
-    }
-
-    const { data, error } = await dbQuery;
-
-    if (error) {
-      throw error;
-    }
-
-    return (data as PoiRow[]).map(toPoiResponse);
-  },
-
-  /**
-   * Get nearby POIs
-   */
-  async getNearby(
-    lat: number,
-    lng: number,
-    radiusKm: number,
-    category: PoiCategory | undefined,
-    limit: number,
-    accessToken: string
-  ): Promise<Poi[]> {
-    const supabase = getSupabaseClient(accessToken);
-
-    // Calculate bounding box for initial filter (rough approximation)
-    const latDelta = radiusKm / 111; // ~111 km per degree of latitude
-    const lngDelta = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
-
-    let dbQuery = supabase
-      .from('pois')
-      .select('*')
-      .gte('latitude', lat - latDelta)
-      .lte('latitude', lat + latDelta)
-      .gte('longitude', lng - lngDelta)
-      .lte('longitude', lng + lngDelta);
-
-    if (category) {
-      dbQuery = dbQuery.eq('category', category);
-    }
-
-    const { data, error } = await dbQuery;
-
-    if (error) {
-      throw error;
-    }
-
-    // Calculate actual distance and filter
-    const poisWithDistance = (data as PoiRow[])
-      .map((row) => ({
-        poi: toPoiResponse(row),
-        distance: calculateDistanceKm(lat, lng, row.latitude, row.longitude),
-      }))
-      .filter(({ distance }) => distance <= radiusKm)
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, limit);
-
-    return poisWithDistance.map(({ poi }) => poi);
   },
 };

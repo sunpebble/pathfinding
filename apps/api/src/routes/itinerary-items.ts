@@ -1,17 +1,18 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { authMiddleware } from '../middleware/auth.ts';
 import {
   CreateItineraryItemSchema,
   ReorderItemsSchema,
   UpdateItineraryItemSchema,
-} from '../models/itineraryItem.ts';
-import { ItineraryItemService } from '../services/itineraryItemService.ts';
+} from '../models/itineraryItem.js';
+import { ItineraryItemService } from '../services/itineraryItemService.js';
 
-export const itineraryItemsRoutes = new Hono();
+interface Variables {
+  userId: string;
+  accessToken: string;
+}
 
-// Apply auth middleware to all routes
-itineraryItemsRoutes.use('/*', authMiddleware);
+export const itineraryItemsRoutes = new Hono<{ Variables: Variables }>();
 
 /**
  * Get items for a day
@@ -19,7 +20,7 @@ itineraryItemsRoutes.use('/*', authMiddleware);
  */
 itineraryItemsRoutes.get('/:itineraryId/days/:dayId/items', async (c) => {
   const dayId = c.req.param('dayId');
-  const accessToken = c.get('accessToken') as string;
+  const accessToken = c.get('accessToken');
 
   const data = await ItineraryItemService.list(dayId, accessToken);
   return c.json({ data });
@@ -35,7 +36,7 @@ itineraryItemsRoutes.post(
   async (c) => {
     const dayId = c.req.param('dayId');
     const input = c.req.valid('json');
-    const accessToken = c.get('accessToken') as string;
+    const accessToken = c.get('accessToken');
 
     const { item, conflicts } = await ItineraryItemService.create(
       dayId,
@@ -61,7 +62,7 @@ itineraryItemsRoutes.get(
   '/:itineraryId/days/:dayId/items/:itemId',
   async (c) => {
     const itemId = c.req.param('itemId');
-    const accessToken = c.get('accessToken') as string;
+    const accessToken = c.get('accessToken');
 
     const data = await ItineraryItemService.getById(itemId, accessToken);
     return c.json({ data });
@@ -78,7 +79,7 @@ itineraryItemsRoutes.patch(
   async (c) => {
     const itemId = c.req.param('itemId');
     const input = c.req.valid('json');
-    const accessToken = c.get('accessToken') as string;
+    const accessToken = c.get('accessToken');
 
     const { item, conflicts } = await ItineraryItemService.update(
       itemId,
@@ -101,7 +102,7 @@ itineraryItemsRoutes.delete(
   '/:itineraryId/days/:dayId/items/:itemId',
   async (c) => {
     const itemId = c.req.param('itemId');
-    const accessToken = c.get('accessToken') as string;
+    const accessToken = c.get('accessToken');
 
     await ItineraryItemService.delete(itemId, accessToken);
     return c.json({ success: true });
@@ -118,7 +119,7 @@ itineraryItemsRoutes.post(
   async (c) => {
     const dayId = c.req.param('dayId');
     const input = c.req.valid('json');
-    const accessToken = c.get('accessToken') as string;
+    const accessToken = c.get('accessToken');
 
     const data = await ItineraryItemService.reorder(dayId, input, accessToken);
     return c.json({ data });

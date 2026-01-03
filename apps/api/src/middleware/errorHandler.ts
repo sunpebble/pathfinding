@@ -32,7 +32,7 @@ export const errorHandler = createMiddleware(async (c: Context, next: Next) => {
       return c.json(
         {
           error: error.message || 'Internal server error',
-          ...(Deno.env.get('NODE_ENV') === 'development' && {
+          ...(process.env.NODE_ENV === 'development' && {
             stack: error.stack,
           }),
         },
@@ -90,14 +90,14 @@ export class ForbiddenError extends Error {
 }
 
 export class ConflictError extends Error {
-  constructor(message = 'Resource conflict') {
+  constructor(message = 'Conflict') {
     super(message);
     this.name = 'ConflictError';
   }
 }
 
 export class ValidationError extends Error {
-  constructor(message = 'Validation failed') {
+  constructor(message = 'Validation error') {
     super(message);
     this.name = 'ValidationError';
   }

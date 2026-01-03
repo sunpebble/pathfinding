@@ -3,9 +3,9 @@ import type {
   CreateItineraryItemInput,
   ReorderItemsInput,
   UpdateItineraryItemInput,
-} from '../models/itineraryItem.ts';
-import { getSupabaseClient } from '../lib/supabase.ts';
-import { NotFoundError, ValidationError } from '../middleware/errorHandler.ts';
+} from '../models/itineraryItem.js';
+import { getSupabaseClient } from '../lib/supabase.js';
+import { NotFoundError, ValidationError } from '../middleware/errorHandler.js';
 
 /**
  * ItineraryItem database row type
@@ -121,6 +121,27 @@ interface TimeConflict {
  */
 export const ItineraryItemService = {
   /**
+   * List items for a day
+   */
+  async list(dayId: string, accessToken: string): Promise<ItineraryItem[]> {
+    const supabase = getSupabaseClient(accessToken);
+
+    const { data, error } = await supabase
+      .from('itinerary_items')
+      .select('*, poi:pois(*)')
+      .eq('day_id', dayId)
+      .order('order_index');
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map((row: ItineraryItemRow & { poi: PoiRow | null }) =>
+      toItineraryItemResponse(row, row.poi || undefined)
+    );
+  },
+
+  /**
    * Create a new item in a day
    */
   async create(
@@ -202,36 +223,15 @@ export const ItineraryItemService = {
     }
 
     const item = toItineraryItemResponse(
-      data as ItineraryItemRow,
-      data.poi as PoiRow | undefined
+      data as ItineraryItemRow & { poi: PoiRow | null },
+      (data as { poi: PoiRow | null }).poi || undefined
     );
 
     return { item, conflicts };
   },
 
   /**
-   * List items for a day
-   */
-  async list(dayId: string, accessToken: string): Promise<ItineraryItem[]> {
-    const supabase = getSupabaseClient(accessToken);
-
-    const { data, error } = await supabase
-      .from('itinerary_items')
-      .select('*, poi:pois(*)')
-      .eq('day_id', dayId)
-      .order('order_index');
-
-    if (error) {
-      throw error;
-    }
-
-    return (data as (ItineraryItemRow & { poi: PoiRow | null })[]).map((row) =>
-      toItineraryItemResponse(row, row.poi || undefined)
-    );
-  },
-
-  /**
-   * Get item by ID
+   * Get a single item by ID
    */
   async getById(itemId: string, accessToken: string): Promise<ItineraryItem> {
     const supabase = getSupabaseClient(accessToken);
@@ -250,7 +250,7 @@ export const ItineraryItemService = {
     }
 
     return toItineraryItemResponse(
-      data as ItineraryItemRow,
+      data as ItineraryItemRow & { poi: PoiRow | null },
       (data as { poi: PoiRow | null }).poi || undefined
     );
   },
@@ -266,24 +266,22 @@ export const ItineraryItemService = {
     const supabase = getSupabaseClient(accessToken);
 
     // Get existing item
-    const { data: existing, error: existingError } = await supabase
+    const { data: existing, error: fetchError } = await supabase
       .from('itinerary_items')
-      .select('id, day_id, start_time, end_time')
+      .select('*, poi:pois(*)')
       .eq('id', itemId)
       .single();
 
-    if (existingError || !existing) {
+    if (fetchError || !existing) {
       throw new NotFoundError('Item not found');
     }
 
     // Check for time conflicts
     let conflicts: TimeConflict[] = [];
-    const startTime =
-      input.startTime !== undefined ? input.startTime : existing.start_time;
-    const endTime =
-      input.endTime !== undefined ? input.endTime : existing.end_time;
+    const newStartTime = input.startTime ?? existing.start_time;
+    const newEndTime = input.endTime ?? existing.end_time;
 
-    if (startTime && endTime) {
+    if (newStartTime && newEndTime) {
       const { data: existingItems } = await supabase
         .from('itinerary_items')
         .select('id, start_time, end_time, poi:pois(name)')
@@ -295,7 +293,12 @@ export const ItineraryItemService = {
       if (existingItems) {
         conflicts = existingItems
           .filter((item) =>
-            timesOverlap(startTime, endTime, item.start_time!, item.end_time!)
+            timesOverlap(
+              newStartTime,
+              newEndTime,
+              item.start_time!,
+              item.end_time!
+            )
           )
           .map((item) => ({
             itemId: item.id,
@@ -332,7 +335,7 @@ export const ItineraryItemService = {
     }
 
     const item = toItineraryItemResponse(
-      data as ItineraryItemRow,
+      data as ItineraryItemRow & { poi: PoiRow | null },
       (data as { poi: PoiRow | null }).poi || undefined
     );
 
@@ -365,36 +368,34 @@ export const ItineraryItemService = {
   ): Promise<ItineraryItem[]> {
     const supabase = getSupabaseClient(accessToken);
 
-    // Verify all items belong to the day
-    const { data: existingItems, error: verifyError } = await supabase
+    // Verify all items belong to this day
+    const { data: existingItems, error: fetchError } = await supabase
       .from('itinerary_items')
       .select('id')
-      .eq('day_id', dayId);
+      .eq('day_id', dayId)
+      .in('id', input.itemIds);
 
-    if (verifyError) {
-      throw verifyError;
+    if (fetchError) {
+      throw fetchError;
     }
 
-    const existingIds = new Set(existingItems?.map((i) => i.id) || []);
-    const invalidIds = input.itemIds.filter((id) => !existingIds.has(id));
-
-    if (invalidIds.length > 0) {
-      throw new ValidationError(
-        `Items not in this day: ${invalidIds.join(', ')}`
-      );
+    if (!existingItems || existingItems.length !== input.itemIds.length) {
+      throw new ValidationError('Some items do not belong to this day');
     }
 
-    // Update order indices
-    const updates = input.itemIds.map((id, index) =>
-      supabase
+    // Update order indexes
+    for (let i = 0; i < input.itemIds.length; i++) {
+      const { error } = await supabase
         .from('itinerary_items')
-        .update({ order_index: index, updated_at: new Date().toISOString() })
-        .eq('id', id)
-    );
+        .update({ order_index: i, updated_at: new Date().toISOString() })
+        .eq('id', input.itemIds[i]);
 
-    await Promise.all(updates);
+      if (error) {
+        throw error;
+      }
+    }
 
-    // Return updated list
+    // Return updated items
     return this.list(dayId, accessToken);
   },
 };

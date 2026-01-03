@@ -2,14 +2,6 @@ import type { Context, Next } from 'hono';
 import { createClient } from '@supabase/supabase-js';
 import { createMiddleware } from 'hono/factory';
 
-// Extend Hono context with user info
-declare module 'hono' {
-  interface ContextVariableMap {
-    userId: string;
-    userEmail: string;
-  }
-}
-
 /**
  * JWT authentication middleware using Supabase Auth
  * Validates the Authorization header and extracts user info
@@ -25,8 +17,8 @@ export const authMiddleware = createMiddleware(
     const token = authHeader.slice(7); // Remove "Bearer " prefix
 
     try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL');
-      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
       if (!supabaseUrl || !supabaseAnonKey) {
         console.error('Missing Supabase environment variables');
@@ -52,6 +44,7 @@ export const authMiddleware = createMiddleware(
       // Set user info in context for downstream handlers
       c.set('userId', user.id);
       c.set('userEmail', user.email || '');
+      c.set('accessToken', token);
 
       await next();
     } catch (err) {

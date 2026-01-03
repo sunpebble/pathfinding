@@ -4,15 +4,15 @@ import type {
   ItineraryResponse,
   ItineraryRow,
   UpdateItineraryInput,
-} from '../models/itinerary.ts';
+} from '../models/itinerary.js';
 import type {
   ItineraryDayResponse,
   ItineraryDayRow,
-} from '../models/itineraryDay.ts';
-import { getSupabaseClient } from '../lib/supabase.ts';
-import { NotFoundError } from '../middleware/errorHandler.ts';
-import { toItineraryResponse } from '../models/itinerary.ts';
-import { toItineraryDayResponse } from '../models/itineraryDay.ts';
+} from '../models/itineraryDay.js';
+import { getSupabaseClient } from '../lib/supabase.js';
+import { NotFoundError } from '../middleware/errorHandler.js';
+import { toItineraryResponse } from '../models/itinerary.js';
+import { toItineraryDayResponse } from '../models/itineraryDay.js';
 
 /**
  * Calculate dates between start and end (inclusive)
@@ -148,6 +148,68 @@ export const ItineraryService = {
   },
 
   /**
+   * List public itineraries for community discovery
+   */
+  async listPublic(
+    query: {
+      cityId?: string;
+      page: number;
+      pageSize: number;
+      sortBy: 'created_at' | 'copy_count';
+    },
+    accessToken: string
+  ): Promise<{ data: ItineraryResponse[]; total: number }> {
+    const supabase = getSupabaseClient(accessToken);
+    const { cityId, page, pageSize, sortBy } = query;
+
+    // Build query for public itineraries
+    let dbQuery = supabase
+      .from('itineraries')
+      .select(
+        `
+        *,
+        cities:city_id (name)
+      `,
+        { count: 'exact' }
+      )
+      .eq('visibility', 'public');
+
+    if (cityId) {
+      dbQuery = dbQuery.eq('city_id', cityId);
+    }
+
+    // Apply sorting and pagination
+    const offset = (page - 1) * pageSize;
+    dbQuery = dbQuery
+      .order(sortBy, { ascending: false })
+      .range(offset, offset + pageSize - 1);
+
+    const { data, error, count } = await dbQuery;
+
+    if (error) {
+      throw error;
+    }
+
+    const itineraries = (data || []).map(
+      (row: ItineraryRow & { cities: { name: string } | null }) => {
+        const response = toItineraryResponse(row);
+        response.cityName = row.cities?.name;
+        const start = new Date(row.start_date);
+        const end = new Date(row.end_date);
+        response.daysCount =
+          Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
+          1;
+        return response;
+      }
+    );
+
+    return {
+      data: itineraries,
+      total: count || 0,
+    };
+  },
+
+  /**
    * Get a single itinerary by ID with days and items
    */
   async getById(
@@ -198,17 +260,12 @@ export const ItineraryService = {
       )
       .map((day: ItineraryDayRow & { itinerary_items?: unknown[] }) => {
         const dayResponse = toItineraryDayResponse(day);
-        // Sort items by order_index
-        dayResponse.items = (day.itinerary_items || []).sort(
-          (a: { order_index: number }, b: { order_index: number }) =>
-            a.order_index - b.order_index
-        );
+        dayResponse.items = day.itinerary_items || [];
         return dayResponse;
       });
 
     return {
       ...response,
-      daysCount: days.length,
       days,
     };
   },
@@ -224,46 +281,17 @@ export const ItineraryService = {
   ): Promise<ItineraryResponse> {
     const supabase = getSupabaseClient(accessToken);
 
-    // Build update object (only include provided fields)
+    // Build update object with snake_case
     const updateData: Record<string, unknown> = {};
     if (input.title !== undefined) updateData.title = input.title;
     if (input.cityId !== undefined) updateData.city_id = input.cityId;
+    if (input.startDate !== undefined) updateData.start_date = input.startDate;
+    if (input.endDate !== undefined) updateData.end_date = input.endDate;
     if (input.visibility !== undefined)
       updateData.visibility = input.visibility;
     if (input.coverImageUrl !== undefined)
       updateData.cover_image_url = input.coverImageUrl;
-
-    // Handle date changes (would need to regenerate days)
-    if (input.startDate !== undefined || input.endDate !== undefined) {
-      // Get current itinerary to check dates
-      const { data: current, error: currentError } = await supabase
-        .from('itineraries')
-        .select('start_date, end_date')
-        .eq('id', itineraryId)
-        .eq('user_id', userId)
-        .single();
-
-      if (currentError) {
-        if (currentError.code === 'PGRST116') {
-          throw new NotFoundError('Itinerary not found');
-        }
-        throw currentError;
-      }
-
-      const newStartDate = input.startDate || current.start_date;
-      const newEndDate = input.endDate || current.end_date;
-
-      // Validate date range
-      if (new Date(newStartDate) > new Date(newEndDate)) {
-        throw new Error('End date must be on or after start date');
-      }
-
-      updateData.start_date = newStartDate;
-      updateData.end_date = newEndDate;
-
-      // TODO: Handle day regeneration when dates change
-      // This is complex and should preserve existing items where possible
-    }
+    updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase
       .from('itineraries')
@@ -305,107 +333,18 @@ export const ItineraryService = {
   },
 
   /**
-   * List public itineraries for discovery (community)
-   */
-  async listPublic(
-    query: {
-      cityId?: string;
-      page: number;
-      pageSize: number;
-      sortBy?: 'created_at' | 'copy_count';
-    },
-    accessToken: string
-  ): Promise<{
-    data: (ItineraryResponse & { authorName?: string; copyCount?: number })[];
-    total: number;
-  }> {
-    const supabase = getSupabaseClient(accessToken);
-    const { cityId, page, pageSize, sortBy = 'created_at' } = query;
-
-    // Build base query
-    let countQuery = supabase
-      .from('itineraries')
-      .select('*', { count: 'exact', head: true })
-      .eq('visibility', 'public');
-
-    let dataQuery = supabase
-      .from('itineraries')
-      .select(
-        `
-        *,
-        cities:city_id (name),
-        users:user_id (id, display_name)
-      `
-      )
-      .eq('visibility', 'public');
-
-    // Filter by city if provided
-    if (cityId) {
-      countQuery = countQuery.eq('city_id', cityId);
-      dataQuery = dataQuery.eq('city_id', cityId);
-    }
-
-    // Get total count
-    const { count, error: countError } = await countQuery;
-    if (countError) {
-      throw countError;
-    }
-
-    // Order by sort field
-    const orderField = sortBy === 'copy_count' ? 'copy_count' : 'created_at';
-    dataQuery = dataQuery.order(orderField, { ascending: false });
-
-    // Pagination
-    const offset = (page - 1) * pageSize;
-    dataQuery = dataQuery.range(offset, offset + pageSize - 1);
-
-    const { data, error } = await dataQuery;
-    if (error) {
-      throw error;
-    }
-
-    const itineraries = (data || []).map(
-      (
-        row: ItineraryRow & {
-          cities: { name: string } | null;
-          users: { id: string; display_name: string | null } | null;
-        }
-      ) => {
-        const response = toItineraryResponse(row);
-        response.cityName = row.cities?.name;
-        // Calculate days count
-        const start = new Date(row.start_date);
-        const end = new Date(row.end_date);
-        response.daysCount =
-          Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
-          1;
-        return {
-          ...response,
-          authorName: row.users?.display_name || '匿名用户',
-          copyCount: row.copy_count || 0,
-        };
-      }
-    );
-
-    return {
-      data: itineraries,
-      total: count || 0,
-    };
-  },
-
-  /**
-   * Copy an itinerary to the current user's collection
+   * Copy an itinerary to user's collection
    */
   async copy(
-    sourceItineraryId: string,
+    itineraryId: string,
     userId: string,
     newStartDate: string,
     accessToken: string
   ): Promise<ItineraryResponse> {
     const supabase = getSupabaseClient(accessToken);
 
-    // Get the source itinerary with all days and items
-    const { data: source, error: sourceError } = await supabase
+    // Get original itinerary with days and items
+    const { data: original, error: fetchError } = await supabase
       .from('itineraries')
       .select(
         `
@@ -416,46 +355,40 @@ export const ItineraryService = {
         )
       `
       )
-      .eq('id', sourceItineraryId)
+      .eq('id', itineraryId)
       .single();
 
-    if (sourceError) {
-      if (sourceError.code === 'PGRST116') {
-        throw new NotFoundError('Itinerary not found');
-      }
-      throw sourceError;
-    }
-
-    // Check if source is public or owned by user
-    if (source.user_id !== userId && source.visibility !== 'public') {
+    if (fetchError || !original) {
       throw new NotFoundError('Itinerary not found');
     }
 
-    // Calculate date offset
-    const originalStart = new Date(source.start_date);
-    const newStart = new Date(newStartDate);
-    const dayOffset = Math.round(
-      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    // Check if itinerary is public or belongs to user
+    if (original.user_id !== userId && original.visibility !== 'public') {
+      throw new NotFoundError('Itinerary not found');
+    }
 
-    // Calculate new end date
-    const originalEnd = new Date(source.end_date);
-    const newEnd = new Date(originalEnd);
-    newEnd.setDate(newEnd.getDate() + dayOffset);
-    const newEndDate = newEnd.toISOString().split('T')[0];
+    // Calculate new date range
+    const originalStart = new Date(original.start_date);
+    const originalEnd = new Date(original.end_date);
+    const daysDiff = Math.ceil(
+      (originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const newStart = new Date(newStartDate);
+    const newEnd = new Date(newStart);
+    newEnd.setDate(newEnd.getDate() + daysDiff);
 
     // Create new itinerary
     const { data: newItinerary, error: createError } = await supabase
       .from('itineraries')
       .insert({
         user_id: userId,
-        title: `${source.title} (副本)`,
-        city_id: source.city_id,
+        title: original.title,
+        city_id: original.city_id,
         start_date: newStartDate,
-        end_date: newEndDate,
+        end_date: newEnd.toISOString().split('T')[0],
         visibility: 'private',
-        cover_image_url: source.cover_image_url,
-        copied_from_id: sourceItineraryId,
+        cover_image_url: original.cover_image_url,
+        copied_from_id: itineraryId,
       })
       .select()
       .single();
@@ -464,98 +397,68 @@ export const ItineraryService = {
       throw createError;
     }
 
-    // Sort source days by day_number
-    const sortedDays = (source.itinerary_days || []).sort(
-      (a: ItineraryDayRow, b: ItineraryDayRow) => a.day_number - b.day_number
+    // Create days for new itinerary
+    const newDates = getDateRange(
+      newStartDate,
+      newEnd.toISOString().split('T')[0]
     );
+    const daysToInsert = newDates.map((date, index) => ({
+      itinerary_id: newItinerary.id,
+      day_number: index + 1,
+      date,
+    }));
 
-    // Create days with adjusted dates
-    const newDays = sortedDays.map(
-      (day: ItineraryDayRow & { itinerary_items?: unknown[] }) => {
-        const originalDayDate = new Date(day.date);
-        const newDayDate = new Date(originalDayDate);
-        newDayDate.setDate(newDayDate.getDate() + dayOffset);
-
-        return {
-          itinerary_id: newItinerary.id,
-          day_number: day.day_number,
-          date: newDayDate.toISOString().split('T')[0],
-          _sourceItems: day.itinerary_items || [],
-        };
-      }
-    );
-
-    // Insert new days
-    const daysToInsert = newDays.map(
-      ({ _sourceItems, ...day }: { _sourceItems: unknown[] }) => day
-    );
-
-    const { data: insertedDays, error: daysError } = await supabase
+    const { data: newDays, error: daysError } = await supabase
       .from('itinerary_days')
       .insert(daysToInsert)
       .select();
 
-    if (daysError) {
+    if (daysError || !newDays) {
       // Rollback
       await supabase.from('itineraries').delete().eq('id', newItinerary.id);
-      throw daysError;
+      throw daysError || new Error('Failed to create days');
     }
 
-    // Map old day IDs to new day IDs
-    const dayIdMap = new Map<number, string>();
-    insertedDays.forEach((day: { id: string; day_number: number }) => {
-      dayIdMap.set(day.day_number, day.id);
-    });
+    // Copy items from original days to new days
+    const originalDays = (original.itinerary_days || []).sort(
+      (a: ItineraryDayRow, b: ItineraryDayRow) => a.day_number - b.day_number
+    );
 
-    // Copy items for each day
-    const itemsToInsert: Record<string, unknown>[] = [];
-    newDays.forEach((day: { day_number: number; _sourceItems: unknown[] }) => {
-      const newDayId = dayIdMap.get(day.day_number);
-      if (!newDayId) return;
-
-      (day._sourceItems || []).forEach(
-        (item: {
+    for (let i = 0; i < originalDays.length && i < newDays.length; i++) {
+      const originalDay = originalDays[i] as ItineraryDayRow & {
+        itinerary_items?: Array<{
           poi_id: string | null;
+          order_index: number;
           start_time: string | null;
           end_time: string | null;
           notes: string | null;
-          transport_mode: string | null;
+          transport_mode: string;
           transport_minutes: number | null;
-          order_index: number;
-        }) => {
-          itemsToInsert.push({
-            day_id: newDayId,
-            poi_id: item.poi_id,
-            start_time: item.start_time,
-            end_time: item.end_time,
-            notes: item.notes,
-            transport_mode: item.transport_mode,
-            transport_minutes: item.transport_minutes,
-            order_index: item.order_index,
-          });
-        }
-      );
-    });
+        }>;
+      };
+      const newDay = newDays[i];
 
-    if (itemsToInsert.length > 0) {
-      const { error: itemsError } = await supabase
-        .from('itinerary_items')
-        .insert(itemsToInsert);
+      if (
+        originalDay.itinerary_items &&
+        originalDay.itinerary_items.length > 0
+      ) {
+        const itemsToInsert = originalDay.itinerary_items.map((item) => ({
+          day_id: newDay.id,
+          poi_id: item.poi_id,
+          order_index: item.order_index,
+          start_time: item.start_time,
+          end_time: item.end_time,
+          notes: item.notes,
+          transport_mode: item.transport_mode,
+          transport_minutes: item.transport_minutes,
+        }));
 
-      if (itemsError) {
-        // Rollback
-        await supabase.from('itineraries').delete().eq('id', newItinerary.id);
-        throw itemsError;
+        await supabase.from('itinerary_items').insert(itemsToInsert);
       }
     }
 
-    // Increment copy count on source itinerary
-    await supabase.rpc('increment_copy_count', {
-      itinerary_id: sourceItineraryId,
-    });
-
     const response = toItineraryResponse(newItinerary as ItineraryRow);
-    response.daysCount = sortedDays.length;
+    response.daysCount = newDates.length;
 
     return response;
   },

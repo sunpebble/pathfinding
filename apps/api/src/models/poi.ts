@@ -1,4 +1,4 @@
-import { z } from 'npm:zod';
+import { z } from 'zod';
 
 /**
  * POI category enum schema
@@ -98,9 +98,6 @@ export const PoiSearchQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
 
-/**
- * TypeScript types inferred from schemas
- */
-export type CreatePoiInput = z.infer<typeof CreatePoiSchema>;
-export type UpdatePoiInput = z.infer<typeof UpdatePoiSchema>;
+// Infer types from schemas
+export type PoiCategory = z.infer<typeof PoiCategorySchema>;
 export type PoiSearchQuery = z.infer<typeof PoiSearchQuerySchema>;

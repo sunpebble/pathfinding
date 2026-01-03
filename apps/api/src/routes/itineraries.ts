@@ -1,12 +1,12 @@
+import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { zValidator } from 'npm:@hono/zod-validator';
-import { z } from 'npm:zod';
+import { z } from 'zod';
 import {
   CreateItinerarySchema,
   ItineraryListQuerySchema,
   UpdateItinerarySchema,
-} from '../models/itinerary.ts';
-import { ItineraryService } from '../services/itineraryService.ts';
+} from '../models/itinerary.js';
+import { ItineraryService } from '../services/itineraryService.js';
 
 interface Variables {
   userId: string;

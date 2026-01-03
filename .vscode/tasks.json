@@ -101,10 +101,10 @@
     {
       "label": "API: Dev",
       "type": "shell",
-      "command": "deno",
-      "args": ["task", "dev"],
+      "command": "pnpm",
+      "args": ["--filter", "@pathfinding/api", "dev"],
       "options": {
-        "cwd": "${workspaceFolder}/apps/api"
+        "cwd": "${workspaceFolder}"
       },
       "isBackground": true,
       "problemMatcher": {
@@ -117,8 +117,8 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "Watcher",
-          "endsPattern": "Listening on"
+          "beginsPattern": "tsx watch",
+          "endsPattern": "API server running"
         }
       },
       "presentation": {
@@ -128,14 +128,14 @@
       }
     },
     {
-      "label": "API: Test",
+      "label": "API: TypeCheck",
       "type": "shell",
-      "command": "deno",
-      "args": ["task", "test"],
+      "command": "pnpm",
+      "args": ["--filter", "@pathfinding/api", "typecheck"],
       "options": {
-        "cwd": "${workspaceFolder}/apps/api"
+        "cwd": "${workspaceFolder}"
       },
-      "problemMatcher": [],
+      "problemMatcher": ["$tsc"],
       "presentation": {
         "reveal": "always",
         "panel": "shared"

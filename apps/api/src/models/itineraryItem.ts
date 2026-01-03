@@ -1,4 +1,4 @@
-import { z } from 'npm:zod';
+import { z } from 'zod';
 
 /**
  * Transport mode enum schema
@@ -97,9 +97,7 @@ export const ReorderItemsSchema = z.object({
     .min(1, 'At least one item ID required'),
 });
 
-/**
- * TypeScript types inferred from schemas
- */
+// Infer types from schemas
 export type CreateItineraryItemInput = z.infer<
   typeof CreateItineraryItemSchema
 >;

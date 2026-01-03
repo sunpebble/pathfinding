@@ -1,12 +1,14 @@
+import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { authMiddleware } from './middleware/auth.ts';
-import { errorHandler } from './middleware/errorHandler.ts';
-import { tracingMiddleware } from './middleware/tracing.ts';
-import { itinerariesRoutes } from './routes/itineraries.ts';
-import { itineraryItemsRoutes } from './routes/itinerary-items.ts';
-import { poisRoutes } from './routes/pois.ts';
+import { authMiddleware } from './middleware/auth.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { tracingMiddleware } from './middleware/tracing.js';
+import { itinerariesRoutes } from './routes/itineraries.js';
+import { itineraryItemsRoutes } from './routes/itinerary-items.js';
+import { poisRoutes } from './routes/pois.js';
+import { remindersRoutes } from './routes/reminders.js';
 
 const app = new Hono();
 
@@ -39,9 +41,9 @@ api.use('*', authMiddleware);
 api.route('/itineraries', itinerariesRoutes);
 api.route('/itineraries', itineraryItemsRoutes); // Nested items routes
 api.route('/pois', poisRoutes);
+api.route('/', remindersRoutes);
 
-// Mount itinerary items under itineraries
-// Nested routes: /itineraries/:id/days/:dayId/items
+// Mount API v1
 app.route('/v1', api);
 
 // 404 handler
@@ -50,8 +52,11 @@ app.notFound((c) => {
 });
 
 // Start server
-const port = Number.parseInt(Deno.env.get('PORT') || '8000');
+const port = Number.parseInt(process.env.PORT || '8000');
 // eslint-disable-next-line no-console -- Server startup log is intentional
 console.log(`🚀 API server running at http://localhost:${port}`);
 
-Deno.serve({ port }, app.fetch);
+serve({
+  fetch: app.fetch,
+  port,
+});

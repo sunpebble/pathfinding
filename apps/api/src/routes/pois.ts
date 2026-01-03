@@ -1,14 +1,15 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'npm:zod';
-import { authMiddleware } from '../middleware/auth.ts';
-import { PoiCategorySchema, PoiSearchQuerySchema } from '../models/poi.ts';
-import { PoiService } from '../services/poiService.ts';
+import { z } from 'zod';
+import { PoiCategorySchema, PoiSearchQuerySchema } from '../models/poi.js';
+import { PoiService } from '../services/poiService.js';
 
-export const poisRoutes = new Hono();
+interface Variables {
+  userId: string;
+  accessToken: string;
+}
 
-// Apply auth middleware to all routes
-poisRoutes.use('/*', authMiddleware);
+export const poisRoutes = new Hono<{ Variables: Variables }>();
 
 /**
  * Search POIs by keyword and filters
@@ -19,7 +20,7 @@ poisRoutes.get(
   zValidator('query', PoiSearchQuerySchema),
   async (c) => {
     const query = c.req.valid('query');
-    const accessToken = c.get('accessToken') as string;
+    const accessToken = c.get('accessToken');
 
     const result = await PoiService.search(query, accessToken);
     return c.json(result);
@@ -42,7 +43,7 @@ poisRoutes.get(
   ),
   async (c) => {
     const { cityId, category, limit } = c.req.valid('query');
-    const accessToken = c.get('accessToken') as string;
+    const accessToken = c.get('accessToken');
 
     const data = await PoiService.getRecommendations(
       cityId,
@@ -72,7 +73,7 @@ poisRoutes.get(
   ),
   async (c) => {
     const { lat, lng, radiusKm, category, limit } = c.req.valid('query');
-    const accessToken = c.get('accessToken') as string;
+    const accessToken = c.get('accessToken');
 
     const data = await PoiService.getNearby(
       lat,
@@ -92,7 +93,7 @@ poisRoutes.get(
  */
 poisRoutes.get('/:id', async (c) => {
   const poiId = c.req.param('id');
-  const accessToken = c.get('accessToken') as string;
+  const accessToken = c.get('accessToken');
 
   const data = await PoiService.getById(poiId, accessToken);
   return c.json({ data });
