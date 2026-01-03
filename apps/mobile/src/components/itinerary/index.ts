@@ -1,5 +1,15 @@
 export { CityPicker } from './CityPicker';
+export { CopyDatePicker } from './CopyDatePicker';
 export { DateRangePicker } from './DateRangePicker';
 export { DaySection } from './DaySection';
+export { DraggableItem } from './DraggableItem';
+export { EditItemModal } from './EditItemModal';
 export { ItineraryCard } from './ItineraryCard';
+export { ItineraryItemCard } from './ItineraryItemCard';
+export { ReminderPicker, ReminderToggle } from './ReminderPicker';
+export { SwipeableItemCard } from './SwipeableItemCard';
+export { TimeConflictAlert } from './TimeConflictAlert';
 export { TimelineView } from './TimelineView';
+export { TimeSlotPicker } from './TimeSlotPicker';
+export { TransportBadge, TransportIndicator } from './TransportBadge';
+export { TransportModePicker } from './TransportModePicker';

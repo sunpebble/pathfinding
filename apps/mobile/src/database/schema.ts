@@ -5,7 +5,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
  * Based on data-model.md entities
  */
 export const schema = appSchema({
-  version: 1,
+  version: 2,
   tables: [
     // Itineraries table
     tableSchema({
@@ -42,6 +42,12 @@ export const schema = appSchema({
     tableSchema({
       name: 'itinerary_items',
       columns: [
+        {
+          name: 'remote_id',
+          type: 'string',
+          isOptional: true,
+          isIndexed: true,
+        },
         { name: 'server_id', type: 'string', isIndexed: true },
         { name: 'day_id', type: 'string', isIndexed: true },
         { name: 'poi_id', type: 'string', isOptional: true },
@@ -51,6 +57,7 @@ export const schema = appSchema({
         { name: 'notes', type: 'string', isOptional: true },
         { name: 'transport_mode', type: 'string' },
         { name: 'transport_minutes', type: 'number', isOptional: true },
+        { name: 'sync_status', type: 'string' }, // 'synced', 'pending', 'error'
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],

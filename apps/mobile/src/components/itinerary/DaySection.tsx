@@ -1,8 +1,9 @@
 import type { ItineraryDay, ItineraryItem } from '@pathfinding/types';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDate } from '@pathfinding/utils';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SwipeableItemCard } from './SwipeableItemCard';
 
 interface DaySectionProps {
   day: ItineraryDay;
@@ -10,12 +11,14 @@ interface DaySectionProps {
   items: ItineraryItem[];
   onAddItem?: () => void;
   onItemPress?: (item: ItineraryItem) => void;
+  onItemDelete?: (item: ItineraryItem) => void;
+  onItemsReorder?: (itemIds: string[]) => void;
   isEditing?: boolean;
   isLastDay?: boolean;
 }
 
 /**
- * Day section component for timeline view
+ * Day section component for timeline view with swipe-to-delete support
  */
 export function DaySection({
   day,
@@ -23,11 +26,42 @@ export function DaySection({
   items,
   onAddItem,
   onItemPress,
+  onItemDelete,
+  onItemsReorder: _onItemsReorder,
   isEditing = false,
   isLastDay = false,
 }: DaySectionProps) {
   const dayDate = new Date(day.date);
   const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+  // Handle delete with confirmation
+  const handleDeleteItem = useCallback(
+    (item: ItineraryItem) => {
+      const poiName = (item.poi as { name?: string })?.name || '此项目';
+      Alert.alert(
+        '确认删除',
+        `确定要删除 "${poiName}" 吗？`,
+        [
+          { text: '取消', style: 'cancel' },
+          {
+            text: '删除',
+            style: 'destructive',
+            onPress: () => onItemDelete?.(item),
+          },
+        ],
+        { cancelable: true }
+      );
+    },
+    [onItemDelete]
+  );
+
+  // Handle edit (opens modal via parent)
+  const handleEditItem = useCallback(
+    (item: ItineraryItem) => {
+      onItemPress?.(item);
+    },
+    [onItemPress]
+  );
 
   return (
     <View style={styles.container}>
@@ -60,36 +94,42 @@ export function DaySection({
             </View>
           ) : (
             <>
-              {items.map((item, _index) => (
-                <TouchableOpacity
+              {items.map((item) => (
+                <SwipeableItemCard
                   key={item.id}
-                  style={styles.itemCard}
-                  onPress={() => onItemPress?.(item)}
-                  disabled={!onItemPress}
+                  onDelete={() => handleDeleteItem(item)}
+                  onEdit={() => handleEditItem(item)}
+                  disabled={!isEditing}
                 >
-                  <View style={styles.itemDot} />
-                  <View style={styles.itemContent}>
-                    <View style={styles.itemHeader}>
-                      {item.startTime && (
-                        <Text style={styles.itemTime}>
-                          {item.startTime}
-                          {item.endTime && ` - ${item.endTime}`}
+                  <TouchableOpacity
+                    style={styles.itemCard}
+                    onPress={() => onItemPress?.(item)}
+                    disabled={!onItemPress}
+                  >
+                    <View style={styles.itemDot} />
+                    <View style={styles.itemContent}>
+                      <View style={styles.itemHeader}>
+                        {item.startTime && (
+                          <Text style={styles.itemTime}>
+                            {item.startTime}
+                            {item.endTime && ` - ${item.endTime}`}
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={styles.itemName} numberOfLines={1}>
+                        {(item.poi as { name: string })?.name || '未命名景点'}
+                      </Text>
+                      {item.notes && (
+                        <Text style={styles.itemNotes} numberOfLines={2}>
+                          {item.notes}
                         </Text>
                       )}
                     </View>
-                    <Text style={styles.itemName} numberOfLines={1}>
-                      {(item.poi as { name: string })?.name || '未命名景点'}
-                    </Text>
-                    {item.notes && (
-                      <Text style={styles.itemNotes} numberOfLines={2}>
-                        {item.notes}
-                      </Text>
+                    {isEditing && (
+                      <Ionicons name="reorder-three" size={24} color="#CCC" />
                     )}
-                  </View>
-                  {isEditing && (
-                    <Ionicons name="reorder-three" size={24} color="#CCC" />
-                  )}
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </SwipeableItemCard>
               ))}
 
               {/* Add more button */}

@@ -1,7 +1,7 @@
-import type { Poi } from '@pathfinding/types';
+import type { Poi, PoiCategory } from '@pathfinding/types';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,141 +11,202 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { CategoryFilter, POICard } from '@/components/poi';
+import { poiService } from '@/services/poiService';
+import { useItineraryStore } from '@/store/itineraryStore';
 
-// Sample POIs for development (will be replaced with API call)
-const SAMPLE_POIS: Poi[] = [
-  {
-    id: '1',
-    cityId: '1',
-    name: '故宫博物院',
-    category: 'attraction',
-    latitude: 39.9169,
-    longitude: 116.3907,
-    address: '北京市东城区景山前街4号',
-    rating: 4.8,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    cityId: '1',
-    name: '天安门广场',
-    category: 'attraction',
-    latitude: 39.9054,
-    longitude: 116.3976,
-    address: '北京市东城区长安街',
-    rating: 4.7,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    cityId: '1',
-    name: '南锣鼓巷',
-    category: 'shopping',
-    latitude: 39.9375,
-    longitude: 116.4034,
-    address: '北京市东城区南锣鼓巷',
-    rating: 4.3,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+type TabMode = 'search' | 'recommend';
 
 /**
- * Add POI to itinerary screen
+ * Add POI to itinerary screen - with search and recommendations
  */
 export default function AddPoiScreen() {
-  const { dayId: _dayId, itineraryId: _itineraryId } = useLocalSearchParams<{
+  const { dayId, itineraryId } = useLocalSearchParams<{
     dayId: string;
     itineraryId: string;
   }>();
 
+  const { currentItinerary } = useItineraryStore();
+  const cityId = currentItinerary?.cityId;
+
+  const [activeTab, setActiveTab] = useState<TabMode>('recommend');
   const [searchQuery, setSearchQuery] = useState('');
-  const [_isLoading, _setIsLoading] = useState(false);
-
-  const filteredPois = SAMPLE_POIS.filter((poi) =>
-    poi.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const [selectedCategory, setSelectedCategory] = useState<PoiCategory | 'all'>(
+    'all'
   );
+  const [pois, setPois] = useState<Poi[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelectPoi = useCallback((_poi: Poi) => {
-    // TODO: Add POI to itinerary day via API
-    // Implementation: Call itineraryService.addPoiToDay(poi.id, dayId)
-    router.back();
-  }, []);
+  // Load recommendations on mount
+  useEffect(() => {
+    if (!cityId) return;
+
+    const loadRecommendations = async () => {
+      setIsLoading(true);
+      try {
+        const category =
+          selectedCategory === 'all' ? undefined : selectedCategory;
+        const data = await poiService.getRecommendations(cityId, category, 30);
+        setPois(data);
+      } catch {
+        console.error('Failed to load recommendations');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (activeTab === 'recommend') {
+      loadRecommendations();
+    }
+  }, [cityId, activeTab, selectedCategory]);
+
+  // Search POIs
+  const handleSearch = useCallback(async () => {
+    if (!cityId || !searchQuery.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const category =
+        selectedCategory === 'all' ? undefined : selectedCategory;
+      const result = await poiService.search({
+        cityId,
+        query: searchQuery.trim(),
+        category,
+        pageSize: 30,
+      });
+      setPois(result.data);
+    } catch {
+      console.error('Failed to search POIs');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cityId, searchQuery, selectedCategory]);
+
+  const handleSelectPoi = useCallback(
+    (poi: Poi) => {
+      router.push({
+        pathname: '/(tabs)/itinerary/add-item',
+        params: {
+          itineraryId,
+          dayId,
+          poiId: poi.id,
+          poiName: poi.name,
+          poiCategory: poi.category,
+        },
+      });
+    },
+    [itineraryId, dayId]
+  );
 
   const renderPoiItem = useCallback(
     ({ item }: { item: Poi }) => (
-      <TouchableOpacity
-        style={styles.poiItem}
+      <POICard
+        poi={item}
         onPress={() => handleSelectPoi(item)}
-      >
-        <View style={styles.poiIcon}>
-          <Ionicons
-            name={
-              item.category === 'attraction'
-                ? 'camera'
-                : item.category === 'restaurant'
-                  ? 'restaurant'
-                  : item.category === 'shopping'
-                    ? 'bag'
-                    : 'location'
-            }
-            size={24}
-            color="#007AFF"
-          />
-        </View>
-        <View style={styles.poiInfo}>
-          <Text style={styles.poiName}>{item.name}</Text>
-          <Text style={styles.poiAddress} numberOfLines={1}>
-            {item.address}
-          </Text>
-          {item.rating && (
-            <View style={styles.ratingRow}>
-              <Ionicons name="star" size={14} color="#FFB800" />
-              <Text style={styles.ratingText}>{item.rating}</Text>
-            </View>
-          )}
-        </View>
-        <Ionicons name="add-circle" size={24} color="#007AFF" />
-      </TouchableOpacity>
+        onAdd={() => handleSelectPoi(item)}
+        showAddButton
+      />
     ),
     [handleSelectPoi]
   );
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons
+        name={activeTab === 'search' ? 'search-outline' : 'star-outline'}
+        size={48}
+        color="#CCC"
+      />
+      <Text style={styles.emptyText}>
+        {activeTab === 'search'
+          ? searchQuery
+            ? '未找到匹配的地点'
+            : '输入关键词搜索'
+          : '暂无推荐'}
+      </Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="搜索景点、餐厅、购物..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="#999" />
-          </TouchableOpacity>
-        )}
+      {/* Tab switcher */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'recommend' && styles.tabActive]}
+          onPress={() => setActiveTab('recommend')}
+        >
+          <Ionicons
+            name="star"
+            size={18}
+            color={activeTab === 'recommend' ? '#007AFF' : '#999'}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'recommend' && styles.tabTextActive,
+            ]}
+          >
+            推荐
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'search' && styles.tabActive]}
+          onPress={() => setActiveTab('search')}
+        >
+          <Ionicons
+            name="search"
+            size={18}
+            color={activeTab === 'search' ? '#007AFF' : '#999'}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'search' && styles.tabTextActive,
+            ]}
+          >
+            搜索
+          </Text>
+        </TouchableOpacity>
       </View>
 
+      {/* Search input (only in search tab) */}
+      {activeTab === 'search' && (
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#999" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="搜索景点、餐厅、购物..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color="#999" />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* Category filter */}
+      <CategoryFilter
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+      />
+
+      {/* POI list */}
       {isLoading ? (
-        <ActivityIndicator style={styles.loader} size="large" />
+        <ActivityIndicator style={styles.loader} size="large" color="#007AFF" />
       ) : (
         <FlatList
-          data={filteredPois}
+          data={pois}
           keyExtractor={(item) => item.id}
           renderItem={renderPoiItem}
           contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={48} color="#CCC" />
-              <Text style={styles.emptyText}>未找到匹配的地点</Text>
-            </View>
-          }
+          ListEmptyComponent={renderEmptyState}
         />
       )}
     </View>
@@ -157,10 +218,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 6,
+  },
+  tabActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#007AFF',
+  },
+  tabText: {
+    fontSize: 15,
+    color: '#999',
+  },
+  tabTextActive: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     margin: 16,
+    marginBottom: 0,
     padding: 12,
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -176,50 +264,8 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   listContent: {
-    paddingHorizontal: 16,
-    flexGrow: 1,
-  },
-  poiItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  poiIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F0F7FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  poiInfo: {
-    flex: 1,
-    marginLeft: 12,
-    marginRight: 8,
-  },
-  poiName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  poiAddress: {
-    marginTop: 2,
-    fontSize: 13,
-    color: '#999',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  ratingText: {
-    marginLeft: 4,
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '500',
+    flexGrow: 1,
   },
   emptyContainer: {
     flex: 1,

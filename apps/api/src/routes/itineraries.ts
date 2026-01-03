@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from 'npm:@hono/zod-validator';
+import { z } from 'npm:zod';
 import {
   CreateItinerarySchema,
   ItineraryListQuerySchema,
@@ -13,6 +14,46 @@ interface Variables {
 }
 
 export const itinerariesRoutes = new Hono<{ Variables: Variables }>();
+
+/**
+ * GET /itineraries/public - List public itineraries for community discovery
+ * Must be defined BEFORE /:id to avoid route conflicts
+ */
+itinerariesRoutes.get(
+  '/public',
+  zValidator(
+    'query',
+    z.object({
+      cityId: z.string().uuid().optional(),
+      page: z.coerce.number().int().min(1).optional().default(1),
+      pageSize: z.coerce.number().int().min(1).max(50).optional().default(20),
+      sortBy: z
+        .enum(['created_at', 'copy_count'])
+        .optional()
+        .default('created_at'),
+    })
+  ),
+  async (c) => {
+    const accessToken = c.get('accessToken');
+    const query = c.req.valid('query');
+
+    const { data, total } = await ItineraryService.listPublic(
+      query,
+      accessToken
+    );
+
+    return c.json({
+      success: true,
+      data,
+      meta: {
+        page: query.page,
+        pageSize: query.pageSize,
+        totalCount: total,
+        totalPages: Math.ceil(total / query.pageSize),
+      },
+    });
+  }
+);
 
 /**
  * GET /itineraries - List user's itineraries with pagination
@@ -129,14 +170,38 @@ itinerariesRoutes.delete('/:id', async (c) => {
   });
 });
 
-// Copy itinerary endpoint (US4)
-itinerariesRoutes.post('/:id/copy', async (c) => {
-  // TODO: T102 - Implement copy itinerary
-  return c.json({ error: 'Not implemented' }, 501);
-});
+/**
+ * POST /itineraries/:id/copy - Copy an itinerary to user's collection
+ */
+itinerariesRoutes.post(
+  '/:id/copy',
+  zValidator(
+    'json',
+    z.object({
+      startDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+    })
+  ),
+  async (c) => {
+    const userId = c.get('userId');
+    const accessToken = c.get('accessToken');
+    const itineraryId = c.req.param('id');
+    const { startDate } = c.req.valid('json');
 
-// Public itineraries for community (US4)
-itinerariesRoutes.get('/public', async (c) => {
-  // TODO: T103 - Implement list public itineraries
-  return c.json({ data: [], pagination: { total: 0, limit: 20, offset: 0 } });
-});
+    const newItinerary = await ItineraryService.copy(
+      itineraryId,
+      userId,
+      startDate,
+      accessToken
+    );
+
+    return c.json(
+      {
+        success: true,
+        data: newItinerary,
+      },
+      201
+    );
+  }
+);

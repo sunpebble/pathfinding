@@ -5,6 +5,7 @@ import { authMiddleware } from './middleware/auth.ts';
 import { errorHandler } from './middleware/errorHandler.ts';
 import { tracingMiddleware } from './middleware/tracing.ts';
 import { itinerariesRoutes } from './routes/itineraries.ts';
+import { itineraryItemsRoutes } from './routes/itinerary-items.ts';
 import { poisRoutes } from './routes/pois.ts';
 
 const app = new Hono();
@@ -36,6 +37,7 @@ api.use('*', authMiddleware);
 
 // Mount route modules
 api.route('/itineraries', itinerariesRoutes);
+api.route('/itineraries', itineraryItemsRoutes); // Nested items routes
 api.route('/pois', poisRoutes);
 
 // Mount itinerary items under itineraries

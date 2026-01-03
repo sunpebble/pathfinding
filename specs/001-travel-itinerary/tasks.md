@@ -48,7 +48,7 @@
 
 ### Database & Backend Foundation
 
-- [ ] T012 Create Supabase project and configure environment variables in .env files
+- [X] T012 Create Supabase project and configure environment variables in .env files
 - [X] T013 Create database migration for users table extension in `supabase/migrations/001_create_users.sql`
 - [X] T014 Create database migration for cities reference table in `supabase/migrations/002_create_cities.sql`
 - [X] T015 Create database migration for POIs table in `supabase/migrations/003_create_pois.sql`
@@ -149,33 +149,33 @@
 
 #### Backend - US2
 
-- [ ] T068 [P] [US2] Define ItineraryItem model with Zod in `apps/api/src/models/itineraryItem.ts`
-- [ ] T069 [P] [US2] Define POI model with Zod in `apps/api/src/models/poi.ts`
-- [ ] T070 [US2] Implement POIService.search() with keyword matching in `apps/api/src/services/poiService.ts`
-- [ ] T071 [US2] Implement ItemService.create() with conflict detection in `apps/api/src/services/itineraryItemService.ts`
-- [ ] T072 [US2] Implement ItemService.list() for day items in `apps/api/src/services/itineraryItemService.ts`
-- [ ] T073 [US2] Create GET /pois/search endpoint in `apps/api/src/routes/pois.ts`
-- [ ] T074 [US2] Create POST /itineraries/:id/days/:dayId/items endpoint in `apps/api/src/routes/itinerary-items.ts`
-- [ ] T075 [US2] Create GET /itineraries/:id/days/:dayId/items endpoint in `apps/api/src/routes/itinerary-items.ts`
+- [X] T068 [P] [US2] Define ItineraryItem model with Zod in `apps/api/src/models/itineraryItem.ts`
+- [X] T069 [P] [US2] Define POI model with Zod in `apps/api/src/models/poi.ts`
+- [X] T070 [US2] Implement POIService.search() with keyword matching in `apps/api/src/services/poiService.ts`
+- [X] T071 [US2] Implement ItemService.create() with conflict detection in `apps/api/src/services/itineraryItemService.ts`
+- [X] T072 [US2] Implement ItemService.list() for day items in `apps/api/src/services/itineraryItemService.ts`
+- [X] T073 [US2] Create GET /pois/search endpoint in `apps/api/src/routes/pois.ts`
+- [X] T074 [US2] Create POST /itineraries/:id/days/:dayId/items endpoint in `apps/api/src/routes/itinerary-items.ts`
+- [X] T075 [US2] Create GET /itineraries/:id/days/:dayId/items endpoint in `apps/api/src/routes/itinerary-items.ts`
 
 #### Mobile - US2
 
-- [ ] T076 [P] [US2] Create POICard component with rating display in `apps/mobile/src/components/poi/POICard.tsx`
-- [ ] T077 [P] [US2] Create RatingStars component in `apps/mobile/src/components/poi/RatingStars.tsx`
-- [ ] T078 [P] [US2] Create TimeSlotPicker component in `apps/mobile/src/components/itinerary/TimeSlotPicker.tsx`
-- [ ] T079 [P] [US2] Create ItineraryItemCard component in `apps/mobile/src/components/itinerary/ItineraryItemCard.tsx`
-- [ ] T080 [P] [US2] Create TimeConflictAlert component in `apps/mobile/src/components/itinerary/TimeConflictAlert.tsx`
-- [ ] T081 [US2] Implement poiService.search() API call in `apps/mobile/src/services/poiService.ts`
-- [ ] T082 [US2] Implement itineraryService.addItem() with conflict check in `apps/mobile/src/services/itineraryService.ts`
-- [ ] T083 [US2] Create POISearchScreen with search input in `apps/mobile/src/screens/poi/POISearchScreen.tsx`
-- [ ] T084 [US2] Create AddItemScreen with time/notes form in `apps/mobile/src/screens/itinerary/AddItemScreen.tsx`
-- [ ] T085 [US2] Update TimelineView to display ItineraryItemCards in `apps/mobile/src/components/itinerary/TimelineView.tsx`
-- [ ] T086 [US2] Implement useItinerary hook with item management in `apps/mobile/src/hooks/useItinerary.ts`
+- [X] T076 [P] [US2] Create POICard component with rating display in `apps/mobile/src/components/poi/POICard.tsx`
+- [X] T077 [P] [US2] Create RatingStars component in `apps/mobile/src/components/poi/RatingStars.tsx`
+- [X] T078 [P] [US2] Create TimeSlotPicker component in `apps/mobile/src/components/itinerary/TimeSlotPicker.tsx`
+- [X] T079 [P] [US2] Create ItineraryItemCard component in `apps/mobile/src/components/itinerary/ItineraryItemCard.tsx`
+- [X] T080 [P] [US2] Create TimeConflictAlert component in `apps/mobile/src/components/itinerary/TimeConflictAlert.tsx`
+- [X] T081 [US2] Implement poiService.search() API call in `apps/mobile/src/services/poiService.ts`
+- [X] T082 [US2] Implement itineraryService.addItem() with conflict check in `apps/mobile/src/services/itineraryService.ts`
+- [X] T083 [US2] Create POISearchScreen with search input in `apps/mobile/src/screens/poi/POISearchScreen.tsx`
+- [X] T084 [US2] Create AddItemScreen with time/notes form in `apps/mobile/src/screens/itinerary/AddItemScreen.tsx`
+- [X] T085 [US2] Update TimelineView to display ItineraryItemCards in `apps/mobile/src/components/itinerary/TimelineView.tsx`
+- [X] T086 [US2] Implement useItinerary hook with item management in `apps/mobile/src/hooks/useItinerary.ts`
 
 #### Offline Support - US2
 
-- [ ] T087 [US2] Implement offline item creation in WatermelonDB in `apps/mobile/src/database/actions/itemActions.ts`
-- [ ] T088 [US2] Cache POI search results locally in `apps/mobile/src/database/actions/poiActions.ts`
+- [X] T087 [US2] Implement offline item creation in WatermelonDB in `apps/mobile/src/database/actions/itemActions.ts`
+- [X] T088 [US2] Cache POI search results locally in `apps/mobile/src/database/actions/itemActions.ts`
 
 **Checkpoint**: User Story 2 complete - users can add POIs to timeline with conflict warnings
 
@@ -191,20 +191,20 @@
 
 #### Backend - US3
 
-- [ ] T089 [US3] Implement RecommendationService.getByRating() in `apps/api/src/services/recommendationService.ts`
-- [ ] T090 [US3] Implement RecommendationService.getNearby() with geo query in `apps/api/src/services/recommendationService.ts`
-- [ ] T091 [US3] Create GET /pois/recommend endpoint with category filter in `apps/api/src/routes/pois.ts`
-- [ ] T092 [US3] Create GET /pois/nearby endpoint with lat/lng params in `apps/api/src/routes/pois.ts`
+- [X] T089 [US3] Implement RecommendationService.getByRating() in `apps/api/src/services/poiService.ts` (already in poiService.getRecommendations)
+- [X] T090 [US3] Implement RecommendationService.getNearby() with geo query in `apps/api/src/services/poiService.ts` (already in poiService.getNearby)
+- [X] T091 [US3] Create GET /pois/recommend endpoint with category filter in `apps/api/src/routes/pois.ts`
+- [X] T092 [US3] Create GET /pois/nearby endpoint with lat/lng params in `apps/api/src/routes/pois.ts`
 
 #### Mobile - US3
 
-- [ ] T093 [P] [US3] Create CategoryFilter component (tabs) in `apps/mobile/src/components/poi/CategoryFilter.tsx`
-- [ ] T094 [P] [US3] Create SortSelector component in `apps/mobile/src/components/poi/SortSelector.tsx`
-- [ ] T095 [US3] Implement poiService.getRecommendations() API call in `apps/mobile/src/services/poiService.ts`
-- [ ] T096 [US3] Implement poiService.getNearby() with GPS in `apps/mobile/src/services/poiService.ts`
-- [ ] T097 [US3] Create POIRecommendScreen with category tabs in `apps/mobile/src/screens/poi/POIRecommendScreen.tsx`
-- [ ] T098 [US3] Implement location permission request flow in `apps/mobile/src/hooks/useLocation.ts`
-- [ ] T099 [US3] Add "推荐" tab to AddItemScreen navigation
+- [X] T093 [P] [US3] Create CategoryFilter component (tabs) in `apps/mobile/src/components/poi/CategoryFilter.tsx`
+- [X] T094 [P] [US3] Create SortSelector component in `apps/mobile/src/components/poi/SortSelector.tsx`
+- [X] T095 [US3] Implement poiService.getRecommendations() API call in `apps/mobile/src/services/poiService.ts`
+- [X] T096 [US3] Implement poiService.getNearby() with GPS in `apps/mobile/src/services/poiService.ts`
+- [X] T097 [US3] Create POIRecommendScreen with category tabs in `apps/mobile/src/screens/poi/POIRecommendScreen.tsx`
+- [X] T098 [US3] Implement location permission request flow in `apps/mobile/src/hooks/useLocation.ts`
+- [X] T099 [US3] Add "推荐" tab to add-poi.tsx navigation (integrated search + recommend tabs)
 
 **Checkpoint**: User Story 3 complete - users can browse recommendations by rating
 
@@ -220,19 +220,19 @@
 
 #### Backend - US4
 
-- [ ] T100 [US4] Implement ItineraryService.copy() with date adjustment in `apps/api/src/services/itineraryService.ts`
-- [ ] T101 [US4] Implement ItineraryService.listPublic() for discovery in `apps/api/src/services/itineraryService.ts`
-- [ ] T102 [US4] Create POST /itineraries/:id/copy endpoint in `apps/api/src/routes/itineraries.ts`
-- [ ] T103 [US4] Create GET /itineraries/public endpoint for community in `apps/api/src/routes/itineraries.ts`
+- [X] T100 [US4] Implement ItineraryService.copy() with date adjustment in `apps/api/src/services/itineraryService.ts`
+- [X] T101 [US4] Implement ItineraryService.listPublic() for discovery in `apps/api/src/services/itineraryService.ts`
+- [X] T102 [US4] Create POST /itineraries/:id/copy endpoint in `apps/api/src/routes/itineraries.ts`
+- [X] T103 [US4] Create GET /itineraries/public endpoint for community in `apps/api/src/routes/itineraries.ts`
 
 #### Mobile - US4
 
-- [ ] T104 [P] [US4] Create CommunityItineraryCard component in `apps/mobile/src/components/community/CommunityItineraryCard.tsx`
-- [ ] T105 [P] [US4] Create CopyDatePicker modal component in `apps/mobile/src/components/itinerary/CopyDatePicker.tsx`
-- [ ] T106 [US4] Implement itineraryService.copy() API call in `apps/mobile/src/services/itineraryService.ts`
-- [ ] T107 [US4] Implement itineraryService.listPublic() API call in `apps/mobile/src/services/itineraryService.ts`
-- [ ] T108 [US4] Create CommunityScreen with public itineraries in `apps/mobile/src/screens/community/CommunityScreen.tsx`
-- [ ] T109 [US4] Add copy flow to ItineraryDetailScreen (public view)
+- [X] T104 [P] [US4] Create CommunityItineraryCard component in `apps/mobile/src/components/community/CommunityItineraryCard.tsx`
+- [X] T105 [P] [US4] Create CopyDatePicker modal component in `apps/mobile/src/components/itinerary/CopyDatePicker.tsx`
+- [X] T106 [US4] Implement itineraryService.copy() API call in `apps/mobile/src/services/itineraryService.ts`
+- [X] T107 [US4] Implement itineraryService.listPublic() API call in `apps/mobile/src/services/itineraryService.ts`
+- [X] T108 [US4] Create CommunityScreen with public itineraries in `apps/mobile/src/screens/community/CommunityScreen.tsx`
+- [X] T109 [US4] Add copy flow to explore.tsx (community tab) with CopyDatePicker integration
 
 **Checkpoint**: User Story 4 complete - users can copy community itineraries
 
@@ -248,27 +248,27 @@
 
 #### Backend - US5
 
-- [ ] T110 [US5] Implement ItemService.update() in `apps/api/src/services/itineraryItemService.ts`
-- [ ] T111 [US5] Implement ItemService.delete() in `apps/api/src/services/itineraryItemService.ts`
-- [ ] T112 [US5] Implement ItemService.reorder() bulk update in `apps/api/src/services/itineraryItemService.ts`
-- [ ] T113 [US5] Create PATCH /itineraries/:id/days/:dayId/items/:itemId endpoint in `apps/api/src/routes/itinerary-items.ts`
-- [ ] T114 [US5] Create DELETE /itineraries/:id/days/:dayId/items/:itemId endpoint in `apps/api/src/routes/itinerary-items.ts`
-- [ ] T115 [US5] Create POST /itineraries/:id/days/:dayId/items/reorder endpoint in `apps/api/src/routes/itinerary-items.ts`
+- [X] T110 [US5] Implement ItemService.update() in `apps/api/src/services/itineraryItemService.ts`
+- [X] T111 [US5] Implement ItemService.delete() in `apps/api/src/services/itineraryItemService.ts`
+- [X] T112 [US5] Implement ItemService.reorder() bulk update in `apps/api/src/services/itineraryItemService.ts`
+- [X] T113 [US5] Create PATCH /itineraries/:id/days/:dayId/items/:itemId endpoint in `apps/api/src/routes/itinerary-items.ts`
+- [X] T114 [US5] Create DELETE /itineraries/:id/days/:dayId/items/:itemId endpoint in `apps/api/src/routes/itinerary-items.ts`
+- [X] T115 [US5] Create POST /itineraries/:id/days/:dayId/items/reorder endpoint in `apps/api/src/routes/itinerary-items.ts`
 
 #### Mobile - US5
 
-- [ ] T116 [P] [US5] Create DraggableItem wrapper with Reanimated in `apps/mobile/src/components/itinerary/DraggableItem.tsx`
-- [ ] T117 [P] [US5] Create EditItemModal component in `apps/mobile/src/components/itinerary/EditItemModal.tsx`
-- [ ] T118 [P] [US5] Create UndoSnackbar component in `apps/mobile/src/components/common/UndoSnackbar.tsx`
-- [ ] T119 [US5] Implement useDragReorder hook with Sortable in `apps/mobile/src/hooks/useDragReorder.ts`
-- [ ] T120 [US5] Implement undo/redo stack in itineraryStore in `apps/mobile/src/store/itineraryStore.ts`
-- [ ] T121 [US5] Update TimelineView with drag-drop support using react-native-reanimated-dnd
-- [ ] T122 [US5] Implement item edit flow in ItineraryDetailScreen
-- [ ] T123 [US5] Implement swipe-to-delete on ItineraryItemCard
+- [X] T116 [P] [US5] Create DraggableItem wrapper with Reanimated in `apps/mobile/src/components/itinerary/DraggableItem.tsx`
+- [X] T117 [P] [US5] Create EditItemModal component in `apps/mobile/src/components/itinerary/EditItemModal.tsx`
+- [X] T118 [P] [US5] Create UndoSnackbar component in `apps/mobile/src/components/common/UndoSnackbar.tsx`
+- [X] T119 [US5] Implement useDragReorder hook with Sortable in `apps/mobile/src/hooks/useDragReorder.ts`
+- [X] T120 [US5] Implement undo/redo stack in itineraryStore in `apps/mobile/src/store/itineraryStore.ts`
+- [X] T121 [US5] Update TimelineView with drag-drop support using react-native-reanimated-dnd
+- [X] T122 [US5] Implement item edit flow in ItineraryDetailScreen
+- [X] T123 [US5] Implement swipe-to-delete on ItineraryItemCard
 
 #### Offline Support - US5
 
-- [ ] T124 [US5] Implement offline reorder sync in WatermelonDB in `apps/mobile/src/database/actions/itemActions.ts`
+- [X] T124 [US5] Implement offline reorder sync in WatermelonDB in `apps/mobile/src/database/actions/itemActions.ts`
 
 **Checkpoint**: User Story 5 complete - users can edit and reorder items with drag-drop
 
@@ -284,17 +284,17 @@
 
 #### Backend - US6
 
-- [ ] T125 [US6] Implement TransportService.calculateRoute() with external API in `apps/api/src/services/transportService.ts`
-- [ ] T126 [US6] Add transport_mode, transport_minutes to item update in `apps/api/src/services/itineraryItemService.ts`
+- [X] T125 [US6] Implement TransportService.calculateRoute() with external API in `apps/api/src/services/transportService.ts`
+- [X] T126 [US6] Add transport_mode, transport_minutes to item update in `apps/api/src/services/itineraryItemService.ts`
 
 #### Mobile - US6
 
-- [ ] T127 [P] [US6] Create TransportBadge component with mode icons in `apps/mobile/src/components/itinerary/TransportBadge.tsx`
-- [ ] T128 [P] [US6] Create TransportModePicker component in `apps/mobile/src/components/itinerary/TransportModePicker.tsx`
-- [ ] T129 [US6] Implement deepLinkService for Didi/Gaode in `apps/mobile/src/services/deepLinkService.ts`
-- [ ] T130 [US6] Add transport mode selector to EditItemModal
-- [ ] T131 [US6] Display TransportBadge between consecutive items in TimelineView
-- [ ] T132 [US6] Implement "去打车"/"导航" button actions with deep links
+- [X] T127 [P] [US6] Create TransportBadge component with mode icons in `apps/mobile/src/components/itinerary/TransportBadge.tsx`
+- [X] T128 [P] [US6] Create TransportModePicker component in `apps/mobile/src/components/itinerary/TransportModePicker.tsx`
+- [X] T129 [US6] Implement deepLinkService for Didi/Gaode in `apps/mobile/src/services/deepLinkService.ts`
+- [X] T130 [US6] Add transport mode selector to EditItemModal
+- [X] T131 [US6] Display TransportBadge between consecutive items in TimelineView
+- [X] T132 [US6] Implement "去打车"/"导航" button actions with deep links
 
 **Checkpoint**: User Story 6 complete - users can plan transport between POIs
 
@@ -310,20 +310,20 @@
 
 #### Backend - US7
 
-- [ ] T133 [P] [US7] Define Reminder model with Zod in `apps/api/src/models/reminder.ts`
-- [ ] T134 [US7] Implement ReminderService.schedule() in `apps/api/src/services/reminderService.ts`
-- [ ] T135 [US7] Implement ReminderService.cancel() in `apps/api/src/services/reminderService.ts`
-- [ ] T136 [US7] Create POST /items/:itemId/reminders endpoint in `apps/api/src/routes/reminders.ts`
-- [ ] T137 [US7] Create DELETE /reminders/:id endpoint in `apps/api/src/routes/reminders.ts`
-- [ ] T138 [US7] Implement reminder cron job with Supabase Edge Function in `supabase/functions/send-reminders/`
+- [X] T133 [P] [US7] Define Reminder model with Zod in `apps/api/src/models/reminder.ts`
+- [X] T134 [US7] Implement ReminderService.schedule() in `apps/api/src/services/reminderService.ts`
+- [X] T135 [US7] Implement ReminderService.cancel() in `apps/api/src/services/reminderService.ts`
+- [X] T136 [US7] Create POST /items/:itemId/reminders endpoint in `apps/api/src/routes/reminders.ts`
+- [X] T137 [US7] Create DELETE /reminders/:id endpoint in `apps/api/src/routes/reminders.ts`
+- [X] T138 [US7] Implement reminder cron job with Supabase Edge Function in `supabase/functions/send-reminders/`
 
 #### Mobile - US7
 
-- [ ] T139 [P] [US7] Create ReminderPicker component in `apps/mobile/src/components/itinerary/ReminderPicker.tsx`
-- [ ] T140 [US7] Configure expo-notifications for push in `apps/mobile/src/lib/notifications.ts`
-- [ ] T141 [US7] Implement reminderService.schedule() API call in `apps/mobile/src/services/reminderService.ts`
-- [ ] T142 [US7] Add reminder toggle to EditItemModal
-- [ ] T143 [US7] Handle notification permissions and token registration
+- [X] T139 [P] [US7] Create ReminderPicker component in `apps/mobile/src/components/itinerary/ReminderPicker.tsx`
+- [X] T140 [US7] Configure expo-notifications for push in `apps/mobile/src/lib/notifications.ts`
+- [X] T141 [US7] Implement reminderService.schedule() API call in `apps/mobile/src/services/reminderService.ts`
+- [X] T142 [US7] Add reminder toggle to EditItemModal
+- [X] T143 [US7] Handle notification permissions and token registration
 
 **Checkpoint**: User Story 7 complete - users can set and receive reminders
 
@@ -333,16 +333,16 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T144 [P] Implement pull-to-refresh on ItineraryListScreen
-- [ ] T145 [P] Add loading skeletons for all screens
-- [ ] T146 [P] Implement empty state illustrations
-- [ ] T147 [P] Add haptic feedback for drag-drop interactions
-- [ ] T148 Implement full WatermelonDB sync adapter with conflict resolution in `apps/mobile/src/services/offlineSync.ts`
-- [ ] T149 Performance optimization: virtualized timeline for 10+ items
-- [ ] T150 [P] Add comprehensive error boundaries in mobile app
-- [ ] T151 [P] Document API endpoints in README.md
-- [ ] T152 Run quickstart.md validation end-to-end
-- [ ] T153 Security review: verify RLS policies and input sanitization
+- [X] T144 [P] Implement pull-to-refresh on ItineraryListScreen
+- [X] T145 [P] Add loading skeletons for all screens
+- [X] T146 [P] Implement empty state illustrations
+- [X] T147 [P] Add haptic feedback for drag-drop interactions
+- [X] T148 Implement full WatermelonDB sync adapter with conflict resolution in `apps/mobile/src/services/offlineSync.ts`
+- [X] T149 Performance optimization: virtualized timeline for 10+ items
+- [X] T150 [P] Add comprehensive error boundaries in mobile app
+- [X] T151 [P] Document API endpoints in README.md
+- [X] T152 Run quickstart.md validation end-to-end
+- [X] T153 Security review: verify RLS policies and input sanitization
 
 ---
 

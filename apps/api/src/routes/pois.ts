@@ -1,29 +1,99 @@
+import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
+import { z } from 'npm:zod';
+import { authMiddleware } from '../middleware/auth.ts';
+import { PoiCategorySchema, PoiSearchQuerySchema } from '../models/poi.ts';
+import { PoiService } from '../services/poiService.ts';
 
-// Placeholder routes - will be implemented in Phase 4-5 (US2, US3)
 export const poisRoutes = new Hono();
 
-// Search POIs by keyword
-poisRoutes.get('/search', async (c) => {
-  // TODO: T073 - Implement POI search
-  const _q = c.req.query('q');
-  const _cityId = c.req.query('cityId');
-  return c.json({ data: [] });
-});
+// Apply auth middleware to all routes
+poisRoutes.use('/*', authMiddleware);
 
-// Get POI recommendations
-poisRoutes.get('/recommend', async (c) => {
-  // TODO: T091 - Implement POI recommendations
-  const _cityId = c.req.query('cityId');
-  const _category = c.req.query('category');
-  return c.json({ data: [] });
-});
+/**
+ * Search POIs by keyword and filters
+ * GET /pois/search?cityId=xxx&query=西湖&category=attraction
+ */
+poisRoutes.get(
+  '/search',
+  zValidator('query', PoiSearchQuerySchema),
+  async (c) => {
+    const query = c.req.valid('query');
+    const accessToken = c.get('accessToken') as string;
 
-// Get nearby POIs
-poisRoutes.get('/nearby', async (c) => {
-  // TODO: T092 - Implement nearby POIs
-  const _lat = c.req.query('lat');
-  const _lng = c.req.query('lng');
-  const _radius = c.req.query('radius') || '5000';
-  return c.json({ data: [] });
+    const result = await PoiService.search(query, accessToken);
+    return c.json(result);
+  }
+);
+
+/**
+ * Get POI recommendations sorted by rating
+ * GET /pois/recommend?cityId=xxx&category=restaurant&limit=20
+ */
+poisRoutes.get(
+  '/recommend',
+  zValidator(
+    'query',
+    z.object({
+      cityId: z.string().uuid('Invalid city ID'),
+      category: PoiCategorySchema.optional(),
+      limit: z.coerce.number().int().min(1).max(50).optional().default(20),
+    })
+  ),
+  async (c) => {
+    const { cityId, category, limit } = c.req.valid('query');
+    const accessToken = c.get('accessToken') as string;
+
+    const data = await PoiService.getRecommendations(
+      cityId,
+      category,
+      limit,
+      accessToken
+    );
+    return c.json({ data });
+  }
+);
+
+/**
+ * Get nearby POIs
+ * GET /pois/nearby?lat=30.2&lng=120.1&radiusKm=5&category=attraction
+ */
+poisRoutes.get(
+  '/nearby',
+  zValidator(
+    'query',
+    z.object({
+      lat: z.coerce.number().min(-90).max(90),
+      lng: z.coerce.number().min(-180).max(180),
+      radiusKm: z.coerce.number().min(0).max(100).optional().default(5),
+      category: PoiCategorySchema.optional(),
+      limit: z.coerce.number().int().min(1).max(50).optional().default(20),
+    })
+  ),
+  async (c) => {
+    const { lat, lng, radiusKm, category, limit } = c.req.valid('query');
+    const accessToken = c.get('accessToken') as string;
+
+    const data = await PoiService.getNearby(
+      lat,
+      lng,
+      radiusKm,
+      category,
+      limit,
+      accessToken
+    );
+    return c.json({ data });
+  }
+);
+
+/**
+ * Get POI by ID
+ * GET /pois/:id
+ */
+poisRoutes.get('/:id', async (c) => {
+  const poiId = c.req.param('id');
+  const accessToken = c.get('accessToken') as string;
+
+  const data = await PoiService.getById(poiId, accessToken);
+  return c.json({ data });
 });

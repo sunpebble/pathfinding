@@ -1,9 +1,12 @@
 import type {
   CreateItineraryInput,
+  TransportMode,
   UpdateItineraryInput,
 } from '@pathfinding/types';
 import type { Itinerary as ItineraryModel } from '@/database/models/Itinerary';
 import type { ItineraryDay as ItineraryDayModel } from '@/database/models/ItineraryDay';
+import type ItineraryItemModel from '@/database/models/ItineraryItem';
+import { Q } from '@nozbe/watermelondb';
 import { database } from '@/database';
 
 /**
@@ -155,6 +158,157 @@ export const offlineItineraryActions = {
         record.lastSyncedAt = new Date();
       });
     });
+  },
+
+  // ==================== Item Operations (US5) ====================
+
+  /**
+   * Update an itinerary item offline
+   */
+  updateItem: async (
+    itemId: string,
+    updates: {
+      startTime?: string | null;
+      endTime?: string | null;
+      notes?: string;
+      transportMode?: TransportMode;
+      transportMinutes?: number | null;
+    }
+  ): Promise<ItineraryItemModel | null> => {
+    try {
+      const item = await database
+        .get<ItineraryItemModel>('itinerary_items')
+        .find(itemId);
+
+      return database.write(async () => {
+        await item.update((record) => {
+          if (updates.startTime !== undefined)
+            record.startTime = updates.startTime;
+          if (updates.endTime !== undefined) record.endTime = updates.endTime;
+          if (updates.notes !== undefined) record.notes = updates.notes || null;
+          if (updates.transportMode !== undefined)
+            record.transportMode = updates.transportMode;
+          if (updates.transportMinutes !== undefined)
+            record.transportMinutes = updates.transportMinutes;
+          record.syncStatus = 'pending';
+        });
+        return item;
+      });
+    } catch (error) {
+      console.error('[offlineItineraryActions] updateItem error:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Delete an itinerary item offline (soft delete)
+   */
+  deleteItem: async (itemId: string): Promise<boolean> => {
+    try {
+      const item = await database
+        .get<ItineraryItemModel>('itinerary_items')
+        .find(itemId);
+
+      await database.write(async () => {
+        await item.markAsDeleted();
+      });
+      return true;
+    } catch (error) {
+      console.error('[offlineItineraryActions] deleteItem error:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Reorder items within a day offline
+   */
+  reorderItems: async (
+    dayId: string,
+    itemIds: string[]
+  ): Promise<ItineraryItemModel[]> => {
+    try {
+      // Get all items for this day
+      const items = await database
+        .get<ItineraryItemModel>('itinerary_items')
+        .query(Q.where('day_id', dayId))
+        .fetch();
+
+      // Create a map for quick lookup
+      const itemMap = new Map(items.map((item) => [item.id, item]));
+
+      return database.write(async () => {
+        const updatedItems: ItineraryItemModel[] = [];
+
+        for (let i = 0; i < itemIds.length; i++) {
+          const item = itemMap.get(itemIds[i]);
+          if (item) {
+            await item.update((record) => {
+              record.orderIndex = i;
+              record.syncStatus = 'pending';
+            });
+            updatedItems.push(item);
+          }
+        }
+
+        return updatedItems;
+      });
+    } catch (error) {
+      console.error('[offlineItineraryActions] reorderItems error:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get items for a day
+   */
+  getItemsByDay: async (dayId: string): Promise<ItineraryItemModel[]> => {
+    try {
+      return database
+        .get<ItineraryItemModel>('itinerary_items')
+        .query(Q.where('day_id', dayId), Q.sortBy('order_index', Q.asc))
+        .fetch();
+    } catch (error) {
+      console.error('[offlineItineraryActions] getItemsByDay error:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get items pending sync
+   */
+  getItemsPendingSync: async (): Promise<ItineraryItemModel[]> => {
+    try {
+      return database
+        .get<ItineraryItemModel>('itinerary_items')
+        .query(Q.where('sync_status', 'pending'))
+        .fetch();
+    } catch (error) {
+      console.error(
+        '[offlineItineraryActions] getItemsPendingSync error:',
+        error
+      );
+      return [];
+    }
+  },
+
+  /**
+   * Mark item as synced
+   */
+  markItemSynced: async (itemId: string, remoteId: string): Promise<void> => {
+    try {
+      const item = await database
+        .get<ItineraryItemModel>('itinerary_items')
+        .find(itemId);
+
+      await database.write(async () => {
+        await item.update((record) => {
+          record.remoteId = remoteId;
+          record.syncStatus = 'synced';
+        });
+      });
+    } catch (error) {
+      console.error('[offlineItineraryActions] markItemSynced error:', error);
+    }
   },
 };
 
