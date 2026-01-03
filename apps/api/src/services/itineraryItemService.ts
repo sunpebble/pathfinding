@@ -3,9 +3,9 @@ import type {
   CreateItineraryItemInput,
   ReorderItemsInput,
   UpdateItineraryItemInput,
-} from '../models/itineraryItem.js';
-import { getSupabaseClient } from '../lib/supabase.js';
-import { NotFoundError, ValidationError } from '../middleware/errorHandler.js';
+} from '../models/itineraryItem';
+import { getSupabaseClient } from '../lib/supabase';
+import { NotFoundError, ValidationError } from '../middleware/errorHandler';
 
 /**
  * ItineraryItem database row type

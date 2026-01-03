@@ -1,7 +1,7 @@
 import type { Poi, PoiCategory } from '@pathfinding/types';
-import type { PoiSearchQuery } from '../models/poi.js';
-import { getSupabaseClient } from '../lib/supabase.js';
-import { NotFoundError } from '../middleware/errorHandler.js';
+import type { PoiSearchQuery } from '../models/poi';
+import { getSupabaseClient } from '../lib/supabase';
+import { NotFoundError } from '../middleware/errorHandler';
 
 /**
  * POI database row type

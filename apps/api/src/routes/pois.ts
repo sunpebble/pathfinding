@@ -1,8 +1,8 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { PoiCategorySchema, PoiSearchQuerySchema } from '../models/poi.js';
-import { PoiService } from '../services/poiService.js';
+import { PoiCategorySchema, PoiSearchQuerySchema } from '../models/poi';
+import { PoiService } from '../services/poiService';
 
 interface Variables {
   userId: string;

@@ -1,10 +1,7 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import {
-  CreateReminderSchema,
-  UpdateReminderSchema,
-} from '../models/reminder.js';
-import { reminderService } from '../services/reminderService.js';
+import { CreateReminderSchema, UpdateReminderSchema } from '../models/reminder';
+import { reminderService } from '../services/reminderService';
 
 interface Variables {
   userId: string;

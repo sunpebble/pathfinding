@@ -4,8 +4,8 @@ import {
   CreateItineraryItemSchema,
   ReorderItemsSchema,
   UpdateItineraryItemSchema,
-} from '../models/itineraryItem.js';
-import { ItineraryItemService } from '../services/itineraryItemService.js';
+} from '../models/itineraryItem';
+import { ItineraryItemService } from '../services/itineraryItemService';
 
 interface Variables {
   userId: string;

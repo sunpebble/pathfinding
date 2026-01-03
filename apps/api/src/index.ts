@@ -2,16 +2,16 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { authMiddleware } from './middleware/auth.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { tracingMiddleware } from './middleware/tracing.js';
+import { authMiddleware } from './middleware/auth';
+import { errorHandler } from './middleware/errorHandler';
+import { tracingMiddleware } from './middleware/tracing';
 import {
   itinerariesRoutes,
   publicItinerariesRoutes,
-} from './routes/itineraries.js';
-import { itineraryItemsRoutes } from './routes/itinerary-items.js';
-import { poisRoutes } from './routes/pois.js';
-import { remindersRoutes } from './routes/reminders.js';
+} from './routes/itineraries';
+import { itineraryItemsRoutes } from './routes/itinerary-items';
+import { poisRoutes } from './routes/pois';
+import { remindersRoutes } from './routes/reminders';
 import 'dotenv/config';
 
 const app = new Hono();

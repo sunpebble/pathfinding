@@ -2,8 +2,8 @@ import type {
   CreateReminderInput,
   Reminder,
   UpdateReminderInput,
-} from '../models/reminder.js';
-import { getSupabaseClient } from '../lib/supabase.js';
+} from '../models/reminder';
+import { getSupabaseClient } from '../lib/supabase';
 
 /**
  * Map database row to Reminder type

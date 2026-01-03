@@ -4,15 +4,15 @@ import type {
   ItineraryResponse,
   ItineraryRow,
   UpdateItineraryInput,
-} from '../models/itinerary.js';
+} from '../models/itinerary';
 import type {
   ItineraryDayResponse,
   ItineraryDayRow,
-} from '../models/itineraryDay.js';
-import { getSupabaseClient } from '../lib/supabase.js';
-import { NotFoundError } from '../middleware/errorHandler.js';
-import { toItineraryResponse } from '../models/itinerary.js';
-import { toItineraryDayResponse } from '../models/itineraryDay.js';
+} from '../models/itineraryDay';
+import { getSupabaseClient } from '../lib/supabase';
+import { NotFoundError } from '../middleware/errorHandler';
+import { toItineraryResponse } from '../models/itinerary';
+import { toItineraryDayResponse } from '../models/itineraryDay';
 
 /**
  * Calculate dates between start and end (inclusive)

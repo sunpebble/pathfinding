@@ -5,8 +5,8 @@ import {
   CreateItinerarySchema,
   ItineraryListQuerySchema,
   UpdateItinerarySchema,
-} from '../models/itinerary.js';
-import { ItineraryService } from '../services/itineraryService.js';
+} from '../models/itinerary';
+import { ItineraryService } from '../services/itineraryService';
 
 interface Variables {
   userId: string;
