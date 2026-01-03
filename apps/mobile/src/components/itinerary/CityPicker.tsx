@@ -187,7 +187,7 @@ export function CityPicker({
             )}
           </View>
 
-          {isLoading ? (
+          {_isLoading ? (
             <ActivityIndicator style={styles.loader} size="large" />
           ) : (
             <FlatList

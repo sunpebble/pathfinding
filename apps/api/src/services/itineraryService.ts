@@ -149,17 +149,15 @@ export const ItineraryService = {
 
   /**
    * List public itineraries for community discovery
+   * No authentication required - uses service role key
    */
-  async listPublic(
-    query: {
-      cityId?: string;
-      page: number;
-      pageSize: number;
-      sortBy: 'created_at' | 'copy_count';
-    },
-    accessToken: string
-  ): Promise<{ data: ItineraryResponse[]; total: number }> {
-    const supabase = getSupabaseClient(accessToken);
+  async listPublic(query: {
+    cityId?: string;
+    page: number;
+    pageSize: number;
+    sortBy: 'created_at' | 'copy_count';
+  }): Promise<{ data: ItineraryResponse[]; total: number }> {
+    const supabase = getSupabaseClient();
     const { cityId, page, pageSize, sortBy } = query;
 
     // Build query for public itineraries
@@ -179,9 +177,12 @@ export const ItineraryService = {
     }
 
     // Apply sorting and pagination
+    // Note: copy_count is not a column, so we use created_at for now
+    // TODO: Add copy_count as a computed column or use a view
+    const effectiveSortBy = sortBy === 'copy_count' ? 'created_at' : sortBy;
     const offset = (page - 1) * pageSize;
     dbQuery = dbQuery
-      .order(sortBy, { ascending: false })
+      .order(effectiveSortBy, { ascending: false })
       .range(offset, offset + pageSize - 1);
 
     const { data, error, count } = await dbQuery;

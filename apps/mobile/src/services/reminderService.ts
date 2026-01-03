@@ -1,6 +1,9 @@
 import { supabase } from '@/lib/supabase';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+// API base URL should NOT include /v1 - it will be added in request URLs
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL?.replace(/\/v1$/, '') ||
+  'http://localhost:8000';
 
 /**
  * Reminder type

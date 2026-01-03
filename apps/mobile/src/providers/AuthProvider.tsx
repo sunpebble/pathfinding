@@ -18,46 +18,22 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   signInWithPhone: (phone: string) => Promise<{ needsVerification: boolean }>;
+  signInWithEmail: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean }>;
+  signUpWithEmail: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean }>;
   verifyOtp: (phone: string, otp: string) => Promise<void>;
   signOut: () => Promise<void>;
   error: AuthError | Error | null;
   clearError: () => void;
+  isDevelopment: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-/**
- * Create a mock user for development mode
- */
-function createMockUser(phone: string): User {
-  return {
-    id: `dev-user-${phone.replace(/\D/g, '')}`,
-    aud: 'authenticated',
-    role: 'authenticated',
-    email: undefined,
-    phone,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    app_metadata: {},
-    user_metadata: { phone },
-    identities: [],
-    factors: [],
-  } as User;
-}
-
-/**
- * Create a mock session for development mode
- */
-function createMockSession(user: User): Session {
-  return {
-    access_token: `dev-access-token-${user.id}`,
-    refresh_token: `dev-refresh-token-${user.id}`,
-    expires_in: 3600,
-    expires_at: Math.floor(Date.now() / 1000) + 3600,
-    token_type: 'bearer',
-    user,
-  };
-}
 
 /**
  * Auth provider that manages Supabase authentication state
@@ -93,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Sign in with phone number
-   * In development mode, any phone number works without OTP verification
+   * In production mode, sends OTP via Supabase
    */
   const signInWithPhone = useCallback(
     async (phone: string): Promise<{ needsVerification: boolean }> => {
@@ -101,17 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(null);
         setIsLoading(true);
 
-        // Development mode: skip OTP and create mock session
-        if (isDevelopment) {
-          const mockUser = createMockUser(phone);
-          const mockSession = createMockSession(mockUser);
-          setUser(mockUser);
-          setSession(mockSession);
-          setIsLoading(false);
-          return { needsVerification: false };
-        }
-
-        // Production mode: send OTP via Supabase
+        // Send OTP via Supabase
         const { error } = await supabase.auth.signInWithOtp({
           phone,
         });
@@ -122,6 +88,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         setError(err as AuthError);
         return { needsVerification: false };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  /**
+   * Sign in with email and password
+   * Used for development mode with local Supabase
+   */
+  const signInWithEmail = useCallback(
+    async (email: string, password: string): Promise<{ success: boolean }> => {
+      try {
+        setError(null);
+        setIsLoading(true);
+
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        return { success: true };
+      } catch (err) {
+        setError(err as AuthError);
+        return { success: false };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  /**
+   * Sign up with email and password
+   * Used for development mode with local Supabase
+   */
+  const signUpWithEmail = useCallback(
+    async (email: string, password: string): Promise<{ success: boolean }> => {
+      try {
+        setError(null);
+        setIsLoading(true);
+
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        return { success: true };
+      } catch (err) {
+        setError(err as AuthError);
+        return { success: false };
       } finally {
         setIsLoading(false);
       }
@@ -156,14 +178,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setIsLoading(true);
 
-      // In development mode with mock session, just clear state
-      if (isDevelopment && session?.access_token?.startsWith('dev-')) {
-        setUser(null);
-        setSession(null);
-        setIsLoading(false);
-        return;
-      }
-
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (err) {
@@ -171,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [session]);
+  }, []);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -183,10 +197,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isAuthenticated: !!session,
     signInWithPhone,
+    signInWithEmail,
+    signUpWithEmail,
     verifyOtp,
     signOut,
     error,
     clearError,
+    isDevelopment,
   };
 
   return <AuthContext value={value}>{children}</AuthContext>;

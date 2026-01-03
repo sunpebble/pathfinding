@@ -10,7 +10,10 @@ import type {
 } from '@pathfinding/types';
 import { supabase } from '@/lib/supabase';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+// API base URL should NOT include /v1 - it will be added in request URLs
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL?.replace(/\/v1$/, '') ||
+  'http://localhost:8000';
 
 interface ListResponse {
   success: boolean;
@@ -346,6 +349,7 @@ export const itineraryService = {
 
   /**
    * List public itineraries for community discovery
+   * Note: This endpoint does not require authentication
    */
   async listPublic(
     params: {
@@ -358,8 +362,6 @@ export const itineraryService = {
     data: (ItineraryWithStats & { authorName?: string; copyCount?: number })[];
     meta: ApiMeta;
   }> {
-    const headers = await getAuthHeader();
-
     const searchParams = new URLSearchParams();
     if (params.cityId) searchParams.set('cityId', params.cityId);
     if (params.page) searchParams.set('page', String(params.page));
@@ -369,7 +371,9 @@ export const itineraryService = {
     const url = `${API_BASE_URL}/v1/itineraries/public?${searchParams}`;
     const response = await fetch(url, {
       method: 'GET',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {

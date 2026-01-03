@@ -1,8 +1,10 @@
 import type { Poi, PoiCategory } from '@pathfinding/types';
 import { supabase } from '@/lib/supabase';
 
+// API base URL should NOT include /v1 - it will be added in request URLs
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/v1';
+  process.env.EXPO_PUBLIC_API_URL?.replace(/\/v1$/, '') ||
+  'http://localhost:8000';
 
 /**
  * POI search filters
@@ -76,7 +78,7 @@ export const poiService = {
       params.append('pageSize', filters.pageSize.toString());
 
     const response = await fetch(
-      `${API_BASE_URL}/pois/search?${params.toString()}`,
+      `${API_BASE_URL}/v1/pois/search?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -112,7 +114,7 @@ export const poiService = {
     params.append('limit', limit.toString());
 
     const response = await fetch(
-      `${API_BASE_URL}/pois/recommend?${params.toString()}`,
+      `${API_BASE_URL}/v1/pois/recommend?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -153,7 +155,7 @@ export const poiService = {
     params.append('limit', limit.toString());
 
     const response = await fetch(
-      `${API_BASE_URL}/pois/nearby?${params.toString()}`,
+      `${API_BASE_URL}/v1/pois/nearby?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -180,7 +182,7 @@ export const poiService = {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/pois/${poiId}`, {
+    const response = await fetch(`${API_BASE_URL}/v1/pois/${poiId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',

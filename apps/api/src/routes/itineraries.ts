@@ -13,13 +13,14 @@ interface Variables {
   accessToken: string;
 }
 
-export const itinerariesRoutes = new Hono<{ Variables: Variables }>();
+// Public routes (no auth required)
+export const publicItinerariesRoutes = new Hono();
 
 /**
  * GET /itineraries/public - List public itineraries for community discovery
- * Must be defined BEFORE /:id to avoid route conflicts
+ * No authentication required
  */
-itinerariesRoutes.get(
+publicItinerariesRoutes.get(
   '/public',
   zValidator(
     'query',
@@ -34,13 +35,9 @@ itinerariesRoutes.get(
     })
   ),
   async (c) => {
-    const accessToken = c.get('accessToken');
     const query = c.req.valid('query');
 
-    const { data, total } = await ItineraryService.listPublic(
-      query,
-      accessToken
-    );
+    const { data, total } = await ItineraryService.listPublic(query);
 
     return c.json({
       success: true,
@@ -54,6 +51,9 @@ itinerariesRoutes.get(
     });
   }
 );
+
+// Protected routes (auth required)
+export const itinerariesRoutes = new Hono<{ Variables: Variables }>();
 
 /**
  * GET /itineraries - List user's itineraries with pagination

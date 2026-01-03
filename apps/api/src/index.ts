@@ -5,10 +5,14 @@ import { logger } from 'hono/logger';
 import { authMiddleware } from './middleware/auth.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { tracingMiddleware } from './middleware/tracing.js';
-import { itinerariesRoutes } from './routes/itineraries.js';
+import {
+  itinerariesRoutes,
+  publicItinerariesRoutes,
+} from './routes/itineraries.js';
 import { itineraryItemsRoutes } from './routes/itinerary-items.js';
 import { poisRoutes } from './routes/pois.js';
 import { remindersRoutes } from './routes/reminders.js';
+import 'dotenv/config';
 
 const app = new Hono();
 
@@ -33,18 +37,22 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API v1 routes
-const api = new Hono();
-api.use('*', authMiddleware);
+// Public API v1 routes (no auth required)
+const publicApi = new Hono();
+publicApi.route('/itineraries', publicItinerariesRoutes);
 
-// Mount route modules
-api.route('/itineraries', itinerariesRoutes);
-api.route('/itineraries', itineraryItemsRoutes); // Nested items routes
-api.route('/pois', poisRoutes);
-api.route('/', remindersRoutes);
+// Protected API v1 routes (auth required)
+const protectedApi = new Hono();
+protectedApi.use('*', authMiddleware);
+protectedApi.route('/itineraries', itinerariesRoutes);
+protectedApi.route('/itineraries', itineraryItemsRoutes); // Nested items routes
+protectedApi.route('/pois', poisRoutes);
+protectedApi.route('/', remindersRoutes);
 
-// Mount API v1
-app.route('/v1', api);
+// Mount both API groups under /v1
+// Public routes first so they take precedence for matching paths
+app.route('/v1', publicApi);
+app.route('/v1', protectedApi);
 
 // 404 handler
 app.notFound((c) => {

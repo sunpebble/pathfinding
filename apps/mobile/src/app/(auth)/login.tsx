@@ -14,15 +14,62 @@ import {
 import { useAuth } from '@/providers/AuthProvider';
 
 /**
- * Login screen - Phone number authentication
+ * Login screen - Phone number authentication (production)
+ * or Email/Password authentication (development with local Supabase)
  */
 export default function LoginScreen() {
-  const { signInWithPhone, verifyOtp, isLoading, error, clearError } =
-    useAuth();
+  const {
+    signInWithPhone,
+    signInWithEmail,
+    signUpWithEmail,
+    verifyOtp,
+    isLoading,
+    error,
+    clearError,
+    isDevelopment,
+  } = useAuth();
+
+  // Phone login state (production)
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
 
+  // Email login state (development)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  // Development mode: Email/Password login
+  const handleEmailLogin = async () => {
+    if (!email.trim()) {
+      Alert.alert('提示', '请输入邮箱');
+      return;
+    }
+    if (!password.trim()) {
+      Alert.alert('提示', '请输入密码');
+      return;
+    }
+
+    clearError();
+
+    if (isSignUp) {
+      const result = await signUpWithEmail(email, password);
+      if (result.success) {
+        // After signup, auto login
+        const loginResult = await signInWithEmail(email, password);
+        if (loginResult.success) {
+          router.replace('/(tabs)');
+        }
+      }
+    } else {
+      const result = await signInWithEmail(email, password);
+      if (result.success) {
+        router.replace('/(tabs)');
+      }
+    }
+  };
+
+  // Production mode: Phone OTP login
   const handleSendOtp = async () => {
     if (!phone.trim()) {
       Alert.alert('提示', '请输入手机号');
@@ -32,13 +79,8 @@ export default function LoginScreen() {
     clearError();
     const result = await signInWithPhone(phone);
 
-    // In development mode, needsVerification is false (direct login)
-    // In production mode, needsVerification is true (need OTP)
     if (result.needsVerification) {
       setStep('otp');
-    } else {
-      // Login successful in dev mode, navigate to main app
-      router.replace('/(tabs)');
     }
   };
 
@@ -50,7 +92,6 @@ export default function LoginScreen() {
 
     clearError();
     await verifyOtp(phone, otp);
-    // After successful OTP verification, navigate to main app
     router.replace('/(tabs)');
   };
 
@@ -60,6 +101,86 @@ export default function LoginScreen() {
     clearError();
   };
 
+  // Development mode: Email/Password form
+  if (isDevelopment) {
+    return (
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.content}>
+          <Text style={styles.title}>探路</Text>
+          <Text style={styles.subtitle}>智能旅行攻略助手</Text>
+
+          <View style={styles.devBanner}>
+            <Text style={styles.devText}>
+              开发模式：使用邮箱密码登录本地 Supabase
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.formContainer}>
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error.message}</Text>
+            </View>
+          )}
+
+          <Text style={styles.label}>邮箱</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="请输入邮箱"
+            placeholderTextColor="#999"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            editable={!isLoading}
+            autoFocus
+          />
+
+          <Text style={styles.label}>密码</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="请输入密码"
+            placeholderTextColor="#999"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            editable={!isLoading}
+          />
+
+          <TouchableOpacity
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleEmailLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>
+                {isSignUp ? '注册' : '登录'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.switchButton}
+            onPress={() => {
+              setIsSignUp(!isSignUp);
+              clearError();
+            }}
+          >
+            <Text style={styles.switchText}>
+              {isSignUp ? '已有账号？去登录' : '没有账号？去注册'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // Production mode: Phone OTP form
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -68,12 +189,6 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <Text style={styles.title}>探路</Text>
         <Text style={styles.subtitle}>智能旅行攻略助手</Text>
-
-        {__DEV__ && (
-          <View style={styles.devBanner}>
-            <Text style={styles.devText}>开发模式：任意手机号可直接登录</Text>
-          </View>
-        )}
       </View>
 
       <View style={styles.formContainer}>
@@ -104,9 +219,7 @@ export default function LoginScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>
-                  {__DEV__ ? '登录' : '获取验证码'}
-                </Text>
+                <Text style={styles.buttonText}>获取验证码</Text>
               )}
             </TouchableOpacity>
           </>
@@ -232,5 +345,13 @@ const styles = StyleSheet.create({
   backText: {
     color: '#007AFF',
     fontSize: 16,
+  },
+  switchButton: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  switchText: {
+    color: '#007AFF',
+    fontSize: 14,
   },
 });
