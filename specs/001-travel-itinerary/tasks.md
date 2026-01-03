@@ -204,6 +204,8 @@
 - [X] T096 [US3] Implement poiService.getNearby() with GPS in `apps/mobile/src/services/poiService.ts`
 - [X] T097 [US3] Create POIRecommendScreen with category tabs in `apps/mobile/src/screens/poi/POIRecommendScreen.tsx`
 - [X] T098 [US3] Implement location permission request flow in `apps/mobile/src/hooks/useLocation.ts`
+- [X] T098a [US3] Create GPSPermissionModal with consent explanation in `apps/mobile/src/components/common/GPSPermissionModal.tsx`
+- [X] T098b [US3] Implement location consent tracking in AsyncStorage in `apps/mobile/src/lib/locationConsent.ts`
 - [X] T099 [US3] Add "推荐" tab to add-poi.tsx navigation (integrated search + recommend tabs)
 
 **Checkpoint**: User Story 3 complete - users can browse recommendations by rating
@@ -343,6 +345,15 @@
 - [X] T151 [P] Document API endpoints in README.md
 - [X] T152 Run quickstart.md validation end-to-end
 - [X] T153 Security review: verify RLS policies and input sanitization
+
+### NFR Validation (Non-Functional Requirements)
+
+- [X] T154 [NFR-001] Validate itinerary list load time < 2s on 4G network in `apps/mobile/__tests__/performance/loadTime.test.ts`
+- [X] T155 [NFR-002] Test offline cache supports 10+ itineraries with full POI data in `apps/mobile/__tests__/offline/cacheCapacity.test.ts`
+- [X] T156 [NFR-003] Validate drag-drop maintains 60fps with Reanimated performance profiler
+- [X] T157 [NFR-004] Add API response size middleware (warn if > 100KB) in `apps/api/src/middleware/responseSizeLimit.ts`
+- [X] T158 [NFR-005] Validate push notification delivery latency < 30s in `supabase/functions/send-reminders/__tests__/latency.test.ts`
+- [X] T159 [NFR] Test offline sync conflict resolution (last-write-wins) in `apps/mobile/__tests__/offline/conflictResolution.test.ts`
 
 ---
 

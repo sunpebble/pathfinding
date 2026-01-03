@@ -4,6 +4,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { authMiddleware } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
+import { responseSizeLimitMiddleware } from './middleware/responseSizeLimit';
 import { tracingMiddleware } from './middleware/tracing';
 import {
   itinerariesRoutes,
@@ -31,6 +32,7 @@ app.use(
 );
 app.use('*', tracingMiddleware);
 app.use('*', errorHandler);
+app.use('*', responseSizeLimitMiddleware); // NFR-004: Monitor response sizes
 
 // Health check (no auth required)
 app.get('/health', (c) => {
