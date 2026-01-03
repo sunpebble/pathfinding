@@ -25,7 +25,7 @@ COPY apps/crawler ./apps/crawler
 RUN pnpm install --frozen-lockfile
 
 # Build packages and crawler
-RUN pnpm turbo build --filter=@pathfinding/crawler
+RUN pnpm turbo build --filter=@pathfinding/crawler...
 
 # Production stage
 FROM node:20-alpine AS runner

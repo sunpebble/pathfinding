@@ -24,7 +24,7 @@ COPY apps/api ./apps/api
 RUN pnpm install --frozen-lockfile
 
 # Build packages and api
-RUN pnpm turbo build --filter=@pathfinding/api
+RUN pnpm turbo build --filter=@pathfinding/api...
 
 # Production stage
 FROM node:20-alpine AS runner
