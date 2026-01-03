@@ -1,0 +1,46 @@
+{
+  "name": "@pathfinding/crawler",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Data crawler service for travel POI collection and training dataset generation",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node --import tsx src/index.ts",
+    "build": "tsc",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@crawlee/core": "^3.13.0",
+    "@crawlee/playwright": "^3.13.0",
+    "@hono/node-server": "^1.19.7",
+    "@hono/zod-validator": "^0.7.6",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.56.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
+    "@opentelemetry/resources": "^2.2.0",
+    "@opentelemetry/sdk-trace-base": "^2.2.0",
+    "@opentelemetry/sdk-trace-node": "^2.2.0",
+    "@opentelemetry/semantic-conventions": "^1.30.0",
+    "@pathfinding/crawler-types": "workspace:*",
+    "@sentry/node": "^9.5.0",
+    "@supabase/supabase-js": "^2.89.0",
+    "crawlee": "^3.13.0",
+    "dotenv": "^17.2.3",
+    "geolib": "^3.3.4",
+    "hono": "^4.11.3",
+    "node-cron": "^3.0.3",
+    "playwright": "^1.51.0",
+    "zod": "^4.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.16"
+  }
+}

@@ -32,7 +32,7 @@ describe('nFR-001: Itinerary List Load Time', () => {
     expect(loadTime).toBeLessThan(2000);
 
     // Log for performance tracking
-    console.log(`Initial load time: ${loadTime.toFixed(2)}ms`);
+    console.warn(`Initial load time: ${loadTime.toFixed(2)}ms`);
   });
 
   it('should load paginated results within 500ms', async () => {
@@ -50,7 +50,7 @@ describe('nFR-001: Itinerary List Load Time', () => {
     // Subsequent pagination should be faster
     expect(loadTime).toBeLessThan(500);
 
-    console.log(`Pagination load time: ${loadTime.toFixed(2)}ms`);
+    console.warn(`Pagination load time: ${loadTime.toFixed(2)}ms`);
   });
 
   it('should handle concurrent load requests efficiently', async () => {
@@ -71,7 +71,7 @@ describe('nFR-001: Itinerary List Load Time', () => {
     // Concurrent requests should not be 3x single request time
     expect(totalTime).toBeLessThan(3000);
 
-    console.log(`Concurrent load time (3 pages): ${totalTime.toFixed(2)}ms`);
+    console.warn(`Concurrent load time (3 pages): ${totalTime.toFixed(2)}ms`);
   });
 });
 
@@ -97,7 +97,7 @@ describe('nFR-001: API Response Time Breakdown', () => {
     const processingTime = metrics.processingEnd - metrics.processingStart;
     const totalTime = metrics.processingEnd - metrics.networkStart;
 
-    console.log(`
+    console.warn(`
       Performance Breakdown:
       - Network: ${networkTime.toFixed(2)}ms
       - Processing: ${processingTime.toFixed(2)}ms

@@ -96,7 +96,7 @@ describe('nFR-002: Offline Cache Capacity', () => {
     expect(days).toBe(itineraryCount * daysPerItinerary);
     expect(items).toBe(itineraryCount * daysPerItinerary * itemsPerDay);
 
-    console.log(`
+    console.warn(`
       Offline Cache Stats:
       - Itineraries: ${itineraries}
       - Days: ${days}
@@ -123,7 +123,7 @@ describe('nFR-002: Offline Cache Capacity', () => {
     expect(itineraries.length).toBeGreaterThanOrEqual(10);
     expect(queryTime).toBeLessThan(100); // Should be very fast from local storage
 
-    console.log(`Query time for 10 itineraries: ${queryTime.toFixed(2)}ms`);
+    console.warn(`Query time for 10 itineraries: ${queryTime.toFixed(2)}ms`);
   });
 
   it('should handle cache near capacity', async () => {
@@ -138,7 +138,7 @@ describe('nFR-002: Offline Cache Capacity', () => {
       .fetch();
     expect(itineraries.length).toBe(extraItineraries);
 
-    console.log(
+    console.warn(
       `Successfully cached ${extraItineraries} itineraries (50% over requirement)`
     );
   });

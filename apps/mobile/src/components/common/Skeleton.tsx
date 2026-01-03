@@ -121,6 +121,7 @@ export const ListSkeleton: React.FC<{
   return (
     <View style={styles.list}>
       {Array.from({ length: count }).map((_, index) => (
+        // eslint-disable-next-line react/no-array-index-key
         <ItemComponent key={index} />
       ))}
     </View>

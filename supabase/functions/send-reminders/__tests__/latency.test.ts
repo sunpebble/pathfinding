@@ -72,7 +72,7 @@ describe('nFR-005: Push Notification Latency', () => {
       // Edge function should respond quickly (< 5 seconds)
       expect(processingTime).toBeLessThan(5000);
 
-      console.log(`Edge function processing time: ${processingTime}ms`);
+      console.warn(`Edge function processing time: ${processingTime}ms`);
     });
   });
 

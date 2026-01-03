@@ -56,7 +56,7 @@ serve(async (req: Request) => {
     }
 
     if (!reminders || reminders.length === 0) {
-      console.log('[send-reminders] No reminders to send');
+      console.warn('[send-reminders] No reminders to send');
       return new Response(
         JSON.stringify({
           success: true,

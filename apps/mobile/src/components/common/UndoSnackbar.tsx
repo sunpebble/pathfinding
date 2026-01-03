@@ -30,6 +30,14 @@ export const UndoSnackbar: React.FC<UndoSnackbarProps> = ({
   const opacity = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const handleDismiss = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    onDismiss();
+  }, [onDismiss]);
+
   // Show/hide animation
   useEffect(() => {
     if (visible) {
@@ -77,15 +85,7 @@ export const UndoSnackbar: React.FC<UndoSnackbarProps> = ({
         clearTimeout(timerRef.current);
       }
     };
-  }, [visible, duration, translateY, opacity]);
-
-  const handleDismiss = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    onDismiss();
-  }, [onDismiss]);
+  }, [visible, duration, translateY, opacity, handleDismiss]);
 
   const handleUndo = useCallback(() => {
     if (timerRef.current) {

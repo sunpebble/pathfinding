@@ -47,11 +47,18 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
   onSave,
   onDelete,
 }) => {
-  const [startTime, setStartTime] = useState<string | undefined>();
-  const [endTime, setEndTime] = useState<string | undefined>();
-  const [notes, setNotes] = useState('');
-  const [transportMode, setTransportMode] = useState<TransportMode>('walking');
-  const [transportMinutes, setTransportMinutes] = useState('');
+  // Initialize state with item data, or default values
+  const [startTime, setStartTime] = useState<string | undefined>(
+    item?.startTime
+  );
+  const [endTime, setEndTime] = useState<string | undefined>(item?.endTime);
+  const [notes, setNotes] = useState(item?.notes || '');
+  const [transportMode, setTransportMode] = useState<TransportMode>(
+    item?.transportMode || 'walking'
+  );
+  const [transportMinutes, setTransportMinutes] = useState(
+    item?.transportMinutes?.toString() || ''
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [conflicts, setConflicts] = useState<
     Array<{
@@ -62,10 +69,11 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
     }>
   >([]);
 
-  // Initialize form with item data
+  // Update form when item changes
   useEffect(() => {
     if (item) {
-      const initializeForm = () => {
+      // Schedule state updates for next tick to comply with React hooks rules
+      const updateForm = () => {
         setStartTime(item.startTime);
         setEndTime(item.endTime);
         setNotes(item.notes || '');
@@ -73,9 +81,11 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         setTransportMinutes(item.transportMinutes?.toString() || '');
         setConflicts([]);
       };
-      initializeForm();
+      // Use setTimeout to defer setState calls
+      const timeoutId = setTimeout(updateForm, 0);
+      return () => clearTimeout(timeoutId);
     }
-  }, [item?.id]); // Only depend on item id to avoid re-renders
+  }, [item]);
 
   const handleTimeSelect = useCallback((start: string, end: string) => {
     setStartTime(start);
