@@ -629,6 +629,62 @@ See [specs/001-travel-itinerary/quickstart.md](./specs/001-travel-itinerary/quic
 
 ---
 
+## 🐳 Docker
+
+### Quick Start with Docker Compose
+
+1. **Copy environment file**:
+
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Supabase credentials
+   ```
+
+2. **Start all services**:
+
+   ```bash
+   docker compose up -d
+   ```
+
+   - API: `http://localhost:8000`
+   - Crawler: `http://localhost:3001`
+
+3. **View logs**:
+
+   ```bash
+   docker compose logs -f
+   ```
+
+4. **Stop services**:
+   ```bash
+   docker compose down
+   ```
+
+### Building Individual Images
+
+```bash
+# Build API image
+docker build -f apps/api/Dockerfile -t pathfinding-api .
+
+# Build Crawler image
+docker build -f apps/crawler/Dockerfile -t pathfinding-crawler .
+```
+
+### Production Deployment
+
+Pre-built images are available from GitHub Container Registry:
+
+```bash
+# Pull latest images
+docker pull ghcr.io/kunish-homelab/pathfinding-api:latest
+docker pull ghcr.io/kunish-homelab/pathfinding-crawler:latest
+
+# Run with docker compose
+docker compose up -d
+```
+
+---
+
 ## Database Schema
 
 The application uses PostgreSQL with the following main tables:

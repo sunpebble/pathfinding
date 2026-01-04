@@ -1,0 +1,62 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: ghcr.io/kunish-homelab/pathfinding-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=8000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    restart: unless-stopped
+
+  crawler:
+    build:
+      context: .
+      dockerfile: apps/crawler/Dockerfile
+    image: ghcr.io/kunish-homelab/pathfinding-crawler:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3001
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - AMAP_API_KEY=${AMAP_API_KEY:-}
+      - AMAP_SECRET_KEY=${AMAP_SECRET_KEY:-}
+      - OVERPASS_API_URL=${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
+      - DEFAULT_RATE_LIMIT_RPS=${DEFAULT_RATE_LIMIT_RPS:-1}
+      - DEFAULT_MAX_CONCURRENT=${DEFAULT_MAX_CONCURRENT:-5}
+      - CRAWLEE_STORAGE_DIR=/app/storage
+      - CRAWLEE_HEADLESS=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      - OTEL_SERVICE_NAME=pathfinding-crawler
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ENABLE_SCHEDULER=${ENABLE_SCHEDULER:-true}
+    volumes:
+      - crawler-storage:/app/storage
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  crawler-storage:
