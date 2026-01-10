@@ -3,12 +3,22 @@
  * Central registry for all available crawlers
  */
 
-import type { CrawlJob } from '@pathfinding/crawler-types';
+import type { CrawlJob, CrawlJobStatistics } from '@pathfinding/crawler-types';
 import { AmapCrawler } from './amap.crawler.js';
+import { BaseGuideCrawler } from './base-guide.crawler.js';
 import { BaseCrawler } from './base.crawler.js';
+import { CtripCrawler } from './ctrip.crawler.js';
 import { OSMCrawler } from './osm.crawler.js';
+import { WeiboCrawler } from './weibo.crawler.js';
+import { XiaohongshuCrawler } from './xiaohongshu.crawler.js';
 
-export type CrawlerConstructor = new (job: CrawlJob) => BaseCrawler;
+// Common interface for all crawlers
+interface Runnable {
+  run: () => Promise<CrawlJobStatistics>;
+  cancel: () => void;
+}
+
+export type CrawlerConstructor = new (job: CrawlJob) => Runnable;
 
 /**
  * Registry of available crawlers by platform
@@ -28,7 +38,7 @@ export function registerCrawler(
 /**
  * Get a crawler instance for a platform
  */
-export function getCrawler(job: CrawlJob): BaseCrawler {
+export function getCrawler(job: CrawlJob): Runnable {
   const platform = job.platform.toLowerCase();
   const Constructor = crawlerRegistry.get(platform);
 
@@ -53,10 +63,25 @@ export function isPlatformSupported(platform: string): boolean {
   return crawlerRegistry.has(platform.toLowerCase());
 }
 
-// Register built-in crawlers
+// Register built-in POI crawlers
 registerCrawler('osm', OSMCrawler);
 registerCrawler('openstreetmap', OSMCrawler);
 registerCrawler('amap', AmapCrawler);
 registerCrawler('gaode', AmapCrawler);
 
-export { AmapCrawler, BaseCrawler, OSMCrawler };
+// Register travel guide crawlers
+registerCrawler('xiaohongshu', XiaohongshuCrawler);
+registerCrawler('xhs', XiaohongshuCrawler);
+registerCrawler('weibo', WeiboCrawler);
+registerCrawler('ctrip', CtripCrawler);
+registerCrawler('xiecheng', CtripCrawler);
+
+export {
+  AmapCrawler,
+  BaseCrawler,
+  BaseGuideCrawler,
+  CtripCrawler,
+  OSMCrawler,
+  WeiboCrawler,
+  XiaohongshuCrawler,
+};

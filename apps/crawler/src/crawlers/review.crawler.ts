@@ -184,6 +184,6 @@ export async function batchFetchReviews(
     results.set(poiId, []);
   }
 
-  console.log(`Review fetch placeholder: ${poiIds.length} POIs requested`);
+  console.warn(`Review fetch placeholder: ${poiIds.length} POIs requested`);
   return results;
 }

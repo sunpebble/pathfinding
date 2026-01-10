@@ -17,6 +17,7 @@ import { initTracing } from './middleware/tracing.js';
 import { initSentry } from './monitoring/index.js';
 import { crawlJobsRouter } from './routes/crawl-jobs.js';
 import { dashboardRouter } from './routes/dashboard.js';
+import { guidesRouter } from './routes/guides.js';
 import { poisRouter } from './routes/pois.js';
 import { qualityReportsRouter } from './routes/quality-reports.js';
 import { trainingDatasetsRouter } from './routes/training-datasets.js';
@@ -68,6 +69,7 @@ app.get('/', (c: Context) => {
       health: '/health',
       crawlJobs: '/api/crawl-jobs',
       pois: '/api/pois',
+      guides: '/api/guides',
       trainingDatasets: '/api/training-datasets',
       qualityReports: '/api/quality-reports',
     },
@@ -80,6 +82,7 @@ app.route('/dashboard', dashboardRouter);
 // Mount API routers
 app.route('/api/crawl-jobs', crawlJobsRouter);
 app.route('/api/pois', poisRouter);
+app.route('/api/guides', guidesRouter);
 app.route('/api/training-datasets', trainingDatasetsRouter);
 app.route('/api/quality-reports', qualityReportsRouter);
 

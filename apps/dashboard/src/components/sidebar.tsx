@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BookOpen,
   Bug,
   Database,
   LayoutDashboard,
@@ -17,6 +18,7 @@ const navigation = [
   { name: 'Overview', href: '/', icon: LayoutDashboard },
   { name: 'Crawl Jobs', href: '/jobs', icon: ListTodo },
   { name: 'POIs', href: '/pois', icon: MapPin },
+  { name: 'Travel Guides', href: '/guides', icon: BookOpen },
   { name: 'Training Datasets', href: '/datasets', icon: Database },
   { name: 'Create Job', href: '/jobs/create', icon: PlusCircle },
 ];

@@ -19,3 +19,6 @@ export * from './raw-record.js';
 
 // Gold Layer
 export * from './training-dataset.js';
+
+// Travel Guides
+export * from './travel-guide.js';

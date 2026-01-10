@@ -232,3 +232,110 @@ export async function getTrainingDatasets(params?: {
 export async function getTrainingDataset(id: string): Promise<TrainingDataset> {
   return fetchApi(`/training-datasets/${id}`);
 }
+
+// Travel Guides API
+export interface TravelGuide {
+  id: string;
+  source_platform: 'xiaohongshu' | 'weibo' | 'ctrip';
+  source_external_id: string;
+  source_url?: string;
+  title?: string;
+  content: string;
+  content_html?: string; // Rich text HTML content for rendering
+  author_name?: string;
+  author_id?: string;
+  destinations: string[];
+  tags: string[];
+  likes_count: number;
+  saves_count: number;
+  comments_count: number;
+  views_count: number;
+  cover_image_url?: string;
+  image_urls: string[];
+  published_at?: string;
+  crawled_at: string;
+  quality_score: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getTravelGuides(params?: {
+  platforms?: string;
+  destinations?: string;
+  min_quality?: number;
+  limit?: number;
+  offset?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+}): Promise<PaginatedResponse<TravelGuide>> {
+  const searchParams = new URLSearchParams();
+  if (params?.platforms) searchParams.append('platforms', params.platforms);
+  if (params?.destinations)
+    searchParams.append('destinations', params.destinations);
+  if (params?.min_quality)
+    searchParams.append('min_quality', params.min_quality.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  if (params?.offset) searchParams.append('offset', params.offset.toString());
+  if (params?.sort) searchParams.append('sort', params.sort);
+  if (params?.order) searchParams.append('order', params.order);
+
+  const query = searchParams.toString();
+  return fetchApi(`/guides${query ? `?${query}` : ''}`);
+}
+
+export async function getTravelGuide(
+  id: string
+): Promise<{ data: TravelGuide }> {
+  return fetchApi(`/guides/${id}`);
+}
+
+export async function getGuideRecommendations(params?: {
+  destinations?: string;
+  tags?: string;
+  platforms?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<PaginatedResponse<TravelGuide>> {
+  const searchParams = new URLSearchParams();
+  if (params?.destinations)
+    searchParams.append('destinations', params.destinations);
+  if (params?.tags) searchParams.append('tags', params.tags);
+  if (params?.platforms) searchParams.append('platforms', params.platforms);
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  if (params?.offset) searchParams.append('offset', params.offset.toString());
+
+  const query = searchParams.toString();
+  return fetchApi(`/guides/recommendations${query ? `?${query}` : ''}`);
+}
+
+export async function getTrendingGuides(params?: {
+  days?: number;
+  platforms?: string;
+  limit?: number;
+}): Promise<{ data: TravelGuide[]; period_days: number }> {
+  const searchParams = new URLSearchParams();
+  if (params?.days) searchParams.append('days', params.days.toString());
+  if (params?.platforms) searchParams.append('platforms', params.platforms);
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+
+  const query = searchParams.toString();
+  return fetchApi(`/guides/trending${query ? `?${query}` : ''}`);
+}
+
+export async function searchGuides(params: {
+  q: string;
+  platforms?: string;
+  destinations?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<PaginatedResponse<TravelGuide>> {
+  const searchParams = new URLSearchParams();
+  searchParams.append('q', params.q);
+  if (params.platforms) searchParams.append('platforms', params.platforms);
+  if (params.destinations)
+    searchParams.append('destinations', params.destinations);
+  if (params.limit) searchParams.append('limit', params.limit.toString());
+  if (params.offset) searchParams.append('offset', params.offset.toString());
+
+  return fetchApi(`/guides/search?${searchParams.toString()}`);
+}

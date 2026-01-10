@@ -1,0 +1,337 @@
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  Bookmark,
+  Calendar,
+  ExternalLink,
+  Eye,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Star,
+  User,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { getTravelGuide } from '@/lib/api';
+import { cn } from '@/lib/utils';
+
+function PlatformBadge({ platform }: { platform: string }) {
+  const colors: Record<string, string> = {
+    ctrip: 'bg-blue-100 text-blue-800 border-blue-200',
+    xiaohongshu: 'bg-red-100 text-red-800 border-red-200',
+    weibo: 'bg-orange-100 text-orange-800 border-orange-200',
+  };
+  const names: Record<string, string> = {
+    ctrip: '携程',
+    xiaohongshu: '小红书',
+    weibo: '微博',
+  };
+  return (
+    <span
+      className={cn(
+        'px-3 py-1 rounded-full text-sm font-medium border',
+        colors[platform] || 'bg-gray-100 text-gray-800 border-gray-200'
+      )}
+    >
+      {names[platform] || platform}
+    </span>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+      <Icon className={cn('h-6 w-6 mx-auto mb-2', color)} />
+      <div className="text-2xl font-bold text-gray-900">
+        {value.toLocaleString()}
+      </div>
+      <div className="text-sm text-gray-500">{label}</div>
+    </div>
+  );
+}
+
+function formatDate(dateString?: string) {
+  if (!dateString) return 'Unknown';
+  try {
+    return new Date(dateString).toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  } catch {
+    return dateString;
+  }
+}
+
+export default function GuideDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['guide', id],
+    queryFn: () => getTravelGuide(id),
+    enabled: !!id,
+  });
+
+  const guide = data?.data;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !guide) {
+    return (
+      <div className="space-y-4">
+        <Link
+          href="/guides"
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Guides
+        </Link>
+        <div className="bg-red-50 text-red-700 p-6 rounded-lg text-center">
+          <p className="font-medium">Guide not found</p>
+          <p className="text-sm mt-1">
+            The guide you're looking for doesn't exist.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const qualityPercent = Math.round(guide.quality_score * 100);
+
+  return (
+    <div className="space-y-6 max-w-4xl">
+      {/* Back Button */}
+      <Link
+        href="/guides"
+        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Guides
+      </Link>
+
+      {/* Header */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              <PlatformBadge platform={guide.source_platform} />
+              <div className="flex items-center gap-1 text-amber-500">
+                <Star className="h-4 w-4 fill-current" />
+                <span className="text-sm font-medium">
+                  {qualityPercent}% Quality
+                </span>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
+              {guide.title || 'Untitled Guide'}
+            </h1>
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              {guide.author_name && (
+                <span className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  {guide.author_name}
+                </span>
+              )}
+              {guide.published_at && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  {formatDate(guide.published_at)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Source Link */}
+          {guide.source_url && (
+            <a
+              href={guide.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              <ExternalLink className="h-4 w-4" />
+              View Original
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        <StatCard
+          icon={Heart}
+          label="Likes"
+          value={guide.likes_count}
+          color="text-red-500"
+        />
+        <StatCard
+          icon={Eye}
+          label="Views"
+          value={guide.views_count}
+          color="text-blue-500"
+        />
+        <StatCard
+          icon={MessageCircle}
+          label="Comments"
+          value={guide.comments_count}
+          color="text-green-500"
+        />
+        <StatCard
+          icon={Bookmark}
+          label="Saves"
+          value={guide.saves_count}
+          color="text-purple-500"
+        />
+      </div>
+
+      {/* Destinations & Tags */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-emerald-600" />
+          Destinations & Tags
+        </h2>
+
+        {guide.destinations.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              Destinations
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {guide.destinations.map((dest) => (
+                <span
+                  key={dest}
+                  className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium"
+                >
+                  {dest}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {guide.tags.length > 0 && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
+            <div className="flex flex-wrap gap-2">
+              {guide.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {guide.destinations.length === 0 && guide.tags.length === 0 && (
+          <p className="text-gray-500 text-sm">
+            No destinations or tags available
+          </p>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Content</h2>
+        {guide.content_html ? (
+          // Render rich text HTML content
+          <div
+            className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
+            dangerouslySetInnerHTML={{ __html: guide.content_html }}
+          />
+        ) : (
+          // Fallback to plain text
+          <div className="prose prose-gray max-w-none">
+            <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+              {guide.content || 'No content available'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Images */}
+      {guide.image_urls && guide.image_urls.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Images ({guide.image_urls.length})
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {guide.image_urls.slice(0, 9).map((url, index) => (
+              <a
+                key={index}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block aspect-square rounded-lg overflow-hidden bg-gray-100 hover:opacity-90 transition-opacity"
+              >
+                <img
+                  src={url}
+                  alt={`Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
+                  }}
+                />
+              </a>
+            ))}
+          </div>
+          {guide.image_urls.length > 9 && (
+            <p className="text-sm text-gray-500 mt-3 text-center">
+              +{guide.image_urls.length - 9} more images
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Metadata */}
+      <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
+        <h2 className="text-sm font-medium text-gray-500 mb-3">Metadata</h2>
+        <dl className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt className="text-gray-500">Guide ID</dt>
+            <dd className="font-mono text-gray-900">
+              {guide.id.slice(0, 8)}...
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">External ID</dt>
+            <dd className="font-mono text-gray-900">
+              {guide.source_external_id.slice(0, 20)}...
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Crawled At</dt>
+            <dd className="text-gray-900">{formatDate(guide.crawled_at)}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Last Updated</dt>
+            <dd className="text-gray-900">{formatDate(guide.updated_at)}</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  );
+}

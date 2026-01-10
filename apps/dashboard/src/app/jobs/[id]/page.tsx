@@ -175,7 +175,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
             Configuration
           </h2>
           <div className="space-y-4">
-            {job.config.categories && job.config.categories.length > 0 && (
+            {job.config?.categories && job.config.categories.length > 0 && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
                   Categories
@@ -192,7 +192,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                 </dd>
               </div>
             )}
-            {job.config.geographic_scope?.cities &&
+            {job.config?.geographic_scope?.cities &&
               job.config.geographic_scope.cities.length > 0 && (
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Cities</dt>
@@ -208,7 +208,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   </dd>
                 </div>
               )}
-            {job.config.rate_limit && (
+            {job.config?.rate_limit && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
                   Rate Limit

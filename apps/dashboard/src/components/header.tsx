@@ -19,7 +19,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           {isLoading ? (
             <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
-          ) : health?.status === 'healthy' ? (
+          ) : health?.status === 'ok' || health?.status === 'healthy' ? (
             <>
               <Wifi className="h-4 w-4 text-emerald-500" />
               <span className="text-sm text-emerald-600">Connected</span>

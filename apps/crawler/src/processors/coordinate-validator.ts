@@ -37,7 +37,8 @@ const CITY_BOUNDS: Record<
 // GCJ-02 to WGS-84 transformation constants
 const PI = Math.PI;
 const A = 6378245.0;
-const EE = 0.006693421622966;
+// Using string to avoid precision loss in linting
+const EE = 0.006_693_421_622_965_943;
 
 /**
  * Check if coordinates are within China bounds
