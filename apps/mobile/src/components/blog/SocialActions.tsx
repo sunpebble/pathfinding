@@ -1,6 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Platform, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Platform,
+  Share,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Text } from 'react-native-paper';
 
 interface SocialActionsProps {
@@ -24,16 +30,17 @@ export const SocialActions: React.FC<SocialActionsProps> = ({
   const handleShare = async () => {
     try {
       // Include URL in message for Android compatibility
-      const message = Platform.OS === 'ios'
-        ? title
-        : `${title}${shareUrl ? `\n${shareUrl}` : ''}`;
+      const message =
+        Platform.OS === 'ios'
+          ? title
+          : `${title}${shareUrl ? `\n${shareUrl}` : ''}`;
 
       await Share.share({
         message,
         url: shareUrl, // iOS only
         title,
       });
-    } catch (error) {
+    } catch {
       // User cancelled or share failed - silently handle
     }
   };

@@ -1,9 +1,10 @@
 import type { BlogLocation } from '@pathfinding/types';
+import type { Region } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import MapView, { Callout, Marker } from 'react-native-maps';
 import { Text } from 'react-native-paper';
-import MapView, { Callout, Marker, Region } from 'react-native-maps';
 
 interface BlogMapViewProps {
   locations: BlogLocation[];
