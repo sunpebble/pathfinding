@@ -1,7 +1,7 @@
 import type { BlogLocation } from '@pathfinding/types';
 import type { Region } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
 import { Text } from 'react-native-paper';
@@ -9,6 +9,7 @@ import { Text } from 'react-native-paper';
 interface BlogMapViewProps {
   locations: BlogLocation[];
   height?: number;
+  selectedLocationId?: string | null;
 }
 
 // Default region when no locations are available (centered on China)
@@ -24,19 +25,27 @@ const MAP_PADDING = 0.02;
 
 /**
  * BlogMapView - displays an interactive map with location markers
+ *
+ * IMPORTANT: Markers are kept completely static (no dynamic styling) to prevent
+ * react-native-maps rendering issues that cause markers to disappear.
+ * Selection is indicated by:
+ * 1. Map animating to center on selected location
+ * 2. Timeline list highlight (handled in parent component)
  */
 export const BlogMapView: React.FC<BlogMapViewProps> = ({
   locations,
   height = 250,
+  selectedLocationId,
 }) => {
-  // Calculate the initial region based on locations
-  const initialRegion = useMemo<Region>(() => {
+  const mapRef = useRef<MapView>(null);
+
+  // Calculate the region to show ALL locations
+  const allLocationsRegion = useMemo<Region>(() => {
     if (!locations || locations.length === 0) {
       return DEFAULT_REGION;
     }
 
     if (locations.length === 1) {
-      // Single location: center on it with reasonable zoom
       const loc = locations[0];
       return {
         latitude: loc.latitude,
@@ -46,31 +55,59 @@ export const BlogMapView: React.FC<BlogMapViewProps> = ({
       };
     }
 
-    // Multiple locations: calculate bounding box
-    const latitudes = locations.map((loc) => loc.latitude);
-    const longitudes = locations.map((loc) => loc.longitude);
+    const lats = locations.map((l) => l.latitude);
+    const lngs = locations.map((l) => l.longitude);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
 
-    const minLat = Math.min(...latitudes);
-    const maxLat = Math.max(...latitudes);
-    const minLng = Math.min(...longitudes);
-    const maxLng = Math.max(...longitudes);
-
-    const latDelta = Math.max(maxLat - minLat, 0.01) + MAP_PADDING;
-    const lngDelta = Math.max(maxLng - minLng, 0.01) + MAP_PADDING;
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLng = (minLng + maxLng) / 2;
+    const deltaLat = (maxLat - minLat) * 1.5 + MAP_PADDING;
+    const deltaLng = (maxLng - minLng) * 1.5 + MAP_PADDING;
 
     return {
-      latitude: (minLat + maxLat) / 2,
-      longitude: (minLng + maxLng) / 2,
-      latitudeDelta: latDelta,
-      longitudeDelta: lngDelta,
+      latitude: centerLat,
+      longitude: centerLng,
+      latitudeDelta: Math.max(deltaLat, 0.02),
+      longitudeDelta: Math.max(deltaLng, 0.02),
     };
   }, [locations]);
 
-  // Sort locations by order for display
+  // Sort locations by order for display (memoized once)
   const sortedLocations = useMemo(() => {
     if (!locations || locations.length === 0) return [];
     return [...locations].sort((a, b) => a.order - b.order);
   }, [locations]);
+
+  // Handle selection changes - animate map only
+  useEffect(() => {
+    if (!mapRef.current || !locations || locations.length === 0) return;
+
+    try {
+      if (selectedLocationId) {
+        const selectedLocation = locations.find(
+          (l) => l.id === selectedLocationId
+        );
+        if (selectedLocation?.latitude && selectedLocation?.longitude) {
+          mapRef.current.animateToRegion(
+            {
+              latitude: selectedLocation.latitude,
+              longitude: selectedLocation.longitude,
+              latitudeDelta: 0.02,
+              longitudeDelta: 0.02,
+            },
+            300
+          );
+        }
+      } else {
+        mapRef.current.animateToRegion(allLocationsRegion, 300);
+      }
+    } catch {
+      // Silently handle animation errors
+    }
+  }, [selectedLocationId, locations, allLocationsRegion]);
 
   // Don't render map if no locations
   if (!locations || locations.length === 0) {
@@ -85,13 +122,15 @@ export const BlogMapView: React.FC<BlogMapViewProps> = ({
   return (
     <View style={[styles.container, { height }]}>
       <MapView
+        ref={mapRef}
         style={styles.map}
-        initialRegion={initialRegion}
+        initialRegion={allLocationsRegion}
         showsUserLocation={false}
         showsMyLocationButton={false}
         showsCompass={true}
         showsScale={true}
       >
+        {/* Static markers - NO dynamic styling to prevent disappearing */}
         {sortedLocations.map((location, index) => (
           <Marker
             key={location.id}
@@ -101,7 +140,7 @@ export const BlogMapView: React.FC<BlogMapViewProps> = ({
             }}
             title={location.name}
             description={location.description}
-            pinColor="#1976d2"
+            tracksViewChanges={false}
           >
             <View style={styles.markerContainer}>
               <View style={styles.marker}>
@@ -149,6 +188,7 @@ const styles = StyleSheet.create({
   },
   markerContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
   },
   marker: {
     width: 28,

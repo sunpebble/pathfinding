@@ -49,6 +49,15 @@ export function BlogPostDetailScreen() {
     }
   }, [id, fetchBlogPost]);
 
+  const handleGetItinerary = useCallback(() => {
+    if (id && currentBlogPost) {
+      router.push({
+        pathname: '/(tabs)/itinerary/imported-itinerary',
+        params: { blogPostId: id },
+      });
+    }
+  }, [id, currentBlogPost]);
+
   // Loading state
   if (isLoading && !currentBlogPost) {
     return (
@@ -128,14 +137,28 @@ export function BlogPostDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Social actions (like and share) */}
-      <SocialActions
-        title={currentBlogPost.title}
-        shareUrl={currentBlogPost.sourceUrl}
-        isLiked={currentBlogPost.isLiked ?? false}
-        likeCount={currentBlogPost.likeCount}
-        onLikePress={handleLike}
-      />
+      {/* Bottom action bar */}
+      <View style={styles.bottomBar}>
+        {/* Get Itinerary button */}
+        {currentBlogPost.locations && currentBlogPost.locations.length > 0 && (
+          <TouchableOpacity
+            style={styles.getItineraryButton}
+            onPress={handleGetItinerary}
+          >
+            <Ionicons name="map-outline" size={18} color="#fff" />
+            <Text style={styles.getItineraryText}>获取攻略</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Social actions (like and share) */}
+        <SocialActions
+          title={currentBlogPost.title}
+          shareUrl={currentBlogPost.sourceUrl}
+          isLiked={currentBlogPost.isLiked ?? false}
+          likeCount={currentBlogPost.likeCount}
+          onLikePress={handleLike}
+        />
+      </View>
     </View>
   );
 }
@@ -226,6 +249,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     lineHeight: 26,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+    gap: 12,
+  },
+  getItineraryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#34C759',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+  },
+  getItineraryText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

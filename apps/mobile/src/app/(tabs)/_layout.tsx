@@ -33,6 +33,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="blog"
+        options={{
+          title: '博文',
+          headerShown: true,
+          headerTitle: '旅行博文',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="book-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: '我的',
