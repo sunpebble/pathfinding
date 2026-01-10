@@ -8,7 +8,7 @@ import type {
   POIReview,
   SourceAttribution,
 } from '@pathfinding/crawler-types';
-import { calculateDistance, getBoundingBox } from '../lib/geo.js';
+import { calculateDistance, getBoundingBoxFromCenter } from '../lib/geo.js';
 import { supabase, TABLES } from '../lib/supabase.js';
 
 export interface POISearchParams {
@@ -92,7 +92,7 @@ export async function searchPOIs(
 
   // Geo filter (bounding box for performance)
   if (lat !== undefined && lng !== undefined) {
-    const bbox = getBoundingBox(lat, lng, radius);
+    const bbox = getBoundingBoxFromCenter(lat, lng, radius);
     dbQuery = dbQuery
       .gte('location_lat', bbox.minLat)
       .lte('location_lat', bbox.maxLat)
@@ -142,10 +142,8 @@ export async function searchPOIs(
   if (lat !== undefined && lng !== undefined) {
     pois = pois.filter((poi) => {
       const distance = calculateDistance(
-        lat,
-        lng,
-        poi.location_lat,
-        poi.location_lng
+        { latitude: lat, longitude: lng },
+        { latitude: poi.location_lat, longitude: poi.location_lng }
       );
       return distance <= radius;
     });
@@ -154,16 +152,12 @@ export async function searchPOIs(
     if (sortBy === 'distance') {
       pois.sort((a, b) => {
         const distA = calculateDistance(
-          lat,
-          lng,
-          a.location_lat,
-          a.location_lng
+          { latitude: lat, longitude: lng },
+          { latitude: a.location_lat, longitude: a.location_lng }
         );
         const distB = calculateDistance(
-          lat,
-          lng,
-          b.location_lat,
-          b.location_lng
+          { latitude: lat, longitude: lng },
+          { latitude: b.location_lat, longitude: b.location_lng }
         );
         return sortOrder === 'asc' ? distA - distB : distB - distA;
       });
@@ -311,7 +305,7 @@ export async function getNearbyPOIs(
   const { radius = 1000, category, limit = 10, excludeId } = options;
 
   // Use bounding box for initial filter
-  const bbox = getBoundingBox(lat, lng, radius);
+  const bbox = getBoundingBoxFromCenter(lat, lng, radius);
 
   let query = supabase
     .from(TABLES.NORMALIZED_POIS)

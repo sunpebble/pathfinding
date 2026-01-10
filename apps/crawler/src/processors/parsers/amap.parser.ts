@@ -11,6 +11,7 @@ import type {
 import type { Parser, ParserResult } from './index.js';
 
 import { mapPlatformCategory } from '@pathfinding/crawler-types';
+import { gcj02ToWgs84 } from '../coordinate-validator.js';
 
 interface AmapPOI {
   id: string;
@@ -32,6 +33,11 @@ interface AmapPOI {
     opentime_today?: string;
     meal_ordering?: string;
     keytag?: string;
+    seat?: string;
+    wifi?: string;
+    parking?: string;
+    smoking?: string;
+    facility?: string;
   };
   alias?: string;
   entr_location?: string;
@@ -39,6 +45,8 @@ interface AmapPOI {
   indoor_map?: string;
   email?: string;
   postcode?: string;
+  tag?: string;
+  business_area?: string;
 }
 
 /**
@@ -82,6 +90,7 @@ function parseCategory(typecode: string): {
 
 /**
  * Parse Amap location string "lng,lat" to coordinates
+ * Converts from GCJ-02 (Amap) to WGS-84 (standard GPS)
  */
 function parseLocation(
   locationStr: string
@@ -91,7 +100,9 @@ function parseLocation(
   const [lng, lat] = locationStr.split(',').map(Number);
   if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
 
-  return { latitude: lat, longitude: lng };
+  // Convert from GCJ-02 to WGS-84
+  const wgs84 = gcj02ToWgs84(lat, lng);
+  return { latitude: wgs84.latitude, longitude: wgs84.longitude };
 }
 
 /**
@@ -219,8 +230,18 @@ function extractTags(poi: AmapPOI): string[] {
     tags.push(...poi.biz_ext.keytag.split(';').map((t) => t.trim()));
   }
 
-  // Filter out empty tags
-  return tags.filter((t) => t.length > 0);
+  // Add tag field if available
+  if (poi.tag) {
+    tags.push(...poi.tag.split(';').map((t) => t.trim()));
+  }
+
+  // Add facility info as tags
+  if (poi.biz_ext?.wifi === '1') tags.push('wifi');
+  if (poi.biz_ext?.parking === '1') tags.push('parking');
+  if (poi.biz_ext?.smoking === '0') tags.push('no_smoking');
+
+  // Filter out empty tags and dedupe
+  return [...new Set(tags.filter((t) => t.length > 0))];
 }
 
 /**

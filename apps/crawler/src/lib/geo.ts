@@ -197,3 +197,24 @@ export function locationSimilarity(
   }
   return 1 - distance / maxDistance;
 }
+
+/**
+ * Create a bounding box from a center point and radius
+ * @param lat - Center latitude
+ * @param lng - Center longitude
+ * @param radiusMeters - Radius in meters
+ * @returns Bounding box
+ */
+export function getBoundingBoxFromCenter(
+  lat: number,
+  lng: number,
+  radiusMeters: number
+): BoundingBox {
+  const degrees = metersToDegrees(radiusMeters, lat);
+  return {
+    minLat: lat - degrees.lat,
+    maxLat: lat + degrees.lat,
+    minLng: lng - degrees.lng,
+    maxLng: lng + degrees.lng,
+  };
+}

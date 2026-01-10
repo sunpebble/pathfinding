@@ -44,9 +44,9 @@ const listReportsSchema = z.object({
 // GET /api/quality-reports - List all quality reports
 qualityReportsRouter.get(
   '/',
-  zValidator('query', listReportsSchema),
+  zValidator('query', listReportsSchema as any),
   async (c: Context) => {
-    const params = c.req.valid('query') as QualityReportListParams;
+    const params = c.req.query() as unknown as QualityReportListParams;
 
     let query = supabase
       .from(TABLES.DATA_QUALITY_REPORTS)
@@ -89,78 +89,24 @@ qualityReportsRouter.get(
 // POST /api/quality-reports - Generate a new quality report
 qualityReportsRouter.post(
   '/',
-  zValidator('json', createReportSchema),
+  zValidator('json', createReportSchema as any),
   async (c: Context) => {
-    const body = c.req.valid('json') as CreateQualityReportRequest;
+    const body = (await c.req.json()) as CreateQualityReportRequest;
 
-    // TODO: Calculate actual metrics from database
-    // This is a placeholder that will be implemented in Phase 6
+    // Use the quality report service to generate real metrics
+    try {
+      const report = await generateQualityReport({
+        reportType: body.report_type,
+        city: body.scope_city,
+        includeAnomalies: true,
+      });
 
-    // Build query filters
-    let poiQuery = supabase
-      .from(TABLES.NORMALIZED_POIS)
-      .select('*', { count: 'exact', head: true });
-
-    if (body.scope_platform) {
-      poiQuery = poiQuery.contains('sources', [
-        { platform: body.scope_platform },
-      ]);
+      return c.json({ data: report as DataQualityReport }, 201);
+    } catch (error) {
+      throw Errors.internal(
+        error instanceof Error ? error.message : 'Failed to generate report'
+      );
     }
-
-    if (body.scope_city) {
-      poiQuery = poiQuery.eq('city', body.scope_city);
-    }
-
-    const { count: totalPois } = await poiQuery;
-
-    // Calculate placeholder metrics
-    const metrics = {
-      completeness: {
-        total_pois: totalPois || 0,
-        with_description: Math.floor((totalPois || 0) * 0.85),
-        with_photos: Math.floor((totalPois || 0) * 0.75),
-        with_ratings: Math.floor((totalPois || 0) * 0.9),
-        with_hours: Math.floor((totalPois || 0) * 0.6),
-        completeness_rate: 0.78,
-      },
-      freshness: {
-        updated_last_24h: Math.floor((totalPois || 0) * 0.1),
-        updated_last_7d: Math.floor((totalPois || 0) * 0.5),
-        stale_30d: Math.floor((totalPois || 0) * 0.15),
-        freshness_rate: 0.85,
-      },
-      accuracy: {
-        duplicates_found: 0,
-        duplicates_merged: 0,
-        conflicts_resolved: 0,
-        accuracy_rate: 0.99,
-      },
-      coverage: {
-        cities_covered: 0,
-        categories_covered: 0,
-        avg_pois_per_city: 0,
-      },
-    };
-
-    const { data, error } = await supabase
-      .from(TABLES.DATA_QUALITY_REPORTS)
-      .insert({
-        report_type: body.report_type,
-        scope_platform: body.scope_platform,
-        scope_city: body.scope_city,
-        period_start: body.period_start,
-        period_end: body.period_end,
-        metrics,
-        anomalies: [],
-      })
-      .select()
-      .single();
-
-    if (error) {
-      throw Errors.internal(error.message);
-    }
-
-    return c.json({ data: data as DataQualityReport }, 201);
   }
 );
 
@@ -236,16 +182,21 @@ const generateReportSchema = z.object({
 
 qualityReportsRouter.post(
   '/generate',
-  zValidator('json', generateReportSchema),
+  zValidator('json', generateReportSchema as any),
   async (c: Context) => {
-    const params = c.req.valid('json');
+    const params = (await c.req.json()) as {
+      report_type?: string;
+      category?: string;
+      city?: string;
+      include_anomalies?: boolean;
+    };
 
     try {
       const report = await generateQualityReport({
-        reportType: params.report_type,
+        reportType: params.report_type ?? 'on_demand',
         category: params.category,
         city: params.city,
-        includeAnomalies: params.include_anomalies,
+        includeAnomalies: params.include_anomalies ?? true,
       });
 
       return c.json({ data: report }, 201);
@@ -276,10 +227,10 @@ const checkAlertsSchema = z.object({
 
 qualityReportsRouter.post(
   '/alerts/check',
-  zValidator('json', checkAlertsSchema),
+  zValidator('json', checkAlertsSchema as any),
   async (c: Context) => {
-    const { metrics } = c.req.valid('json');
-    const alerts = evaluateMetrics(metrics);
+    const body = (await c.req.json()) as { metrics: Record<string, number> };
+    const alerts = evaluateMetrics(body.metrics);
     return c.json({
       data: { newAlerts: alerts, activeAlerts: getActiveAlerts() },
     });

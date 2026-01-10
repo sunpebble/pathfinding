@@ -135,10 +135,12 @@ export class CSVExporter extends BaseExporter {
             | undefined;
           result[field] = breakdown?.[childField] || '';
         } else {
-          result[field] = (poi as Record<string, unknown>)[field] ?? '';
+          result[field] =
+            (poi as unknown as Record<string, unknown>)[field] ?? '';
         }
       } else {
-        result[field] = (poi as Record<string, unknown>)[field] ?? '';
+        result[field] =
+          (poi as unknown as Record<string, unknown>)[field] ?? '';
       }
     }
 

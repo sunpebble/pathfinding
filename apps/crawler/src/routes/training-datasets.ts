@@ -10,12 +10,14 @@ import type {
   TrainingDatasetStatus,
 } from '@pathfinding/crawler-types';
 import type { Context } from 'hono';
+import type { DatasetGenerationParams } from '../services/training-dataset.service.js';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { supabase, TABLES } from '../lib/supabase.js';
 import { Errors } from '../middleware/error-handler.js';
+import { generateTrainingDataset } from '../services/training-dataset.service.js';
 
 export const trainingDatasetsRouter = new Hono();
 
@@ -58,9 +60,9 @@ const listDatasetsSchema = z.object({
 // GET /api/training-datasets - List all training datasets
 trainingDatasetsRouter.get(
   '/',
-  zValidator('query', listDatasetsSchema),
+  zValidator('query', listDatasetsSchema as any),
   async (c: Context) => {
-    const params = c.req.valid('query') as TrainingDatasetListParams;
+    const params = c.req.query() as unknown as TrainingDatasetListParams;
 
     let query = supabase
       .from(TABLES.TRAINING_DATASETS)
@@ -103,9 +105,9 @@ trainingDatasetsRouter.get(
 // POST /api/training-datasets - Create a new training dataset
 trainingDatasetsRouter.post(
   '/',
-  zValidator('json', createDatasetSchema),
+  zValidator('json', createDatasetSchema as any),
   async (c: Context) => {
-    const body = c.req.valid('json') as CreateTrainingDatasetRequest;
+    const body = (await c.req.json()) as CreateTrainingDatasetRequest;
 
     // Check for duplicate name+version
     const { data: existing } = await supabase
@@ -121,36 +123,76 @@ trainingDatasetsRouter.post(
       );
     }
 
-    const { data, error } = await supabase
-      .from(TABLES.TRAINING_DATASETS)
-      .insert({
+    // Generate the dataset using the service
+    try {
+      const generationParams: DatasetGenerationParams = {
         name: body.name,
-        version: body.version,
         description: body.description,
-        generation_params: body.generation_params,
-        output_format: body.output_format || 'json',
-        status: 'pending' as TrainingDatasetStatus,
-        source_data_cutoff: new Date().toISOString(),
-        statistics: {
-          total_records: 0,
-          train_size: 0,
-          val_size: 0,
-          test_size: 0,
-          categories_distribution: {},
-          cities_distribution: {},
+        format: (body.output_format || 'json') as 'json' | 'jsonl' | 'csv',
+        filters: {
+          categories: body.generation_params.categories,
+          cities: body.generation_params.geographic_scope,
+          minQuality: body.generation_params.min_quality_score,
+          startDate: body.generation_params.time_range?.start
+            ? String(body.generation_params.time_range.start)
+            : undefined,
+          endDate: body.generation_params.time_range?.end
+            ? String(body.generation_params.time_range.end)
+            : undefined,
         },
-      })
-      .select()
-      .single();
+        sampling: body.generation_params.sampling
+          ? {
+              method: body.generation_params.sampling.method,
+              stratifyBy: 'category',
+            }
+          : undefined,
+        split: body.generation_params.sampling
+          ? {
+              enabled: true,
+              trainRatio: body.generation_params.sampling.train_ratio,
+              valRatio: body.generation_params.sampling.val_ratio,
+              testRatio: body.generation_params.sampling.test_ratio,
+            }
+          : undefined,
+      };
 
-    if (error) {
-      throw Errors.internal(error.message);
+      const result = await generateTrainingDataset(generationParams);
+
+      return c.json({ data: result.dataset as TrainingDataset }, 201);
+    } catch (genError) {
+      // If generation fails, still create a record with failed status
+      const { data, error } = await supabase
+        .from(TABLES.TRAINING_DATASETS)
+        .insert({
+          name: body.name,
+          version: body.version,
+          description: body.description,
+          generation_params: body.generation_params,
+          output_format: body.output_format || 'json',
+          status: 'failed' as TrainingDatasetStatus,
+          source_data_cutoff: new Date().toISOString(),
+          error_message:
+            genError instanceof Error
+              ? genError.message
+              : 'Unknown error during generation',
+          statistics: {
+            total_records: 0,
+            train_size: 0,
+            val_size: 0,
+            test_size: 0,
+            categories_distribution: {},
+            cities_distribution: {},
+          },
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw Errors.internal(error.message);
+      }
+
+      return c.json({ data: data as TrainingDataset }, 201);
     }
-
-    // TODO: Trigger dataset generation job
-    // This will be implemented in Phase 5
-
-    return c.json({ data: data as TrainingDataset }, 201);
   }
 );
 
@@ -191,25 +233,51 @@ trainingDatasetsRouter.get('/:id/download', async (c: Context) => {
     throw Errors.internal(error.message);
   }
 
-  if (dataset.status !== 'completed') {
-    throw Errors.badRequest('Dataset is not yet ready for download');
+  // For datasets that were generated but don't have a stored file,
+  // regenerate on-the-fly
+  const format = (dataset.output_format || 'json') as 'json' | 'jsonl' | 'csv';
+  const filters = (dataset.generation_params as Record<string, unknown>) || {};
+
+  try {
+    const generationParams: DatasetGenerationParams = {
+      name: dataset.name,
+      description: dataset.description,
+      format,
+      filters: {
+        categories: filters.categories as string[] | undefined,
+        cities: filters.geographic_scope as string[] | undefined,
+        minQuality: filters.min_quality_score as number | undefined,
+        startDate: (filters.time_range as Record<string, string>)?.start,
+        endDate: (filters.time_range as Record<string, string>)?.end,
+      },
+    };
+
+    const result = await generateTrainingDataset(generationParams);
+
+    // Return the full dataset export
+    const exportData = result.exports.full || result.exports.train;
+    if (!exportData) {
+      throw Errors.notFound('No export data generated');
+    }
+
+    // Set appropriate headers for file download
+    const filename = `${dataset.name}_v${dataset.version}.${format === 'jsonl' ? 'jsonl' : format}`;
+    c.header('Content-Type', exportData.mimeType);
+    c.header('Content-Disposition', `attachment; filename="${filename}"`);
+    c.header('Content-Length', String(exportData.sizeBytes));
+
+    return c.body(
+      typeof exportData.content === 'string'
+        ? exportData.content
+        : exportData.content.toString()
+    );
+  } catch (genError) {
+    throw Errors.internal(
+      genError instanceof Error
+        ? genError.message
+        : 'Failed to generate dataset for download'
+    );
   }
-
-  if (!dataset.output_path) {
-    throw Errors.notFound('Dataset file not found');
-  }
-
-  // TODO: Implement actual file download
-  // This will involve reading from storage and streaming the file
-  // For now, return a placeholder response
-
-  return c.json({
-    message: 'Download endpoint not yet implemented',
-    dataset_id: id,
-    output_path: dataset.output_path,
-    output_format: dataset.output_format,
-    output_size_bytes: dataset.output_size_bytes,
-  });
 });
 
 // DELETE /api/training-datasets/:id - Delete a training dataset
@@ -217,7 +285,7 @@ trainingDatasetsRouter.delete('/:id', async (c: Context) => {
   const id = c.req.param('id');
 
   // Get dataset to find output path
-  const { data: _dataset, error: fetchError } = await supabase
+  const { data: dataset, error: fetchError } = await supabase
     .from(TABLES.TRAINING_DATASETS)
     .select('output_path')
     .eq('id', id)
@@ -230,7 +298,23 @@ trainingDatasetsRouter.delete('/:id', async (c: Context) => {
     throw Errors.internal(fetchError.message);
   }
 
-  // TODO: Delete output file if exists
+  // Delete output file from storage if exists
+  if (dataset.output_path) {
+    try {
+      // Extract bucket and path from output_path
+      // Format: storage://bucket_name/path/to/file
+      const pathMatch = dataset.output_path.match(
+        /^storage:\/\/([^/]+)\/(.+)$/
+      );
+      if (pathMatch) {
+        const [, bucket, filePath] = pathMatch;
+        await supabase.storage.from(bucket).remove([filePath]);
+      }
+    } catch {
+      // Log but don't fail if file deletion fails
+      console.warn(`Failed to delete output file: ${dataset.output_path}`);
+    }
+  }
 
   // Delete database record
   const { error } = await supabase
@@ -267,28 +351,80 @@ trainingDatasetsRouter.post('/:id/regenerate', async (c: Context) => {
     throw Errors.conflict('Dataset is already being generated');
   }
 
-  // Reset status to pending
-  const { data, error } = await supabase
+  // Update status to generating
+  await supabase
     .from(TABLES.TRAINING_DATASETS)
     .update({
-      status: 'pending' as TrainingDatasetStatus,
+      status: 'generating' as TrainingDatasetStatus,
       source_data_cutoff: new Date().toISOString(),
       error_message: null,
-      started_at: null,
+      started_at: new Date().toISOString(),
       completed_at: null,
     })
-    .eq('id', id)
-    .select()
-    .single();
+    .eq('id', id);
 
-  if (error) {
-    throw Errors.internal(error.message);
+  // Regenerate the dataset using the service
+  try {
+    const filters =
+      (dataset.generation_params as Record<string, unknown>) || {};
+    const format = (dataset.output_format || 'json') as
+      | 'json'
+      | 'jsonl'
+      | 'csv';
+
+    const generationParams: DatasetGenerationParams = {
+      name: dataset.name,
+      description: dataset.description,
+      format,
+      filters: {
+        categories: filters.categories as string[] | undefined,
+        cities: filters.geographic_scope as string[] | undefined,
+        minQuality: filters.min_quality_score as number | undefined,
+        startDate: (filters.time_range as Record<string, string>)?.start,
+        endDate: (filters.time_range as Record<string, string>)?.end,
+      },
+    };
+
+    const result = await generateTrainingDataset(generationParams);
+
+    // Update the existing record with new statistics
+    const { data: updatedData, error: updateError } = await supabase
+      .from(TABLES.TRAINING_DATASETS)
+      .update({
+        status: 'completed' as TrainingDatasetStatus,
+        statistics: result.dataset.statistics,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw Errors.internal(updateError.message);
+    }
+
+    return c.json({
+      data: updatedData as TrainingDataset,
+      message: 'Dataset regeneration completed',
+    });
+  } catch (genError) {
+    // Update record with failed status
+    await supabase
+      .from(TABLES.TRAINING_DATASETS)
+      .update({
+        status: 'failed' as TrainingDatasetStatus,
+        error_message:
+          genError instanceof Error
+            ? genError.message
+            : 'Unknown error during regeneration',
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    throw Errors.internal(
+      genError instanceof Error
+        ? genError.message
+        : 'Dataset regeneration failed'
+    );
   }
-
-  // TODO: Trigger dataset generation job
-
-  return c.json({
-    data: data as TrainingDataset,
-    message: 'Dataset regeneration queued',
-  });
 });

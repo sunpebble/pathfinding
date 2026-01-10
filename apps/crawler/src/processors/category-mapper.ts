@@ -3,15 +3,99 @@
  * Maps platform-specific categories to unified taxonomy
  */
 
-import type { POICategory, POISubcategory } from '@pathfinding/crawler-types';
+import type { POICategory } from '@pathfinding/crawler-types';
 import { POI_CATEGORIES } from '@pathfinding/crawler-types';
+
+/**
+ * OSM cuisine tag to subcategory mapping
+ */
+const CUISINE_SUBCATEGORY_MAP: Record<string, string> = {
+  chinese: 'chinese',
+  cantonese: 'chinese',
+  sichuan: 'chinese',
+  hunan: 'chinese',
+  japanese: 'japanese',
+  sushi: 'japanese',
+  ramen: 'japanese',
+  korean: 'korean',
+  thai: 'southeast_asian',
+  vietnamese: 'southeast_asian',
+  indian: 'indian',
+  italian: 'western',
+  pizza: 'western',
+  french: 'western',
+  american: 'western',
+  burger: 'fast_food',
+  kebab: 'fast_food',
+  coffee: 'cafe',
+  tea: 'cafe',
+  ice_cream: 'dessert',
+  cake: 'dessert',
+  seafood: 'seafood',
+  hotpot: 'hotpot',
+  bbq: 'bbq',
+  vegetarian: 'vegetarian',
+  vegan: 'vegetarian',
+};
+
+/**
+ * Parse OSM cuisine tag to get subcategory
+ */
+export function parseOsmCuisine(cuisineTag: string | undefined): string {
+  if (!cuisineTag) return 'other';
+
+  const cuisines = cuisineTag.toLowerCase().split(/[;,]/);
+  for (const cuisine of cuisines) {
+    const trimmed = cuisine.trim();
+    if (CUISINE_SUBCATEGORY_MAP[trimmed]) {
+      return CUISINE_SUBCATEGORY_MAP[trimmed];
+    }
+  }
+  return 'other';
+}
+
+/**
+ * Map OSM tags to category with cuisine awareness
+ */
+export function mapOsmTagsToCategory(
+  tags: Record<string, string>
+): { category: POICategory; subcategory?: string } | null {
+  // Check amenity=restaurant with cuisine
+  if (tags.amenity === 'restaurant' || tags.amenity === 'fast_food') {
+    const subcategory = parseOsmCuisine(tags.cuisine);
+    return {
+      category: 'restaurant',
+      subcategory: tags.amenity === 'fast_food' ? 'fast_food' : subcategory,
+    };
+  }
+
+  // Build tag key for lookup
+  for (const key of [
+    'amenity',
+    'tourism',
+    'shop',
+    'leisure',
+    'historic',
+    'aeroway',
+    'railway',
+  ]) {
+    if (tags[key]) {
+      const tagKey = `${key}=${tags[key]}`;
+      if (osmCategoryMap[tagKey]) {
+        return osmCategoryMap[tagKey];
+      }
+    }
+  }
+
+  return null;
+}
 
 /**
  * OSM tag to unified category mapping
  */
 const osmCategoryMap: Record<
   string,
-  { category: POICategory; subcategory?: POISubcategory }
+  { category: POICategory; subcategory?: string }
 > = {
   // Tourism
   'tourism=attraction': { category: 'attraction', subcategory: 'landmark' },
@@ -33,8 +117,8 @@ const osmCategoryMap: Record<
     subcategory: 'historic_site',
   },
 
-  // Amenity - Food
-  'amenity=restaurant': { category: 'restaurant', subcategory: 'chinese' },
+  // Amenity - Food (default subcategories, cuisine tag takes precedence)
+  'amenity=restaurant': { category: 'restaurant', subcategory: 'other' },
   'amenity=fast_food': { category: 'restaurant', subcategory: 'fast_food' },
   'amenity=cafe': { category: 'restaurant', subcategory: 'cafe' },
   'amenity=food_court': { category: 'restaurant', subcategory: 'food_court' },
@@ -132,7 +216,7 @@ const osmCategoryMap: Record<
  */
 const amapCategoryMap: Record<
   string,
-  { category: POICategory; subcategory?: POISubcategory }
+  { category: POICategory; subcategory?: string }
 > = {
   // 05 - 餐饮服务 (Restaurant)
   '050000': { category: 'restaurant' },
@@ -238,7 +322,7 @@ const amapCategoryMap: Record<
 export function mapPlatformCategoryInternal(
   platform: string,
   platformCategory: string
-): { category: POICategory; subcategory?: POISubcategory } | null {
+): { category: POICategory; subcategory?: string } | null {
   const lowerPlatform = platform.toLowerCase();
 
   if (lowerPlatform === 'osm') {

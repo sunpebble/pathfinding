@@ -107,20 +107,38 @@ export async function runNormalizationPipeline(
       );
     }
 
-    // Step 3: Run deduplication
+    // Step 3: Run deduplication (staged: same-platform first, then cross-platform)
     if (runDeduplication && recordsNormalized > 0) {
-      console.warn('Step 3: Running deduplication...');
-      const dedupeResult = await runBatchDeduplication({
+      console.warn('Step 3a: Running same-platform deduplication...');
+      const samePlatformResult = await runBatchDeduplication({
         category,
         city,
         limit: batchSize * 2,
+        samePlatformOnly: true,
       });
 
-      duplicatesFound = dedupeResult.processed;
-      duplicatesMerged = dedupeResult.merged;
+      console.warn(
+        `Same-platform dedup: processed ${samePlatformResult.processed}, merged ${samePlatformResult.merged}`
+      );
+
+      console.warn('Step 3b: Running cross-platform deduplication...');
+      const crossPlatformResult = await runBatchDeduplication({
+        category,
+        city,
+        limit: batchSize * 2,
+        crossPlatformOnly: true,
+      });
 
       console.warn(
-        `Deduplication: processed ${duplicatesFound}, merged ${duplicatesMerged}`
+        `Cross-platform dedup: processed ${crossPlatformResult.processed}, merged ${crossPlatformResult.merged}`
+      );
+
+      duplicatesFound =
+        samePlatformResult.processed + crossPlatformResult.processed;
+      duplicatesMerged = samePlatformResult.merged + crossPlatformResult.merged;
+
+      console.warn(
+        `Total deduplication: processed ${duplicatesFound}, merged ${duplicatesMerged}`
       );
     }
 
@@ -257,20 +275,30 @@ async function generateQualityReport(stats: {
       }
     }
 
-    // Store report
+    // Store report with correct schema
+    const now = new Date();
     const report = {
       report_type: 'pipeline_run',
-      total_records: stats.recordsProcessed,
-      processed_records: stats.recordsNormalized,
-      failed_records: stats.recordsFailed,
-      skipped_records: stats.recordsSkipped,
-      duplicates_found: stats.duplicatesMerged,
-      quality_metrics: {
-        avg_quality_score: Math.round(avgQualityScore * 100) / 100,
-        avg_completeness_score: Math.round(avgCompletenessScore * 100) / 100,
-        quality_breakdown: qualityBreakdown,
-        category_breakdown: categoryBreakdown,
-        total_active_pois: totalPois || 0,
+      period_start: new Date(now.getTime() - 3600000).toISOString(), // 1 hour ago
+      period_end: now.toISOString(),
+      metrics: {
+        pipeline: {
+          total_records: stats.recordsProcessed,
+          processed_records: stats.recordsNormalized,
+          failed_records: stats.recordsFailed,
+          skipped_records: stats.recordsSkipped,
+        },
+        accuracy: {
+          duplicates_found: stats.duplicatesMerged,
+          duplicates_merged: stats.duplicatesMerged,
+        },
+        completeness: {
+          total_pois: totalPois || 0,
+          avg_quality_score: Math.round(avgQualityScore * 100) / 100,
+          avg_completeness_score: Math.round(avgCompletenessScore * 100) / 100,
+          quality_breakdown: qualityBreakdown,
+          category_breakdown: categoryBreakdown,
+        },
       },
     };
 

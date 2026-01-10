@@ -2,6 +2,7 @@ import type { ErrorInfo, ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import React, { Component } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { captureException } from '@/lib/sentry';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -85,7 +86,11 @@ export const ScreenErrorBoundary: React.FC<{
     <ErrorBoundary
       onError={(error, errorInfo) => {
         console.error(`[${screenName || 'Screen'}] Error:`, error, errorInfo);
-        // TODO: Report to Sentry or other error tracking service
+        // Report to Sentry for error tracking
+        captureException(error, {
+          screenName: screenName || 'Unknown',
+          componentStack: errorInfo.componentStack,
+        });
       }}
     >
       {children}

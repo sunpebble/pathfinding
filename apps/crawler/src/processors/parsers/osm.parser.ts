@@ -88,7 +88,15 @@ function parseOpeningHours(hoursString?: string): OperatingHours | undefined {
   }
 
   // Handle common patterns
-  const dayMap: Record<string, keyof OperatingHours> = {
+  type DayKey =
+    | 'monday'
+    | 'tuesday'
+    | 'wednesday'
+    | 'thursday'
+    | 'friday'
+    | 'saturday'
+    | 'sunday';
+  const dayMap: Record<string, DayKey> = {
     Mo: 'monday',
     Tu: 'tuesday',
     We: 'wednesday',

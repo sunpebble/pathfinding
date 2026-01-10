@@ -43,9 +43,9 @@ const searchPoisSchema = z.object({
 // GET /api/pois - Search normalized POIs
 poisRouter.get(
   '/',
-  zValidator('query', searchPoisSchema),
+  zValidator('query', searchPoisSchema as any),
   async (c: Context) => {
-    const params = c.req.valid('query') as POISearchParams;
+    const params = c.req.query() as unknown as POISearchParams;
 
     let query = supabase
       .from(TABLES.NORMALIZED_POIS)
@@ -318,13 +318,20 @@ const normalizeSchema = z.object({
 
 poisRouter.post(
   '/normalize',
-  zValidator('json', normalizeSchema),
+  zValidator('json', normalizeSchema as any),
   async (c: Context) => {
-    const params = c.req.valid('json');
+    const params = (await c.req.json()) as {
+      batch_size?: number;
+      run_deduplication?: boolean;
+      platform?: string;
+      city?: string;
+      category?: string;
+      crawl_job_id?: string;
+    };
 
     const result = await runNormalizationPipeline({
-      batchSize: params.batch_size,
-      runDeduplication: params.run_deduplication,
+      batchSize: params.batch_size ?? 100,
+      runDeduplication: params.run_deduplication ?? true,
       platform: params.platform,
       city: params.city,
       category: params.category,

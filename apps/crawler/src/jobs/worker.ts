@@ -34,7 +34,7 @@ export async function executeCrawlJob(
 
   try {
     // Execute crawl with tracing
-    const statistics = (await createSpan(
+    const statistics = await createSpan<CrawlJobStatistics>(
       `crawl:${job.platform}`,
       async (span) => {
         span.setAttribute('job_id', job.id);
@@ -43,7 +43,7 @@ export async function executeCrawlJob(
 
         return await crawler.run();
       }
-    )) as unknown as CrawlJobStatistics;
+    );
 
     console.warn(`[Worker] Job ${job.id} completed:`, statistics);
 
@@ -148,7 +148,8 @@ class WorkerQueue {
 }
 
 // Global worker queue
-const workerQueue = new WorkerQueue(3);
+const MAX_CONCURRENT_JOBS = 3;
+const workerQueue = new WorkerQueue(MAX_CONCURRENT_JOBS);
 
 /**
  * Queue a crawl job for execution
@@ -166,10 +167,14 @@ export function getWorkerStatus(): {
   running: number;
   pending: number;
   activeJobs: string[];
+  maxConcurrent: number;
+  runningJobs: number;
 } {
   return {
     running: workerQueue.runningCount,
     pending: workerQueue.pendingCount,
     activeJobs: getActiveJobIds(),
+    maxConcurrent: MAX_CONCURRENT_JOBS,
+    runningJobs: workerQueue.runningCount,
   };
 }

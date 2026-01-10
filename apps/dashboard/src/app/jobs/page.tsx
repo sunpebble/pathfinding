@@ -1,0 +1,249 @@
+'use client';
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  CheckCircle,
+  Clock,
+  Eye,
+  Loader2,
+  Play,
+  Plus,
+  RefreshCw,
+  StopCircle,
+  XCircle,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import { cancelCrawlJob, getCrawlJobs, startCrawlJob } from '@/lib/api';
+import { formatDateTime, shortId } from '@/lib/utils';
+
+export default function JobsPage() {
+  const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState<string>('');
+
+  const {
+    data: jobsData,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['crawl-jobs', statusFilter],
+    queryFn: () =>
+      getCrawlJobs({ status: statusFilter || undefined, limit: 50 }),
+  });
+
+  const startMutation = useMutation({
+    mutationFn: startCrawlJob,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crawl-jobs'] });
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: cancelCrawlJob,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crawl-jobs'] });
+    },
+  });
+
+  const jobs = jobsData?.data || [];
+
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Crawl Jobs</h1>
+          <p className="text-gray-500">Manage and monitor crawling tasks</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </button>
+          <Link
+            href="/jobs/create"
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Create Job
+          </Link>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-4">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="running">Running</option>
+          <option value="completed">Completed</option>
+          <option value="failed">Failed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <span className="text-sm text-gray-500">
+          {jobsData?.pagination.total ?? 0} jobs total
+        </span>
+      </div>
+
+      {/* Jobs Table */}
+      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Platform
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Records
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Created
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-12 text-center">
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
+                </td>
+              </tr>
+            ) : jobs.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="px-6 py-12 text-center text-gray-500"
+                >
+                  No jobs found.{' '}
+                  <Link
+                    href="/jobs/create"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Create one
+                  </Link>
+                </td>
+              </tr>
+            ) : (
+              jobs.map((job) => (
+                <tr key={job.id} className="hover:bg-gray-50">
+                  <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
+                    {shortId(job.id)}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="font-medium text-gray-900">{job.name}</div>
+                    <div className="text-sm text-gray-500">{job.job_type}</div>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                      {job.platform}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <StatusBadge status={job.status} />
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                    {job.statistics?.records_extracted ?? 0}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    {formatDateTime(job.created_at)}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {job.status === 'pending' && (
+                        <button
+                          onClick={() => startMutation.mutate(job.id)}
+                          disabled={startMutation.isPending}
+                          className="rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:opacity-50"
+                          title="Start job"
+                        >
+                          <Play className="h-4 w-4" />
+                        </button>
+                      )}
+                      {job.status === 'running' && (
+                        <button
+                          onClick={() => {
+                            // eslint-disable-next-line no-alert
+                            if (confirm('Cancel this job?')) {
+                              cancelMutation.mutate(job.id);
+                            }
+                          }}
+                          disabled={cancelMutation.isPending}
+                          className="rounded-lg bg-red-500 p-2 text-white hover:bg-red-600 disabled:opacity-50"
+                          title="Cancel job"
+                        >
+                          <StopCircle className="h-4 w-4" />
+                        </button>
+                      )}
+                      <Link
+                        href={`/jobs/${job.id}`}
+                        className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
+                        title="View details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const config: Record<string, { icon: React.ReactNode; className: string }> = {
+    pending: {
+      icon: <Clock className="h-3.5 w-3.5" />,
+      className: 'bg-amber-50 text-amber-600 border-amber-200',
+    },
+    running: {
+      icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
+      className: 'bg-blue-50 text-blue-600 border-blue-200',
+    },
+    completed: {
+      icon: <CheckCircle className="h-3.5 w-3.5" />,
+      className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    },
+    failed: {
+      icon: <XCircle className="h-3.5 w-3.5" />,
+      className: 'bg-red-50 text-red-600 border-red-200',
+    },
+    cancelled: {
+      icon: <XCircle className="h-3.5 w-3.5" />,
+      className: 'bg-gray-50 text-gray-600 border-gray-200',
+    },
+  };
+
+  const { icon, className } = config[status] || config.cancelled;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}
+    >
+      {icon}
+      {status}
+    </span>
+  );
+}

@@ -74,9 +74,9 @@ const listCrawlJobsSchema = z.object({
 // GET /api/crawl-jobs - List all crawl jobs
 crawlJobsRouter.get(
   '/',
-  zValidator('query', listCrawlJobsSchema),
+  zValidator('query', listCrawlJobsSchema as any),
   async (c: Context) => {
-    const params = c.req.valid('query') as CrawlJobListParams;
+    const params = c.req.query() as unknown as CrawlJobListParams;
 
     let query = supabase
       .from(TABLES.CRAWL_JOBS)
@@ -115,9 +115,9 @@ crawlJobsRouter.get(
 // POST /api/crawl-jobs - Create a new crawl job
 crawlJobsRouter.post(
   '/',
-  zValidator('json', createCrawlJobSchema),
+  zValidator('json', createCrawlJobSchema as any),
   async (c: Context) => {
-    const body = c.req.valid('json') as CreateCrawlJobRequest;
+    const body = (await c.req.json()) as CreateCrawlJobRequest;
 
     // Validate platform
     if (!isPlatformSupported(body.platform)) {
@@ -372,10 +372,11 @@ const scheduleJobSchema = z.object({
 
 crawlJobsRouter.post(
   '/:id/schedule',
-  zValidator('json', scheduleJobSchema),
+  zValidator('json', scheduleJobSchema as any),
   async (c: Context) => {
     const id = c.req.param('id');
-    const { run_at } = c.req.valid('json');
+    const body = (await c.req.json()) as { run_at: string };
+    const { run_at } = body;
 
     // Update job scheduled time
     const { data, error } = await supabase

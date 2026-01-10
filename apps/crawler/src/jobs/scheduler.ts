@@ -8,6 +8,7 @@ import { createLogger } from '../lib/logger.js';
 import { supabase, TABLES } from '../lib/supabase.js';
 import { captureError, CrawlerMetrics } from '../monitoring/index.js';
 import { runNormalizationPipeline } from '../processors/pipeline.js';
+import { getCrawlJob } from '../services/crawl-job.service.js';
 import { generateQualityReport } from '../services/quality-report.service.js';
 import { executeCrawlJob, getWorkerStatus } from './worker.js';
 
@@ -219,7 +220,7 @@ async function triggerIncrementalCrawls(): Promise<void> {
 
   const { data: staleMappings, error } = await supabase
     .from(TABLES.POI_SOURCE_MAPPINGS)
-    .select('platform, COUNT(*) as count')
+    .select('platform')
     .lt('last_crawled_at', staleThreshold.toISOString())
     .limit(1000);
 
@@ -235,7 +236,7 @@ async function triggerIncrementalCrawls(): Promise<void> {
 
   // Group by platform and create incremental jobs
   const platformCounts: Record<string, number> = {};
-  for (const mapping of staleMappings) {
+  for (const mapping of staleMappings as Array<{ platform: string }>) {
     platformCounts[mapping.platform] =
       (platformCounts[mapping.platform] || 0) + 1;
   }
@@ -274,16 +275,25 @@ export async function scheduleOnceAt(
 ): Promise<void> {
   const delay = runAt.getTime() - Date.now();
 
+  const executeJob = async () => {
+    const job = await getCrawlJob(jobId);
+    if (!job) {
+      log.error(`Job ${jobId} not found`);
+      return;
+    }
+    await executeCrawlJob(job);
+  };
+
   if (delay <= 0) {
     // Run immediately
-    await executeCrawlJob(jobId);
+    await executeJob();
     return;
   }
 
   // Schedule to run after delay
   setTimeout(async () => {
     try {
-      await executeCrawlJob(jobId);
+      await executeJob();
     } catch (error) {
       log.error(`Failed to execute scheduled job ${jobId}:`, error);
     }

@@ -4,7 +4,7 @@
     "lib": ["ES2022"],
     "rootDir": "./src",
     "module": "nodenext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "strict": true,
     "declaration": true,

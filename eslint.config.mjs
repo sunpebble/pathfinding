@@ -13,14 +13,10 @@ export default antfu({
   // Disable stylistic rules (formatting handled by Prettier)
   stylistic: false,
 
+  markdown: false,
+
   // Ignore patterns
-  ignores: [
-    '.claude/**',
-    '**/*.md',
-    'dist/**',
-    'node_modules/**',
-    'pnpm-workspace.yaml',
-  ],
+  ignores: ['.claude/**', 'dist/**', 'node_modules/**', 'pnpm-workspace.yaml'],
 
   // Custom rule overrides
   rules: {

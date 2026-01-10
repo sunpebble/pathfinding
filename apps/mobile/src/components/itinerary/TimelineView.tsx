@@ -5,6 +5,7 @@ import type {
 } from '@pathfinding/types';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { itineraryService } from '@/services/itineraryService';
 import { UndoSnackbar } from '../common/UndoSnackbar';
 import { DaySection } from './DaySection';
 import { EditItemModal } from './EditItemModal';
@@ -126,14 +127,28 @@ export function TimelineView({
       const poiName = (item.poi as { name?: string })?.name || '项目';
       setUndoMessage(`已删除 "${poiName}"`);
       setUndoAction(() => async () => {
-        // Re-add the item (would need addItem API)
-        // TODO: Implement undo restore via API
-        void deletedItem;
-        void deletedDayId;
+        // Re-add the item via API
+        try {
+          const poiId =
+            typeof deletedItem.poi === 'object' && deletedItem.poi
+              ? (deletedItem.poi as { id?: string }).id
+              : undefined;
+
+          await itineraryService.addItem(itineraryId, deletedDayId, {
+            poiId,
+            startTime: deletedItem.startTime ?? undefined,
+            endTime: deletedItem.endTime ?? undefined,
+            notes: deletedItem.notes,
+            transportMode: deletedItem.transportMode,
+            transportMinutes: deletedItem.transportMinutes ?? undefined,
+          });
+        } catch (error) {
+          console.error('Failed to restore deleted item:', error);
+        }
       });
       setUndoVisible(true);
     },
-    [onItemDelete]
+    [onItemDelete, itineraryId]
   );
 
   // Handle reorder

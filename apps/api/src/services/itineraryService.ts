@@ -177,8 +177,8 @@ export const ItineraryService = {
     }
 
     // Apply sorting and pagination
-    // Note: copy_count is not a column, so we use created_at for now
-    // TODO: Add copy_count as a computed column or use a view
+    // Note: copy_count is derived from counting itineraries with copied_from_id
+    // For now, we fall back to created_at as a proxy for popularity
     const effectiveSortBy = sortBy === 'copy_count' ? 'created_at' : sortBy;
     const offset = (page - 1) * pageSize;
     dbQuery = dbQuery

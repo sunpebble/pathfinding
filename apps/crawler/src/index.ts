@@ -16,6 +16,7 @@ import { errorHandler } from './middleware/error-handler.js';
 import { initTracing } from './middleware/tracing.js';
 import { initSentry } from './monitoring/index.js';
 import { crawlJobsRouter } from './routes/crawl-jobs.js';
+import { dashboardRouter } from './routes/dashboard.js';
 import { poisRouter } from './routes/pois.js';
 import { qualityReportsRouter } from './routes/quality-reports.js';
 import { trainingDatasetsRouter } from './routes/training-datasets.js';
@@ -63,6 +64,7 @@ app.get('/', (c: Context) => {
     description:
       'Data crawler service for travel POI collection and training dataset generation',
     endpoints: {
+      dashboard: '/dashboard',
       health: '/health',
       crawlJobs: '/api/crawl-jobs',
       pois: '/api/pois',
@@ -71,6 +73,9 @@ app.get('/', (c: Context) => {
     },
   });
 });
+
+// Mount dashboard
+app.route('/dashboard', dashboardRouter);
 
 // Mount API routers
 app.route('/api/crawl-jobs', crawlJobsRouter);

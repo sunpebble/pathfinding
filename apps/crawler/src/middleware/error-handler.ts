@@ -4,6 +4,7 @@
  */
 
 import type { Context, MiddlewareHandler, Next } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import * as Sentry from '@sentry/node';
 import { HTTPException } from 'hono/http-exception';
 
@@ -169,7 +170,7 @@ export function errorHandler(): MiddlewareHandler {
  * Create an HTTP exception with a custom message
  */
 export function createHttpError(
-  status: number,
+  status: ContentfulStatusCode,
   message: string
 ): HTTPException {
   return new HTTPException(status, { message });

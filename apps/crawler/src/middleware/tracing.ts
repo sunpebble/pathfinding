@@ -1,103 +1,88 @@
 /**
- * OpenTelemetry Tracing Middleware
- * Initialize distributed tracing for the crawler service
+ * Tracing Middleware
+ * Simple structured logging for the crawler service
  */
 
-import type { Span } from '@opentelemetry/api';
-import { context, SpanStatusCode, trace } from '@opentelemetry/api';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { Resource } from '@opentelemetry/resources';
-import { NodeSDK } from '@opentelemetry/sdk-trace-node';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+interface TraceContext {
+  traceId: string;
+  spanId: string;
+}
 
-let sdk: NodeSDK | null = null;
+const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 15);
+};
+
+let currentContext: TraceContext = {
+  traceId: generateId(),
+  spanId: generateId(),
+};
 
 /**
- * Initialize OpenTelemetry SDK
+ * Initialize tracing
  */
 export function initTracing(): void {
-  const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
   const serviceName = process.env.OTEL_SERVICE_NAME || 'pathfinding-crawler';
+  console.log(`📊 Tracing initialized for ${serviceName}`);
 
-  // Skip if no endpoint configured
-  if (!otlpEndpoint || otlpEndpoint === 'http://localhost:4318') {
-    console.warn('📊 OpenTelemetry: No endpoint configured, tracing disabled');
-    return;
-  }
-
-  try {
-    const exporter = new OTLPTraceExporter({
-      url: `${otlpEndpoint}/v1/traces`,
-    });
-
-    sdk = new NodeSDK({
-      resource: new Resource({
-        [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
-        [SemanticResourceAttributes.SERVICE_VERSION]:
-          process.env.npm_package_version || '1.0.0',
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]:
-          process.env.NODE_ENV || 'development',
-      }),
-      traceExporter: exporter,
-      instrumentations: [
-        getNodeAutoInstrumentations({
-          '@opentelemetry/instrumentation-http': {
-            ignoreIncomingPaths: ['/health'],
-          },
-          '@opentelemetry/instrumentation-fs': {
-            enabled: false,
-          },
-        }),
-      ],
-    });
-
-    sdk.start();
-    console.warn(`📊 OpenTelemetry: Tracing enabled for ${serviceName}`);
-
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
-      sdk?.shutdown().then(
-        () => console.warn('📊 OpenTelemetry: SDK shut down successfully'),
-        (error: unknown) =>
-          console.error('📊 OpenTelemetry: Error shutting down SDK', error)
-      );
-    });
-  } catch (error) {
-    console.error('📊 OpenTelemetry: Failed to initialize tracing', error);
-  }
+  // Reset context on startup
+  currentContext = {
+    traceId: generateId(),
+    spanId: generateId(),
+  };
 }
 
 /**
- * Get the tracer instance
+ * Get the tracer instance (dummy implementation for compatibility)
  */
 export function getTracer(name: string = 'pathfinding-crawler') {
-  return trace.getTracer(name);
+  return {
+    name,
+    startActiveSpan: async (
+      spanName: string,
+      fn: (span: any) => Promise<void>
+    ) => {
+      const span = {
+        name: spanName,
+        attributes: {} as Record<string, any>,
+        setAttribute: (key: string, value: any) => {
+          span.attributes[key] = value;
+        },
+        setStatus: () => {},
+        recordException: () => {},
+        end: () => {},
+      };
+      await fn(span);
+    },
+  };
 }
 
 /**
  * Create a new span for tracking operations
  */
-export function createSpan(
+export async function createSpan<T>(
   name: string,
-  fn: (span: Span) => Promise<void>
-): Promise<void> {
-  const tracer = getTracer();
-  return tracer.startActiveSpan(name, async (span: Span) => {
-    try {
-      await fn(span);
-      span.setStatus({ code: SpanStatusCode.OK });
-    } catch (error) {
-      span.setStatus({
-        code: SpanStatusCode.ERROR,
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
-      span.recordException(error as Error);
-      throw error;
-    } finally {
-      span.end();
-    }
-  });
+  fn: (span: any) => Promise<T>
+): Promise<T> {
+  const span = {
+    name,
+    attributes: {} as Record<string, any>,
+    setAttribute: (key: string, value: any) => {
+      span.attributes[key] = value;
+    },
+    setStatus: () => {},
+    recordException: () => {},
+    end: () => {},
+  };
+
+  try {
+    console.log(`[SPAN] ${name} started`);
+    const result = await fn(span);
+    console.log(`[SPAN] ${name} completed successfully`);
+    return result;
+  } catch (error) {
+    console.error(`[SPAN] ${name} failed:`, error);
+    throw error;
+  }
 }
 
 /**
@@ -106,40 +91,26 @@ export function createSpan(
 export function setSpanAttributes(
   attributes: Record<string, string | number | boolean>
 ): void {
-  const span = trace.getActiveSpan();
-  if (span) {
-    for (const [key, value] of Object.entries(attributes)) {
-      span.setAttribute(key, value);
-    }
-  }
+  console.debug('[ATTRIBUTES]', attributes);
 }
 
 /**
  * Record an exception on the current span
  */
 export function recordException(error: Error): void {
-  const span = trace.getActiveSpan();
-  if (span) {
-    span.recordException(error);
-    span.setStatus({
-      code: SpanStatusCode.ERROR,
-      message: error.message,
-    });
-  }
+  console.error('[EXCEPTION]', error);
 }
 
 /**
  * Get the current trace context
  */
-export function getCurrentContext() {
-  return context.active();
+export function getCurrentContext(): TraceContext {
+  return currentContext;
 }
 
 /**
- * Shutdown the OpenTelemetry SDK
+ * Shutdown tracing
  */
 export async function shutdownTracing(): Promise<void> {
-  if (sdk) {
-    await sdk.shutdown();
-  }
+  console.log('📊 Tracing shutdown');
 }

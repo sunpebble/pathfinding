@@ -56,3 +56,7 @@ supabase/.temp/
 # Cache
 .cache/
 *.cache
+
+# Next.js
+.next/
+out/

@@ -182,7 +182,7 @@
 - [X] T065 [US3] Create `apps/crawler/src/exporters/base.exporter.ts` with abstract exporter interface
 - [X] T066 [US3] Create `apps/crawler/src/exporters/json.exporter.ts` with JSON Lines export
 - [X] T067 [P] [US3] Create `apps/crawler/src/exporters/csv.exporter.ts` with CSV export
-- [ ] T068 [P] [US3] Create `apps/crawler/src/exporters/parquet.exporter.ts` with Parquet export (optional)
+- [X] T068 [P] [US3] Create `apps/crawler/src/exporters/parquet.exporter.ts` with Parquet export (optional)
 
 ### Dataset Generation Service
 

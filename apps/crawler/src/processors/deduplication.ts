@@ -17,12 +17,203 @@ import {
 
 /**
  * Similarity thresholds for deduplication
+ * Tightened to reduce false positives
  */
 const THRESHOLDS = {
-  NAME_SIMILARITY: 0.8, // Minimum name similarity (0-1)
-  DISTANCE_METERS: 100, // Maximum distance in meters
-  COMBINED_SCORE: 0.75, // Minimum combined similarity score
+  NAME_SIMILARITY: 0.85, // Minimum name similarity (0-1) - increased from 0.8
+  DISTANCE_METERS: 50, // Maximum distance in meters - reduced from 100
+  COMBINED_SCORE: 0.8, // Minimum combined similarity score - increased from 0.75
+  CHAIN_DISTANCE_METERS: 20, // Stricter distance for chain stores
+  ADDRESS_SIMILARITY: 0.7, // Minimum address similarity for chain stores
 };
+
+/**
+ * Known chain store brands that require stricter deduplication
+ */
+const CHAIN_BRANDS = [
+  // Coffee & Tea
+  '星巴克',
+  'Starbucks',
+  '瑞幸',
+  'Luckin',
+  '喜茶',
+  '奈雪',
+  'COCO',
+  '一点点',
+  '蜜雪冰城',
+  '茶百道',
+  '古茗',
+  '书亦烧仙草',
+  // Fast Food
+  '肯德基',
+  'KFC',
+  '麦当劳',
+  "McDonald's",
+  '汉堡王',
+  'Burger King',
+  '必胜客',
+  'Pizza Hut',
+  '德克士',
+  '华莱士',
+  '正新鸡排',
+  '绝味鸭脖',
+  '周黑鸭',
+  // Convenience Stores
+  '全家',
+  'FamilyMart',
+  '7-11',
+  '7-Eleven',
+  '罗森',
+  'Lawson',
+  '便利蜂',
+  '美宜佳',
+  // Banks
+  '中国银行',
+  '工商银行',
+  '建设银行',
+  '农业银行',
+  '招商银行',
+  '交通银行',
+  // Hotels
+  '如家',
+  '汉庭',
+  '7天',
+  '锦江之星',
+  '全季',
+  '亚朵',
+  // Supermarkets
+  '永辉',
+  '盒马',
+  '大润发',
+  '沃尔玛',
+  'Walmart',
+  '家乐福',
+  'Carrefour',
+  // Pharmacies
+  '大参林',
+  '老百姓',
+  '益丰',
+  '一心堂',
+];
+
+/**
+ * Check if a POI name belongs to a chain store
+ */
+export function isChainStore(name: string): boolean {
+  if (!name) return false;
+  const normalizedName = name.toLowerCase();
+  return CHAIN_BRANDS.some(
+    (brand) =>
+      normalizedName.includes(brand.toLowerCase()) ||
+      brand.toLowerCase().includes(normalizedName)
+  );
+}
+
+/**
+ * Extract branch identifier from name or address
+ * e.g., "星巴克(西湖店)" -> "西湖店"
+ * e.g., "肯德基武林门店" -> "武林门店"
+ */
+export function extractBranchIdentifier(
+  name: string,
+  address?: string
+): string | null {
+  if (!name && !address) return null;
+
+  const patterns = [
+    /[（(]([^）)]+店)[）)]/u, // (XX店)
+    /[（(]([^）)]+路)[）)]/u, // (XX路)
+    /[（(]([^）)]+站)[）)]/u, // (XX站)
+    /[（(]([^）)]+广场)[）)]/u, // (XX广场)
+    /[（(]([^）)]+中心)[）)]/u, // (XX中心)
+    /[（(]([^）)]+店铺)[）)]/u, // (XX店铺)
+    /(\S{2,}分店)$/u, // XX分店
+    /(\S{2,}门店)$/u, // XX门店
+    /(\S{2,}旗舰店)$/u, // XX旗舰店
+  ];
+
+  for (const pattern of patterns) {
+    const nameMatch = name?.match(pattern);
+    if (nameMatch) return nameMatch[1];
+
+    const addrMatch = address?.match(pattern);
+    if (addrMatch) return addrMatch[1];
+  }
+
+  return null;
+}
+
+/**
+ * Extract street number from address
+ * e.g., "西湖区文三路123号" -> "123号"
+ */
+function extractStreetNumber(address: string): string | null {
+  if (!address) return null;
+
+  const patterns = [
+    /(\d+号)/u, // 123号
+    /(\d+-\d+号)/u, // 123-125号
+    /(\d+弄)/u, // 123弄
+    /(\d+栋)/u, // 123栋
+    /(\d+幢)/u, // 123幢
+    /(\d+楼)/u, // 123楼
+    /(\d+层)/u, // 123层
+    /(\d+[A-Z])/u, // 123A
+  ];
+
+  for (const pattern of patterns) {
+    const match = address.match(pattern);
+    if (match) return match[1];
+  }
+
+  return null;
+}
+
+/**
+ * Calculate address similarity score (0-1)
+ * Considers street numbers, building names, and floor info
+ */
+export function calculateAddressSimilarity(
+  addr1: string | undefined,
+  addr2: string | undefined
+): number {
+  if (!addr1 || !addr2) return 0.5; // Unknown, neutral score
+
+  const normalized1 = normalizeAddress(addr1);
+  const normalized2 = normalizeAddress(addr2);
+
+  if (normalized1 === normalized2) return 1;
+
+  // Extract and compare street numbers
+  const num1 = extractStreetNumber(addr1);
+  const num2 = extractStreetNumber(addr2);
+
+  // If both have street numbers and they differ, low similarity
+  if (num1 && num2 && num1 !== num2) {
+    return 0.2;
+  }
+
+  // Calculate text similarity
+  const distance = levenshteinDistance(normalized1, normalized2);
+  const maxLength = Math.max(normalized1.length, normalized2.length);
+
+  if (maxLength === 0) return 1;
+
+  return 1 - distance / maxLength;
+}
+
+/**
+ * Normalize address for comparison
+ */
+function normalizeAddress(address: string): string {
+  if (!address) return '';
+  return address
+    .replace(/[省市区县镇乡村]/g, '') // Remove administrative units
+    .replace(/[（）()【】[\]]/g, '') // Remove brackets
+    .replace(/\s+/g, '') // Remove spaces
+    .toLowerCase()
+    .trim();
+}
 
 /**
  * Calculate string similarity using Levenshtein distance
@@ -60,6 +251,9 @@ function levenshteinDistance(a: string, b: string): number {
  * Uses normalized Levenshtein distance
  */
 export function calculateNameSimilarity(name1: string, name2: string): number {
+  // Handle null/undefined names
+  if (!name1 || !name2) return 0;
+
   // Normalize names
   const n1 = normalizeName(name1);
   const n2 = normalizeName(name2);
@@ -78,7 +272,8 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
  * Normalize name for comparison
  */
 function normalizeName(name: string): string {
-  return name
+  if (name == null) return ''; // Handle null and undefined
+  return String(name) // Safely convert to string
     .toLowerCase()
     .replace(/[（）()【】[\]《》<>]/g, ' ') // Replace brackets with spaces
     .replace(/[・·]/g, '') // Remove center dots
@@ -88,38 +283,81 @@ function normalizeName(name: string): string {
 
 /**
  * Calculate overall similarity score between two POIs
+ * Enhanced with chain store detection and address comparison
  */
 export function calculateSimilarity(
   poi1: NormalizedPOI,
   poi2: NormalizedPOI
 ): number {
-  // Name similarity (weight: 0.5)
+  // Name similarity (weight: 0.4)
   const nameSim = calculateNameSimilarity(poi1.name, poi2.name);
 
-  // Location similarity (weight: 0.4)
+  // Location similarity (weight: 0.3)
   const distance = calculateDistance(
-    poi1.location_lat,
-    poi1.location_lng,
-    poi2.location_lat,
-    poi2.location_lng
+    { latitude: poi1.location_lat, longitude: poi1.location_lng },
+    { latitude: poi2.location_lat, longitude: poi2.location_lng }
   );
-  const locSim = locationSimilarity(distance);
 
-  // Category match bonus (weight: 0.1)
+  // Use stricter distance threshold for chain stores
+  const isChain = isChainStore(poi1.name) || isChainStore(poi2.name);
+  const maxDistance = isChain
+    ? THRESHOLDS.CHAIN_DISTANCE_METERS
+    : THRESHOLDS.DISTANCE_METERS;
+  const locSim = locationSimilarity(distance, maxDistance);
+
+  // Category match (weight: 0.1)
   const categorySim = poi1.category === poi2.category ? 1 : 0;
 
-  return nameSim * 0.5 + locSim * 0.4 + categorySim * 0.1;
+  // Address similarity (weight: 0.2) - especially important for chain stores
+  const addr1 = poi1.location?.address || (poi1 as any).address;
+  const addr2 = poi2.location?.address || (poi2 as any).address;
+  const addrSim = calculateAddressSimilarity(addr1, addr2);
+
+  // For chain stores, also check branch identifiers
+  if (isChain) {
+    const branch1 = extractBranchIdentifier(poi1.name, addr1);
+    const branch2 = extractBranchIdentifier(poi2.name, addr2);
+
+    // If both have branch identifiers and they differ, not duplicates
+    if (branch1 && branch2 && branch1 !== branch2) {
+      return 0; // Definitely different stores
+    }
+
+    // Chain stores need higher address similarity
+    if (addrSim < THRESHOLDS.ADDRESS_SIMILARITY) {
+      return nameSim * 0.3; // Low score if addresses don't match
+    }
+  }
+
+  return nameSim * 0.4 + locSim * 0.3 + categorySim * 0.1 + addrSim * 0.2;
 }
 
 /**
  * Find potential duplicates for a POI
+ * Enhanced with chain store detection and cross-platform options
  */
 export async function findPotentialDuplicates(
   poi: NormalizedPOI,
-  searchRadius: number = THRESHOLDS.DISTANCE_METERS
+  options: {
+    searchRadius?: number;
+    samePlatformOnly?: boolean;
+    crossPlatformOnly?: boolean;
+  } = {}
 ): Promise<Array<{ poi: NormalizedPOI; similarity: number }>> {
+  const {
+    searchRadius = THRESHOLDS.DISTANCE_METERS,
+    samePlatformOnly = false,
+    crossPlatformOnly = false,
+  } = options;
+
+  // Use stricter radius for chain stores
+  const isChain = isChainStore(poi.name);
+  const effectiveRadius = isChain
+    ? Math.min(searchRadius, THRESHOLDS.CHAIN_DISTANCE_METERS)
+    : searchRadius;
+
   // Query nearby POIs using PostGIS
-  const { data: nearby, error } = await supabase
+  const query = supabase
     .from(TABLES.NORMALIZED_POIS)
     .select('*')
     .neq('id', poi.id)
@@ -130,6 +368,8 @@ export async function findPotentialDuplicates(
     .gte('location_lng', poi.location_lng - 0.01)
     .lte('location_lng', poi.location_lng + 0.01);
 
+  const { data: nearby, error } = await query;
+
   if (error) {
     throw new Error(`Failed to find nearby POIs: ${error.message}`);
   }
@@ -138,19 +378,26 @@ export async function findPotentialDuplicates(
     return [];
   }
 
+  // Get POI's platform for filtering
+  const poiPlatform = poi.sources?.[0]?.platform;
+
   // Calculate similarity for each nearby POI
   const candidates: Array<{ poi: NormalizedPOI; similarity: number }> = [];
 
   for (const candidate of nearby as NormalizedPOI[]) {
+    const candidatePlatform = candidate.sources?.[0]?.platform;
+
+    // Apply platform filters
+    if (samePlatformOnly && poiPlatform !== candidatePlatform) continue;
+    if (crossPlatformOnly && poiPlatform === candidatePlatform) continue;
+
     // Calculate distance first (fast filter)
     const distance = calculateDistance(
-      poi.location_lat,
-      poi.location_lng,
-      candidate.location_lat,
-      candidate.location_lng
+      { latitude: poi.location_lat, longitude: poi.location_lng },
+      { latitude: candidate.location_lat, longitude: candidate.location_lng }
     );
 
-    if (distance > searchRadius) continue;
+    if (distance > effectiveRadius) continue;
 
     // Calculate full similarity
     const similarity = calculateSimilarity(poi, candidate);
@@ -174,7 +421,7 @@ export async function mergePOIs(
   duplicate: NormalizedPOI,
   _matchMethod: string = 'name_location'
 ): Promise<NormalizedPOI> {
-  const now = new Date().toISOString();
+  const now = new Date();
 
   // Merge sources
   const allSources = [...(primary.sources || [])];
@@ -187,6 +434,10 @@ export async function mergePOIs(
     }
   }
 
+  // Safe name handling
+  const primaryName = primary.name || '';
+  const duplicateName = duplicate.name || '';
+
   // Select best values (prefer non-null, more complete)
   const merged = {
     // Keep primary ID
@@ -194,9 +445,7 @@ export async function mergePOIs(
 
     // Prefer longer name (usually more complete)
     name:
-      primary.name.length >= duplicate.name.length
-        ? primary.name
-        : duplicate.name,
+      primaryName.length >= duplicateName.length ? primaryName : duplicateName,
     name_en: primary.name_en || duplicate.name_en,
 
     // Merge aliases
@@ -204,7 +453,9 @@ export async function mergePOIs(
       ...(primary.name_aliases || []),
       ...(duplicate.name_aliases || []),
       // Add other name as alias if different
-      ...(primary.name !== duplicate.name ? [duplicate.name] : []),
+      ...(primaryName !== duplicateName && duplicateName
+        ? [duplicateName]
+        : []),
     ].filter((v, i, a) => a.indexOf(v) === i), // Unique
 
     // Prefer longer description
@@ -225,10 +476,14 @@ export async function mergePOIs(
     // Keep primary location (usually more accurate)
     location_lat: primary.location_lat,
     location_lng: primary.location_lng,
-    address: primary.address || duplicate.address,
-    city: primary.city || duplicate.city,
-    district: primary.district || duplicate.district,
-    country: primary.country || duplicate.country,
+    location: {
+      latitude: primary.location_lat,
+      longitude: primary.location_lng,
+      address: primary.location?.address || duplicate.location?.address,
+      city: primary.location?.city || duplicate.location?.city,
+      district: primary.location?.district || duplicate.location?.district,
+      country: primary.location?.country || duplicate.location?.country,
+    },
 
     // Prefer higher rating with more reviews
     rating_overall:
@@ -269,7 +524,7 @@ export async function mergePOIs(
   // Calculate new quality scores
   const qualityScore = calculateQualityScore(merged);
   const completenessScore = calculateCompletenessScore(merged);
-  const freshnessScore = calculateFreshnessScore(now);
+  const freshnessScore = calculateFreshnessScore(now.toISOString());
 
   // Update primary POI
   const { data: updatedPoi, error: updateError } = await supabase
@@ -319,7 +574,23 @@ export async function deduplicatePOI(poi: NormalizedPOI): Promise<{
   merged: boolean;
   mergedWith?: string;
 }> {
-  const duplicates = await findPotentialDuplicates(poi);
+  return deduplicatePOIWithOptions(poi, {});
+}
+
+/**
+ * Run deduplication for a specific POI with options
+ */
+export async function deduplicatePOIWithOptions(
+  poi: NormalizedPOI,
+  options: {
+    samePlatformOnly?: boolean;
+    crossPlatformOnly?: boolean;
+  }
+): Promise<{
+  merged: boolean;
+  mergedWith?: string;
+}> {
+  const duplicates = await findPotentialDuplicates(poi, options);
 
   if (duplicates.length === 0) {
     return { merged: false };
@@ -329,10 +600,10 @@ export async function deduplicatePOI(poi: NormalizedPOI): Promise<{
   const bestMatch = duplicates[0];
 
   // Determine which one to keep as primary (higher quality score)
-  const primaryPoi =
-    poi.quality_score >= bestMatch.poi.quality_score ? poi : bestMatch.poi;
-  const duplicatePoi =
-    poi.quality_score >= bestMatch.poi.quality_score ? bestMatch.poi : poi;
+  const poiScore = poi.quality_score ?? 0;
+  const matchScore = bestMatch.poi.quality_score ?? 0;
+  const primaryPoi = poiScore >= matchScore ? poi : bestMatch.poi;
+  const duplicatePoi = poiScore >= matchScore ? bestMatch.poi : poi;
 
   await mergePOIs(primaryPoi, duplicatePoi, 'name_location');
 
@@ -344,16 +615,25 @@ export async function deduplicatePOI(poi: NormalizedPOI): Promise<{
 
 /**
  * Run batch deduplication
+ * Enhanced with same-platform and cross-platform options
  */
 export async function runBatchDeduplication(options: {
   category?: string;
   city?: string;
   limit?: number;
+  samePlatformOnly?: boolean;
+  crossPlatformOnly?: boolean;
 }): Promise<{
   processed: number;
   merged: number;
 }> {
-  const { category, city, limit = 1000 } = options;
+  const {
+    category,
+    city,
+    limit = 1000,
+    samePlatformOnly = false,
+    crossPlatformOnly = false,
+  } = options;
 
   // Build query
   let query = supabase
@@ -384,19 +664,30 @@ export async function runBatchDeduplication(options: {
   let merged = 0;
 
   for (const poi of pois as NormalizedPOI[]) {
-    // Skip if already marked as duplicate in this batch
-    const { data: current } = await supabase
-      .from(TABLES.NORMALIZED_POIS)
-      .select('is_duplicate')
-      .eq('id', poi.id)
-      .single();
+    try {
+      // Skip if already marked as duplicate in this batch
+      const { data: current } = await supabase
+        .from(TABLES.NORMALIZED_POIS)
+        .select('is_duplicate')
+        .eq('id', poi.id)
+        .single();
 
-    if (current?.is_duplicate) continue;
+      if (current?.is_duplicate) continue;
 
-    const result = await deduplicatePOI(poi);
-    processed++;
-    if (result.merged) {
-      merged++;
+      const result = await deduplicatePOIWithOptions(poi, {
+        samePlatformOnly,
+        crossPlatformOnly,
+      });
+      processed++;
+      if (result.merged) {
+        merged++;
+      }
+    } catch (poiError) {
+      console.error(
+        `Error deduplicating POI ${poi.id} (${poi.name}):`,
+        poiError
+      );
+      // Continue with other POIs
     }
   }
 

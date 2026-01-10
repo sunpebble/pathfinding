@@ -131,7 +131,7 @@ export abstract class BaseExporter {
     const fields = this.options.fields || this.getDefaultFields();
 
     for (const field of fields) {
-      const value = (poi as Record<string, unknown>)[field];
+      const value = (poi as unknown as Record<string, unknown>)[field];
 
       // Apply field mapping
       const outputField = this.options.fieldMappings?.[field] || field;
