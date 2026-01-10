@@ -1,0 +1,115 @@
+{
+  "name": "Scheduled Crawl Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CRAWLER_API_URL }}/api/crawl-jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"Daily XiaoHongshu Crawl - {{ $now.format('YYYY-MM-DD') }}\",\n  \"platform\": \"xiaohongshu\",\n  \"job_type\": \"incremental\",\n  \"config\": {\n    \"keywords\": [\"旅行攻略\", \"自由行\", \"美食探店\"],\n    \"max_pages\": 20,\n    \"rate_limit\": {\n      \"requests_per_second\": 0.5,\n      \"max_concurrent\": 3\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "create-job",
+      "name": "Create Crawl Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CRAWLER_API_URL }}/api/crawl-jobs/{{ $json.id }}/start",
+        "options": {}
+      },
+      "id": "start-job",
+      "name": "Start Crawl Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#crawl-notifications",
+        "text": "=🚀 *Scheduled Crawl Started*\n\n*Job ID:* {{ $json.id }}\n*Platform:* xiaohongshu\n*Time:* {{ $now.format('YYYY-MM-DD HH:mm:ss') }}",
+        "otherOptions": {}
+      },
+      "id": "slack-notify",
+      "name": "Notify Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [910, 300],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-credentials",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Create Crawl Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Crawl Job": {
+      "main": [
+        [
+          {
+            "node": "Start Crawl Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Crawl Job": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["crawl", "schedule"]
+}

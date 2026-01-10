@@ -43,6 +43,7 @@ export const TABLES = {
   POI_SOURCE_MAPPINGS: 'poi_source_mappings',
   TRAINING_DATASETS: 'training_datasets',
   DATA_QUALITY_REPORTS: 'data_quality_reports',
+  TRAVEL_GUIDES: 'travel_guides',
 } as const;
 
 export type TableName = (typeof TABLES)[keyof typeof TABLES];

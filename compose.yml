@@ -56,6 +56,14 @@ services:
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - ENABLE_SCHEDULER=${ENABLE_SCHEDULER:-true}
+      # AI Services
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma3:12b}
+      # n8n Workflow
+      - N8N_BASE_URL=http://n8n:5678
+      - N8N_API_KEY=${N8N_API_KEY:-}
+      # ComfyUI Image Generation
+      - COMFYUI_BASE_URL=http://comfyui:8188
     volumes:
       - crawler-storage:/app/storage
     healthcheck:
@@ -73,6 +81,111 @@ services:
       start_period: 5s
       retries: 3
     restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+      n8n:
+        condition: service_healthy
+
+  # Ollama - Local LLM with Gemma3 for content extraction and summarization
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama-models:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_NUM_PARALLEL=2
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:11434/api/tags']
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Ollama model initialization - pulls Gemma3 model on startup
+  ollama-init:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ['sh', '-c']
+    command:
+      - |
+        ollama pull gemma3:12b
+        echo "Gemma3 model ready"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    restart: 'no'
+
+  # n8n - Workflow automation for crawl scheduling and notifications
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - '5678:5678'
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-changeme}
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      - GENERIC_TIMEZONE=${TZ:-Asia/Shanghai}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-your-encryption-key-here}
+      # External service connections
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - CRAWLER_API_URL=http://crawler:3001
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows:ro
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:5678/healthz']
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    restart: unless-stopped
+
+  # ComfyUI - AI image generation for travel guide illustrations
+  comfyui:
+    image: yanwk/comfyui-boot:latest
+    ports:
+      - '8188:8188'
+    volumes:
+      - comfyui-data:/root
+      - comfyui-output:/root/ComfyUI/output
+      - ./comfyui/workflows:/root/ComfyUI/user/default/workflows:ro
+    environment:
+      - CLI_ARGS=--listen 0.0.0.0
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8188/system_stats']
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
 volumes:
   crawler-storage:
+  ollama-models:
+  n8n-data:
+  comfyui-data:
+  comfyui-output:

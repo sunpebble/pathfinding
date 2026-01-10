@@ -15,6 +15,7 @@ import { checkConnection } from './lib/supabase.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { initTracing } from './middleware/tracing.js';
 import { initSentry } from './monitoring/index.js';
+import { aiRouter } from './routes/ai.js';
 import { crawlJobsRouter } from './routes/crawl-jobs.js';
 import { dashboardRouter } from './routes/dashboard.js';
 import { guidesRouter } from './routes/guides.js';
@@ -72,6 +73,7 @@ app.get('/', (c: Context) => {
       guides: '/api/guides',
       trainingDatasets: '/api/training-datasets',
       qualityReports: '/api/quality-reports',
+      ai: '/api/ai',
     },
   });
 });
@@ -85,6 +87,7 @@ app.route('/api/pois', poisRouter);
 app.route('/api/guides', guidesRouter);
 app.route('/api/training-datasets', trainingDatasetsRouter);
 app.route('/api/quality-reports', qualityReportsRouter);
+app.route('/api/ai', aiRouter);
 
 // 404 handler
 app.notFound((c: Context) => {
