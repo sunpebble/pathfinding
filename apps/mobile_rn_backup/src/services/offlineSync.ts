@@ -1,6 +1,4 @@
-import type {
-  Itinerary,
-} from '@pathfinding/types';
+import type { Itinerary } from '@pathfinding/types';
 import type { Itinerary as ItineraryModel } from '@/database/models/Itinerary';
 import { Q } from '@nozbe/watermelondb';
 import { database } from '@/database';

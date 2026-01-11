@@ -49,7 +49,7 @@ export function ImportedItineraryScreen() {
   }, [blogPostId, fetchBlogPost]);
 
   // Initialize editable locations from blog post
-   
+
   useEffect(() => {
     if (currentBlogPost?.locations && locations.length === 0) {
       const totalLocations = currentBlogPost.locations.length;
