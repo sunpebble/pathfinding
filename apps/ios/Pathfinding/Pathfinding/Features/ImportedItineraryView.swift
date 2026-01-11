@@ -5,6 +5,8 @@ struct ImportedItineraryView: View {
   let guide: BlogPost
   @State private var selectedDay: Int = 1
   @State private var cameraPosition: MapCameraPosition = .automatic
+  @State private var selectedPoi: AiPoi?
+  @State private var showSaveConfirmation = false
 
   var days: [AiDay] { guide.aiDays ?? [] }
   var currentDay: AiDay? { days.first { $0.dayNumber == selectedDay } }
@@ -14,9 +16,8 @@ struct ImportedItineraryView: View {
     return day.pois.compactMap { poi in
       guard let lat = poi.latitude, let lng = poi.longitude,
         lat != 0 && lng != 0,
-        // 验证坐标在合理范围内（中国及周边区域）
-        lat >= 3 && lat <= 54,  // 纬度范围
-        lng >= 73 && lng <= 136  // 经度范围
+        lat >= -90 && lat <= 90,
+        lng >= -180 && lng <= 180
       else { return nil }
       return PoiAnnotation(
         poi: poi,
@@ -27,95 +28,151 @@ struct ImportedItineraryView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      // Day picker
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: 12) {
-          ForEach(days) { day in
-            Button {
-              withAnimation { selectedDay = day.dayNumber }
-            } label: {
-              VStack(spacing: 4) {
-                Text("Day \(day.dayNumber)").font(.headline)
-                if let theme = day.theme {
-                  Text(theme).font(.caption).lineLimit(1)
-                }
-              }
-              .padding(.horizontal, 16).padding(.vertical, 8)
-              .background(
-                selectedDay == day.dayNumber ? Color.accentColor : Color.secondary.opacity(0.1)
-              )
-              .foregroundStyle(selectedDay == day.dayNumber ? .white : .primary)
-              .clipShape(Capsule())
-            }
-            .buttonStyle(.plain)
-          }
-        }
-        .padding()
-      }
-      .background(.ultraThinMaterial)
+      // MARK: - Day Selector
+      daySelectorView
+        .background(.ultraThinMaterial)
 
-      // Map with Markers
-      Map(position: $cameraPosition) {
-        ForEach(Array(annotations.enumerated()), id: \.element.id) { index, annotation in
-          Annotation(annotation.poi.name, coordinate: annotation.coordinate) {
-            ZStack {
-              Circle()
-                .fill(colorForType(annotation.poi.type))
-                .frame(width: 30, height: 30)
-              Text("\(index + 1)")
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundStyle(.white)
-            }
-          }
-        }
-      }
-      .mapStyle(.standard(elevation: .realistic))
-      .onChange(of: selectedDay) { _, _ in updateCamera() }
-      .onAppear { updateCamera() }
+      // MARK: - Map
+      mapView
+        .frame(maxHeight: .infinity)
 
-      // POI List
-      List {
-        if let day = currentDay {
-          ForEach(Array(day.pois.enumerated()), id: \.offset) { index, poi in
-            HStack(spacing: 12) {
-              ZStack {
-                Circle().fill(colorForType(poi.type)).frame(width: 32, height: 32)
-                Text("\(index + 1)").font(.caption).fontWeight(.bold).foregroundStyle(.white)
-              }
-              VStack(alignment: .leading, spacing: 2) {
-                Text(poi.name).font(.subheadline).fontWeight(.medium)
-                if let type = poi.type {
-                  Text(type).font(.caption).foregroundStyle(.secondary)
-                }
-              }
-              Spacer()
-              if poi.latitude != nil && poi.latitude != 0 {
-                Image(systemName: "location.fill").foregroundStyle(.green)
-              }
-            }
-            .padding(.vertical, 4)
-          }
-        }
-      }
-      .listStyle(.plain)
-      .frame(height: 200)
+      // MARK: - POI List
+      poiListView
+        .frame(height: 220)
     }
-    .navigationTitle("导入行程")
+    .navigationTitle(guide.title)
     .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button {
+          showSaveConfirmation = true
+        } label: {
+          Label("保存", systemImage: "square.and.arrow.down")
+        }
+      }
+    }
+    .alert("保存行程", isPresented: $showSaveConfirmation) {
+      Button("保存") {
+        // Save itinerary logic
+      }
+      Button("取消", role: .cancel) {}
+    } message: {
+      Text("将此行程保存到「我的行程」中？")
+    }
+    .sheet(item: $selectedPoi) { poi in
+      PoiDetailSheet(poi: poi)
+    }
   }
 
-  private func updateCamera() {
-    print("📍 Annotations count: \(annotations.count)")
-    guard !annotations.isEmpty else {
-      print("⚠️ No annotations to display")
-      return
+  // MARK: - Day Selector
+
+  private var daySelectorView: some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      HStack(spacing: DesignTokens.Spacing.sm) {
+        ForEach(days) { day in
+          DaySelectorButton(
+            day: day,
+            isSelected: selectedDay == day.dayNumber
+          ) {
+            withAnimation(.spring(response: 0.3)) {
+              selectedDay = day.dayNumber
+            }
+          }
+        }
+      }
+      .padding(.horizontal, DesignTokens.Spacing.md)
+      .padding(.vertical, DesignTokens.Spacing.sm)
     }
+  }
+
+  // MARK: - Map View
+
+  private var mapView: some View {
+    Map(position: $cameraPosition, selection: $selectedPoi) {
+      ForEach(Array(annotations.enumerated()), id: \.element.id) { index, annotation in
+        Annotation(
+          annotation.poi.name,
+          coordinate: annotation.coordinate,
+          anchor: .bottom
+        ) {
+          MapMarker(
+            index: index + 1,
+            type: annotation.poi.type,
+            isSelected: selectedPoi?.name == annotation.poi.name
+          )
+        }
+        .tag(annotation.poi)
+      }
+
+      // Draw route line if multiple POIs
+      if annotations.count > 1 {
+        MapPolyline(coordinates: annotations.map(\.coordinate))
+          .stroke(.indigo.opacity(0.6), style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
+      }
+    }
+    .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .including([.restaurant, .hotel, .museum, .park])))
+    .mapControls {
+      MapCompass()
+      MapScaleView()
+      MapUserLocationButton()
+    }
+    .onChange(of: selectedDay) { _, _ in
+      updateCamera()
+    }
+    .onAppear {
+      updateCamera()
+    }
+  }
+
+  // MARK: - POI List
+
+  private var poiListView: some View {
+    VStack(spacing: 0) {
+      // Handle
+      Capsule()
+        .fill(Color(.systemGray4))
+        .frame(width: 36, height: 4)
+        .padding(.top, DesignTokens.Spacing.xs)
+        .padding(.bottom, DesignTokens.Spacing.sm)
+
+      // List
+      ScrollView {
+        LazyVStack(spacing: DesignTokens.Spacing.xs) {
+          if let day = currentDay {
+            ForEach(Array(day.pois.enumerated()), id: \.offset) { index, poi in
+              PoiListItem(
+                poi: poi,
+                index: index + 1,
+                isSelected: selectedPoi?.name == poi.name
+              ) {
+                selectedPoi = poi
+                // Center map on this POI
+                if let lat = poi.latitude, let lng = poi.longitude {
+                  withAnimation {
+                    cameraPosition = .region(
+                      MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                      )
+                    )
+                  }
+                }
+              }
+            }
+          }
+        }
+        .padding(.horizontal, DesignTokens.Spacing.md)
+      }
+    }
+    .background(.background)
+  }
+
+  // MARK: - Update Camera
+
+  private func updateCamera() {
+    guard !annotations.isEmpty else { return }
 
     let coords = annotations.map(\.coordinate)
-    coords.forEach { print("  📌 \($0.latitude), \($0.longitude)") }
-
-    // Calculate bounding box
     let lats = coords.map(\.latitude)
     let lngs = coords.map(\.longitude)
 
@@ -129,21 +186,75 @@ struct ImportedItineraryView: View {
       longitude: (minLng + maxLng) / 2
     )
 
-    // Add padding to the span, with min/max limits
-    // Min: 0.01 (very close zoom), Max: 2.0 (city level, not country level)
     let latDelta = min(max((maxLat - minLat) * 1.5, 0.01), 2.0)
     let lngDelta = min(max((maxLng - minLng) * 1.5, 0.01), 2.0)
 
-    print(
-      "📍 Camera: center=(\(center.latitude), \(center.longitude)), span=(\(latDelta), \(lngDelta))")
-
-    withAnimation {
+    withAnimation(.easeInOut(duration: 0.5)) {
       cameraPosition = .region(
         MKCoordinateRegion(
           center: center,
           span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
-        ))
+        )
+      )
     }
+  }
+}
+
+// MARK: - Day Selector Button
+
+struct DaySelectorButton: View {
+  let day: AiDay
+  let isSelected: Bool
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      VStack(spacing: 4) {
+        Text("Day")
+          .font(.caption2)
+          .fontWeight(.medium)
+
+        Text("\(day.dayNumber)")
+          .font(.headline)
+
+        if let theme = day.theme {
+          Text(theme)
+            .font(.caption2)
+            .lineLimit(1)
+        }
+      }
+      .padding(.horizontal, DesignTokens.Spacing.md)
+      .padding(.vertical, DesignTokens.Spacing.xs)
+      .background(
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+          .fill(isSelected ? Color.accentColor : Color(.systemGray6))
+      )
+      .foregroundStyle(isSelected ? .white : .primary)
+    }
+    .buttonStyle(.plain)
+  }
+}
+
+// MARK: - Map Marker
+
+struct MapMarker: View {
+  let index: Int
+  let type: String?
+  let isSelected: Bool
+
+  var body: some View {
+    ZStack {
+      Circle()
+        .fill(colorForType(type).gradient)
+        .frame(width: isSelected ? 40 : 32, height: isSelected ? 40 : 32)
+        .shadow(color: colorForType(type).opacity(0.5), radius: isSelected ? 8 : 4, y: 2)
+
+      Text("\(index)")
+        .font(isSelected ? .headline : .caption)
+        .fontWeight(.bold)
+        .foregroundStyle(.white)
+    }
+    .animation(.spring(response: 0.3), value: isSelected)
   }
 
   private func colorForType(_ type: String?) -> Color {
@@ -157,6 +268,185 @@ struct ImportedItineraryView: View {
   }
 }
 
+// MARK: - POI List Item
+
+struct PoiListItem: View {
+  let poi: AiPoi
+  let index: Int
+  let isSelected: Bool
+  let onTap: () -> Void
+
+  var body: some View {
+    Button(action: onTap) {
+      HStack(spacing: DesignTokens.Spacing.sm) {
+        // Index
+        ZStack {
+          Circle()
+            .fill(colorForType(poi.type).gradient)
+            .frame(width: 28, height: 28)
+
+          Text("\(index)")
+            .font(.caption)
+            .fontWeight(.bold)
+            .foregroundStyle(.white)
+        }
+
+        // Info
+        VStack(alignment: .leading, spacing: 2) {
+          Text(poi.name)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundStyle(.primary)
+
+          if let type = poi.type {
+            Text(type)
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+          }
+        }
+
+        Spacer()
+
+        // Location indicator
+        if poi.latitude != nil && poi.latitude != 0 {
+          Image(systemName: "location.fill")
+            .font(.caption)
+            .foregroundStyle(.green)
+        }
+
+        Image(systemName: "chevron.right")
+          .font(.caption2)
+          .foregroundStyle(.tertiary)
+      }
+      .padding(DesignTokens.Spacing.sm)
+      .background(
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
+          .fill(isSelected ? Color.accentColor.opacity(0.1) : Color(.systemGray6))
+      )
+    }
+    .buttonStyle(.plain)
+  }
+
+  private func colorForType(_ type: String?) -> Color {
+    switch type?.lowercased() {
+    case "景点", "attraction": return .orange
+    case "餐厅", "restaurant", "美食", "food": return .red
+    case "酒店", "hotel", "住宿", "accommodation": return .blue
+    case "交通", "transport", "transportation": return .green
+    default: return .purple
+    }
+  }
+}
+
+// MARK: - POI Detail Sheet
+
+struct PoiDetailSheet: View {
+  @Environment(\.dismiss) private var dismiss
+  let poi: AiPoi
+
+  var body: some View {
+    NavigationStack {
+      ScrollView {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+          // Header
+          VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            if let type = poi.type {
+              Badge(type, style: .info)
+            }
+
+            Text(poi.name)
+              .font(.title2)
+              .fontWeight(.bold)
+
+            if let address = poi.address {
+              Label(address, systemImage: "mappin.and.ellipse")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
+          }
+
+          if let description = poi.description {
+            Divider()
+
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+              Text("简介")
+                .font(.headline)
+
+              Text(description)
+                .font(.body)
+                .foregroundStyle(.secondary)
+            }
+          }
+
+          // Map preview
+          if let lat = poi.latitude, let lng = poi.longitude, lat != 0, lng != 0 {
+            Divider()
+
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+              Text("位置")
+                .font(.headline)
+
+              Map(initialPosition: .region(
+                MKCoordinateRegion(
+                  center: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                  span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )
+              )) {
+                Marker(poi.name, coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng))
+              }
+              .frame(height: 200)
+              .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+            }
+          }
+
+          // Actions
+          HStack(spacing: DesignTokens.Spacing.md) {
+            if let lat = poi.latitude, let lng = poi.longitude {
+              Button {
+                openInMaps(name: poi.name, lat: lat, lng: lng)
+              } label: {
+                Label("导航", systemImage: "arrow.triangle.turn.up.right.diamond")
+                  .frame(maxWidth: .infinity)
+              }
+              .buttonStyle(.borderedProminent)
+            }
+
+            Button {
+              // Add to favorites
+            } label: {
+              Label("收藏", systemImage: "bookmark")
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+          }
+        }
+        .padding(DesignTokens.Spacing.lg)
+      }
+      .navigationTitle("景点详情")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button("完成") { dismiss() }
+        }
+      }
+    }
+    .presentationDetents([.medium, .large])
+    .presentationDragIndicator(.visible)
+  }
+
+  private func openInMaps(name: String, lat: Double, lng: Double) {
+    let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+    let placemark = MKPlacemark(coordinate: coordinate)
+    let mapItem = MKMapItem(placemark: placemark)
+    mapItem.name = name
+    mapItem.openInMaps(launchOptions: [
+      MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking
+    ])
+  }
+}
+
+// MARK: - POI Annotation
+
 struct PoiAnnotation: Identifiable {
   let id = UUID()
   let poi: AiPoi
@@ -167,21 +457,32 @@ struct PoiAnnotation: Identifiable {
   NavigationStack {
     ImportedItineraryView(
       guide: BlogPost(
-        id: "1", title: "Test", authorName: nil, content: nil, summary: nil, coverImageUrl: nil,
-        imageUrls: nil, sourcePlatform: "test", qualityScore: nil, viewsCount: nil, likesCount: nil,
-        savesCount: nil, createdAt: nil,
+        id: "1", title: "东京5日游",
+        authorName: nil, content: nil, summary: nil, coverImageUrl: nil,
+        imageUrls: nil, sourcePlatform: "test", qualityScore: nil,
+        viewsCount: nil, likesCount: nil, savesCount: nil, createdAt: nil,
         aiSummary: nil, aiTips: nil, aiBestTime: nil, aiDuration: nil, aiBudget: nil,
         aiDays: [
           AiDay(
-            dayNumber: 1, theme: "Day 1",
+            dayNumber: 1, theme: "浅草文化探索",
             pois: [
               AiPoi(
-                name: "Place 1", type: "景点", description: nil, latitude: 35.68, longitude: 139.76,
-                address: nil),
+                name: "浅草寺", type: "景点", description: "东京最古老的寺庙",
+                latitude: 35.7148, longitude: 139.7967, address: "东京都台东区浅草2-3-1"),
               AiPoi(
-                name: "Place 2", type: "美食", description: nil, latitude: 35.69, longitude: 139.77,
-                address: nil),
-            ])
-        ], aiProcessedAt: nil))
+                name: "晴空塔", type: "景点", description: "日本最高建筑",
+                latitude: 35.7101, longitude: 139.8107, address: nil),
+            ]),
+          AiDay(
+            dayNumber: 2, theme: "原宿潮流",
+            pois: [
+              AiPoi(
+                name: "竹下通", type: "购物", description: nil,
+                latitude: 35.6702, longitude: 139.7026, address: nil)
+            ]),
+        ],
+        aiProcessedAt: nil
+      )
+    )
   }
 }

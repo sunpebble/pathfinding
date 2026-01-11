@@ -49,12 +49,15 @@ struct BlogPost: Codable, Identifiable, Hashable {
     case aiProcessedAt = "ai_processed_at"
   }
 
-  // Convenience accessors
+  // MARK: - Convenience Accessors
+
   var author: String? { authorName }
   var coverImage: String? { coverImageUrl }
   var platform: String { sourcePlatform ?? "unknown" }
   var viewCount: Int? { viewsCount }
   var likeCount: Int? { likesCount }
+
+  // MARK: - Hashable
 
   func hash(into hasher: inout Hasher) {
     hasher.combine(id)
@@ -65,13 +68,28 @@ struct BlogPost: Codable, Identifiable, Hashable {
   }
 }
 
+// MARK: - AI Day
+
 /// AI-extracted day structure
 struct AiDay: Codable, Identifiable, Hashable {
   var id: Int { dayNumber }
   let dayNumber: Int
   let theme: String?
   let pois: [AiPoi]
+
+  // API returns camelCase (dayNumber), not snake_case
+  // No CodingKeys needed as property names match JSON
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(dayNumber)
+  }
+
+  static func == (lhs: AiDay, rhs: AiDay) -> Bool {
+    lhs.dayNumber == rhs.dayNumber
+  }
 }
+
+// MARK: - AI POI
 
 /// AI-extracted point of interest
 struct AiPoi: Codable, Identifiable, Hashable {
@@ -82,7 +100,19 @@ struct AiPoi: Codable, Identifiable, Hashable {
   let latitude: Double?
   let longitude: Double?
   let address: String?
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(name)
+    hasher.combine(latitude)
+    hasher.combine(longitude)
+  }
+
+  static func == (lhs: AiPoi, rhs: AiPoi) -> Bool {
+    lhs.name == rhs.name && lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+  }
 }
+
+// MARK: - API Response
 
 /// API response wrapper
 struct BlogListResponse: Codable {

@@ -1,44 +1,36 @@
 import SwiftUI
 
 struct HomeView: View {
-  @State private var guides: [BlogPost] = []
-  @State private var isLoading = false
-  @State private var errorMessage: String?
-
-  var featuredGuides: [BlogPost] {
-    Array(guides.prefix(3))
-  }
-
-  var recentGuides: [BlogPost] {
-    Array(guides.dropFirst(3))
-  }
+  @State private var store = GuideStore.shared
+  @Namespace private var animation
 
   var body: some View {
     NavigationStack {
       ScrollView {
-        VStack(alignment: .leading, spacing: 24) {
-          // MARK: - Header
-          headerSection
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
+          // MARK: - Hero Header
+          heroHeader
+            .padding(.horizontal, DesignTokens.Spacing.lg)
 
-          if isLoading {
+          if store.isLoading && store.guides.isEmpty {
             loadingView
-          } else if let error = errorMessage {
+          } else if let error = store.error, store.guides.isEmpty {
             errorView(error)
-          } else if guides.isEmpty {
+          } else if store.guides.isEmpty {
             emptyView
           } else {
             // MARK: - Featured Section
-            if !featuredGuides.isEmpty {
+            if !store.featuredGuides.isEmpty {
               featuredSection
             }
 
             // MARK: - Recent Guides
-            if !recentGuides.isEmpty {
+            if !store.recentGuides.isEmpty {
               recentSection
             }
           }
         }
-        .padding(.vertical)
+        .padding(.vertical, DesignTokens.Spacing.md)
       }
       .background(Color(.systemGroupedBackground))
       .navigationBarTitleDisplayMode(.inline)
@@ -46,96 +38,137 @@ struct HomeView: View {
         BlogDetailView(guide: guide)
       }
       .task {
-        await loadGuides()
+        await store.fetchGuides()
       }
       .refreshable {
-        await loadGuides()
+        await store.fetchGuides(forceRefresh: true)
       }
     }
   }
 
-  // MARK: - Header Section
-  private var headerSection: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("发现旅途")
-        .font(.system(size: 34, weight: .bold))
-      Text("探索精选旅行攻略，开启你的下一段旅程")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
+  // MARK: - Hero Header
+
+  private var heroHeader: some View {
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+      HStack {
+        VStack(alignment: .leading, spacing: 4) {
+          Text("发现旅途")
+            .font(.system(size: 32, weight: .bold, design: .rounded))
+
+          Text("探索精选攻略，开启下一段旅程")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+
+        Spacer()
+
+        // Profile button
+        NavigationLink {
+          ProfileView()
+        } label: {
+          Image(systemName: "person.circle.fill")
+            .font(.title)
+            .foregroundStyle(.secondary)
+        }
+      }
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 20)
+    .padding(.top, DesignTokens.Spacing.xs)
   }
 
   // MARK: - Featured Section
+
   private var featuredSection: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      SectionHeader(title: "精选推荐", icon: "star.fill")
-        .padding(.horizontal, 20)
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+      SectionHeader(title: "精选推荐", icon: "star.fill", iconColor: .orange)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
 
       ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: 16) {
-          ForEach(featuredGuides) { guide in
+        HStack(spacing: DesignTokens.Spacing.md) {
+          ForEach(store.featuredGuides) { guide in
             NavigationLink(value: guide) {
               FeaturedCard(guide: guide)
             }
             .buttonStyle(.plain)
           }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
       }
       .scrollClipDisabled()
     }
   }
 
   // MARK: - Recent Section
-  private var recentSection: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      SectionHeader(title: "最新攻略", icon: "clock.fill")
-        .padding(.horizontal, 20)
 
-      LazyVStack(spacing: 12) {
-        ForEach(recentGuides) { guide in
+  private var recentSection: some View {
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+      SectionHeader(title: "最新攻略", icon: "clock.fill", iconColor: .indigo)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+
+      LazyVStack(spacing: DesignTokens.Spacing.sm) {
+        ForEach(store.recentGuides) { guide in
           NavigationLink(value: guide) {
             CompactGuideCard(guide: guide)
           }
           .buttonStyle(.plain)
         }
       }
-      .padding(.horizontal, 20)
+      .padding(.horizontal, DesignTokens.Spacing.lg)
     }
   }
 
   // MARK: - Loading View
+
   private var loadingView: some View {
-    VStack(spacing: 16) {
-      ProgressView()
-        .scaleEffect(1.2)
-      Text("加载中...")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
+      // Featured skeleton
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+        SectionHeader(title: "精选推荐", icon: "star.fill", iconColor: .orange)
+          .padding(.horizontal, DesignTokens.Spacing.lg)
+
+        ScrollView(.horizontal, showsIndicators: false) {
+          HStack(spacing: DesignTokens.Spacing.md) {
+            ForEach(0..<3, id: \.self) { _ in
+              GuideCardSkeleton()
+            }
+          }
+          .padding(.horizontal, DesignTokens.Spacing.lg)
+        }
+      }
+
+      // Recent skeleton
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+        SectionHeader(title: "最新攻略", icon: "clock.fill", iconColor: .indigo)
+          .padding(.horizontal, DesignTokens.Spacing.lg)
+
+        VStack(spacing: DesignTokens.Spacing.sm) {
+          ForEach(0..<4, id: \.self) { _ in
+            CompactGuideSkeleton()
+          }
+        }
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+      }
     }
-    .frame(maxWidth: .infinity, minHeight: 300)
-    .padding(.horizontal, 20)
   }
 
   // MARK: - Error View
-  private func errorView(_ error: String) -> some View {
+
+  private func errorView(_ error: StoreError) -> some View {
     ContentUnavailableView {
       Label("加载失败", systemImage: "wifi.exclamationmark")
     } description: {
-      Text(error)
+      Text(error.localizedDescription)
     } actions: {
       Button("重试") {
-        Task { await loadGuides() }
+        Task { await store.fetchGuides(forceRefresh: true) }
       }
-      .buttonStyle(.bordered)
+      .buttonStyle(.secondary)
     }
     .frame(minHeight: 300)
-    .padding(.horizontal, 20)
+    .padding(.horizontal, DesignTokens.Spacing.lg)
   }
 
   // MARK: - Empty View
+
   private var emptyView: some View {
     ContentUnavailableView {
       Label("暂无攻略", systemImage: "book.closed")
@@ -143,32 +176,21 @@ struct HomeView: View {
       Text("下拉刷新加载最新内容")
     }
     .frame(minHeight: 300)
-    .padding(.horizontal, 20)
-  }
-
-  private func loadGuides() async {
-    isLoading = true
-    errorMessage = nil
-
-    do {
-      guides = try await APIClient.shared.fetchGuides(limit: 20)
-    } catch {
-      errorMessage = error.localizedDescription
-    }
-
-    isLoading = false
+    .padding(.horizontal, DesignTokens.Spacing.lg)
   }
 }
 
 // MARK: - Section Header
+
 struct SectionHeader: View {
   let title: String
   let icon: String
+  var iconColor: Color = .accentColor
 
   var body: some View {
-    HStack(spacing: 6) {
+    HStack(spacing: DesignTokens.Spacing.xs) {
       Image(systemName: icon)
-        .foregroundStyle(Color.accentColor)
+        .foregroundStyle(iconColor)
         .font(.subheadline)
       Text(title)
         .font(.title3)
@@ -177,61 +199,46 @@ struct SectionHeader: View {
   }
 }
 
-// MARK: - Featured Card (Large Horizontal Card)
+// MARK: - Featured Card
+
 struct FeaturedCard: View {
   let guide: BlogPost
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       // Cover Image
-      ZStack(alignment: .bottomLeading) {
-        AsyncImage(url: URL(string: guide.coverImage ?? "")) { image in
-          image.resizable().aspectRatio(contentMode: .fill)
+      ZStack(alignment: .topTrailing) {
+        CachedAsyncImage(url: URL(string: guide.coverImage ?? "")) { image in
+          image
+            .resizable()
+            .aspectRatio(contentMode: .fill)
         } placeholder: {
           Rectangle()
             .fill(
               LinearGradient(
-                colors: [.purple.opacity(0.3), .blue.opacity(0.3)],
+                colors: [.indigo.opacity(0.3), .purple.opacity(0.2)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
               )
             )
             .overlay {
               Image(systemName: "photo")
-                .font(.largeTitle)
+                .font(.title)
                 .foregroundStyle(.white.opacity(0.5))
             }
         }
         .frame(width: 280, height: 180)
         .clipped()
 
-        // Gradient Overlay
-        LinearGradient(
-          colors: [.clear, .black.opacity(0.6)],
-          startPoint: .top,
-          endPoint: .bottom
-        )
-
         // AI Badge
         if guide.aiProcessedAt != nil {
-          HStack(spacing: 4) {
-            Image(systemName: "sparkles")
-            Text("AI")
-          }
-          .font(.caption2)
-          .fontWeight(.medium)
-          .foregroundStyle(.white)
-          .padding(.horizontal, 8)
-          .padding(.vertical, 4)
-          .background(.purple.gradient)
-          .clipShape(Capsule())
-          .padding(12)
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+          Badge("AI", icon: "sparkles", style: .ai)
+            .padding(DesignTokens.Spacing.sm)
         }
       }
 
       // Content
-      VStack(alignment: .leading, spacing: 8) {
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
         Text(guide.title)
           .font(.headline)
           .lineLimit(2)
@@ -244,11 +251,11 @@ struct FeaturedCard: View {
             .lineLimit(2)
         }
 
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.sm) {
           if let author = guide.author {
             HStack(spacing: 4) {
               Image(systemName: "person.circle.fill")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tertiary)
               Text(author)
             }
             .font(.caption)
@@ -259,33 +266,39 @@ struct FeaturedCard: View {
           Spacer()
 
           if let views = guide.viewCount {
-            HStack(spacing: 2) {
-              Image(systemName: "eye")
-              Text("\(views)")
-            }
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
+            StatLabel(icon: "eye", value: formatNumber(views))
           }
         }
       }
-      .padding(12)
+      .padding(DesignTokens.Spacing.sm)
     }
     .frame(width: 280)
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: 16))
-    .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
+    .cardStyle(radius: DesignTokens.Radius.lg)
+  }
+
+  private func formatNumber(_ num: Int) -> String {
+    if num >= 10000 {
+      return String(format: "%.1fw", Double(num) / 10000)
+    } else if num >= 1000 {
+      return String(format: "%.1fk", Double(num) / 1000)
+    }
+    return "\(num)"
   }
 }
 
-// MARK: - Compact Guide Card (List Style)
+// MARK: - Compact Guide Card
+
 struct CompactGuideCard: View {
   let guide: BlogPost
+
   var body: some View {
-    HStack(spacing: 12) {
+    HStack(spacing: DesignTokens.Spacing.sm) {
       // Thumbnail
       ZStack(alignment: .topTrailing) {
-        AsyncImage(url: URL(string: guide.coverImage ?? "")) { image in
-          image.resizable().aspectRatio(contentMode: .fill)
+        CachedAsyncImage(url: URL(string: guide.coverImage ?? "")) { image in
+          image
+            .resizable()
+            .aspectRatio(contentMode: .fill)
         } placeholder: {
           Rectangle()
             .fill(
@@ -297,21 +310,21 @@ struct CompactGuideCard: View {
             )
         }
         .frame(width: 100, height: 80)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
 
         if guide.aiProcessedAt != nil {
           Image(systemName: "sparkles")
             .font(.caption2)
             .foregroundStyle(.white)
             .padding(4)
-            .background(.purple.gradient)
+            .background(Color.aiPurple.gradient)
             .clipShape(Circle())
             .offset(x: 4, y: -4)
         }
       }
 
       // Content
-      VStack(alignment: .leading, spacing: 6) {
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
         Text(guide.title)
           .font(.subheadline)
           .fontWeight(.medium)
@@ -320,16 +333,18 @@ struct CompactGuideCard: View {
 
         Spacer()
 
-        HStack(spacing: 8) {
+        HStack(spacing: DesignTokens.Spacing.xs) {
           if let author = guide.author {
             Text(author)
               .lineLimit(1)
           }
+
           Spacer()
+
           if let likes = guide.likeCount {
             HStack(spacing: 2) {
               Image(systemName: "heart.fill")
-                .foregroundStyle(.red.opacity(0.7))
+                .foregroundStyle(.red.opacity(0.8))
               Text("\(likes)")
             }
           }
@@ -339,14 +354,11 @@ struct CompactGuideCard: View {
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(12)
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: 14))
-    .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+    .padding(DesignTokens.Spacing.sm)
+    .subtleCardStyle(radius: DesignTokens.Radius.md)
   }
 }
 
 #Preview {
   HomeView()
 }
-

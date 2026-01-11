@@ -1,23 +1,40 @@
 import Foundation
+import OSLog
 
-/// API client for Crawler service
-final class APIClient: Sendable {
+/// API client for Crawler service with caching and retry logic
+actor APIClient {
   static let shared = APIClient()
 
   private let baseURL: URL
   private let session: URLSession
+  private let decoder: JSONDecoder
+  private let logger = Logger(subsystem: "org.pathfinding.app", category: "APIClient")
 
-  init(baseURL: String = "http://127.0.0.1:3001") {
-    self.baseURL = URL(string: baseURL)!
+  // Response cache
+  private var responseCache: [String: CachedResponse] = [:]
 
-    let config = URLSessionConfiguration.default
-    config.timeoutIntervalForRequest = 30
-    config.timeoutIntervalForResource = 60
-    self.session = URLSession(configuration: config)
+  private struct CachedResponse {
+    let data: Data
+    let cachedAt: Date
   }
 
-  /// Fetch travel guides
-  func fetchGuides(limit: Int = 20, offset: Int = 0) async throws -> [BlogPost] {
+  init(baseURL: String? = nil) {
+    let urlString = baseURL ?? AppConfig.apiBaseURL
+    self.baseURL = URL(string: urlString)!
+
+    let config = URLSessionConfiguration.default
+    config.timeoutIntervalForRequest = AppConfig.networkTimeoutRequest
+    config.timeoutIntervalForResource = AppConfig.networkTimeoutResource
+    config.waitsForConnectivity = true
+    self.session = URLSession(configuration: config)
+
+    self.decoder = JSONDecoder()
+  }
+
+  /// Fetch travel guides with caching
+  func fetchGuides(limit: Int = 20, offset: Int = 0, forceRefresh: Bool = false) async throws
+    -> [BlogPost]
+  {
     var components = URLComponents(
       url: baseURL.appendingPathComponent("api/guides"),
       resolvingAgainstBaseURL: false
@@ -28,50 +45,17 @@ final class APIClient: Sendable {
     ]
 
     guard let url = components.url else {
-      throw URLError(.badURL)
+      throw APIError.invalidURL
     }
 
-    print("🌐 Fetching: \(url)")
-
-    let (data, response) = try await session.data(from: url)
-
-    guard let httpResponse = response as? HTTPURLResponse else {
-      throw URLError(.badServerResponse)
-    }
-
-    print("📡 Response status: \(httpResponse.statusCode)")
-
-    guard httpResponse.statusCode == 200 else {
-      throw URLError(.badServerResponse)
-    }
-
-    // Debug: print raw JSON
-    if let jsonString = String(data: data, encoding: .utf8) {
-      print("📄 Raw JSON (first 500 chars): \(String(jsonString.prefix(500)))")
-    }
+    let data = try await fetchWithRetry(url: url, forceRefresh: forceRefresh)
 
     do {
-      let decoder = JSONDecoder()
       let result = try decoder.decode(BlogListResponse.self, from: data)
-      print("✅ Loaded \(result.data.count) guides")
+      logger.info("Loaded \(result.data.count) guides")
       return result.data
-    } catch let DecodingError.keyNotFound(key, context) {
-      print("❌ Key not found: \(key.stringValue)")
-      print("   Context: \(context.debugDescription)")
-      print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
-      throw DecodingError.keyNotFound(key, context)
-    } catch let DecodingError.typeMismatch(type, context) {
-      print("❌ Type mismatch: \(type)")
-      print("   Context: \(context.debugDescription)")
-      print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
-      throw DecodingError.typeMismatch(type, context)
-    } catch let DecodingError.valueNotFound(type, context) {
-      print("❌ Value not found: \(type)")
-      print("   Context: \(context.debugDescription)")
-      print("   Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
-      throw DecodingError.valueNotFound(type, context)
     } catch {
-      print("❌ Decoding error: \(error)")
+      logger.error("Decoding error: \(String(describing: error))")
       throw error
     }
   }
@@ -79,7 +63,113 @@ final class APIClient: Sendable {
   /// Fetch single guide by ID
   func fetchGuide(id: String) async throws -> BlogPost {
     let url = baseURL.appendingPathComponent("api/guides/\(id)")
-    let (data, _) = try await session.data(from: url)
-    return try JSONDecoder().decode(BlogPost.self, from: data)
+    let data = try await fetchWithRetry(url: url)
+    return try decoder.decode(BlogPost.self, from: data)
+  }
+
+  // MARK: - Private Methods
+
+  private func fetchWithRetry(
+    url: URL,
+    forceRefresh: Bool = false,
+    maxRetries: Int = AppConfig.maxRetryAttempts
+  ) async throws -> Data {
+    let cacheKey = url.absoluteString
+
+    // Check cache first
+    if !forceRefresh, let cached = responseCache[cacheKey] {
+      let age = Date().timeIntervalSince(cached.cachedAt)
+      if age < AppConfig.apiCacheValiditySeconds {
+        logger.debug("Using cached response for \(url.path)")
+        return cached.data
+      }
+    }
+
+    var lastError: Error?
+
+    for attempt in 1...maxRetries {
+      do {
+        logger.debug("Fetching \(url.path) (attempt \(attempt)/\(maxRetries))")
+
+        let (data, response) = try await session.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+          throw APIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200...299:
+          // Cache the successful response
+          responseCache[cacheKey] = CachedResponse(data: data, cachedAt: Date())
+          return data
+
+        case 401:
+          throw APIError.unauthorized
+
+        case 404:
+          throw APIError.notFound
+
+        case 429:
+          // Rate limited - wait and retry
+          let waitTime = Double(attempt) * 2
+          try await Task.sleep(for: .seconds(waitTime))
+          continue
+
+        case 500...599:
+          throw APIError.serverError(httpResponse.statusCode)
+
+        default:
+          throw APIError.httpError(httpResponse.statusCode)
+        }
+      } catch let error as APIError {
+        throw error
+      } catch {
+        lastError = error
+        // Network error - exponential backoff
+        if attempt < maxRetries {
+          let waitTime = Double(attempt) * 1.5
+          try? await Task.sleep(for: .seconds(waitTime))
+        }
+      }
+    }
+
+    throw lastError ?? APIError.unknown
+  }
+
+  /// Clear response cache
+  func clearCache() {
+    responseCache.removeAll()
+    logger.info("API cache cleared")
+  }
+}
+
+// MARK: - API Error
+
+enum APIError: LocalizedError {
+  case invalidURL
+  case invalidResponse
+  case unauthorized
+  case notFound
+  case serverError(Int)
+  case httpError(Int)
+  case unknown
+
+  var errorDescription: String? {
+    switch self {
+    case .invalidURL:
+      return "请求地址无效"
+    case .invalidResponse:
+      return "服务器响应无效"
+    case .unauthorized:
+      return "未授权，请重新登录"
+    case .notFound:
+      return "请求的资源不存在"
+    case .serverError(let code):
+      return "服务器错误 (\(code))"
+    case .httpError(let code):
+      return "请求失败 (\(code))"
+    case .unknown:
+      return "未知错误"
+    }
   }
 }
