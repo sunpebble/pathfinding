@@ -10,7 +10,7 @@ import type {
 } from '@pathfinding/crawler-types';
 import type { ExportResult } from '../exporters/index.js';
 import { getExporter, getSupportedFormats } from '../exporters/index.js';
-import { supabase, TABLES } from '../lib/supabase.js';
+import { TABLES } from '../lib/convex.js';
 
 export interface DatasetGenerationParams {
   /**

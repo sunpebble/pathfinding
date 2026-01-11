@@ -1,119 +1,29 @@
-import type { ItineraryItem, Poi, TransportMode } from '@pathfinding/types';
-import type {
-  CreateItineraryItemInput,
-  ReorderItemsInput,
-  UpdateItineraryItemInput,
-} from '../models/itineraryItem';
-import { getSupabaseClient } from '../lib/supabase';
-import { NotFoundError, ValidationError } from '../middleware/errorHandler';
-
 /**
- * ItineraryItem database row type
+ * Itinerary Item Service - Convex Implementation
+ * CRUD operations for items within itinerary days
  */
-interface ItineraryItemRow {
-  id: string;
-  day_id: string;
-  poi_id: string | null;
-  order_index: number;
-  start_time: string | null;
-  end_time: string | null;
-  notes: string | null;
-  transport_mode: TransportMode;
-  transport_minutes: number | null;
-  created_at: string;
-  updated_at: string;
+
+import type { Id } from '../lib/convex';
+import { api, convex } from '../lib/convex';
+import { NotFoundError } from '../middleware/errorHandler';
+
+// Types
+export interface CreateItineraryItemInput {
+  dayId: string;
+  poiId: string;
+  orderIndex?: number;
+  startTime?: string;
+  endTime?: string;
+  transportMode?: 'walking' | 'driving' | 'transit' | 'cycling' | 'taxi';
+  notes?: string;
 }
 
-/**
- * POI database row type for joins
- */
-interface PoiRow {
-  id: string;
-  name: string;
-  name_en: string | null;
-  category: string;
-  address: string | null;
-  latitude: number;
-  longitude: number;
-  rating: number | null;
-  rating_count: number;
-  price_level: number | null;
-  image_urls: string[] | null;
-}
-
-/**
- * Convert database row to API response
- */
-function toItineraryItemResponse(
-  row: ItineraryItemRow,
-  poi?: PoiRow
-): ItineraryItem {
-  return {
-    id: row.id,
-    dayId: row.day_id,
-    poiId: row.poi_id || undefined,
-    orderIndex: row.order_index,
-    startTime: row.start_time || undefined,
-    endTime: row.end_time || undefined,
-    notes: row.notes || undefined,
-    transportMode: row.transport_mode,
-    transportMinutes: row.transport_minutes || undefined,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
-    poi: poi
-      ? {
-          id: poi.id,
-          name: poi.name,
-          nameEn: poi.name_en || undefined,
-          category: poi.category as Poi['category'],
-          cityId: '', // Not needed in response
-          address: poi.address || undefined,
-          latitude: poi.latitude,
-          longitude: poi.longitude,
-          rating: poi.rating || undefined,
-          ratingCount: poi.rating_count,
-          priceLevel: poi.price_level || undefined,
-          imageUrls: poi.image_urls || undefined,
-          source: '',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }
-      : undefined,
-  };
-}
-
-/**
- * Parse time string (HH:mm) to minutes from midnight
- */
-function parseTimeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-}
-
-/**
- * Check if two time ranges overlap
- */
-function timesOverlap(
-  start1: string,
-  end1: string,
-  start2: string,
-  end2: string
-): boolean {
-  const s1 = parseTimeToMinutes(start1);
-  const e1 = parseTimeToMinutes(end1);
-  const s2 = parseTimeToMinutes(start2);
-  const e2 = parseTimeToMinutes(end2);
-  return s1 < e2 && s2 < e1;
-}
-
-/**
- * Time conflict information
- */
-interface TimeConflict {
-  itemId: string;
-  startTime: string;
-  endTime: string;
-  poiName?: string;
+export interface UpdateItineraryItemInput {
+  orderIndex?: number;
+  startTime?: string;
+  endTime?: string;
+  transportMode?: 'walking' | 'driving' | 'transit' | 'cycling' | 'taxi';
+  notes?: string;
 }
 
 /**
@@ -123,136 +33,46 @@ export const ItineraryItemService = {
   /**
    * List items for a day
    */
-  async list(dayId: string, accessToken: string): Promise<ItineraryItem[]> {
-    const supabase = getSupabaseClient(accessToken);
+  async listByDay(dayId: string, _accessToken: string) {
+    const items = await convex.query(api.itineraryItems.listByDay, {
+      dayId: dayId as Id<'itineraryDays'>,
+    });
 
-    const { data, error } = await supabase
-      .from('itinerary_items')
-      .select('*, poi:pois(*)')
-      .eq('day_id', dayId)
-      .order('order_index');
-
-    if (error) {
-      throw error;
-    }
-
-    return (data || []).map((row: ItineraryItemRow & { poi: PoiRow | null }) =>
-      toItineraryItemResponse(row, row.poi || undefined)
-    );
+    return items;
   },
 
   /**
-   * Create a new item in a day
+   * Get an item by ID
    */
-  async create(
-    dayId: string,
-    input: CreateItineraryItemInput,
-    accessToken: string
-  ): Promise<{ item: ItineraryItem; conflicts: TimeConflict[] }> {
-    const supabase = getSupabaseClient(accessToken);
+  async getById(itemId: string, _accessToken: string) {
+    const item = await convex.query(api.itineraryItems.getById, {
+      id: itemId as Id<'itineraryItems'>,
+    });
 
-    // Verify day exists and get itinerary info
-    const { data: day, error: dayError } = await supabase
-      .from('itinerary_days')
-      .select('id, itinerary_id')
-      .eq('id', dayId)
-      .single();
-
-    if (dayError || !day) {
-      throw new NotFoundError('Day not found');
+    if (!item) {
+      throw new NotFoundError('Item not found');
     }
 
-    // Get max order index for this day
-    const { data: maxOrder } = await supabase
-      .from('itinerary_items')
-      .select('order_index')
-      .eq('day_id', dayId)
-      .order('order_index', { ascending: false })
-      .limit(1)
-      .single();
-
-    const orderIndex = input.orderIndex ?? (maxOrder?.order_index ?? -1) + 1;
-
-    // Check for time conflicts if start/end time provided
-    let conflicts: TimeConflict[] = [];
-    if (input.startTime && input.endTime) {
-      const { data: existingItems } = await supabase
-        .from('itinerary_items')
-        .select('id, start_time, end_time, poi:pois(name)')
-        .eq('day_id', dayId)
-        .not('start_time', 'is', null)
-        .not('end_time', 'is', null);
-
-      if (existingItems) {
-        conflicts = existingItems
-          .filter((item) =>
-            timesOverlap(
-              input.startTime!,
-              input.endTime!,
-              item.start_time!,
-              item.end_time!
-            )
-          )
-          .map((item) => ({
-            itemId: item.id,
-            startTime: item.start_time!,
-            endTime: item.end_time!,
-            poiName: (item.poi as { name: string } | null)?.name,
-          }));
-      }
-    }
-
-    // Create the item
-    const { data, error } = await supabase
-      .from('itinerary_items')
-      .insert({
-        day_id: dayId,
-        poi_id: input.poiId || null,
-        order_index: orderIndex,
-        start_time: input.startTime || null,
-        end_time: input.endTime || null,
-        notes: input.notes || null,
-        transport_mode: input.transportMode || 'walking',
-        transport_minutes: input.transportMinutes || null,
-      })
-      .select('*, poi:pois(*)')
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    const item = toItineraryItemResponse(
-      data as ItineraryItemRow & { poi: PoiRow | null },
-      (data as { poi: PoiRow | null }).poi || undefined
-    );
-
-    return { item, conflicts };
+    return item;
   },
 
   /**
-   * Get a single item by ID
+   * Create a new item
    */
-  async getById(itemId: string, accessToken: string): Promise<ItineraryItem> {
-    const supabase = getSupabaseClient(accessToken);
+  async create(input: CreateItineraryItemInput, _accessToken: string) {
+    const itemId = await convex.mutation(api.itineraryItems.create, {
+      dayId: input.dayId as Id<'itineraryDays'>,
+      poiId: input.poiId as Id<'pois'>,
+      orderIndex: input.orderIndex,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      transportMode: input.transportMode,
+      notes: input.notes,
+    });
 
-    const { data, error } = await supabase
-      .from('itinerary_items')
-      .select('*, poi:pois(*)')
-      .eq('id', itemId)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        throw new NotFoundError('Item not found');
-      }
-      throw error;
-    }
-
-    return toItineraryItemResponse(
-      data as ItineraryItemRow & { poi: PoiRow | null },
-      (data as { poi: PoiRow | null }).poi || undefined
-    );
+    return await convex.query(api.itineraryItems.getById, {
+      id: itemId,
+    });
   },
 
   /**
@@ -261,141 +81,86 @@ export const ItineraryItemService = {
   async update(
     itemId: string,
     input: UpdateItineraryItemInput,
-    accessToken: string
-  ): Promise<{ item: ItineraryItem; conflicts: TimeConflict[] }> {
-    const supabase = getSupabaseClient(accessToken);
+    _accessToken: string
+  ) {
+    const existing = await convex.query(api.itineraryItems.getById, {
+      id: itemId as Id<'itineraryItems'>,
+    });
 
-    // Get existing item
-    const { data: existing, error: fetchError } = await supabase
-      .from('itinerary_items')
-      .select('*, poi:pois(*)')
-      .eq('id', itemId)
-      .single();
-
-    if (fetchError || !existing) {
+    if (!existing) {
       throw new NotFoundError('Item not found');
     }
 
-    // Check for time conflicts
-    let conflicts: TimeConflict[] = [];
-    const newStartTime = input.startTime ?? existing.start_time;
-    const newEndTime = input.endTime ?? existing.end_time;
+    const updated = await convex.mutation(api.itineraryItems.update, {
+      id: itemId as Id<'itineraryItems'>,
+      orderIndex: input.orderIndex,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      transportMode: input.transportMode,
+      notes: input.notes,
+    });
 
-    if (newStartTime && newEndTime) {
-      const { data: existingItems } = await supabase
-        .from('itinerary_items')
-        .select('id, start_time, end_time, poi:pois(name)')
-        .eq('day_id', existing.day_id)
-        .neq('id', itemId)
-        .not('start_time', 'is', null)
-        .not('end_time', 'is', null);
-
-      if (existingItems) {
-        conflicts = existingItems
-          .filter((item) =>
-            timesOverlap(
-              newStartTime,
-              newEndTime,
-              item.start_time!,
-              item.end_time!
-            )
-          )
-          .map((item) => ({
-            itemId: item.id,
-            startTime: item.start_time!,
-            endTime: item.end_time!,
-            poiName: (item.poi as { name: string } | null)?.name,
-          }));
-      }
-    }
-
-    // Build update object
-    const updateData: Record<string, unknown> = {};
-    if (input.poiId !== undefined) updateData.poi_id = input.poiId;
-    if (input.orderIndex !== undefined)
-      updateData.order_index = input.orderIndex;
-    if (input.startTime !== undefined) updateData.start_time = input.startTime;
-    if (input.endTime !== undefined) updateData.end_time = input.endTime;
-    if (input.notes !== undefined) updateData.notes = input.notes;
-    if (input.transportMode !== undefined)
-      updateData.transport_mode = input.transportMode;
-    if (input.transportMinutes !== undefined)
-      updateData.transport_minutes = input.transportMinutes;
-    updateData.updated_at = new Date().toISOString();
-
-    const { data, error } = await supabase
-      .from('itinerary_items')
-      .update(updateData)
-      .eq('id', itemId)
-      .select('*, poi:pois(*)')
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    const item = toItineraryItemResponse(
-      data as ItineraryItemRow & { poi: PoiRow | null },
-      (data as { poi: PoiRow | null }).poi || undefined
-    );
-
-    return { item, conflicts };
+    return updated;
   },
 
   /**
    * Delete an item
    */
-  async delete(itemId: string, accessToken: string): Promise<void> {
-    const supabase = getSupabaseClient(accessToken);
+  async delete(itemId: string, _accessToken: string) {
+    const existing = await convex.query(api.itineraryItems.getById, {
+      id: itemId as Id<'itineraryItems'>,
+    });
 
-    const { error } = await supabase
-      .from('itinerary_items')
-      .delete()
-      .eq('id', itemId);
-
-    if (error) {
-      throw error;
+    if (!existing) {
+      throw new NotFoundError('Item not found');
     }
+
+    await convex.mutation(api.itineraryItems.remove, {
+      id: itemId as Id<'itineraryItems'>,
+    });
   },
 
   /**
-   * Reorder items within a day
+   * Reorder an item within its day
    */
-  async reorder(
-    dayId: string,
-    input: ReorderItemsInput,
-    accessToken: string
-  ): Promise<ItineraryItem[]> {
-    const supabase = getSupabaseClient(accessToken);
+  async reorder(itemId: string, newOrderIndex: number, _accessToken: string) {
+    const existing = await convex.query(api.itineraryItems.getById, {
+      id: itemId as Id<'itineraryItems'>,
+    });
 
-    // Verify all items belong to this day
-    const { data: existingItems, error: fetchError } = await supabase
-      .from('itinerary_items')
-      .select('id')
-      .eq('day_id', dayId)
-      .in('id', input.itemIds);
-
-    if (fetchError) {
-      throw fetchError;
+    if (!existing) {
+      throw new NotFoundError('Item not found');
     }
 
-    if (!existingItems || existingItems.length !== input.itemIds.length) {
-      throw new ValidationError('Some items do not belong to this day');
+    await convex.mutation(api.itineraryItems.reorder, {
+      itemId: itemId as Id<'itineraryItems'>,
+      newOrderIndex,
+    });
+  },
+
+  /**
+   * Move an item to a different day
+   */
+  async moveToDay(
+    itemId: string,
+    newDayId: string,
+    orderIndex?: number,
+    _accessToken?: string
+  ) {
+    const existing = await convex.query(api.itineraryItems.getById, {
+      id: itemId as Id<'itineraryItems'>,
+    });
+
+    if (!existing) {
+      throw new NotFoundError('Item not found');
     }
 
-    // Update order indexes
-    for (let i = 0; i < input.itemIds.length; i++) {
-      const { error } = await supabase
-        .from('itinerary_items')
-        .update({ order_index: i, updated_at: new Date().toISOString() })
-        .eq('id', input.itemIds[i]);
+    const updated = await convex.mutation(api.itineraryItems.moveToDay, {
+      itemId: itemId as Id<'itineraryItems'>,
+      newDayId: newDayId as Id<'itineraryDays'>,
+      orderIndex,
+    });
 
-      if (error) {
-        throw error;
-      }
-    }
-
-    // Return updated items
-    return this.list(dayId, accessToken);
+    return updated;
   },
 };

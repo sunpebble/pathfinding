@@ -5,7 +5,6 @@
 
 import type { TravelGuideRaw } from '@pathfinding/crawler-types';
 import { hashContent } from '../lib/hash.js';
-import { supabase } from '../lib/supabase.js';
 
 // Common Chinese cities for destination extraction
 const KNOWN_CITIES = [

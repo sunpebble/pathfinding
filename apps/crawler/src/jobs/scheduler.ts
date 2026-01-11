@@ -4,8 +4,8 @@
  */
 
 import cron from 'node-cron';
+import { TABLES } from '../lib/convex.js';
 import { createLogger } from '../lib/logger.js';
-import { supabase, TABLES } from '../lib/supabase.js';
 import { captureError, CrawlerMetrics } from '../monitoring/index.js';
 import { runNormalizationPipeline } from '../processors/pipeline.js';
 import { getCrawlJob } from '../services/crawl-job.service.js';

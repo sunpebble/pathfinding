@@ -11,7 +11,7 @@ import type {
   UpdateCrawlJobRequest,
 } from '@pathfinding/crawler-types';
 
-import { supabase, TABLES } from '../lib/supabase.js';
+import { TABLES } from '../lib/convex.js';
 
 export interface PaginatedResult<T> {
   data: T[];

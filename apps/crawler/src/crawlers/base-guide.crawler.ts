@@ -14,7 +14,7 @@ import type { Page } from 'playwright';
 
 import { Buffer } from 'node:buffer';
 import { PlaywrightCrawler } from 'crawlee';
-import { supabase, TABLES } from '../lib/supabase.js';
+import { TABLES } from '../lib/convex.js';
 import { processGuide, saveGuide } from '../processors/guide-processor.js';
 
 export interface GuideExtractionResult {

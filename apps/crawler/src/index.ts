@@ -11,7 +11,7 @@ import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { initScheduler } from './jobs/scheduler.js';
 
-import { checkConnection } from './lib/supabase.js';
+import { checkConnection } from './lib/convex.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { initTracing } from './middleware/tracing.js';
 import { initSentry } from './monitoring/index.js';

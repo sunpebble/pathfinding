@@ -7,8 +7,8 @@ import type {
   NormalizedPOI,
   SourceAttribution,
 } from '@pathfinding/crawler-types';
+import { TABLES } from '../lib/convex.js';
 import { calculateDistance, locationSimilarity } from '../lib/geo.js';
-import { supabase, TABLES } from '../lib/supabase.js';
 import {
   calculateCompletenessScore,
   calculateFreshnessScore,
