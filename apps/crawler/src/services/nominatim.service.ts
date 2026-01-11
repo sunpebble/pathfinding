@@ -45,6 +45,7 @@ export class NominatimService {
 
   /**
    * Geocode a location by name and optional city
+   * Fetches multiple results and picks the best match
    */
   async geocode(
     query: string,
@@ -52,45 +53,78 @@ export class NominatimService {
   ): Promise<GeocodedLocation | null> {
     await this.throttle();
 
-    const searchQuery = city ? `${query}, ${city}, China` : `${query}, China`;
+    // 清理查询字符串，移除括号内容和特殊字符
+    const cleanQuery = query
+      .replace(/[（(].*?[）)]/g, '')
+      .replace(/["']/g, '')
+      .trim();
 
-    try {
-      const params = new URLSearchParams({
-        q: searchQuery,
-        format: 'json',
-        limit: '1',
-        'accept-language': 'zh',
-      });
+    // 首先尝试精确搜索（包含城市名）
+    const searchQueries = city
+      ? [`${cleanQuery}, ${city}`, `${cleanQuery}, ${city}, 中国`]
+      : [`${cleanQuery}, 中国`, cleanQuery];
 
-      const response = await fetch(`${NOMINATIM_URL}/search?${params}`, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-        signal: AbortSignal.timeout(10000),
-      });
+    for (const searchQuery of searchQueries) {
+      try {
+        const params = new URLSearchParams({
+          q: searchQuery,
+          format: 'json',
+          limit: '5', // 获取多个结果以便选择最佳
+          'accept-language': 'zh',
+          countrycodes: 'cn', // 限制在中国搜索
+        });
 
-      if (!response.ok) {
-        console.error(`Nominatim error: ${response.status}`);
-        return null;
+        const response = await fetch(`${NOMINATIM_URL}/search?${params}`, {
+          headers: {
+            'User-Agent': USER_AGENT,
+          },
+          signal: AbortSignal.timeout(10000),
+        });
+
+        if (!response.ok) {
+          console.error(`Nominatim error: ${response.status}`);
+          continue;
+        }
+
+        const results = (await response.json()) as NominatimResult[];
+
+        if (results.length === 0) {
+          continue;
+        }
+
+        // 如果有城市参数，优先选择地址中包含该城市的结果
+        if (city) {
+          const cityMatch = results.find(
+            (r) =>
+              r.display_name.includes(city) ||
+              r.display_name.includes(city.replace('市', ''))
+          );
+          if (cityMatch) {
+            return {
+              latitude: Number.parseFloat(cityMatch.lat),
+              longitude: Number.parseFloat(cityMatch.lon),
+              address: cityMatch.display_name,
+              confidence: cityMatch.importance,
+            };
+          }
+        }
+
+        // 否则返回第一个结果
+        const best = results[0];
+        return {
+          latitude: Number.parseFloat(best.lat),
+          longitude: Number.parseFloat(best.lon),
+          address: best.display_name,
+          confidence: best.importance,
+        };
+      } catch (error) {
+        console.error('Geocoding error:', error);
       }
 
-      const results = (await response.json()) as NominatimResult[];
-
-      if (results.length === 0) {
-        return null;
-      }
-
-      const best = results[0];
-      return {
-        latitude: Number.parseFloat(best.lat),
-        longitude: Number.parseFloat(best.lon),
-        address: best.display_name,
-        confidence: best.importance,
-      };
-    } catch (error) {
-      console.error('Geocoding error:', error);
-      return null;
+      await this.throttle(); // 每次查询之间也要限流
     }
+
+    return null;
   }
 
   /**
