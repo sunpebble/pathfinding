@@ -3,7 +3,9 @@
 
 # Configuration
 CONVEX_URL ?= https://convex.kunish.org
+CONVEX_ADMIN_KEY ?= convex-self-hosted|012aa1ae784acd9fb6c9ef5f0250acf0210b6151b34f4642bd31f95b7a91475af03848dab4
 OLLAMA_URL ?= https://ol.svc.kunish.org
+OLLAMA_MODEL ?= gemma3:latest
 
 help:
 	@echo "Usage: make <command>"
@@ -18,9 +20,9 @@ help:
 
 setup:
 	@echo "📋 Setting up environment..."
-	@test -f .env.local || echo 'CONVEX_URL=$(CONVEX_URL)' > .env.local
-	@test -f apps/crawler/.env || echo 'CONVEX_URL=$(CONVEX_URL)' > apps/crawler/.env
-	@test -f apps/api/.env || echo 'CONVEX_URL=$(CONVEX_URL)' > apps/api/.env
+	@test -f .env.local || (echo "CONVEX_SELF_HOSTED_URL='$(CONVEX_URL)'\nCONVEX_SELF_HOSTED_ADMIN_KEY='$(CONVEX_ADMIN_KEY)'\nCONVEX_URL=$(CONVEX_URL)" > .env.local && echo "  ✓ Created .env.local")
+	@test -f apps/crawler/.env || (echo "CONVEX_URL=$(CONVEX_URL)\nOLLAMA_BASE_URL=$(OLLAMA_URL)\nOLLAMA_MODEL=$(OLLAMA_MODEL)" > apps/crawler/.env && echo "  ✓ Created apps/crawler/.env")
+	@test -f apps/api/.env || (echo "CONVEX_URL=$(CONVEX_URL)" > apps/api/.env && echo "  ✓ Created apps/api/.env")
 	@echo "✅ Done"
 
 dev: setup
