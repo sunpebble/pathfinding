@@ -8,6 +8,7 @@ struct BlogPost: Codable, Identifiable, Hashable {
   let content: String?
   let summary: String?
   let coverImageUrl: String?
+  let imageUrls: [String]?
   let sourcePlatform: String?
   let qualityScore: Double?
   let viewsCount: Int?
@@ -32,6 +33,7 @@ struct BlogPost: Codable, Identifiable, Hashable {
     case content
     case summary
     case coverImageUrl = "cover_image_url"
+    case imageUrls = "image_urls"
     case sourcePlatform = "source_platform"
     case qualityScore = "quality_score"
     case viewsCount = "views_count"

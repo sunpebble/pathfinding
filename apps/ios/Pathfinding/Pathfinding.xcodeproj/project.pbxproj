@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -112,6 +112,7 @@
 			);
 			name = Pathfinding;
 			packageProductDependencies = (
+				8CC8B2812F13F95E00CAE48B /* Inject */,
 			);
 			productName = Pathfinding;
 			productReference = 9B90394763C3B516ED821E46 /* Pathfinding.app */;
@@ -142,7 +143,9 @@
 			);
 			mainGroup = D7493A283B966BF13B12C2FD;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+			packageReferences = (
+				8CC8B2802F13F95E00CAE48B /* XCRemoteSwiftPackageReference "Inject" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -366,6 +369,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8CC8B2802F13F95E00CAE48B /* XCRemoteSwiftPackageReference "Inject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzysztofzablocki/Inject.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8CC8B2812F13F95E00CAE48B /* Inject */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8CC8B2802F13F95E00CAE48B /* XCRemoteSwiftPackageReference "Inject" */;
+			productName = Inject;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AF87F1ACA3F795ED61537E7A /* Project object */;
 }

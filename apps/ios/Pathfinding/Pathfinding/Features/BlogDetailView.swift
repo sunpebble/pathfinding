@@ -4,16 +4,65 @@ import SwiftUI
 struct BlogDetailView: View {
   let guide: BlogPost
   @State private var selectedDay: AiDay?
+  @State private var currentImageIndex: Int = 0
+
+  /// 获取要显示的图片列表（最多 10 张）
+  private var displayImages: [String] {
+    if let images = guide.imageUrls, !images.isEmpty {
+      return Array(images.prefix(10))
+    } else if let cover = guide.coverImage {
+      return [cover]
+    }
+    return []
+  }
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
-        AsyncImage(url: URL(string: guide.coverImage ?? "")) { image in
-          image.resizable().aspectRatio(16 / 9, contentMode: .fill)
-        } placeholder: {
+        // 图片轮播
+        if displayImages.isEmpty {
           Rectangle().fill(.quaternary).aspectRatio(16 / 9, contentMode: .fill)
+            .frame(maxWidth: .infinity)
+        } else if displayImages.count == 1 {
+          AsyncImage(url: URL(string: displayImages[0])) { image in
+            image.resizable().aspectRatio(16 / 9, contentMode: .fill)
+          } placeholder: {
+            Rectangle().fill(.quaternary).aspectRatio(16 / 9, contentMode: .fill)
+              .overlay { ProgressView() }
+          }
+          .frame(maxWidth: .infinity).clipped()
+        } else {
+          ZStack(alignment: .bottom) {
+            TabView(selection: $currentImageIndex) {
+              ForEach(Array(displayImages.enumerated()), id: \.offset) { index, imageUrl in
+                AsyncImage(url: URL(string: imageUrl)) { image in
+                  image.resizable().aspectRatio(contentMode: .fill)
+                } placeholder: {
+                  Rectangle().fill(.quaternary)
+                    .overlay { ProgressView() }
+                }
+                .tag(index)
+              }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .aspectRatio(16 / 9, contentMode: .fill)
+            .frame(maxWidth: .infinity)
+            .clipped()
+
+            // 自定义页面指示器
+            HStack(spacing: 6) {
+              ForEach(0..<displayImages.count, id: \.self) { index in
+                Circle()
+                  .fill(index == currentImageIndex ? Color.white : Color.white.opacity(0.5))
+                  .frame(width: 6, height: 6)
+              }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(.black.opacity(0.3)))
+            .padding(.bottom, 12)
+          }
         }
-        .frame(maxWidth: .infinity).clipped()
 
         VStack(alignment: .leading, spacing: 16) {
           Text(guide.title).font(.title2).fontWeight(.bold)
@@ -122,7 +171,7 @@ struct BlogDetailView: View {
     BlogDetailView(
       guide: BlogPost(
         id: "1", title: "测试攻略", authorName: "作者", content: nil, summary: nil, coverImageUrl: nil,
-        sourcePlatform: "test", qualityScore: nil, viewsCount: 100, likesCount: 10, savesCount: 0,
+        imageUrls: nil, sourcePlatform: "test", qualityScore: nil, viewsCount: 100, likesCount: 10, savesCount: 0,
         createdAt: nil,
         aiSummary: "这是AI摘要", aiTips: ["提示1"], aiBestTime: nil, aiDuration: nil, aiBudget: nil,
         aiDays: nil, aiProcessedAt: nil))

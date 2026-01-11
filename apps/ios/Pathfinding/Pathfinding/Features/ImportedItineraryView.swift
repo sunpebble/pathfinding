@@ -164,7 +164,7 @@ struct PoiAnnotation: Identifiable {
     ImportedItineraryView(
       guide: BlogPost(
         id: "1", title: "Test", authorName: nil, content: nil, summary: nil, coverImageUrl: nil,
-        sourcePlatform: "test", qualityScore: nil, viewsCount: nil, likesCount: nil,
+        imageUrls: nil, sourcePlatform: "test", qualityScore: nil, viewsCount: nil, likesCount: nil,
         savesCount: nil, createdAt: nil,
         aiSummary: nil, aiTips: nil, aiBestTime: nil, aiDuration: nil, aiBudget: nil,
         aiDays: [
