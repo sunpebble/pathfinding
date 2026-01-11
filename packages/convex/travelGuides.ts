@@ -347,3 +347,32 @@ export const removeShortContent = mutation({
     return { removedCount, minLength };
   },
 });
+
+// Clear AI data from guides to allow reprocessing (batch mode)
+export const clearAllAiData = mutation({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 50;
+    // Only get guides that have AI data
+    const guides = await ctx.db
+      .query('travelGuides')
+      .filter((q) => q.neq(q.field('aiProcessedAt'), undefined))
+      .take(limit);
+
+    let clearedCount = 0;
+    for (const guide of guides) {
+      await ctx.db.patch(guide._id, {
+        aiSummary: undefined,
+        aiTips: undefined,
+        aiBestTime: undefined,
+        aiDuration: undefined,
+        aiBudget: undefined,
+        aiDays: undefined,
+        aiProcessedAt: undefined,
+      });
+      clearedCount++;
+    }
+
+    return { clearedCount, hasMore: guides.length === limit };
+  },
+});

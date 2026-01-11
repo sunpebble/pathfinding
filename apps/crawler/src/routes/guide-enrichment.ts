@@ -18,6 +18,7 @@ export const guideEnrichmentRouter = new Hono();
  */
 guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
   const id = c.req.param('id') as Id<'travelGuides'>;
+  const force = c.req.query('force') === 'true';
 
   try {
     // 1. Get the guide
@@ -26,8 +27,8 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
       return c.json({ error: 'Guide not found' }, 404);
     }
 
-    // Check if already processed
-    if (guide.aiProcessedAt) {
+    // Check if already processed (skip if force=true)
+    if (guide.aiProcessedAt && !force) {
       return c.json({
         message: 'Guide already processed',
         processedAt: new Date(guide.aiProcessedAt).toISOString(),
