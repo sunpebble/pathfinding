@@ -7,6 +7,7 @@ struct BlogDetailView: View {
   @State private var currentImageIndex: Int = 0
   @State private var isLiked = false
   @State private var isSaved = false
+  @State private var showImageViewer = false
 
   private var displayImages: [String] {
     if let images = guide.imageUrls, !images.isEmpty {
@@ -89,6 +90,11 @@ struct BlogDetailView: View {
         selectedDay = nil
       }
     }
+    .imageViewer(
+      images: displayImages,
+      isPresented: $showImageViewer,
+      selectedIndex: $currentImageIndex
+    )
   }
 
   // MARK: - Image Gallery
@@ -113,6 +119,10 @@ struct BlogDetailView: View {
       }
       .frame(maxWidth: .infinity)
       .clipped()
+      .contentShape(Rectangle())
+      .onTapGesture {
+        showImageViewer = true
+      }
     } else {
       ZStack(alignment: .bottom) {
         TabView(selection: $currentImageIndex) {
@@ -127,6 +137,11 @@ struct BlogDetailView: View {
                 .overlay { ProgressView() }
             }
             .tag(index)
+            .contentShape(Rectangle())
+            .onTapGesture {
+              currentImageIndex = index
+              showImageViewer = true
+            }
           }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
@@ -134,18 +149,33 @@ struct BlogDetailView: View {
         .frame(maxWidth: .infinity)
         .clipped()
 
-        // Custom page indicator
-        HStack(spacing: 6) {
-          ForEach(0..<displayImages.count, id: \.self) { index in
-            Capsule()
-              .fill(index == currentImageIndex ? Color.white : Color.white.opacity(0.5))
-              .frame(width: index == currentImageIndex ? 16 : 6, height: 6)
-              .animation(.spring(response: 0.3), value: currentImageIndex)
+        // Custom page indicator & tap hint
+        HStack {
+          // Page indicator
+          HStack(spacing: 6) {
+            ForEach(0..<displayImages.count, id: \.self) { index in
+              Capsule()
+                .fill(index == currentImageIndex ? Color.white : Color.white.opacity(0.5))
+                .frame(width: index == currentImageIndex ? 16 : 6, height: 6)
+                .animation(.spring(response: 0.3), value: currentImageIndex)
+            }
           }
+
+          Spacer()
+
+          // Tap to view hint
+          HStack(spacing: 4) {
+            Image(systemName: "arrow.up.left.and.arrow.down.right")
+              .font(.caption2)
+            Text("点击查看")
+              .font(.caption2)
+          }
+          .foregroundStyle(.white.opacity(0.8))
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
         .background(Capsule().fill(.black.opacity(0.3)))
+        .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.bottom, DesignTokens.Spacing.sm)
       }
     }

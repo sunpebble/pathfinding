@@ -22,6 +22,7 @@
 		BA21945B9CBB178E0CD589D9 /* ImportedItineraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864256C336A90E01DFF561F /* ImportedItineraryView.swift */; };
 		C355AB11BCD166D1B03F8692 /* BlogListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B1DC8C0323700E48372AFE /* BlogListView.swift */; };
 		DD6488A271910ABDE48DA72A /* BlogPost.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEADDF8D8F827D98224C5319 /* BlogPost.swift */; };
+		E00CA295BE96C068E1780624 /* ImageViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EF909360AF167C0F072F27 /* ImageViewer.swift */; };
 		F0B34056545022E06CC35E8E /* ShimmerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F96D49F693CB4FF5F429D4B5 /* ShimmerView.swift */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +34,7 @@
 		45483963DF5BAECD964E3082 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		59416B95E7D9420581D210BD /* BlogDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlogDetailView.swift; sourceTree = "<group>"; };
 		7DC0E5D5CF44CA5A88716D7C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		89EF909360AF167C0F072F27 /* ImageViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageViewer.swift; sourceTree = "<group>"; };
 		91A2F8827930C01D116AC63C /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		9B90394763C3B516ED821E46 /* Pathfinding.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Pathfinding.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A37FE9B868035096F5A506BD /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -114,6 +116,7 @@
 			children = (
 				3BEAE92A75B627957C151DF3 /* CachedAsyncImage.swift */,
 				B0C9F6EF3A35C1A7727763F9 /* DesignSystem.swift */,
+				89EF909360AF167C0F072F27 /* ImageViewer.swift */,
 				F96D49F693CB4FF5F429D4B5 /* ShimmerView.swift */,
 			);
 			path = Components;
@@ -200,6 +203,7 @@
 				A30DC01FB58E30F46FF19D16 /* DesignSystem.swift in Sources */,
 				9FF850D8A3E420F6515455E6 /* GuideStore.swift in Sources */,
 				50CD2CD3D8EDF0D4C363E9FB /* HomeView.swift in Sources */,
+				E00CA295BE96C068E1780624 /* ImageViewer.swift in Sources */,
 				BA21945B9CBB178E0CD589D9 /* ImportedItineraryView.swift in Sources */,
 				9A042CFA39774EA61384518A /* ItineraryListView.swift in Sources */,
 				38610C8194871525123CE555 /* PathfindingApp.swift in Sources */,
