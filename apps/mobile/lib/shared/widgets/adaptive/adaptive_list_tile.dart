@@ -35,7 +35,7 @@ class AdaptiveListTile extends StatelessWidget {
         onTap: onTap,
         padding: contentPadding,
         backgroundColor: selected
-            ? CupertinoColors.activeBlue.withOpacity(0.1)
+            ? CupertinoColors.activeBlue.withValues(alpha: 0.1)
             : null,
       );
     }

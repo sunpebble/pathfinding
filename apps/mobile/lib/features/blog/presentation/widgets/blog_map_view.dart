@@ -30,18 +30,30 @@ class _BlogMapViewState extends State<BlogMapView> {
   @override
   void didUpdateWidget(BlogMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
-    // Animate to selected location
-    if (widget.selectedLocationId != null && 
-        widget.selectedLocationId != oldWidget.selectedLocationId) {
-      final selectedLocation = widget.locations.firstWhere(
-        (loc) => loc.id == widget.selectedLocationId,
-        orElse: () => widget.locations.first,
-      );
-      _mapController.move(
-        LatLng(selectedLocation.latitude, selectedLocation.longitude),
-        14.0,
-      );
+
+    // Handle selection changes
+    if (widget.selectedLocationId != oldWidget.selectedLocationId) {
+      if (widget.selectedLocationId != null) {
+        // Animate to selected location
+        final selectedLocation = widget.locations.firstWhere(
+          (loc) => loc.id == widget.selectedLocationId,
+          orElse: () => widget.locations.first,
+        );
+        _mapController.move(
+          LatLng(selectedLocation.latitude, selectedLocation.longitude),
+          14.0,
+        );
+      } else {
+        // Deselected - reset to show all locations
+        if (widget.locations.isNotEmpty) {
+          final bounds = LatLngBounds.fromPoints(
+            widget.locations
+                .map((l) => LatLng(l.latitude, l.longitude))
+                .toList(),
+          );
+          _mapController.move(bounds.center, _calculateZoom(bounds));
+        }
+      }
     }
   }
 
@@ -60,10 +72,7 @@ class _BlogMapViewState extends State<BlogMapView> {
             children: [
               Icon(Icons.map_outlined, size: 48, color: AppColors.textHint),
               const SizedBox(height: 8),
-              Text(
-                '暂无地点信息',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
+              Text('暂无地点信息', style: TextStyle(color: AppColors.textSecondary)),
             ],
           ),
         ),
@@ -96,14 +105,14 @@ class _BlogMapViewState extends State<BlogMapView> {
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.pathfinding.app',
             ),
-            
+
             // Markers layer
             MarkerLayer(
               markers: widget.locations.asMap().entries.map((entry) {
                 final index = entry.key;
                 final location = entry.value;
                 final isSelected = widget.selectedLocationId == location.id;
-                
+
                 return Marker(
                   point: LatLng(location.latitude, location.longitude),
                   width: isSelected ? 50 : 40,
@@ -116,7 +125,9 @@ class _BlogMapViewState extends State<BlogMapView> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.secondary : AppColors.primary,
+                        color: isSelected
+                            ? AppColors.secondary
+                            : AppColors.primary,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                         boxShadow: [
@@ -149,16 +160,21 @@ class _BlogMapViewState extends State<BlogMapView> {
   }
 
   /// Calculate appropriate zoom level based on bounds
+  /// Returns a more conservative zoom to ensure all markers are visible with padding
   double _calculateZoom(LatLngBounds bounds) {
     final latDiff = (bounds.north - bounds.south).abs();
     final lngDiff = (bounds.east - bounds.west).abs();
     final maxDiff = latDiff > lngDiff ? latDiff : lngDiff;
-    
-    if (maxDiff < 0.01) return 15.0;
-    if (maxDiff < 0.05) return 13.0;
-    if (maxDiff < 0.1) return 12.0;
-    if (maxDiff < 0.5) return 10.0;
-    if (maxDiff < 1.0) return 8.0;
+
+    // More conservative zoom levels to ensure markers have padding
+    if (maxDiff < 0.005) return 14.0;
+    if (maxDiff < 0.01) return 13.0;
+    if (maxDiff < 0.03) return 12.0;
+    if (maxDiff < 0.08) return 11.0;
+    if (maxDiff < 0.15) return 10.0;
+    if (maxDiff < 0.3) return 9.0;
+    if (maxDiff < 0.6) return 8.0;
+    if (maxDiff < 1.2) return 7.0;
     return 6.0;
   }
 }

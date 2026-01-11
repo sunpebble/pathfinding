@@ -1,5 +1,6 @@
 /// Adaptive UI components for cross-platform support
 /// Uses Cupertino widgets on iOS and Material widgets on Android
+library;
 
 export 'platform_utils.dart';
 export 'adaptive_app_bar.dart';

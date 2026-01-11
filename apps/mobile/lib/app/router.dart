@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -39,7 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'login',
         builder: (context, state) => const LoginPage(),
       ),
-      
+
       // Main shell with bottom navigation
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -56,7 +55,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          
+
           // Blog tab
           StatefulShellBranch(
             routes: [
@@ -77,7 +76,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          
+
           // Itinerary tab
           StatefulShellBranch(
             routes: [
@@ -95,7 +94,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'imported',
                     name: 'importedItinerary',
                     builder: (context, state) {
-                      final blogPostId = state.uri.queryParameters['blogPostId'];
+                      final blogPostId =
+                          state.uri.queryParameters['blogPostId'];
                       return ImportedItineraryPage(blogPostId: blogPostId);
                     },
                   ),
@@ -111,7 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          
+
           // Profile tab
           StatefulShellBranch(
             routes: [

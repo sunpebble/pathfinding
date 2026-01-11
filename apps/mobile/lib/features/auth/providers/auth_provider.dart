@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/models/user.dart';
 import '../../../data/services/auth_service.dart';
@@ -8,13 +7,7 @@ import '../../../data/services/auth_service.dart';
 part 'auth_provider.g.dart';
 
 /// Auth state
-enum AuthStatus {
-  initial,
-  loading,
-  authenticated,
-  unauthenticated,
-  error,
-}
+enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
 /// Auth state notifier
 @riverpod

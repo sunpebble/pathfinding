@@ -49,10 +49,7 @@ class AuthService {
 
   /// Sign up with email and password
   Future<AuthResponse> signUpWithEmail(String email, String password) async {
-    return await _supabase.auth.signUp(
-      email: email,
-      password: password,
-    );
+    return await _supabase.auth.signUp(email: email, password: password);
   }
 
   /// Sign out
@@ -80,7 +77,7 @@ class AuthService {
       displayName: response['display_name'] as String?,
       avatarUrl: response['avatar_url'] as String?,
       bio: response['bio'] as String?,
-      createdAt: user.createdAt != null ? DateTime.parse(user.createdAt!) : null,
+      createdAt: DateTime.parse(user.createdAt),
     );
   }
 }

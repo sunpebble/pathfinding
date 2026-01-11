@@ -177,12 +177,15 @@ class ItineraryService {
 
     // Only add optional fields if they have values
     if (input.cityId != null) insertData['city_id'] = input.cityId;
-    if (input.startDate != null)
+    if (input.startDate != null) {
       insertData['start_date'] = input.startDate!.toIso8601String();
-    if (input.endDate != null)
+    }
+    if (input.endDate != null) {
       insertData['end_date'] = input.endDate!.toIso8601String();
-    if (input.coverImageUrl != null)
+    }
+    if (input.coverImageUrl != null) {
       insertData['cover_image_url'] = input.coverImageUrl;
+    }
 
     // Insert itinerary
     final response = await _supabase
@@ -211,8 +214,8 @@ class ItineraryService {
         final dayId = dayResponse['id'] as String;
 
         // Insert items for this day
-        if (dayInput.items != null && dayInput.items!.isNotEmpty) {
-          for (final itemInput in dayInput.items!) {
+        if (dayInput.items.isNotEmpty) {
+          for (final itemInput in dayInput.items) {
             await _supabase.from('itinerary_items').insert({
               'day_id': dayId,
               'poi_name': itemInput.poiName,
