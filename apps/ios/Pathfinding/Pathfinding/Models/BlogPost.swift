@@ -4,14 +4,15 @@ import Foundation
 struct BlogPost: Codable, Identifiable, Hashable {
   let id: String
   let title: String
-  let author: String?
+  let authorName: String?
   let content: String?
   let summary: String?
-  let coverImage: String?
-  let platform: String
-  let qualityScore: Int?
-  let viewCount: Int?
-  let likeCount: Int?
+  let coverImageUrl: String?
+  let sourcePlatform: String?
+  let qualityScore: Double?
+  let viewsCount: Int?
+  let likesCount: Int?
+  let savesCount: Int?
   let createdAt: String?
 
   // AI-enhanced fields
@@ -23,14 +24,19 @@ struct BlogPost: Codable, Identifiable, Hashable {
   let aiDays: [AiDay]?
   let aiProcessedAt: String?
 
+  // Match actual API snake_case field names
   enum CodingKeys: String, CodingKey {
-    case id = "_id"
-    case title, author, content, summary
-    case coverImage = "cover_image"
-    case platform
+    case id
+    case title
+    case authorName = "author_name"
+    case content
+    case summary
+    case coverImageUrl = "cover_image_url"
+    case sourcePlatform = "source_platform"
     case qualityScore = "quality_score"
-    case viewCount = "view_count"
-    case likeCount = "like_count"
+    case viewsCount = "views_count"
+    case likesCount = "likes_count"
+    case savesCount = "saves_count"
     case createdAt = "created_at"
     case aiSummary = "ai_summary"
     case aiTips = "ai_tips"
@@ -40,6 +46,13 @@ struct BlogPost: Codable, Identifiable, Hashable {
     case aiDays = "ai_days"
     case aiProcessedAt = "ai_processed_at"
   }
+
+  // Convenience accessors
+  var author: String? { authorName }
+  var coverImage: String? { coverImageUrl }
+  var platform: String { sourcePlatform ?? "unknown" }
+  var viewCount: Int? { viewsCount }
+  var likeCount: Int? { likesCount }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine(id)
@@ -56,11 +69,6 @@ struct AiDay: Codable, Identifiable, Hashable {
   let dayNumber: Int
   let theme: String?
   let pois: [AiPoi]
-
-  enum CodingKeys: String, CodingKey {
-    case dayNumber = "day_number"
-    case theme, pois
-  }
 }
 
 /// AI-extracted point of interest

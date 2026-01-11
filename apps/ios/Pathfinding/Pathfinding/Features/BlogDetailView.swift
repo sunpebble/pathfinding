@@ -121,8 +121,9 @@ struct BlogDetailView: View {
   NavigationStack {
     BlogDetailView(
       guide: BlogPost(
-        id: "1", title: "测试攻略", author: "作者", content: nil, summary: nil, coverImage: nil,
-        platform: "test", qualityScore: nil, viewCount: 100, likeCount: 10, createdAt: nil,
+        id: "1", title: "测试攻略", authorName: "作者", content: nil, summary: nil, coverImageUrl: nil,
+        sourcePlatform: "test", qualityScore: nil, viewsCount: 100, likesCount: 10, savesCount: 0,
+        createdAt: nil,
         aiSummary: "这是AI摘要", aiTips: ["提示1"], aiBestTime: nil, aiDuration: nil, aiBudget: nil,
         aiDays: nil, aiProcessedAt: nil))
   }

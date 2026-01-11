@@ -12,14 +12,19 @@ struct ImportedItineraryView: View {
   var annotations: [PoiAnnotation] {
     guard let day = currentDay else { return [] }
     return day.pois.compactMap { poi in
-      guard let lat = poi.latitude, let lng = poi.longitude else { return nil }
+      guard let lat = poi.latitude, let lng = poi.longitude,
+        lat != 0 && lng != 0
+      else { return nil }  // Filter invalid coords
       return PoiAnnotation(
-        poi: poi, coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng))
+        poi: poi,
+        coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)
+      )
     }
   }
 
   var body: some View {
     VStack(spacing: 0) {
+      // Day picker
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: 12) {
           ForEach(days) { day in
@@ -28,7 +33,9 @@ struct ImportedItineraryView: View {
             } label: {
               VStack(spacing: 4) {
                 Text("Day \(day.dayNumber)").font(.headline)
-                if let theme = day.theme { Text(theme).font(.caption).lineLimit(1) }
+                if let theme = day.theme {
+                  Text(theme).font(.caption).lineLimit(1)
+                }
               }
               .padding(.horizontal, 16).padding(.vertical, 8)
               .background(
@@ -44,50 +51,104 @@ struct ImportedItineraryView: View {
       }
       .background(.ultraThinMaterial)
 
+      // Map with Markers
       Map(position: $cameraPosition) {
-        ForEach(annotations) { annotation in
-          Marker(annotation.poi.name, coordinate: annotation.coordinate)
+        ForEach(Array(annotations.enumerated()), id: \.element.id) { index, annotation in
+          Annotation(annotation.poi.name, coordinate: annotation.coordinate) {
+            ZStack {
+              Circle()
+                .fill(colorForType(annotation.poi.type))
+                .frame(width: 30, height: 30)
+              Text("\(index + 1)")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
+            }
+          }
         }
       }
       .mapStyle(.standard(elevation: .realistic))
       .onChange(of: selectedDay) { _, _ in updateCamera() }
       .onAppear { updateCamera() }
 
+      // POI List
       List {
         if let day = currentDay {
           ForEach(Array(day.pois.enumerated()), id: \.offset) { index, poi in
             HStack(spacing: 12) {
               ZStack {
-                Circle().fill(.purple).frame(width: 32, height: 32)
+                Circle().fill(colorForType(poi.type)).frame(width: 32, height: 32)
                 Text("\(index + 1)").font(.caption).fontWeight(.bold).foregroundStyle(.white)
               }
               VStack(alignment: .leading, spacing: 2) {
                 Text(poi.name).font(.subheadline).fontWeight(.medium)
-                if let type = poi.type { Text(type).font(.caption).foregroundStyle(.secondary) }
+                if let type = poi.type {
+                  Text(type).font(.caption).foregroundStyle(.secondary)
+                }
               }
               Spacer()
-              if poi.latitude != nil { Image(systemName: "location.fill").foregroundStyle(.green) }
+              if poi.latitude != nil && poi.latitude != 0 {
+                Image(systemName: "location.fill").foregroundStyle(.green)
+              }
             }
             .padding(.vertical, 4)
           }
         }
       }
-      .listStyle(.plain).frame(height: 200)
+      .listStyle(.plain)
+      .frame(height: 200)
     }
-    .navigationTitle("导入行程").navigationBarTitleDisplayMode(.inline)
+    .navigationTitle("导入行程")
+    .navigationBarTitleDisplayMode(.inline)
   }
 
   private func updateCamera() {
-    guard !annotations.isEmpty else { return }
+    print("📍 Annotations count: \(annotations.count)")
+    guard !annotations.isEmpty else {
+      print("⚠️ No annotations to display")
+      return
+    }
+
     let coords = annotations.map(\.coordinate)
+    coords.forEach { print("  📌 \($0.latitude), \($0.longitude)") }
+
+    // Calculate bounding box
+    let lats = coords.map(\.latitude)
+    let lngs = coords.map(\.longitude)
+
+    let minLat = lats.min()!
+    let maxLat = lats.max()!
+    let minLng = lngs.min()!
+    let maxLng = lngs.max()!
+
     let center = CLLocationCoordinate2D(
-      latitude: coords.map(\.latitude).reduce(0, +) / Double(coords.count),
-      longitude: coords.map(\.longitude).reduce(0, +) / Double(coords.count)
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2
     )
+
+    // Add padding to the span
+    let latDelta = max((maxLat - minLat) * 1.5, 0.01)
+    let lngDelta = max((maxLng - minLng) * 1.5, 0.01)
+
+    print(
+      "📍 Camera: center=(\(center.latitude), \(center.longitude)), span=(\(latDelta), \(lngDelta))")
+
     withAnimation {
       cameraPosition = .region(
         MKCoordinateRegion(
-          center: center, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)))
+          center: center,
+          span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
+        ))
+    }
+  }
+
+  private func colorForType(_ type: String?) -> Color {
+    switch type?.lowercased() {
+    case "景点", "attraction": return .orange
+    case "餐厅", "restaurant", "美食", "food": return .red
+    case "酒店", "hotel", "住宿", "accommodation": return .blue
+    case "交通", "transport", "transportation": return .green
+    default: return .purple
     }
   }
 }
@@ -102,16 +163,20 @@ struct PoiAnnotation: Identifiable {
   NavigationStack {
     ImportedItineraryView(
       guide: BlogPost(
-        id: "1", title: "Test", author: nil, content: nil, summary: nil, coverImage: nil,
-        platform: "test", qualityScore: nil, viewCount: nil, likeCount: nil, createdAt: nil,
+        id: "1", title: "Test", authorName: nil, content: nil, summary: nil, coverImageUrl: nil,
+        sourcePlatform: "test", qualityScore: nil, viewsCount: nil, likesCount: nil,
+        savesCount: nil, createdAt: nil,
         aiSummary: nil, aiTips: nil, aiBestTime: nil, aiDuration: nil, aiBudget: nil,
         aiDays: [
           AiDay(
             dayNumber: 1, theme: "Day 1",
             pois: [
               AiPoi(
-                name: "Place", type: "景点", description: nil, latitude: 35.68, longitude: 139.76,
-                address: nil)
+                name: "Place 1", type: "景点", description: nil, latitude: 35.68, longitude: 139.76,
+                address: nil),
+              AiPoi(
+                name: "Place 2", type: "美食", description: nil, latitude: 35.69, longitude: 139.77,
+                address: nil),
             ])
         ], aiProcessedAt: nil))
   }

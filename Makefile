@@ -11,7 +11,7 @@ help:
 	@echo "Usage: make <command>"
 	@echo ""
 	@echo "Commands:"
-	@echo "  dev        Start all services"
+	@echo "  dev        Start/restart all services"
 	@echo "  stop       Stop all services"
 	@echo "  setup      Setup env files"
 	@echo "  health     Check service health"
@@ -26,12 +26,43 @@ setup:
 	@test -f apps/api/.env || (echo "CONVEX_URL=$(CONVEX_URL)" > apps/api/.env && echo "  ✓ Created apps/api/.env")
 	@echo "✅ Done"
 
+# Smart dev: check each service and start/restart as needed
 dev: setup
-	@echo "🚀 Starting all services..."
-	@npx convex dev &
-	@sleep 2
+	@echo "🚀 Starting services..."
+	@# Convex - check if running, restart if yes, start if no
+	@if pgrep -f "convex dev" > /dev/null; then \
+		echo "  ♻️  Convex already running, skipping..."; \
+	else \
+		echo "  ▶️  Starting Convex..."; \
+		npx convex dev & \
+		sleep 2; \
+	fi
+	@# API - port 8000
+	@if curl -sf http://localhost:8000/health > /dev/null 2>&1; then \
+		echo "  ♻️  Restarting API..."; \
+		lsof -ti:8000 | xargs kill -9 2>/dev/null || true; \
+		sleep 1; \
+	else \
+		echo "  ▶️  Starting API..."; \
+	fi
 	@cd apps/api && pnpm dev &
+	@# Crawler - port 3001
+	@if curl -sf http://localhost:3001/health > /dev/null 2>&1; then \
+		echo "  ♻️  Restarting Crawler..."; \
+		lsof -ti:3001 | xargs kill -9 2>/dev/null || true; \
+		sleep 1; \
+	else \
+		echo "  ▶️  Starting Crawler..."; \
+	fi
 	@cd apps/crawler && pnpm dev &
+	@# Dashboard - port 3002
+	@if curl -sf http://localhost:3002 > /dev/null 2>&1; then \
+		echo "  ♻️  Restarting Dashboard..."; \
+		lsof -ti:3002 | xargs kill -9 2>/dev/null || true; \
+		sleep 1; \
+	else \
+		echo "  ▶️  Starting Dashboard..."; \
+	fi
 	@cd apps/dashboard && pnpm dev --port 3002 &
 	@sleep 5
 	@make health
