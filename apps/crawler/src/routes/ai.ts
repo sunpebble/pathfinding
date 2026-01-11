@@ -9,7 +9,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { TABLES } from '../lib/convex.js';
+import { api, convex } from '../lib/convex.js';
 import {
   batchProcessGuidesWithAI,
   generateMissingImages,
@@ -133,14 +133,16 @@ aiRouter.post(
   async (c: Context) => {
     const { guideId, options } = await c.req.json();
 
-    // Fetch guide from database
-    const { data: guide, error } = await supabase
-      .from(TABLES.TRAVEL_GUIDES)
-      .select('*')
-      .eq('id', guideId)
-      .single();
-
-    if (error || !guide) {
+    // Fetch guide from database using Convex
+    let guide;
+    try {
+      guide = await convex.query(api.travelGuides.getById, {
+        id: guideId as any,
+      });
+      if (!guide) {
+        return c.json({ error: 'Guide not found' }, 404);
+      }
+    } catch {
       return c.json({ error: 'Guide not found' }, 404);
     }
 
@@ -164,13 +166,17 @@ aiRouter.post(
   async (c: Context) => {
     const { guideIds, options } = await c.req.json();
 
-    // Fetch guides from database
-    const { data: guides, error } = await supabase
-      .from(TABLES.TRAVEL_GUIDES)
-      .select('*')
-      .in('id', guideIds);
-
-    if (error || !guides || guides.length === 0) {
+    // Fetch guides from database using Convex
+    let guides: any[] = [];
+    try {
+      const allGuides = await convex.query(api.travelGuides.list, {
+        limit: 100,
+      });
+      guides = allGuides.filter((g: any) => guideIds.includes(g._id));
+      if (guides.length === 0) {
+        return c.json({ error: 'No guides found' }, 404);
+      }
+    } catch {
       return c.json({ error: 'No guides found' }, 404);
     }
 

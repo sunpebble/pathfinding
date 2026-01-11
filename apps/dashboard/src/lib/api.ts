@@ -59,10 +59,18 @@ export interface CrawlJob {
   };
   statistics?: {
     records_extracted: number;
-    records_failed: number;
-    pages_crawled: number;
+    requests_failed: number;
+    requests_success: number;
+    requests_total: number;
+    bytes_downloaded: number;
+    duration_seconds: number;
+    // Aliases for Dashboard compatibility
+    records_failed?: number;
+    pages_crawled?: number;
   };
   schedule_cron?: string;
+  started_at?: string;
+  completed_at?: string;
   last_run_at?: string;
   next_run_at?: string;
   created_at: string;
@@ -95,7 +103,8 @@ export async function getCrawlJobs(params?: {
 }
 
 export async function getCrawlJob(id: string): Promise<CrawlJob> {
-  return fetchApi(`/crawl-jobs/${id}`);
+  const response = await fetchApi<{ data: CrawlJob }>(`/crawl-jobs/${id}`);
+  return response.data;
 }
 
 export interface CreateCrawlJobInput {

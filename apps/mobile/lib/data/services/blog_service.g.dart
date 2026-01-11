@@ -6,7 +6,7 @@ part of 'blog_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$blogServiceHash() => r'c3b853cca917c95e5ff8642d01efd613ea6af43b';
+String _$blogServiceHash() => r'01d12d91cc2633289ff60d528d96f9f125fb0d42';
 
 /// Blog service provider
 ///

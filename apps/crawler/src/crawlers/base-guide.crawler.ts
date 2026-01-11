@@ -14,7 +14,7 @@ import type { Page } from 'playwright';
 
 import { Buffer } from 'node:buffer';
 import { PlaywrightCrawler } from 'crawlee';
-import { TABLES } from '../lib/convex.js';
+import { api, convex } from '../lib/convex.js';
 import { processGuide, saveGuide } from '../processors/guide-processor.js';
 
 export interface GuideExtractionResult {
@@ -91,35 +91,37 @@ export abstract class BaseGuideCrawler {
   }
 
   /**
-   * Update job status
+   * Update job status using Convex
    */
   protected async updateJobStatus(
     status: 'running' | 'completed' | 'failed' | 'cancelled',
     errorMessage?: string
   ): Promise<void> {
-    const update: Record<string, unknown> = { status };
-
-    if (status === 'running') {
-      update.started_at = new Date().toISOString();
-    } else {
-      update.completed_at = new Date().toISOString();
+    try {
+      await convex.mutation(api.crawlJobs.updateStatus, {
+        id: this.job.id as any,
+        status,
+        startedAt: status === 'running' ? Date.now() : undefined,
+        completedAt: status !== 'running' ? Date.now() : undefined,
+        errorMessage,
+      });
+    } catch (error) {
+      console.error('Failed to update job status:', error);
     }
-
-    if (errorMessage) {
-      update.error_message = errorMessage;
-    }
-
-    await supabase.from(TABLES.CRAWL_JOBS).update(update).eq('id', this.job.id);
   }
 
   /**
-   * Update statistics
+   * Update statistics using Convex
    */
   protected async updateStatistics(): Promise<void> {
-    await supabase
-      .from(TABLES.CRAWL_JOBS)
-      .update({ statistics: this.statistics })
-      .eq('id', this.job.id);
+    try {
+      await convex.mutation(api.crawlJobs.updateStatistics, {
+        id: this.job.id as any,
+        statistics: this.statistics,
+      });
+    } catch (error) {
+      console.error('Failed to update statistics:', error);
+    }
   }
 
   /**

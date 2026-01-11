@@ -1,54 +1,69 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/blog_post.dart';
 import 'api_client.dart';
 
 part 'blog_service.g.dart';
 
-/// Blog service for handling blog post operations via Supabase
+/// Blog/Travel Guide service for handling blog post operations via API
 class BlogService {
-  final SupabaseClient _supabase;
+  final Dio _dio;
 
-  BlogService(this._supabase);
+  // Crawler API base URL for travel guides
+  static const String _crawlerUrl = 'http://localhost:3001';
 
-  /// Get list of blog posts
+  BlogService(this._dio);
+
+  /// Get list of travel guides
   Future<List<BlogPostWithStats>> list({
     int page = 1,
     int pageSize = 20,
     String? search,
   }) async {
-    final startIndex = (page - 1) * pageSize;
-    
-    // Build and execute query - no search filtering for now to avoid API issues
-    final response = await _supabase
-        .from('travel_blog_posts')
-        .select('*')
-        .order('created_at', ascending: false)
-        .range(startIndex, startIndex + pageSize - 1);
+    try {
+      final offset = (page - 1) * pageSize;
 
-    return (response as List).map((json) {
-      // Transform JSON to match our model
-      return BlogPostWithStats(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        content: json['content'] as String? ?? '',
-        summary: _truncateContent(json['content']),
-        coverImageUrl: json['cover_image_url'] as String?,
-        authorId: json['user_id'] as String,
-        authorName: null,
-        authorAvatarUrl: null,
-        locations: _parseLocations(json['locations']),
-        tags: [],
-        createdAt: DateTime.parse(json['created_at'] as String),
-        updatedAt: DateTime.parse(json['updated_at'] as String),
-        likeCount: json['like_count'] as int? ?? 0,
-        viewCount: 0,
-        commentCount: 0,
-        isLiked: false,
+      final response = await _dio.get(
+        '$_crawlerUrl/api/guides',
+        queryParameters: {
+          'limit': pageSize,
+          'offset': offset,
+          if (search != null) 'q': search,
+        },
       );
-    }).toList();
+
+      final data = response.data['data'] as List? ?? [];
+
+      return data.map((json) {
+        return BlogPostWithStats(
+          id: json['id'] as String,
+          title: json['title'] as String? ?? '无标题',
+          content: json['content'] as String? ?? '',
+          summary: _truncateContent(json['content']),
+          coverImageUrl: json['cover_image_url'] as String?,
+          authorId: json['author_id'] as String? ?? '',
+          authorName: json['author_name'] as String?,
+          authorAvatarUrl: null,
+          locations: _parseDestinations(json['destinations']),
+          tags: (json['tags'] as List?)?.cast<String>() ?? [],
+          createdAt:
+              DateTime.tryParse(json['created_at'] as String? ?? '') ??
+              DateTime.now(),
+          updatedAt:
+              DateTime.tryParse(json['updated_at'] as String? ?? '') ??
+              DateTime.now(),
+          likeCount: json['likes_count'] as int? ?? 0,
+          viewCount: json['views_count'] as int? ?? 0,
+          commentCount: json['comments_count'] as int? ?? 0,
+          isLiked: false,
+        );
+      }).toList();
+    } catch (e) {
+      print('Error fetching guides: $e');
+      return [];
+    }
   }
 
   /// Truncate content for summary
@@ -58,51 +73,93 @@ class BlogService {
     return str.length > 100 ? str.substring(0, 100) : str;
   }
 
-  /// Parse locations from JSON
-  List<BlogLocation> _parseLocations(dynamic locationsJson) {
-    if (locationsJson == null) return [];
-    if (locationsJson is! List) return [];
-    
-    return locationsJson.asMap().entries.map((entry) {
-      final json = entry.value as Map<String, dynamic>;
+  /// Parse destinations into locations
+  List<BlogLocation> _parseDestinations(dynamic destinations) {
+    if (destinations == null) return [];
+    if (destinations is! List) return [];
+
+    return destinations.asMap().entries.map((entry) {
+      final dest = entry.value.toString();
       return BlogLocation(
-        id: json['id'] as String? ?? 'loc_${entry.key}',
-        name: json['name'] as String? ?? '未知地点',
-        description: json['description'] as String?,
-        latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-        longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
-        order: json['order'] as int? ?? entry.key,
-        category: json['category'] as String?,
+        id: 'loc_${entry.key}',
+        name: dest,
+        description: null,
+        latitude: 0.0,
+        longitude: 0.0,
+        order: entry.key,
+        category: null,
       );
     }).toList();
   }
 
   /// Get blog post by ID
   Future<BlogPostWithStats> getById(String id) async {
-    final response = await _supabase
-        .from('travel_blog_posts')
-        .select('*')
-        .eq('id', id)
-        .single();
+    try {
+      final response = await _dio.get('$_crawlerUrl/api/guides/$id');
+      final json = response.data['data'];
 
-    return BlogPostWithStats(
-      id: response['id'] as String,
-      title: response['title'] as String,
-      content: response['content'] as String? ?? '',
-      summary: null,
-      coverImageUrl: response['cover_image_url'] as String?,
-      authorId: response['user_id'] as String,
-      authorName: null,
-      authorAvatarUrl: null,
-      locations: _parseLocations(response['locations']),
-      tags: [],
-      createdAt: DateTime.parse(response['created_at'] as String),
-      updatedAt: DateTime.parse(response['updated_at'] as String),
-      likeCount: response['like_count'] as int? ?? 0,
-      viewCount: 0,
-      commentCount: 0,
-      isLiked: false,
-    );
+      return BlogPostWithStats(
+        id: json['id'] as String,
+        title: json['title'] as String? ?? '无标题',
+        content: json['content'] as String? ?? '',
+        summary: null,
+        coverImageUrl: json['cover_image_url'] as String?,
+        authorId: json['author_id'] as String? ?? '',
+        authorName: json['author_name'] as String?,
+        authorAvatarUrl: null,
+        locations: _parseDestinations(json['destinations']),
+        tags: (json['tags'] as List?)?.cast<String>() ?? [],
+        createdAt:
+            DateTime.tryParse(json['created_at'] as String? ?? '') ??
+            DateTime.now(),
+        updatedAt:
+            DateTime.tryParse(json['updated_at'] as String? ?? '') ??
+            DateTime.now(),
+        likeCount: json['likes_count'] as int? ?? 0,
+        viewCount: json['views_count'] as int? ?? 0,
+        commentCount: json['comments_count'] as int? ?? 0,
+        isLiked: false,
+        // AI-enhanced fields
+        aiProcessedAt: json['ai_processed_at'] != null
+            ? DateTime.tryParse(json['ai_processed_at'] as String)
+            : null,
+        aiSummary: json['ai_summary'] as String?,
+        aiTips: (json['ai_tips'] as List?)?.cast<String>() ?? [],
+        aiBestTime: json['ai_best_time'] as String?,
+        aiDuration: json['ai_duration'] as String?,
+        aiBudget: json['ai_budget'] as String?,
+        aiDays: _parseAiDays(json['ai_days']),
+      );
+    } catch (e) {
+      print('Error fetching guide $id: $e');
+      rethrow;
+    }
+  }
+
+  /// Parse AI days from API response
+  List<AiDay> _parseAiDays(dynamic aiDays) {
+    if (aiDays == null || aiDays is! List) return [];
+
+    return aiDays.map<AiDay>((day) {
+      final pois =
+          (day['pois'] as List?)?.map<AiPoi>((poi) {
+            return AiPoi(
+              name: poi['name'] as String? ?? '',
+              type: poi['type'] as String? ?? 'attraction',
+              description: poi['description'] as String?,
+              latitude: (poi['latitude'] as num?)?.toDouble() ?? 0.0,
+              longitude: (poi['longitude'] as num?)?.toDouble() ?? 0.0,
+              address: poi['address'] as String?,
+            );
+          }).toList() ??
+          [];
+
+      return AiDay(
+        dayNumber: day['dayNumber'] as int? ?? 1,
+        theme: day['theme'] as String?,
+        pois: pois,
+      );
+    }).toList();
   }
 
   /// Toggle like on a blog post
@@ -115,5 +172,5 @@ class BlogService {
 /// Blog service provider
 @riverpod
 BlogService blogService(Ref ref) {
-  return BlogService(ref.watch(supabaseProvider));
+  return BlogService(ref.watch(dioProvider));
 }

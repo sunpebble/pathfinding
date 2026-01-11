@@ -4,6 +4,7 @@
  */
 
 import { api, convex, createConvexClient } from '@pathfinding/convex';
+// MUST import dotenv BEFORE convex to ensure env vars are loaded
 import 'dotenv/config';
 
 // Re-export for use in services
@@ -27,11 +28,18 @@ export const TABLES = {
 export type TableName = (typeof TABLES)[keyof typeof TABLES];
 
 /**
- * Check database connection
+ * Check database connection with timeout
  */
 export async function checkConnection(): Promise<boolean> {
   try {
-    await convex.query(api.crawlJobs.list, { limit: 1 });
+    // Add 3 second timeout to prevent hanging
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout')), 3000)
+    );
+
+    const queryPromise = convex.query(api.crawlJobs.list, { limit: 1 });
+
+    await Promise.race([queryPromise, timeoutPromise]);
     return true;
   } catch {
     return false;

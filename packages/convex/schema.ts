@@ -267,6 +267,34 @@ export default defineSchema({
     crawledAt: v.number(),
     qualityScore: v.number(), // 0-1
     contentHash: v.optional(v.string()),
+
+    // AI Enhanced Fields
+    aiProcessedAt: v.optional(v.number()),
+    aiSummary: v.optional(v.string()),
+    aiTips: v.optional(v.array(v.string())),
+    aiBestTime: v.optional(v.string()),
+    aiDuration: v.optional(v.string()),
+    aiBudget: v.optional(v.string()),
+
+    // Day-based Itinerary Structure
+    aiDays: v.optional(
+      v.array(
+        v.object({
+          dayNumber: v.number(),
+          theme: v.optional(v.string()),
+          pois: v.array(
+            v.object({
+              name: v.string(),
+              type: v.string(),
+              description: v.optional(v.string()),
+              latitude: v.number(),
+              longitude: v.number(),
+              address: v.optional(v.string()),
+            })
+          ),
+        })
+      )
+    ),
   })
     .index('by_platform', ['sourcePlatform'])
     .index('by_platform_external', ['sourcePlatform', 'sourceExternalId'])

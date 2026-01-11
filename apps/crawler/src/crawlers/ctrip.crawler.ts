@@ -193,30 +193,12 @@ export class CtripCrawler extends BaseGuideCrawler {
         `Found ${extractedData.articles.length} articles on list page ${url}`
       );
 
-      // Return article URLs to be enqueued, guides will be extracted from article pages
-      // For now, store basic info and return URLs for follow-up
-      for (const article of extractedData.articles.slice(0, 10)) {
-        // Limit per page
-        guides.push({
-          title: article.title,
-          content: article.summary, // Will be replaced with full content
-          author_name: article.author,
-          cover_image_url: article.coverImage,
-          views_count: this.parseCount(article.views),
-          likes_count: this.parseCount(article.likes),
-          comments_count: this.parseCount(article.comments),
-          published_at: article.publishDate
-            ? this.parseDate(article.publishDate)
-            : undefined,
-          // Store URL for full content extraction
-          tags: [article.url], // Temporary: store URL in tags for reference
-        });
-      }
-
+      // Don't save list page summaries - only return article URLs for full content extraction
+      // The article pages will extract and save the full content
       return {
-        guides,
+        guides: [], // Don't save truncated summaries
         nextPageUrl: extractedData.nextPageUrl || undefined,
-        // Return article URLs for enqueueing
+        // Return article URLs for enqueueing to get full content
         articleUrls: extractedData.articles.slice(0, 10).map((a) => a.url),
       } as GuideExtractionResult & { articleUrls?: string[] };
     } catch (error) {
@@ -242,11 +224,44 @@ export class CtripCrawler extends BaseGuideCrawler {
           document.querySelector('.title')?.textContent?.trim() ||
           '';
 
-        // Author
-        const author =
-          document.querySelector('.author-name')?.textContent?.trim() ||
-          document.querySelector('[class*="author"]')?.textContent?.trim() ||
-          '';
+        // Author name - try multiple selectors
+        const authorSelectors = [
+          '.author-name',
+          '.user-name',
+          '[class*="author"] a',
+          '[class*="author"] span',
+          '.avatar-container + *',
+        ];
+        let author = '';
+        for (const sel of authorSelectors) {
+          const el = document.querySelector(sel);
+          if (el?.textContent?.trim()) {
+            author = el.textContent.trim();
+            break;
+          }
+        }
+
+        // Author ID - try to extract from URL or data attribute
+        let authorId = '';
+        const authorLink = document.querySelector(
+          '.author-name a, [class*="author"] a'
+        ) as HTMLAnchorElement;
+        if (authorLink?.href) {
+          const match = authorLink.href.match(
+            /\/(?:user|member|profile)\/(\d+)/
+          );
+          if (match) authorId = match[1];
+        }
+        // Try data attribute
+        if (!authorId) {
+          const authorEl = document.querySelector(
+            '[data-user-id], [data-author-id]'
+          );
+          authorId =
+            authorEl?.getAttribute('data-user-id') ||
+            authorEl?.getAttribute('data-author-id') ||
+            '';
+        }
 
         // Publish date
         const dateEl = document.querySelector(
@@ -301,27 +316,59 @@ export class CtripCrawler extends BaseGuideCrawler {
             }
           });
 
-        // Stats
-        const likesEl = document.querySelector(
-          '[class*="like"] span, .like-count'
-        );
-        const viewsEl = document.querySelector(
-          '[class*="view"] span, .view-count'
-        );
-        const commentsEl = document.querySelector(
-          '[class*="comment"] span, .comment-count'
-        );
+        // Stats - enhanced selectors for likes, views, saves, comments
+        const getStatValue = (selectors: string[]): string => {
+          for (const sel of selectors) {
+            const el = document.querySelector(sel);
+            if (el?.textContent?.trim()) {
+              return el.textContent.trim();
+            }
+          }
+          return '0';
+        };
+
+        const likes = getStatValue([
+          '[class*="like"] span',
+          '.like-count',
+          '[class*="zan"] span',
+          '[data-type="like"] span',
+        ]);
+
+        const views = getStatValue([
+          '[class*="view"] span',
+          '.view-count',
+          '[class*="read"] span',
+          '.visits span',
+          '[data-type="view"] span',
+        ]);
+
+        const saves = getStatValue([
+          '[class*="collect"] span',
+          '.collect-count',
+          '[class*="save"] span',
+          '[class*="favor"] span',
+          '[data-type="collect"] span',
+        ]);
+
+        const comments = getStatValue([
+          '[class*="comment"] span',
+          '.comment-count',
+          '[class*="reply"] span',
+          '[data-type="comment"] span',
+        ]);
 
         return {
           title,
           author,
+          authorId,
           publishDate,
           content,
           contentHtml,
           images,
-          likes: likesEl?.textContent?.trim() || '0',
-          views: viewsEl?.textContent?.trim() || '0',
-          comments: commentsEl?.textContent?.trim() || '0',
+          likes,
+          views,
+          saves,
+          comments,
         };
       });
 
@@ -339,9 +386,11 @@ export class CtripCrawler extends BaseGuideCrawler {
         content: articleData.content,
         content_html: articleData.contentHtml,
         author_name: articleData.author,
+        author_id: articleData.authorId,
         image_urls: articleData.images,
         cover_image_url: articleData.images[0],
         likes_count: this.parseCount(articleData.likes),
+        saves_count: this.parseCount(articleData.saves),
         views_count: this.parseCount(articleData.views),
         comments_count: this.parseCount(articleData.comments),
         published_at: articleData.publishDate

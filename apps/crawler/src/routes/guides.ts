@@ -236,6 +236,81 @@ guidesRouter.get('/stats', async (c: Context) => {
   }
 });
 
+/**
+ * POST /api/guides
+ * Create a new travel guide (for testing/seeding)
+ */
+guidesRouter.post('/', async (c: Context) => {
+  try {
+    const body = await c.req.json();
+
+    const id = await convex.mutation(api.travelGuides.upsert, {
+      sourcePlatform: body.source_platform || 'xiaohongshu',
+      sourceExternalId: body.source_external_id || `manual_${Date.now()}`,
+      sourceUrl: body.source_url,
+      title: body.title,
+      content: body.content || '',
+      contentHtml: body.content_html,
+      authorName: body.author_name,
+      authorId: body.author_id,
+      destinations: body.destinations || [],
+      tags: body.tags || [],
+      likesCount: body.likes_count || 0,
+      savesCount: body.saves_count || 0,
+      commentsCount: body.comments_count || 0,
+      viewsCount: body.views_count || 0,
+      coverImageUrl: body.cover_image_url,
+      imageUrls: body.image_urls || [],
+      qualityScore: body.quality_score || 0.5,
+    });
+
+    const guide = await convex.query(api.travelGuides.getById, { id });
+    return c.json({ data: mapGuide(guide) }, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
+ * POST /api/guides/cleanup/duplicates
+ * Remove duplicate guides (keep the one with longer content)
+ */
+guidesRouter.post('/cleanup/duplicates', async (c: Context) => {
+  try {
+    const result = await convex.mutation(api.travelGuides.removeDuplicates, {});
+    return c.json({
+      success: true,
+      message: `Removed ${result.removedCount} duplicates`,
+      totalBefore: result.totalBefore,
+      totalAfter: result.totalAfter,
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
+ * POST /api/guides/cleanup/short-content
+ * Remove guides with short/truncated content
+ */
+guidesRouter.post('/cleanup/short-content', async (c: Context) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const minLength = body.min_length || 200;
+
+    const result = await convex.mutation(api.travelGuides.removeShortContent, {
+      minLength,
+    });
+    return c.json({
+      success: true,
+      message: `Removed ${result.removedCount} guides with content shorter than ${minLength} chars`,
+      removedCount: result.removedCount,
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Helper to map Convex guide to API response format
 function mapGuide(doc: any) {
   return {
@@ -264,5 +339,15 @@ function mapGuide(doc: any) {
     content_hash: doc.contentHash,
     created_at: new Date(doc._creationTime).toISOString(),
     updated_at: new Date(doc._creationTime).toISOString(),
+    // AI-Enhanced Fields
+    ai_processed_at: doc.aiProcessedAt
+      ? new Date(doc.aiProcessedAt).toISOString()
+      : null,
+    ai_summary: doc.aiSummary,
+    ai_tips: doc.aiTips,
+    ai_best_time: doc.aiBestTime,
+    ai_duration: doc.aiDuration,
+    ai_budget: doc.aiBudget,
+    ai_days: doc.aiDays,
   };
 }

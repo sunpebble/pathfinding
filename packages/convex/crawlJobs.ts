@@ -113,6 +113,33 @@ export const cancel = mutation({
   },
 });
 
+// Update crawl job status (generic status update)
+export const updateStatus = mutation({
+  args: {
+    id: v.id('crawlJobs'),
+    status: v.string(),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const update: Record<string, unknown> = { status: args.status };
+
+    if (args.startedAt !== undefined) {
+      update.startedAt = args.startedAt;
+    }
+    if (args.completedAt !== undefined) {
+      update.completedAt = args.completedAt;
+    }
+    if (args.errorMessage !== undefined) {
+      update.errorMessage = args.errorMessage;
+    }
+
+    await ctx.db.patch(args.id, update);
+    return await ctx.db.get(args.id);
+  },
+});
+
 // Update crawl job statistics (during running)
 export const updateStatistics = mutation({
   args: {

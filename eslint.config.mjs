@@ -16,7 +16,13 @@ export default antfu({
   markdown: false,
 
   // Ignore patterns
-  ignores: ['.claude/**', 'dist/**', 'node_modules/**', 'pnpm-workspace.yaml'],
+  ignores: [
+    '.claude/**',
+    'dist/**',
+    'node_modules/**',
+    'pnpm-workspace.yaml',
+    '**/\_generated/**',
+  ],
 
   // Custom rule overrides
   rules: {

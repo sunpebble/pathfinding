@@ -18,6 +18,7 @@ import { initSentry } from './monitoring/index.js';
 import { aiRouter } from './routes/ai.js';
 import { crawlJobsRouter } from './routes/crawl-jobs.js';
 import { dashboardRouter } from './routes/dashboard.js';
+import { guideEnrichmentRouter } from './routes/guide-enrichment.js';
 import { guidesRouter } from './routes/guides.js';
 import { poisRouter } from './routes/pois.js';
 import { qualityReportsRouter } from './routes/quality-reports.js';
@@ -39,9 +40,25 @@ app.use('*', cors());
 app.use('*', secureHeaders());
 app.use('*', errorHandler());
 
-// Health check endpoint
+// Simple ping endpoint - no dependencies
+app.get('/ping', (c: Context) => {
+  return c.text('pong');
+});
+
+// Health check endpoint - responds immediately, checks db in background
 app.get('/health', async (c: Context) => {
-  const dbConnected = await checkConnection();
+  // Use a short timeout to not block the response
+  let dbConnected = false;
+  try {
+    const timeoutPromise = new Promise<boolean>((resolve) =>
+      setTimeout(() => resolve(false), 2000)
+    );
+    const checkPromise = checkConnection();
+    dbConnected = await Promise.race([checkPromise, timeoutPromise]);
+  } catch {
+    dbConnected = false;
+  }
+
   const status = dbConnected ? 'healthy' : 'unhealthy';
   const statusCode = dbConnected ? 200 : 503;
 
@@ -85,6 +102,7 @@ app.route('/dashboard', dashboardRouter);
 app.route('/api/crawl-jobs', crawlJobsRouter);
 app.route('/api/pois', poisRouter);
 app.route('/api/guides', guidesRouter);
+app.route('/api/guides', guideEnrichmentRouter);
 app.route('/api/training-datasets', trainingDatasetsRouter);
 app.route('/api/quality-reports', qualityReportsRouter);
 app.route('/api/ai', aiRouter);

@@ -34,7 +34,8 @@ class ImportedItineraryPage extends ConsumerStatefulWidget {
   const ImportedItineraryPage({super.key, this.blogPostId});
 
   @override
-  ConsumerState<ImportedItineraryPage> createState() => _ImportedItineraryPageState();
+  ConsumerState<ImportedItineraryPage> createState() =>
+      _ImportedItineraryPageState();
 }
 
 class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
@@ -52,7 +53,9 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
     _tipsController.text = '当地天气多变，建议备好雨具';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.blogPostId != null && mounted) {
-        ref.read(currentBlogNotifierProvider.notifier).loadBlogPost(widget.blogPostId!);
+        ref
+            .read(currentBlogNotifierProvider.notifier)
+            .loadBlogPost(widget.blogPostId!);
       }
     });
   }
@@ -69,10 +72,31 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
   }
 
   /// Parse blog content to extract day-based itinerary
+  /// Prioritizes AI-extracted days when available
   List<DayData> _parseBlogToDays(BlogPostWithStats blogPost) {
+    // Use AI-extracted days if available
+    if (blogPost.aiDays.isNotEmpty) {
+      return blogPost.aiDays.map((aiDay) {
+        final locations = aiDay.pois.asMap().entries.map((entry) {
+          final poi = entry.value;
+          return BlogLocation(
+            id: 'ai_${aiDay.dayNumber}_${entry.key}',
+            name: poi.name,
+            description: poi.description,
+            latitude: poi.latitude,
+            longitude: poi.longitude,
+            order: entry.key,
+            category: poi.type,
+          );
+        }).toList();
+        return DayData(dayNumber: aiDay.dayNumber, locations: locations);
+      }).toList();
+    }
+
+    // Fallback: parse from content using regex
     final content = blogPost.content;
     final locations = List<BlogLocation>.from(blogPost.locations);
-    
+
     if (locations.isEmpty) {
       return [DayData(dayNumber: 1, locations: [])];
     }
@@ -86,7 +110,7 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
 
     final dayMarkers = <int, int>{};
     int currentDay = 0;
-    
+
     for (final pattern in dayPatterns) {
       for (final match in pattern.allMatches(content)) {
         currentDay++;
@@ -99,12 +123,17 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
       final locationsPerDay = 3;
       final numDays = (locations.length / locationsPerDay).ceil().clamp(1, 7);
       final days = <DayData>[];
-      
+
       for (int d = 0; d < numDays; d++) {
         final startIdx = d * locationsPerDay;
         final endIdx = ((d + 1) * locationsPerDay).clamp(0, locations.length);
         if (startIdx < locations.length) {
-          days.add(DayData(dayNumber: d + 1, locations: locations.sublist(startIdx, endIdx)));
+          days.add(
+            DayData(
+              dayNumber: d + 1,
+              locations: locations.sublist(startIdx, endIdx),
+            ),
+          );
         }
       }
       return days;
@@ -113,7 +142,7 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
     final sortedPositions = dayMarkers.keys.toList()..sort();
     final numDays = sortedPositions.length;
     final days = <DayData>[];
-    
+
     for (int d = 0; d < numDays; d++) {
       days.add(DayData(dayNumber: d + 1, locations: []));
     }
@@ -121,7 +150,9 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
     for (final location in locations) {
       final locationPos = content.indexOf(location.name);
       if (locationPos == -1) {
-        days.last = days.last.copyWith(locations: [...days.last.locations, location]);
+        days.last = days.last.copyWith(
+          locations: [...days.last.locations, location],
+        );
         continue;
       }
 
@@ -129,16 +160,29 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
       for (int i = 0; i < sortedPositions.length; i++) {
         if (locationPos >= sortedPositions[i]) dayIndex = i;
       }
-      days[dayIndex] = days[dayIndex].copyWith(locations: [...days[dayIndex].locations, location]);
+      days[dayIndex] = days[dayIndex].copyWith(
+        locations: [...days[dayIndex].locations, location],
+      );
     }
 
-    return days.where((d) => d.locations.isNotEmpty).toList().isEmpty 
+    return days.where((d) => d.locations.isNotEmpty).toList().isEmpty
         ? [DayData(dayNumber: 1, locations: locations)]
         : days.where((d) => d.locations.isNotEmpty).toList();
   }
 
   int _extractDayNumber(String marker, int defaultNum) {
-    final chineseNums = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10};
+    final chineseNums = {
+      '一': 1,
+      '二': 2,
+      '三': 3,
+      '四': 4,
+      '五': 5,
+      '六': 6,
+      '七': 7,
+      '八': 8,
+      '九': 9,
+      '十': 10,
+    };
     if (marker.contains('最后')) return 99;
     for (final entry in chineseNums.entries) {
       if (marker.contains(entry.key)) return entry.value;
@@ -196,14 +240,23 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
 
   void _editNotes(int dayIndex, int itemIndex) {
     final location = _days[dayIndex].locations[itemIndex];
-    final notesController = TextEditingController(text: location.description ?? '');
+    final notesController = TextEditingController(
+      text: location.description ?? '',
+    );
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,24 +264,52 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${location.name} 备注', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                Text(
+                  '${location.name} 备注',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            TextField(controller: notesController, autofocus: true, maxLines: 3, decoration: const InputDecoration(hintText: '添加备注信息...', border: OutlineInputBorder())),
+            TextField(
+              controller: notesController,
+              autofocus: true,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: '添加备注信息...',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: AdaptiveButton(
                 onPressed: () {
                   setState(() {
-                    final locations = List<BlogLocation>.from(_days[dayIndex].locations);
-                    locations[itemIndex] = BlogLocation(
-                      id: location.id, name: location.name, latitude: location.latitude, longitude: location.longitude,
-                      category: location.category, description: notesController.text.trim().isEmpty ? null : notesController.text.trim(), order: location.order,
+                    final locations = List<BlogLocation>.from(
+                      _days[dayIndex].locations,
                     );
-                    _days[dayIndex] = _days[dayIndex].copyWith(locations: locations);
+                    locations[itemIndex] = BlogLocation(
+                      id: location.id,
+                      name: location.name,
+                      latitude: location.latitude,
+                      longitude: location.longitude,
+                      category: location.category,
+                      description: notesController.text.trim().isEmpty
+                          ? null
+                          : notesController.text.trim(),
+                      order: location.order,
+                    );
+                    _days[dayIndex] = _days[dayIndex].copyWith(
+                      locations: locations,
+                    );
                   });
                   Navigator.pop(context);
                 },
@@ -247,9 +328,16 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,30 +345,57 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('添加$category', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                Text(
+                  '添加$category',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            TextField(controller: nameController, autofocus: true, decoration: InputDecoration(hintText: '输入${category}名称', border: const OutlineInputBorder())),
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: '输入${category}名称',
+                border: const OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: AdaptiveButton(
                 onPressed: () {
                   if (nameController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请输入名称')));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(const SnackBar(content: Text('请输入名称')));
                     return;
                   }
                   setState(() {
-                    final locations = List<BlogLocation>.from(_days[dayIndex].locations);
-                    locations.add(BlogLocation(
-                      id: 'new_${DateTime.now().millisecondsSinceEpoch}',
-                      name: nameController.text.trim(),
-                      latitude: 0, longitude: 0,
-                      category: category, description: null, order: locations.length,
-                    ));
-                    _days[dayIndex] = _days[dayIndex].copyWith(locations: locations);
+                    final locations = List<BlogLocation>.from(
+                      _days[dayIndex].locations,
+                    );
+                    locations.add(
+                      BlogLocation(
+                        id: 'new_${DateTime.now().millisecondsSinceEpoch}',
+                        name: nameController.text.trim(),
+                        latitude: 0,
+                        longitude: 0,
+                        category: category,
+                        description: null,
+                        order: locations.length,
+                      ),
+                    );
+                    _days[dayIndex] = _days[dayIndex].copyWith(
+                      locations: locations,
+                    );
                   });
                   Navigator.pop(context);
                 },
@@ -294,25 +409,51 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
   }
 
   void _openMemoPage() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const MemoPage()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MemoPage()),
+    );
   }
 
   void _editTips() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('温馨提示', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text(
+              '温馨提示',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
-            TextField(controller: _tipsController, maxLines: 3, decoration: const InputDecoration(hintText: '输入行程备注...', border: OutlineInputBorder())),
+            TextField(
+              controller: _tipsController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: '输入行程备注...',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 16),
-            SizedBox(width: double.infinity, child: AdaptiveButton(onPressed: () => Navigator.pop(context), child: const Text('完成'))),
+            SizedBox(
+              width: double.infinity,
+              child: AdaptiveButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('完成'),
+              ),
+            ),
           ],
         ),
       ),
@@ -328,8 +469,14 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
           title: const Text('需要登录'),
           content: const Text('保存行程需要先登录账号'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('去登录')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('去登录'),
+            ),
           ],
         ),
       );
@@ -338,7 +485,9 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
     }
 
     if (_titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请输入行程名称')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入行程名称')));
       return;
     }
 
@@ -348,23 +497,36 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
       final items = day.locations.asMap().entries.map((entry) {
         final location = entry.value;
         return CreateItineraryItemInput(
-          poiName: location.name, latitude: location.latitude, longitude: location.longitude,
-          orderIndex: entry.key, category: location.category, notes: location.description,
+          poiName: location.name,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          orderIndex: entry.key,
+          category: location.category,
+          notes: location.description,
         );
       }).toList();
       return CreateItineraryDayInput(dayNumber: day.dayNumber, items: items);
     }).toList();
 
-    final input = CreateItineraryInput(title: _titleController.text.trim(), days: days);
-    final result = await ref.read(currentItineraryNotifierProvider.notifier).createItinerary(input);
+    final input = CreateItineraryInput(
+      title: _titleController.text.trim(),
+      days: days,
+    );
+    final result = await ref
+        .read(currentItineraryNotifierProvider.notifier)
+        .createItinerary(input);
 
     setState(() => _isLoading = false);
 
     if (result != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('行程已保存')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('行程已保存')));
       context.go('/itinerary/${result.id}');
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存失败，请重试')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('保存失败，请重试')));
     }
   }
 
@@ -376,7 +538,8 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
       backgroundColor: Colors.grey[100],
       body: blogAsync.when(
         data: (blogPost) {
-          if (blogPost == null) return const Center(child: CircularProgressIndicator());
+          if (blogPost == null)
+            return const Center(child: CircularProgressIndicator());
 
           if (_days.isEmpty && blogPost.locations.isNotEmpty) {
             _days = _parseBlogToDays(blogPost);
@@ -393,11 +556,26 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                   // Header
                   Container(
                     color: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
-                        IconButton(icon: const Icon(Icons.arrow_back_ios, size: 20), onPressed: () => Navigator.pop(context)),
-                        const Expanded(child: Text('我的攻略', textAlign: TextAlign.center, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600))),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios, size: 20),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const Expanded(
+                          child: Text(
+                            '我的攻略',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                         const SizedBox(width: 48),
                       ],
                     ),
@@ -413,25 +591,48 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                           child: _isTitleEditing
                               ? TextField(
                                   controller: _titleController,
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   autofocus: true,
-                                  decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.zero, isDense: true),
-                                  onSubmitted: (_) => setState(() => _isTitleEditing = false),
-                                  onTapOutside: (_) => setState(() => _isTitleEditing = false),
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                    isDense: true,
+                                  ),
+                                  onSubmitted: (_) =>
+                                      setState(() => _isTitleEditing = false),
+                                  onTapOutside: (_) =>
+                                      setState(() => _isTitleEditing = false),
                                 )
                               : GestureDetector(
-                                  onTap: () => setState(() => _isTitleEditing = true),
+                                  onTap: () =>
+                                      setState(() => _isTitleEditing = true),
                                   child: Text(
-                                    _titleController.text.isEmpty ? '输入行程名称' : _titleController.text,
+                                    _titleController.text.isEmpty
+                                        ? '输入行程名称'
+                                        : _titleController.text,
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w500,
-                                      color: _titleController.text.isEmpty ? AppColors.textHint : null,
+                                      color: _titleController.text.isEmpty
+                                          ? AppColors.textHint
+                                          : null,
                                     ),
                                   ),
                                 ),
                         ),
-                        TextButton(onPressed: _openMemoPage, child: Text('备忘录', style: TextStyle(color: AppColors.textSecondary, fontSize: 14))),
+                        TextButton(
+                          onPressed: _openMemoPage,
+                          child: Text(
+                            '备忘录',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -447,7 +648,8 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                           locations: _allLocations,
                           height: 160,
                           selectedLocationId: _selectedLocationId,
-                          onLocationSelected: (id) => setState(() => _selectedLocationId = id),
+                          onLocationSelected: (id) =>
+                              setState(() => _selectedLocationId = id),
                         ),
                       ),
                     ),
@@ -464,10 +666,23 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('行程', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            const Text(
+                              '行程',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             TextButton(
-                              onPressed: () => setState(() => _isEditMode = !_isEditMode),
-                              child: Text(_isEditMode ? '完成' : '编辑行程', style: TextStyle(color: AppColors.primary, fontSize: 13)),
+                              onPressed: () =>
+                                  setState(() => _isEditMode = !_isEditMode),
+                              child: Text(
+                                _isEditMode ? '完成' : '编辑行程',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 13,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -482,9 +697,22 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                                 itemCount: _days.length,
                                 onReorder: _reorderDays,
                                 buildDefaultDragHandles: false,
-                                itemBuilder: (context, dayIndex) => _buildDaySection(dayIndex, _days[dayIndex], key: ValueKey('day_$dayIndex')),
+                                itemBuilder: (context, dayIndex) =>
+                                    _buildDaySection(
+                                      dayIndex,
+                                      _days[dayIndex],
+                                      key: ValueKey('day_$dayIndex'),
+                                    ),
                               )
-                            : Column(children: List.generate(_days.length, (dayIndex) => _buildDaySection(dayIndex, _days[dayIndex]))),
+                            : Column(
+                                children: List.generate(
+                                  _days.length,
+                                  (dayIndex) => _buildDaySection(
+                                    dayIndex,
+                                    _days[dayIndex],
+                                  ),
+                                ),
+                              ),
 
                         // Add day button
                         if (_isEditMode)
@@ -493,13 +721,26 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                             child: InkWell(
                               onTap: _addDay,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                                 child: Row(
                                   children: [
                                     const SizedBox(width: 7),
-                                    Icon(Icons.add_circle, size: 18, color: AppColors.primary),
+                                    Icon(
+                                      Icons.add_circle,
+                                      size: 18,
+                                      color: AppColors.primary,
+                                    ),
                                     const SizedBox(width: 12),
-                                    Text('添加一天', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500, fontSize: 14)),
+                                    Text(
+                                      '添加一天',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -518,10 +759,23 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.wb_sunny, color: Colors.orange, size: 16),
+                                Icon(
+                                  Icons.wb_sunny,
+                                  color: Colors.orange,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 8),
-                                Expanded(child: Text('温馨提示：${_tipsController.text}', style: const TextStyle(fontSize: 13))),
-                                Icon(Icons.edit_outlined, color: AppColors.textHint, size: 16),
+                                Expanded(
+                                  child: Text(
+                                    '温馨提示：${_tipsController.text}',
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.edit_outlined,
+                                  color: AppColors.textHint,
+                                  size: 16,
+                                ),
                               ],
                             ),
                           ),
@@ -547,7 +801,10 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
               const SizedBox(height: 16),
               AdaptiveButton(
                 onPressed: () {
-                  if (widget.blogPostId != null) ref.read(currentBlogNotifierProvider.notifier).loadBlogPost(widget.blogPostId!);
+                  if (widget.blogPostId != null)
+                    ref
+                        .read(currentBlogNotifierProvider.notifier)
+                        .loadBlogPost(widget.blogPostId!);
                 },
                 child: const Text('重试'),
               ),
@@ -562,7 +819,9 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
             padding: const EdgeInsets.all(16),
             child: AdaptiveButton(
               onPressed: _isLoading ? null : _saveItinerary,
-              child: _isLoading ? const CupertinoActivityIndicator(color: Colors.white) : const Text('保存为我的行程'),
+              child: _isLoading
+                  ? const CupertinoActivityIndicator(color: Colors.white)
+                  : const Text('保存为我的行程'),
             ),
           ),
         ),
@@ -581,11 +840,21 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
           Row(
             children: [
               Container(
-                width: 8, height: 8,
-                decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
               ),
               const SizedBox(width: 12),
-              Text('第${day.dayNumber}天', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              Text(
+                '第${day.dayNumber}天',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               if (_isEditMode) ...[
                 const Spacer(),
                 if (_days.length > 1)
@@ -593,14 +862,21 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                     onTap: () => _removeDay(dayIndex),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('删除', style: TextStyle(color: AppColors.error, fontSize: 12)),
+                      child: Text(
+                        '删除',
+                        style: TextStyle(color: AppColors.error, fontSize: 12),
+                      ),
                     ),
                   ),
                 ReorderableDragStartListener(
                   index: dayIndex,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
-                    child: Icon(Icons.drag_handle, size: 18, color: AppColors.textHint),
+                    child: Icon(
+                      Icons.drag_handle,
+                      size: 18,
+                      color: AppColors.textHint,
+                    ),
                   ),
                 ),
               ],
@@ -617,11 +893,26 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: day.locations.length,
-                    onReorder: (oldIdx, newIdx) => _reorderItemsInDay(dayIndex, oldIdx, newIdx),
+                    onReorder: (oldIdx, newIdx) =>
+                        _reorderItemsInDay(dayIndex, oldIdx, newIdx),
                     buildDefaultDragHandles: false,
-                    itemBuilder: (context, itemIndex) => _buildLocationItem(dayIndex, itemIndex, day.locations[itemIndex], key: ValueKey('loc_${dayIndex}_$itemIndex')),
+                    itemBuilder: (context, itemIndex) => _buildLocationItem(
+                      dayIndex,
+                      itemIndex,
+                      day.locations[itemIndex],
+                      key: ValueKey('loc_${dayIndex}_$itemIndex'),
+                    ),
                   )
-                : Column(children: List.generate(day.locations.length, (itemIndex) => _buildLocationItem(dayIndex, itemIndex, day.locations[itemIndex]))),
+                : Column(
+                    children: List.generate(
+                      day.locations.length,
+                      (itemIndex) => _buildLocationItem(
+                        dayIndex,
+                        itemIndex,
+                        day.locations[itemIndex],
+                      ),
+                    ),
+                  ),
           ),
 
           // Add buttons
@@ -631,9 +922,27 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
               child: Wrap(
                 spacing: 12,
                 children: [
-                  GestureDetector(onTap: () => _addNewLocation(dayIndex, '景点'), child: Text('+ 景点', style: TextStyle(color: AppColors.primary, fontSize: 12))),
-                  GestureDetector(onTap: () => _addNewLocation(dayIndex, '美食'), child: Text('+ 美食', style: TextStyle(color: Colors.orange, fontSize: 12))),
-                  GestureDetector(onTap: () => _addNewLocation(dayIndex, '住宿'), child: Text('+ 住宿', style: TextStyle(color: Colors.purple, fontSize: 12))),
+                  GestureDetector(
+                    onTap: () => _addNewLocation(dayIndex, '景点'),
+                    child: Text(
+                      '+ 景点',
+                      style: TextStyle(color: AppColors.primary, fontSize: 12),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _addNewLocation(dayIndex, '美食'),
+                    child: Text(
+                      '+ 美食',
+                      style: TextStyle(color: Colors.orange, fontSize: 12),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _addNewLocation(dayIndex, '住宿'),
+                    child: Text(
+                      '+ 住宿',
+                      style: TextStyle(color: Colors.purple, fontSize: 12),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -642,7 +951,12 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
     );
   }
 
-  Widget _buildLocationItem(int dayIndex, int itemIndex, BlogLocation location, {Key? key}) {
+  Widget _buildLocationItem(
+    int dayIndex,
+    int itemIndex,
+    BlogLocation location, {
+    Key? key,
+  }) {
     final isSelected = _selectedLocationId == location.id;
     return Container(
       key: key,
@@ -652,29 +966,53 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _selectedLocationId = isSelected ? null : location.id),
+              onTap: () => setState(
+                () => _selectedLocationId = isSelected ? null : location.id,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Text('${location.category ?? "景点"}：', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text(
+                        '${location.category ?? "景点"}：',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
                       Expanded(
                         child: Text(
                           location.name,
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isSelected ? AppColors.primary : null),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected ? AppColors.primary : null,
+                          ),
                         ),
                       ),
                       GestureDetector(
                         onTap: () => _editNotes(dayIndex, itemIndex),
-                        child: Text(location.description != null ? '编辑备注' : '添加备注', style: TextStyle(color: AppColors.textHint, fontSize: 11)),
+                        child: Text(
+                          location.description != null ? '编辑备注' : '添加备注',
+                          style: TextStyle(
+                            color: AppColors.textHint,
+                            fontSize: 11,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   if (location.description != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 2, left: 48),
-                      child: Text(location.description!, style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                      child: Text(
+                        location.description!,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -683,11 +1021,25 @@ class _ImportedItineraryPageState extends ConsumerState<ImportedItineraryPage> {
           if (_isEditMode) ...[
             GestureDetector(
               onTap: () => _removeItem(dayIndex, itemIndex),
-              child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Icon(Icons.close, size: 14, color: AppColors.error.withAlpha(180))),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(
+                  Icons.close,
+                  size: 14,
+                  color: AppColors.error.withAlpha(180),
+                ),
+              ),
             ),
             ReorderableDragStartListener(
               index: itemIndex,
-              child: Padding(padding: const EdgeInsets.all(4), child: Icon(Icons.drag_handle, size: 14, color: AppColors.textHint)),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(
+                  Icons.drag_handle,
+                  size: 14,
+                  color: AppColors.textHint,
+                ),
+              ),
             ),
           ],
         ],
@@ -734,7 +1086,11 @@ class _MemoPageState extends State<MemoPage> {
         ),
         title: Text(
           '备忘录',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.grey[800]),
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[800],
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -751,7 +1107,11 @@ class _MemoPageState extends State<MemoPage> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
-              BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 2)),
+              BoxShadow(
+                color: Colors.black.withAlpha(10),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
             ],
           ),
           child: TextField(
@@ -780,10 +1140,22 @@ class _MemoPageState extends State<MemoPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(icon: Icon(Icons.check_box_outlined, color: Colors.grey[600]), onPressed: () {}),
-              IconButton(icon: Icon(Icons.camera_alt_outlined, color: Colors.grey[600]), onPressed: () {}),
-              IconButton(icon: Icon(Icons.draw_outlined, color: Colors.grey[600]), onPressed: () {}),
-              IconButton(icon: Icon(Icons.format_list_bulleted, color: Colors.grey[600]), onPressed: () {}),
+              IconButton(
+                icon: Icon(Icons.check_box_outlined, color: Colors.grey[600]),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Icon(Icons.camera_alt_outlined, color: Colors.grey[600]),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Icon(Icons.draw_outlined, color: Colors.grey[600]),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Icon(Icons.format_list_bulleted, color: Colors.grey[600]),
+                onPressed: () {},
+              ),
             ],
           ),
         ),

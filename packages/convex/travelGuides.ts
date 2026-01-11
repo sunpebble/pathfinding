@@ -20,17 +20,28 @@ export const list = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let guides = await ctx.db.query('travelGuides').order('desc').collect();
+    const effectiveLimit = args.limit || 50; // Default limit to prevent memory issues
+
+    // Build query with platform filter using index if available
+    let queryBuilder = ctx.db.query('travelGuides');
 
     if (args.platform) {
-      guides = guides.filter((g) => g.sourcePlatform === args.platform);
+      queryBuilder = queryBuilder.withIndex('by_platform', (q) =>
+        q.eq('sourcePlatform', args.platform!)
+      );
     }
+
+    // Take limited records before collecting to avoid 16MB limit
+    // Note: We fetch more than the limit to allow for quality filtering
+    const fetchLimit =
+      args.minQuality !== undefined ? effectiveLimit * 3 : effectiveLimit;
+    let guides = await queryBuilder.order('desc').take(fetchLimit);
 
     if (args.minQuality !== undefined) {
       guides = guides.filter((g) => g.qualityScore >= args.minQuality!);
     }
 
-    return args.limit ? guides.slice(0, args.limit) : guides;
+    return guides.slice(0, effectiveLimit);
   },
 });
 
@@ -217,6 +228,43 @@ export const updateQualityScore = mutation({
   },
 });
 
+// Update AI-extracted data
+export const updateAiData = mutation({
+  args: {
+    id: v.id('travelGuides'),
+    aiSummary: v.optional(v.string()),
+    aiTips: v.optional(v.array(v.string())),
+    aiBestTime: v.optional(v.string()),
+    aiDuration: v.optional(v.string()),
+    aiBudget: v.optional(v.string()),
+    aiDays: v.optional(
+      v.array(
+        v.object({
+          dayNumber: v.number(),
+          theme: v.optional(v.string()),
+          pois: v.array(
+            v.object({
+              name: v.string(),
+              type: v.string(),
+              description: v.optional(v.string()),
+              latitude: v.number(),
+              longitude: v.number(),
+              address: v.optional(v.string()),
+            })
+          ),
+        })
+      )
+    ),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...aiData } = args;
+    await ctx.db.patch(id, {
+      ...aiData,
+      aiProcessedAt: Date.now(),
+    });
+  },
+});
+
 // Delete a guide
 export const remove = mutation({
   args: { id: v.id('travelGuides') },
@@ -232,5 +280,70 @@ export const remove = mutation({
     }
 
     await ctx.db.delete(args.id);
+  },
+});
+
+// Remove duplicate guides (keep the one with longer content or higher quality score)
+export const removeDuplicates = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const guides = await ctx.db.query('travelGuides').collect();
+
+    // Group by platform + externalId
+    const grouped = new Map<string, typeof guides>();
+    for (const guide of guides) {
+      const key = `${guide.sourcePlatform}:${guide.sourceExternalId}`;
+      const existing = grouped.get(key) || [];
+      existing.push(guide);
+      grouped.set(key, existing);
+    }
+
+    let removedCount = 0;
+    for (const [_key, group] of grouped) {
+      if (group.length > 1) {
+        // Sort by content length (desc), then quality score (desc), then crawledAt (desc)
+        group.sort((a, b) => {
+          const contentDiff =
+            (b.content?.length || 0) - (a.content?.length || 0);
+          if (contentDiff !== 0) return contentDiff;
+
+          const qualityDiff = b.qualityScore - a.qualityScore;
+          if (qualityDiff !== 0) return qualityDiff;
+
+          return (b.crawledAt || 0) - (a.crawledAt || 0);
+        });
+
+        // Keep first (best), delete rest
+        for (let i = 1; i < group.length; i++) {
+          await ctx.db.delete(group[i]._id);
+          removedCount++;
+        }
+      }
+    }
+
+    return {
+      removedCount,
+      totalBefore: guides.length,
+      totalAfter: guides.length - removedCount,
+    };
+  },
+});
+
+// Remove guides with truncated/short content
+export const removeShortContent = mutation({
+  args: { minLength: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const minLength = args.minLength || 200; // Default minimum content length
+    const guides = await ctx.db.query('travelGuides').collect();
+
+    let removedCount = 0;
+    for (const guide of guides) {
+      if (!guide.content || guide.content.length < minLength) {
+        await ctx.db.delete(guide._id);
+        removedCount++;
+      }
+    }
+
+    return { removedCount, minLength };
   },
 });

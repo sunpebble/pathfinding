@@ -20,6 +20,33 @@ abstract class BlogLocation with _$BlogLocation {
       _$BlogLocationFromJson(json);
 }
 
+/// AI-extracted POI with geocoded coordinates
+@freezed
+abstract class AiPoi with _$AiPoi {
+  const factory AiPoi({
+    required String name,
+    required String type,
+    String? description,
+    required double latitude,
+    required double longitude,
+    String? address,
+  }) = _AiPoi;
+
+  factory AiPoi.fromJson(Map<String, dynamic> json) => _$AiPoiFromJson(json);
+}
+
+/// AI-extracted day itinerary
+@freezed
+abstract class AiDay with _$AiDay {
+  const factory AiDay({
+    required int dayNumber,
+    String? theme,
+    @Default([]) List<AiPoi> pois,
+  }) = _AiDay;
+
+  factory AiDay.fromJson(Map<String, dynamic> json) => _$AiDayFromJson(json);
+}
+
 /// Blog post model
 @freezed
 abstract class BlogPost with _$BlogPost {
@@ -62,6 +89,14 @@ abstract class BlogPostWithStats with _$BlogPostWithStats {
     @Default(0) int viewCount,
     @Default(0) int commentCount,
     @Default(false) bool isLiked,
+    // AI-enhanced fields
+    DateTime? aiProcessedAt,
+    String? aiSummary,
+    @Default([]) List<String> aiTips,
+    String? aiBestTime,
+    String? aiDuration,
+    String? aiBudget,
+    @Default([]) List<AiDay> aiDays,
   }) = _BlogPostWithStats;
 
   factory BlogPostWithStats.fromJson(Map<String, dynamic> json) =>

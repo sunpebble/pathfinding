@@ -124,14 +124,14 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           color="blue"
         />
         <StatCard
-          title="Records Failed"
-          value={job.statistics?.records_failed ?? 0}
+          title="Requests Failed"
+          value={job.statistics?.requests_failed ?? 0}
           icon={<XCircle className="h-5 w-5" />}
           color="red"
         />
         <StatCard
-          title="Pages Crawled"
-          value={job.statistics?.pages_crawled ?? 0}
+          title="Requests Success"
+          value={job.statistics?.requests_success ?? 0}
           icon={<MapPin className="h-5 w-5" />}
           color="emerald"
         />

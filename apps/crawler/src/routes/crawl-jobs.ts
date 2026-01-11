@@ -79,22 +79,25 @@ crawlJobsRouter.get(
   async (c: Context) => {
     const params = c.req.query() as unknown as CrawlJobListParams;
 
+    // Explicitly convert to numbers for Convex
+    const limit = Number(params.limit) || 20;
+    const offset = Number(params.offset) || 0;
+
     try {
       const jobs = await convex.query(api.crawlJobs.list, {
         status: params.status,
         platform: params.platform,
-        limit: params.limit || 20,
+        limit,
       });
 
       // Apply offset manually (Convex doesn't have native offset)
-      const offset = params.offset || 0;
-      const data = jobs.slice(offset, offset + (params.limit || 20));
+      const data = jobs.slice(offset, offset + limit);
 
       return c.json({
         data: data.map(mapCrawlJob),
         pagination: {
           total: jobs.length,
-          limit: params.limit || 20,
+          limit,
           offset,
         },
       });

@@ -181,7 +181,7 @@ class _ItineraryDetailProviderElement
 }
 
 String _$currentItineraryNotifierHash() =>
-    r'13baebe704c24e2b5bc3eda3980ffc3f2cd64849';
+    r'717729e92f34d911c88ae216c20af0fb74869a38';
 
 /// Current itinerary notifier for editing
 ///

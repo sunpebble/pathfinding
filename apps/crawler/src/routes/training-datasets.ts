@@ -1,21 +1,16 @@
 /**
  * Training Datasets API Routes
  * Endpoints for generating and managing ML training datasets
+ * Migrated to Convex
  */
 
-import type {
-  CreateTrainingDatasetRequest,
-  TrainingDataset,
-  TrainingDatasetListParams,
-  TrainingDatasetStatus,
-} from '@pathfinding/crawler-types';
 import type { Context } from 'hono';
 import type { DatasetGenerationParams } from '../services/training-dataset.service.js';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { TABLES } from '../lib/convex.js';
+import { api, convex } from '../lib/convex.js';
 import { Errors } from '../middleware/error-handler.js';
 import { generateTrainingDataset } from '../services/training-dataset.service.js';
 
@@ -57,48 +52,53 @@ const listDatasetsSchema = z.object({
   offset: z.coerce.number().nonnegative().optional().default(0),
 });
 
+// Helper to map Convex dataset to API response format
+function mapDataset(dataset: any) {
+  if (!dataset) return null;
+  return {
+    id: dataset._id,
+    name: dataset.name,
+    version: dataset.version,
+    description: dataset.description,
+    generation_params: dataset.generationParams,
+    output_format: dataset.outputFormats?.[0] || 'json',
+    output_formats: dataset.outputFormats,
+    status: dataset.status,
+    statistics: dataset.statistics,
+    storage_paths: dataset.storagePaths,
+    created_at: dataset._creationTime
+      ? new Date(dataset._creationTime).toISOString()
+      : null,
+    generated_at: dataset.generatedAt
+      ? new Date(dataset.generatedAt).toISOString()
+      : null,
+  };
+}
+
 // GET /api/training-datasets - List all training datasets
 trainingDatasetsRouter.get(
   '/',
   zValidator('query', listDatasetsSchema as any),
   async (c: Context) => {
-    const params = c.req.query() as unknown as TrainingDatasetListParams;
+    const query = c.req.query();
+    const limit = Number.parseInt(query.limit || '20');
+    const offset = Number.parseInt(query.offset || '0');
 
-    let query = supabase
-      .from(TABLES.TRAINING_DATASETS)
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(
-        params.offset || 0,
-        (params.offset || 0) + (params.limit || 20) - 1
-      );
+    try {
+      const result = await convex.query(api.trainingDatasets.list, {
+        name: query.name,
+        status: query.status as any,
+        limit,
+        offset,
+      });
 
-    if (params.name) {
-      query = query.ilike('name', `%${params.name}%`);
-    }
-
-    if (params.status) {
-      query = query.eq('status', params.status);
-    }
-
-    if (params.output_format) {
-      query = query.eq('output_format', params.output_format);
-    }
-
-    const { data, error, count } = await query;
-
-    if (error) {
+      return c.json({
+        data: result.data.map(mapDataset),
+        pagination: result.pagination,
+      });
+    } catch (error: any) {
       throw Errors.internal(error.message);
     }
-
-    return c.json({
-      data: data as TrainingDataset[],
-      pagination: {
-        total: count || 0,
-        limit: params.limit || 20,
-        offset: params.offset || 0,
-      },
-    });
   }
 );
 
@@ -107,21 +107,7 @@ trainingDatasetsRouter.post(
   '/',
   zValidator('json', createDatasetSchema as any),
   async (c: Context) => {
-    const body = (await c.req.json()) as CreateTrainingDatasetRequest;
-
-    // Check for duplicate name+version
-    const { data: existing } = await supabase
-      .from(TABLES.TRAINING_DATASETS)
-      .select('id')
-      .eq('name', body.name)
-      .eq('version', body.version)
-      .single();
-
-    if (existing) {
-      throw Errors.conflict(
-        `Dataset ${body.name} version ${body.version} already exists`
-      );
-    }
+    const body = await c.req.json();
 
     // Generate the dataset using the service
     try {
@@ -130,23 +116,23 @@ trainingDatasetsRouter.post(
         description: body.description,
         format: (body.output_format || 'json') as 'json' | 'jsonl' | 'csv',
         filters: {
-          categories: body.generation_params.categories,
-          cities: body.generation_params.geographic_scope,
-          minQuality: body.generation_params.min_quality_score,
-          startDate: body.generation_params.time_range?.start
+          categories: body.generation_params?.categories,
+          cities: body.generation_params?.geographic_scope,
+          minQuality: body.generation_params?.min_quality_score,
+          startDate: body.generation_params?.time_range?.start
             ? String(body.generation_params.time_range.start)
             : undefined,
-          endDate: body.generation_params.time_range?.end
+          endDate: body.generation_params?.time_range?.end
             ? String(body.generation_params.time_range.end)
             : undefined,
         },
-        sampling: body.generation_params.sampling
+        sampling: body.generation_params?.sampling
           ? {
               method: body.generation_params.sampling.method,
               stratifyBy: 'category',
             }
           : undefined,
-        split: body.generation_params.sampling
+        split: body.generation_params?.sampling
           ? {
               enabled: true,
               trainRatio: body.generation_params.sampling.train_ratio,
@@ -158,23 +144,26 @@ trainingDatasetsRouter.post(
 
       const result = await generateTrainingDataset(generationParams);
 
-      return c.json({ data: result.dataset as TrainingDataset }, 201);
-    } catch (genError) {
+      // Save to Convex
+      const dataset = await convex.mutation(api.trainingDatasets.create, {
+        name: body.name,
+        version: body.version,
+        generationParams: body.generation_params,
+        outputFormats: [body.output_format || 'json'],
+        status: 'completed',
+        statistics: result.dataset.statistics,
+      });
+
+      return c.json({ data: mapDataset(dataset) }, 201);
+    } catch (genError: any) {
       // If generation fails, still create a record with failed status
-      const { data, error } = await supabase
-        .from(TABLES.TRAINING_DATASETS)
-        .insert({
+      try {
+        const dataset = await convex.mutation(api.trainingDatasets.create, {
           name: body.name,
           version: body.version,
-          description: body.description,
-          generation_params: body.generation_params,
-          output_format: body.output_format || 'json',
-          status: 'failed' as TrainingDatasetStatus,
-          source_data_cutoff: new Date().toISOString(),
-          error_message:
-            genError instanceof Error
-              ? genError.message
-              : 'Unknown error during generation',
+          generationParams: body.generation_params,
+          outputFormats: [body.output_format || 'json'],
+          status: 'failed',
           statistics: {
             total_records: 0,
             train_size: 0,
@@ -182,16 +171,15 @@ trainingDatasetsRouter.post(
             test_size: 0,
             categories_distribution: {},
             cities_distribution: {},
+            error_message:
+              genError.message || 'Unknown error during generation',
           },
-        })
-        .select()
-        .single();
+        });
 
-      if (error) {
+        return c.json({ data: mapDataset(dataset) }, 201);
+      } catch (error: any) {
         throw Errors.internal(error.message);
       }
-
-      return c.json({ data: data as TrainingDataset }, 201);
     }
   }
 );
@@ -200,48 +188,47 @@ trainingDatasetsRouter.post(
 trainingDatasetsRouter.get('/:id', async (c: Context) => {
   const id = c.req.param('id');
 
-  const { data, error } = await supabase
-    .from(TABLES.TRAINING_DATASETS)
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const dataset = await convex.query(api.trainingDatasets.getById, {
+      id: id as any,
+    });
 
-  if (error) {
-    if (error.code === 'PGRST116') {
+    if (!dataset) {
+      throw Errors.notFound('Training dataset');
+    }
+
+    return c.json({ data: mapDataset(dataset) });
+  } catch (error: any) {
+    if (error.message?.includes('not found') || error.code === 'PGRST116') {
       throw Errors.notFound('Training dataset');
     }
     throw Errors.internal(error.message);
   }
-
-  return c.json({ data: data as TrainingDataset });
 });
 
 // GET /api/training-datasets/:id/download - Download training dataset file
 trainingDatasetsRouter.get('/:id/download', async (c: Context) => {
   const id = c.req.param('id');
 
-  const { data: dataset, error } = await supabase
-    .from(TABLES.TRAINING_DATASETS)
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const dataset = await convex.query(api.trainingDatasets.getById, {
+      id: id as any,
+    });
 
-  if (error) {
-    if (error.code === 'PGRST116') {
+    if (!dataset) {
       throw Errors.notFound('Training dataset');
     }
-    throw Errors.internal(error.message);
-  }
 
-  // For datasets that were generated but don't have a stored file,
-  // regenerate on-the-fly
-  const format = (dataset.output_format || 'json') as 'json' | 'jsonl' | 'csv';
-  const filters = (dataset.generation_params as Record<string, unknown>) || {};
+    // Regenerate on-the-fly
+    const format = (dataset.outputFormats?.[0] || 'json') as
+      | 'json'
+      | 'jsonl'
+      | 'csv';
+    const filters = (dataset.generationParams as Record<string, unknown>) || {};
 
-  try {
     const generationParams: DatasetGenerationParams = {
       name: dataset.name,
-      description: dataset.description,
+      description: undefined,
       format,
       filters: {
         categories: filters.categories as string[] | undefined,
@@ -254,13 +241,11 @@ trainingDatasetsRouter.get('/:id/download', async (c: Context) => {
 
     const result = await generateTrainingDataset(generationParams);
 
-    // Return the full dataset export
     const exportData = result.exports.full || result.exports.train;
     if (!exportData) {
       throw Errors.notFound('No export data generated');
     }
 
-    // Set appropriate headers for file download
     const filename = `${dataset.name}_v${dataset.version}.${format === 'jsonl' ? 'jsonl' : format}`;
     c.header('Content-Type', exportData.mimeType);
     c.header('Content-Disposition', `attachment; filename="${filename}"`);
@@ -271,12 +256,11 @@ trainingDatasetsRouter.get('/:id/download', async (c: Context) => {
         ? exportData.content
         : exportData.content.toString()
     );
-  } catch (genError) {
-    throw Errors.internal(
-      genError instanceof Error
-        ? genError.message
-        : 'Failed to generate dataset for download'
-    );
+  } catch (error: any) {
+    if (error.message?.includes('not found')) {
+      throw Errors.notFound('Training dataset');
+    }
+    throw Errors.internal(error.message);
   }
 });
 
@@ -284,97 +268,59 @@ trainingDatasetsRouter.get('/:id/download', async (c: Context) => {
 trainingDatasetsRouter.delete('/:id', async (c: Context) => {
   const id = c.req.param('id');
 
-  // Get dataset to find output path
-  const { data: dataset, error: fetchError } = await supabase
-    .from(TABLES.TRAINING_DATASETS)
-    .select('output_path')
-    .eq('id', id)
-    .single();
+  try {
+    const dataset = await convex.query(api.trainingDatasets.getById, {
+      id: id as any,
+    });
 
-  if (fetchError) {
-    if (fetchError.code === 'PGRST116') {
+    if (!dataset) {
       throw Errors.notFound('Training dataset');
     }
-    throw Errors.internal(fetchError.message);
-  }
 
-  // Delete output file from storage if exists
-  if (dataset.output_path) {
-    try {
-      // Extract bucket and path from output_path
-      // Format: storage://bucket_name/path/to/file
-      const pathMatch = dataset.output_path.match(
-        /^storage:\/\/([^/]+)\/(.+)$/
-      );
-      if (pathMatch) {
-        const [, bucket, filePath] = pathMatch;
-        await supabase.storage.from(bucket).remove([filePath]);
-      }
-    } catch {
-      // Log but don't fail if file deletion fails
-      console.warn(`Failed to delete output file: ${dataset.output_path}`);
+    await convex.mutation(api.trainingDatasets.remove, { id: id as any });
+
+    return c.json({ message: 'Training dataset deleted' });
+  } catch (error: any) {
+    if (error.message?.includes('not found')) {
+      throw Errors.notFound('Training dataset');
     }
-  }
-
-  // Delete database record
-  const { error } = await supabase
-    .from(TABLES.TRAINING_DATASETS)
-    .delete()
-    .eq('id', id);
-
-  if (error) {
     throw Errors.internal(error.message);
   }
-
-  return c.json({ message: 'Training dataset deleted' });
 });
 
 // POST /api/training-datasets/:id/regenerate - Regenerate a training dataset
 trainingDatasetsRouter.post('/:id/regenerate', async (c: Context) => {
   const id = c.req.param('id');
 
-  // Get current dataset
-  const { data: dataset, error: fetchError } = await supabase
-    .from(TABLES.TRAINING_DATASETS)
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const dataset = await convex.query(api.trainingDatasets.getById, {
+      id: id as any,
+    });
 
-  if (fetchError) {
-    if (fetchError.code === 'PGRST116') {
+    if (!dataset) {
       throw Errors.notFound('Training dataset');
     }
-    throw Errors.internal(fetchError.message);
-  }
 
-  if (dataset.status === 'generating') {
-    throw Errors.conflict('Dataset is already being generated');
-  }
+    if (dataset.status === 'generating') {
+      throw Errors.conflict('Dataset is already being generated');
+    }
 
-  // Update status to generating
-  await supabase
-    .from(TABLES.TRAINING_DATASETS)
-    .update({
-      status: 'generating' as TrainingDatasetStatus,
-      source_data_cutoff: new Date().toISOString(),
-      error_message: null,
-      started_at: new Date().toISOString(),
-      completed_at: null,
-    })
-    .eq('id', id);
+    // Update status to generating
+    await convex.mutation(api.trainingDatasets.update, {
+      id: id as any,
+      status: 'generating',
+    });
 
-  // Regenerate the dataset using the service
-  try {
-    const filters =
-      (dataset.generation_params as Record<string, unknown>) || {};
-    const format = (dataset.output_format || 'json') as
+    // Regenerate the dataset
+    const filters = (dataset.generationParams as Record<string, unknown>) || {};
+    const format = (dataset.outputFormats?.[0] || 'json') as
       | 'json'
       | 'jsonl'
       | 'csv';
 
     const generationParams: DatasetGenerationParams = {
       name: dataset.name,
-      description: dataset.description,
+      description: undefined,
       format,
       filters: {
         categories: filters.categories as string[] | undefined,
@@ -388,43 +334,34 @@ trainingDatasetsRouter.post('/:id/regenerate', async (c: Context) => {
     const result = await generateTrainingDataset(generationParams);
 
     // Update the existing record with new statistics
-    const { data: updatedData, error: updateError } = await supabase
-      .from(TABLES.TRAINING_DATASETS)
-      .update({
-        status: 'completed' as TrainingDatasetStatus,
-        statistics: result.dataset.statistics,
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (updateError) {
-      throw Errors.internal(updateError.message);
-    }
+    const updatedDataset = await convex.mutation(api.trainingDatasets.update, {
+      id: id as any,
+      status: 'completed',
+      statistics: result.dataset.statistics,
+      generatedAt: Date.now(),
+    });
 
     return c.json({
-      data: updatedData as TrainingDataset,
+      data: mapDataset(updatedDataset),
       message: 'Dataset regeneration completed',
     });
-  } catch (genError) {
+  } catch (error: any) {
     // Update record with failed status
-    await supabase
-      .from(TABLES.TRAINING_DATASETS)
-      .update({
-        status: 'failed' as TrainingDatasetStatus,
-        error_message:
-          genError instanceof Error
-            ? genError.message
-            : 'Unknown error during regeneration',
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+    try {
+      await convex.mutation(api.trainingDatasets.update, {
+        id: id as any,
+        status: 'failed',
+      });
+    } catch {
+      // Ignore update failure
+    }
 
-    throw Errors.internal(
-      genError instanceof Error
-        ? genError.message
-        : 'Dataset regeneration failed'
-    );
+    if (error.message?.includes('not found')) {
+      throw Errors.notFound('Training dataset');
+    }
+    if (error.message?.includes('already being generated')) {
+      throw Errors.conflict('Dataset is already being generated');
+    }
+    throw Errors.internal(error.message);
   }
 });

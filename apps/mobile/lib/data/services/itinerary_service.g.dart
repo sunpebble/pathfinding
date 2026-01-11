@@ -6,7 +6,7 @@ part of 'itinerary_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$itineraryServiceHash() => r'a5447a25cb41bbf3275d896079ce225973804e62';
+String _$itineraryServiceHash() => r'32bcabeec219020bbc7cd1c3b471334dd55cb14d';
 
 /// Itinerary service provider
 ///

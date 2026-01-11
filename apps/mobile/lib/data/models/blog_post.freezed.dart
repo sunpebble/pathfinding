@@ -294,6 +294,559 @@ as String?,
 
 
 /// @nodoc
+mixin _$AiPoi {
+
+ String get name; String get type; String? get description; double get latitude; double get longitude; String? get address;
+/// Create a copy of AiPoi
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AiPoiCopyWith<AiPoi> get copyWith => _$AiPoiCopyWithImpl<AiPoi>(this as AiPoi, _$identity);
+
+  /// Serializes this AiPoi to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AiPoi&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.description, description) || other.description == description)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.address, address) || other.address == address));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,name,type,description,latitude,longitude,address);
+
+@override
+String toString() {
+  return 'AiPoi(name: $name, type: $type, description: $description, latitude: $latitude, longitude: $longitude, address: $address)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AiPoiCopyWith<$Res>  {
+  factory $AiPoiCopyWith(AiPoi value, $Res Function(AiPoi) _then) = _$AiPoiCopyWithImpl;
+@useResult
+$Res call({
+ String name, String type, String? description, double latitude, double longitude, String? address
+});
+
+
+
+
+}
+/// @nodoc
+class _$AiPoiCopyWithImpl<$Res>
+    implements $AiPoiCopyWith<$Res> {
+  _$AiPoiCopyWithImpl(this._self, this._then);
+
+  final AiPoi _self;
+  final $Res Function(AiPoi) _then;
+
+/// Create a copy of AiPoi
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? type = null,Object? description = freezed,Object? latitude = null,Object? longitude = null,Object? address = freezed,}) {
+  return _then(_self.copyWith(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
+as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
+as double,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AiPoi].
+extension AiPoiPatterns on AiPoi {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AiPoi value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AiPoi() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AiPoi value)  $default,){
+final _that = this;
+switch (_that) {
+case _AiPoi():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AiPoi value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AiPoi() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String type,  String? description,  double latitude,  double longitude,  String? address)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AiPoi() when $default != null:
+return $default(_that.name,_that.type,_that.description,_that.latitude,_that.longitude,_that.address);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String type,  String? description,  double latitude,  double longitude,  String? address)  $default,) {final _that = this;
+switch (_that) {
+case _AiPoi():
+return $default(_that.name,_that.type,_that.description,_that.latitude,_that.longitude,_that.address);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String type,  String? description,  double latitude,  double longitude,  String? address)?  $default,) {final _that = this;
+switch (_that) {
+case _AiPoi() when $default != null:
+return $default(_that.name,_that.type,_that.description,_that.latitude,_that.longitude,_that.address);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AiPoi implements AiPoi {
+  const _AiPoi({required this.name, required this.type, this.description, required this.latitude, required this.longitude, this.address});
+  factory _AiPoi.fromJson(Map<String, dynamic> json) => _$AiPoiFromJson(json);
+
+@override final  String name;
+@override final  String type;
+@override final  String? description;
+@override final  double latitude;
+@override final  double longitude;
+@override final  String? address;
+
+/// Create a copy of AiPoi
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AiPoiCopyWith<_AiPoi> get copyWith => __$AiPoiCopyWithImpl<_AiPoi>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AiPoiToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AiPoi&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.description, description) || other.description == description)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.address, address) || other.address == address));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,name,type,description,latitude,longitude,address);
+
+@override
+String toString() {
+  return 'AiPoi(name: $name, type: $type, description: $description, latitude: $latitude, longitude: $longitude, address: $address)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AiPoiCopyWith<$Res> implements $AiPoiCopyWith<$Res> {
+  factory _$AiPoiCopyWith(_AiPoi value, $Res Function(_AiPoi) _then) = __$AiPoiCopyWithImpl;
+@override @useResult
+$Res call({
+ String name, String type, String? description, double latitude, double longitude, String? address
+});
+
+
+
+
+}
+/// @nodoc
+class __$AiPoiCopyWithImpl<$Res>
+    implements _$AiPoiCopyWith<$Res> {
+  __$AiPoiCopyWithImpl(this._self, this._then);
+
+  final _AiPoi _self;
+  final $Res Function(_AiPoi) _then;
+
+/// Create a copy of AiPoi
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? type = null,Object? description = freezed,Object? latitude = null,Object? longitude = null,Object? address = freezed,}) {
+  return _then(_AiPoi(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
+as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
+as double,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$AiDay {
+
+ int get dayNumber; String? get theme; List<AiPoi> get pois;
+/// Create a copy of AiDay
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AiDayCopyWith<AiDay> get copyWith => _$AiDayCopyWithImpl<AiDay>(this as AiDay, _$identity);
+
+  /// Serializes this AiDay to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AiDay&&(identical(other.dayNumber, dayNumber) || other.dayNumber == dayNumber)&&(identical(other.theme, theme) || other.theme == theme)&&const DeepCollectionEquality().equals(other.pois, pois));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,dayNumber,theme,const DeepCollectionEquality().hash(pois));
+
+@override
+String toString() {
+  return 'AiDay(dayNumber: $dayNumber, theme: $theme, pois: $pois)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AiDayCopyWith<$Res>  {
+  factory $AiDayCopyWith(AiDay value, $Res Function(AiDay) _then) = _$AiDayCopyWithImpl;
+@useResult
+$Res call({
+ int dayNumber, String? theme, List<AiPoi> pois
+});
+
+
+
+
+}
+/// @nodoc
+class _$AiDayCopyWithImpl<$Res>
+    implements $AiDayCopyWith<$Res> {
+  _$AiDayCopyWithImpl(this._self, this._then);
+
+  final AiDay _self;
+  final $Res Function(AiDay) _then;
+
+/// Create a copy of AiDay
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? dayNumber = null,Object? theme = freezed,Object? pois = null,}) {
+  return _then(_self.copyWith(
+dayNumber: null == dayNumber ? _self.dayNumber : dayNumber // ignore: cast_nullable_to_non_nullable
+as int,theme: freezed == theme ? _self.theme : theme // ignore: cast_nullable_to_non_nullable
+as String?,pois: null == pois ? _self.pois : pois // ignore: cast_nullable_to_non_nullable
+as List<AiPoi>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AiDay].
+extension AiDayPatterns on AiDay {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AiDay value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AiDay() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AiDay value)  $default,){
+final _that = this;
+switch (_that) {
+case _AiDay():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AiDay value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AiDay() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int dayNumber,  String? theme,  List<AiPoi> pois)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AiDay() when $default != null:
+return $default(_that.dayNumber,_that.theme,_that.pois);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int dayNumber,  String? theme,  List<AiPoi> pois)  $default,) {final _that = this;
+switch (_that) {
+case _AiDay():
+return $default(_that.dayNumber,_that.theme,_that.pois);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int dayNumber,  String? theme,  List<AiPoi> pois)?  $default,) {final _that = this;
+switch (_that) {
+case _AiDay() when $default != null:
+return $default(_that.dayNumber,_that.theme,_that.pois);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AiDay implements AiDay {
+  const _AiDay({required this.dayNumber, this.theme, final  List<AiPoi> pois = const []}): _pois = pois;
+  factory _AiDay.fromJson(Map<String, dynamic> json) => _$AiDayFromJson(json);
+
+@override final  int dayNumber;
+@override final  String? theme;
+ final  List<AiPoi> _pois;
+@override@JsonKey() List<AiPoi> get pois {
+  if (_pois is EqualUnmodifiableListView) return _pois;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_pois);
+}
+
+
+/// Create a copy of AiDay
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AiDayCopyWith<_AiDay> get copyWith => __$AiDayCopyWithImpl<_AiDay>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AiDayToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AiDay&&(identical(other.dayNumber, dayNumber) || other.dayNumber == dayNumber)&&(identical(other.theme, theme) || other.theme == theme)&&const DeepCollectionEquality().equals(other._pois, _pois));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,dayNumber,theme,const DeepCollectionEquality().hash(_pois));
+
+@override
+String toString() {
+  return 'AiDay(dayNumber: $dayNumber, theme: $theme, pois: $pois)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AiDayCopyWith<$Res> implements $AiDayCopyWith<$Res> {
+  factory _$AiDayCopyWith(_AiDay value, $Res Function(_AiDay) _then) = __$AiDayCopyWithImpl;
+@override @useResult
+$Res call({
+ int dayNumber, String? theme, List<AiPoi> pois
+});
+
+
+
+
+}
+/// @nodoc
+class __$AiDayCopyWithImpl<$Res>
+    implements _$AiDayCopyWith<$Res> {
+  __$AiDayCopyWithImpl(this._self, this._then);
+
+  final _AiDay _self;
+  final $Res Function(_AiDay) _then;
+
+/// Create a copy of AiDay
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? dayNumber = null,Object? theme = freezed,Object? pois = null,}) {
+  return _then(_AiDay(
+dayNumber: null == dayNumber ? _self.dayNumber : dayNumber // ignore: cast_nullable_to_non_nullable
+as int,theme: freezed == theme ? _self.theme : theme // ignore: cast_nullable_to_non_nullable
+as String?,pois: null == pois ? _self._pois : pois // ignore: cast_nullable_to_non_nullable
+as List<AiPoi>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$BlogPost {
 
  String get id; String get title; String get content; String? get summary; String? get coverImageUrl; String get authorId; String? get authorName; String? get authorAvatarUrl; List<BlogLocation> get locations; List<String> get tags; DateTime get createdAt; DateTime get updatedAt;
@@ -604,7 +1157,8 @@ as DateTime,
 /// @nodoc
 mixin _$BlogPostWithStats {
 
- String get id; String get title; String get content; String? get summary; String? get coverImageUrl; String get authorId; String? get authorName; String? get authorAvatarUrl; List<BlogLocation> get locations; List<String> get tags; DateTime get createdAt; DateTime get updatedAt; int get likeCount; int get viewCount; int get commentCount; bool get isLiked;
+ String get id; String get title; String get content; String? get summary; String? get coverImageUrl; String get authorId; String? get authorName; String? get authorAvatarUrl; List<BlogLocation> get locations; List<String> get tags; DateTime get createdAt; DateTime get updatedAt; int get likeCount; int get viewCount; int get commentCount; bool get isLiked;// AI-enhanced fields
+ DateTime? get aiProcessedAt; String? get aiSummary; List<String> get aiTips; String? get aiBestTime; String? get aiDuration; String? get aiBudget; List<AiDay> get aiDays;
 /// Create a copy of BlogPostWithStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -617,16 +1171,16 @@ $BlogPostWithStatsCopyWith<BlogPostWithStats> get copyWith => _$BlogPostWithStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlogPostWithStats&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.coverImageUrl, coverImageUrl) || other.coverImageUrl == coverImageUrl)&&(identical(other.authorId, authorId) || other.authorId == authorId)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.authorAvatarUrl, authorAvatarUrl) || other.authorAvatarUrl == authorAvatarUrl)&&const DeepCollectionEquality().equals(other.locations, locations)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.isLiked, isLiked) || other.isLiked == isLiked));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlogPostWithStats&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.coverImageUrl, coverImageUrl) || other.coverImageUrl == coverImageUrl)&&(identical(other.authorId, authorId) || other.authorId == authorId)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.authorAvatarUrl, authorAvatarUrl) || other.authorAvatarUrl == authorAvatarUrl)&&const DeepCollectionEquality().equals(other.locations, locations)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.isLiked, isLiked) || other.isLiked == isLiked)&&(identical(other.aiProcessedAt, aiProcessedAt) || other.aiProcessedAt == aiProcessedAt)&&(identical(other.aiSummary, aiSummary) || other.aiSummary == aiSummary)&&const DeepCollectionEquality().equals(other.aiTips, aiTips)&&(identical(other.aiBestTime, aiBestTime) || other.aiBestTime == aiBestTime)&&(identical(other.aiDuration, aiDuration) || other.aiDuration == aiDuration)&&(identical(other.aiBudget, aiBudget) || other.aiBudget == aiBudget)&&const DeepCollectionEquality().equals(other.aiDays, aiDays));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,content,summary,coverImageUrl,authorId,authorName,authorAvatarUrl,const DeepCollectionEquality().hash(locations),const DeepCollectionEquality().hash(tags),createdAt,updatedAt,likeCount,viewCount,commentCount,isLiked);
+int get hashCode => Object.hashAll([runtimeType,id,title,content,summary,coverImageUrl,authorId,authorName,authorAvatarUrl,const DeepCollectionEquality().hash(locations),const DeepCollectionEquality().hash(tags),createdAt,updatedAt,likeCount,viewCount,commentCount,isLiked,aiProcessedAt,aiSummary,const DeepCollectionEquality().hash(aiTips),aiBestTime,aiDuration,aiBudget,const DeepCollectionEquality().hash(aiDays)]);
 
 @override
 String toString() {
-  return 'BlogPostWithStats(id: $id, title: $title, content: $content, summary: $summary, coverImageUrl: $coverImageUrl, authorId: $authorId, authorName: $authorName, authorAvatarUrl: $authorAvatarUrl, locations: $locations, tags: $tags, createdAt: $createdAt, updatedAt: $updatedAt, likeCount: $likeCount, viewCount: $viewCount, commentCount: $commentCount, isLiked: $isLiked)';
+  return 'BlogPostWithStats(id: $id, title: $title, content: $content, summary: $summary, coverImageUrl: $coverImageUrl, authorId: $authorId, authorName: $authorName, authorAvatarUrl: $authorAvatarUrl, locations: $locations, tags: $tags, createdAt: $createdAt, updatedAt: $updatedAt, likeCount: $likeCount, viewCount: $viewCount, commentCount: $commentCount, isLiked: $isLiked, aiProcessedAt: $aiProcessedAt, aiSummary: $aiSummary, aiTips: $aiTips, aiBestTime: $aiBestTime, aiDuration: $aiDuration, aiBudget: $aiBudget, aiDays: $aiDays)';
 }
 
 
@@ -637,7 +1191,7 @@ abstract mixin class $BlogPostWithStatsCopyWith<$Res>  {
   factory $BlogPostWithStatsCopyWith(BlogPostWithStats value, $Res Function(BlogPostWithStats) _then) = _$BlogPostWithStatsCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String content, String? summary, String? coverImageUrl, String authorId, String? authorName, String? authorAvatarUrl, List<BlogLocation> locations, List<String> tags, DateTime createdAt, DateTime updatedAt, int likeCount, int viewCount, int commentCount, bool isLiked
+ String id, String title, String content, String? summary, String? coverImageUrl, String authorId, String? authorName, String? authorAvatarUrl, List<BlogLocation> locations, List<String> tags, DateTime createdAt, DateTime updatedAt, int likeCount, int viewCount, int commentCount, bool isLiked, DateTime? aiProcessedAt, String? aiSummary, List<String> aiTips, String? aiBestTime, String? aiDuration, String? aiBudget, List<AiDay> aiDays
 });
 
 
@@ -654,7 +1208,7 @@ class _$BlogPostWithStatsCopyWithImpl<$Res>
 
 /// Create a copy of BlogPostWithStats
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? content = null,Object? summary = freezed,Object? coverImageUrl = freezed,Object? authorId = null,Object? authorName = freezed,Object? authorAvatarUrl = freezed,Object? locations = null,Object? tags = null,Object? createdAt = null,Object? updatedAt = null,Object? likeCount = null,Object? viewCount = null,Object? commentCount = null,Object? isLiked = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? content = null,Object? summary = freezed,Object? coverImageUrl = freezed,Object? authorId = null,Object? authorName = freezed,Object? authorAvatarUrl = freezed,Object? locations = null,Object? tags = null,Object? createdAt = null,Object? updatedAt = null,Object? likeCount = null,Object? viewCount = null,Object? commentCount = null,Object? isLiked = null,Object? aiProcessedAt = freezed,Object? aiSummary = freezed,Object? aiTips = null,Object? aiBestTime = freezed,Object? aiDuration = freezed,Object? aiBudget = freezed,Object? aiDays = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -672,7 +1226,14 @@ as DateTime,likeCount: null == likeCount ? _self.likeCount : likeCount // ignore
 as int,viewCount: null == viewCount ? _self.viewCount : viewCount // ignore: cast_nullable_to_non_nullable
 as int,commentCount: null == commentCount ? _self.commentCount : commentCount // ignore: cast_nullable_to_non_nullable
 as int,isLiked: null == isLiked ? _self.isLiked : isLiked // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,aiProcessedAt: freezed == aiProcessedAt ? _self.aiProcessedAt : aiProcessedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,aiSummary: freezed == aiSummary ? _self.aiSummary : aiSummary // ignore: cast_nullable_to_non_nullable
+as String?,aiTips: null == aiTips ? _self.aiTips : aiTips // ignore: cast_nullable_to_non_nullable
+as List<String>,aiBestTime: freezed == aiBestTime ? _self.aiBestTime : aiBestTime // ignore: cast_nullable_to_non_nullable
+as String?,aiDuration: freezed == aiDuration ? _self.aiDuration : aiDuration // ignore: cast_nullable_to_non_nullable
+as String?,aiBudget: freezed == aiBudget ? _self.aiBudget : aiBudget // ignore: cast_nullable_to_non_nullable
+as String?,aiDays: null == aiDays ? _self.aiDays : aiDays // ignore: cast_nullable_to_non_nullable
+as List<AiDay>,
   ));
 }
 
@@ -757,10 +1318,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String content,  String? summary,  String? coverImageUrl,  String authorId,  String? authorName,  String? authorAvatarUrl,  List<BlogLocation> locations,  List<String> tags,  DateTime createdAt,  DateTime updatedAt,  int likeCount,  int viewCount,  int commentCount,  bool isLiked)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String content,  String? summary,  String? coverImageUrl,  String authorId,  String? authorName,  String? authorAvatarUrl,  List<BlogLocation> locations,  List<String> tags,  DateTime createdAt,  DateTime updatedAt,  int likeCount,  int viewCount,  int commentCount,  bool isLiked,  DateTime? aiProcessedAt,  String? aiSummary,  List<String> aiTips,  String? aiBestTime,  String? aiDuration,  String? aiBudget,  List<AiDay> aiDays)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BlogPostWithStats() when $default != null:
-return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImageUrl,_that.authorId,_that.authorName,_that.authorAvatarUrl,_that.locations,_that.tags,_that.createdAt,_that.updatedAt,_that.likeCount,_that.viewCount,_that.commentCount,_that.isLiked);case _:
+return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImageUrl,_that.authorId,_that.authorName,_that.authorAvatarUrl,_that.locations,_that.tags,_that.createdAt,_that.updatedAt,_that.likeCount,_that.viewCount,_that.commentCount,_that.isLiked,_that.aiProcessedAt,_that.aiSummary,_that.aiTips,_that.aiBestTime,_that.aiDuration,_that.aiBudget,_that.aiDays);case _:
   return orElse();
 
 }
@@ -778,10 +1339,10 @@ return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImag
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String content,  String? summary,  String? coverImageUrl,  String authorId,  String? authorName,  String? authorAvatarUrl,  List<BlogLocation> locations,  List<String> tags,  DateTime createdAt,  DateTime updatedAt,  int likeCount,  int viewCount,  int commentCount,  bool isLiked)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String content,  String? summary,  String? coverImageUrl,  String authorId,  String? authorName,  String? authorAvatarUrl,  List<BlogLocation> locations,  List<String> tags,  DateTime createdAt,  DateTime updatedAt,  int likeCount,  int viewCount,  int commentCount,  bool isLiked,  DateTime? aiProcessedAt,  String? aiSummary,  List<String> aiTips,  String? aiBestTime,  String? aiDuration,  String? aiBudget,  List<AiDay> aiDays)  $default,) {final _that = this;
 switch (_that) {
 case _BlogPostWithStats():
-return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImageUrl,_that.authorId,_that.authorName,_that.authorAvatarUrl,_that.locations,_that.tags,_that.createdAt,_that.updatedAt,_that.likeCount,_that.viewCount,_that.commentCount,_that.isLiked);case _:
+return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImageUrl,_that.authorId,_that.authorName,_that.authorAvatarUrl,_that.locations,_that.tags,_that.createdAt,_that.updatedAt,_that.likeCount,_that.viewCount,_that.commentCount,_that.isLiked,_that.aiProcessedAt,_that.aiSummary,_that.aiTips,_that.aiBestTime,_that.aiDuration,_that.aiBudget,_that.aiDays);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -798,10 +1359,10 @@ return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImag
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String content,  String? summary,  String? coverImageUrl,  String authorId,  String? authorName,  String? authorAvatarUrl,  List<BlogLocation> locations,  List<String> tags,  DateTime createdAt,  DateTime updatedAt,  int likeCount,  int viewCount,  int commentCount,  bool isLiked)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String content,  String? summary,  String? coverImageUrl,  String authorId,  String? authorName,  String? authorAvatarUrl,  List<BlogLocation> locations,  List<String> tags,  DateTime createdAt,  DateTime updatedAt,  int likeCount,  int viewCount,  int commentCount,  bool isLiked,  DateTime? aiProcessedAt,  String? aiSummary,  List<String> aiTips,  String? aiBestTime,  String? aiDuration,  String? aiBudget,  List<AiDay> aiDays)?  $default,) {final _that = this;
 switch (_that) {
 case _BlogPostWithStats() when $default != null:
-return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImageUrl,_that.authorId,_that.authorName,_that.authorAvatarUrl,_that.locations,_that.tags,_that.createdAt,_that.updatedAt,_that.likeCount,_that.viewCount,_that.commentCount,_that.isLiked);case _:
+return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImageUrl,_that.authorId,_that.authorName,_that.authorAvatarUrl,_that.locations,_that.tags,_that.createdAt,_that.updatedAt,_that.likeCount,_that.viewCount,_that.commentCount,_that.isLiked,_that.aiProcessedAt,_that.aiSummary,_that.aiTips,_that.aiBestTime,_that.aiDuration,_that.aiBudget,_that.aiDays);case _:
   return null;
 
 }
@@ -813,7 +1374,7 @@ return $default(_that.id,_that.title,_that.content,_that.summary,_that.coverImag
 @JsonSerializable()
 
 class _BlogPostWithStats implements BlogPostWithStats {
-  const _BlogPostWithStats({required this.id, required this.title, required this.content, this.summary, this.coverImageUrl, required this.authorId, this.authorName, this.authorAvatarUrl, final  List<BlogLocation> locations = const [], final  List<String> tags = const [], required this.createdAt, required this.updatedAt, this.likeCount = 0, this.viewCount = 0, this.commentCount = 0, this.isLiked = false}): _locations = locations,_tags = tags;
+  const _BlogPostWithStats({required this.id, required this.title, required this.content, this.summary, this.coverImageUrl, required this.authorId, this.authorName, this.authorAvatarUrl, final  List<BlogLocation> locations = const [], final  List<String> tags = const [], required this.createdAt, required this.updatedAt, this.likeCount = 0, this.viewCount = 0, this.commentCount = 0, this.isLiked = false, this.aiProcessedAt, this.aiSummary, final  List<String> aiTips = const [], this.aiBestTime, this.aiDuration, this.aiBudget, final  List<AiDay> aiDays = const []}): _locations = locations,_tags = tags,_aiTips = aiTips,_aiDays = aiDays;
   factory _BlogPostWithStats.fromJson(Map<String, dynamic> json) => _$BlogPostWithStatsFromJson(json);
 
 @override final  String id;
@@ -844,6 +1405,26 @@ class _BlogPostWithStats implements BlogPostWithStats {
 @override@JsonKey() final  int viewCount;
 @override@JsonKey() final  int commentCount;
 @override@JsonKey() final  bool isLiked;
+// AI-enhanced fields
+@override final  DateTime? aiProcessedAt;
+@override final  String? aiSummary;
+ final  List<String> _aiTips;
+@override@JsonKey() List<String> get aiTips {
+  if (_aiTips is EqualUnmodifiableListView) return _aiTips;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_aiTips);
+}
+
+@override final  String? aiBestTime;
+@override final  String? aiDuration;
+@override final  String? aiBudget;
+ final  List<AiDay> _aiDays;
+@override@JsonKey() List<AiDay> get aiDays {
+  if (_aiDays is EqualUnmodifiableListView) return _aiDays;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_aiDays);
+}
+
 
 /// Create a copy of BlogPostWithStats
 /// with the given fields replaced by the non-null parameter values.
@@ -858,16 +1439,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BlogPostWithStats&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.coverImageUrl, coverImageUrl) || other.coverImageUrl == coverImageUrl)&&(identical(other.authorId, authorId) || other.authorId == authorId)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.authorAvatarUrl, authorAvatarUrl) || other.authorAvatarUrl == authorAvatarUrl)&&const DeepCollectionEquality().equals(other._locations, _locations)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.isLiked, isLiked) || other.isLiked == isLiked));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BlogPostWithStats&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.coverImageUrl, coverImageUrl) || other.coverImageUrl == coverImageUrl)&&(identical(other.authorId, authorId) || other.authorId == authorId)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.authorAvatarUrl, authorAvatarUrl) || other.authorAvatarUrl == authorAvatarUrl)&&const DeepCollectionEquality().equals(other._locations, _locations)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.isLiked, isLiked) || other.isLiked == isLiked)&&(identical(other.aiProcessedAt, aiProcessedAt) || other.aiProcessedAt == aiProcessedAt)&&(identical(other.aiSummary, aiSummary) || other.aiSummary == aiSummary)&&const DeepCollectionEquality().equals(other._aiTips, _aiTips)&&(identical(other.aiBestTime, aiBestTime) || other.aiBestTime == aiBestTime)&&(identical(other.aiDuration, aiDuration) || other.aiDuration == aiDuration)&&(identical(other.aiBudget, aiBudget) || other.aiBudget == aiBudget)&&const DeepCollectionEquality().equals(other._aiDays, _aiDays));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,content,summary,coverImageUrl,authorId,authorName,authorAvatarUrl,const DeepCollectionEquality().hash(_locations),const DeepCollectionEquality().hash(_tags),createdAt,updatedAt,likeCount,viewCount,commentCount,isLiked);
+int get hashCode => Object.hashAll([runtimeType,id,title,content,summary,coverImageUrl,authorId,authorName,authorAvatarUrl,const DeepCollectionEquality().hash(_locations),const DeepCollectionEquality().hash(_tags),createdAt,updatedAt,likeCount,viewCount,commentCount,isLiked,aiProcessedAt,aiSummary,const DeepCollectionEquality().hash(_aiTips),aiBestTime,aiDuration,aiBudget,const DeepCollectionEquality().hash(_aiDays)]);
 
 @override
 String toString() {
-  return 'BlogPostWithStats(id: $id, title: $title, content: $content, summary: $summary, coverImageUrl: $coverImageUrl, authorId: $authorId, authorName: $authorName, authorAvatarUrl: $authorAvatarUrl, locations: $locations, tags: $tags, createdAt: $createdAt, updatedAt: $updatedAt, likeCount: $likeCount, viewCount: $viewCount, commentCount: $commentCount, isLiked: $isLiked)';
+  return 'BlogPostWithStats(id: $id, title: $title, content: $content, summary: $summary, coverImageUrl: $coverImageUrl, authorId: $authorId, authorName: $authorName, authorAvatarUrl: $authorAvatarUrl, locations: $locations, tags: $tags, createdAt: $createdAt, updatedAt: $updatedAt, likeCount: $likeCount, viewCount: $viewCount, commentCount: $commentCount, isLiked: $isLiked, aiProcessedAt: $aiProcessedAt, aiSummary: $aiSummary, aiTips: $aiTips, aiBestTime: $aiBestTime, aiDuration: $aiDuration, aiBudget: $aiBudget, aiDays: $aiDays)';
 }
 
 
@@ -878,7 +1459,7 @@ abstract mixin class _$BlogPostWithStatsCopyWith<$Res> implements $BlogPostWithS
   factory _$BlogPostWithStatsCopyWith(_BlogPostWithStats value, $Res Function(_BlogPostWithStats) _then) = __$BlogPostWithStatsCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String content, String? summary, String? coverImageUrl, String authorId, String? authorName, String? authorAvatarUrl, List<BlogLocation> locations, List<String> tags, DateTime createdAt, DateTime updatedAt, int likeCount, int viewCount, int commentCount, bool isLiked
+ String id, String title, String content, String? summary, String? coverImageUrl, String authorId, String? authorName, String? authorAvatarUrl, List<BlogLocation> locations, List<String> tags, DateTime createdAt, DateTime updatedAt, int likeCount, int viewCount, int commentCount, bool isLiked, DateTime? aiProcessedAt, String? aiSummary, List<String> aiTips, String? aiBestTime, String? aiDuration, String? aiBudget, List<AiDay> aiDays
 });
 
 
@@ -895,7 +1476,7 @@ class __$BlogPostWithStatsCopyWithImpl<$Res>
 
 /// Create a copy of BlogPostWithStats
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? content = null,Object? summary = freezed,Object? coverImageUrl = freezed,Object? authorId = null,Object? authorName = freezed,Object? authorAvatarUrl = freezed,Object? locations = null,Object? tags = null,Object? createdAt = null,Object? updatedAt = null,Object? likeCount = null,Object? viewCount = null,Object? commentCount = null,Object? isLiked = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? content = null,Object? summary = freezed,Object? coverImageUrl = freezed,Object? authorId = null,Object? authorName = freezed,Object? authorAvatarUrl = freezed,Object? locations = null,Object? tags = null,Object? createdAt = null,Object? updatedAt = null,Object? likeCount = null,Object? viewCount = null,Object? commentCount = null,Object? isLiked = null,Object? aiProcessedAt = freezed,Object? aiSummary = freezed,Object? aiTips = null,Object? aiBestTime = freezed,Object? aiDuration = freezed,Object? aiBudget = freezed,Object? aiDays = null,}) {
   return _then(_BlogPostWithStats(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -913,7 +1494,14 @@ as DateTime,likeCount: null == likeCount ? _self.likeCount : likeCount // ignore
 as int,viewCount: null == viewCount ? _self.viewCount : viewCount // ignore: cast_nullable_to_non_nullable
 as int,commentCount: null == commentCount ? _self.commentCount : commentCount // ignore: cast_nullable_to_non_nullable
 as int,isLiked: null == isLiked ? _self.isLiked : isLiked // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,aiProcessedAt: freezed == aiProcessedAt ? _self.aiProcessedAt : aiProcessedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,aiSummary: freezed == aiSummary ? _self.aiSummary : aiSummary // ignore: cast_nullable_to_non_nullable
+as String?,aiTips: null == aiTips ? _self._aiTips : aiTips // ignore: cast_nullable_to_non_nullable
+as List<String>,aiBestTime: freezed == aiBestTime ? _self.aiBestTime : aiBestTime // ignore: cast_nullable_to_non_nullable
+as String?,aiDuration: freezed == aiDuration ? _self.aiDuration : aiDuration // ignore: cast_nullable_to_non_nullable
+as String?,aiBudget: freezed == aiBudget ? _self.aiBudget : aiBudget // ignore: cast_nullable_to_non_nullable
+as String?,aiDays: null == aiDays ? _self._aiDays : aiDays // ignore: cast_nullable_to_non_nullable
+as List<AiDay>,
   ));
 }
 

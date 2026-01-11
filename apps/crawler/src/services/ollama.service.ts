@@ -57,8 +57,8 @@ export interface ContentSummary {
 }
 
 const DEFAULT_CONFIG: OllamaConfig = {
-  baseUrl: process.env.OLLAMA_BASE_URL || 'http://ollama:11434',
-  model: process.env.OLLAMA_MODEL || 'gemma3:12b',
+  baseUrl: process.env.OLLAMA_BASE_URL || 'https://ol.svc.kunish.org',
+  model: process.env.OLLAMA_MODEL || 'gemma3:latest',
   timeout: 120000,
 };
 
@@ -429,6 +429,88 @@ Translation:`;
       temperature: 0.3,
       max_tokens: content.length * 2,
     });
+  }
+
+  /**
+   * Extract day-based itinerary structure from travel guide content
+   */
+  async extractDayBasedItinerary(
+    content: string,
+    destinations: string[] = []
+  ): Promise<{
+    summary: string;
+    tips: string[];
+    bestTime: string;
+    duration: string;
+    budget: string;
+    days: Array<{
+      dayNumber: number;
+      theme: string;
+      pois: Array<{
+        name: string;
+        type: string;
+        description: string;
+      }>;
+    }>;
+  }> {
+    const systemPrompt = `你是一位专业的旅行行程规划师。从旅行攻略中提取结构化的按天行程信息。
+始终返回有效的JSON格式。专注于提取实际可执行的旅行信息。`;
+
+    const prompt = `分析以下旅行攻略，提取按天结构化的行程信息。
+
+内容:
+${content.slice(0, 12000)}
+
+${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
+
+返回JSON对象:
+{
+  "summary": "2-3句话的行程摘要",
+  "tips": ["实用建议1", "实用建议2", ...],
+  "bestTime": "最佳旅行时间",
+  "duration": "建议天数",
+  "budget": "预算范围",
+  "days": [
+    {
+      "dayNumber": 1,
+      "theme": "当日主题（如：市区游览、海边休闲）",
+      "pois": [
+        {
+          "name": "景点/餐厅/酒店名称",
+          "type": "attraction|restaurant|hotel|shopping|entertainment",
+          "description": "简短描述或推荐理由"
+        }
+      ]
+    }
+  ]
+}
+
+如果内容中没有明确的天数划分，请根据提到的景点数量合理分配（每天3-5个景点）。
+只返回JSON对象，不要其他文字。`;
+
+    const response = await this.generate(prompt, {
+      system: systemPrompt,
+      temperature: 0.2,
+      max_tokens: 4000,
+    });
+
+    try {
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON object found in response');
+      }
+      return JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      console.error('Failed to parse itinerary extraction:', error);
+      return {
+        summary: '',
+        tips: [],
+        bestTime: '',
+        duration: '',
+        budget: '',
+        days: [],
+      };
+    }
   }
 }
 

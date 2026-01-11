@@ -27,5 +27,26 @@ export function createConvexClient(url?: string): ConvexHttpClient {
   return new ConvexHttpClient(convexUrl);
 }
 
-// Default client for server-side usage
-export const convex = createConvexClient();
+// Lazy singleton for default client
+let _convex: ConvexHttpClient | null = null;
+
+/**
+ * Get or create the default Convex client
+ * Uses lazy initialization to allow env vars to be loaded first
+ */
+export function getConvex(): ConvexHttpClient {
+  if (!_convex) {
+    _convex = createConvexClient();
+  }
+  return _convex;
+}
+
+// For backwards compatibility - use getConvex() for lazy init
+export const convex = {
+  query: (...args: Parameters<ConvexHttpClient['query']>) =>
+    getConvex().query(...args),
+  mutation: (...args: Parameters<ConvexHttpClient['mutation']>) =>
+    getConvex().mutation(...args),
+  action: (...args: Parameters<ConvexHttpClient['action']>) =>
+    getConvex().action(...args),
+};
