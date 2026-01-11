@@ -13,8 +13,11 @@ struct ImportedItineraryView: View {
     guard let day = currentDay else { return [] }
     return day.pois.compactMap { poi in
       guard let lat = poi.latitude, let lng = poi.longitude,
-        lat != 0 && lng != 0
-      else { return nil }  // Filter invalid coords
+        lat != 0 && lng != 0,
+        // 验证坐标在合理范围内（中国及周边区域）
+        lat >= 3 && lat <= 54,  // 纬度范围
+        lng >= 73 && lng <= 136  // 经度范围
+      else { return nil }
       return PoiAnnotation(
         poi: poi,
         coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)
@@ -126,9 +129,10 @@ struct ImportedItineraryView: View {
       longitude: (minLng + maxLng) / 2
     )
 
-    // Add padding to the span
-    let latDelta = max((maxLat - minLat) * 1.5, 0.01)
-    let lngDelta = max((maxLng - minLng) * 1.5, 0.01)
+    // Add padding to the span, with min/max limits
+    // Min: 0.01 (very close zoom), Max: 2.0 (city level, not country level)
+    let latDelta = min(max((maxLat - minLat) * 1.5, 0.01), 2.0)
+    let lngDelta = min(max((maxLng - minLng) * 1.5, 0.01), 2.0)
 
     print(
       "📍 Camera: center=(\(center.latitude), \(center.longitude)), span=(\(latDelta), \(lngDelta))")
