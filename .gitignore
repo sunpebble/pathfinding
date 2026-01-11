@@ -6,13 +6,6 @@ dist/
 build/
 .turbo/
 
-# React Native / Expo
-.expo/
-web-build/
-ios/
-android/
-expo-env.d.ts
-
 # Environment variables
 .env
 .env.local
@@ -46,10 +39,6 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 
-# Supabase
-supabase/.branches/
-supabase/.temp/
-
 # Sentry
 .sentryclirc
 
@@ -61,10 +50,8 @@ supabase/.temp/
 .next/
 out/
 
-# Auto Claude data directory
-.auto-claude/
-
 # Auto Claude generated files
+.auto-claude/
 .auto-claude-security.json
 .auto-claude-status
 .claude_settings.json

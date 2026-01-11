@@ -72,7 +72,7 @@ dashboard:
 	cd apps/dashboard && pnpm dev --port 3002
 
 mobile:
-	cd apps/mobile && flutter run -d iPhone
+	open apps/ios/Pathfinding/Pathfinding.xcodeproj
 
 enrich:
 	@curl -X POST "http://localhost:3001/api/guides/$(ID)/enrich" | jq
