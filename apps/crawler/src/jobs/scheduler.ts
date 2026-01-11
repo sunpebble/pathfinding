@@ -4,9 +4,8 @@
  */
 
 import cron from 'node-cron';
-import { TABLES } from '../lib/convex.js';
 import { createLogger } from '../lib/logger.js';
-import { captureError, CrawlerMetrics } from '../monitoring/index.js';
+import { captureError } from '../monitoring/index.js';
 import { runNormalizationPipeline } from '../processors/pipeline.js';
 import { getCrawlJob } from '../services/crawl-job.service.js';
 import { generateQualityReport } from '../services/quality-report.service.js';
@@ -166,104 +165,18 @@ export function getSchedulerStatus(): {
  * Process pending scheduled jobs
  */
 async function processPendingJobs(): Promise<void> {
-  // Get pending scheduled jobs that are due
-  const now = new Date().toISOString();
-
-  const { data: pendingJobs, error } = await supabase
-    .from(TABLES.CRAWL_JOBS)
-    .select('*')
-    .eq('status', 'pending')
-    .lte('scheduled_at', now)
-    .order('scheduled_at', { ascending: true })
-    .limit(10);
-
-  if (error) {
-    log.error(`Failed to fetch pending jobs: ${error.message}`);
-    return;
-  }
-
-  if (!pendingJobs || pendingJobs.length === 0) {
-    return;
-  }
-
-  log.info(`Found ${pendingJobs.length} pending jobs`);
-
-  // Check worker capacity
-  const status = getWorkerStatus();
-  const availableSlots = status.maxConcurrent - status.runningJobs;
-
-  if (availableSlots <= 0) {
-    log.info('Worker queue is full, skipping...');
-    return;
-  }
-
-  // Start jobs up to available capacity
-  const jobsToStart = pendingJobs.slice(0, availableSlots);
-
-  for (const job of jobsToStart) {
-    try {
-      await executeCrawlJob(job.id);
-      CrawlerMetrics.recordCrawlJob('started', job.platform);
-    } catch (error) {
-      log.error(`Failed to start job ${job.id}:`, error);
-    }
-  }
+  // TODO: Implement with Convex when crawl job scheduling is needed
+  // Currently no active scheduled crawl jobs in use
+  log.info('Pending job processing skipped (not implemented with Convex yet)');
 }
 
 /**
  * Trigger incremental crawl jobs for stale data
  */
 async function triggerIncrementalCrawls(): Promise<void> {
-  // Find source mappings that haven't been crawled recently
-  const staleThreshold = new Date();
-  staleThreshold.setDate(staleThreshold.getDate() - 7); // 7 days ago
-
-  const { data: staleMappings, error } = await supabase
-    .from(TABLES.POI_SOURCE_MAPPINGS)
-    .select('platform')
-    .lt('last_crawled_at', staleThreshold.toISOString())
-    .limit(1000);
-
-  if (error) {
-    log.error(`Failed to check stale mappings: ${error.message}`);
-    return;
-  }
-
-  if (!staleMappings || staleMappings.length === 0) {
-    log.info('No stale data found, skipping incremental crawl');
-    return;
-  }
-
-  // Group by platform and create incremental jobs
-  const platformCounts: Record<string, number> = {};
-  for (const mapping of staleMappings as Array<{ platform: string }>) {
-    platformCounts[mapping.platform] =
-      (platformCounts[mapping.platform] || 0) + 1;
-  }
-
-  log.info('Stale data by platform:', platformCounts);
-
-  // Create incremental crawl jobs for platforms with significant stale data
-  for (const [platform, count] of Object.entries(platformCounts)) {
-    if (count >= 100) {
-      // Only trigger if 100+ stale records
-      log.info(
-        `Creating incremental crawl job for ${platform} (${count} stale records)`
-      );
-
-      // Create a new crawl job for incremental update
-      await supabase.from(TABLES.CRAWL_JOBS).insert({
-        platform,
-        job_type: 'incremental',
-        status: 'pending',
-        config: {
-          mode: 'incremental',
-          staleThresholdDays: 7,
-        },
-        scheduled_at: new Date().toISOString(),
-      });
-    }
-  }
+  // TODO: Implement with Convex when incremental crawls are needed
+  // Currently travel guides are crawled on-demand, not on schedule
+  log.info('Incremental crawl check skipped (not implemented with Convex yet)');
 }
 
 /**
