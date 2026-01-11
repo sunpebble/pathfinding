@@ -6,6 +6,7 @@
  * TODO: Implement when AI model training workflow is needed.
  */
 
+import type { Buffer } from 'node:buffer';
 import { createLogger } from '../lib/logger.js';
 
 const log = createLogger('TrainingDataset');
@@ -26,88 +27,79 @@ export interface TrainingRecord {
   createdAt: string;
 }
 
-/**
- * Create a new training dataset
- */
-export async function createTrainingDataset(_options: {
+export interface DatasetGenerationParams {
   name: string;
   description?: string;
-}): Promise<TrainingDataset> {
-  log.info('Training dataset creation stubbed');
-  return {
-    id: `dataset_${Date.now()}`,
-    name: _options.name,
-    description: _options.description,
-    recordCount: 0,
-    createdAt: new Date().toISOString(),
+  format: 'json' | 'jsonl' | 'csv';
+  filters?: {
+    categories?: string[];
+    cities?: string[];
+    minQuality?: number;
+    startDate?: string;
+    endDate?: string;
+  };
+  sampling?: {
+    method: 'random' | 'stratified';
+    stratifyBy?: string;
+  };
+  split?: {
+    enabled: boolean;
+    trainRatio?: number;
+    valRatio?: number;
+    testRatio?: number;
+  };
+}
+
+export interface DatasetExport {
+  content: string | Buffer;
+  mimeType: string;
+  sizeBytes: number;
+}
+
+export interface GeneratedDataset {
+  dataset: {
+    statistics: {
+      total_records: number;
+      train_size: number;
+      val_size: number;
+      test_size: number;
+      categories_distribution: Record<string, number>;
+      cities_distribution: Record<string, number>;
+    };
+  };
+  exports: {
+    full?: DatasetExport;
+    train?: DatasetExport;
+    val?: DatasetExport;
+    test?: DatasetExport;
   };
 }
 
 /**
- * List training datasets
+ * Generate a training dataset
  */
-export async function listTrainingDatasets(_options?: {
-  page?: number;
-  limit?: number;
-}): Promise<{ datasets: TrainingDataset[]; total: number }> {
-  log.info('Training dataset listing stubbed');
-  return { datasets: [], total: 0 };
-}
+export async function generateTrainingDataset(
+  params: DatasetGenerationParams
+): Promise<GeneratedDataset> {
+  log.info(`Generating training dataset: ${params.name} (stubbed)`);
 
-/**
- * Get training dataset by ID
- */
-export async function getTrainingDataset(
-  _id: string
-): Promise<TrainingDataset | null> {
-  log.info('Training dataset get by ID stubbed');
-  return null;
-}
-
-/**
- * Add record to training dataset
- */
-export async function addTrainingRecord(_options: {
-  datasetId: string;
-  input: unknown;
-  output: unknown;
-}): Promise<TrainingRecord> {
-  log.info('Training record creation stubbed');
   return {
-    id: `record_${Date.now()}`,
-    datasetId: _options.datasetId,
-    input: _options.input,
-    output: _options.output,
-    createdAt: new Date().toISOString(),
+    dataset: {
+      statistics: {
+        total_records: 0,
+        train_size: 0,
+        val_size: 0,
+        test_size: 0,
+        categories_distribution: {},
+        cities_distribution: {},
+      },
+    },
+    exports: {
+      full: {
+        content: '[]',
+        mimeType: 'application/json',
+        sizeBytes: 2,
+      },
+    },
   };
-}
-
-/**
- * List training records
- */
-export async function listTrainingRecords(_options: {
-  datasetId: string;
-  page?: number;
-  limit?: number;
-}): Promise<{ records: TrainingRecord[]; total: number }> {
-  log.info('Training records listing stubbed');
-  return { records: [], total: 0 };
-}
-
-/**
- * Delete training dataset
- */
-export async function deleteTrainingDataset(_id: string): Promise<void> {
-  log.info('Training dataset deletion stubbed');
-}
-
-/**
- * Export training dataset
- */
-export async function exportTrainingDataset(_id: string): Promise<{
-  format: string;
-  data: unknown[];
-}> {
-  log.info('Training dataset export stubbed');
-  return { format: 'jsonl', data: [] };
 }
