@@ -1,5 +1,5 @@
 # Pathfinding Development Makefile
-.PHONY: dev setup health convex api crawler dashboard mobile enrich guides
+.PHONY: dev stop setup health convex api crawler dashboard mobile enrich guides
 
 # Configuration
 CONVEX_URL ?= https://convex.kunish.org
@@ -12,6 +12,7 @@ help:
 	@echo ""
 	@echo "Commands:"
 	@echo "  dev        Start all services"
+	@echo "  stop       Stop all services"
 	@echo "  setup      Setup env files"
 	@echo "  health     Check service health"
 	@echo "  mobile     Start iOS app"
@@ -47,6 +48,16 @@ health:
 	@curl -sf http://localhost:8000/health > /dev/null && echo "  ✓ API (8000)" || echo "  ✗ API"
 	@curl -sf http://localhost:3001/health > /dev/null && echo "  ✓ Crawler (3001)" || echo "  ✗ Crawler"
 	@curl -sf http://localhost:3002 > /dev/null && echo "  ✓ Dashboard (3002)" || echo "  ✗ Dashboard"
+
+stop:
+	@echo "🛑 Stopping all services..."
+	@-pkill -f "convex dev" 2>/dev/null || true
+	@-pkill -f "tsx watch" 2>/dev/null || true
+	@-pkill -f "next dev" 2>/dev/null || true
+	@-lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	@-lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+	@-lsof -ti:3002 | xargs kill -9 2>/dev/null || true
+	@echo "✅ All services stopped"
 
 convex:
 	npx convex dev
