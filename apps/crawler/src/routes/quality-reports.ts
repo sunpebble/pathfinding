@@ -13,7 +13,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { supabase, TABLES } from '../lib/supabase.js';
+import { TABLES } from '../lib/convex.js';
 import { Errors } from '../middleware/error-handler.js';
 import {
   evaluateMetrics,

@@ -14,8 +14,8 @@ import { Buffer } from 'node:buffer';
 import { CRAWLER_VERSION } from '@pathfinding/crawler-types';
 
 import { PlaywrightCrawler } from 'crawlee';
+import { TABLES } from '../lib/convex.js';
 import { hashContent } from '../lib/hash.js';
-import { supabase, TABLES } from '../lib/supabase.js';
 
 export interface CrawlContext {
   job: CrawlJob;

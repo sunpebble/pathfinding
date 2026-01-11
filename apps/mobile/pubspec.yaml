@@ -1,6 +1,6 @@
 name: pathfinding
-description: 'Travel itinerary planning app with blog integration'
-publish_to: 'none'
+description: Travel itinerary planning app with blog integration
+publish_to: none
 
 version: 1.0.0+1
 

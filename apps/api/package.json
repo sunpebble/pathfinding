@@ -17,7 +17,8 @@
     "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
     "@opentelemetry/sdk-trace-base": "^2.2.0",
     "@opentelemetry/sdk-trace-node": "^2.2.0",
-    "@supabase/supabase-js": "^2.89.0",
+    "@pathfinding/convex": "workspace:*",
+    "convex": "^1.31.3",
     "dotenv": "^17.2.3",
     "hono": "^4.11.3",
     "zod": "^4.3.4"

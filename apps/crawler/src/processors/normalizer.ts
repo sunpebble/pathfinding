@@ -11,7 +11,7 @@ import type {
 } from '@pathfinding/crawler-types';
 
 import type { ParserResult } from './parsers/index.js';
-import { supabase, TABLES } from '../lib/supabase.js';
+import { TABLES } from '../lib/convex.js';
 import { getParser } from './parsers/index.js';
 import {
   calculateCompletenessScore,

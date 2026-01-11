@@ -5,8 +5,9 @@
 
 import type { GuidePlatform } from '@pathfinding/crawler-types';
 import type { Context } from 'hono';
+import type { Id } from '../lib/convex.js';
 import { Hono } from 'hono';
-import { supabase } from '../lib/supabase.js';
+import { api, convex } from '../lib/convex.js';
 import {
   getGuidesByDestination,
   getRecommendations,
@@ -48,7 +49,7 @@ guidesRouter.get('/recommendations', async (c: Context) => {
     pagination: {
       limit,
       offset,
-      total: guides.length, // Would need a count query for actual total
+      total: guides.length,
     },
   });
 });
@@ -158,17 +159,19 @@ guidesRouter.get('/destination/:name', async (c: Context) => {
 guidesRouter.get('/:id', async (c: Context) => {
   const id = c.req.param('id');
 
-  const { data, error } = await supabase
-    .from('travel_guides')
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const guide = await convex.query(api.travelGuides.getById, {
+      id: id as Id<'travelGuides'>,
+    });
 
-  if (error || !data) {
+    if (!guide) {
+      return c.json({ error: 'Guide not found' }, 404);
+    }
+
+    return c.json({ data: mapGuide(guide) });
+  } catch {
     return c.json({ error: 'Guide not found' }, 404);
   }
-
-  return c.json({ data });
 });
 
 /**
@@ -180,38 +183,31 @@ guidesRouter.get('/', async (c: Context) => {
   const minQuality = Number(c.req.query('min_quality')) || 0;
   const limit = Number(c.req.query('limit')) || 20;
   const offset = Number(c.req.query('offset')) || 0;
-  const sortBy = c.req.query('sort') || 'quality_score';
-  const sortOrder = c.req.query('order') === 'asc';
 
   const platforms = platformsParam
     ? (platformsParam.split(',') as GuidePlatform[])
     : undefined;
 
-  let query = supabase
-    .from('travel_guides')
-    .select('*', { count: 'exact' })
-    .gte('quality_score', minQuality)
-    .order(sortBy, { ascending: sortOrder })
-    .range(offset, offset + limit - 1);
+  try {
+    const guides = await convex.query(api.travelGuides.list, {
+      platform: platforms?.[0] as any,
+      minQuality,
+      limit: limit + offset,
+    });
 
-  if (platforms && platforms.length > 0) {
-    query = query.in('source_platform', platforms);
-  }
+    const data = guides.slice(offset, offset + limit);
 
-  const { data, error, count } = await query;
-
-  if (error) {
+    return c.json({
+      data: data.map(mapGuide),
+      pagination: {
+        limit,
+        offset,
+        total: guides.length,
+      },
+    });
+  } catch {
     return c.json({ error: 'Failed to fetch guides' }, 500);
   }
-
-  return c.json({
-    data: data || [],
-    pagination: {
-      limit,
-      offset,
-      total: count || 0,
-    },
-  });
 });
 
 /**
@@ -219,23 +215,54 @@ guidesRouter.get('/', async (c: Context) => {
  * Get statistics about stored guides
  */
 guidesRouter.get('/stats', async (c: Context) => {
-  const { data: platformCounts } = await supabase
-    .from('travel_guides')
-    .select('source_platform')
-    .then(({ data }) => {
-      const counts: Record<string, number> = {};
-      for (const row of data || []) {
-        counts[row.source_platform] = (counts[row.source_platform] || 0) + 1;
-      }
-      return { data: counts };
+  try {
+    const guides = await convex.query(api.travelGuides.list, {});
+
+    const platformCounts: Record<string, number> = {};
+    for (const guide of guides) {
+      platformCounts[guide.sourcePlatform] =
+        (platformCounts[guide.sourcePlatform] || 0) + 1;
+    }
+
+    return c.json({
+      total: guides.length,
+      by_platform: platformCounts,
     });
-
-  const { count: totalCount } = await supabase
-    .from('travel_guides')
-    .select('*', { count: 'exact', head: true });
-
-  return c.json({
-    total: totalCount || 0,
-    by_platform: platformCounts || {},
-  });
+  } catch {
+    return c.json({
+      total: 0,
+      by_platform: {},
+    });
+  }
 });
+
+// Helper to map Convex guide to API response format
+function mapGuide(doc: any) {
+  return {
+    id: doc._id,
+    source_platform: doc.sourcePlatform,
+    source_external_id: doc.sourceExternalId,
+    source_url: doc.sourceUrl,
+    title: doc.title,
+    content: doc.content,
+    content_html: doc.contentHtml,
+    author_name: doc.authorName,
+    author_id: doc.authorId,
+    destinations: doc.destinations,
+    tags: doc.tags,
+    likes_count: doc.likesCount,
+    saves_count: doc.savesCount,
+    comments_count: doc.commentsCount,
+    views_count: doc.viewsCount,
+    cover_image_url: doc.coverImageUrl,
+    image_urls: doc.imageUrls,
+    published_at: doc.publishedAt
+      ? new Date(doc.publishedAt).toISOString()
+      : null,
+    crawled_at: new Date(doc.crawledAt).toISOString(),
+    quality_score: doc.qualityScore,
+    content_hash: doc.contentHash,
+    created_at: new Date(doc._creationTime).toISOString(),
+    updated_at: new Date(doc._creationTime).toISOString(),
+  };
+}

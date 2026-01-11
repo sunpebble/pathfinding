@@ -8,12 +8,7 @@ import type {
   RecommendationParams,
   TravelGuide,
 } from '@pathfinding/crawler-types';
-import { supabase } from '../lib/supabase.js';
-
-const TABLES = {
-  TRAVEL_GUIDES: 'travel_guides',
-  GUIDE_RECOMMENDATIONS: 'guide_recommendations',
-};
+import { api, convex } from '../lib/convex.js';
 
 /**
  * Weights for scoring components
@@ -39,47 +34,44 @@ export async function getRecommendations(
     minQuality = 0.3,
   } = params;
 
-  let query = supabase
-    .from(TABLES.TRAVEL_GUIDES)
-    .select('*')
-    .gte('quality_score', minQuality)
-    .order('quality_score', { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    const guides = await convex.query(api.travelGuides.list, {
+      platform: platforms?.[0] as any,
+      minQuality,
+      limit: limit + offset,
+    });
 
-  // Filter by destinations if provided
-  if (destinations.length > 0) {
-    query = query.overlaps('destinations', destinations);
-  }
+    // Filter by destinations and tags client-side
+    let filtered = guides;
+    if (destinations.length > 0) {
+      filtered = filtered.filter((g: any) =>
+        g.destinations?.some((d: string) => destinations.includes(d))
+      );
+    }
+    if (tags.length > 0) {
+      filtered = filtered.filter((g: any) =>
+        g.tags?.some((t: string) => tags.includes(t))
+      );
+    }
 
-  // Filter by tags if provided
-  if (tags.length > 0) {
-    query = query.overlaps('tags', tags);
-  }
+    // Sort by composite score
+    const scoredGuides = filtered.map((guide: any) => ({
+      ...mapGuide(guide),
+      _compositeScore: calculateCompositeScore(mapGuide(guide)),
+    }));
 
-  // Filter by platforms if provided
-  if (platforms && platforms.length > 0) {
-    query = query.in('source_platform', platforms);
-  }
+    scoredGuides.sort(
+      (a: any, b: any) => b._compositeScore - a._compositeScore
+    );
 
-  const { data, error } = await query;
-
-  if (error) {
+    // Apply offset and remove internal score
+    return scoredGuides
+      .slice(offset, offset + limit)
+      .map(({ _compositeScore, ...guide }: any) => guide as TravelGuide);
+  } catch (error) {
     console.error('Failed to fetch recommendations:', error);
     return [];
   }
-
-  // Sort by composite score
-  const scoredGuides = (data || []).map((guide) => ({
-    ...guide,
-    _compositeScore: calculateCompositeScore(guide),
-  }));
-
-  scoredGuides.sort((a, b) => b._compositeScore - a._compositeScore);
-
-  // Remove internal score before returning
-  return scoredGuides.map(
-    ({ _compositeScore, ...guide }) => guide as TravelGuide
-  );
 }
 
 /**
@@ -101,14 +93,12 @@ function calculateCompositeScore(guide: TravelGuide): number {
  * Calculate popularity score based on engagement metrics
  */
 export function calculatePopularityScore(guide: TravelGuide): number {
-  // Weighted engagement score
   const engagement =
     (guide.likes_count || 0) * 1 +
-    (guide.saves_count || 0) * 2 + // Saves are more valuable
+    (guide.saves_count || 0) * 2 +
     (guide.comments_count || 0) * 1.5 +
     (guide.views_count || 0) * 0.1;
 
-  // Normalize to 0-1 range (assuming 10000 is a "viral" post)
   return Math.min(engagement / 10000, 1);
 }
 
@@ -117,7 +107,7 @@ export function calculatePopularityScore(guide: TravelGuide): number {
  */
 export function calculateFreshnessScore(publishedAt?: string): number {
   if (!publishedAt) {
-    return 0.5; // Default score for unknown publish dates
+    return 0.5;
   }
 
   const publishDate = new Date(publishedAt);
@@ -125,24 +115,11 @@ export function calculateFreshnessScore(publishedAt?: string): number {
   const daysSincePublish =
     (now.getTime() - publishDate.getTime()) / (1000 * 60 * 60 * 24);
 
-  // Decay over 1 year (365 days)
-  // Recent content (< 7 days) gets a boost
-  if (daysSincePublish < 7) {
-    return 1;
-  }
-  if (daysSincePublish < 30) {
-    return 0.9;
-  }
-  if (daysSincePublish < 90) {
-    return 0.7;
-  }
-  if (daysSincePublish < 180) {
-    return 0.5;
-  }
-  if (daysSincePublish < 365) {
-    return 0.3;
-  }
-
+  if (daysSincePublish < 7) return 1;
+  if (daysSincePublish < 30) return 0.9;
+  if (daysSincePublish < 90) return 0.7;
+  if (daysSincePublish < 180) return 0.5;
+  if (daysSincePublish < 365) return 0.3;
   return 0.1;
 }
 
@@ -160,30 +137,26 @@ export async function searchGuides(
 ): Promise<TravelGuide[]> {
   const { platforms, destinations, limit = 20, offset = 0 } = options;
 
-  // Build search query with text search on title and content
-  let dbQuery = supabase
-    .from(TABLES.TRAVEL_GUIDES)
-    .select('*')
-    .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
-    .order('quality_score', { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    const guides = await convex.query(api.travelGuides.search, {
+      query,
+      platform: platforms?.[0] as any,
+      limit: limit + offset,
+    });
 
-  if (platforms && platforms.length > 0) {
-    dbQuery = dbQuery.in('source_platform', platforms);
-  }
+    let filtered = guides.map(mapGuide);
 
-  if (destinations && destinations.length > 0) {
-    dbQuery = dbQuery.overlaps('destinations', destinations);
-  }
+    if (destinations && destinations.length > 0) {
+      filtered = filtered.filter((g) =>
+        g.destinations?.some((d: string) => destinations.includes(d))
+      );
+    }
 
-  const { data, error } = await dbQuery;
-
-  if (error) {
+    return filtered.slice(offset, offset + limit);
+  } catch (error) {
     console.error('Failed to search guides:', error);
     return [];
   }
-
-  return (data || []) as TravelGuide[];
 }
 
 /**
@@ -198,28 +171,27 @@ export async function getTrendingGuides(
 ): Promise<TravelGuide[]> {
   const { days = 7, platforms, limit = 10 } = options;
 
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
+  try {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
 
-  let query = supabase
-    .from(TABLES.TRAVEL_GUIDES)
-    .select('*')
-    .gte('crawled_at', cutoffDate.toISOString())
-    .order('likes_count', { ascending: false })
-    .limit(limit);
+    const guides = await convex.query(api.travelGuides.list, {
+      platform: platforms?.[0] as any,
+      limit: limit * 2,
+    });
 
-  if (platforms && platforms.length > 0) {
-    query = query.in('source_platform', platforms);
-  }
+    // Filter by crawl date and sort by likes
+    const filtered = guides
+      .filter((g: any) => g.crawledAt >= cutoffDate.getTime())
+      .map(mapGuide)
+      .sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0))
+      .slice(0, limit);
 
-  const { data, error } = await query;
-
-  if (error) {
+    return filtered;
+  } catch (error) {
     console.error('Failed to fetch trending guides:', error);
     return [];
   }
-
-  return (data || []) as TravelGuide[];
 }
 
 /**
@@ -236,24 +208,53 @@ export async function getGuidesByDestination(
 ): Promise<TravelGuide[]> {
   const { platforms, minQuality = 0.3, limit = 20, offset = 0 } = options;
 
-  let query = supabase
-    .from(TABLES.TRAVEL_GUIDES)
-    .select('*')
-    .contains('destinations', [destination])
-    .gte('quality_score', minQuality)
-    .order('quality_score', { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    const guides = await convex.query(api.travelGuides.list, {
+      platform: platforms?.[0] as any,
+      minQuality,
+      limit: (limit + offset) * 2,
+    });
 
-  if (platforms && platforms.length > 0) {
-    query = query.in('source_platform', platforms);
-  }
+    // Filter by destination
+    const filtered = guides
+      .filter((g: any) => g.destinations?.includes(destination))
+      .map(mapGuide)
+      .slice(offset, offset + limit);
 
-  const { data, error } = await query;
-
-  if (error) {
+    return filtered;
+  } catch (error) {
     console.error('Failed to fetch guides by destination:', error);
     return [];
   }
+}
 
-  return (data || []) as TravelGuide[];
+// Helper to map Convex guide to TravelGuide type
+function mapGuide(doc: any): TravelGuide {
+  return {
+    id: doc._id,
+    source_platform: doc.sourcePlatform,
+    source_external_id: doc.sourceExternalId,
+    source_url: doc.sourceUrl,
+    title: doc.title,
+    content: doc.content,
+    content_html: doc.contentHtml,
+    author_name: doc.authorName,
+    author_id: doc.authorId,
+    destinations: doc.destinations,
+    tags: doc.tags,
+    likes_count: doc.likesCount,
+    saves_count: doc.savesCount,
+    comments_count: doc.commentsCount,
+    views_count: doc.viewsCount,
+    cover_image_url: doc.coverImageUrl,
+    image_urls: doc.imageUrls,
+    published_at: doc.publishedAt
+      ? new Date(doc.publishedAt).toISOString()
+      : null,
+    crawled_at: new Date(doc.crawledAt).toISOString(),
+    quality_score: doc.qualityScore,
+    content_hash: doc.contentHash,
+    created_at: new Date(doc._creationTime).toISOString(),
+    updated_at: new Date(doc._creationTime).toISOString(),
+  } as TravelGuide;
 }
