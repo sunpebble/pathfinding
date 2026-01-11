@@ -433,10 +433,12 @@ Translation:`;
 
   /**
    * Extract day-based itinerary structure from travel guide content
+   * With improved error handling and retry logic
    */
   async extractDayBasedItinerary(
     content: string,
-    destinations: string[] = []
+    destinations: string[] = [],
+    options?: { maxRetries?: number }
   ): Promise<{
     summary: string;
     tips: string[];
@@ -453,63 +455,207 @@ Translation:`;
       }>;
     }>;
   }> {
+    const maxRetries = options?.maxRetries ?? 2;
+    const destination = destinations[0] || '';
+
     const systemPrompt = `你是一位专业的旅行行程规划师。从旅行攻略中提取结构化的按天行程信息。
-始终返回有效的JSON格式。专注于提取实际可执行的旅行信息。`;
+始终返回有效的JSON格式。专注于提取实际可执行的旅行信息。
+确保提取的景点名称是具体的地点名称，不是泛泛的描述。
+每个POI的type必须是: attraction, restaurant, hotel, shopping, entertainment, cafe, museum, historic, park 中的一个。`;
 
     const prompt = `分析以下旅行攻略，提取按天结构化的行程信息。
 
 内容:
-${content.slice(0, 12000)}
+${content.slice(0, 15000)}
 
 ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
 
 返回JSON对象:
 {
-  "summary": "2-3句话的行程摘要",
+  "summary": "2-3句话的行程摘要，概述这篇攻略的主要内容和特点",
   "tips": ["实用建议1", "实用建议2", ...],
-  "bestTime": "最佳旅行时间",
-  "duration": "建议天数",
-  "budget": "预算范围",
+  "bestTime": "最佳旅行时间（如：4-5月、秋季等）",
+  "duration": "建议天数（如：3天2晚）",
+  "budget": "预算范围（如：人均2000-3000元）",
   "days": [
     {
       "dayNumber": 1,
-      "theme": "当日主题（如：市区游览、海边休闲）",
+      "theme": "当日主题（如：市区文化之旅、海边休闲日）",
       "pois": [
         {
-          "name": "景点/餐厅/酒店名称",
-          "type": "attraction|restaurant|hotel|shopping|entertainment",
-          "description": "简短描述或推荐理由"
+          "name": "具体景点名称（必须是可以在地图上找到的具体地点）",
+          "type": "attraction|restaurant|hotel|shopping|entertainment|cafe|museum|historic|park",
+          "description": "简短描述或推荐理由（20-50字）"
         }
       ]
     }
   ]
 }
 
-如果内容中没有明确的天数划分，请根据提到的景点数量合理分配（每天3-5个景点）。
-只返回JSON对象，不要其他文字。`;
+重要提示:
+1. POI名称必须是具体可查找的地点，如"西湖"、"外滩"、"南锣鼓巷"，不要写"当地特色餐厅"这类泛泛的描述
+2. 如果内容中没有明确的天数划分，根据提到的景点数量合理分配（每天3-5个景点）
+3. 确保每个POI都有合理的type分类
+4. 只返回JSON对象，不要其他文字`;
 
-    const response = await this.generate(prompt, {
-      system: systemPrompt,
-      temperature: 0.2,
-      max_tokens: 4000,
-    });
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await this.generate(prompt, {
+          system: systemPrompt,
+          temperature: attempt === 0 ? 0.2 : 0.3 + attempt * 0.1, // Increase temp on retry
+          max_tokens: 5000,
+        });
+
+        // Try to extract JSON from response
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('No JSON object found in response');
+        }
+
+        const parsed = JSON.parse(jsonMatch[0]);
+
+        // Validate parsed result
+        if (!parsed.days || !Array.isArray(parsed.days)) {
+          throw new Error('Invalid response structure: missing days array');
+        }
+
+        // Clean up and normalize the result
+        interface ParsedDay {
+          dayNumber?: number;
+          theme?: string;
+          pois?: Array<{ name?: string; type?: string; description?: string }>;
+        }
+        interface ParsedPoi {
+          name?: string;
+          type?: string;
+          description?: string;
+        }
+
+        const result = {
+          summary: String(parsed.summary || ''),
+          tips: Array.isArray(parsed.tips) ? parsed.tips.map(String) : [],
+          bestTime: String(parsed.bestTime || ''),
+          duration: String(parsed.duration || ''),
+          budget: String(parsed.budget || ''),
+          days: parsed.days.map((day: ParsedDay, index: number) => ({
+            dayNumber: Number(day.dayNumber) || index + 1,
+            theme: String(day.theme || `第${index + 1}天`),
+            pois: Array.isArray(day.pois)
+              ? day.pois
+                  .filter(
+                    (poi: ParsedPoi) => poi && poi.name && poi.name.length >= 2
+                  )
+                  .map((poi: ParsedPoi) => ({
+                    name: String(poi.name).trim(),
+                    type: String(poi.type || 'attraction').toLowerCase(),
+                    description: String(poi.description || '').slice(0, 200),
+                  }))
+              : [],
+          })),
+        };
+
+        // Filter out empty days
+        result.days = result.days.filter(
+          (day: {
+            pois: Array<{ name: string; type: string; description: string }>;
+          }) => day.pois.length > 0
+        );
+
+        // If no valid data extracted, try to extract POIs from content directly
+        if (result.days.length === 0) {
+          console.warn(
+            `[Ollama] No days extracted for ${destination}, attempting POI-only extraction`
+          );
+          const fallbackPois = await this.extractPOIsSimple(
+            content,
+            destination
+          );
+          if (fallbackPois.length > 0) {
+            result.days = [
+              {
+                dayNumber: 1,
+                theme: destination ? `${destination}游览` : '景点游览',
+                pois: fallbackPois,
+              },
+            ];
+          }
+        }
+
+        return result;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.error(
+          `[Ollama] Extraction attempt ${attempt + 1} failed:`,
+          lastError.message
+        );
+
+        if (attempt < maxRetries) {
+          // Wait before retry
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * (attempt + 1))
+          );
+        }
+      }
+    }
+
+    console.error('[Ollama] All extraction attempts failed:', lastError);
+    return {
+      summary: '',
+      tips: [],
+      bestTime: '',
+      duration: '',
+      budget: '',
+      days: [],
+    };
+  }
+
+  /**
+   * Simple POI extraction fallback
+   */
+  private async extractPOIsSimple(
+    content: string,
+    destination: string
+  ): Promise<Array<{ name: string; type: string; description: string }>> {
+    const systemPrompt = `你是一个旅游POI提取专家。从文本中提取具体的景点、餐厅、酒店名称。只提取可以在地图上找到的具体地点。`;
+
+    const prompt = `从以下内容中提取所有提到的具体地点（景点、餐厅、酒店等）：
+
+${content.slice(0, 8000)}
+
+${destination ? `目的地: ${destination}` : ''}
+
+返回JSON数组:
+[
+  {"name": "具体地点名称", "type": "attraction|restaurant|hotel|cafe|museum|historic|park|shopping", "description": "简短描述"}
+]
+
+只返回JSON数组，不要其他文字。`;
 
     try {
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON object found in response');
-      }
-      return JSON.parse(jsonMatch[0]);
-    } catch (error) {
-      console.error('Failed to parse itinerary extraction:', error);
-      return {
-        summary: '',
-        tips: [],
-        bestTime: '',
-        duration: '',
-        budget: '',
-        days: [],
-      };
+      const response = await this.generate(prompt, {
+        system: systemPrompt,
+        temperature: 0.3,
+        max_tokens: 2000,
+      });
+
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) return [];
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      return Array.isArray(parsed)
+        ? parsed
+            .filter((p: any) => p && p.name && p.name.length >= 2)
+            .slice(0, 15) // Limit to 15 POIs
+            .map((p: any) => ({
+              name: String(p.name).trim(),
+              type: String(p.type || 'attraction').toLowerCase(),
+              description: String(p.description || '').slice(0, 100),
+            }))
+        : [];
+    } catch {
+      return [];
     }
   }
 }

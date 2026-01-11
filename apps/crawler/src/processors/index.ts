@@ -9,19 +9,8 @@ export {
   isValidCategory,
   mapPlatformCategoryInternal,
 } from './category-mapper.js';
-export {
-  calculateNameSimilarity,
-  calculateSimilarity,
-  deduplicatePOI,
-  findPotentialDuplicates,
-  mergePOIs,
-  runBatchDeduplication,
-} from './deduplication.js';
-export {
-  batchNormalize,
-  getPendingRecords,
-  normalizeRecord,
-} from './normalizer.js';
+export { runBatchDeduplication } from './deduplication.js';
+export { batchNormalize, normalizeRecord } from './normalizer.js';
 export {
   getParser,
   getSupportedPlatforms,
@@ -34,6 +23,20 @@ export {
   processJobRecords,
   runNormalizationPipeline,
 } from './pipeline.js';
+export {
+  arePoisDuplicates,
+  deduplicatePOIs,
+  type ExtractedDay,
+  type ExtractedPOI,
+  normalizePoiName,
+  normalizePoiType,
+  toStorageFormat,
+  validateCoordinates,
+  type ValidatedPOI,
+  validateExtractedDays,
+  validatePOI,
+  type ValidationResult,
+} from './poi-validator.js';
 export {
   calculateCompletenessScore,
   calculateFreshnessScore,
