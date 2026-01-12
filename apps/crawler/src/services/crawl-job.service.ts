@@ -193,6 +193,17 @@ export async function getRunningJobs(): Promise<CrawlJob[]> {
 }
 
 /**
+ * Get jobs that are due to run (nextRunAt <= now)
+ */
+export async function getDueJobs(limit?: number): Promise<CrawlJob[]> {
+  const jobs = await convex.query(api.crawlJobs.getDueJobs, {
+    limit,
+  });
+
+  return jobs.map(mapToCrawlJob);
+}
+
+/**
  * Get job statistics summary
  */
 export async function getJobStatsSummary(): Promise<{
