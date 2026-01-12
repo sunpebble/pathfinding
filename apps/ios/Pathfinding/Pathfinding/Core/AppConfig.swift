@@ -43,6 +43,13 @@ enum AppConfig {
   static let networkTimeoutResource: TimeInterval = 60
   static let maxRetryAttempts = 3
 
+  // MARK: - Performance Configuration
+
+  static let maxItineraryLoadBatch = 20  // Load itineraries in batches of 20
+  static let mapAnnotationLimit = 100  // Maximum annotations to show on map at once
+  static let poiRenderBatchSize = 10  // Render POIs in batches of 10
+  static let memoryWarningThreshold = 150 * 1024 * 1024  // 150 MB - trigger cleanup
+
   // MARK: - App Info
 
   static var appVersion: String {
