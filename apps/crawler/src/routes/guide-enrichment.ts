@@ -5,6 +5,7 @@
 
 import type { Context } from 'hono';
 import type { Id } from '../lib/convex.js';
+import type { GeocodingStrategy } from '../services/geocoding.service.js';
 import { Hono } from 'hono';
 import { api, convex } from '../lib/convex.js';
 import { withConcurrency } from '../lib/retry.js';
@@ -14,7 +15,7 @@ import {
   toStorageFormat,
   validateExtractedDays,
 } from '../processors/poi-validator.js';
-import { getNominatimService } from '../services/nominatim.service.js';
+import { getGeocodingService } from '../services/geocoding.service.js';
 import { getOllamaService } from '../services/ollama.service.js';
 
 export const guideEnrichmentRouter = new Hono();
@@ -27,6 +28,7 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
   const id = c.req.param('id') as Id<'travelGuides'>;
   const force = c.req.query('force') === 'true';
   const skipValidation = c.req.query('skip_validation') === 'true';
+  const strategy = (c.req.query('strategy') || 'multi') as GeocodingStrategy;
 
   try {
     // 1. Get the guide
@@ -58,8 +60,8 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
       guide.destinations
     );
 
-    // 3. Geocode POIs using enhanced Nominatim service
-    const nominatimService = getNominatimService();
+    // 3. Geocode POIs using enhanced unified GeocodingService
+    const geocodingService = getGeocodingService();
     const city = guide.destinations[0] || '';
 
     const geocodedDays = await Promise.all(
@@ -68,11 +70,14 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
           day.pois.map(async (poi) => {
             // Normalize name before geocoding for better results
             const cleanName = normalizePoiName(poi.name);
-            const location = await nominatimService.geocode(cleanName, city);
+            const location = await geocodingService.geocode(cleanName, city, {
+              strategy,
+              crossValidate: true,
+            });
 
             // Validate geocoding result
             const coords = location
-              ? nominatimService.validateCoordinates(
+              ? geocodingService.validateCoordinates(
                   location.latitude,
                   location.longitude,
                   city
@@ -164,7 +169,12 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
       geocode_rate:
         totalPois > 0 ? Math.round((poisWithCoords / totalPois) * 100) : 0,
       validation: validationStats,
-      cache_stats: nominatimService.getCacheStats(),
+      geocoding: {
+        strategy,
+        metrics: geocodingService.getMetrics(),
+        service_status: geocodingService.getServiceStatus(),
+        cache_stats: geocodingService.getCacheStats(),
+      },
     });
   } catch (error: any) {
     console.error('[Enrich] Error:', error);
@@ -181,6 +191,7 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
   const limit = body.limit || 5;
   const skipValidation = body.skipValidation || false;
   const concurrency = Math.min(body.concurrency || 2, 5); // Max 5 concurrent AI extractions
+  const strategy = (body.strategy || 'multi') as GeocodingStrategy;
 
   try {
     // Get guides without AI data
@@ -194,10 +205,10 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
     }
 
     const ollamaService = getOllamaService();
-    const nominatimService = getNominatimService();
+    const geocodingService = getGeocodingService();
 
     // Process guides with controlled concurrency for AI extraction
-    // Note: Geocoding is rate-limited by Nominatim, so we do parallel AI extraction
+    // Note: Geocoding is rate-limited by provider, so we do parallel AI extraction
     // then sequential geocoding per guide
     const processedResults = await withConcurrency(
       unprocessed,
@@ -226,6 +237,8 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
             latitude: number;
             longitude: number;
             address?: string;
+            geocodeConfidence?: number;
+            geocodeSource?: string;
           }>;
         }> = [];
 
@@ -237,14 +250,19 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
             latitude: number;
             longitude: number;
             address?: string;
+            geocodeConfidence?: number;
+            geocodeSource?: string;
           }> = [];
 
           for (const poi of day.pois) {
             const cleanName = normalizePoiName(poi.name);
-            const location = await nominatimService.geocode(cleanName, city);
+            const location = await geocodingService.geocode(cleanName, city, {
+              strategy,
+              crossValidate: true,
+            });
 
             const coords = location
-              ? nominatimService.validateCoordinates(
+              ? geocodingService.validateCoordinates(
                   location.latitude,
                   location.longitude,
                   city
@@ -258,6 +276,8 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
               latitude: coords.valid ? location!.latitude : 0,
               longitude: coords.valid ? location!.longitude : 0,
               address: coords.valid ? location!.address : undefined,
+              geocodeConfidence: location?.confidence ?? 0,
+              geocodeSource: location?.source ?? 'none',
             });
           }
 
@@ -355,7 +375,12 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
       total_geocoded: totalPoisGeocoded,
       geocode_rate:
         totalPois > 0 ? Math.round((totalPoisGeocoded / totalPois) * 100) : 0,
-      cache_stats: nominatimService.getCacheStats(),
+      geocoding: {
+        strategy,
+        metrics: geocodingService.getMetrics(),
+        service_status: geocodingService.getServiceStatus(),
+        cache_stats: geocodingService.getCacheStats(),
+      },
       results,
     });
   } catch (error: any) {
@@ -470,25 +495,35 @@ guideEnrichmentRouter.post('/:id/validate', async (c: Context) => {
  * Get geocoding service statistics
  */
 guideEnrichmentRouter.get('/geocoding/stats', (c: Context) => {
-  const nominatimService = getNominatimService();
+  const geocodingService = getGeocodingService();
   return c.json({
-    cache: nominatimService.getCacheStats(),
-    service: 'nominatim',
-    rate_limit: '1 request/second',
+    cache: geocodingService.getCacheStats(),
+    metrics: geocodingService.getMetrics(),
+    service_status: geocodingService.getServiceStatus(),
+    hit_rate: geocodingService.getHitRate(),
+    success_rate: geocodingService.getSuccessRate(),
+    services: ['amap', 'nominatim', 'overpass'],
+    description: 'Multi-source geocoding with fallback chain',
   });
 });
 
 /**
  * POST /api/guides/geocoding/clear-cache
- * Clear the geocoding cache
+ * Clear all geocoding caches
  */
 guideEnrichmentRouter.post('/geocoding/clear-cache', (c: Context) => {
-  const nominatimService = getNominatimService();
-  const sizeBefore = nominatimService.getCacheStats().size;
-  nominatimService.clearCache();
+  const geocodingService = getGeocodingService();
+  const cacheStatsBefore = geocodingService.getCacheStats();
+  geocodingService.clearAllCaches();
   return c.json({
     success: true,
-    entries_cleared: sizeBefore,
+    caches_cleared: ['unified', 'amap', 'nominatim', 'overpass'],
+    entries_cleared: {
+      unified: cacheStatsBefore.unified,
+      amap: cacheStatsBefore.amap?.size ?? 0,
+      nominatim: cacheStatsBefore.nominatim.size,
+      overpass: cacheStatsBefore.overpass.size,
+    },
   });
 });
 
@@ -501,6 +536,7 @@ guideEnrichmentRouter.post('/optimize/all', async (c: Context) => {
   const limit = body.limit || 100;
   const regeocode = body.regeocode !== false; // Default: true
   const _skipAlreadyOptimized = body.skipAlreadyOptimized !== false; // Default: true (reserved for future use)
+  const strategy = (body.strategy || 'multi') as GeocodingStrategy;
 
   try {
     // Get guides with AI data (use smaller limit to avoid Convex size limits)
@@ -523,7 +559,7 @@ guideEnrichmentRouter.post('/optimize/all', async (c: Context) => {
     }
 
     const toProcess = withAiData.slice(0, limit);
-    const nominatimService = getNominatimService();
+    const geocodingService = getGeocodingService();
 
     const results: Array<{
       id: string;
@@ -585,7 +621,7 @@ guideEnrichmentRouter.post('/optimize/all', async (c: Context) => {
                       regeocode &&
                       (poi.latitude === 0 ||
                         poi.longitude === 0 ||
-                        !nominatimService.validateCoordinates(
+                        !geocodingService.validateCoordinates(
                           poi.latitude,
                           poi.longitude,
                           city
@@ -593,14 +629,15 @@ guideEnrichmentRouter.post('/optimize/all', async (c: Context) => {
 
                     if (needsRegeocode) {
                       const cleanName = normalizePoiName(poi.name);
-                      const location = await nominatimService.geocode(
+                      const location = await geocodingService.geocode(
                         cleanName,
-                        city
+                        city,
+                        { strategy, crossValidate: true }
                       );
 
                       if (
                         location &&
-                        nominatimService.validateCoordinates(
+                        geocodingService.validateCoordinates(
                           location.latitude,
                           location.longitude,
                           city
@@ -703,7 +740,11 @@ guideEnrichmentRouter.post('/optimize/all', async (c: Context) => {
         pois_regeocoded: totalRegeocoded,
         duplicates_removed: totalDuplicatesRemoved,
       },
-      cache_stats: nominatimService.getCacheStats(),
+      geocoding: {
+        strategy,
+        metrics: geocodingService.getMetrics(),
+        cache_stats: geocodingService.getCacheStats(),
+      },
       results,
     });
   } catch (error: unknown) {
@@ -731,7 +772,7 @@ guideEnrichmentRouter.get('/optimize/stats', async (c: Context) => {
       guides_needing_optimization: 0,
     };
 
-    const nominatimService = getNominatimService();
+    const geocodingService = getGeocodingService();
 
     for (const guide of guides) {
       if (guide.aiProcessedAt && guide.aiDays && guide.aiDays.length > 0) {
@@ -746,7 +787,7 @@ guideEnrichmentRouter.get('/optimize/stats', async (c: Context) => {
             const isValid =
               poi.latitude !== 0 &&
               poi.longitude !== 0 &&
-              nominatimService.validateCoordinates(
+              geocodingService.validateCoordinates(
                 poi.latitude,
                 poi.longitude,
                 city
@@ -789,6 +830,7 @@ guideEnrichmentRouter.get('/optimize/stats', async (c: Context) => {
  */
 guideEnrichmentRouter.post('/:id/regeocode', async (c: Context) => {
   const id = c.req.param('id') as Id<'travelGuides'>;
+  const strategy = (c.req.query('strategy') || 'multi') as GeocodingStrategy;
 
   try {
     const guide = await convex.query(api.travelGuides.getById, { id });
@@ -800,7 +842,7 @@ guideEnrichmentRouter.post('/:id/regeocode', async (c: Context) => {
       return c.json({ error: 'No AI data to regeocode' }, 400);
     }
 
-    const nominatimService = getNominatimService();
+    const geocodingService = getGeocodingService();
     const city = guide.destinations[0] || '';
 
     console.warn(`[Regeocode] Processing guide: ${guide.title}`);
@@ -831,13 +873,14 @@ guideEnrichmentRouter.post('/:id/regeocode', async (c: Context) => {
                 address?: string;
               }) => {
                 const cleanName = normalizePoiName(poi.name);
-                const location = await nominatimService.geocode(
+                const location = await geocodingService.geocode(
                   cleanName,
-                  city
+                  city,
+                  { strategy, crossValidate: true }
                 );
 
                 const coords = location
-                  ? nominatimService.validateCoordinates(
+                  ? geocodingService.validateCoordinates(
                       location.latitude,
                       location.longitude,
                       city
@@ -851,6 +894,8 @@ guideEnrichmentRouter.post('/:id/regeocode', async (c: Context) => {
                   latitude: coords.valid ? location!.latitude : poi.latitude,
                   longitude: coords.valid ? location!.longitude : poi.longitude,
                   address: coords.valid ? location!.address : poi.address,
+                  geocodeConfidence: location?.confidence ?? 0,
+                  geocodeSource: location?.source ?? 'none',
                 };
               }
             )
@@ -896,6 +941,11 @@ guideEnrichmentRouter.post('/:id/regeocode', async (c: Context) => {
       geocode_rate:
         totalPois > 0 ? Math.round((poisWithCoords / totalPois) * 100) : 0,
       validation: validationResult.stats,
+      geocoding: {
+        strategy,
+        metrics: geocodingService.getMetrics(),
+        cache_stats: geocodingService.getCacheStats(),
+      },
     });
   } catch (error: any) {
     console.error('[Regeocode] Error:', error);
