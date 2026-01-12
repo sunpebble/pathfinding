@@ -164,6 +164,20 @@ export const updateStatistics = mutation({
   },
 });
 
+// Update next run time for scheduled jobs
+export const updateNextRunAt = mutation({
+  args: {
+    id: v.id('crawlJobs'),
+    nextRunAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      nextRunAt: args.nextRunAt,
+    });
+    return await ctx.db.get(args.id);
+  },
+});
+
 // Delete a crawl job
 export const remove = mutation({
   args: { id: v.id('crawlJobs') },
