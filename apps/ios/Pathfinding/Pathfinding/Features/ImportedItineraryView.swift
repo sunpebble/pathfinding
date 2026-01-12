@@ -97,7 +97,7 @@ struct ImportedItineraryView: View {
   // MARK: - Map View
 
   private var mapView: some View {
-    Map(position: $cameraPosition, selection: $selectedPoi) {
+    Map(position: $cameraPosition) {
       ForEach(Array(annotations.enumerated()), id: \.element.id) { index, annotation in
         Annotation(
           annotation.poi.name,
@@ -110,7 +110,6 @@ struct ImportedItineraryView: View {
             isSelected: selectedPoi?.name == annotation.poi.name
           )
         }
-        .tag(annotation.poi)
       }
 
       // Draw route line if multiple POIs
