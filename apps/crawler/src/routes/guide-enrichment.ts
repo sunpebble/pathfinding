@@ -508,6 +508,78 @@ guideEnrichmentRouter.get('/geocoding/stats', (c: Context) => {
 });
 
 /**
+ * GET /api/guides/geocoding/metrics
+ * Get detailed geocoding metrics and performance analysis
+ */
+guideEnrichmentRouter.get('/geocoding/metrics', (c: Context) => {
+  const geocodingService = getGeocodingService();
+  const metrics = geocodingService.getMetrics();
+  const cacheStats = geocodingService.getCacheStats();
+  const serviceStatus = geocodingService.getServiceStatus();
+  const hitRate = geocodingService.getHitRate();
+  const successRate = geocodingService.getSuccessRate();
+
+  // Calculate additional derived metrics
+  const totalSuccessful = metrics.totalRequests - metrics.failedRequests;
+  const sourceBreakdown = Object.entries(metrics.sourceDistribution)
+    .filter(([, count]) => count > 0)
+    .map(([source, count]) => ({
+      source,
+      count,
+      percentage:
+        metrics.totalRequests > 0
+          ? Math.round((count / metrics.totalRequests) * 100 * 10) / 10
+          : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  // Calculate total cache entries across all services
+  const totalCacheEntries =
+    cacheStats.unified +
+    (cacheStats.amap?.size ?? 0) +
+    cacheStats.nominatim.size +
+    cacheStats.overpass.size;
+
+  return c.json({
+    summary: {
+      total_requests: metrics.totalRequests,
+      successful_requests: totalSuccessful,
+      failed_requests: metrics.failedRequests,
+      success_rate: Math.round(successRate * 10) / 10,
+      cache_hit_rate: Math.round(hitRate * 10) / 10,
+      average_confidence: Math.round(metrics.averageConfidence * 100) / 100,
+      consensus_matches: metrics.consensusMatches,
+    },
+    source_breakdown: sourceBreakdown,
+    cache: {
+      total_entries: totalCacheEntries,
+      by_service: {
+        unified: cacheStats.unified,
+        amap: cacheStats.amap?.size ?? 0,
+        nominatim: cacheStats.nominatim.size,
+        overpass: cacheStats.overpass.size,
+      },
+    },
+    services: {
+      amap: {
+        available: serviceStatus.amap,
+        description: 'AMap (Gaode) - Primary geocoder for Chinese POIs',
+      },
+      nominatim: {
+        available: serviceStatus.nominatim,
+        description: 'OpenStreetMap Nominatim - Fallback geocoder',
+      },
+      overpass: {
+        available: serviceStatus.overpass,
+        description:
+          'OpenStreetMap Overpass API - Cross-validation and fallback',
+      },
+    },
+    raw_metrics: metrics,
+  });
+});
+
+/**
  * POST /api/guides/geocoding/clear-cache
  * Clear all geocoding caches
  */
