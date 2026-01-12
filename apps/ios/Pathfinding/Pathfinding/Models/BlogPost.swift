@@ -22,7 +22,7 @@ struct BlogPost: Codable, Identifiable, Hashable {
   let aiBestTime: String?
   let aiDuration: String?
   let aiBudget: String?
-  let aiDays: [AiDay]?
+  var aiDays: [AiDay]?
   let aiProcessedAt: String?
 
   // Match actual API snake_case field names
@@ -73,19 +73,19 @@ struct BlogPost: Codable, Identifiable, Hashable {
 /// AI-extracted day structure
 struct AiDay: Codable, Identifiable, Hashable {
   var id: Int { dayNumber }
-  let dayNumber: Int
-  let theme: String?
-  let pois: [AiPoi]
-
-  // API returns camelCase (dayNumber), not snake_case
-  // No CodingKeys needed as property names match JSON
-
+  var dayNumber: Int
+  var theme: String?
+  var pois: [AiPoi]
+  
+  // Hashable conformance for var properties
   func hash(into hasher: inout Hasher) {
     hasher.combine(dayNumber)
+    hasher.combine(theme)
+    hasher.combine(pois)
   }
-
+  
   static func == (lhs: AiDay, rhs: AiDay) -> Bool {
-    lhs.dayNumber == rhs.dayNumber
+    lhs.dayNumber == rhs.dayNumber && lhs.pois == rhs.pois && lhs.theme == rhs.theme
   }
 }
 
@@ -93,22 +93,25 @@ struct AiDay: Codable, Identifiable, Hashable {
 
 /// AI-extracted point of interest
 struct AiPoi: Codable, Identifiable, Hashable {
-  var id: String { name }
-  let name: String
-  let type: String?
-  let description: String?
-  let latitude: Double?
-  let longitude: Double?
-  let address: String?
-
-  func hash(into hasher: inout Hasher) {
-    hasher.combine(name)
-    hasher.combine(latitude)
-    hasher.combine(longitude)
+  var id: String = UUID().uuidString
+  var name: String
+  var type: String?
+  var description: String?
+  var latitude: Double?
+  var longitude: Double?
+  var address: String?
+  var time: String? // User-added time
+  
+  enum CodingKeys: String, CodingKey {
+    case name, type, description, latitude, longitude, address, time
   }
-
+  
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+  }
+  
   static func == (lhs: AiPoi, rhs: AiPoi) -> Bool {
-    lhs.name == rhs.name && lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    lhs.id == rhs.id
   }
 }
 
