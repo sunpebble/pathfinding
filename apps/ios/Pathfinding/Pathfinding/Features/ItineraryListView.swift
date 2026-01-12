@@ -85,67 +85,38 @@ struct ItineraryListView: View {
 
 struct ItineraryCard: View {
   let itinerary: SavedItinerary
-  
-  var gradientColors: [Color] {
-    [.indigo, .purple] // Default or random
+
+  // MARK: - Computed Properties (Cached)
+
+  /// Total number of POIs across all days - computed once
+  private var totalPOICount: Int {
+    itinerary.days.reduce(0) { $0 + $1.pois.count }
   }
-  
+
+  /// Number of days in the itinerary
+  private var daysCount: Int {
+    itinerary.days.count
+  }
+
+  /// Gradient colors for cover placeholder
+  private var gradientColors: [Color] {
+    [.indigo, .purple]
+  }
+
+  // MARK: - Body
+
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
         // Cover image or gradient
-        if let coverUrl = itinerary.coverImage, let url = URL(string: coverUrl) {
-          CachedAsyncImage(url: url) { image in
-            image.resizable().aspectRatio(contentMode: .fill)
-          } placeholder: {
-             ZStack {
-               RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
-                 .fill(Color.gray.opacity(0.2))
-               ProgressView()
-             }
-          }
-          .frame(width: 60, height: 60)
-          .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
-        } else {
-          ZStack {
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
-              .fill(
-                LinearGradient(
-                  colors: gradientColors,
-                  startPoint: .topLeading,
-                  endPoint: .bottomTrailing
-                )
-              )
-              .frame(width: 60, height: 60)
-            
-            Image(systemName: "map.fill")
-              .font(.title2)
-              .foregroundStyle(.white.opacity(0.9))
-          }
-        }
-        
-        VStack(alignment: .leading, spacing: 4) {
-          Text(itinerary.title)
-            .font(.headline)
-            .lineLimit(1)
-          
-          if let dest = itinerary.destination {
-             Text(dest)
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
-          }
-          
-          HStack(spacing: DesignTokens.Spacing.sm) {
-            Label("\(itinerary.days.count)天", systemImage: "calendar")
-            let poiCount = itinerary.days.reduce(0) { $0 + $1.pois.count }
-            Label("\(poiCount)景点", systemImage: "mappin")
-          }
-          .font(.caption)
-          .foregroundStyle(.tertiary)
-        }
-        
+        coverImageView
+
+        // Itinerary info
+        itineraryInfoView
+
         Spacer()
-        
+
+        // Chevron indicator
         Image(systemName: "chevron.right")
           .font(.caption)
           .foregroundStyle(.tertiary)
@@ -153,6 +124,64 @@ struct ItineraryCard: View {
     }
     .padding(DesignTokens.Spacing.sm)
     .subtleCardStyle(radius: DesignTokens.Radius.md)
+  }
+
+  // MARK: - Subviews
+
+  @ViewBuilder
+  private var coverImageView: some View {
+    if let coverUrl = itinerary.coverImage, let url = URL(string: coverUrl) {
+      CachedAsyncImage(url: url) { image in
+        image
+          .resizable()
+          .aspectRatio(contentMode: .fill)
+      } placeholder: {
+        ZStack {
+          RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
+            .fill(Color.gray.opacity(0.2))
+          ProgressView()
+        }
+      }
+      .frame(width: 60, height: 60)
+      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
+    } else {
+      ZStack {
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
+          .fill(
+            LinearGradient(
+              colors: gradientColors,
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .frame(width: 60, height: 60)
+
+        Image(systemName: "map.fill")
+          .font(.title2)
+          .foregroundStyle(.white.opacity(0.9))
+      }
+    }
+  }
+
+  private var itineraryInfoView: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Text(itinerary.title)
+        .font(.headline)
+        .lineLimit(1)
+
+      if let dest = itinerary.destination {
+        Text(dest)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+      }
+
+      HStack(spacing: DesignTokens.Spacing.sm) {
+        Label("\(daysCount)天", systemImage: "calendar")
+        Label("\(totalPOICount)景点", systemImage: "mappin")
+      }
+      .font(.caption)
+      .foregroundStyle(.tertiary)
+    }
   }
 }
 
