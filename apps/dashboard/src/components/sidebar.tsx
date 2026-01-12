@@ -8,6 +8,7 @@ import {
   ListTodo,
   MapPin,
   PlusCircle,
+  Route,
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Crawl Jobs', href: '/jobs', icon: ListTodo },
   { name: 'POIs', href: '/pois', icon: MapPin },
   { name: 'Travel Guides', href: '/guides', icon: BookOpen },
+  { name: 'Itineraries', href: '/itineraries', icon: Route },
   { name: 'Training Datasets', href: '/datasets', icon: Database },
   { name: 'Create Job', href: '/jobs/create', icon: PlusCircle },
 ];
