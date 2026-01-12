@@ -20,11 +20,22 @@ if (SENTRY_DSN && SENTRY_DSN !== 'your-sentry-dsn-here') {
 }
 
 export interface ApiError {
-  error: string;
-  message: string;
-  code?: string;
-  details?: unknown;
-  stack?: string;
+  success: false;
+  error: {
+    type: string;
+    message: string;
+    code?: string;
+    details?: unknown;
+    stack?: string;
+  };
+  timestamp: string;
+  requestId?: string;
+}
+
+export interface ApiSuccess<T> {
+  success: true;
+  data: T;
+  timestamp: string;
 }
 
 /**
@@ -32,31 +43,47 @@ export interface ApiError {
  */
 function createErrorResponse(
   status: number,
-  error: string,
+  errorType: string,
   message: string,
   code?: string,
   details?: unknown,
-  includeStack?: string
+  includeStack?: string,
+  requestId?: string
 ): ApiError {
   const response: ApiError = {
-    error,
-    message,
+    success: false,
+    error: {
+      type: errorType,
+      message,
+    },
+    timestamp: new Date().toISOString(),
   };
 
   if (code) {
-    response.code = code;
+    response.error.code = code;
   }
 
   if (details) {
-    response.details = details;
+    response.error.details = details;
   }
 
   // Only include stack trace in development
   if (includeStack && process.env.NODE_ENV === 'development') {
-    response.stack = includeStack;
+    response.error.stack = includeStack;
+  }
+
+  if (requestId) {
+    response.requestId = requestId;
   }
 
   return response;
+}
+
+/**
+ * Generate a simple request ID
+ */
+function generateRequestId(): string {
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
@@ -64,16 +91,21 @@ function createErrorResponse(
  */
 export function errorHandler(): MiddlewareHandler {
   return async (c: Context, next: Next) => {
+    // Generate request ID for tracking
+    const requestId = c.req.header('x-request-id') || generateRequestId();
+    c.header('x-request-id', requestId);
+
     try {
       await next();
     } catch (err) {
-      // Log error
-      console.error('[Error]', err);
+      // Log error with request context
+      console.error(`[Error] [${requestId}]`, err);
 
       // Report to Sentry
       if (SENTRY_DSN && SENTRY_DSN !== 'your-sentry-dsn-here') {
         Sentry.captureException(err, {
           extra: {
+            requestId,
             method: c.req.method,
             path: c.req.path,
             query: c.req.query(),
@@ -90,7 +122,8 @@ export function errorHandler(): MiddlewareHandler {
           httpErr.message,
           `HTTP_${httpErr.status}`,
           undefined,
-          httpErr.stack
+          httpErr.stack,
+          requestId
         );
         return c.json(response, httpErr.status);
       }
@@ -104,7 +137,8 @@ export function errorHandler(): MiddlewareHandler {
           'Request validation failed',
           'VALIDATION_ERROR',
           zodError.errors,
-          err.stack
+          err.stack,
+          requestId
         );
         return c.json(response, 400);
       }
@@ -121,7 +155,8 @@ export function errorHandler(): MiddlewareHandler {
             'Resource already exists',
             'DUPLICATE_KEY',
             dbError.details,
-            err.stack
+            err.stack,
+            requestId
           );
           return c.json(response, 409);
         }
@@ -133,7 +168,8 @@ export function errorHandler(): MiddlewareHandler {
             'Referenced resource not found',
             'FOREIGN_KEY_VIOLATION',
             dbError.details,
-            err.stack
+            err.stack,
+            requestId
           );
           return c.json(response, 400);
         }
@@ -149,7 +185,8 @@ export function errorHandler(): MiddlewareHandler {
             : 'An unexpected error occurred',
           'INTERNAL_ERROR',
           undefined,
-          err.stack
+          err.stack,
+          requestId
         );
         return c.json(response, 500);
       }
@@ -159,10 +196,24 @@ export function errorHandler(): MiddlewareHandler {
         500,
         'Internal Server Error',
         'An unexpected error occurred',
-        'UNKNOWN_ERROR'
+        'UNKNOWN_ERROR',
+        undefined,
+        undefined,
+        requestId
       );
       return c.json(response, 500);
     }
+  };
+}
+
+/**
+ * Create a standardized success response
+ */
+export function createSuccessResponse<T>(data: T): ApiSuccess<T> {
+  return {
+    success: true,
+    data,
+    timestamp: new Date().toISOString(),
   };
 }
 

@@ -3,6 +3,14 @@
  * Provides content extraction and summarization using Gemma3 model
  */
 
+import type {RetryOptions} from '../lib/retry.js';
+import {
+  CircuitBreaker,
+  parseJsonSafely,
+  
+  withRetry
+} from '../lib/retry.js';
+
 export interface OllamaConfig {
   baseUrl: string;
   model: string;
@@ -62,26 +70,45 @@ const DEFAULT_CONFIG: OllamaConfig = {
   timeout: 120000,
 };
 
+// Default retry options for Ollama calls
+const DEFAULT_RETRY_OPTIONS: RetryOptions = {
+  maxRetries: 3,
+  initialDelay: 1000,
+  maxDelay: 10000,
+  backoffMultiplier: 2,
+  onRetry: (error: Error, attempt: number) => {
+    console.warn(`[Ollama] Retry attempt ${attempt}: ${error.message}`);
+  },
+};
+
 /**
  * OllamaService - AI-powered content extraction and summarization
  */
 export class OllamaService {
   private config: OllamaConfig;
+  private circuitBreaker: CircuitBreaker;
 
   constructor(config: Partial<OllamaConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    // Circuit breaker: open after 5 failures, reset after 60 seconds
+    this.circuitBreaker = new CircuitBreaker(5, 60000);
   }
 
   /**
-   * Check if Ollama service is available
+   * Check if Ollama service is available (with retry)
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.config.baseUrl}/api/tags`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000),
-      });
-      return response.ok;
+      return await withRetry(
+        async () => {
+          const response = await fetch(`${this.config.baseUrl}/api/tags`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(5000),
+          });
+          return response.ok;
+        },
+        { maxRetries: 2, initialDelay: 500, maxDelay: 2000 }
+      );
     } catch {
       return false;
     }
@@ -109,37 +136,56 @@ export class OllamaService {
   }
 
   /**
-   * Generate text completion using Ollama
+   * Generate text completion using Ollama (with retry and circuit breaker)
    */
   async generate(
     prompt: string,
     options: OllamaGenerateOptions = {}
   ): Promise<string> {
-    const response = await fetch(`${this.config.baseUrl}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: this.config.model,
-        prompt,
-        stream: false,
-        options: {
-          temperature: options.temperature ?? 0.3,
-          top_p: options.top_p ?? 0.9,
-          num_predict: options.max_tokens ?? 2048,
+    return this.circuitBreaker.execute(() =>
+      withRetry(
+        async () => {
+          const response = await fetch(`${this.config.baseUrl}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: this.config.model,
+              prompt,
+              stream: false,
+              options: {
+                temperature: options.temperature ?? 0.3,
+                top_p: options.top_p ?? 0.9,
+                num_predict: options.max_tokens ?? 2048,
+              },
+              system: options.system,
+            }),
+            signal: AbortSignal.timeout(this.config.timeout!),
+          });
+
+          if (!response.ok) {
+            throw new Error(
+              `Ollama API error: ${response.status} ${response.statusText}`
+            );
+          }
+
+          const result = (await response.json()) as OllamaResponse;
+          return result.response;
         },
-        system: options.system,
-      }),
-      signal: AbortSignal.timeout(this.config.timeout!),
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Ollama API error: ${response.status} ${response.statusText}`
-      );
-    }
-
-    const result = (await response.json()) as OllamaResponse;
-    return result.response;
+        {
+          ...DEFAULT_RETRY_OPTIONS,
+          timeout: this.config.timeout,
+          isRetryable: (error: Error) => {
+            // Don't retry on 4xx errors (client errors)
+            const msg = error.message;
+            return (
+              !msg.includes('400') &&
+              !msg.includes('401') &&
+              !msg.includes('403')
+            );
+          },
+        }
+      )
+    );
   }
 
   /**
@@ -194,12 +240,28 @@ Return ONLY the JSON object, no additional text.`;
     });
 
     try {
-      // Extract JSON from response (handle potential markdown code blocks)
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON object found in response');
+      // Use improved JSON parsing with multiple fallback strategies
+      const { data, success, error } = parseJsonSafely<GuideExtraction>(
+        response,
+        {
+          title: 'Unknown',
+          summary: '',
+          highlights: [],
+          destinations: [],
+          tips: [],
+          bestTime: '',
+          duration: '',
+          budget: '',
+          tags: [],
+          sentiment: 'neutral',
+        }
+      );
+
+      if (!success) {
+        console.error('Failed to parse guide extraction:', error);
       }
-      return JSON.parse(jsonMatch[0]) as GuideExtraction;
+
+      return data;
     } catch (error) {
       console.error('Failed to parse guide extraction:', error);
       // Return default structure on parse failure
@@ -249,21 +311,19 @@ Return ONLY the JSON object.`;
       max_tokens: 1000,
     });
 
-    try {
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON object found in response');
-      }
-      return JSON.parse(jsonMatch[0]) as ContentSummary;
-    } catch {
-      return {
-        title: 'Untitled',
-        summary: content.slice(0, maxLength),
-        keyPoints: [],
-        category: 'other',
-        quality: 50,
-      };
+    const { data, success, error } = parseJsonSafely<ContentSummary>(response, {
+      title: 'Untitled',
+      summary: content.slice(0, maxLength),
+      keyPoints: [],
+      category: 'other',
+      quality: 50,
+    });
+
+    if (!success) {
+      console.warn('[Ollama] Failed to parse content summary:', error);
     }
+
+    return data;
   }
 
   /**
@@ -307,15 +367,23 @@ Return ONLY the JSON array.`;
       max_tokens: 3000,
     });
 
-    try {
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        return [];
-      }
-      return JSON.parse(jsonMatch[0]);
-    } catch {
-      return [];
+    const { data, success, error } = parseJsonSafely<
+      Array<{
+        name: string;
+        type: string;
+        description: string;
+        address?: string;
+        coordinates?: { latitude: number; longitude: number };
+        rating?: number;
+        priceRange?: string;
+      }>
+    >(response, []);
+
+    if (!success) {
+      console.warn('[Ollama] Failed to parse POIs:', error);
     }
+
+    return data;
   }
 
   /**
@@ -384,23 +452,29 @@ Return ONLY the JSON object.`;
       max_tokens: 1000,
     });
 
-    try {
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON object found');
-      }
-      return JSON.parse(jsonMatch[0]);
-    } catch {
-      return {
-        overallScore: 50,
-        relevance: 50,
-        informativeness: 50,
-        readability: 50,
-        uniqueness: 50,
-        issues: ['Unable to analyze content'],
-        suggestions: [],
-      };
+    const { data, success, error } = parseJsonSafely<{
+      overallScore: number;
+      relevance: number;
+      informativeness: number;
+      readability: number;
+      uniqueness: number;
+      issues: string[];
+      suggestions: string[];
+    }>(response, {
+      overallScore: 50,
+      relevance: 50,
+      informativeness: 50,
+      readability: 50,
+      uniqueness: 50,
+      issues: ['Unable to analyze content'],
+      suggestions: [],
+    });
+
+    if (!success) {
+      console.warn('[Ollama] Failed to parse content quality analysis:', error);
     }
+
+    return data;
   }
 
   /**
@@ -498,6 +572,18 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
 3. 确保每个POI都有合理的type分类
 4. 只返回JSON对象，不要其他文字`;
 
+    // Type definitions for parsed data
+    interface ParsedPoi {
+      name?: string;
+      type?: string;
+      description?: string;
+    }
+    interface ParsedDay {
+      dayNumber?: number;
+      theme?: string;
+      pois?: ParsedPoi[];
+    }
+
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -508,13 +594,23 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
           max_tokens: 5000,
         });
 
-        // Try to extract JSON from response
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          throw new Error('No JSON object found in response');
-        }
+        // Use improved JSON parsing with multiple fallback strategies
+        const {
+          data: parsed,
+          success,
+          error,
+        } = parseJsonSafely<{
+          summary?: string;
+          tips?: string[];
+          bestTime?: string;
+          duration?: string;
+          budget?: string;
+          days?: ParsedDay[];
+        }>(response, { days: [] });
 
-        const parsed = JSON.parse(jsonMatch[0]);
+        if (!success) {
+          throw new Error(`JSON parse failed: ${error}`);
+        }
 
         // Validate parsed result
         if (!parsed.days || !Array.isArray(parsed.days)) {
@@ -522,17 +618,6 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
         }
 
         // Clean up and normalize the result
-        interface ParsedDay {
-          dayNumber?: number;
-          theme?: string;
-          pois?: Array<{ name?: string; type?: string; description?: string }>;
-        }
-        interface ParsedPoi {
-          name?: string;
-          type?: string;
-          description?: string;
-        }
-
         const result = {
           summary: String(parsed.summary || ''),
           tips: Array.isArray(parsed.tips) ? parsed.tips.map(String) : [],
@@ -640,20 +725,20 @@ ${destination ? `目的地: ${destination}` : ''}
         max_tokens: 2000,
       });
 
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) return [];
+      const { data: parsed, success } = parseJsonSafely<
+        Array<{ name?: string; type?: string; description?: string }>
+      >(response, []);
 
-      const parsed = JSON.parse(jsonMatch[0]);
-      return Array.isArray(parsed)
-        ? parsed
-            .filter((p: any) => p && p.name && p.name.length >= 2)
-            .slice(0, 15) // Limit to 15 POIs
-            .map((p: any) => ({
-              name: String(p.name).trim(),
-              type: String(p.type || 'attraction').toLowerCase(),
-              description: String(p.description || '').slice(0, 100),
-            }))
-        : [];
+      if (!success || !Array.isArray(parsed)) return [];
+
+      return parsed
+        .filter((p) => p && p.name && p.name.length >= 2)
+        .slice(0, 15) // Limit to 15 POIs
+        .map((p) => ({
+          name: String(p.name).trim(),
+          type: String(p.type || 'attraction').toLowerCase(),
+          description: String(p.description || '').slice(0, 100),
+        }));
     } catch {
       return [];
     }

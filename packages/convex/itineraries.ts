@@ -92,7 +92,7 @@ export const listPublic = query({
   },
 });
 
-// Get itinerary by ID with full details (days and items)
+// Get itinerary by ID with full details (days and items) - optimized to avoid N+1
 export const getById = query({
   args: { id: v.id('itineraries') },
   handler: async (ctx, args) => {
@@ -110,44 +110,57 @@ export const getById = query({
     // Sort days by dayNumber
     days.sort((a, b) => a.dayNumber - b.dayNumber);
 
-    // Get items for each day with POI details
-    const daysWithItems = await Promise.all(
-      days.map(async (day) => {
-        const items = await ctx.db
+    // Get all items for all days in a single batch
+    const allItems = await Promise.all(
+      days.map((day) =>
+        ctx.db
           .query('itineraryItems')
           .withIndex('by_day', (q) => q.eq('dayId', day._id))
-          .collect();
-
-        // Sort items by orderIndex
-        items.sort((a, b) => a.orderIndex - b.orderIndex);
-
-        // Enrich items with POI data
-        const enrichedItems = await Promise.all(
-          items.map(async (item) => {
-            const poi = await ctx.db.get(item.poiId);
-            return {
-              ...item,
-              poi: poi
-                ? {
-                    id: poi._id,
-                    name: poi.name,
-                    category: poi.category,
-                    address: poi.address,
-                    latitude: poi.latitude,
-                    longitude: poi.longitude,
-                    rating: poi.rating,
-                  }
-                : null,
-            };
-          })
-        );
-
-        return {
-          ...day,
-          items: enrichedItems,
-        };
-      })
+          .collect()
+      )
     );
+
+    // Collect all unique POI IDs
+    const poiIds = new Set<string>();
+    allItems.flat().forEach((item) => poiIds.add(item.poiId));
+
+    // Batch load all POIs at once (single query per POI, but parallel)
+    const poiMap = new Map();
+    const pois = await Promise.all(
+      Array.from(poiIds).map((id) => ctx.db.get(id as any))
+    );
+    Array.from(poiIds).forEach((id, idx) => {
+      poiMap.set(id, pois[idx]);
+    });
+
+    // Build the response with pre-loaded POI data
+    const daysWithItems = days.map((day, dayIdx) => {
+      const items = allItems[dayIdx];
+      items.sort((a, b) => a.orderIndex - b.orderIndex);
+
+      const enrichedItems = items.map((item) => {
+        const poi = poiMap.get(item.poiId);
+        return {
+          ...item,
+          poi: poi
+            ? {
+                id: poi._id,
+                name: poi.name,
+                category: poi.category,
+                address: poi.address,
+                latitude: poi.latitude,
+                longitude: poi.longitude,
+                rating: poi.rating,
+              }
+            : null,
+        };
+      });
+
+      return {
+        ...day,
+        items: enrichedItems,
+      };
+    });
 
     return {
       ...itinerary,

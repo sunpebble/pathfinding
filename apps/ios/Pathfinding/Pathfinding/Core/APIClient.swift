@@ -74,6 +74,9 @@ actor APIClient {
     forceRefresh: Bool = false,
     maxRetries: Int = AppConfig.maxRetryAttempts
   ) async throws -> Data {
+    // Check for cancellation before starting
+    try Task.checkCancellation()
+
     let cacheKey = url.absoluteString
 
     // Check cache first
@@ -88,6 +91,11 @@ actor APIClient {
     var lastError: Error?
 
     for attempt in 1...maxRetries {
+      // Check for cancellation before each attempt
+      if Task.isCancelled {
+        throw APIError.cancelled
+      }
+
       do {
         logger.debug("Fetching \(url.path) (attempt \(attempt)/\(maxRetries))")
 
@@ -121,14 +129,30 @@ actor APIClient {
         default:
           throw APIError.httpError(httpResponse.statusCode)
         }
+      } catch is CancellationError {
+        // Task was cancelled - don't retry
+        throw APIError.cancelled
       } catch let error as APIError {
-        throw error
-      } catch {
+        // Don't retry non-recoverable API errors
+        if !error.isRecoverable {
+          throw error
+        }
         lastError = error
-        // Network error - exponential backoff
         if attempt < maxRetries {
           let waitTime = Double(attempt) * 1.5
           try? await Task.sleep(for: .seconds(waitTime))
+        }
+      } catch {
+        lastError = error
+        // Network error - exponential backoff with cancellation check
+        if attempt < maxRetries {
+          let waitTime = Double(attempt) * 1.5
+          do {
+            try await Task.sleep(for: .seconds(waitTime))
+          } catch {
+            // Sleep was cancelled
+            throw APIError.cancelled
+          }
         }
       }
     }
@@ -152,6 +176,8 @@ enum APIError: LocalizedError {
   case notFound
   case serverError(Int)
   case httpError(Int)
+  case cancelled
+  case networkError(Error)
   case unknown
 
   var errorDescription: String? {
@@ -168,8 +194,22 @@ enum APIError: LocalizedError {
       return "服务器错误 (\(code))"
     case .httpError(let code):
       return "请求失败 (\(code))"
+    case .cancelled:
+      return "请求已取消"
+    case .networkError(let error):
+      return "网络错误: \(error.localizedDescription)"
     case .unknown:
       return "未知错误"
+    }
+  }
+
+  /// Whether this error is recoverable (can retry)
+  var isRecoverable: Bool {
+    switch self {
+    case .serverError, .networkError:
+      return true
+    case .invalidURL, .invalidResponse, .unauthorized, .notFound, .cancelled, .httpError, .unknown:
+      return false
     }
   }
 }

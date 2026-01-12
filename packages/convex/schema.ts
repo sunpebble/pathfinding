@@ -85,7 +85,9 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_visibility', ['visibility'])
-    .index('by_city', ['cityId']),
+    .index('by_city', ['cityId'])
+    .index('by_visibility_city', ['visibility', 'cityId'])
+    .index('by_user_visibility', ['userId', 'visibility']),
 
   // ============================================
   // Itinerary Days
@@ -159,7 +161,10 @@ export default defineSchema({
     rawData: v.any(),
     crawledAt: v.number(),
     processingStatus: v.string(), // 'pending', 'processed', 'failed'
-  }).index('by_job', ['jobId']),
+  })
+    .index('by_job', ['jobId'])
+    .index('by_job_status', ['jobId', 'processingStatus'])
+    .index('by_status', ['processingStatus']),
 
   // ============================================
   // Normalized POIs (from crawl data)
@@ -182,7 +187,8 @@ export default defineSchema({
     sourceMappingId: v.optional(v.id('poiSourceMappings')),
   })
     .index('by_category', ['category'])
-    .index('by_confidence', ['confidence']),
+    .index('by_confidence', ['confidence'])
+    .index('by_category_confidence', ['category', 'confidence']),
 
   // ============================================
   // POI Source Mappings
@@ -226,7 +232,8 @@ export default defineSchema({
     generatedAt: v.optional(v.number()),
   })
     .index('by_name', ['name'])
-    .index('by_version', ['version']),
+    .index('by_version', ['version'])
+    .index('by_status', ['status']),
 
   // ============================================
   // Data Quality Reports

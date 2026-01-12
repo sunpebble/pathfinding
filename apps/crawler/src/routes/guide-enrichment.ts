@@ -7,6 +7,7 @@ import type { Context } from 'hono';
 import type { Id } from '../lib/convex.js';
 import { Hono } from 'hono';
 import { api, convex } from '../lib/convex.js';
+import { withConcurrency } from '../lib/retry.js';
 import {
   normalizePoiName,
   normalizePoiType,
@@ -173,12 +174,13 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
 
 /**
  * POST /api/guides/enrich/batch
- * Batch enrich multiple guides with validation
+ * Batch enrich multiple guides with validation and controlled concurrency
  */
 guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
   const body = await c.req.json().catch(() => ({}));
   const limit = body.limit || 5;
   const skipValidation = body.skipValidation || false;
+  const concurrency = Math.min(body.concurrency || 2, 5); // Max 5 concurrent AI extractions
 
   try {
     // Get guides without AI data
@@ -191,67 +193,30 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
       return c.json({ message: 'No guides to process', processed: 0 });
     }
 
-    const results: Array<{
-      id: string;
-      title: string;
-      success: boolean;
-      pois_total?: number;
-      pois_geocoded?: number;
-      error?: string;
-    }> = [];
-
     const ollamaService = getOllamaService();
     const nominatimService = getNominatimService();
 
-    for (const guide of unprocessed) {
-      try {
+    // Process guides with controlled concurrency for AI extraction
+    // Note: Geocoding is rate-limited by Nominatim, so we do parallel AI extraction
+    // then sequential geocoding per guide
+    const processedResults = await withConcurrency(
+      unprocessed,
+      async (guide: {
+        _id: string;
+        title?: string;
+        content: string;
+        destinations: string[];
+      }) => {
         const city = guide.destinations[0] || '';
 
-        // Extract itinerary
+        // Extract itinerary (AI step - can be parallelized)
         const extraction = await ollamaService.extractDayBasedItinerary(
           guide.content,
           guide.destinations
         );
 
-        // Geocode POIs with enhanced service
-        const geocodedDays = await Promise.all(
-          extraction.days.map(async (day) => {
-            const geocodedPois = await Promise.all(
-              day.pois.map(async (poi) => {
-                const cleanName = normalizePoiName(poi.name);
-                const location = await nominatimService.geocode(
-                  cleanName,
-                  city
-                );
-
-                const coords = location
-                  ? nominatimService.validateCoordinates(
-                      location.latitude,
-                      location.longitude,
-                      city
-                    )
-                  : { valid: false };
-
-                return {
-                  name: poi.name,
-                  type: normalizePoiType(poi.type),
-                  description: poi.description,
-                  latitude: coords.valid ? location!.latitude : 0,
-                  longitude: coords.valid ? location!.longitude : 0,
-                  address: coords.valid ? location!.address : undefined,
-                };
-              })
-            );
-            return {
-              dayNumber: day.dayNumber,
-              theme: day.theme,
-              pois: geocodedPois,
-            };
-          })
-        );
-
-        // Validate and deduplicate
-        let finalDays: Array<{
+        // Geocode POIs (rate-limited, sequential within each guide)
+        const geocodedDays: Array<{
           dayNumber: number;
           theme?: string;
           pois: Array<{
@@ -262,7 +227,49 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
             longitude: number;
             address?: string;
           }>;
-        }> = geocodedDays;
+        }> = [];
+
+        for (const day of extraction.days) {
+          const geocodedPois: Array<{
+            name: string;
+            type: string;
+            description?: string;
+            latitude: number;
+            longitude: number;
+            address?: string;
+          }> = [];
+
+          for (const poi of day.pois) {
+            const cleanName = normalizePoiName(poi.name);
+            const location = await nominatimService.geocode(cleanName, city);
+
+            const coords = location
+              ? nominatimService.validateCoordinates(
+                  location.latitude,
+                  location.longitude,
+                  city
+                )
+              : { valid: false };
+
+            geocodedPois.push({
+              name: poi.name,
+              type: normalizePoiType(poi.type),
+              description: poi.description,
+              latitude: coords.valid ? location!.latitude : 0,
+              longitude: coords.valid ? location!.longitude : 0,
+              address: coords.valid ? location!.address : undefined,
+            });
+          }
+
+          geocodedDays.push({
+            dayNumber: day.dayNumber,
+            theme: day.theme,
+            pois: geocodedPois,
+          });
+        }
+
+        // Validate and deduplicate
+        let finalDays = geocodedDays;
         if (!skipValidation) {
           const validationResult = validateExtractedDays(geocodedDays, {
             removeInvalid: false,
@@ -274,7 +281,7 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
 
         // Save to database
         await convex.mutation(api.travelGuides.updateAiData, {
-          id: guide._id,
+          id: guide._id as Id<'travelGuides'>,
           aiSummary: extraction.summary,
           aiTips: extraction.tips,
           aiBestTime: extraction.bestTime,
@@ -289,27 +296,45 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
           0
         );
 
-        results.push({
+        console.warn(
+          `[Batch] Processed: ${guide.title} (${poisWithCoords}/${totalPois} geocoded)`
+        );
+
+        return {
           id: guide._id,
           title: guide.title || 'Untitled',
           success: true,
           pois_total: totalPois,
           pois_geocoded: poisWithCoords,
-        });
-
-        console.warn(
-          `[Batch] Processed: ${guide.title} (${poisWithCoords}/${totalPois} geocoded)`
-        );
-      } catch (error: any) {
-        results.push({
-          id: guide._id,
-          title: guide.title || 'Untitled',
-          success: false,
-          error: error.message,
-        });
-        console.error(`[Batch] Failed: ${guide.title}`, error.message);
+        };
+      },
+      {
+        concurrency,
+        onError: (error, guide) => {
+          console.error(`[Batch] Failed: ${guide.title}`, error.message);
+        },
       }
-    }
+    );
+
+    // Transform results
+    const results: Array<{
+      id: string;
+      title: string;
+      success: boolean;
+      pois_total?: number;
+      pois_geocoded?: number;
+      error?: string;
+    }> = processedResults.map((r) => {
+      if (r.error) {
+        return {
+          id: r.item._id,
+          title: r.item.title || 'Untitled',
+          success: false,
+          error: r.error.message,
+        };
+      }
+      return r.result!;
+    });
 
     const successful = results.filter((r) => r.success);
     const totalPoisGeocoded = successful.reduce(
@@ -325,6 +350,7 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
       processed: results.length,
       successful: successful.length,
       failed: results.length - successful.length,
+      concurrency_used: concurrency,
       total_pois: totalPois,
       total_geocoded: totalPoisGeocoded,
       geocode_rate:

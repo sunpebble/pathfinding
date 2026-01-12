@@ -47,7 +47,7 @@ export const getById = query({
   },
 });
 
-// Search POIs by name
+// Search POIs by name - optimized to use indexes first
 export const search = query({
   args: {
     query: v.string(),
@@ -57,17 +57,23 @@ export const search = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let pois = await ctx.db.query('pois').collect();
+    // Use index-based filtering first to reduce data loaded
+    let q = ctx.db.query('pois');
 
-    // Filter by city
-    if (args.cityId) {
-      pois = pois.filter((poi) => poi.cityId === args.cityId);
+    // Apply index-based filters first
+    if (args.cityId && args.category) {
+      q = q.withIndex('by_city_category', (q) =>
+        q.eq('cityId', args.cityId!).eq('category', args.category!)
+      );
+    } else if (args.cityId) {
+      q = q.withIndex('by_city', (q) => q.eq('cityId', args.cityId!));
+    } else if (args.category) {
+      q = q.withIndex('by_category', (q) => q.eq('category', args.category!));
     }
 
-    // Filter by category
-    if (args.category) {
-      pois = pois.filter((poi) => poi.category === args.category);
-    }
+    // Use .take() to limit results early if no text search needed
+    const maxResults = args.limit ?? 100;
+    let pois = await q.take(maxResults * 10); // Fetch more for filtering
 
     // Filter by minimum rating
     if (args.minRating !== undefined) {
@@ -76,7 +82,7 @@ export const search = query({
       );
     }
 
-    // Search by name
+    // Search by name (in-memory, but on pre-filtered data)
     const searchLower = args.query.toLowerCase();
     pois = pois.filter(
       (poi) =>
@@ -87,11 +93,11 @@ export const search = query({
     // Sort by rating (descending)
     pois.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 
-    return args.limit ? pois.slice(0, args.limit) : pois;
+    return pois.slice(0, maxResults);
   },
 });
 
-// Get nearby POIs (simple distance calculation)
+// Get nearby POIs - optimized with index and early limit
 export const getNearby = query({
   args: {
     latitude: v.number(),
@@ -101,11 +107,15 @@ export const getNearby = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let pois = await ctx.db.query('pois').collect();
-
+    // Use index if category is provided
+    let q = ctx.db.query('pois');
     if (args.category) {
-      pois = pois.filter((poi) => poi.category === args.category);
+      q = q.withIndex('by_category', (q) => q.eq('category', args.category!));
     }
+
+    // Limit initial fetch to reduce memory usage
+    const maxFetch = Math.min((args.limit ?? 50) * 20, 2000);
+    const pois = await q.take(maxFetch);
 
     // Calculate distance and filter
     const poisWithDistance = pois
