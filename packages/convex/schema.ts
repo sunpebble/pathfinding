@@ -301,10 +301,36 @@ export default defineSchema({
               latitude: v.number(),
               longitude: v.number(),
               address: v.optional(v.string()),
+              // Geocoding metadata (for enhanced geocoding accuracy)
+              geocodeConfidence: v.optional(v.number()), // 0-1 confidence score
+              geocodeSource: v.optional(v.string()), // 'amap', 'nominatim', 'overpass', 'consensus', 'manual'
+              isManuallyVerified: v.optional(v.boolean()), // true if manually corrected
+              verifiedAt: v.optional(v.number()), // Unix timestamp of verification
+              verifiedBy: v.optional(v.string()), // User ID who verified
             })
           ),
         })
       )
+    ),
+
+    // Geocoding aggregate metrics for this guide
+    geocodingMetrics: v.optional(
+      v.object({
+        totalPois: v.number(),
+        averageConfidence: v.number(), // 0-1
+        lowConfidenceCount: v.number(), // POIs with confidence < 0.5
+        manuallyVerifiedCount: v.number(),
+        sourceDistribution: v.optional(
+          v.object({
+            amap: v.optional(v.number()),
+            nominatim: v.optional(v.number()),
+            overpass: v.optional(v.number()),
+            consensus: v.optional(v.number()),
+            manual: v.optional(v.number()),
+          })
+        ),
+        lastUpdated: v.optional(v.number()), // Unix timestamp
+      })
     ),
   })
     .index('by_platform', ['sourcePlatform'])
