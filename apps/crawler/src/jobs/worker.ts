@@ -9,6 +9,7 @@ import type { CrawlJob, CrawlJobStatistics } from '@pathfinding/crawler-types';
 
 import type { BaseCrawler } from '../crawlers/registry.js';
 import { getCrawler, isPlatformSupported } from '../crawlers/registry.js';
+import { acquireToken } from '../lib/rate-limiter.js';
 import { createSpan } from '../middleware/tracing.js';
 import { updateCrawlJobStatus } from '../services/crawl-job.service.js';
 
@@ -47,6 +48,10 @@ export async function executeCrawlJob(
       } else {
         console.warn(`[Worker] Starting job ${job.id} for platform ${job.platform}`);
       }
+
+      // Acquire rate limit token before starting crawl
+      console.warn(`[Worker] Acquiring rate limit token for ${job.platform}`);
+      await acquireToken(job.platform as any);
 
       // Create crawler instance
       const crawler = getCrawler(job);
