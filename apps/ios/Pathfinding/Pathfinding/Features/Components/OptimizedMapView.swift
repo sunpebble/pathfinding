@@ -75,8 +75,8 @@ struct OptimizedMapView: View {
       if annotations.count <= maxVisibleAnnotations {
         visibleAnnotations = annotations
       } else {
-        // Start with a subset based on camera position
-        updateVisibleAnnotationsFromCamera()
+        // Start with first N annotations until camera updates
+        visibleAnnotations = Array(annotations.prefix(maxVisibleAnnotations))
       }
     }
   }
@@ -117,13 +117,6 @@ struct OptimizedMapView: View {
       visibleAnnotations = clusterAnnotations(filteredAnnotations, limit: maxVisibleAnnotations)
     } else {
       visibleAnnotations = filteredAnnotations
-    }
-  }
-
-  /// Update visible annotations based on current camera position
-  private func updateVisibleAnnotationsFromCamera() {
-    if case .region(let region) = cameraPosition {
-      updateVisibleAnnotations(region: region)
     }
   }
 

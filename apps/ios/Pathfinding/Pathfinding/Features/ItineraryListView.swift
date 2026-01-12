@@ -261,28 +261,21 @@ struct SavedItineraryDetailView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
-        // Map Header
-        Map(position: $cameraPosition) {
-          ForEach(Array(annotations.enumerated()), id: \.element.id) { index, annotation in
-            let isSelected = annotation.poi.id == selectedPoiId
-            Annotation(annotation.poi.name, coordinate: annotation.coordinate) {
-              ZStack {
-                Circle()
-                  .fill(isSelected ? Color.red : colorForType(annotation.poi.type))
-                  .frame(width: isSelected ? 40 : 30, height: isSelected ? 40 : 30)
-                  .shadow(color: isSelected ? .red.opacity(0.5) : .black.opacity(0.2), radius: isSelected ? 8 : 4)
-                  .overlay(
-                    Circle().stroke(.white, lineWidth: 2)
-                  )
-                  .scaleEffect(isSelected ? 1.1 : 1.0)
-                  .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isSelected)
-                
-                Text("\(index + 1)")
-                  .font(isSelected ? .body : .caption)
-                  .fontWeight(.bold)
-                  .foregroundStyle(.white)
-              }
-              .zIndex(isSelected ? 100 : 1) // Bring selected to front
+        // Map Header - Optimized for large itineraries
+        OptimizedMapView(
+          annotations: annotations,
+          cameraPosition: $cameraPosition,
+          selectedPoiId: selectedPoiId
+        ) { poiId in
+          // Handle annotation tap
+          withAnimation {
+            selectedPoiId = poiId
+            if let poi = allPois.first(where: { $0.id == poiId }),
+               let lat = poi.latitude, let lng = poi.longitude, lat != 0 && lng != 0 {
+              cameraPosition = .region(MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+              ))
             }
           }
         }
@@ -524,16 +517,6 @@ struct SavedItineraryDetailView: View {
         center: center,
         span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
       ))
-    }
-  }
-  
-  private func colorForType(_ type: String?) -> Color {
-    switch type?.lowercased() {
-    case "景点", "attraction": return .orange
-    case "餐厅", "restaurant", "美食", "food": return .red
-    case "酒店", "hotel", "住宿", "accommodation": return .blue
-    case "交通", "transport", "transportation": return .green
-    default: return .purple
     }
   }
 }
