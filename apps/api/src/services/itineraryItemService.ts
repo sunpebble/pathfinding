@@ -10,11 +10,12 @@ import { NotFoundError } from '../middleware/errorHandler';
 // Types
 export interface CreateItineraryItemInput {
   dayId: string;
-  poiId: string;
+  poiId?: string;
   orderIndex?: number;
   startTime?: string;
   endTime?: string;
   transportMode?: 'walking' | 'driving' | 'transit' | 'cycling' | 'taxi';
+  transportMinutes?: number;
   notes?: string;
 }
 
@@ -62,7 +63,7 @@ export const ItineraryItemService = {
   async create(input: CreateItineraryItemInput, _accessToken: string) {
     const itemId = await convex.mutation(api.itineraryItems.create, {
       dayId: input.dayId as Id<'itineraryDays'>,
-      poiId: input.poiId as Id<'pois'>,
+      poiId: input.poiId ? (input.poiId as Id<'pois'>) : undefined,
       orderIndex: input.orderIndex,
       startTime: input.startTime,
       endTime: input.endTime,

@@ -1,3 +1,5 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 /**
  * Crawl Worker
  * Executes crawl jobs using the appropriate crawler

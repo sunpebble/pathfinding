@@ -22,7 +22,7 @@ itineraryItemsRoutes.get('/:itineraryId/days/:dayId/items', async (c) => {
   const dayId = c.req.param('dayId');
   const accessToken = c.get('accessToken');
 
-  const data = await ItineraryItemService.list(dayId, accessToken);
+  const data = await ItineraryItemService.listByDay(dayId, accessToken);
   return c.json({ data });
 });
 
@@ -38,16 +38,14 @@ itineraryItemsRoutes.post(
     const input = c.req.valid('json');
     const accessToken = c.get('accessToken');
 
-    const { item, conflicts } = await ItineraryItemService.create(
-      dayId,
-      input,
+    const item = await ItineraryItemService.create(
+      { ...input, dayId },
       accessToken
     );
 
     return c.json(
       {
         data: item,
-        conflicts: conflicts.length > 0 ? conflicts : undefined,
       },
       201
     );
@@ -81,15 +79,22 @@ itineraryItemsRoutes.patch(
     const input = c.req.valid('json');
     const accessToken = c.get('accessToken');
 
-    const { item, conflicts } = await ItineraryItemService.update(
+    // Filter out null values and convert to undefined for service compatibility
+    const sanitizedInput: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(input)) {
+      if (value !== null) {
+        sanitizedInput[key] = value;
+      }
+    }
+
+    const item = await ItineraryItemService.update(
       itemId,
-      input,
+      sanitizedInput as Parameters<typeof ItineraryItemService.update>[1],
       accessToken
     );
 
     return c.json({
       data: item,
-      conflicts: conflicts.length > 0 ? conflicts : undefined,
     });
   }
 );
@@ -117,11 +122,15 @@ itineraryItemsRoutes.post(
   '/:itineraryId/days/:dayId/items/reorder',
   zValidator('json', ReorderItemsSchema),
   async (c) => {
-    const dayId = c.req.param('dayId');
     const input = c.req.valid('json');
     const accessToken = c.get('accessToken');
 
-    const data = await ItineraryItemService.reorder(dayId, input, accessToken);
-    return c.json({ data });
+    // Reorder each item to its new position
+    const results = [];
+    for (let i = 0; i < input.itemIds.length; i++) {
+      await ItineraryItemService.reorder(input.itemIds[i], i, accessToken);
+      results.push({ itemId: input.itemIds[i], newIndex: i });
+    }
+    return c.json({ data: results });
   }
 );

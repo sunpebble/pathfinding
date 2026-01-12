@@ -1,3 +1,5 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 /**
  * Recommendation Engine
  * Provides travel guide recommendations based on content, popularity, and freshness

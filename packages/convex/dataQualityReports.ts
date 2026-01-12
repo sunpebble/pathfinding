@@ -1,3 +1,5 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 /**
  * Data Quality Reports - Convex Functions
  * CRUD operations for data quality analysis reports

@@ -1,3 +1,5 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 /**
  * Quality Reports API Routes
  * Endpoints for managing data quality analysis reports

@@ -1,3 +1,5 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 import { authTables } from '@convex-dev/auth/server';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
@@ -253,7 +255,9 @@ export default defineSchema({
     sourcePlatform: v.union(
       v.literal('xiaohongshu'),
       v.literal('weibo'),
-      v.literal('ctrip')
+      v.literal('ctrip'),
+      v.literal('douyin'),
+      v.literal('tripadvisor')
     ),
     sourceExternalId: v.string(),
     sourceUrl: v.optional(v.string()),

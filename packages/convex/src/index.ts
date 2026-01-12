@@ -42,11 +42,15 @@ export function getConvex(): ConvexHttpClient {
 }
 
 // For backwards compatibility - use getConvex() for lazy init
+// The ConvexHttpClient methods already have proper typing
 export const convex = {
-  query: (...args: Parameters<ConvexHttpClient['query']>) =>
-    getConvex().query(...args),
-  mutation: (...args: Parameters<ConvexHttpClient['mutation']>) =>
-    getConvex().mutation(...args),
-  action: (...args: Parameters<ConvexHttpClient['action']>) =>
-    getConvex().action(...args),
+  get query() {
+    return getConvex().query.bind(getConvex());
+  },
+  get mutation() {
+    return getConvex().mutation.bind(getConvex());
+  },
+  get action() {
+    return getConvex().action.bind(getConvex());
+  },
 };
