@@ -95,7 +95,7 @@ struct ItineraryCard: View {
       HStack {
         // Cover image or gradient
         if let coverUrl = itinerary.coverImage, let url = URL(string: coverUrl) {
-          AsyncImage(url: url) { image in
+          CachedAsyncImage(url: url) { image in
             image.resizable().aspectRatio(contentMode: .fill)
           } placeholder: {
              ZStack {
