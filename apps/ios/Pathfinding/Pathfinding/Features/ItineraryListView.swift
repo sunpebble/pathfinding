@@ -3,9 +3,8 @@ import SwiftUI
 
 struct ItineraryListView: View {
   private var store: ItineraryStore { ItineraryStore.shared }
-  @State private var editMode: EditMode = .inactive
   @State private var showCreateSheet = false
-  
+
   var body: some View {
     NavigationStack {
       Group {
@@ -25,24 +24,14 @@ struct ItineraryListView: View {
               .symbolRenderingMode(.hierarchical)
           }
         }
-        if !store.itineraries.isEmpty {
-          ToolbarItem(placement: .topBarLeading) {
-            EditButton()
-          }
-        }
       }
       .sheet(isPresented: $showCreateSheet) {
         CreateItinerarySheet { itinerary in
           store.update(itinerary) // Use update (or add logic in store)
         }
       }
-      .environment(\.editMode, $editMode)
-      .onChange(of: store.itineraries.isEmpty) { _, isEmpty in
-        if isEmpty {
-          DispatchQueue.main.async {
-            editMode = .inactive
-          }
-        }
+      .navigationDestination(for: SavedItinerary.self) { itinerary in
+        SavedItineraryDetailView(itinerary: itinerary)
       }
     }
   }
@@ -74,32 +63,20 @@ struct ItineraryListView: View {
   }
   
   // MARK: - Itinerary List
-  
+
   private var itineraryList: some View {
-    List {
-      ForEach(store.itineraries) { itinerary in
-        ZStack {
-          NavigationLink(destination: SavedItineraryDetailView(itinerary: itinerary)) {
-            EmptyView()
-          }.opacity(0)
-          
-          ItineraryCard(itinerary: itinerary)
+    ScrollView {
+      LazyVStack(spacing: DesignTokens.Spacing.sm) {
+        ForEach(store.itineraries) { itinerary in
+          NavigationLink(value: itinerary) {
+            ItineraryCard(itinerary: itinerary)
+          }
+          .buttonStyle(.plain)
         }
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(
-          top: DesignTokens.Spacing.xxs,
-          leading: DesignTokens.Spacing.md,
-          bottom: DesignTokens.Spacing.xxs,
-          trailing: DesignTokens.Spacing.md
-        ))
       }
-      .onDelete { indexSet in
-        store.delete(at: indexSet)
-      }
+      .padding(.horizontal, DesignTokens.Spacing.md)
+      .padding(.vertical, DesignTokens.Spacing.sm)
     }
-    .listStyle(.plain)
-    .scrollContentBackground(.hidden)
     .background(Color(.systemGroupedBackground))
   }
 }
