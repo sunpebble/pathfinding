@@ -76,21 +76,28 @@ struct ImportedItineraryView: View {
   // MARK: - Day Selector
 
   private var daySelectorView: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: DesignTokens.Spacing.sm) {
-        ForEach(days) { day in
-          DaySelectorButton(
-            day: day,
-            isSelected: selectedDay == day.dayNumber
-          ) {
-            withAnimation(.spring(response: 0.3)) {
-              selectedDay = day.dayNumber
+    ScrollViewReader { proxy in
+      ScrollView(.horizontal, showsIndicators: false) {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+          ForEach(days) { day in
+            DaySelectorButton(
+              day: day,
+              isSelected: selectedDay == day.dayNumber
+            ) {
+              withAnimation(.spring(response: 0.3)) {
+                selectedDay = day.dayNumber
+                proxy.scrollTo(day.dayNumber, anchor: .center)
+              }
             }
+            .id(day.dayNumber)
           }
         }
+        .padding(.horizontal, DesignTokens.Spacing.md)
+        .padding(.vertical, DesignTokens.Spacing.sm)
       }
-      .padding(.horizontal, DesignTokens.Spacing.md)
-      .padding(.vertical, DesignTokens.Spacing.sm)
+      .onAppear {
+        proxy.scrollTo(selectedDay, anchor: .center)
+      }
     }
   }
 
