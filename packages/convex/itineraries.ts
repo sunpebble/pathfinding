@@ -226,11 +226,18 @@ export const getById = query({
       };
     });
 
+    // Get collaborators
+    const collaborators = await ctx.db
+      .query('itineraryCollaborators')
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .collect();
+
     return {
       ...itinerary,
       cityName: city?.name,
       daysCount: calculateDaysCount(itinerary.startDate, itinerary.endDate),
       days: daysWithItems,
+      collaborators,
     };
   },
 });
