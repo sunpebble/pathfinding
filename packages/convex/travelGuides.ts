@@ -385,3 +385,189 @@ export const clearAllAiData = mutation({
     return { clearedCount, hasMore: guides.length === limit };
   },
 });
+
+// Update POI coordinates with manual override
+export const updatePoiCoordinates = mutation({
+  args: {
+    guideId: v.id('travelGuides'),
+    dayNumber: v.number(),
+    poiIndex: v.number(),
+    latitude: v.number(),
+    longitude: v.number(),
+    verifiedBy: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const guide = await ctx.db.get(args.guideId);
+    if (!guide) {
+      throw new Error(`Guide not found: ${args.guideId}`);
+    }
+
+    if (!guide.aiDays) {
+      throw new Error('Guide has no AI-generated itinerary data');
+    }
+
+    // Find the day
+    const dayIndex = guide.aiDays.findIndex(
+      (day) => day.dayNumber === args.dayNumber
+    );
+    if (dayIndex === -1) {
+      throw new Error(`Day ${args.dayNumber} not found in guide`);
+    }
+
+    const day = guide.aiDays[dayIndex];
+    if (args.poiIndex < 0 || args.poiIndex >= day.pois.length) {
+      throw new Error(
+        `POI index ${args.poiIndex} out of range (0-${day.pois.length - 1})`
+      );
+    }
+
+    // Create updated aiDays with the modified POI
+    const updatedAiDays = guide.aiDays.map((d, dIdx) => {
+      if (dIdx !== dayIndex) return d;
+      return {
+        ...d,
+        pois: d.pois.map((poi, pIdx) => {
+          if (pIdx !== args.poiIndex) return poi;
+          return {
+            ...poi,
+            latitude: args.latitude,
+            longitude: args.longitude,
+            geocodeConfidence: 1.0,
+            geocodeSource: 'manual',
+            isManuallyVerified: true,
+            verifiedAt: Date.now(),
+            verifiedBy: args.verifiedBy,
+          };
+        }),
+      };
+    });
+
+    // Recalculate geocoding metrics
+    let totalPois = 0;
+    let totalConfidence = 0;
+    let lowConfidenceCount = 0;
+    let manuallyVerifiedCount = 0;
+    const sourceDistribution: {
+      amap?: number;
+      nominatim?: number;
+      overpass?: number;
+      consensus?: number;
+      manual?: number;
+    } = {};
+
+    for (const d of updatedAiDays) {
+      for (const poi of d.pois) {
+        totalPois++;
+        const confidence = poi.geocodeConfidence ?? 0;
+        totalConfidence += confidence;
+        if (confidence < 0.5) {
+          lowConfidenceCount++;
+        }
+        if (poi.isManuallyVerified) {
+          manuallyVerifiedCount++;
+        }
+        const source = poi.geocodeSource ?? 'unknown';
+        if (
+          source === 'amap' ||
+          source === 'nominatim' ||
+          source === 'overpass' ||
+          source === 'consensus' ||
+          source === 'manual'
+        ) {
+          sourceDistribution[source] = (sourceDistribution[source] ?? 0) + 1;
+        }
+      }
+    }
+
+    const geocodingMetrics = {
+      totalPois,
+      averageConfidence: totalPois > 0 ? totalConfidence / totalPois : 0,
+      lowConfidenceCount,
+      manuallyVerifiedCount,
+      sourceDistribution,
+      lastUpdated: Date.now(),
+    };
+
+    await ctx.db.patch(args.guideId, {
+      aiDays: updatedAiDays,
+      geocodingMetrics,
+    });
+
+    return {
+      success: true,
+      updatedPoi: {
+        dayNumber: args.dayNumber,
+        poiIndex: args.poiIndex,
+        latitude: args.latitude,
+        longitude: args.longitude,
+      },
+      geocodingMetrics,
+    };
+  },
+});
+
+// Get guides with low confidence geocoding for admin review
+export const getGuidesWithLowConfidence = query({
+  args: {
+    confidenceThreshold: v.optional(v.number()), // Default 0.5
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const threshold = args.confidenceThreshold ?? 0.5;
+    const effectiveLimit = args.limit ?? 50;
+
+    // Get all guides with AI data
+    const guides = await ctx.db
+      .query('travelGuides')
+      .filter((q) => q.neq(q.field('aiDays'), undefined))
+      .collect();
+
+    // Calculate low confidence POI count for each guide
+    const guidesWithStats = guides
+      .map((guide) => {
+        if (!guide.aiDays) return null;
+
+        let totalPois = 0;
+        let lowConfidenceCount = 0;
+        let totalConfidence = 0;
+        let manuallyVerifiedCount = 0;
+
+        for (const day of guide.aiDays) {
+          for (const poi of day.pois) {
+            totalPois++;
+            const confidence = poi.geocodeConfidence ?? 0;
+            totalConfidence += confidence;
+            if (confidence < threshold) {
+              lowConfidenceCount++;
+            }
+            if (poi.isManuallyVerified) {
+              manuallyVerifiedCount++;
+            }
+          }
+        }
+
+        // Only include guides with low-confidence POIs
+        if (lowConfidenceCount === 0) return null;
+
+        return {
+          _id: guide._id,
+          title: guide.title,
+          sourcePlatform: guide.sourcePlatform,
+          sourceExternalId: guide.sourceExternalId,
+          totalPois,
+          lowConfidenceCount,
+          averageConfidence: totalPois > 0 ? totalConfidence / totalPois : 0,
+          manuallyVerifiedCount,
+          unverifiedLowConfidence: lowConfidenceCount - manuallyVerifiedCount,
+        };
+      })
+      .filter((g): g is NonNullable<typeof g> => g !== null);
+
+    // Sort by unverified low-confidence count (descending)
+    guidesWithStats.sort(
+      (a, b) => b.unverifiedLowConfidence - a.unverifiedLowConfidence
+    );
+
+    return guidesWithStats.slice(0, effectiveLimit);
+  },
+});
