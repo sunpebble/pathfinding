@@ -84,7 +84,29 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
                 )
               : { valid: false };
 
-            return {
+            // Build POI with all enhanced metadata
+            const geocodedPoi: {
+              name: string;
+              type: string;
+              description?: string;
+              latitude: number;
+              longitude: number;
+              address?: string;
+              geocodeConfidence: number;
+              geocodeSource: string;
+              duration?: string;
+              priceInfo?: string;
+              openingHours?: string;
+              tips?: string;
+              rating?: number;
+              highlights?: string[];
+              transportToNext?: {
+                mode?: string;
+                duration?: string;
+                distance?: string;
+                notes?: string;
+              };
+            } = {
               name: poi.name,
               type: poi.type,
               description: poi.description,
@@ -94,6 +116,21 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
               geocodeConfidence: location?.confidence ?? 0,
               geocodeSource: location?.source ?? 'none',
             };
+
+            // Preserve enhanced metadata from AI extraction
+            if (poi.duration) geocodedPoi.duration = poi.duration;
+            if (poi.priceInfo) geocodedPoi.priceInfo = poi.priceInfo;
+            if (poi.openingHours) geocodedPoi.openingHours = poi.openingHours;
+            if (poi.tips) geocodedPoi.tips = poi.tips;
+            if (poi.rating) geocodedPoi.rating = poi.rating;
+            if (poi.highlights && poi.highlights.length > 0) {
+              geocodedPoi.highlights = poi.highlights;
+            }
+            if (poi.transportToNext) {
+              geocodedPoi.transportToNext = poi.transportToNext;
+            }
+
+            return geocodedPoi;
           })
         );
 
@@ -190,17 +227,20 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
   const body = await c.req.json().catch(() => ({}));
   const limit = body.limit || 5;
   const skipValidation = body.skipValidation || false;
+  const force = body.force || false; // Force re-process even if already has AI data
   const concurrency = Math.min(body.concurrency || 2, 5); // Max 5 concurrent AI extractions
   const strategy = (body.strategy || 'multi') as GeocodingStrategy;
 
   try {
-    // Get guides without AI data
+    // Get guides - if force, get all; otherwise only unprocessed
     const guides = await convex.query(api.travelGuides.list, { limit: 50 });
-    const unprocessed = guides
-      .filter((g: { aiProcessedAt?: number }) => !g.aiProcessedAt)
-      .slice(0, limit);
+    const toProcess = force
+      ? guides.slice(0, limit)
+      : guides
+          .filter((g: { aiProcessedAt?: number }) => !g.aiProcessedAt)
+          .slice(0, limit);
 
-    if (unprocessed.length === 0) {
+    if (toProcess.length === 0) {
       return c.json({ message: 'No guides to process', processed: 0 });
     }
 
@@ -211,7 +251,7 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
     // Note: Geocoding is rate-limited by provider, so we do parallel AI extraction
     // then sequential geocoding per guide
     const processedResults = await withConcurrency(
-      unprocessed,
+      toProcess,
       async (guide: {
         _id: string;
         title?: string;
@@ -239,6 +279,18 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
             address?: string;
             geocodeConfidence?: number;
             geocodeSource?: string;
+            duration?: string;
+            priceInfo?: string;
+            openingHours?: string;
+            tips?: string;
+            rating?: number;
+            highlights?: string[];
+            transportToNext?: {
+              mode?: string;
+              duration?: string;
+              distance?: string;
+              notes?: string;
+            };
           }>;
         }> = [];
 
@@ -252,6 +304,18 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
             address?: string;
             geocodeConfidence?: number;
             geocodeSource?: string;
+            duration?: string;
+            priceInfo?: string;
+            openingHours?: string;
+            tips?: string;
+            rating?: number;
+            highlights?: string[];
+            transportToNext?: {
+              mode?: string;
+              duration?: string;
+              distance?: string;
+              notes?: string;
+            };
           }> = [];
 
           for (const poi of day.pois) {
@@ -269,7 +333,7 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
                 )
               : { valid: false };
 
-            geocodedPois.push({
+            const geocodedPoi: (typeof geocodedPois)[number] = {
               name: poi.name,
               type: normalizePoiType(poi.type),
               description: poi.description,
@@ -278,7 +342,22 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
               address: coords.valid ? location!.address : undefined,
               geocodeConfidence: location?.confidence ?? 0,
               geocodeSource: location?.source ?? 'none',
-            });
+            };
+
+            // Preserve enhanced metadata from AI extraction
+            if (poi.duration) geocodedPoi.duration = poi.duration;
+            if (poi.priceInfo) geocodedPoi.priceInfo = poi.priceInfo;
+            if (poi.openingHours) geocodedPoi.openingHours = poi.openingHours;
+            if (poi.tips) geocodedPoi.tips = poi.tips;
+            if (poi.rating) geocodedPoi.rating = poi.rating;
+            if (poi.highlights && poi.highlights.length > 0) {
+              geocodedPoi.highlights = poi.highlights;
+            }
+            if (poi.transportToNext) {
+              geocodedPoi.transportToNext = poi.transportToNext;
+            }
+
+            geocodedPois.push(geocodedPoi);
           }
 
           geocodedDays.push({

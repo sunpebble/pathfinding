@@ -17,6 +17,22 @@ export interface ExtractedPOI {
   latitude: number;
   longitude: number;
   address?: string;
+  // Enhanced POI metadata
+  duration?: string;
+  priceInfo?: string;
+  openingHours?: string;
+  tips?: string;
+  rating?: number;
+  highlights?: string[];
+  transportToNext?: {
+    mode?: string;
+    duration?: string;
+    distance?: string;
+    notes?: string;
+  };
+  // Geocoding metadata
+  geocodeConfidence?: number;
+  geocodeSource?: string;
 }
 
 /**
@@ -286,30 +302,31 @@ function haversineDistance(
 
 /**
  * Calculate validation score for a POI (0-1)
+ * Enhanced to consider additional metadata quality
  */
 export function calculateValidationScore(poi: ExtractedPOI): number {
   let score = 0;
 
-  // Name quality (max 0.3)
+  // Name quality (max 0.25)
   const normalizedName = normalizePoiName(poi.name);
   if (normalizedName.length >= 2) {
-    score += 0.2;
+    score += 0.15;
     if (normalizedName.length >= 4) {
       score += 0.1;
     }
   }
 
-  // Coordinate quality (max 0.4)
+  // Coordinate quality (max 0.35)
   const coordValidation = validateCoordinates(poi.latitude, poi.longitude);
   if (coordValidation.valid) {
-    score += 0.4;
+    score += 0.35;
   } else if (poi.latitude !== 0 || poi.longitude !== 0) {
     score += 0.1; // Partial credit for non-zero but invalid
   }
 
-  // Type quality (max 0.15)
+  // Type quality (max 0.1)
   if (poi.type && normalizePoiType(poi.type) !== 'other') {
-    score += 0.15;
+    score += 0.1;
   }
 
   // Description quality (max 0.1)
@@ -321,6 +338,18 @@ export function calculateValidationScore(poi: ExtractedPOI): number {
   if (poi.address && poi.address.length > 5) {
     score += 0.05;
   }
+
+  // Enhanced metadata bonus (max 0.15)
+  let metadataBonus = 0;
+  if (poi.duration) metadataBonus += 0.02;
+  if (poi.priceInfo) metadataBonus += 0.03;
+  if (poi.openingHours) metadataBonus += 0.02;
+  if (poi.tips) metadataBonus += 0.02;
+  if (poi.rating && poi.rating >= 1 && poi.rating <= 5) metadataBonus += 0.02;
+  if (poi.highlights && poi.highlights.length > 0) metadataBonus += 0.02;
+  if (poi.transportToNext) metadataBonus += 0.02;
+
+  score += Math.min(0.15, metadataBonus);
 
   return Math.min(1, score);
 }
@@ -472,6 +501,7 @@ export function validateExtractedDays(
 
 /**
  * Convert validated POIs back to the original format (for storage)
+ * Preserves all enhanced metadata fields
  */
 export function toStorageFormat(
   validatedDays: ValidationResult['days']
@@ -479,14 +509,39 @@ export function toStorageFormat(
   return validatedDays.map((day) => ({
     dayNumber: day.dayNumber,
     theme: day.theme,
-    pois: day.pois.map((poi) => ({
-      name: poi.normalizedName || poi.name,
-      type: poi.normalizedType || poi.type,
-      description: poi.description,
-      latitude: poi.latitude,
-      longitude: poi.longitude,
-      address: poi.address,
-    })),
+    pois: day.pois.map((poi) => {
+      const storagePoi: ExtractedPOI = {
+        name: poi.normalizedName || poi.name,
+        type: poi.normalizedType || poi.type,
+        description: poi.description,
+        latitude: poi.latitude,
+        longitude: poi.longitude,
+        address: poi.address,
+      };
+
+      // Preserve enhanced metadata
+      if (poi.duration) storagePoi.duration = poi.duration;
+      if (poi.priceInfo) storagePoi.priceInfo = poi.priceInfo;
+      if (poi.openingHours) storagePoi.openingHours = poi.openingHours;
+      if (poi.tips) storagePoi.tips = poi.tips;
+      if (poi.rating) storagePoi.rating = poi.rating;
+      if (poi.highlights && poi.highlights.length > 0) {
+        storagePoi.highlights = poi.highlights;
+      }
+      if (poi.transportToNext) {
+        storagePoi.transportToNext = poi.transportToNext;
+      }
+
+      // Preserve geocoding metadata
+      if (poi.geocodeConfidence !== undefined) {
+        storagePoi.geocodeConfidence = poi.geocodeConfidence;
+      }
+      if (poi.geocodeSource) {
+        storagePoi.geocodeSource = poi.geocodeSource;
+      }
+
+      return storagePoi;
+    }),
   }));
 }
 

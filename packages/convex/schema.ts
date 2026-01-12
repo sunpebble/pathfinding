@@ -301,6 +301,25 @@ export default defineSchema({
               latitude: v.number(),
               longitude: v.number(),
               address: v.optional(v.string()),
+
+              // Enhanced POI metadata
+              duration: v.optional(v.string()), // 推荐停留时长，如 "1-2小时"
+              priceInfo: v.optional(v.string()), // 门票/人均消费，如 "免费" "人均80元"
+              openingHours: v.optional(v.string()), // 营业时间，如 "09:00-18:00"
+              tips: v.optional(v.string()), // 针对该POI的特别提示
+              rating: v.optional(v.number()), // 1-5 评分
+              highlights: v.optional(v.array(v.string())), // 亮点/特色，如餐厅特色菜
+
+              // Transportation to next POI
+              transportToNext: v.optional(
+                v.object({
+                  mode: v.optional(v.string()), // walking, driving, transit, taxi
+                  duration: v.optional(v.string()), // 如 "步行10分钟"
+                  distance: v.optional(v.string()), // 如 "800米"
+                  notes: v.optional(v.string()), // 交通备注
+                })
+              ),
+
               // Geocoding metadata (for enhanced geocoding accuracy)
               geocodeConfidence: v.optional(v.number()), // 0-1 confidence score
               geocodeSource: v.optional(v.string()), // 'amap', 'nominatim', 'overpass', 'consensus', 'manual'

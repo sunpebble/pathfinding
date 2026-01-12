@@ -274,15 +274,98 @@ guidesRouter.post('/', async (c: Context) => {
 /**
  * POST /api/guides/cleanup/duplicates
  * Remove duplicate guides (keep the one with longer content)
+ * Uses cursor-based pagination and indexed lookups
  */
 guidesRouter.post('/cleanup/duplicates', async (c: Context) => {
   try {
-    const result = await convex.mutation(api.travelGuides.removeDuplicates, {});
+    const body = await c.req.json().catch(() => ({}));
+    const requestedPlatform = body.platform as
+      | 'xiaohongshu'
+      | 'weibo'
+      | 'ctrip'
+      | 'douyin'
+      | 'tripadvisor'
+      | undefined;
+
+    // Process each platform
+    const platforms = requestedPlatform
+      ? [requestedPlatform]
+      : (['xiaohongshu', 'weibo', 'ctrip', 'douyin', 'tripadvisor'] as const);
+
+    let totalRemoved = 0;
+    let totalChecked = 0;
+    const results: Record<string, any> = {};
+
+    for (const platform of platforms) {
+      let platformRemoved = 0;
+      let platformChecked = 0;
+      const seenExternalIds = new Set<string>();
+      const maxIterations = 500;
+      let iterations = 0;
+      let cursor: string | undefined;
+
+      // Process using cursor-based pagination
+      while (iterations < maxIterations) {
+        iterations++;
+
+        // Get batch using cursor
+        const batch = await convex.query(
+          api.travelGuides.getUniqueExternalIds,
+          {
+            platform,
+            limit: 50,
+            cursor,
+          }
+        );
+
+        if (batch.items.length === 0) {
+          break;
+        }
+
+        cursor = batch.cursor;
+
+        // Check each externalId for duplicates
+        for (const item of batch.items) {
+          if (seenExternalIds.has(item.externalId)) continue;
+          seenExternalIds.add(item.externalId);
+          platformChecked++;
+
+          const dupes = await convex.query(
+            api.travelGuides.findDuplicatesForExternalId,
+            {
+              sourcePlatform: platform,
+              sourceExternalId: item.externalId,
+            }
+          );
+
+          if (dupes.idsToDelete.length > 0) {
+            await convex.mutation(api.travelGuides.batchDelete, {
+              ids: dupes.idsToDelete as Id<'travelGuides'>[],
+            });
+            platformRemoved += dupes.idsToDelete.length;
+          }
+        }
+
+        if (batch.isDone) {
+          break;
+        }
+      }
+
+      results[platform] = {
+        removed: platformRemoved,
+        checked: platformChecked,
+        iterations,
+      };
+      totalRemoved += platformRemoved;
+      totalChecked += platformChecked;
+    }
+
     return c.json({
       success: true,
-      message: `Removed ${result.removedCount} duplicates`,
-      totalBefore: result.totalBefore,
-      totalAfter: result.totalAfter,
+      message: `Removed ${totalRemoved} duplicates`,
+      totalRemoved,
+      totalChecked,
+      byPlatform: results,
     });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);

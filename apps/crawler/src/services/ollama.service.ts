@@ -3,13 +3,8 @@
  * Provides content extraction and summarization using Gemma3 model
  */
 
-import type {RetryOptions} from '../lib/retry.js';
-import {
-  CircuitBreaker,
-  parseJsonSafely,
-  
-  withRetry
-} from '../lib/retry.js';
+import type { RetryOptions } from '../lib/retry.js';
+import { CircuitBreaker, parseJsonSafely, withRetry } from '../lib/retry.js';
 
 export interface OllamaConfig {
   baseUrl: string;
@@ -526,6 +521,19 @@ Translation:`;
         name: string;
         type: string;
         description: string;
+        // Enhanced POI metadata
+        duration?: string;
+        priceInfo?: string;
+        openingHours?: string;
+        tips?: string;
+        rating?: number;
+        highlights?: string[];
+        transportToNext?: {
+          mode?: string;
+          duration?: string;
+          distance?: string;
+          notes?: string;
+        };
       }>;
     }>;
   }> {
@@ -535,9 +543,10 @@ Translation:`;
     const systemPrompt = `你是一位专业的旅行行程规划师。从旅行攻略中提取结构化的按天行程信息。
 始终返回有效的JSON格式。专注于提取实际可执行的旅行信息。
 确保提取的景点名称是具体的地点名称，不是泛泛的描述。
-每个POI的type必须是: attraction, restaurant, hotel, shopping, entertainment, cafe, museum, historic, park 中的一个。`;
+每个POI的type必须是: attraction, restaurant, hotel, shopping, entertainment, cafe, museum, historic, park, transportation 中的一个。
+尽可能提取更多的实用信息，如门票价格、营业时间、推荐停留时长、交通方式等。`;
 
-    const prompt = `分析以下旅行攻略，提取按天结构化的行程信息。
+    const prompt = `分析以下旅行攻略，提取按天结构化的行程信息，尽可能完整地提取所有实用信息。
 
 内容:
 ${content.slice(0, 15000)}
@@ -558,8 +567,20 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
       "pois": [
         {
           "name": "具体景点名称（必须是可以在地图上找到的具体地点）",
-          "type": "attraction|restaurant|hotel|shopping|entertainment|cafe|museum|historic|park",
-          "description": "简短描述或推荐理由（20-50字）"
+          "type": "attraction|restaurant|hotel|shopping|entertainment|cafe|museum|historic|park|transportation",
+          "description": "简短描述或推荐理由（20-50字）",
+          "duration": "推荐停留时长（如：1-2小时、半天）",
+          "priceInfo": "门票或人均消费（如：免费、门票60元、人均80元）",
+          "openingHours": "营业/开放时间（如：09:00-18:00、全天开放）",
+          "tips": "针对该地点的特别提示（如：需提前预约、建议早上去人少）",
+          "rating": 评分1-5（根据内容判断，如无法判断则不填）,
+          "highlights": ["亮点1", "亮点2"],
+          "transportToNext": {
+            "mode": "walking|driving|transit|taxi",
+            "duration": "到下一个景点的时间（如：步行10分钟）",
+            "distance": "距离（如：800米、2公里）",
+            "notes": "交通备注"
+          }
         }
       ]
     }
@@ -570,13 +591,29 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
 1. POI名称必须是具体可查找的地点，如"西湖"、"外滩"、"南锣鼓巷"，不要写"当地特色餐厅"这类泛泛的描述
 2. 如果内容中没有明确的天数划分，根据提到的景点数量合理分配（每天3-5个景点）
 3. 确保每个POI都有合理的type分类
-4. 只返回JSON对象，不要其他文字`;
+4. 尽可能从内容中提取门票价格、营业时间、停留时长等信息，如果没有明确提到可以根据常识估算
+5. 餐厅类POI在highlights中填写推荐菜品
+6. transportToNext只需填写到下一个POI的交通信息，每天最后一个POI可以不填
+7. 只返回JSON对象，不要其他文字`;
 
     // Type definitions for parsed data
+    interface ParsedTransport {
+      mode?: string;
+      duration?: string;
+      distance?: string;
+      notes?: string;
+    }
     interface ParsedPoi {
       name?: string;
       type?: string;
       description?: string;
+      duration?: string;
+      priceInfo?: string;
+      openingHours?: string;
+      tips?: string;
+      rating?: number;
+      highlights?: string[];
+      transportToNext?: ParsedTransport;
     }
     interface ParsedDay {
       dayNumber?: number;
@@ -632,11 +669,99 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
                   .filter(
                     (poi: ParsedPoi) => poi && poi.name && poi.name.length >= 2
                   )
-                  .map((poi: ParsedPoi) => ({
-                    name: String(poi.name).trim(),
-                    type: String(poi.type || 'attraction').toLowerCase(),
-                    description: String(poi.description || '').slice(0, 200),
-                  }))
+                  .map((poi: ParsedPoi) => {
+                    const basePoi = {
+                      name: String(poi.name).trim(),
+                      type: String(poi.type || 'attraction').toLowerCase(),
+                      description: String(poi.description || '').slice(0, 200),
+                    };
+
+                    // Add optional enhanced fields if present
+                    const enhancedPoi: typeof basePoi & {
+                      duration?: string;
+                      priceInfo?: string;
+                      openingHours?: string;
+                      tips?: string;
+                      rating?: number;
+                      highlights?: string[];
+                      transportToNext?: {
+                        mode?: string;
+                        duration?: string;
+                        distance?: string;
+                        notes?: string;
+                      };
+                    } = { ...basePoi };
+
+                    if (poi.duration) {
+                      enhancedPoi.duration = String(poi.duration).slice(0, 50);
+                    }
+                    if (poi.priceInfo) {
+                      enhancedPoi.priceInfo = String(poi.priceInfo).slice(
+                        0,
+                        100
+                      );
+                    }
+                    if (poi.openingHours) {
+                      enhancedPoi.openingHours = String(poi.openingHours).slice(
+                        0,
+                        100
+                      );
+                    }
+                    if (poi.tips) {
+                      enhancedPoi.tips = String(poi.tips).slice(0, 200);
+                    }
+                    if (
+                      poi.rating !== undefined &&
+                      poi.rating >= 1 &&
+                      poi.rating <= 5
+                    ) {
+                      enhancedPoi.rating = Number(poi.rating);
+                    }
+                    if (
+                      Array.isArray(poi.highlights) &&
+                      poi.highlights.length > 0
+                    ) {
+                      enhancedPoi.highlights = poi.highlights
+                        .filter((h) => h && typeof h === 'string')
+                        .slice(0, 5)
+                        .map((h) => String(h).slice(0, 50));
+                    }
+                    if (
+                      poi.transportToNext &&
+                      typeof poi.transportToNext === 'object'
+                    ) {
+                      const transport = poi.transportToNext;
+                      if (
+                        transport.mode ||
+                        transport.duration ||
+                        transport.distance
+                      ) {
+                        enhancedPoi.transportToNext = {};
+                        if (transport.mode) {
+                          enhancedPoi.transportToNext.mode = String(
+                            transport.mode
+                          ).toLowerCase();
+                        }
+                        if (transport.duration) {
+                          enhancedPoi.transportToNext.duration = String(
+                            transport.duration
+                          ).slice(0, 50);
+                        }
+                        if (transport.distance) {
+                          enhancedPoi.transportToNext.distance = String(
+                            transport.distance
+                          ).slice(0, 50);
+                        }
+                        if (transport.notes) {
+                          enhancedPoi.transportToNext.notes = String(
+                            transport.notes
+                          ).slice(0, 100);
+                        }
+                      }
+                    }
+
+                    return enhancedPoi;
+                  })
               : [],
           })),
         };

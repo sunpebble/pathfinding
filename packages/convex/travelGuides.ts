@@ -54,6 +54,53 @@ export const list = query({
   },
 });
 
+// List guide IDs with pagination (lightweight - for bulk operations)
+export const listIds = query({
+  args: {
+    cursor: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 100;
+
+    const result = await ctx.db
+      .query('travelGuides')
+      .order('desc')
+      .paginate({ numItems: limit, cursor: args.cursor ?? null });
+
+    // Return only essential fields to avoid 16MB limit
+    const items = result.page.map((g) => ({
+      _id: g._id,
+      sourceExternalId: g.sourceExternalId,
+      sourcePlatform: g.sourcePlatform,
+      title: g.title,
+      contentLength: g.content?.length || 0,
+      qualityScore: g.qualityScore,
+      aiProcessedAt: g.aiProcessedAt,
+    }));
+
+    return {
+      items,
+      cursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+// Count total guides
+export const count = query({
+  args: {},
+  handler: async (ctx) => {
+    // Use index to count efficiently - iterate without loading full documents
+    let count = 0;
+    const iter = ctx.db.query('travelGuides').order('desc');
+    for await (const _ of iter) {
+      count++;
+    }
+    return count;
+  },
+});
+
 // Get a guide by ID
 export const getById = query({
   args: { id: v.id('travelGuides') },
@@ -259,6 +306,29 @@ export const updateAiData = mutation({
               latitude: v.number(),
               longitude: v.number(),
               address: v.optional(v.string()),
+
+              // Enhanced POI metadata
+              duration: v.optional(v.string()),
+              priceInfo: v.optional(v.string()),
+              openingHours: v.optional(v.string()),
+              tips: v.optional(v.string()),
+              rating: v.optional(v.number()),
+              highlights: v.optional(v.array(v.string())),
+              transportToNext: v.optional(
+                v.object({
+                  mode: v.optional(v.string()),
+                  duration: v.optional(v.string()),
+                  distance: v.optional(v.string()),
+                  notes: v.optional(v.string()),
+                })
+              ),
+
+              // Geocoding metadata
+              geocodeConfidence: v.optional(v.number()),
+              geocodeSource: v.optional(v.string()),
+              isManuallyVerified: v.optional(v.boolean()),
+              verifiedAt: v.optional(v.number()),
+              verifiedBy: v.optional(v.string()),
             })
           ),
         })
@@ -292,48 +362,202 @@ export const remove = mutation({
   },
 });
 
+// Find duplicate guide IDs by checking platform + externalId (uses index)
+export const findDuplicatesForExternalId = query({
+  args: {
+    sourcePlatform: platformValidator,
+    sourceExternalId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Use the by_platform_external index for efficient lookup
+    const guides = await ctx.db
+      .query('travelGuides')
+      .withIndex('by_platform_external', (q) =>
+        q
+          .eq('sourcePlatform', args.sourcePlatform)
+          .eq('sourceExternalId', args.sourceExternalId)
+      )
+      .collect();
+
+    if (guides.length <= 1) {
+      return { idsToDelete: [], kept: guides[0]?._id };
+    }
+
+    // Sort to find best one
+    const sorted = guides
+      .map((g) => ({
+        _id: g._id,
+        contentLength: g.content?.length || 0,
+        qualityScore: g.qualityScore,
+        crawledAt: g.crawledAt || 0,
+        aiProcessedAt: g.aiProcessedAt,
+      }))
+      .sort((a, b) => {
+        const aiDiff = (b.aiProcessedAt ? 1 : 0) - (a.aiProcessedAt ? 1 : 0);
+        if (aiDiff !== 0) return aiDiff;
+        const contentDiff = b.contentLength - a.contentLength;
+        if (contentDiff !== 0) return contentDiff;
+        const qualityDiff = b.qualityScore - a.qualityScore;
+        if (qualityDiff !== 0) return qualityDiff;
+        return b.crawledAt - a.crawledAt;
+      });
+
+    return {
+      idsToDelete: sorted.slice(1).map((g) => g._id),
+      kept: sorted[0]._id,
+      total: guides.length,
+    };
+  },
+});
+
+// Get unique sourceExternalIds using pagination (lightweight)
+export const getUniqueExternalIds = query({
+  args: {
+    platform: platformValidator,
+    limit: v.optional(v.number()),
+    cursor: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 50;
+
+    const result = await ctx.db
+      .query('travelGuides')
+      .withIndex('by_platform', (q) => q.eq('sourcePlatform', args.platform))
+      .paginate({
+        numItems: limit,
+        cursor: args.cursor ?? null,
+      });
+
+    // Extract externalIds from this page
+    const items = result.page.map((g) => ({
+      id: g._id,
+      externalId: g.sourceExternalId,
+      platform: g.sourcePlatform,
+    }));
+
+    return {
+      items,
+      cursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+// Batch delete guides by IDs
+export const batchDelete = mutation({
+  args: {
+    ids: v.array(v.id('travelGuides')),
+  },
+  handler: async (ctx, args) => {
+    let deletedCount = 0;
+    for (const id of args.ids) {
+      try {
+        await ctx.db.delete(id);
+        deletedCount++;
+      } catch {
+        // Skip if already deleted
+      }
+    }
+    return { deletedCount };
+  },
+});
+
 // Remove duplicate guides (keep the one with longer content or higher quality score)
+// Uses platform index to batch process and avoid 16MB limit
 export const removeDuplicates = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const guides = await ctx.db.query('travelGuides').collect();
+  args: {
+    platform: v.optional(platformValidator),
+  },
+  handler: async (ctx, args) => {
+    // Collect guide metadata using platform index for smaller batches
+    interface GuideInfo {
+      _id: Id<'travelGuides'>;
+      sourcePlatform: string;
+      sourceExternalId: string;
+      contentLength: number;
+      qualityScore: number;
+      crawledAt: number;
+      aiProcessedAt?: number;
+    }
+
+    const allGuides: GuideInfo[] = [];
+
+    // If platform specified, only query that platform
+    // Otherwise query all platforms one by one
+    const platforms: Array<
+      'xiaohongshu' | 'weibo' | 'ctrip' | 'douyin' | 'tripadvisor'
+    > = args.platform
+      ? [args.platform]
+      : ['xiaohongshu', 'weibo', 'ctrip', 'douyin', 'tripadvisor'];
+
+    for (const platform of platforms) {
+      const guides = await ctx.db
+        .query('travelGuides')
+        .withIndex('by_platform', (q) => q.eq('sourcePlatform', platform))
+        .collect();
+
+      for (const g of guides) {
+        allGuides.push({
+          _id: g._id,
+          sourcePlatform: g.sourcePlatform,
+          sourceExternalId: g.sourceExternalId,
+          contentLength: g.content?.length || 0,
+          qualityScore: g.qualityScore,
+          crawledAt: g.crawledAt || 0,
+          aiProcessedAt: g.aiProcessedAt,
+        });
+      }
+    }
 
     // Group by platform + externalId
-    const grouped = new Map<string, typeof guides>();
-    for (const guide of guides) {
+    const grouped = new Map<string, GuideInfo[]>();
+    for (const guide of allGuides) {
       const key = `${guide.sourcePlatform}:${guide.sourceExternalId}`;
       const existing = grouped.get(key) || [];
       existing.push(guide);
       grouped.set(key, existing);
     }
 
+    // Find and delete duplicates
     let removedCount = 0;
+    const idsToDelete: Id<'travelGuides'>[] = [];
+
     for (const [_key, group] of grouped) {
       if (group.length > 1) {
-        // Sort by content length (desc), then quality score (desc), then crawledAt (desc)
+        // Sort by: hasAiData (desc), content length (desc), quality score (desc), crawledAt (desc)
         group.sort((a, b) => {
-          const contentDiff =
-            (b.content?.length || 0) - (a.content?.length || 0);
+          // Prefer guides with AI data
+          const aiDiff = (b.aiProcessedAt ? 1 : 0) - (a.aiProcessedAt ? 1 : 0);
+          if (aiDiff !== 0) return aiDiff;
+
+          const contentDiff = b.contentLength - a.contentLength;
           if (contentDiff !== 0) return contentDiff;
 
           const qualityDiff = b.qualityScore - a.qualityScore;
           if (qualityDiff !== 0) return qualityDiff;
 
-          return (b.crawledAt || 0) - (a.crawledAt || 0);
+          return b.crawledAt - a.crawledAt;
         });
 
-        // Keep first (best), delete rest
+        // Keep first (best), mark rest for deletion
         for (let i = 1; i < group.length; i++) {
-          await ctx.db.delete(group[i]._id);
-          removedCount++;
+          idsToDelete.push(group[i]._id);
         }
       }
     }
 
+    // Delete duplicates
+    for (const id of idsToDelete) {
+      await ctx.db.delete(id);
+      removedCount++;
+    }
+
     return {
       removedCount,
-      totalBefore: guides.length,
-      totalAfter: guides.length - removedCount,
+      totalBefore: allGuides.length,
+      totalAfter: allGuides.length - removedCount,
+      uniqueKeys: grouped.size,
+      platform: args.platform || 'all',
     };
   },
 });

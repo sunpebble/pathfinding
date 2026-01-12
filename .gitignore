@@ -58,3 +58,6 @@ out/
 .worktrees/
 .security-key
 logs/security/
+
+# iOS
+*.xcuserstate
