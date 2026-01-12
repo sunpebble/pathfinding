@@ -15,6 +15,46 @@ const transportModeValidator = v.union(
   v.literal('taxi')
 );
 
+/**
+ * Permission checking helper for items
+ */
+
+// Check if user can edit items in a day (checks itinerary permission)
+async function checkItemEditPermission(ctx: any, dayId: any, userId: string) {
+  const day = await ctx.db.get(dayId);
+  if (!day) {
+    throw new Error('Day not found');
+  }
+
+  const itinerary = await ctx.db.get(day.itineraryId);
+  if (!itinerary) {
+    throw new Error('Itinerary not found');
+  }
+
+  // Check if user is the owner (via itinerary.userId)
+  if (itinerary.userId === userId) {
+    return true;
+  }
+
+  // Check if user is a collaborator with edit permissions
+  const collab = await ctx.db
+    .query('itineraryCollaborators')
+    .withIndex('by_itinerary_user', (q) =>
+      q.eq('itineraryId', day.itineraryId).eq('userId', userId)
+    )
+    .first();
+
+  if (!collab) {
+    throw new Error('You do not have access to this itinerary');
+  }
+
+  if (collab.role === 'viewer') {
+    throw new Error('You do not have edit permissions for this itinerary');
+  }
+
+  return true;
+}
+
 // List items for a day
 export const listByDay = query({
   args: { dayId: v.id('itineraryDays') },
@@ -70,6 +110,7 @@ export const getById = query({
 export const create = mutation({
   args: {
     dayId: v.id('itineraryDays'),
+    userId: v.string(),
     poiId: v.id('pois'),
     orderIndex: v.optional(v.number()),
     startTime: v.optional(v.string()),
@@ -78,6 +119,9 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Check edit permission
+    await checkItemEditPermission(ctx, args.dayId, args.userId);
+
     // If no orderIndex provided, add at the end
     let orderIndex = args.orderIndex;
     if (orderIndex === undefined) {
@@ -107,6 +151,7 @@ export const create = mutation({
 export const update = mutation({
   args: {
     id: v.id('itineraryItems'),
+    userId: v.string(),
     orderIndex: v.optional(v.number()),
     startTime: v.optional(v.string()),
     endTime: v.optional(v.string()),
@@ -114,7 +159,14 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    // Get item to check permissions
+    const item = await ctx.db.get(args.id);
+    if (!item) throw new Error('Item not found');
+
+    // Check edit permission
+    await checkItemEditPermission(ctx, item.dayId, args.userId);
+
+    const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
@@ -125,8 +177,18 @@ export const update = mutation({
 
 // Delete an item
 export const remove = mutation({
-  args: { id: v.id('itineraryItems') },
+  args: {
+    id: v.id('itineraryItems'),
+    userId: v.string(),
+  },
   handler: async (ctx, args) => {
+    // Get item to check permissions
+    const item = await ctx.db.get(args.id);
+    if (!item) throw new Error('Item not found');
+
+    // Check edit permission
+    await checkItemEditPermission(ctx, item.dayId, args.userId);
+
     await ctx.db.delete(args.id);
   },
 });
@@ -135,11 +197,15 @@ export const remove = mutation({
 export const reorder = mutation({
   args: {
     itemId: v.id('itineraryItems'),
+    userId: v.string(),
     newOrderIndex: v.number(),
   },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.itemId);
     if (!item) throw new Error('Item not found');
+
+    // Check edit permission
+    await checkItemEditPermission(ctx, item.dayId, args.userId);
 
     const oldOrder = item.orderIndex;
     const newOrder = args.newOrderIndex;
@@ -175,12 +241,19 @@ export const reorder = mutation({
 export const moveToDay = mutation({
   args: {
     itemId: v.id('itineraryItems'),
+    userId: v.string(),
     newDayId: v.id('itineraryDays'),
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.itemId);
     if (!item) throw new Error('Item not found');
+
+    // Check edit permission for the source day
+    await checkItemEditPermission(ctx, item.dayId, args.userId);
+
+    // Check edit permission for the destination day
+    await checkItemEditPermission(ctx, args.newDayId, args.userId);
 
     // Calculate new order index if not provided
     let orderIndex = args.orderIndex;
