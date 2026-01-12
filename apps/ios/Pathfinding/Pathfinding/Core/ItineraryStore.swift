@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 
 /// 行程存储管理器 - 使用 UserDefaults 持久化
 @MainActor
@@ -34,6 +35,11 @@ final class ItineraryStore {
   private init() {
     load()
     loadInitialBatch()
+    setupMemoryWarningObserver()
+  }
+
+  deinit {
+    NotificationCenter.default.removeObserver(self)
   }
 
   // MARK: - Lazy Loading
@@ -120,5 +126,28 @@ final class ItineraryStore {
   private func persist() {
     guard let data = try? JSONEncoder().encode(allItineraries) else { return }
     UserDefaults.standard.set(data, forKey: key)
+  }
+
+  // MARK: - Memory Management
+
+  /// Setup memory warning observer
+  private func setupMemoryWarningObserver() {
+    NotificationCenter.default.addObserver(
+      forName: UIApplication.didReceiveMemoryWarningNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      self?.clearCache()
+    }
+  }
+
+  /// Clear cached data to free memory
+  func clearCache() {
+    // Clear paginated data but keep allItineraries (backed by UserDefaults)
+    paginatedItineraries = []
+    loadedCount = 0
+
+    // Reload initial batch to maintain functionality
+    loadInitialBatch()
   }
 }
