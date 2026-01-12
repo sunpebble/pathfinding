@@ -45,6 +45,23 @@ export const getById = query({
   },
 });
 
+// Get jobs that are due to run (nextRunAt <= now)
+export const getDueJobs = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const jobs = await ctx.db
+      .query('crawlJobs')
+      .withIndex('by_nextRunAt')
+      .filter((q) => q.lte(q.field('nextRunAt'), now))
+      .collect();
+
+    return args.limit ? jobs.slice(0, args.limit) : jobs;
+  },
+});
+
 // Create a new crawl job
 export const create = mutation({
   args: {
