@@ -1,7 +1,7 @@
 import Foundation
 
 /// Memory management utility for monitoring app memory usage
-class MemoryManager {
+final class MemoryManager: @unchecked Sendable {
   // MARK: - Shared Instance
 
   static let shared = MemoryManager()

@@ -33,7 +33,28 @@ struct ItineraryListView: View {
       .navigationDestination(for: SavedItinerary.self) { itinerary in
         SavedItineraryDetailView(itinerary: itinerary)
       }
+      .onAppear {
+        logMemoryUsage(context: "ItineraryListView.onAppear")
+      }
+      .onDisappear {
+        logMemoryUsage(context: "ItineraryListView.onDisappear")
+      }
     }
+  }
+
+  // MARK: - Memory Monitoring
+
+  private func logMemoryUsage(context: String) {
+    #if DEBUG
+    if let usage = MemoryManager.shared.currentMemoryUsage() {
+      let formatted = MemoryManager.shared.formatBytes(usage.used)
+      NSLog("[\(context)] Memory: \(formatted) (\(String(format: "%.1f", usage.usagePercentage))%)")
+
+      if MemoryManager.shared.isMemoryPressureHigh() {
+        NSLog("[\(context)] ⚠️ High memory pressure detected!")
+      }
+    }
+    #endif
   }
   
   // MARK: - Empty View
@@ -427,6 +448,10 @@ struct SavedItineraryDetailView: View {
         localTitle = itinerary.title
       }
       updateCamera()
+      logMemoryUsage(context: "SavedItineraryDetailView.onAppear", poiCount: allPois.count)
+    }
+    .onDisappear {
+      logMemoryUsage(context: "SavedItineraryDetailView.onDisappear", poiCount: allPois.count)
     }
     .onChange(of: localDays) { _, _ in
        // When days change (e.g. from edit), save immediately
@@ -497,27 +522,42 @@ struct SavedItineraryDetailView: View {
   private func updateCamera() {
     let ValidAnnotations = annotations
     guard !ValidAnnotations.isEmpty else { return }
-    
+
     let coords = ValidAnnotations.map(\.coordinate)
     let minLat = coords.map(\.latitude).min()!
     let maxLat = coords.map(\.latitude).max()!
     let minLng = coords.map(\.longitude).min()!
     let maxLng = coords.map(\.longitude).max()!
-    
+
     let center = CLLocationCoordinate2D(
       latitude: (minLat + maxLat) / 2,
       longitude: (minLng + maxLng) / 2
     )
-    
+
     let latDelta = max((maxLat - minLat) * 1.5, 0.01)
     let lngDelta = max((maxLng - minLng) * 1.5, 0.01)
-    
+
     withAnimation {
       cameraPosition = .region(MKCoordinateRegion(
         center: center,
         span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
       ))
     }
+  }
+
+  // MARK: - Memory Monitoring
+
+  private func logMemoryUsage(context: String, poiCount: Int) {
+    #if DEBUG
+    if let usage = MemoryManager.shared.currentMemoryUsage() {
+      let formatted = MemoryManager.shared.formatBytes(usage.used)
+      NSLog("[\(context)] Memory: \(formatted) (\(String(format: "%.1f", usage.usagePercentage))%) | POIs: \(poiCount)")
+
+      if MemoryManager.shared.isMemoryPressureHigh() {
+        NSLog("[\(context)] ⚠️ High memory pressure detected!")
+      }
+    }
+    #endif
   }
 }
 

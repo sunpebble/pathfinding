@@ -28,6 +28,7 @@
 		DD6488A271910ABDE48DA72A /* BlogPost.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEADDF8D8F827D98224C5319 /* BlogPost.swift */; };
 		E8CE944BDEE799DD2C7348F4 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F941316940938FD8267380E /* DesignSystem.swift */; };
 		FC76BBD2E067578FFBBAE967 /* ImageViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F177FCC76E9C41E981C00F74 /* ImageViewer.swift */; };
+		A1B2C3D4E5F6789012345678 /* MemoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F67890123456789A /* MemoryManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +55,7 @@
 		F864256C336A90E01DFF561F /* ImportedItineraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportedItineraryView.swift; sourceTree = "<group>"; };
 		FDDD0352CE972C041C193895 /* ItineraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryStore.swift; sourceTree = "<group>"; };
 		FEADDF8D8F827D98224C5319 /* BlogPost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlogPost.swift; sourceTree = "<group>"; };
+		B2C3D4E5F67890123456789A /* MemoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -79,6 +81,7 @@
 				D07D06AEEC92366CD1FCD629 /* AppConfig.swift */,
 				03EB7C5914880CEB79C806F6 /* GuideStore.swift */,
 				FDDD0352CE972C041C193895 /* ItineraryStore.swift */,
+				B2C3D4E5F67890123456789A /* MemoryManager.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -219,6 +222,7 @@
 				BA21945B9CBB178E0CD589D9 /* ImportedItineraryView.swift in Sources */,
 				9A042CFA39774EA61384518A /* ItineraryListView.swift in Sources */,
 				3FDC37F9452D153C6C569401 /* ItineraryStore.swift in Sources */,
+				A1B2C3D4E5F6789012345678 /* MemoryManager.swift in Sources */,
 				436EDDCAC8F4E1DCAAF7AA96 /* OptimizedMapView.swift in Sources */,
 				38610C8194871525123CE555 /* PathfindingApp.swift in Sources */,
 				883D57E21B447D0F6CBABDA1 /* PoiEditView.swift in Sources */,
