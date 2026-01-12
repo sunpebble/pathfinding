@@ -18,13 +18,16 @@
     "hono"
   ],
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
+    "build": "nx run-many -t build",
+    "dev": "nx run-many -t dev --projects=api,crawler,dashboard --parallel=3",
     "lint": "eslint --fix .",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "typecheck": "nx run-many -t typecheck",
+    "test": "nx run-many -t test",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "graph": "nx graph",
+    "enrich": "curl -X POST http://localhost:3001/api/guides/$npm_config_id/enrich",
+    "guides": "curl -s http://localhost:3001/api/guides | jq"
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.90",
@@ -37,12 +40,13 @@
     "@commitlint/config-conventional": "^20.3.0",
     "@eslint-react/eslint-plugin": "^2.5.0",
     "@eslint/js": "^9.39.2",
+    "@nx/next": "^22.3.3",
     "eslint": "^9.39.2",
     "eslint-plugin-react-refresh": "^0.4.26",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "nx": "^22.3.3",
     "prettier": "^3.7.4",
-    "turbo": "^2.7.2",
     "typescript": "^5.9.3"
   }
 }
