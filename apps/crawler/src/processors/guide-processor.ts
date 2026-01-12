@@ -234,7 +234,12 @@ export async function saveGuide(
   // Note: record variable removed, using Convex mutation directly
   try {
     const id = await convex.mutation(api.travelGuides.upsert, {
-      sourcePlatform: platform as 'xiaohongshu' | 'weibo' | 'ctrip',
+      sourcePlatform: platform as
+        | 'xiaohongshu'
+        | 'weibo'
+        | 'ctrip'
+        | 'douyin'
+        | 'tripadvisor',
       sourceExternalId: externalId,
       sourceUrl,
       title: guide.title,
