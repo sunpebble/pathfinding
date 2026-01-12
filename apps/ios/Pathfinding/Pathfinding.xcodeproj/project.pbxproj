@@ -29,6 +29,7 @@
 		E8CE944BDEE799DD2C7348F4 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F941316940938FD8267380E /* DesignSystem.swift */; };
 		FC76BBD2E067578FFBBAE967 /* ImageViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F177FCC76E9C41E981C00F74 /* ImageViewer.swift */; };
 		A1B2C3D4E5F6789012345678 /* MemoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F67890123456789A /* MemoryManager.swift */; };
+		D3B4G5M6N7U8V9W0X1Y2Z3A4 /* DebugMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C5H6O7P8R9S0T1U2V3W4X5 /* DebugMenuView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +57,7 @@
 		FDDD0352CE972C041C193895 /* ItineraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryStore.swift; sourceTree = "<group>"; };
 		FEADDF8D8F827D98224C5319 /* BlogPost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlogPost.swift; sourceTree = "<group>"; };
 		B2C3D4E5F67890123456789A /* MemoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryManager.swift; sourceTree = "<group>"; };
+		E4C5H6O7P8R9S0T1U2V3W4X5 /* DebugMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMenuView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -64,6 +66,7 @@
 			children = (
 				59416B95E7D9420581D210BD /* BlogDetailView.swift */,
 				F1B1DC8C0323700E48372AFE /* BlogListView.swift */,
+				E4C5H6O7P8R9S0T1U2V3W4X5 /* DebugMenuView.swift */,
 				A37FE9B868035096F5A506BD /* HomeView.swift */,
 				F864256C336A90E01DFF561F /* ImportedItineraryView.swift */,
 				C80C869DF30828354D994AE2 /* ItineraryListView.swift */,
@@ -215,6 +218,7 @@
 				DD6488A271910ABDE48DA72A /* BlogPost.swift in Sources */,
 				8C0CA3722560758A7B9E6535 /* CachedAsyncImage.swift in Sources */,
 				ACF80467617E6570777A3DCB /* ContentView.swift in Sources */,
+				D3B4G5M6N7U8V9W0X1Y2Z3A4 /* DebugMenuView.swift in Sources */,
 				E8CE944BDEE799DD2C7348F4 /* DesignSystem.swift in Sources */,
 				9FF850D8A3E420F6515455E6 /* GuideStore.swift in Sources */,
 				50CD2CD3D8EDF0D4C363E9FB /* HomeView.swift in Sources */,

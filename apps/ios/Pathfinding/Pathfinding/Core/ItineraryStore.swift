@@ -151,3 +151,88 @@ final class ItineraryStore {
     loadInitialBatch()
   }
 }
+
+// MARK: - DEBUG Test Helpers
+
+#if DEBUG
+extension ItineraryStore {
+  /// Generate test itinerary with specified number of POIs for performance testing
+  /// - Parameter poiCount: Number of POIs to generate (e.g., 100 for stress testing)
+  func generateTestItinerary(poiCount: Int) {
+    let daysCount = max(1, (poiCount + 9) / 10) // ~10 POIs per day
+
+    let testItinerary = SavedItinerary(
+      title: "🧪 Test Itinerary - \(poiCount) POIs",
+      destination: "Performance Test Location",
+      daysCount: daysCount
+    )
+
+    // Generate POIs for each day
+    var currentItinerary = testItinerary
+    currentItinerary.days = generateTestDays(poiCount: poiCount, daysCount: daysCount)
+
+    allItineraries.insert(currentItinerary, at: 0)
+    persist()
+    reloadAll()
+
+    NSLog("[TestData] Generated itinerary with \(poiCount) POIs across \(daysCount) days")
+  }
+
+  /// Generate test days with POIs distributed across them
+  private func generateTestDays(poiCount: Int, daysCount: Int) -> [AiDay] {
+    var days: [AiDay] = []
+    var remainingPOIs = poiCount
+    let poisPerDay = max(1, poiCount / daysCount)
+
+    for dayNum in 1...daysCount {
+      let poisForThisDay = min(remainingPOIs, dayNum == daysCount ? remainingPOIs : poisPerDay)
+      let pois = generateTestPOIs(count: poisForThisDay, dayNumber: dayNum)
+
+      days.append(AiDay(
+        dayNumber: dayNum,
+        theme: "Day \(dayNum) - \(poisForThisDay) locations",
+        pois: pois
+      ))
+
+      remainingPOIs -= poisForThisDay
+      if remainingPOIs <= 0 { break }
+    }
+
+    return days
+  }
+
+  /// Generate test POIs with realistic data
+  private func generateTestPOIs(count: Int, dayNumber: Int) -> [AiPoi] {
+    let poiTypes = ["attraction", "restaurant", "hotel", "transportation", "shopping"]
+    let baseLatitude = 31.23 // Shanghai area
+    let baseLongitude = 121.47
+
+    return (1...count).map { poiNum in
+      let poiType = poiTypes[poiNum % poiTypes.count]
+      let hasDescription = poiNum % 3 == 0 // Some POIs have descriptions
+
+      return AiPoi(
+        name: "\(poiType.capitalized) \(dayNumber)-\(poiNum)",
+        type: poiType,
+        description: hasDescription ? "This is a test \(poiType) for performance testing. It includes a longer description to simulate real-world data." : nil,
+        latitude: baseLatitude + Double(dayNumber) * 0.01 + Double(poiNum) * 0.002,
+        longitude: baseLongitude + Double(dayNumber) * 0.015 + Double(poiNum) * 0.003,
+        address: "Test Street \(poiNum), District \(dayNumber), Test City"
+      )
+    }
+  }
+
+  /// Clear all test itineraries (those with 🧪 prefix)
+  func clearTestItineraries() {
+    let beforeCount = allItineraries.count
+    allItineraries.removeAll { $0.title.hasPrefix("🧪") }
+    let removedCount = beforeCount - allItineraries.count
+
+    if removedCount > 0 {
+      persist()
+      reloadAll()
+      NSLog("[TestData] Removed \(removedCount) test itineraries")
+    }
+  }
+}
+#endif
