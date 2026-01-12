@@ -10,10 +10,14 @@ import {
   Globe,
   Lock,
   MapPin,
+  UserPlus,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
+import { CollaboratorPanel } from '@/components/collaborator-panel';
+import { InviteDialog } from '@/components/invite-dialog';
 import { cn } from '@/lib/utils';
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
@@ -218,76 +222,29 @@ function DaySection({ day }: { day: Day }) {
   );
 }
 
-function CollaboratorsList({
-  collaborators,
-}: {
-  collaborators: Collaborator[];
-}) {
-  if (collaborators.length === 0) {
-    return null;
-  }
-
-  const roleColors: Record<string, string> = {
-    owner: 'bg-purple-100 text-purple-800',
-    editor: 'bg-blue-100 text-blue-800',
-    viewer: 'bg-gray-100 text-gray-800',
-  };
-
-  const statusLabels: Record<string, string> = {
-    pending: 'Pending',
-    accepted: 'Active',
-    rejected: 'Rejected',
-  };
-
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <Users className="h-5 w-5 text-emerald-600" />
-        Collaborators ({collaborators.length})
-      </h3>
-      <div className="space-y-3">
-        {collaborators.map((collab) => (
-          <div
-            key={collab._id}
-            className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white text-sm font-medium">
-                {collab.userId.slice(0, 2).toUpperCase()}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {collab.userId}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {statusLabels[collab.status]}
-                </p>
-              </div>
-            </div>
-            <span
-              className={cn(
-                'px-2 py-1 rounded-full text-xs font-medium capitalize',
-                roleColors[collab.role] || 'bg-gray-100 text-gray-800'
-              )}
-            >
-              {collab.role}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// Current user ID for testing (in production, this would come from auth)
+const TEST_USER_ID = 'test-user-1';
 
 export default function ItineraryDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
   const itinerary = useQuery(api.itineraries.getById, {
     id: id as any,
   }) as Itinerary | null | undefined;
 
   const isLoading = itinerary === undefined;
+
+  // Determine current user's role
+  const currentUserCollaborator = itinerary?.collaborators?.find(
+    (c) => c.userId === TEST_USER_ID
+  );
+  const isOwner = currentUserCollaborator?.role === 'owner';
+  const isEditor =
+    currentUserCollaborator?.role === 'editor' ||
+    currentUserCollaborator?.role === 'owner';
+  const canInvite = isOwner || isEditor;
 
   if (isLoading) {
     return (
@@ -372,9 +329,26 @@ export default function ItineraryDetailPage() {
       </div>
 
       {/* Collaborators */}
-      {itinerary.collaborators && itinerary.collaborators.length > 0 && (
-        <CollaboratorsList collaborators={itinerary.collaborators} />
-      )}
+      <div className="space-y-4">
+        {canInvite && (
+          <button
+            onClick={() => setIsInviteDialogOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+          >
+            <UserPlus className="h-4 w-4" />
+            Invite Collaborator
+          </button>
+        )}
+
+        {itinerary.collaborators && itinerary.collaborators.length > 0 && (
+          <CollaboratorPanel
+            itineraryId={itinerary._id}
+            collaborators={itinerary.collaborators}
+            currentUserId={TEST_USER_ID}
+            isOwner={isOwner}
+          />
+        )}
+      </div>
 
       {/* Days and POIs */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -411,6 +385,14 @@ export default function ItineraryDetailPage() {
           Delete
         </button>
       </div>
+
+      {/* Invite Dialog */}
+      <InviteDialog
+        isOpen={isInviteDialogOpen}
+        onClose={() => setIsInviteDialogOpen(false)}
+        itineraryId={itinerary._id}
+        currentUserId={TEST_USER_ID}
+      />
     </div>
   );
 }
