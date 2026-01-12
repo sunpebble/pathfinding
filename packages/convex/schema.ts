@@ -150,6 +150,9 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
     statistics: v.optional(v.any()),
     errorMessage: v.optional(v.string()),
+    retryCount: v.number(), // Number of retry attempts
+    lastFailureAt: v.optional(v.number()), // Timestamp of last failure
+    lastFailureReason: v.optional(v.string()), // Reason for last failure
   })
     .index('by_status', ['status'])
     .index('by_platform', ['platform']),

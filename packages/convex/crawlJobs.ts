@@ -113,6 +113,7 @@ export const create = mutation({
       config: args.config,
       scheduleCron: args.scheduleCron,
       status: 'pending',
+      retryCount: 0,
     });
   },
 });
@@ -153,11 +154,18 @@ export const fail = mutation({
     statistics: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new Error(`Job ${args.id} not found`);
+    }
+
     await ctx.db.patch(args.id, {
       status: 'failed',
       completedAt: Date.now(),
       errorMessage: args.errorMessage,
       statistics: args.statistics,
+      lastFailureAt: Date.now(),
+      lastFailureReason: args.errorMessage,
     });
     return await ctx.db.get(args.id);
   },
@@ -224,6 +232,22 @@ export const updateNextRunAt = mutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
       nextRunAt: args.nextRunAt,
+    });
+    return await ctx.db.get(args.id);
+  },
+});
+
+// Increment retry count
+export const incrementRetryCount = mutation({
+  args: { id: v.id('crawlJobs') },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new Error(`Job ${args.id} not found`);
+    }
+
+    await ctx.db.patch(args.id, {
+      retryCount: (job.retryCount ?? 0) + 1,
     });
     return await ctx.db.get(args.id);
   },
