@@ -3,10 +3,38 @@
  * Search and retrieval operations for Points of Interest
  */
 
-import type { Poi, PoiCategory } from '@pathfinding/types';
 import type { Id } from '../lib/convex';
 import { api, convex } from '../lib/convex';
 import { NotFoundError } from '../middleware/errorHandler';
+
+// Local type definitions (avoiding circular dependency with @pathfinding/types)
+export type PoiCategory =
+  | 'attraction'
+  | 'restaurant'
+  | 'hotel'
+  | 'shopping'
+  | 'other';
+
+export interface Poi {
+  id: string;
+  externalId?: string;
+  name: string;
+  nameEn?: string;
+  category: PoiCategory;
+  cityId: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
+  rating?: number;
+  ratingCount?: number;
+  priceLevel?: number;
+  businessHours?: Record<string, string>;
+  phone?: string;
+  imageUrls?: string[];
+  source: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // Types
 export interface PoiSearchQuery {

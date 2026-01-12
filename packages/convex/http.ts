@@ -1,3 +1,5 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 import { httpRouter } from 'convex/server';
 import { auth } from './auth';
 

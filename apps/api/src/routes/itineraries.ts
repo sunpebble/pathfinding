@@ -140,10 +140,18 @@ itinerariesRoutes.patch(
     const itineraryId = c.req.param('id');
     const input = c.req.valid('json');
 
+    // Sanitize input - convert null to undefined for service compatibility
+    const sanitizedInput: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(input)) {
+      if (value !== null) {
+        sanitizedInput[key] = value;
+      }
+    }
+
     const itinerary = await ItineraryService.update(
       itineraryId,
       userId,
-      input,
+      sanitizedInput as Parameters<typeof ItineraryService.update>[2],
       accessToken
     );
 

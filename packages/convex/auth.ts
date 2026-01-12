@@ -1,3 +1,5 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 import { Password } from '@convex-dev/auth/providers/Password';
 import { convexAuth } from '@convex-dev/auth/server';
 

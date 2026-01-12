@@ -1,4 +1,5 @@
 import type { Context, Next } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { createMiddleware } from 'hono/factory';
 import { ZodError } from 'zod';
 
@@ -17,8 +18,8 @@ export const errorHandler = createMiddleware(async (c: Context, next: Next) => {
       return c.json(
         {
           error: 'Validation error',
-          details: error.errors.map((e) => ({
-            path: e.path.join('.'),
+          details: error.issues.map((e) => ({
+            path: e.path.map(String).join('.'),
             message: e.message,
           })),
         },
@@ -28,7 +29,7 @@ export const errorHandler = createMiddleware(async (c: Context, next: Next) => {
 
     // Handle known error types
     if (error instanceof Error) {
-      const statusCode = getStatusCode(error);
+      const statusCode = getStatusCode(error) as ContentfulStatusCode;
       return c.json(
         {
           error: error.message || 'Internal server error',

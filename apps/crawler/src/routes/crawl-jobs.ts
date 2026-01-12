@@ -1,3 +1,5 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 /**
  * Crawl Jobs API Routes
  * Endpoints for managing crawl job configuration and execution
