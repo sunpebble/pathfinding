@@ -92,6 +92,22 @@ export default defineSchema({
     .index('by_user_visibility', ['userId', 'visibility']),
 
   // ============================================
+  // Itinerary Collaborators
+  // ============================================
+  itineraryCollaborators: defineTable({
+    userId: v.string(), // Auth user ID
+    itineraryId: v.id('itineraries'),
+    role: v.union(
+      v.literal('owner'),
+      v.literal('editor'),
+      v.literal('viewer')
+    ),
+  })
+    .index('by_itinerary', ['itineraryId'])
+    .index('by_user', ['userId'])
+    .index('by_itinerary_user', ['itineraryId', 'userId']),
+
+  // ============================================
   // Itinerary Days
   // ============================================
   itineraryDays: defineTable({
