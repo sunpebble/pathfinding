@@ -161,6 +161,25 @@ export async function updateCrawlJobStatus(
 }
 
 /**
+ * Update job next run time
+ */
+export async function updateJobNextRunAt(
+  id: string,
+  nextRunAt: Date
+): Promise<CrawlJob> {
+  const job = await convex.mutation(api.crawlJobs.updateNextRunAt, {
+    id: id as Id<'crawlJobs'>,
+    nextRunAt: nextRunAt.getTime(),
+  });
+
+  if (!job) {
+    throw new Error('Failed to update job next run time');
+  }
+
+  return mapToCrawlJob(job);
+}
+
+/**
  * Delete a crawl job
  */
 export async function deleteCrawlJob(id: string): Promise<void> {
