@@ -9,7 +9,9 @@ import { mutation, query } from './_generated/server';
 const platformValidator = v.union(
   v.literal('xiaohongshu'),
   v.literal('weibo'),
-  v.literal('ctrip')
+  v.literal('ctrip'),
+  v.literal('douyin'),
+  v.literal('tripadvisor')
 );
 
 // List travel guides with filters
