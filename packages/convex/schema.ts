@@ -253,7 +253,9 @@ export default defineSchema({
     sourcePlatform: v.union(
       v.literal('xiaohongshu'),
       v.literal('weibo'),
-      v.literal('ctrip')
+      v.literal('ctrip'),
+      v.literal('douyin'),
+      v.literal('tripadvisor')
     ),
     sourceExternalId: v.string(),
     sourceUrl: v.optional(v.string()),
