@@ -223,6 +223,15 @@ export async function getDueJobs(limit?: number): Promise<CrawlJob[]> {
 }
 
 /**
+ * Get jobs for incremental crawling (type=incremental, status=pending, scheduled to run)
+ */
+export async function getJobsForIncrementalCrawl(): Promise<CrawlJob[]> {
+  const jobs = await convex.query(api.crawlJobs.getJobsForIncrementalCrawl, {});
+
+  return jobs.map(mapToCrawlJob);
+}
+
+/**
  * Get job statistics summary
  */
 export async function getJobStatsSummary(): Promise<{
