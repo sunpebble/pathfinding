@@ -10,7 +10,7 @@ WORKDIR /app
 COPY pnpm-workspace.yaml ./
 COPY package.json ./
 COPY pnpm-lock.yaml ./
-COPY turbo.json ./
+COPY nx.json ./
 
 # Copy packages
 COPY packages/types ./packages/types
@@ -24,7 +24,7 @@ COPY apps/api ./apps/api
 RUN pnpm install --frozen-lockfile
 
 # Build packages and api
-RUN pnpm turbo build --filter=@pathfinding/api...
+RUN pnpm nx build api
 
 # Production stage
 FROM node:20-alpine AS runner

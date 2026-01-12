@@ -7,7 +7,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc",
+        "command": "tsdown",
         "cwd": "apps/crawler"
       },
       "outputs": ["{projectRoot}/dist"]
