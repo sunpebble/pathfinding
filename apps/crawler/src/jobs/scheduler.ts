@@ -7,7 +7,7 @@ import cron from 'node-cron';
 import { createLogger } from '../lib/logger.js';
 import { captureError } from '../monitoring/index.js';
 import { runNormalizationPipeline } from '../processors/pipeline.js';
-import { getCrawlJob } from '../services/crawl-job.service.js';
+import { getCrawlJob, getPendingScheduledJobs } from '../services/crawl-job.service.js';
 import { generateQualityReport } from '../services/quality-report.service.js';
 import { executeCrawlJob, getWorkerStatus } from './worker.js';
 
@@ -165,9 +165,40 @@ export function getSchedulerStatus(): {
  * Process pending scheduled jobs
  */
 async function processPendingJobs(): Promise<void> {
-  // TODO: Implement with Convex when crawl job scheduling is needed
-  // Currently no active scheduled crawl jobs in use
-  log.info('Pending job processing skipped (not implemented with Convex yet)');
+  try {
+    const jobs = await getPendingScheduledJobs();
+
+    if (jobs.length === 0) {
+      return;
+    }
+
+    log.info(`Found ${jobs.length} pending scheduled job(s)`);
+
+    for (const job of jobs) {
+      try {
+        log.info(`Executing scheduled job: ${job.name} (${job.id})`);
+        await executeCrawlJob(job);
+      } catch (error) {
+        log.error(`Failed to execute job ${job.id}:`, error);
+        captureError(
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            jobId: job.id,
+            jobName: job.name,
+            platform: job.platform,
+          }
+        );
+      }
+    }
+  } catch (error) {
+    log.error('Failed to process pending jobs:', error);
+    captureError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operation: 'processPendingJobs',
+      }
+    );
+  }
 }
 
 /**
