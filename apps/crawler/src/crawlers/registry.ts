@@ -8,6 +8,7 @@ import { AmapCrawler } from './amap.crawler.js';
 import { BaseGuideCrawler } from './base-guide.crawler.js';
 import { BaseCrawler } from './base.crawler.js';
 import { CtripCrawler } from './ctrip.crawler.js';
+import { DouyinCrawler } from './douyin.crawler.js';
 import { OSMCrawler } from './osm.crawler.js';
 import { WeiboCrawler } from './weibo.crawler.js';
 import { XiaohongshuCrawler } from './xiaohongshu.crawler.js';
@@ -75,12 +76,14 @@ registerCrawler('xhs', XiaohongshuCrawler);
 registerCrawler('weibo', WeiboCrawler);
 registerCrawler('ctrip', CtripCrawler);
 registerCrawler('xiecheng', CtripCrawler);
+registerCrawler('douyin', DouyinCrawler);
 
 export {
   AmapCrawler,
   BaseCrawler,
   BaseGuideCrawler,
   CtripCrawler,
+  DouyinCrawler,
   OSMCrawler,
   WeiboCrawler,
   XiaohongshuCrawler,
