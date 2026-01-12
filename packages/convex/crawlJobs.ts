@@ -62,6 +62,40 @@ export const getDueJobs = query({
   },
 });
 
+// Get jobs needing incremental crawl (completed jobs idle for >24h with schedule)
+export const getJobsForIncrementalCrawl = query({
+  args: {
+    staleThresholdHours: v.optional(v.number()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const thresholdHours = args.staleThresholdHours ?? 24;
+    const thresholdMs = thresholdHours * 60 * 60 * 1000;
+    const now = Date.now();
+    const staleTimestamp = now - thresholdMs;
+
+    // Get all completed jobs
+    const completedJobs = await ctx.db
+      .query('crawlJobs')
+      .withIndex('by_status', (q) => q.eq('status', 'completed'))
+      .collect();
+
+    // Filter for stale jobs with schedule (candidates for incremental crawl)
+    const staleJobs = completedJobs.filter(
+      (job) =>
+        job.completedAt &&
+        job.completedAt < staleTimestamp &&
+        job.scheduleCron !== undefined &&
+        job.jobType === 'full' // Only full crawls can trigger incremental updates
+    );
+
+    // Sort by completedAt (oldest first) to prioritize most stale jobs
+    staleJobs.sort((a, b) => (a.completedAt ?? 0) - (b.completedAt ?? 0));
+
+    return args.limit ? staleJobs.slice(0, args.limit) : staleJobs;
+  },
+});
+
 // Create a new crawl job
 export const create = mutation({
   args: {
