@@ -10,11 +10,15 @@ import {
   Heart,
   MapPin,
   MessageCircle,
+  Route,
   Star,
   User,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
+import { GeocodingConfidenceBadge } from '@/components/geocoding-confidence-badge';
+import { PoiEditor } from '@/components/poi-editor';
 import { getTravelGuide } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -76,17 +80,44 @@ function formatDate(dateString?: string) {
   }
 }
 
+// Extended interface for TravelGuide with AI enrichment data
+interface AiPoi {
+  name: string;
+  type: string;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  address?: string;
+  geocodeConfidence?: number;
+  geocodeSource?: string;
+  isManuallyVerified?: boolean;
+  verifiedAt?: number;
+  verifiedBy?: string;
+}
+
+interface AiDay {
+  dayNumber: number;
+  theme?: string;
+  pois: AiPoi[];
+}
+
 export default function GuideDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { data, isLoading, error } = useQuery({
+  const [editingPoi, setEditingPoi] = useState<{
+    dayNumber: number;
+    poiIndex: number;
+    poi: AiPoi;
+  } | null>(null);
+
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['guide', id],
     queryFn: () => getTravelGuide(id),
     enabled: !!id,
   });
 
-  const guide = data?.data;
+  const guide = data?.data as any; // Extended with AI fields
 
   if (isLoading) {
     return (
@@ -304,6 +335,136 @@ export default function GuideDetailPage() {
             </p>
           )}
         </div>
+      )}
+
+      {/* AI-Extracted Itinerary */}
+      {guide.ai_days && guide.ai_days.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Route className="h-5 w-5 text-emerald-600" />
+                AI-Extracted Itinerary
+              </h2>
+              {guide.geocoding_metrics && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {guide.geocoding_metrics.total_pois} POIs •{' '}
+                  {Math.round(guide.geocoding_metrics.average_confidence * 100)}
+                  % avg confidence
+                  {guide.geocoding_metrics.low_confidence_count > 0 && (
+                    <span className="text-amber-600 font-medium ml-2">
+                      {guide.geocoding_metrics.low_confidence_count} need review
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {guide.ai_days.map((day: AiDay) => (
+              <div
+                key={day.dayNumber}
+                className="border border-gray-200 rounded-lg p-4"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-lg text-sm">
+                    Day {day.dayNumber}
+                  </div>
+                  {day.theme && (
+                    <span className="text-sm text-gray-600">{day.theme}</span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {day.pois.map((poi: AiPoi, poiIndex: number) => {
+                    const isLowConfidence =
+                      poi.geocodeConfidence !== undefined &&
+                      poi.geocodeConfidence < 0.5;
+
+                    return (
+                      <div
+                        key={poiIndex}
+                        className={cn(
+                          'flex items-start gap-3 p-3 rounded-lg border transition-colors',
+                          isLowConfidence && !poi.isManuallyVerified
+                            ? 'border-amber-200 bg-amber-50'
+                            : 'border-gray-200 bg-gray-50'
+                        )}
+                      >
+                        <div className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                          {poiIndex + 1}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900">
+                                {poi.name}
+                              </h4>
+                              <p className="text-xs text-gray-500 uppercase mt-0.5">
+                                {poi.type}
+                              </p>
+                              {poi.description && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {poi.description}
+                                </p>
+                              )}
+                              {poi.address && (
+                                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />
+                                  {poi.address}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-400 mt-1 font-mono">
+                                {poi.latitude.toFixed(6)},{' '}
+                                {poi.longitude.toFixed(6)}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-col items-end gap-2">
+                              {poi.geocodeConfidence !== undefined && (
+                                <GeocodingConfidenceBadge
+                                  confidence={poi.geocodeConfidence}
+                                  source={poi.geocodeSource}
+                                  isManuallyVerified={poi.isManuallyVerified}
+                                  onClick={() =>
+                                    setEditingPoi({
+                                      dayNumber: day.dayNumber,
+                                      poiIndex,
+                                      poi,
+                                    })
+                                  }
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* POI Editor Modal */}
+      {editingPoi && (
+        <PoiEditor
+          isOpen={true}
+          onClose={() => {
+            setEditingPoi(null);
+            // Refetch to get updated data
+            refetch();
+          }}
+          guideId={id}
+          dayNumber={editingPoi.dayNumber}
+          poiIndex={editingPoi.poiIndex}
+          poi={editingPoi.poi}
+          verifiedBy="admin"
+        />
       )}
 
       {/* Metadata */}
