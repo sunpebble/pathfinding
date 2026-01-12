@@ -10,7 +10,7 @@ WORKDIR /app
 COPY pnpm-workspace.yaml ./
 COPY package.json ./
 COPY pnpm-lock.yaml ./
-COPY turbo.json ./
+COPY nx.json ./
 
 # Copy packages
 COPY packages/types ./packages/types
@@ -25,7 +25,7 @@ COPY apps/crawler ./apps/crawler
 RUN pnpm install --frozen-lockfile
 
 # Build packages and crawler
-RUN pnpm turbo build --filter=@pathfinding/crawler...
+RUN pnpm nx build crawler
 
 # Production stage
 FROM node:20-alpine AS runner
