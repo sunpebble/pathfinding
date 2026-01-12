@@ -6,7 +6,12 @@
 /**
  * Supported platforms for travel guide crawling
  */
-export type GuidePlatform = 'xiaohongshu' | 'weibo' | 'ctrip';
+export type GuidePlatform =
+  | 'xiaohongshu'
+  | 'weibo'
+  | 'ctrip'
+  | 'douyin'
+  | 'tripadvisor';
 
 /**
  * Raw travel guide data as extracted from source platforms
