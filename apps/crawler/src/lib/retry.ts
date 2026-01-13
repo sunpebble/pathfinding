@@ -20,6 +20,12 @@ export interface RetryOptions {
   onRetry?: (error: Error, attempt: number) => void;
 }
 
+/**
+ * Retry configuration for crawl jobs
+ * Alias for RetryOptions for backward compatibility
+ */
+export type RetryConfig = RetryOptions;
+
 const DEFAULT_OPTIONS: Required<
   Omit<RetryOptions, 'timeout' | 'onRetry' | 'isRetryable'>
 > = {
@@ -28,6 +34,21 @@ const DEFAULT_OPTIONS: Required<
   maxDelay: 30000,
   backoffMultiplier: 2,
 };
+
+/**
+ * Calculate exponential backoff delay
+ * @param attempt - Current retry attempt (0-indexed)
+ * @param config - Retry configuration
+ * @returns Delay in milliseconds
+ */
+export function calculateBackoff(
+  attempt: number,
+  config: Partial<RetryConfig> = {}
+): number {
+  const opts = { ...DEFAULT_OPTIONS, ...config };
+  const delay = opts.initialDelay * Math.pow(opts.backoffMultiplier, attempt);
+  return Math.min(delay, opts.maxDelay);
+}
 
 /**
  * Execute a function with retry logic and exponential backoff

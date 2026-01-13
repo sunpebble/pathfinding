@@ -9,53 +9,92 @@ import type { CrawlJob, CrawlJobStatistics } from '@pathfinding/crawler-types';
 
 import type { BaseCrawler } from '../crawlers/registry.js';
 import { getCrawler, isPlatformSupported } from '../crawlers/registry.js';
+import { acquireToken } from '../lib/rate-limiter.js';
 import { createSpan } from '../middleware/tracing.js';
 import { updateCrawlJobStatus } from '../services/crawl-job.service.js';
 
 // Active crawlers for cancellation support
 const activeCrawlers: Map<string, BaseCrawler> = new Map();
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 1000; // 1 second
+
 /**
- * Execute a crawl job
+ * Execute a crawl job with retry logic and exponential backoff
  */
 export async function executeCrawlJob(
   job: CrawlJob
 ): Promise<CrawlJobStatistics> {
-  // Validate platform
+  // Validate platform (no retry for validation errors)
   if (!isPlatformSupported(job.platform)) {
     const error = `Unsupported platform: ${job.platform}`;
     await updateCrawlJobStatus(job.id, 'failed', { errorMessage: error });
     throw new Error(error);
   }
 
-  console.warn(`[Worker] Starting job ${job.id} for platform ${job.platform}`);
+  let lastError: Error | null = null;
 
-  // Create crawler instance
-  const crawler = getCrawler(job);
-  activeCrawlers.set(job.id, crawler);
-
-  try {
-    // Execute crawl with tracing
-    const statistics = await createSpan<CrawlJobStatistics>(
-      `crawl:${job.platform}`,
-      async (span) => {
-        span.setAttribute('job_id', job.id);
-        span.setAttribute('platform', job.platform);
-        span.setAttribute('job_type', job.job_type);
-
-        return await crawler.run();
+  // Retry loop with exponential backoff
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      // Apply exponential backoff delay for retries
+      if (attempt > 0) {
+        const backoffMs = INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1);
+        console.warn(
+          `[Worker] Retrying job ${job.id} (attempt ${attempt}/${MAX_RETRIES}) after ${backoffMs}ms backoff`
+        );
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+      } else {
+        console.warn(`[Worker] Starting job ${job.id} for platform ${job.platform}`);
       }
-    );
 
-    console.warn(`[Worker] Job ${job.id} completed:`, statistics);
+      // Acquire rate limit token before starting crawl
+      console.warn(`[Worker] Acquiring rate limit token for ${job.platform}`);
+      await acquireToken(job.platform as any);
 
-    return statistics;
-  } catch (error) {
-    console.error(`[Worker] Job ${job.id} failed:`, error);
-    throw error;
-  } finally {
-    activeCrawlers.delete(job.id);
+      // Create crawler instance
+      const crawler = getCrawler(job);
+      activeCrawlers.set(job.id, crawler);
+
+      try {
+        // Execute crawl with tracing
+        const statistics = await createSpan<CrawlJobStatistics>(
+          `crawl:${job.platform}`,
+          async (span) => {
+            span.setAttribute('job_id', job.id);
+            span.setAttribute('platform', job.platform);
+            span.setAttribute('job_type', job.job_type);
+            span.setAttribute('attempt', attempt);
+
+            return await crawler.run();
+          }
+        );
+
+        console.warn(`[Worker] Job ${job.id} completed:`, statistics);
+
+        return statistics;
+      } finally {
+        activeCrawlers.delete(job.id);
+      }
+    } catch (error) {
+      lastError = error as Error;
+      console.error(
+        `[Worker] Job ${job.id} failed on attempt ${attempt}/${MAX_RETRIES}:`,
+        error
+      );
+
+      // If this was the last attempt, throw the error
+      if (attempt === MAX_RETRIES) {
+        throw error;
+      }
+
+      // Otherwise, continue to next retry with backoff
+    }
   }
+
+  // This should never be reached, but TypeScript needs it
+  throw lastError || new Error('Job failed with unknown error');
 }
 
 /**

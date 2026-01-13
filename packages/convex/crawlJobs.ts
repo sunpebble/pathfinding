@@ -45,6 +45,57 @@ export const getById = query({
   },
 });
 
+// Get jobs that are due to run (nextRunAt <= now)
+export const getDueJobs = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const jobs = await ctx.db
+      .query('crawlJobs')
+      .withIndex('by_nextRunAt')
+      .filter((q) => q.lte(q.field('nextRunAt'), now))
+      .collect();
+
+    return args.limit ? jobs.slice(0, args.limit) : jobs;
+  },
+});
+
+// Get jobs needing incremental crawl (completed jobs idle for >24h with schedule)
+export const getJobsForIncrementalCrawl = query({
+  args: {
+    staleThresholdHours: v.optional(v.number()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const thresholdHours = args.staleThresholdHours ?? 24;
+    const thresholdMs = thresholdHours * 60 * 60 * 1000;
+    const now = Date.now();
+    const staleTimestamp = now - thresholdMs;
+
+    // Get all completed jobs
+    const completedJobs = await ctx.db
+      .query('crawlJobs')
+      .withIndex('by_status', (q) => q.eq('status', 'completed'))
+      .collect();
+
+    // Filter for stale jobs with schedule (candidates for incremental crawl)
+    const staleJobs = completedJobs.filter(
+      (job) =>
+        job.completedAt &&
+        job.completedAt < staleTimestamp &&
+        job.scheduleCron !== undefined &&
+        job.jobType === 'full' // Only full crawls can trigger incremental updates
+    );
+
+    // Sort by completedAt (oldest first) to prioritize most stale jobs
+    staleJobs.sort((a, b) => (a.completedAt ?? 0) - (b.completedAt ?? 0));
+
+    return args.limit ? staleJobs.slice(0, args.limit) : staleJobs;
+  },
+});
+
 // Create a new crawl job
 export const create = mutation({
   args: {
@@ -62,6 +113,7 @@ export const create = mutation({
       config: args.config,
       scheduleCron: args.scheduleCron,
       status: 'pending',
+      retryCount: 0,
     });
   },
 });
@@ -102,11 +154,18 @@ export const fail = mutation({
     statistics: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new Error(`Job ${args.id} not found`);
+    }
+
     await ctx.db.patch(args.id, {
       status: 'failed',
       completedAt: Date.now(),
       errorMessage: args.errorMessage,
       statistics: args.statistics,
+      lastFailureAt: Date.now(),
+      lastFailureReason: args.errorMessage,
     });
     return await ctx.db.get(args.id);
   },
@@ -161,6 +220,36 @@ export const updateStatistics = mutation({
     await ctx.db.patch(args.id, {
       statistics: args.statistics,
     });
+  },
+});
+
+// Update next run time for scheduled jobs
+export const updateNextRunAt = mutation({
+  args: {
+    id: v.id('crawlJobs'),
+    nextRunAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      nextRunAt: args.nextRunAt,
+    });
+    return await ctx.db.get(args.id);
+  },
+});
+
+// Increment retry count
+export const incrementRetryCount = mutation({
+  args: { id: v.id('crawlJobs') },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new Error(`Job ${args.id} not found`);
+    }
+
+    await ctx.db.patch(args.id, {
+      retryCount: (job.retryCount ?? 0) + 1,
+    });
+    return await ctx.db.get(args.id);
   },
 });
 

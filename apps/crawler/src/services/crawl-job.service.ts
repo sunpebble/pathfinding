@@ -161,6 +161,25 @@ export async function updateCrawlJobStatus(
 }
 
 /**
+ * Update job next run time
+ */
+export async function updateJobNextRunAt(
+  id: string,
+  nextRunAt: Date
+): Promise<CrawlJob> {
+  const job = await convex.mutation(api.crawlJobs.updateNextRunAt, {
+    id: id as Id<'crawlJobs'>,
+    nextRunAt: nextRunAt.getTime(),
+  });
+
+  if (!job) {
+    throw new Error('Failed to update job next run time');
+  }
+
+  return mapToCrawlJob(job);
+}
+
+/**
  * Delete a crawl job
  */
 export async function deleteCrawlJob(id: string): Promise<void> {
@@ -188,6 +207,26 @@ export async function getRunningJobs(): Promise<CrawlJob[]> {
   const jobs = await convex.query(api.crawlJobs.list, {
     status: 'running',
   });
+
+  return jobs.map(mapToCrawlJob);
+}
+
+/**
+ * Get jobs that are due to run (nextRunAt <= now)
+ */
+export async function getDueJobs(limit?: number): Promise<CrawlJob[]> {
+  const jobs = await convex.query(api.crawlJobs.getDueJobs, {
+    limit,
+  });
+
+  return jobs.map(mapToCrawlJob);
+}
+
+/**
+ * Get jobs for incremental crawling (type=incremental, status=pending, scheduled to run)
+ */
+export async function getJobsForIncrementalCrawl(): Promise<CrawlJob[]> {
+  const jobs = await convex.query(api.crawlJobs.getJobsForIncrementalCrawl, {});
 
   return jobs.map(mapToCrawlJob);
 }

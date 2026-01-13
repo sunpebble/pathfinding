@@ -7,7 +7,7 @@ import cron from 'node-cron';
 import { createLogger } from '../lib/logger.js';
 import { captureError } from '../monitoring/index.js';
 import { runNormalizationPipeline } from '../processors/pipeline.js';
-import { getCrawlJob } from '../services/crawl-job.service.js';
+import { createCrawlJob, getCrawlJob, getPendingScheduledJobs, listCrawlJobs } from '../services/crawl-job.service.js';
 import { generateQualityReport } from '../services/quality-report.service.js';
 import { executeCrawlJob, getWorkerStatus } from './worker.js';
 
@@ -165,18 +165,105 @@ export function getSchedulerStatus(): {
  * Process pending scheduled jobs
  */
 async function processPendingJobs(): Promise<void> {
-  // TODO: Implement with Convex when crawl job scheduling is needed
-  // Currently no active scheduled crawl jobs in use
-  log.info('Pending job processing skipped (not implemented with Convex yet)');
+  try {
+    const jobs = await getPendingScheduledJobs();
+
+    if (jobs.length === 0) {
+      return;
+    }
+
+    log.info(`Found ${jobs.length} pending scheduled job(s)`);
+
+    for (const job of jobs) {
+      try {
+        log.info(`Executing scheduled job: ${job.name} (${job.id})`);
+        await executeCrawlJob(job);
+      } catch (error) {
+        log.error(`Failed to execute job ${job.id}:`, error);
+        captureError(
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            jobId: job.id,
+            jobName: job.name,
+            platform: job.platform,
+          }
+        );
+      }
+    }
+  } catch (error) {
+    log.error('Failed to process pending jobs:', error);
+    captureError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operation: 'processPendingJobs',
+      }
+    );
+  }
 }
 
 /**
  * Trigger incremental crawl jobs for stale data
  */
 async function triggerIncrementalCrawls(): Promise<void> {
-  // TODO: Implement with Convex when incremental crawls are needed
-  // Currently travel guides are crawled on-demand, not on schedule
-  log.info('Incremental crawl check skipped (not implemented with Convex yet)');
+  try {
+    // Get all completed jobs with schedules
+    const jobs = await listCrawlJobs({ status: 'completed' });
+
+    if (jobs.data.length === 0) {
+      return;
+    }
+
+    // Filter for stale jobs (completed more than 24 hours ago)
+    const STALE_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const now = Date.now();
+    const staleJobs = jobs.data.filter((job) => {
+      if (!job.completed_at || !job.schedule_cron) {
+        return false;
+      }
+
+      const completedAt = new Date(job.completed_at).getTime();
+      return now - completedAt > STALE_THRESHOLD_MS;
+    });
+
+    if (staleJobs.length === 0) {
+      log.info('No stale jobs found for incremental crawl');
+      return;
+    }
+
+    log.info(`Found ${staleJobs.length} stale job(s) for incremental crawl`);
+
+    // Create incremental crawl jobs for stale data
+    for (const job of staleJobs) {
+      try {
+        const incrementalJob = await createCrawlJob({
+          name: `${job.name} (Incremental)`,
+          platform: job.platform,
+          job_type: 'incremental',
+          config: job.config,
+        });
+
+        log.info(`Created incremental crawl job: ${incrementalJob.id} for ${job.name}`);
+      } catch (error) {
+        log.error(`Failed to create incremental job for ${job.id}:`, error);
+        captureError(
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            parentJobId: job.id,
+            jobName: job.name,
+            platform: job.platform,
+          }
+        );
+      }
+    }
+  } catch (error) {
+    log.error('Failed to trigger incremental crawls:', error);
+    captureError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operation: 'triggerIncrementalCrawls',
+      }
+    );
+  }
 }
 
 /**
