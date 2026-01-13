@@ -17,36 +17,31 @@ A mobile-first travel itinerary planning application with offline support, POI r
 
 **Tech Stack**:
 
-- **Backend**: Deno + Hono (TypeScript)
-- **Frontend**: React Native + Expo + Expo Router
-- **Database**: Supabase (PostgreSQL)
-- **Storage**: AsyncStorage + WatermelonDB (offline)
-- **Monitoring**: OpenTelemetry + Sentry
-- **Build**: Turborepo + pnpm workspaces
+- **Backend**: Hono (Node.js/TypeScript)
+- **Frontend**: Next.js (Dashboard), SwiftUI (iOS)
+- **Database**: Convex (self-hosted)
+- **AI**: Ollama with Gemma 3 model
+- **Build**: pnpm workspaces + nx
 
 **Project Structure**:
 
 ```
 apps/
-├── api/              # Deno + Hono backend
-│   ├── src/
-│   │   ├── routes/   # API endpoints
-│   │   ├── services/ # Business logic
-│   │   ├── models/   # Data validation (Zod)
-│   │   └── middleware/
-│   └── deno.json
-└── mobile/           # React Native + Expo frontend
-    ├── src/
-    │   ├── screens/  # Navigation screens
-    │   ├── components/ # Reusable UI components
-    │   ├── services/ # API client
-    │   ├── database/ # WatermelonDB
-    │   ├── hooks/    # Custom hooks
-    │   └── store/    # Zustand state
+├── api/              # Hono API server (port 8000)
+├── crawler/          # Data crawler + AI enrichment (port 3001)
+├── dashboard/        # Next.js admin dashboard (port 3002)
+└── ios/              # SwiftUI iOS app (iOS 17+)
+    └── Pathfinding/
+        ├── Config/   # xcconfig files (Debug/Staging/Release)
+        └── Pathfinding/
+            ├── Core/     # APIClient, AppConfig, AuthManager
+            ├── Models/   # Data models
+            └── Features/ # SwiftUI views
 
 packages/
-├── types/   # Shared TypeScript types
-├── utils/   # Shared utility functions
+├── convex/    # Convex database schema and functions
+├── types/     # Shared TypeScript types
+├── utils/     # Shared utility functions
 └── constants/ # Shared constants
 ```
 
@@ -576,11 +571,9 @@ All error responses follow this format:
 1. **Install Prerequisites**:
 
    ```bash
-   # Node.js 20+, Deno 1.40+, pnpm 8+, Docker
+   # Node.js 20+, pnpm 10+
    node --version
-   deno --version
    pnpm --version
-   docker --version
    ```
 
 2. **Clone and Install**:
@@ -591,41 +584,29 @@ All error responses follow this format:
    pnpm install
    ```
 
-3. **Start Supabase Locally**:
+3. **Start Backend Services**:
 
    ```bash
-   # Start Docker if not running
-   supabase start
+   pnpm dev  # Starts API, Crawler, Dashboard
    ```
 
-   Get credentials from output and update `.env` files.
+   - API: `http://localhost:8000`
+   - Crawler: `http://localhost:3001`
+   - Dashboard: `http://localhost:3002`
 
-4. **Start Backend**:
+4. **Start iOS App**:
 
    ```bash
-   cd apps/api
-   deno task dev
+   pnpm ios       # Build and launch in simulator
+   pnpm ios:open  # Open in Xcode
    ```
 
-   API runs on `http://localhost:8000`
-
-5. **Start Mobile**:
-
+5. **Run Tests**:
    ```bash
-   cd apps/mobile
-   pnpm start
+   pnpm lint      # Lint all packages
+   pnpm format    # Format with Prettier
+   pnpm test      # Run tests
    ```
-
-   Then press `i` for iOS or `a` for Android
-
-6. **Run Tests**:
-   ```bash
-   pnpm lint        # Lint all packages
-   pnpm format      # Format with Prettier
-   cd apps/api && deno task test  # Backend tests
-   ```
-
-See [specs/001-travel-itinerary/quickstart.md](./specs/001-travel-itinerary/quickstart.md) for detailed setup instructions.
 
 ---
 

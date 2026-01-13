@@ -39,10 +39,9 @@ pathfinding/
 ### Quick Start
 
 ```bash
-make dev      # Start all services (API, Crawler, Dashboard)
-make stop     # Stop all services
-make health   # Check service health
-make mobile   # Open iOS project in Xcode
+pnpm dev       # Start all services (API, Crawler, Dashboard)
+pnpm ios       # Build and launch iOS app in simulator
+pnpm ios:open  # Open iOS project in Xcode
 ```
 
 ### Service Ports
@@ -56,10 +55,10 @@ make mobile   # Open iOS project in Xcode
 ### Individual Services
 
 ```bash
-make api        # Start API only
-make crawler    # Start Crawler only
-make dashboard  # Start Dashboard only
-make convex     # Start Convex dev server
+pnpm dev              # Start API, Crawler, Dashboard
+pnpm ios              # Build and launch iOS in simulator
+pnpm ios:build        # Build iOS only
+pnpm ios:open         # Open Xcode project
 ```
 
 ### AI Enrichment
@@ -98,24 +97,43 @@ Key mutations in `packages/convex/travelGuides.ts`:
 ## iOS App Structure
 
 ```
-apps/ios/Pathfinding/Pathfinding/
-├── Core/
-│   └── APIClient.swift      # REST API client
-├── Models/
-│   └── BlogPost.swift       # Data models (matches API response)
-├── Features/
-│   ├── HomeView.swift       # Home screen with guide cards
-│   ├── BlogListView.swift   # Guide list
-│   ├── BlogDetailView.swift # Guide detail with image carousel
-│   └── ImportedItineraryView.swift  # Map + itinerary view
-└── PathfindingApp.swift     # App entry point
+apps/ios/Pathfinding/
+├── Config/
+│   ├── Base.xcconfig       # Shared settings
+│   ├── Debug.xcconfig      # Development (localhost API)
+│   ├── Release.xcconfig    # Production
+│   └── Staging.xcconfig    # QA/Staging
+├── Pathfinding/
+│   ├── Core/
+│   │   ├── APIClient.swift     # REST API client
+│   │   ├── AppConfig.swift     # Build configuration reader
+│   │   └── AuthManager.swift   # Authentication manager
+│   ├── Models/
+│   │   └── BlogPost.swift      # Data models
+│   ├── Features/
+│   │   ├── Auth/               # Login/Signup views
+│   │   ├── HomeView.swift      # Home screen
+│   │   ├── BlogListView.swift  # Guide list
+│   │   ├── BlogDetailView.swift # Guide detail
+│   │   └── ImportedItineraryView.swift  # Map + itinerary
+│   └── PathfindingApp.swift    # App entry point
+└── project.yml                 # XcodeGen configuration
 ```
+
+### iOS Build Configurations
+
+| Scheme              | Environment | API URL                             | Debug Logging |
+| ------------------- | ----------- | ----------------------------------- | ------------- |
+| Pathfinding-Debug   | development | http://127.0.0.1:3001               | Enabled       |
+| Pathfinding-Staging | staging     | https://staging-api.pathfinding.org | Enabled       |
+| Pathfinding-Release | production  | https://api.pathfinding.org         | Disabled      |
 
 ### iOS Conventions
 
 - Target: iOS 17+
-- Use `@Observable` pattern for state management
-- API base URL: `http://127.0.0.1:3001` (for simulator)
+- Swift 6.0 with strict concurrency
+- Use `@Observable` and `@MainActor` for state management
+- Configuration via xcconfig files (not hardcoded)
 - All API field names use `snake_case`, Swift uses `camelCase` with `CodingKeys`
 
 ## Data Models
@@ -220,8 +238,11 @@ npx convex dev  # Restart Convex dev server
 ### iOS build errors
 
 ```bash
-cd apps/ios/Pathfinding
-xcodebuild -scheme Pathfinding -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+# Regenerate Xcode project
+cd apps/ios/Pathfinding && xcodegen generate
+
+# Build with specific scheme
+pnpm ios:build
 ```
 
 ### Geocoding accuracy issues
