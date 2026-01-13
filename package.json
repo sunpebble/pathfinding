@@ -20,6 +20,9 @@
   "scripts": {
     "build": "nx run-many -t build",
     "dev": "nx run-many -t dev --projects=api,crawler,dashboard --parallel=3",
+    "ios": "xcodebuild -project apps/ios/Pathfinding/Pathfinding.xcodeproj -scheme Pathfinding-Debug -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' -derivedDataPath /tmp/pathfinding-build build && xcrun simctl install booted /tmp/pathfinding-build/Build/Products/Debug-iphonesimulator/Pathfinding.app && xcrun simctl launch booted org.pathfinding.app.debug",
+    "ios:build": "xcodebuild -project apps/ios/Pathfinding/Pathfinding.xcodeproj -scheme Pathfinding-Debug -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' build",
+    "ios:open": "open apps/ios/Pathfinding/Pathfinding.xcodeproj",
     "lint": "eslint --fix .",
     "typecheck": "nx run-many -t typecheck",
     "test": "nx run-many -t test",
