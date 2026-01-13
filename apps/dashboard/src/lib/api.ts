@@ -156,6 +156,22 @@ export async function getSchedulerStatus(): Promise<SchedulerStatus> {
   return response.data;
 }
 
+export async function startScheduledTask(
+  name: string
+): Promise<{ message: string }> {
+  return fetchApi(`/crawl-jobs/scheduler/tasks/${name}/start`, {
+    method: 'POST',
+  });
+}
+
+export async function stopScheduledTask(
+  name: string
+): Promise<{ message: string }> {
+  return fetchApi(`/crawl-jobs/scheduler/tasks/${name}/stop`, {
+    method: 'POST',
+  });
+}
+
 // POIs API
 export interface NormalizedPOI {
   id: string;
