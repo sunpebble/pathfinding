@@ -13,6 +13,72 @@ const visibilityValidator = v.union(
   v.literal('public')
 );
 
+/**
+ * Permission checking helpers
+ */
+
+// Check if user can edit itinerary (owner or editor)
+async function checkEditPermission(ctx: any, itineraryId: any, userId: string) {
+  const itinerary = await ctx.db.get(itineraryId);
+  if (!itinerary) {
+    throw new Error('Itinerary not found');
+  }
+
+  // Check if user is the owner (via itinerary.userId)
+  if (itinerary.userId === userId) {
+    return true;
+  }
+
+  // Check if user is a collaborator with edit permissions
+  const collab = await ctx.db
+    .query('itineraryCollaborators')
+    .withIndex('by_itinerary_user', (q) =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId)
+    )
+    .first();
+
+  if (!collab) {
+    throw new Error('You do not have access to this itinerary');
+  }
+
+  if (collab.role === 'viewer') {
+    throw new Error('You do not have edit permissions for this itinerary');
+  }
+
+  return true;
+}
+
+// Check if user is the owner
+async function checkOwnerPermission(
+  ctx: any,
+  itineraryId: any,
+  userId: string
+) {
+  const itinerary = await ctx.db.get(itineraryId);
+  if (!itinerary) {
+    throw new Error('Itinerary not found');
+  }
+
+  // Check if user is the owner (via itinerary.userId)
+  if (itinerary.userId === userId) {
+    return true;
+  }
+
+  // Check if user is a collaborator with owner role
+  const collab = await ctx.db
+    .query('itineraryCollaborators')
+    .withIndex('by_itinerary_user', (q) =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId)
+    )
+    .first();
+
+  if (!collab || collab.role !== 'owner') {
+    throw new Error('Only the owner can perform this action');
+  }
+
+  return true;
+}
+
 // List itineraries for a user
 export const listByUser = query({
   args: {
@@ -164,11 +230,18 @@ export const getById = query({
       };
     });
 
+    // Get collaborators
+    const collaborators = await ctx.db
+      .query('itineraryCollaborators')
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .collect();
+
     return {
       ...itinerary,
       cityName: city?.name,
       daysCount: calculateDaysCount(itinerary.startDate, itinerary.endDate),
       days: daysWithItems,
+      collaborators,
     };
   },
 });
@@ -214,6 +287,7 @@ export const create = mutation({
 export const update = mutation({
   args: {
     id: v.id('itineraries'),
+    userId: v.string(),
     title: v.optional(v.string()),
     cityId: v.optional(v.id('cities')),
     startDate: v.optional(v.string()),
@@ -222,7 +296,10 @@ export const update = mutation({
     coverImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    // Check edit permission
+    await checkEditPermission(ctx, args.id, args.userId);
+
+    const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
@@ -233,8 +310,14 @@ export const update = mutation({
 
 // Delete an itinerary (cascades to days and items)
 export const remove = mutation({
-  args: { id: v.id('itineraries') },
+  args: {
+    id: v.id('itineraries'),
+    userId: v.string(),
+  },
   handler: async (ctx, args) => {
+    // Check owner permission (only owner can delete)
+    await checkOwnerPermission(ctx, args.id, args.userId);
+
     // Get all days
     const days = await ctx.db
       .query('itineraryDays')
@@ -251,6 +334,15 @@ export const remove = mutation({
         await ctx.db.delete(item._id);
       }
       await ctx.db.delete(day._id);
+    }
+
+    // Delete all collaborators
+    const collaborators = await ctx.db
+      .query('itineraryCollaborators')
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .collect();
+    for (const collab of collaborators) {
+      await ctx.db.delete(collab._id);
     }
 
     // Delete itinerary
