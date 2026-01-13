@@ -198,7 +198,7 @@ struct SignupView: View {
               Text("登录")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             }
           }
           .padding(.top, DesignTokens.Spacing.sm)

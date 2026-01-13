@@ -16,8 +16,8 @@ struct PathfindingApp: App {
           // Show loading state while checking authentication
           ProgressView()
             .controlSize(.large)
-        } else if authViewModel.isAuthenticated {
-          // Show main app when authenticated
+        } else if authViewModel.isAuthenticated || authViewModel.isGuestMode {
+          // Show main app when authenticated or in guest mode
           ContentView()
         } else {
           // Show login when not authenticated
@@ -58,14 +58,24 @@ struct PathfindingApp: App {
 // MARK: - AuthViewModel
 
 /// Observable wrapper for AuthManager to provide reactive authentication state to SwiftUI
+@MainActor
 @Observable
 final class AuthViewModel {
   private(set) var isAuthenticated: Bool = false
   private(set) var isLoading: Bool = true
   private(set) var userEmail: String?
+  private(set) var isGuestMode: Bool = false
 
   /// Initialize and check for existing session
   func initialize() async {
+    // Check for stored guest mode preference
+    isGuestMode = UserDefaults.standard.bool(forKey: "isGuestMode")
+
+    if isGuestMode {
+      isLoading = false
+      return
+    }
+
     // Give AuthManager time to load stored session
     try? await Task.sleep(for: .milliseconds(100))
 
@@ -80,9 +90,17 @@ final class AuthViewModel {
     userEmail = await authManager.userEmail
   }
 
+  /// Continue as guest without authentication
+  func continueAsGuest() {
+    isGuestMode = true
+    UserDefaults.standard.set(true, forKey: "isGuestMode")
+  }
+
   /// Sign out the current user
   func signOut() async throws {
     try await AuthManager.shared.signOut()
+    isGuestMode = false
+    UserDefaults.standard.set(false, forKey: "isGuestMode")
     await updateAuthState()
   }
 }

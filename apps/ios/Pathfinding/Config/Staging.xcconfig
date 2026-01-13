@@ -1,0 +1,25 @@
+// Staging.xcconfig
+// Staging/QA environment configuration
+
+#include "Base.xcconfig"
+
+// Environment
+PF_ENVIRONMENT = staging
+BUNDLE_ID_SUFFIX = .staging
+
+// API Configuration
+PF_API_BASE_URL = https:$()/staging-api.pathfinding.org
+PF_API_TIMEOUT = 30
+
+// Staging uses release optimization but with debug symbols
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+GCC_OPTIMIZATION_LEVEL = s
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule
+
+// Keep symbols for crash reporting
+STRIP_INSTALLED_PRODUCT = NO
+
+// Logging - enabled for QA testing
+PF_ENABLE_DEBUG_LOGGING = YES
+PF_ENABLE_NETWORK_LOGGING = YES

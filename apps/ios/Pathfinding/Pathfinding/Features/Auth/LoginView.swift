@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct LoginView: View {
-  @Environment(\.dismiss) private var dismiss
   @Environment(AuthViewModel.self) private var authViewModel
 
   @State private var email = ""
@@ -115,7 +114,7 @@ struct LoginView: View {
             } label: {
               Text("忘记密码？")
                 .font(.subheadline)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             }
             .padding(.top, DesignTokens.Spacing.xxs)
           }
@@ -193,7 +192,7 @@ struct LoginView: View {
               Text("注册")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             }
           }
           .padding(.top, DesignTokens.Spacing.sm)
@@ -205,7 +204,7 @@ struct LoginView: View {
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           Button("跳过") {
-            dismiss()
+            authViewModel.continueAsGuest()
           }
           .foregroundStyle(.secondary)
         }

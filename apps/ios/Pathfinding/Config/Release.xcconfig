@@ -1,0 +1,28 @@
+// Release.xcconfig
+// Production environment configuration
+
+#include "Base.xcconfig"
+
+// Environment
+PF_ENVIRONMENT = production
+BUNDLE_ID_SUFFIX =
+
+// API Configuration
+PF_API_BASE_URL = https:$()/api.pathfinding.org
+PF_API_TIMEOUT = 60
+
+// Release Settings
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+GCC_OPTIMIZATION_LEVEL = s
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule
+VALIDATE_PRODUCT = YES
+
+// Strip Debug Symbols
+STRIP_INSTALLED_PRODUCT = YES
+COPY_PHASE_STRIP = YES
+DEAD_CODE_STRIPPING = YES
+
+// Logging
+PF_ENABLE_DEBUG_LOGGING = NO
+PF_ENABLE_NETWORK_LOGGING = NO

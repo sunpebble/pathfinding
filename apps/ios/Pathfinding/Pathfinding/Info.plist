@@ -2,10 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <!-- Bundle Configuration -->
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>Pathfinding</string>
+    <string>$(PRODUCT_NAME)</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -22,17 +23,40 @@
     <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+
+    <!-- Custom Build Settings -->
+    <key>PFEnvironment</key>
+    <string>$(PF_ENVIRONMENT)</string>
+    <key>PFAPIBaseURL</key>
+    <string>$(PF_API_BASE_URL)</string>
+    <key>PFAPITimeout</key>
+    <string>$(PF_API_TIMEOUT)</string>
+    <key>PFEnableDebugLogging</key>
+    <string>$(PF_ENABLE_DEBUG_LOGGING)</string>
+    <key>PFEnableNetworkLogging</key>
+    <string>$(PF_ENABLE_NETWORK_LOGGING)</string>
+
+    <!-- Scene Configuration -->
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
         <true/>
     </dict>
+
+    <!-- Launch Screen -->
     <key>UILaunchScreen</key>
-    <dict/>
+    <dict>
+        <key>UIColorName</key>
+        <string>LaunchScreenBackground</string>
+    </dict>
+
+    <!-- Device Capabilities -->
     <key>UIRequiredDeviceCapabilities</key>
     <array>
-        <string>armv7</string>
+        <string>arm64</string>
     </array>
+
+    <!-- Supported Orientations -->
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
@@ -46,10 +70,59 @@
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+
+    <!-- App Transport Security -->
     <key>NSAppTransportSecurity</key>
     <dict>
+        <!-- Disable arbitrary loads by default for security -->
         <key>NSAllowsArbitraryLoads</key>
-        <true/>
+        <false/>
+        <!-- Allow localhost for development -->
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>localhost</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+            <key>127.0.0.1</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+        </dict>
     </dict>
+
+    <!-- Privacy - Usage Descriptions -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Pathfinding 需要访问您的位置以显示附近的旅行目的地和导航。</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Pathfinding 需要访问您的位置以提供旅行导航和位置提醒。</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Pathfinding 需要访问您的相册以保存旅行照片。</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Pathfinding 需要访问相机以拍摄旅行照片。</string>
+
+    <!-- Background Modes (if needed) -->
+    <!-- <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+        <string>fetch</string>
+    </array> -->
+
+    <!-- URL Schemes -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>org.pathfinding.app</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>pathfinding</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

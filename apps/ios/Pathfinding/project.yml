@@ -6,6 +6,16 @@ options:
   xcodeVersion: "16.0"
   minimumXcodeGenVersion: "2.0"
 
+configFiles:
+  Debug: Config/Debug.xcconfig
+  Release: Config/Release.xcconfig
+  Staging: Config/Staging.xcconfig
+
+configs:
+  Debug: debug
+  Release: release
+  Staging: release
+
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -21,9 +31,65 @@ targets:
     settings:
       base:
         INFOPLIST_FILE: Pathfinding/Info.plist
-        PRODUCT_BUNDLE_IDENTIFIER: org.pathfinding.app
+        PRODUCT_BUNDLE_IDENTIFIER: org.pathfinding.app$(BUNDLE_ID_SUFFIX)
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         DEVELOPMENT_TEAM: ""
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Pass build settings to Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: Pathfinding
+    configFiles:
+      Debug: Config/Debug.xcconfig
+      Release: Config/Release.xcconfig
+      Staging: Config/Staging.xcconfig
+
+schemes:
+  Pathfinding-Debug:
+    build:
+      targets:
+        Pathfinding: all
+    run:
+      config: Debug
+      environmentVariables:
+        - variable: OS_ACTIVITY_MODE
+          value: disable
+          isEnabled: false
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  Pathfinding-Staging:
+    build:
+      targets:
+        Pathfinding: all
+    run:
+      config: Staging
+    test:
+      config: Staging
+    profile:
+      config: Staging
+    analyze:
+      config: Staging
+    archive:
+      config: Staging
+
+  Pathfinding-Release:
+    build:
+      targets:
+        Pathfinding: all
+    run:
+      config: Release
+    test:
+      config: Release
+    profile:
+      config: Release
+    analyze:
+      config: Release
+    archive:
+      config: Release
