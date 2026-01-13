@@ -9,6 +9,7 @@ import type { CrawlJob, CrawlJobStatistics } from '@pathfinding/crawler-types';
 
 import type { BaseCrawler } from '../crawlers/registry.js';
 import { getCrawler, isPlatformSupported } from '../crawlers/registry.js';
+import { workerLogger } from '../lib/logger.js';
 import { acquireToken } from '../lib/rate-limiter.js';
 import { createSpan } from '../middleware/tracing.js';
 import { updateCrawlJobStatus } from '../services/crawl-job.service.js';
@@ -40,17 +41,25 @@ export async function executeCrawlJob(
     try {
       // Apply exponential backoff delay for retries
       if (attempt > 0) {
-        const backoffMs = INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1);
-        console.warn(
-          `[Worker] Retrying job ${job.id} (attempt ${attempt}/${MAX_RETRIES}) after ${backoffMs}ms backoff`
-        );
-        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        const backoffMs = INITIAL_BACKOFF_MS * 2**(attempt - 1);
+        workerLogger.warn('Retrying job', {
+          job_id: job.id,
+          attempt,
+          max_retries: MAX_RETRIES,
+          backoff_ms: backoffMs,
+        });
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
       } else {
-        console.warn(`[Worker] Starting job ${job.id} for platform ${job.platform}`);
+        workerLogger.info('Starting job', {
+          job_id: job.id,
+          platform: job.platform,
+        });
       }
 
       // Acquire rate limit token before starting crawl
-      console.warn(`[Worker] Acquiring rate limit token for ${job.platform}`);
+      workerLogger.debug('Acquiring rate limit token', {
+        platform: job.platform,
+      });
       await acquireToken(job.platform as any);
 
       // Create crawler instance
@@ -71,7 +80,7 @@ export async function executeCrawlJob(
           }
         );
 
-        console.warn(`[Worker] Job ${job.id} completed:`, statistics);
+        workerLogger.info('Job completed', { job_id: job.id, statistics });
 
         return statistics;
       } finally {
@@ -79,10 +88,11 @@ export async function executeCrawlJob(
       }
     } catch (error) {
       lastError = error as Error;
-      console.error(
-        `[Worker] Job ${job.id} failed on attempt ${attempt}/${MAX_RETRIES}:`,
-        error
-      );
+      workerLogger.error('Job failed', lastError, {
+        job_id: job.id,
+        attempt,
+        max_retries: MAX_RETRIES,
+      });
 
       // If this was the last attempt, throw the error
       if (attempt === MAX_RETRIES) {
@@ -104,11 +114,11 @@ export function cancelCrawlJob(jobId: string): boolean {
   const crawler = activeCrawlers.get(jobId);
 
   if (!crawler) {
-    console.warn(`[Worker] No active crawler found for job ${jobId}`);
+    workerLogger.warn('No active crawler found for job', { job_id: jobId });
     return false;
   }
 
-  console.warn(`[Worker] Cancelling job ${jobId}`);
+  workerLogger.info('Cancelling job', { job_id: jobId });
   crawler.cancel();
   activeCrawlers.delete(jobId);
 

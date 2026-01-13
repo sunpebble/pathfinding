@@ -8,6 +8,7 @@ import type { Context } from 'hono';
 import type { Id } from '../lib/convex.js';
 import { Hono } from 'hono';
 import { api, convex } from '../lib/convex.js';
+import { Errors } from '../middleware/error-handler.js';
 import {
   getGuidesByDestination,
   getRecommendations,
@@ -66,7 +67,7 @@ guidesRouter.get('/search', async (c: Context) => {
   const offset = Number(c.req.query('offset')) || 0;
 
   if (!query) {
-    return c.json({ error: 'Query parameter "q" is required' }, 400);
+    throw Errors.badRequest('Query parameter "q" is required');
   }
 
   const platforms = platformsParam
@@ -159,19 +160,15 @@ guidesRouter.get('/destination/:name', async (c: Context) => {
 guidesRouter.get('/:id', async (c: Context) => {
   const id = c.req.param('id');
 
-  try {
-    const guide = await convex.query(api.travelGuides.getById, {
-      id: id as Id<'travelGuides'>,
-    });
+  const guide = await convex.query(api.travelGuides.getById, {
+    id: id as Id<'travelGuides'>,
+  });
 
-    if (!guide) {
-      return c.json({ error: 'Guide not found' }, 404);
-    }
-
-    return c.json({ data: mapGuide(guide) });
-  } catch {
-    return c.json({ error: 'Guide not found' }, 404);
+  if (!guide) {
+    throw Errors.notFound('Guide');
   }
+
+  return c.json({ data: mapGuide(guide) });
 });
 
 /**
@@ -188,26 +185,22 @@ guidesRouter.get('/', async (c: Context) => {
     ? (platformsParam.split(',') as GuidePlatform[])
     : undefined;
 
-  try {
-    const guides = await convex.query(api.travelGuides.list, {
-      platform: platforms?.[0] as any,
-      minQuality,
-      limit: limit + offset,
-    });
+  const guides = await convex.query(api.travelGuides.list, {
+    platform: platforms?.[0] as any,
+    minQuality,
+    limit: limit + offset,
+  });
 
-    const data = guides.slice(offset, offset + limit);
+  const data = guides.slice(offset, offset + limit);
 
-    return c.json({
-      data: data.map(mapGuide),
-      pagination: {
-        limit,
-        offset,
-        total: guides.length,
-      },
-    });
-  } catch {
-    return c.json({ error: 'Failed to fetch guides' }, 500);
-  }
+  return c.json({
+    data: data.map(mapGuide),
+    pagination: {
+      limit,
+      offset,
+      total: guides.length,
+    },
+  });
 });
 
 /**
@@ -215,25 +208,18 @@ guidesRouter.get('/', async (c: Context) => {
  * Get statistics about stored guides
  */
 guidesRouter.get('/stats', async (c: Context) => {
-  try {
-    const guides = await convex.query(api.travelGuides.list, {});
+  const guides = await convex.query(api.travelGuides.list, {});
 
-    const platformCounts: Record<string, number> = {};
-    for (const guide of guides) {
-      platformCounts[guide.sourcePlatform] =
-        (platformCounts[guide.sourcePlatform] || 0) + 1;
-    }
-
-    return c.json({
-      total: guides.length,
-      by_platform: platformCounts,
-    });
-  } catch {
-    return c.json({
-      total: 0,
-      by_platform: {},
-    });
+  const platformCounts: Record<string, number> = {};
+  for (const guide of guides) {
+    platformCounts[guide.sourcePlatform] =
+      (platformCounts[guide.sourcePlatform] || 0) + 1;
   }
+
+  return c.json({
+    total: guides.length,
+    by_platform: platformCounts,
+  });
 });
 
 /**
@@ -241,34 +227,30 @@ guidesRouter.get('/stats', async (c: Context) => {
  * Create a new travel guide (for testing/seeding)
  */
 guidesRouter.post('/', async (c: Context) => {
-  try {
-    const body = await c.req.json();
+  const body = await c.req.json();
 
-    const id = await convex.mutation(api.travelGuides.upsert, {
-      sourcePlatform: body.source_platform || 'xiaohongshu',
-      sourceExternalId: body.source_external_id || `manual_${Date.now()}`,
-      sourceUrl: body.source_url,
-      title: body.title,
-      content: body.content || '',
-      contentHtml: body.content_html,
-      authorName: body.author_name,
-      authorId: body.author_id,
-      destinations: body.destinations || [],
-      tags: body.tags || [],
-      likesCount: body.likes_count || 0,
-      savesCount: body.saves_count || 0,
-      commentsCount: body.comments_count || 0,
-      viewsCount: body.views_count || 0,
-      coverImageUrl: body.cover_image_url,
-      imageUrls: body.image_urls || [],
-      qualityScore: body.quality_score || 0.5,
-    });
+  const id = await convex.mutation(api.travelGuides.upsert, {
+    sourcePlatform: body.source_platform || 'xiaohongshu',
+    sourceExternalId: body.source_external_id || `manual_${Date.now()}`,
+    sourceUrl: body.source_url,
+    title: body.title,
+    content: body.content || '',
+    contentHtml: body.content_html,
+    authorName: body.author_name,
+    authorId: body.author_id,
+    destinations: body.destinations || [],
+    tags: body.tags || [],
+    likesCount: body.likes_count || 0,
+    savesCount: body.saves_count || 0,
+    commentsCount: body.comments_count || 0,
+    viewsCount: body.views_count || 0,
+    coverImageUrl: body.cover_image_url,
+    imageUrls: body.image_urls || [],
+    qualityScore: body.quality_score || 0.5,
+  });
 
-    const guide = await convex.query(api.travelGuides.getById, { id });
-    return c.json({ data: mapGuide(guide) }, 201);
-  } catch (error: any) {
-    return c.json({ error: error.message }, 500);
-  }
+  const guide = await convex.query(api.travelGuides.getById, { id });
+  return c.json({ data: mapGuide(guide) }, 201);
 });
 
 /**

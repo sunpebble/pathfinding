@@ -12,7 +12,11 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { z } from 'zod';
-import { Errors } from '../middleware/error-handler.js';
+import {
+  ApiErrors,
+  successResponse,
+  successWithPagination,
+} from '../lib/api-response.js';
 import {
   getPipelineStats,
   runNormalizationPipeline,
@@ -49,18 +53,18 @@ poisRouter.get(
     try {
       // Use Convex to get POIs - normalizedPois table
       // Note: Full implementation would need more Convex functions
-      const pois: any[] = [];
+      const pois: NormalizedPOI[] = [];
+      const limit = params.limit || 20;
+      const offset = params.offset || 0;
 
-      return c.json({
-        data: pois as NormalizedPOI[],
-        pagination: {
-          total: pois.length,
-          limit: params.limit || 20,
-          offset: params.offset || 0,
-        },
+      return successWithPagination(c, pois, {
+        total: pois.length,
+        limit,
+        offset,
       });
-    } catch (error: any) {
-      throw Errors.internal(error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return ApiErrors.internal(c, message);
     }
   }
 );
@@ -69,17 +73,16 @@ poisRouter.get(
 poisRouter.get('/stats', async (c: Context) => {
   try {
     // Return placeholder stats - full implementation needs Convex aggregation
-    return c.json({
-      data: {
-        total_pois: 0,
-        categories: {},
-        cities: {},
-        top_categories: [],
-        top_cities: [],
-      },
+    return successResponse(c, {
+      total_pois: 0,
+      categories: {},
+      cities: {},
+      top_categories: [],
+      top_cities: [],
     });
-  } catch (error: any) {
-    throw Errors.internal(error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return ApiErrors.internal(c, message);
   }
 });
 
@@ -90,12 +93,12 @@ poisRouter.get('/:id', async (c: Context) => {
   try {
     const poi = await getPOIById(id);
     if (!poi) {
-      throw Errors.notFound('POI');
+      return ApiErrors.notFound(c, 'POI');
     }
-    return c.json({ data: poi as NormalizedPOI });
-  } catch (error: any) {
-    if (error.statusCode) throw error;
-    throw Errors.internal(error.message);
+    return successResponse(c, poi as NormalizedPOI);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return ApiErrors.internal(c, message);
   }
 });
 
@@ -109,23 +112,20 @@ poisRouter.get('/:id/reviews', async (c: Context) => {
     // Verify POI exists
     const poi = await getPOIById(id);
     if (!poi) {
-      throw Errors.notFound('POI');
+      return ApiErrors.notFound(c, 'POI');
     }
 
     // Get reviews from Convex - need poiReviews functions
-    const reviews: any[] = [];
+    const reviews: unknown[] = [];
 
-    return c.json({
-      data: reviews,
-      pagination: {
-        total: reviews.length,
-        limit,
-        offset,
-      },
+    return successWithPagination(c, reviews, {
+      total: reviews.length,
+      limit,
+      offset,
     });
-  } catch (error: any) {
-    if (error.statusCode) throw error;
-    throw Errors.internal(error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return ApiErrors.internal(c, message);
   }
 });
 
@@ -139,7 +139,7 @@ poisRouter.get('/:id/nearby', async (c: Context) => {
   try {
     const poi = await getPOIById(id);
     if (!poi) {
-      throw Errors.notFound('POI');
+      return ApiErrors.notFound(c, 'POI');
     }
 
     const nearby = await getNearbyPOIs(poi.location_lat, poi.location_lng, {
@@ -149,10 +149,10 @@ poisRouter.get('/:id/nearby', async (c: Context) => {
       excludeId: id,
     });
 
-    return c.json({ data: nearby });
-  } catch (error: any) {
-    if (error.statusCode) throw error;
-    throw Errors.internal(error.message);
+    return successResponse(c, nearby);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return ApiErrors.internal(c, message);
   }
 });
 
@@ -163,14 +163,14 @@ poisRouter.get('/:id/sources', async (c: Context) => {
   try {
     const poi = await getPOIById(id);
     if (!poi) {
-      throw Errors.notFound('POI');
+      return ApiErrors.notFound(c, 'POI');
     }
 
     const sources = await getPOISources(id);
-    return c.json({ data: sources });
-  } catch (error: any) {
-    if (error.statusCode) throw error;
-    throw Errors.internal(error.message);
+    return successResponse(c, sources);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return ApiErrors.internal(c, message);
   }
 });
 
@@ -197,21 +197,31 @@ poisRouter.post(
       crawl_job_id?: string;
     };
 
-    const result = await runNormalizationPipeline({
-      batchSize: params.batch_size ?? 100,
-      runDeduplication: params.run_deduplication ?? true,
-      platform: params.platform,
-      city: params.city,
-      category: params.category,
-      crawlJobId: params.crawl_job_id,
-    });
+    try {
+      const result = await runNormalizationPipeline({
+        batchSize: params.batch_size ?? 100,
+        runDeduplication: params.run_deduplication ?? true,
+        platform: params.platform,
+        city: params.city,
+        category: params.category,
+        crawlJobId: params.crawl_job_id,
+      });
 
-    return c.json({ data: result });
+      return successResponse(c, result);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return ApiErrors.internal(c, message);
+    }
   }
 );
 
 // GET /api/pois/pipeline/stats - Get normalization pipeline stats
 poisRouter.get('/pipeline/stats', async (c: Context) => {
-  const stats = await getPipelineStats();
-  return c.json({ data: stats });
+  try {
+    const stats = await getPipelineStats();
+    return successResponse(c, stats);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return ApiErrors.internal(c, message);
+  }
 });

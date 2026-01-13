@@ -3,7 +3,7 @@
  * Managing item reminders and notifications
  */
 
-import type { Id } from '../lib/convex';
+import type { Doc, Id  } from '../lib/convex';
 import { api, convex } from '../lib/convex';
 
 // Types
@@ -27,7 +27,7 @@ export interface UpdateReminderInput {
   minutesBefore?: number;
 }
 
-function mapReminder(row: any): Reminder {
+function mapReminder(row: Doc<'reminders'>): Reminder {
   return {
     id: row._id,
     userId: row.userId,
@@ -60,10 +60,14 @@ export const reminderService = {
       throw new Error('Item not found');
     }
 
-    // Get the day to find itinerary
-    const _day = await convex.query(api.itineraries.getById, {
-      id: item.dayId as unknown as Id<'itineraries'>,
+    // Get the day to find the itinerary
+    const day = await convex.query(api.itineraryDays.getById, {
+      id: item.dayId,
     });
+
+    if (!day) {
+      throw new Error('Day not found');
+    }
 
     // Calculate scheduled time
     const _startTime = item.startTime || '09:00';
@@ -79,7 +83,7 @@ export const reminderService = {
     if (existing) {
       // Update existing reminder
       const updated = await convex.mutation(api.reminders.update, {
-        id: existing._id as Id<'reminders'>,
+        id: existing._id,
         reminderTime,
         message: `Reminder: ${input.minutesBefore} minutes before`,
       });
@@ -89,7 +93,7 @@ export const reminderService = {
     // Create new reminder
     const reminderId = await convex.mutation(api.reminders.create, {
       userId,
-      itineraryId: item.dayId as unknown as Id<'itineraries'>, // Simplified
+      itineraryId: day.itineraryId,
       itemId: input.itemId as Id<'itineraryItems'>,
       reminderTime,
       message: `Reminder: ${input.minutesBefore} minutes before`,

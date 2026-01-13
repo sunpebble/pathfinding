@@ -4,6 +4,7 @@
  */
 
 import type { RetryOptions } from '../lib/retry.js';
+import { ollamaLogger } from '../lib/logger.js';
 import { CircuitBreaker, parseJsonSafely, withRetry } from '../lib/retry.js';
 
 export interface OllamaConfig {
@@ -72,7 +73,10 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   maxDelay: 10000,
   backoffMultiplier: 2,
   onRetry: (error: Error, attempt: number) => {
-    console.warn(`[Ollama] Retry attempt ${attempt}: ${error.message}`);
+    ollamaLogger.warn('Retry attempt', {
+      attempt,
+      error_message: error.message,
+    });
   },
 };
 
@@ -253,12 +257,15 @@ Return ONLY the JSON object, no additional text.`;
       );
 
       if (!success) {
-        console.error('Failed to parse guide extraction:', error);
+        ollamaLogger.error('Failed to parse guide extraction', null, { error });
       }
 
       return data;
-    } catch (error) {
-      console.error('Failed to parse guide extraction:', error);
+    } catch (err) {
+      ollamaLogger.error(
+        'Failed to parse guide extraction',
+        err instanceof Error ? err : null
+      );
       // Return default structure on parse failure
       return {
         title: 'Unknown',
@@ -315,7 +322,7 @@ Return ONLY the JSON object.`;
     });
 
     if (!success) {
-      console.warn('[Ollama] Failed to parse content summary:', error);
+      ollamaLogger.warn('Failed to parse content summary', { error });
     }
 
     return data;
@@ -375,7 +382,7 @@ Return ONLY the JSON array.`;
     >(response, []);
 
     if (!success) {
-      console.warn('[Ollama] Failed to parse POIs:', error);
+      ollamaLogger.warn('Failed to parse POIs', { error });
     }
 
     return data;
@@ -466,7 +473,7 @@ Return ONLY the JSON object.`;
     });
 
     if (!success) {
-      console.warn('[Ollama] Failed to parse content quality analysis:', error);
+      ollamaLogger.warn('Failed to parse content quality analysis', { error });
     }
 
     return data;
@@ -775,8 +782,9 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
 
         // If no valid data extracted, try to extract POIs from content directly
         if (result.days.length === 0) {
-          console.warn(
-            `[Ollama] No days extracted for ${destination}, attempting POI-only extraction`
+          ollamaLogger.warn(
+            'No days extracted, attempting POI-only extraction',
+            { destination }
           );
           const fallbackPois = await this.extractPOIsSimple(
             content,
@@ -796,10 +804,9 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
         return result;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        console.error(
-          `[Ollama] Extraction attempt ${attempt + 1} failed:`,
-          lastError.message
-        );
+        ollamaLogger.error('Extraction attempt failed', lastError, {
+          attempt: attempt + 1,
+        });
 
         if (attempt < maxRetries) {
           // Wait before retry
@@ -810,7 +817,7 @@ ${destinations.length > 0 ? `目的地: ${destinations.join(', ')}` : ''}
       }
     }
 
-    console.error('[Ollama] All extraction attempts failed:', lastError);
+    ollamaLogger.error('All extraction attempts failed', lastError);
     return {
       summary: '',
       tips: [],

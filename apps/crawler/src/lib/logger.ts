@@ -1,15 +1,20 @@
 /**
  * Logger Utility
- * Simple logging wrapper that complies with lint rules
+ * Unified logging system with structured output and log levels
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface Logger {
-  debug: (message: string, ...args: unknown[]) => void;
-  info: (message: string, ...args: unknown[]) => void;
-  warn: (message: string, ...args: unknown[]) => void;
-  error: (message: string, ...args: unknown[]) => void;
+export interface LogContext {
+  [key: string]: unknown;
+}
+
+export interface Logger {
+  debug: (message: string, context?: LogContext) => void;
+  info: (message: string, context?: LogContext) => void;
+  warn: (message: string, context?: LogContext) => void;
+  error: (message: string, error?: Error | null, context?: LogContext) => void;
+  child: (prefix: string) => Logger;
 }
 
 const LOG_LEVEL_ORDER: Record<LogLevel, number> = {
@@ -24,47 +29,123 @@ const currentLevel: LogLevel =
   (process.env.LOG_LEVEL as LogLevel) ||
   (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
 
+// Enable JSON output for structured logging in production
+const useJsonOutput =
+  process.env.LOG_FORMAT === 'json' || process.env.NODE_ENV === 'production';
+
 function shouldLog(level: LogLevel): boolean {
   return LOG_LEVEL_ORDER[level] >= LOG_LEVEL_ORDER[currentLevel];
 }
 
-function formatMessage(level: LogLevel, message: string): string {
+function formatContext(context?: LogContext): string {
+  if (!context || Object.keys(context).length === 0) {
+    return '';
+  }
+  return ` ${  JSON.stringify(context)}`;
+}
+
+function formatError(error?: Error | null): LogContext | undefined {
+  if (!error) {
+    return undefined;
+  }
+  return {
+    error_name: error.name,
+    error_message: error.message,
+    error_stack: error.stack?.split('\n').slice(0, 5).join('\n'),
+  };
+}
+
+interface StructuredLog {
+  timestamp: string;
+  level: LogLevel;
+  prefix?: string;
+  message: string;
+  context?: LogContext;
+  error?: LogContext;
+}
+
+function formatStructuredLog(
+  level: LogLevel,
+  message: string,
+  prefix?: string,
+  context?: LogContext,
+  error?: Error | null
+): string {
   const timestamp = new Date().toISOString();
-  return `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+
+  if (useJsonOutput) {
+    const log: StructuredLog = {
+      timestamp,
+      level,
+      message,
+    };
+    if (prefix) {
+      log.prefix = prefix;
+    }
+    if (context && Object.keys(context).length > 0) {
+      log.context = context;
+    }
+    if (error) {
+      log.error = formatError(error);
+    }
+    return JSON.stringify(log);
+  }
+
+  // Human-readable format for development
+  const prefixStr = prefix ? `[${prefix}] ` : '';
+  const contextStr = formatContext(context);
+  const errorStr = error ? ` | Error: ${error.message}` : '';
+  return `[${timestamp}] [${level.toUpperCase()}] ${prefixStr}${message}${contextStr}${errorStr}`;
 }
 
 /**
- * Create a logger instance
+ * Create a logger instance with optional prefix
  */
 export function createLogger(prefix?: string): Logger {
-  const formatWithPrefix = (level: LogLevel, message: string): string => {
-    const base = formatMessage(level, message);
-    return prefix ? `${base} [${prefix}]` : base;
-  };
-
   return {
-    debug: (message: string, ...args: unknown[]) => {
+    debug(message: string, context?: LogContext): void {
       if (shouldLog('debug')) {
-        console.warn(formatWithPrefix('debug', message), ...args);
+        // eslint-disable-next-line no-console
+        console.debug(formatStructuredLog('debug', message, prefix, context));
       }
     },
-    info: (message: string, ...args: unknown[]) => {
+
+    info(message: string, context?: LogContext): void {
       if (shouldLog('info')) {
-        console.warn(formatWithPrefix('info', message), ...args);
+        // eslint-disable-next-line no-console
+        console.info(formatStructuredLog('info', message, prefix, context));
       }
     },
-    warn: (message: string, ...args: unknown[]) => {
+
+    warn(message: string, context?: LogContext): void {
       if (shouldLog('warn')) {
-        console.warn(formatWithPrefix('warn', message), ...args);
+         
+        console.warn(formatStructuredLog('warn', message, prefix, context));
       }
     },
-    error: (message: string, ...args: unknown[]) => {
+
+    error(message: string, error?: Error | null, context?: LogContext): void {
       if (shouldLog('error')) {
-        console.error(formatWithPrefix('error', message), ...args);
+         
+        console.error(
+          formatStructuredLog('error', message, prefix, context, error)
+        );
       }
+    },
+
+    child(childPrefix: string): Logger {
+      const newPrefix = prefix ? `${prefix}:${childPrefix}` : childPrefix;
+      return createLogger(newPrefix);
     },
   };
 }
 
 // Default logger instance
 export const logger = createLogger();
+
+// Pre-configured loggers for common modules
+export const workerLogger = createLogger('Worker');
+export const ollamaLogger = createLogger('Ollama');
+export const enrichLogger = createLogger('Enrich');
+export const geocodeLogger = createLogger('Geocode');
+export const crawlerLogger = createLogger('Crawler');

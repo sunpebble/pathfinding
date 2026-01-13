@@ -1,5 +1,5 @@
-/* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
+import type { Id } from './_generated/dataModel';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -18,7 +18,11 @@ const visibilityValidator = v.union(
  */
 
 // Check if user can edit itinerary (owner or editor)
-async function checkEditPermission(ctx: any, itineraryId: any, userId: string) {
+async function checkEditPermission(
+  ctx: QueryCtx | MutationCtx,
+  itineraryId: Id<'itineraries'>,
+  userId: string
+): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
     throw new Error('Itinerary not found');
@@ -50,10 +54,10 @@ async function checkEditPermission(ctx: any, itineraryId: any, userId: string) {
 
 // Check if user is the owner
 async function checkOwnerPermission(
-  ctx: any,
-  itineraryId: any,
+  ctx: QueryCtx | MutationCtx,
+  itineraryId: Id<'itineraries'>,
   userId: string
-) {
+): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
     throw new Error('Itinerary not found');

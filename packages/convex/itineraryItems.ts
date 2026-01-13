@@ -1,5 +1,5 @@
-/* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
+import type { Id } from './_generated/dataModel';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -20,7 +20,11 @@ const transportModeValidator = v.union(
  */
 
 // Check if user can edit items in a day (checks itinerary permission)
-async function checkItemEditPermission(ctx: any, dayId: any, userId: string) {
+async function checkItemEditPermission(
+  ctx: QueryCtx | MutationCtx,
+  dayId: Id<'itineraryDays'>,
+  userId: string
+): Promise<boolean> {
   const day = await ctx.db.get(dayId);
   if (!day) {
     throw new Error('Day not found');

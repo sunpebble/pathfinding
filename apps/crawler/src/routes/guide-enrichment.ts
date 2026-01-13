@@ -8,6 +8,7 @@ import type { Id } from '../lib/convex.js';
 import type { GeocodingStrategy } from '../services/geocoding.service.js';
 import { Hono } from 'hono';
 import { api, convex } from '../lib/convex.js';
+import { enrichLogger } from '../lib/logger.js';
 import { withConcurrency } from '../lib/retry.js';
 import {
   normalizePoiName,
@@ -53,7 +54,7 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
       return c.json({ error: 'AI service unavailable' }, 503);
     }
 
-    console.warn(`[Enrich] Processing guide: ${guide.title}`);
+    enrichLogger.info('Processing guide', { guide_id: id, title: guide.title });
 
     const extraction = await ollamaService.extractDayBasedItinerary(
       guide.content,
@@ -169,10 +170,11 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
       // Convert back to storage format (removes validation metadata)
       finalDays = toStorageFormat(validationResult.days);
 
-      console.warn(
-        `[Enrich] Validation: ${validationStats.validPois}/${validationStats.totalPois} valid, ` +
-          `${validationStats.duplicatesRemoved} duplicates removed`
-      );
+      enrichLogger.info('Validation complete', {
+        valid_pois: validationStats.validPois,
+        total_pois: validationStats.totalPois,
+        duplicates_removed: validationStats.duplicatesRemoved,
+      });
     }
 
     // 5. Save to Convex
@@ -186,7 +188,10 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
       aiDays: finalDays,
     });
 
-    console.warn(`[Enrich] Completed: ${guide.title}`);
+    enrichLogger.info('Enrichment completed', {
+      guide_id: id,
+      title: guide.title,
+    });
 
     const totalPois = finalDays.reduce((sum, d) => sum + d.pois.length, 0);
     const poisWithCoords = finalDays.reduce(
@@ -213,9 +218,10 @@ guideEnrichmentRouter.post('/:id/enrich', async (c: Context) => {
         cache_stats: geocodingService.getCacheStats(),
       },
     });
-  } catch (error: any) {
-    console.error('[Enrich] Error:', error);
-    return c.json({ error: error.message }, 500);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    enrichLogger.error('Enrichment failed', err, { guide_id: id });
+    return c.json({ error: err.message }, 500);
   }
 });
 
@@ -395,9 +401,11 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
           0
         );
 
-        console.warn(
-          `[Batch] Processed: ${guide.title} (${poisWithCoords}/${totalPois} geocoded)`
-        );
+        enrichLogger.info('Batch processed guide', {
+          title: guide.title,
+          pois_geocoded: poisWithCoords,
+          pois_total: totalPois,
+        });
 
         return {
           id: guide._id,
@@ -410,7 +418,9 @@ guideEnrichmentRouter.post('/enrich/batch', async (c: Context) => {
       {
         concurrency,
         onError: (error, guide) => {
-          console.error(`[Batch] Failed: ${guide.title}`, error.message);
+          enrichLogger.error('Batch processing failed', error, {
+            title: guide.title,
+          });
         },
       }
     );
@@ -858,9 +868,13 @@ guideEnrichmentRouter.post('/optimize/all', async (c: Context) => {
           duplicates_removed: validationResult.stats.duplicatesRemoved,
         });
 
-        console.warn(
-          `[Optimize] ${guide.title}: ${poisAfter}/${poisBefore} POIs, ${regeocoded} regeocoded, ${validationResult.stats.duplicatesRemoved} duplicates`
-        );
+        enrichLogger.info('Optimize processed guide', {
+          title: guide.title,
+          pois_after: poisAfter,
+          pois_before: poisBefore,
+          regeocoded,
+          duplicates_removed: validationResult.stats.duplicatesRemoved,
+        });
       } catch (error: unknown) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -874,7 +888,11 @@ guideEnrichmentRouter.post('/optimize/all', async (c: Context) => {
           duplicates_removed: 0,
           error: errorMessage,
         });
-        console.error(`[Optimize] Failed: ${guide.title}`, errorMessage);
+        enrichLogger.error(
+          'Optimize failed',
+          error instanceof Error ? error : null,
+          { title: guide.title }
+        );
       }
     }
 
@@ -996,7 +1014,10 @@ guideEnrichmentRouter.post('/:id/regeocode', async (c: Context) => {
     const geocodingService = getGeocodingService();
     const city = guide.destinations[0] || '';
 
-    console.warn(`[Regeocode] Processing guide: ${guide.title}`);
+    enrichLogger.info('Processing regeocode', {
+      guide_id: id,
+      title: guide.title,
+    });
 
     // Re-geocode all POIs
     const regeocodedDays = await Promise.all(
@@ -1079,9 +1100,12 @@ guideEnrichmentRouter.post('/:id/regeocode', async (c: Context) => {
       0
     );
 
-    console.warn(
-      `[Regeocode] Completed: ${guide.title} (${poisWithCoords}/${totalPois} geocoded)`
-    );
+    enrichLogger.info('Regeocode completed', {
+      guide_id: id,
+      title: guide.title,
+      pois_geocoded: poisWithCoords,
+      pois_total: totalPois,
+    });
 
     return c.json({
       success: true,
@@ -1098,8 +1122,9 @@ guideEnrichmentRouter.post('/:id/regeocode', async (c: Context) => {
         cache_stats: geocodingService.getCacheStats(),
       },
     });
-  } catch (error: any) {
-    console.error('[Regeocode] Error:', error);
-    return c.json({ error: error.message }, 500);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    enrichLogger.error('Regeocode failed', err, { guide_id: id });
+    return c.json({ error: err.message }, 500);
   }
 });

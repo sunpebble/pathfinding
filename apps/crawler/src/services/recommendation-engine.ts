@@ -10,7 +10,40 @@ import type {
   RecommendationParams,
   TravelGuide,
 } from '@pathfinding/crawler-types';
+import type { Doc } from '../lib/convex.js';
 import { api, convex } from '../lib/convex.js';
+
+/**
+ * Valid guide platforms for runtime validation
+ */
+const VALID_PLATFORMS: readonly GuidePlatform[] = [
+  'xiaohongshu',
+  'weibo',
+  'ctrip',
+  'douyin',
+  'tripadvisor',
+] as const;
+
+/**
+ * Validates if a string is a valid guide platform
+ */
+function isValidPlatform(value: string | undefined): value is GuidePlatform {
+  if (!value) return false;
+  return VALID_PLATFORMS.includes(value as GuidePlatform);
+}
+
+/**
+ * Safely gets the first platform from an array with validation
+ */
+function getFirstValidPlatform(
+  platforms: GuidePlatform[] | undefined
+): GuidePlatform | undefined {
+  if (!platforms || platforms.length === 0) {
+    return undefined;
+  }
+  const first = platforms[0];
+  return isValidPlatform(first) ? first : undefined;
+}
 
 /**
  * Weights for scoring components
@@ -37,8 +70,9 @@ export async function getRecommendations(
   } = params;
 
   try {
+    const platform = getFirstValidPlatform(platforms);
     const guides = await convex.query(api.travelGuides.list, {
-      platform: platforms?.[0] as any,
+      platform,
       minQuality,
       limit: limit + offset,
     });
@@ -46,30 +80,28 @@ export async function getRecommendations(
     // Filter by destinations and tags client-side
     let filtered = guides;
     if (destinations.length > 0) {
-      filtered = filtered.filter((g: any) =>
+      filtered = filtered.filter((g: Doc<'travelGuides'>) =>
         g.destinations?.some((d: string) => destinations.includes(d))
       );
     }
     if (tags.length > 0) {
-      filtered = filtered.filter((g: any) =>
+      filtered = filtered.filter((g: Doc<'travelGuides'>) =>
         g.tags?.some((t: string) => tags.includes(t))
       );
     }
 
     // Sort by composite score
-    const scoredGuides = filtered.map((guide: any) => ({
+    const scoredGuides = filtered.map((guide: Doc<'travelGuides'>) => ({
       ...mapGuide(guide),
       _compositeScore: calculateCompositeScore(mapGuide(guide)),
     }));
 
-    scoredGuides.sort(
-      (a: any, b: any) => b._compositeScore - a._compositeScore
-    );
+    scoredGuides.sort((a, b) => b._compositeScore - a._compositeScore);
 
     // Apply offset and remove internal score
     return scoredGuides
       .slice(offset, offset + limit)
-      .map(({ _compositeScore, ...guide }: any) => guide as TravelGuide);
+      .map(({ _compositeScore, ...guide }) => guide as TravelGuide);
   } catch (error) {
     console.error('Failed to fetch recommendations:', error);
     return [];
@@ -140,9 +172,10 @@ export async function searchGuides(
   const { platforms, destinations, limit = 20, offset = 0 } = options;
 
   try {
+    const platform = getFirstValidPlatform(platforms);
     const guides = await convex.query(api.travelGuides.search, {
       query,
-      platform: platforms?.[0] as any,
+      platform,
       limit: limit + offset,
     });
 
@@ -177,14 +210,15 @@ export async function getTrendingGuides(
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
+    const platform = getFirstValidPlatform(platforms);
     const guides = await convex.query(api.travelGuides.list, {
-      platform: platforms?.[0] as any,
+      platform,
       limit: limit * 2,
     });
 
     // Filter by crawl date and sort by likes
     const filtered = guides
-      .filter((g: any) => g.crawledAt >= cutoffDate.getTime())
+      .filter((g: Doc<'travelGuides'>) => g.crawledAt >= cutoffDate.getTime())
       .map(mapGuide)
       .sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0))
       .slice(0, limit);
@@ -211,15 +245,16 @@ export async function getGuidesByDestination(
   const { platforms, minQuality = 0.3, limit = 20, offset = 0 } = options;
 
   try {
+    const platform = getFirstValidPlatform(platforms);
     const guides = await convex.query(api.travelGuides.list, {
-      platform: platforms?.[0] as any,
+      platform,
       minQuality,
       limit: (limit + offset) * 2,
     });
 
     // Filter by destination
     const filtered = guides
-      .filter((g: any) => g.destinations?.includes(destination))
+      .filter((g: Doc<'travelGuides'>) => g.destinations?.includes(destination))
       .map(mapGuide)
       .slice(offset, offset + limit);
 
@@ -231,7 +266,7 @@ export async function getGuidesByDestination(
 }
 
 // Helper to map Convex guide to TravelGuide type
-function mapGuide(doc: any): TravelGuide {
+function mapGuide(doc: Doc<'travelGuides'>): TravelGuide {
   return {
     id: doc._id,
     source_platform: doc.sourcePlatform,
@@ -252,7 +287,7 @@ function mapGuide(doc: any): TravelGuide {
     image_urls: doc.imageUrls,
     published_at: doc.publishedAt
       ? new Date(doc.publishedAt).toISOString()
-      : null,
+      : undefined,
     crawled_at: new Date(doc.crawledAt).toISOString(),
     quality_score: doc.qualityScore,
     content_hash: doc.contentHash,

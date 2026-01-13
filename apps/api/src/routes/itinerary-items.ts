@@ -1,3 +1,4 @@
+import type { UpdateItineraryItemInput } from '../services/itineraryItemService';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import {
@@ -79,17 +80,28 @@ itineraryItemsRoutes.patch(
     const input = c.req.valid('json');
     const accessToken = c.get('accessToken');
 
-    // Filter out null values and convert to undefined for service compatibility
-    const sanitizedInput: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(input)) {
-      if (value !== null) {
-        sanitizedInput[key] = value;
-      }
+    // Build sanitized input with proper typing, filtering out null values
+    const sanitizedInput: UpdateItineraryItemInput = {};
+
+    if (input.orderIndex !== undefined && input.orderIndex !== null) {
+      sanitizedInput.orderIndex = input.orderIndex;
+    }
+    if (input.startTime !== undefined && input.startTime !== null) {
+      sanitizedInput.startTime = input.startTime;
+    }
+    if (input.endTime !== undefined && input.endTime !== null) {
+      sanitizedInput.endTime = input.endTime;
+    }
+    if (input.transportMode !== undefined && input.transportMode !== null) {
+      sanitizedInput.transportMode = input.transportMode;
+    }
+    if (input.notes !== undefined && input.notes !== null) {
+      sanitizedInput.notes = input.notes;
     }
 
     const item = await ItineraryItemService.update(
       itemId,
-      sanitizedInput as Parameters<typeof ItineraryItemService.update>[1],
+      sanitizedInput,
       accessToken
     );
 

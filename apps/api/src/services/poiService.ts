@@ -3,7 +3,7 @@
  * Search and retrieval operations for Points of Interest
  */
 
-import type { Id } from '../lib/convex';
+import type { Doc, Id } from '../lib/convex';
 import { api, convex } from '../lib/convex';
 import { NotFoundError } from '../middleware/errorHandler';
 
@@ -14,6 +14,30 @@ export type PoiCategory =
   | 'hotel'
   | 'shopping'
   | 'other';
+
+// Valid POI categories for runtime validation
+const VALID_POI_CATEGORIES: readonly PoiCategory[] = [
+  'attraction',
+  'restaurant',
+  'hotel',
+  'shopping',
+  'other',
+] as const;
+
+/**
+ * Validates if a string is a valid POI category
+ */
+function isValidPoiCategory(value: string | undefined): value is PoiCategory {
+  if (!value) return false;
+  return VALID_POI_CATEGORIES.includes(value as PoiCategory);
+}
+
+/**
+ * Safely converts a category string to PoiCategory or undefined
+ */
+function toPoiCategory(value: string | undefined): PoiCategory | undefined {
+  return isValidPoiCategory(value) ? value : undefined;
+}
 
 export interface Poi {
   id: string;
@@ -65,27 +89,28 @@ export const PoiService = {
     meta: { page: number; pageSize: number; total: number; totalPages: number };
   }> {
     // Use search if query provided, otherwise use list
-    let pois;
+    let pois: Doc<'pois'>[];
+    const validCategory = toPoiCategory(query.category);
 
     if (query.query) {
       pois = await convex.query(api.pois.search, {
         query: query.query,
         cityId: query.cityId as Id<'cities'>,
-        category: query.category as any,
+        category: validCategory,
         minRating: query.minRating,
         limit: query.pageSize * query.page, // Get enough for pagination
       });
     } else {
       pois = await convex.query(api.pois.list, {
         cityId: query.cityId as Id<'cities'>,
-        category: query.category as any,
+        category: validCategory,
         limit: query.pageSize * query.page,
       });
     }
 
     // Filter by nearby if coordinates provided
     if (query.nearbyLat !== undefined && query.nearbyLng !== undefined) {
-      pois = pois.filter((poi: any) => {
+      pois = pois.filter((poi) => {
         const distance = calculateDistanceKm(
           query.nearbyLat!,
           query.nearbyLng!,
@@ -121,9 +146,10 @@ export const PoiService = {
     limit: number,
     _accessToken: string
   ): Promise<Poi[]> {
+    const validCategory = toPoiCategory(category);
     const pois = await convex.query(api.pois.getRecommendations, {
       cityId: cityId as Id<'cities'>,
-      category: category as any,
+      category: validCategory,
       limit,
     });
 
@@ -141,11 +167,12 @@ export const PoiService = {
     limit: number,
     _accessToken: string
   ): Promise<Poi[]> {
+    const validCategory = toPoiCategory(category);
     const pois = await convex.query(api.pois.getNearby, {
       latitude: lat,
       longitude: lng,
       radiusKm,
-      category: category as any,
+      category: validCategory,
       limit,
     });
 
@@ -169,7 +196,7 @@ export const PoiService = {
 };
 
 // Helper function to convert Convex POI to API response
-function toPoi(row: any): Poi {
+function toPoi(row: Doc<'pois'>): Poi {
   return {
     id: row._id,
     externalId: row.externalId,

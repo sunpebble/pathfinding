@@ -1,3 +1,4 @@
+import type { UpdateItineraryInput } from '../services/itineraryService';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -140,18 +141,32 @@ itinerariesRoutes.patch(
     const itineraryId = c.req.param('id');
     const input = c.req.valid('json');
 
-    // Sanitize input - convert null to undefined for service compatibility
-    const sanitizedInput: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(input)) {
-      if (value !== null) {
-        sanitizedInput[key] = value;
-      }
+    // Build sanitized input with proper typing, filtering out null values
+    const sanitizedInput: UpdateItineraryInput = {};
+
+    if (input.title !== undefined && input.title !== null) {
+      sanitizedInput.title = input.title;
+    }
+    if (input.cityId !== undefined && input.cityId !== null) {
+      sanitizedInput.cityId = input.cityId;
+    }
+    if (input.startDate !== undefined && input.startDate !== null) {
+      sanitizedInput.startDate = input.startDate;
+    }
+    if (input.endDate !== undefined && input.endDate !== null) {
+      sanitizedInput.endDate = input.endDate;
+    }
+    if (input.visibility !== undefined && input.visibility !== null) {
+      sanitizedInput.visibility = input.visibility;
+    }
+    if (input.coverImageUrl !== undefined && input.coverImageUrl !== null) {
+      sanitizedInput.coverImageUrl = input.coverImageUrl;
     }
 
     const itinerary = await ItineraryService.update(
       itineraryId,
       userId,
-      sanitizedInput as Parameters<typeof ItineraryService.update>[2],
+      sanitizedInput,
       accessToken
     );
 
