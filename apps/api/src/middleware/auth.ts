@@ -1,15 +1,13 @@
 import type { Context, Next } from 'hono';
-import { Buffer } from 'node:buffer';
+import { ConvexHttpClient } from 'convex/browser';
 import { createMiddleware } from 'hono/factory';
+import { api } from '../lib/convex';
 
 /**
  * JWT Authentication Middleware
  *
- * This is a placeholder implementation for Convex Auth migration.
- * TODO: Integrate with Convex Auth once fully configured.
- *
- * For now, this validates the Authorization header format
- * and extracts the user ID from the token (simplified).
+ * Validates JWT tokens with Convex Auth by creating an authenticated
+ * client and querying the current user identity.
  */
 export const authMiddleware = createMiddleware(
   async (c: Context, next: Next) => {
@@ -22,36 +20,28 @@ export const authMiddleware = createMiddleware(
     const token = authHeader.slice(7); // Remove "Bearer " prefix
 
     try {
-      // TODO: Replace with Convex Auth token validation
-      // For now, we'll use a simplified approach where the token
-      // is expected to contain the user ID (for development)
-
-      // In production with Convex Auth:
-      // 1. Validate the JWT token with Convex Auth
-      // 2. Extract user claims from the validated token
-      // 3. Get user info from Convex
-
-      // Simplified: Extract user ID from token (development only)
-      // The token format should be: "user_<userId>" or a JWT
-      let userId: string;
-      let userEmail: string = '';
-
-      if (token.startsWith('user_')) {
-        // Development token format: user_<userId>
-        userId = token.slice(5);
-      } else {
-        // Attempt to decode as a simple base64-encoded JSON
-        try {
-          const payload = JSON.parse(
-            Buffer.from(token.split('.')[1] || '', 'base64').toString()
-          );
-          userId = payload.sub || payload.userId || payload.id;
-          userEmail = payload.email || '';
-        } catch {
-          // If decoding fails, use the token itself as user ID (dev mode)
-          userId = token;
-        }
+      // Create an authenticated Convex client for this request
+      const convexUrl = process.env.CONVEX_URL;
+      if (!convexUrl) {
+        throw new Error('CONVEX_URL environment variable not set');
       }
+
+      const authenticatedClient = new ConvexHttpClient(convexUrl);
+      authenticatedClient.setAuth(token);
+
+      // Validate token by querying current user from Convex Auth
+      const user = await authenticatedClient.query(
+        api.users.getCurrentUser,
+        {}
+      );
+
+      if (!user) {
+        return c.json({ error: 'Invalid or expired token' }, 401);
+      }
+
+      // Extract user info from validated token
+      const userId = user.id;
+      const userEmail = user.email || '';
 
       if (!userId) {
         return c.json({ error: 'Invalid token: no user ID found' }, 401);
@@ -63,8 +53,7 @@ export const authMiddleware = createMiddleware(
       c.set('accessToken', token);
 
       await next();
-    } catch (err) {
-      console.error('Auth middleware error:', err);
+    } catch {
       return c.json({ error: 'Authentication failed' }, 401);
     }
   }
@@ -82,26 +71,23 @@ export const optionalAuthMiddleware = createMiddleware(
       const token = authHeader.slice(7);
 
       try {
-        // Same simplified logic as above
-        let userId: string | undefined;
+        // Create an authenticated Convex client for this request
+        const convexUrl = process.env.CONVEX_URL;
+        if (convexUrl) {
+          const authenticatedClient = new ConvexHttpClient(convexUrl);
+          authenticatedClient.setAuth(token);
 
-        if (token.startsWith('user_')) {
-          userId = token.slice(5);
-        } else {
-          try {
-            const payload = JSON.parse(
-              Buffer.from(token.split('.')[1] || '', 'base64').toString()
-            );
-            userId = payload.sub || payload.userId || payload.id;
-            c.set('userEmail', payload.email || '');
-          } catch {
-            userId = token;
+          // Attempt to validate token and get user info
+          const user = await authenticatedClient.query(
+            api.users.getCurrentUser,
+            {}
+          );
+
+          if (user && user.id) {
+            c.set('userId', user.id);
+            c.set('userEmail', user.email || '');
+            c.set('accessToken', token);
           }
-        }
-
-        if (userId) {
-          c.set('userId', userId);
-          c.set('accessToken', token);
         }
       } catch {
         // Ignore auth errors for optional auth

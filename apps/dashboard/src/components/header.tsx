@@ -2,6 +2,7 @@
 
 import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { useHealthStatus } from '@/hooks/use-health-status';
+import { AuthButton } from './auth-button';
 
 export function Header() {
   const { data: health, isLoading, refetch } = useHealthStatus();
@@ -40,6 +41,9 @@ export function Header() {
         >
           <RefreshCw className="h-4 w-4" />
         </button>
+
+        {/* Auth Button */}
+        <AuthButton />
       </div>
     </header>
   );

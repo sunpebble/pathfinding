@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@convex-dev/auth": "^0.0.90",
     "@pathfinding/convex": "workspace:*",
     "@tanstack/react-query": "^5.64.2",
     "clsx": "^2.1.1",

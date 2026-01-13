@@ -9,6 +9,7 @@ actor APIClient {
   private let session: URLSession
   private let decoder: JSONDecoder
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "APIClient")
+  private let authManager = AuthManager.shared
 
   // Response cache
   private var responseCache: [String: CachedResponse] = [:]
@@ -69,6 +70,19 @@ actor APIClient {
 
   // MARK: - Private Methods
 
+  /// Create URLRequest with authentication header if available
+  private func createRequest(url: URL) async -> URLRequest {
+    var request = URLRequest(url: url)
+
+    // Add authorization header if user is authenticated
+    if let token = try? await authManager.getAccessToken() {
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+      logger.debug("Added auth token to request for \(url.path)")
+    }
+
+    return request
+  }
+
   private func fetchWithRetry(
     url: URL,
     forceRefresh: Bool = false,
@@ -99,7 +113,9 @@ actor APIClient {
       do {
         logger.debug("Fetching \(url.path) (attempt \(attempt)/\(maxRetries))")
 
-        let (data, response) = try await session.data(from: url)
+        // Create request with authentication header
+        let request = await createRequest(url: url)
+        let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
           throw APIError.invalidResponse
@@ -112,7 +128,24 @@ actor APIClient {
           return data
 
         case 401:
-          throw APIError.unauthorized
+          // Try to refresh token and retry once
+          logger.warning("Received 401, attempting token refresh")
+          do {
+            try await authManager.refreshToken()
+            // Retry once with new token
+            let retryRequest = await createRequest(url: url)
+            let (retryData, retryResponse) = try await session.data(for: retryRequest)
+            guard let retryHttpResponse = retryResponse as? HTTPURLResponse,
+                  retryHttpResponse.statusCode >= 200 && retryHttpResponse.statusCode < 300
+            else {
+              throw APIError.unauthorized
+            }
+            responseCache[cacheKey] = CachedResponse(data: retryData, cachedAt: Date())
+            return retryData
+          } catch {
+            logger.error("Token refresh failed: \(String(describing: error))")
+            throw APIError.unauthorized
+          }
 
         case 404:
           throw APIError.notFound
