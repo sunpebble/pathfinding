@@ -1,7 +1,7 @@
 import Foundation
 
 /// 保存的行程数据模型
-struct SavedItinerary: Identifiable, Codable {
+struct SavedItinerary: Identifiable, Codable, Hashable {
   let id: UUID
   let blogId: String
   var title: String
