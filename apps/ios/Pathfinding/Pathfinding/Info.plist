@@ -41,6 +41,19 @@
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
         <true/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <!-- CarPlay Scene Configuration -->
+            <key>CPTemplateApplicationSceneSessionRoleApplication</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>CarPlay</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).CarPlaySceneDelegate</string>
+                </dict>
+            </array>
+        </dict>
     </dict>
 
     <!-- Launch Screen -->
@@ -104,6 +117,20 @@
     <string>Pathfinding 需要访问您的相册以保存旅行照片。</string>
     <key>NSCameraUsageDescription</key>
     <string>Pathfinding 需要访问相机以拍摄旅行照片。</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Pathfinding 需要访问麦克风以进行语音输入和录制语音备忘录。</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Pathfinding 需要语音识别权限以将您的语音转换为文字，用于语音规划行程和添加景点。</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Pathfinding 需要访问您的日历以同步行程安排和提醒。</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Pathfinding 需要完整访问您的日历以同步行程安排、创建事件和设置提醒。</string>
+
+    <!-- Live Activities Support -->
+    <key>NSSupportsLiveActivities</key>
+    <true/>
+    <key>NSSupportsLiveActivitiesFrequentUpdates</key>
+    <true/>
 
     <!-- Background Modes (if needed) -->
     <!-- <key>UIBackgroundModes</key>

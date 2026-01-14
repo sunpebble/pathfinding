@@ -4,6 +4,10 @@ import Observation
 @main
 struct PathfindingApp: App {
   @State private var authViewModel = AuthViewModel()
+  @State private var themeManager = ThemeManager.shared
+  @State private var localizationManager = LocalizationManager.shared
+  @State private var siriNavigationAction: SiriNavigationAction?
+  @Environment(\.scenePhase) private var scenePhase
 
   init() {
     configureAppearance()
@@ -19,15 +23,37 @@ struct PathfindingApp: App {
         } else if authViewModel.isAuthenticated || authViewModel.isGuestMode {
           // Show main app when authenticated or in guest mode
           ContentView()
+            .onSiriNavigationAction(siriNavigationAction)
         } else {
           // Show login when not authenticated
           LoginView()
         }
       }
       .environment(authViewModel)
+      .environment(themeManager)
+      .environment(localizationManager)
+      .withTheme(themeManager)
+      .withLocalization()
       .task {
         await authViewModel.initialize()
+        // Apply theme immediately on app launch
+        themeManager.applyThemeImmediately()
+        // Check for pending Siri navigation on app launch
+        checkPendingSiriNavigation()
       }
+      .onChange(of: scenePhase) { oldPhase, newPhase in
+        if newPhase == .active {
+          // Check for pending Siri navigation when app becomes active
+          checkPendingSiriNavigation()
+        }
+      }
+    }
+  }
+
+  /// Check for pending Siri navigation actions
+  private func checkPendingSiriNavigation() {
+    if #available(iOS 16.0, *) {
+      siriNavigationAction = SiriShortcutsManager.shared.checkPendingNavigation()
     }
   }
 

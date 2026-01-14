@@ -33,6 +33,9 @@ export const getCurrentUser = query({
         ? {
             displayName: profile.displayName,
             avatarUrl: profile.avatarUrl,
+            bio: profile.bio,
+            followersCount: profile.followersCount ?? 0,
+            followingCount: profile.followingCount ?? 0,
           }
         : null,
     };
@@ -58,6 +61,63 @@ export const getUserById = query({
       email: profile.email,
       displayName: profile.displayName,
       avatarUrl: profile.avatarUrl,
+      bio: profile.bio,
+      followersCount: profile.followersCount ?? 0,
+      followingCount: profile.followingCount ?? 0,
+    };
+  },
+});
+
+// Get user profile with follow status (for viewing other users' profiles)
+export const getUserProfile = query({
+  args: {
+    userId: v.string(),
+    currentUserId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Query profiles table
+    const profile = await ctx.db
+      .query('profiles')
+      .filter((q) => q.eq(q.field('email'), args.userId))
+      .first();
+
+    if (!profile) {
+      return null;
+    }
+
+    // Check follow status if currentUserId is provided
+    let isFollowing = false;
+    let isFollowedBy = false;
+
+    if (args.currentUserId && args.currentUserId !== args.userId) {
+      const currentUserFollows = await ctx.db
+        .query('userFollows')
+        .withIndex('by_follower_following', (q) =>
+          q.eq('followerId', args.currentUserId!).eq('followingId', args.userId)
+        )
+        .first();
+      isFollowing = currentUserFollows !== null;
+
+      const targetUserFollows = await ctx.db
+        .query('userFollows')
+        .withIndex('by_follower_following', (q) =>
+          q.eq('followerId', args.userId).eq('followingId', args.currentUserId!)
+        )
+        .first();
+      isFollowedBy = targetUserFollows !== null;
+    }
+
+    return {
+      id: args.userId,
+      email: profile.email,
+      displayName: profile.displayName,
+      avatarUrl: profile.avatarUrl,
+      bio: profile.bio,
+      followersCount: profile.followersCount ?? 0,
+      followingCount: profile.followingCount ?? 0,
+      isFollowing,
+      isFollowedBy,
+      isMutual: isFollowing && isFollowedBy,
     };
   },
 });
@@ -76,6 +136,7 @@ export const updateProfile = mutation({
   args: {
     displayName: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
+    bio: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Verify authentication
@@ -90,11 +151,24 @@ export const updateProfile = mutation({
       .withIndex('by_email', (q) => q.eq('email', identity.email!))
       .first();
 
-    const data = {
+    const data: {
+      email: string;
+      displayName?: string;
+      avatarUrl?: string;
+      bio?: string;
+    } = {
       email: identity.email!,
-      displayName: args.displayName,
-      avatarUrl: args.avatarUrl,
     };
+
+    if (args.displayName !== undefined) {
+      data.displayName = args.displayName;
+    }
+    if (args.avatarUrl !== undefined) {
+      data.avatarUrl = args.avatarUrl;
+    }
+    if (args.bio !== undefined) {
+      data.bio = args.bio;
+    }
 
     if (existing) {
       // Update existing profile

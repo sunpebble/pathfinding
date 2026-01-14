@@ -164,7 +164,7 @@ export const ItineraryService = {
   },
 
   /**
-   * Copy an itinerary to user's collection
+   * Copy an itinerary to user's collection (full copy)
    */
   async copy(
     itineraryId: string,
@@ -194,5 +194,85 @@ export const ItineraryService = {
     return await convex.query(api.itineraries.getById, {
       id: newItineraryId,
     });
+  },
+
+  /**
+   * Copy an itinerary with partial days selection
+   */
+  async copyPartial(
+    itineraryId: string,
+    userId: string,
+    newStartDate: string,
+    selectedDays: number[],
+    newTitle: string | undefined,
+    _accessToken: string
+  ) {
+    // Check if source itinerary exists and is accessible
+    const original = await convex.query(api.itineraries.getById, {
+      id: itineraryId as Id<'itineraries'>,
+    });
+
+    if (!original) {
+      throw new NotFoundError('Itinerary not found');
+    }
+
+    if (original.userId !== userId && original.visibility !== 'public') {
+      throw new NotFoundError('Itinerary not found');
+    }
+
+    const newItineraryId = await convex.mutation(api.itineraries.copyPartial, {
+      itineraryId: itineraryId as Id<'itineraries'>,
+      userId,
+      newStartDate,
+      selectedDays,
+      newTitle,
+    });
+
+    return await convex.query(api.itineraries.getById, {
+      id: newItineraryId,
+    });
+  },
+
+  /**
+   * Get copy history for a user
+   */
+  async getCopyHistory(
+    userId: string,
+    page: number,
+    pageSize: number,
+    _accessToken: string
+  ) {
+    const result = await convex.query(api.itineraries.getCopyHistory, {
+      userId,
+      page,
+      pageSize,
+    });
+
+    return result;
+  },
+
+  /**
+   * Get copy statistics for an itinerary
+   */
+  async getCopyStats(itineraryId: string, userId: string, _accessToken: string) {
+    // Check if user has access to the itinerary
+    const itinerary = await convex.query(api.itineraries.getById, {
+      id: itineraryId as Id<'itineraries'>,
+    });
+
+    if (!itinerary) {
+      throw new NotFoundError('Itinerary not found');
+    }
+
+    // Only owner can see copy stats
+    if (itinerary.userId !== userId) {
+      throw new NotFoundError('Itinerary not found');
+    }
+
+    const result = await convex.query(api.itineraries.getItineraryCopyStats, {
+      itineraryId: itineraryId as Id<'itineraries'>,
+    });
+
+    return result;
   },
 };

@@ -8,6 +8,8 @@ struct BlogDetailView: View {
   @State private var isLiked = false
   @State private var isSaved = false
   @State private var showImageViewer = false
+  @State private var showPdfExport = false
+  @State private var showShareSheet = false
 
   private var displayImages: [String] {
     if let images = guide.imageUrls, !images.isEmpty {
@@ -53,6 +55,12 @@ struct BlogDetailView: View {
           if guide.aiDays != nil {
             importButton
           }
+
+          // MARK: - Comments Section
+          Divider()
+            .padding(.vertical, DesignTokens.Spacing.sm)
+
+          CommentSectionView(itineraryId: guide.id)
         }
         .padding(DesignTokens.Spacing.lg)
       }
@@ -80,8 +88,19 @@ struct BlogDetailView: View {
             .symbolEffect(.bounce, value: isSaved)
         }
 
-        ShareLink(item: guide.title) {
+        Button {
+          showShareSheet = true
+        } label: {
           Image(systemName: "square.and.arrow.up")
+        }
+
+        // PDF Export button
+        if guide.aiDays != nil {
+          Button {
+            showPdfExport = true
+          } label: {
+            Image(systemName: "doc.richtext")
+          }
         }
       }
     }
@@ -90,11 +109,24 @@ struct BlogDetailView: View {
         selectedDay = nil
       }
     }
+    .sheet(isPresented: $showPdfExport) {
+      PdfExportSheet(guide: guide) {
+        showPdfExport = false
+      }
+    }
     .imageViewer(
       images: displayImages,
       isPresented: $showImageViewer,
       selectedIndex: $currentImageIndex
     )
+    .sheet(isPresented: $showShareSheet) {
+      ShareSheet(
+        title: guide.title,
+        subtitle: guide.author,
+        content: .blogPost(guide),
+        onDismiss: { showShareSheet = false }
+      )
+    }
   }
 
   // MARK: - Image Gallery
@@ -233,6 +265,15 @@ struct BlogDetailView: View {
             value: "\(days.count)天",
             color: .purple
           )
+        }
+        // Safety info card with navigation
+        if let destination = guide.destinations?.first {
+          NavigationLink {
+            SafetyRatingView(destinationName: destination)
+          } label: {
+            QuickInfoCard(icon: "shield.fill", title: "安全", value: "查看", color: .red)
+          }
+          .buttonStyle(.plain)
         }
       }
     }

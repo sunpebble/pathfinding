@@ -97,6 +97,23 @@ enum AppConfig {
   static let poiRenderBatchSize = 10  // Render POIs in batches of 10
   static let memoryWarningThreshold = 150 * 1024 * 1024  // 150 MB - trigger cleanup
 
+  // MARK: - Offline Maps Configuration
+
+  /// Maximum storage to use for offline maps (in bytes)
+  static let offlineMapStorageLimit: Int64 = 2 * 1024 * 1024 * 1024  // 2 GB
+
+  /// Minimum zoom level for offline map downloads
+  static let offlineMapMinZoom = 10
+
+  /// Maximum zoom level for offline map downloads
+  static let offlineMapMaxZoom = 16
+
+  /// Number of concurrent tile downloads
+  static let offlineMapConcurrentDownloads = 4
+
+  /// Delay between download batches (milliseconds) to avoid rate limiting
+  static let offlineMapBatchDelayMs: UInt64 = 100
+
   // MARK: - App Info
 
   static var appVersion: String {

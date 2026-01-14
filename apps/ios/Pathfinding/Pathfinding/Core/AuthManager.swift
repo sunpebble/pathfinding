@@ -27,6 +27,19 @@ actor AuthManager {
   private(set) var userEmail: String?
   private(set) var isAuthenticated: Bool = false
 
+  /// Synchronous access to current user ID (cached value)
+  nonisolated var currentUserId: String? {
+    // Use Task to get the value synchronously from the cache
+    // This is a workaround for accessing actor-isolated state from non-async context
+    return _cachedUserId
+  }
+
+  /// Cached user ID for synchronous access
+  private nonisolated(unsafe) static var _sharedCachedUserId: String?
+  private nonisolated var _cachedUserId: String? {
+    AuthManager._sharedCachedUserId
+  }
+
   init(convexURL: String = "https://convex.kunish.org") {
     self.convexURL = URL(string: convexURL)!
 
@@ -217,6 +230,9 @@ actor AuthManager {
     self.userEmail = email ?? response.email
     self.isAuthenticated = true
 
+    // Update cached userId for synchronous access
+    AuthManager._sharedCachedUserId = response.userId
+
     // Persist to Keychain
     try saveToKeychain(response.token, key: accessTokenKey)
     if let refreshToken = response.refreshToken {
@@ -243,6 +259,10 @@ actor AuthManager {
         self.userId = userId
         self.userEmail = email
         self.isAuthenticated = true
+
+        // Update cached userId for synchronous access
+        AuthManager._sharedCachedUserId = userId
+
         logger.info("Restored session from Keychain")
       }
     }
@@ -254,6 +274,9 @@ actor AuthManager {
     self.userId = nil
     self.userEmail = nil
     self.isAuthenticated = false
+
+    // Clear cached userId for synchronous access
+    AuthManager._sharedCachedUserId = nil
 
     // Clear from Keychain
     deleteFromKeychain(key: accessTokenKey)

@@ -354,7 +354,7 @@ export const remove = mutation({
   },
 });
 
-// Copy an itinerary
+// Copy an itinerary (full copy)
 export const copy = mutation({
   args: {
     itineraryId: v.id('itineraries'),
@@ -365,12 +365,23 @@ export const copy = mutation({
     const original = await ctx.db.get(args.itineraryId);
     if (!original) throw new Error('Itinerary not found');
 
+    // Check access - must be owner or public itinerary
+    if (original.userId !== args.userId && original.visibility !== 'public') {
+      throw new Error('You do not have access to copy this itinerary');
+    }
+
     // Calculate new end date
     const daysCount = calculateDaysCount(original.startDate, original.endDate);
     const newStart = new Date(args.newStartDate);
     const newEnd = new Date(newStart);
     newEnd.setDate(newEnd.getDate() + daysCount - 1);
     const newEndDate = newEnd.toISOString().split('T')[0];
+
+    // Calculate date offset
+    const originalStart = new Date(original.startDate);
+    const dateOffset = Math.floor(
+      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     // Create new itinerary
     const newItineraryId = await ctx.db.insert('itineraries', {
@@ -421,7 +432,207 @@ export const copy = mutation({
       }
     }
 
+    // Record copy history
+    await ctx.db.insert('itineraryCopyHistory', {
+      originalItineraryId: args.itineraryId,
+      copiedItineraryId: newItineraryId,
+      userId: args.userId,
+      copyType: 'full',
+      originalStartDate: original.startDate,
+      newStartDate: args.newStartDate,
+      dateOffset,
+      createdAt: Date.now(),
+    });
+
     return newItineraryId;
+  },
+});
+
+// Copy an itinerary with partial days selection
+export const copyPartial = mutation({
+  args: {
+    itineraryId: v.id('itineraries'),
+    userId: v.string(),
+    newStartDate: v.string(),
+    selectedDays: v.array(v.number()), // Array of day numbers to copy
+    newTitle: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const original = await ctx.db.get(args.itineraryId);
+    if (!original) throw new Error('Itinerary not found');
+
+    // Check access - must be owner or public itinerary
+    if (original.userId !== args.userId && original.visibility !== 'public') {
+      throw new Error('You do not have access to copy this itinerary');
+    }
+
+    // Validate selected days
+    if (args.selectedDays.length === 0) {
+      throw new Error('At least one day must be selected');
+    }
+
+    const sortedDays = [...args.selectedDays].sort((a, b) => a - b);
+
+    // Calculate new end date based on selected days count
+    const newStart = new Date(args.newStartDate);
+    const newEnd = new Date(newStart);
+    newEnd.setDate(newEnd.getDate() + sortedDays.length - 1);
+    const newEndDate = newEnd.toISOString().split('T')[0];
+
+    // Calculate date offset
+    const originalStart = new Date(original.startDate);
+    const dateOffset = Math.floor(
+      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Create new itinerary
+    const newItineraryId = await ctx.db.insert('itineraries', {
+      userId: args.userId,
+      title: args.newTitle || original.title,
+      cityId: original.cityId,
+      startDate: args.newStartDate,
+      endDate: newEndDate,
+      visibility: 'private',
+      coverImageUrl: original.coverImageUrl,
+      copiedFromId: args.itineraryId,
+    });
+
+    // Get original days
+    const originalDays = await ctx.db
+      .query('itineraryDays')
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .collect();
+
+    // Create a map of original days by day number
+    const originalDaysMap = new Map(originalDays.map((d) => [d.dayNumber, d]));
+
+    // Create new days with copied items
+    const newDates = getDateRange(args.newStartDate, newEndDate);
+    for (let i = 0; i < sortedDays.length; i++) {
+      const originalDayNumber = sortedDays[i];
+      const newDayId = await ctx.db.insert('itineraryDays', {
+        itineraryId: newItineraryId,
+        dayNumber: i + 1,
+        date: newDates[i],
+      });
+
+      // Copy items from original day if it exists
+      const originalDay = originalDaysMap.get(originalDayNumber);
+      if (originalDay) {
+        const originalItems = await ctx.db
+          .query('itineraryItems')
+          .withIndex('by_day', (q) => q.eq('dayId', originalDay._id))
+          .collect();
+
+        for (const item of originalItems) {
+          await ctx.db.insert('itineraryItems', {
+            dayId: newDayId,
+            poiId: item.poiId,
+            orderIndex: item.orderIndex,
+            startTime: item.startTime,
+            endTime: item.endTime,
+            transportMode: item.transportMode,
+            notes: item.notes,
+          });
+        }
+      }
+    }
+
+    // Record copy history
+    await ctx.db.insert('itineraryCopyHistory', {
+      originalItineraryId: args.itineraryId,
+      copiedItineraryId: newItineraryId,
+      userId: args.userId,
+      copyType: 'partial',
+      selectedDays: sortedDays,
+      originalStartDate: original.startDate,
+      newStartDate: args.newStartDate,
+      dateOffset,
+      createdAt: Date.now(),
+    });
+
+    return newItineraryId;
+  },
+});
+
+// Get copy history for a user
+export const getCopyHistory = query({
+  args: {
+    userId: v.string(),
+    page: v.optional(v.number()),
+    pageSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const page = args.page ?? 1;
+    const pageSize = args.pageSize ?? 10;
+    const offset = (page - 1) * pageSize;
+
+    const history = await ctx.db
+      .query('itineraryCopyHistory')
+      .withIndex('by_user_created', (q) => q.eq('userId', args.userId))
+      .order('desc')
+      .collect();
+
+    const total = history.length;
+    const data = history.slice(offset, offset + pageSize);
+
+    // Enrich with itinerary details
+    const enriched = await Promise.all(
+      data.map(async (record) => {
+        const [original, copied] = await Promise.all([
+          ctx.db.get(record.originalItineraryId),
+          ctx.db.get(record.copiedItineraryId),
+        ]);
+
+        return {
+          ...record,
+          originalItinerary: original
+            ? {
+                id: original._id,
+                title: original.title,
+                startDate: original.startDate,
+                endDate: original.endDate,
+              }
+            : null,
+          copiedItinerary: copied
+            ? {
+                id: copied._id,
+                title: copied.title,
+                startDate: copied.startDate,
+                endDate: copied.endDate,
+              }
+            : null,
+        };
+      })
+    );
+
+    return { data: enriched, total };
+  },
+});
+
+// Get copy history for a specific itinerary (to see who copied it)
+export const getItineraryCopyStats = query({
+  args: {
+    itineraryId: v.id('itineraries'),
+  },
+  handler: async (ctx, args) => {
+    const copies = await ctx.db
+      .query('itineraryCopyHistory')
+      .withIndex('by_original', (q) =>
+        q.eq('originalItineraryId', args.itineraryId)
+      )
+      .collect();
+
+    return {
+      copyCount: copies.length,
+      recentCopies: copies
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 5)
+        .map((c) => ({
+          copiedAt: c.createdAt,
+          copyType: c.copyType,
+        })),
+    };
   },
 });
 

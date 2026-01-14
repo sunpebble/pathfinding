@@ -4,6 +4,8 @@ import SwiftUI
 struct ItineraryListView: View {
   private var store: ItineraryStore { ItineraryStore.shared }
   @State private var showCreateSheet = false
+  @State private var showVoiceItinerary = false
+  @State private var showDiscovery = false
 
   var body: some View {
     NavigationStack {
@@ -16,6 +18,23 @@ struct ItineraryListView: View {
       }
       .navigationTitle("我的行程")
       .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          HStack(spacing: DesignTokens.Spacing.sm) {
+            Button {
+              showVoiceItinerary = true
+            } label: {
+              Image(systemName: "mic.fill")
+                .symbolRenderingMode(.hierarchical)
+            }
+
+            Button {
+              showDiscovery = true
+            } label: {
+              Image(systemName: "globe")
+                .symbolRenderingMode(.hierarchical)
+            }
+          }
+        }
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             showCreateSheet = true
@@ -29,6 +48,12 @@ struct ItineraryListView: View {
         CreateItinerarySheet { itinerary in
           store.update(itinerary) // Use update (or add logic in store)
         }
+      }
+      .fullScreenCover(isPresented: $showVoiceItinerary) {
+        VoiceItineraryView()
+      }
+      .sheet(isPresented: $showDiscovery) {
+        PublicItineraryDiscoveryView()
       }
       .navigationDestination(for: SavedItinerary.self) { itinerary in
         SavedItineraryDetailView(itinerary: itinerary)
@@ -65,20 +90,39 @@ struct ItineraryListView: View {
     } description: {
       Text("从攻略中导入行程，或创建新行程")
     } actions: {
-      HStack(spacing: DesignTokens.Spacing.md) {
-        NavigationLink {
-          BlogListView()
-        } label: {
-          Label("浏览攻略", systemImage: "book")
-        }
-        .buttonStyle(.secondary)
-        
+      VStack(spacing: DesignTokens.Spacing.md) {
+        // Voice creation button - prominent placement
         Button {
-          showCreateSheet = true
+          showVoiceItinerary = true
         } label: {
-          Label("新建行程", systemImage: "plus")
+          Label("语音创建", systemImage: "mic.fill")
         }
         .buttonStyle(.primary)
+
+        HStack(spacing: DesignTokens.Spacing.md) {
+          NavigationLink {
+            BlogListView()
+          } label: {
+            Label("浏览攻略", systemImage: "book")
+          }
+          .buttonStyle(.secondary)
+
+          Button {
+            showCreateSheet = true
+          } label: {
+            Label("新建行程", systemImage: "plus")
+          }
+          .buttonStyle(.secondary)
+        }
+
+        // Discover public itineraries
+        Button {
+          showDiscovery = true
+        } label: {
+          Label("发现公开行程", systemImage: "globe")
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
       }
     }
   }
@@ -186,14 +230,30 @@ struct ItineraryCard: View {
 
   private var itineraryInfoView: some View {
     VStack(alignment: .leading, spacing: 4) {
-      Text(itinerary.title)
-        .font(.headline)
-        .lineLimit(1)
+      HStack(spacing: DesignTokens.Spacing.xs) {
+        Text(itinerary.title)
+          .font(.headline)
+          .lineLimit(1)
+
+        // Copied badge
+        if itinerary.isCopied {
+          Image(systemName: "doc.on.doc.fill")
+            .font(.caption2)
+            .foregroundStyle(.blue.opacity(0.8))
+        }
+      }
 
       if let dest = itinerary.destination {
         Text(dest)
           .font(.subheadline)
           .foregroundStyle(.secondary)
+      }
+
+      // Original author attribution
+      if let author = itinerary.originalAuthor?.displayName {
+        Text("来自 \(author)")
+          .font(.caption2)
+          .foregroundStyle(.blue.opacity(0.7))
       }
 
       HStack(spacing: DesignTokens.Spacing.sm) {
@@ -264,7 +324,9 @@ struct SavedItineraryDetailView: View {
   @State private var selectedDayIndex: Int? = nil
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var selectedPoiId: String? = nil
-  
+  @State private var showCopySheet = false
+
+  @Environment(AppState.self) private var appState
   private var store: ItineraryStore { ItineraryStore.shared }
   
   var allPois: [AiPoi] {
@@ -323,6 +385,24 @@ struct SavedItineraryDetailView: View {
             .onChange(of: localTitle) { _, _ in
               saveChanges()
             }
+
+          // Original Author Badge (for copied itineraries)
+          if let originalAuthor = itinerary.originalAuthor {
+            HStack {
+              OriginalAuthorBadge(author: originalAuthor)
+              Spacer()
+            }
+            .padding(.horizontal)
+          }
+
+          // Copy Stats (for API-synced itineraries)
+          if let apiId = itinerary.apiItineraryId {
+            HStack {
+              CopyStatsView(itineraryId: apiId)
+              Spacer()
+            }
+            .padding(.horizontal)
+          }
 
           // Timeline
           if !localDays.isEmpty {
@@ -440,6 +520,24 @@ struct SavedItineraryDetailView: View {
     }
     .navigationBarTitleDisplayMode(.inline)
     .ignoresSafeArea(edges: .top)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+          Button {
+            showCopySheet = true
+          } label: {
+            Image(systemName: "doc.on.doc")
+          }
+
+          CalendarSyncToolbarButton(itinerary: itinerary)
+        }
+      }
+    }
+    .sheet(isPresented: $showCopySheet) {
+      CopyItinerarySheet(itinerary: itinerary) { _ in
+        // Copy completed - sheet handles navigation
+      }
+    }
     .onAppear {
       if localDays.isEmpty {
         localDays = itinerary.days

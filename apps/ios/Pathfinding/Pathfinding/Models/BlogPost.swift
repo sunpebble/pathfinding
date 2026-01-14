@@ -15,6 +15,7 @@ struct BlogPost: Codable, Identifiable, Hashable {
   let likesCount: Int?
   let savesCount: Int?
   let createdAt: String?
+  let destinations: [String]?
 
   // AI-enhanced fields
   let aiSummary: String?
@@ -40,6 +41,7 @@ struct BlogPost: Codable, Identifiable, Hashable {
     case likesCount = "likes_count"
     case savesCount = "saves_count"
     case createdAt = "created_at"
+    case destinations
     case aiSummary = "ai_summary"
     case aiTips = "ai_tips"
     case aiBestTime = "ai_best_time"

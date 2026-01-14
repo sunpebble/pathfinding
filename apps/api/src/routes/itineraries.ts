@@ -194,7 +194,7 @@ itinerariesRoutes.delete('/:id', async (c) => {
 });
 
 /**
- * POST /itineraries/:id/copy - Copy an itinerary to user's collection
+ * POST /itineraries/:id/copy - Copy an itinerary to user's collection (full copy)
  */
 itinerariesRoutes.post(
   '/:id/copy',
@@ -228,3 +228,102 @@ itinerariesRoutes.post(
     );
   }
 );
+
+/**
+ * POST /itineraries/:id/copy-partial - Copy specific days from an itinerary
+ */
+itinerariesRoutes.post(
+  '/:id/copy-partial',
+  zValidator(
+    'json',
+    z.object({
+      startDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+      selectedDays: z
+        .array(z.number().int().min(1))
+        .min(1, 'At least one day must be selected'),
+      title: z.string().min(1).max(200).optional(),
+    })
+  ),
+  async (c) => {
+    const userId = c.get('userId');
+    const accessToken = c.get('accessToken');
+    const itineraryId = c.req.param('id');
+    const { startDate, selectedDays, title } = c.req.valid('json');
+
+    const newItinerary = await ItineraryService.copyPartial(
+      itineraryId,
+      userId,
+      startDate,
+      selectedDays,
+      title,
+      accessToken
+    );
+
+    return c.json(
+      {
+        success: true,
+        data: newItinerary,
+      },
+      201
+    );
+  }
+);
+
+/**
+ * GET /itineraries/copy-history - Get user's itinerary copy history
+ */
+itinerariesRoutes.get(
+  '/copy-history',
+  zValidator(
+    'query',
+    z.object({
+      page: z.coerce.number().int().min(1).optional().default(1),
+      pageSize: z.coerce.number().int().min(1).max(50).optional().default(20),
+    })
+  ),
+  async (c) => {
+    const userId = c.get('userId');
+    const accessToken = c.get('accessToken');
+    const query = c.req.valid('query');
+
+    const { data, total } = await ItineraryService.getCopyHistory(
+      userId,
+      query.page,
+      query.pageSize,
+      accessToken
+    );
+
+    return c.json({
+      success: true,
+      data,
+      meta: {
+        page: query.page,
+        pageSize: query.pageSize,
+        totalCount: total,
+        totalPages: Math.ceil(total / query.pageSize),
+      },
+    });
+  }
+);
+
+/**
+ * GET /itineraries/:id/copy-stats - Get copy statistics for an itinerary
+ */
+itinerariesRoutes.get('/:id/copy-stats', async (c) => {
+  const userId = c.get('userId');
+  const accessToken = c.get('accessToken');
+  const itineraryId = c.req.param('id');
+
+  const stats = await ItineraryService.getCopyStats(
+    itineraryId,
+    userId,
+    accessToken
+  );
+
+  return c.json({
+    success: true,
+    data: stats,
+  });
+});

@@ -1,0 +1,334 @@
+/*
+  Localizable.strings (Simplified Chinese)
+  Pathfinding
+
+  Chinese localization for Pathfinding app
+*/
+
+// MARK: - Common
+"common.cancel" = "取消";
+"common.confirm" = "确认";
+"common.save" = "保存";
+"common.delete" = "删除";
+"common.edit" = "编辑";
+"common.done" = "完成";
+"common.close" = "关闭";
+"common.back" = "返回";
+"common.next" = "下一步";
+"common.previous" = "上一步";
+"common.loading" = "加载中...";
+"common.error" = "错误";
+"common.success" = "成功";
+"common.retry" = "重试";
+"common.search" = "搜索";
+"common.share" = "分享";
+"common.copy" = "复制";
+"common.more" = "更多";
+"common.less" = "收起";
+"common.all" = "全部";
+"common.none" = "无";
+"common.yes" = "是";
+"common.no" = "否";
+"common.ok" = "好��";
+
+// MARK: - Tab Bar
+"tab.home" = "首页";
+"tab.guides" = "攻略";
+"tab.chat" = "助手";
+"tab.itinerary" = "行程";
+"tab.profile" = "我的";
+
+// MARK: - Home
+"home.title" = "探路";
+"home.welcome" = "欢迎使用探路";
+"home.discover" = "发现精彩旅途";
+"home.popular_destinations" = "热门目的地";
+"home.recommended" = "为你推荐";
+"home.recent" = "最近浏览";
+
+// MARK: - Guides
+"guides.title" = "旅行攻略";
+"guides.empty" = "暂无攻略";
+"guides.empty_description" = "稍后再来看看吧";
+"guides.search_placeholder" = "搜索攻略...";
+"guides.filter" = "筛选";
+"guides.sort" = "排序";
+"guides.sort.latest" = "最新";
+"guides.sort.popular" = "最热";
+"guides.sort.rating" = "评分";
+
+// MARK: - Itinerary
+"itinerary.title" = "我的行程";
+"itinerary.empty" = "暂无行程";
+"itinerary.empty_description" = "从攻略中导入或创建新行程";
+"itinerary.create" = "创建行程";
+"itinerary.import" = "导入行程";
+"itinerary.day" = "第 %d 天";
+"itinerary.days" = "%d 天";
+"itinerary.poi_count" = "%d 个景点";
+"itinerary.start_date" = "开始日期";
+"itinerary.end_date" = "结束日期";
+"itinerary.duration" = "行程时长";
+"itinerary.budget" = "预算";
+"itinerary.notes" = "备注";
+"itinerary.delete_confirm" = "确定要删除这个行程吗？";
+"itinerary.delete_confirm_message" = "此操作无法撤销";
+
+// MARK: - Profile
+"profile.title" = "我的";
+"profile.guest" = "游客";
+"profile.login_prompt" = "点击登录体验更多功能";
+"profile.favorites" = "收藏";
+"profile.trips" = "行程";
+"profile.footprints" = "足迹";
+
+// MARK: - Profile Sections
+"profile.section.travel_data" = "旅行数据";
+"profile.section.travel_services" = "旅行服务";
+"profile.section.appearance" = "外观";
+"profile.section.settings" = "设置";
+
+// MARK: - Profile Items
+"profile.travel_stats" = "旅行统计";
+"profile.travel_stats_subtitle" = "查看旅行报告和年度回顾";
+"profile.insurance" = "旅行保险";
+"profile.insurance_subtitle" = "保险推荐、比较与理赔指南";
+"profile.theme" = "主题模式";
+"profile.language" = "语言设置";
+"profile.language_subtitle" = "切换应用显示语言";
+"profile.offline_maps" = "离线地图";
+"profile.offline_maps_subtitle" = "下载地图以便离线使用";
+"profile.offline_maps_downloaded" = "已下载 %@";
+"profile.icloud_sync" = "iCloud 同步";
+"profile.icloud_sync_subtitle" = "跨设备同步行程和收藏";
+
+// MARK: - iCloud Sync
+"icloud.title" = "iCloud 同步";
+"icloud.connected" = "已连接 iCloud";
+"icloud.last_sync" = "上次同步: %@";
+"icloud.never_synced" = "从未同步";
+"icloud.sync_options" = "同步选项";
+"icloud.sync_itineraries" = "同步行程";
+"icloud.sync_favorites" = "同步收藏";
+"icloud.sync_preferences" = "同步偏好设置";
+"icloud.sync_now" = "立即同步";
+"icloud.about" = "关于 iCloud 同步";
+"icloud.about_description" = "启用 iCloud 同步后，你的行程、收藏和偏好设置将自动同步到所有登录同一 Apple ID 的设备。数据以加密形式存储在 iCloud 中。";
+
+// MARK: - Follow System
+"follow.followers" = "粉丝";
+"follow.following" = "关注";
+"follow.mutual" = "互相关注";
+"follow.follow_back" = "回关";
+"follow.follows_you" = "关注了你";
+"follow.follow" = "关注";
+"follow.followed" = "已关注";
+"follow.unfollow" = "取消关注";
+"follow.no_followers" = "暂无粉丝";
+"follow.no_followers_description" = "还没有人关注你";
+"follow.no_following" = "暂无关注";
+"follow.no_following_description" = "去发现有趣的人吧";
+"follow.no_mutual" = "暂无互相关注";
+"follow.no_mutual_description" = "关注更多人来获得互相关注吧";
+"follow.no_recommendations" = "暂无推荐";
+"follow.no_recommendations_description" = "关注更多人来获取个性化推荐";
+"follow.recommendations" = "推荐关注";
+"follow.management" = "关注管理";
+"follow.followers_count" = "%d 粉丝";
+"follow.following_count" = "%d 关注";
+
+"profile.api_config" = "API 配置";
+"profile.cache" = "缓存管理";
+"profile.cache_subtitle" = "清理图片和数据缓存";
+"profile.about" = "关于";
+"profile.about_subtitle" = "版本信息与开发者";
+"profile.version" = "版本";
+"profile.environment" = "环境";
+"profile.followers" = "粉丝";
+"profile.following" = "关注";
+"profile.preferences" = "偏好设置";
+"profile.preferences_subtitle" = "个性化推荐与旅行风格";
+"profile.siri_shortcuts" = "Siri 快捷指令";
+"profile.siri_shortcuts_subtitle" = "语音控制行程与景点导航";
+"profile.likes" = "点赞";
+"profile.my_favorites" = "我的收藏";
+"profile.my_likes" = "我的点赞";
+"profile.favorites_count" = "%d 个收藏";
+"profile.likes_count" = "%d 个点赞";
+"profile.collections" = "收藏夹";
+"profile.collections_count" = "%d 个收藏夹";
+"profile.section.likes_favorites" = "收藏与点赞";
+
+// MARK: - Preferences
+"preferences.title" = "偏好设置";
+"preferences.your_profile" = "你的旅行档案";
+"preferences.profile_learned" = "根据你的行为分析生成";
+"preferences.profile_learning" = "正在学习你的偏好...";
+"preferences.learned_interests" = "兴趣分析";
+"preferences.learned_interests_footer" = "根据你的浏览、收藏和复制行为分析";
+"preferences.your_preferences" = "明确偏好";
+"preferences.favorite_categories" = "喜爱的类别";
+"preferences.not_set" = "未设置";
+"preferences.travel_style" = "旅行风格";
+"preferences.style" = "风格";
+"preferences.budget" = "预算";
+"preferences.pace" = "节奏";
+"preferences.additional" = "其他偏好";
+"preferences.local_food" = "偏好当地美食";
+"preferences.off_beat" = "喜欢小众景点";
+"preferences.accessibility" = "无障碍需求";
+"preferences.reset" = "重置偏好";
+"preferences.reset_footer" = "重置将清除通过行为学习的偏好数据，但会保留你手动设置的偏好。";
+"preferences.reset_confirm_title" = "确定重置偏好？";
+"preferences.reset_confirm_message" = "这将清除所有学习到的偏好数据，但会保留你手动设置的偏好。";
+"preferences.cancel" = "取消";
+"preferences.save" = "保存";
+"preferences.category_selection_footer" = "选择你感兴趣的旅行类别，我们将为你提供更精准的推荐。";
+
+// MARK: - Theme
+"theme.title" = "主题模式";
+"theme.system" = "跟随系统";
+"theme.system_description" = "根据系统设置自动切换";
+"theme.light" = "浅色模式";
+"theme.light_description" = "始终使用浅色外观";
+"theme.dark" = "深色模式";
+"theme.dark_description" = "始终使用深色外观";
+"theme.select" = "选择主题";
+"theme.about" = "关于主题模式";
+"theme.about_description" = "选择「跟随系统」将根据设备的外观设置自动切换浅色和深色模式。你可以在「设置 > 显示与亮度」中更改系统外观。";
+"theme.preview.light" = "浅色";
+"theme.preview.dark" = "深色";
+
+// MARK: - Accent Colors
+"color.indigo" = "靛蓝";
+"color.blue" = "蓝色";
+"color.purple" = "紫色";
+"color.pink" = "粉色";
+"color.red" = "红色";
+"color.orange" = "橙色";
+"color.green" = "绿色";
+"color.teal" = "青色";
+"color.cyan" = "天蓝";
+"color.mint" = "薄荷";
+
+// MARK: - Map Styles
+"map.style.standard" = "标准地图";
+"map.style.satellite" = "卫星地图";
+"map.style.hybrid" = "混合地图";
+"map.style.followTheme" = "跟随主题";
+
+// MARK: - Language
+"language.title" = "语言设置";
+"language.system" = "跟随系统";
+"language.system_description" = "根据系统语言自动切换";
+"language.chinese" = "简体中文";
+"language.chinese_description" = "使用简体中文显示";
+"language.english" = "English";
+"language.english_description" = "使用英文显示";
+"language.select" = "选择语言";
+"language.about" = "关于语言设置";
+"language.about_description" = "选择「跟随系统」将根据设备的语言设置自动切换显示语言。你可以在「设置 > 通用 > 语言与地区」中更改系统语言。";
+"language.restart_hint" = "部分内容可能需要重启应用后生效";
+
+// MARK: - API Settings
+"api.title" = "API 配置";
+"api.server" = "API 服务器";
+"api.url_placeholder" = "API URL";
+"api.current_environment" = "当前环境: %@";
+"api.restart_hint" = "修改 API 地址需要重启应用才能生效";
+
+// MARK: - Cache Settings
+"cache.title" = "缓存管理";
+"cache.image" = "图片缓存";
+"cache.image_size_limit" = "缓存大小限制";
+"cache.clear_image" = "清除图片缓存";
+"cache.api" = "API 缓存";
+"cache.api_validity" = "缓存有效期";
+"cache.api_validity_minutes" = "%d 分钟";
+"cache.clear_api" = "清除 API 缓存";
+
+// MARK: - About
+"about.title" = "关于";
+"about.app_name" = "Pathfinding";
+"about.version" = "版本 %@";
+"about.tagline" = "发现精彩旅途，AI 智能规划你的每一段旅程";
+"about.developer" = "开发者";
+"about.developer_name" = "Pathfinding Team";
+"about.build_number" = "版本号";
+"about.swift_version" = "Swift 版本";
+"about.min_ios" = "最低支持系统";
+
+// MARK: - Map
+"map.title" = "地图";
+"map.satellite" = "卫星";
+"map.hybrid" = "混合";
+"map.standard" = "标准";
+"map.offline" = "离线地图";
+"map.download" = "下载地图";
+"map.downloading" = "下载中...";
+"map.download_complete" = "下载完成";
+"map.download_failed" = "下载失败";
+"map.storage_used" = "已使用存储";
+"map.delete_region" = "删除此区域";
+
+// MARK: - POI Types
+"poi.attraction" = "景点";
+"poi.restaurant" = "餐厅";
+"poi.hotel" = "酒店";
+"poi.transportation" = "交通";
+"poi.shopping" = "购物";
+"poi.entertainment" = "娱乐";
+"poi.other" = "其他";
+
+// MARK: - Time
+"time.today" = "今天";
+"time.yesterday" = "昨天";
+"time.tomorrow" = "明天";
+"time.days_ago" = "%d 天前";
+"time.hours_ago" = "%d 小时前";
+"time.minutes_ago" = "%d 分钟前";
+"time.just_now" = "刚刚";
+
+// MARK: - Errors
+"error.network" = "网络连接失败";
+"error.network_description" = "请检查网络连接后重试";
+"error.server" = "服务器错误";
+"error.server_description" = "服务器暂时不可用，请稍后重试";
+"error.unknown" = "未知错误";
+"error.unknown_description" = "发生了未知错误，请重试";
+"error.load_failed" = "加载失败";
+"error.save_failed" = "保存失败";
+
+// MARK: - Empty States
+"empty.no_data" = "暂无数据";
+"empty.no_results" = "没有找到结果";
+"empty.try_again" = "请稍后再试";
+
+// MARK: - Authentication
+"auth.login" = "登录";
+"auth.logout" = "退出登录";
+"auth.signup" = "注册";
+"auth.guest_mode" = "游客模式";
+"auth.continue_as_guest" = "以游客身份继续";
+"auth.email" = "邮箱";
+"auth.password" = "密码";
+"auth.forgot_password" = "忘记密码？";
+
+// MARK: - Stats
+"stats.title" = "旅行统计";
+"stats.total_trips" = "总行程数";
+"stats.total_days" = "总天数";
+"stats.total_pois" = "总景点数";
+"stats.cities_visited" = "到访城市";
+"stats.countries_visited" = "到访国家";
+"stats.yearly_review" = "年度回顾";
+
+// MARK: - Accessibility
+"accessibility.close_button" = "关闭";
+"accessibility.back_button" = "返回";
+"accessibility.menu_button" = "菜单";
+"accessibility.search_button" = "搜索";
+"accessibility.share_button" = "分享";
+"accessibility.favorite_button" = "收藏";
+"accessibility.map_view" = "地图视图";
+"accessibility.list_view" = "列表视图";

@@ -16,13 +16,22 @@ import { errorHandler } from './middleware/error-handler.js';
 import { initTracing } from './middleware/tracing.js';
 import { initSentry } from './monitoring/index.js';
 import { aiRouter } from './routes/ai.js';
+import { aiItineraryRouter } from './routes/ai-itinerary.js';
+import { astronomyRouter } from './routes/astronomy.js';
+import { chatRouter } from './routes/chat.js';
 import { crawlJobsRouter } from './routes/crawl-jobs.js';
 import { dashboardRouter } from './routes/dashboard.js';
+import { flightsRouter } from './routes/flights.js';
 import { guideEnrichmentRouter } from './routes/guide-enrichment.js';
 import { guidesRouter } from './routes/guides.js';
+import { pdfExportRouter } from './routes/pdf-export.js';
 import { poisRouter } from './routes/pois.js';
 import { qualityReportsRouter } from './routes/quality-reports.js';
+import { routeOptimizationRouter } from './routes/route-optimization.js';
 import { trainingDatasetsRouter } from './routes/training-datasets.js';
+import { translationsRouter } from './routes/translations.js';
+import { transportRouter } from './routes/transport.js';
+import { weatherRouter } from './routes/weather.js';
 import 'dotenv/config';
 
 // Initialize OpenTelemetry tracing
@@ -91,6 +100,14 @@ app.get('/', (c: Context) => {
       trainingDatasets: '/api/training-datasets',
       qualityReports: '/api/quality-reports',
       ai: '/api/ai',
+      chat: '/api/chat',
+      aiItinerary: '/api/ai-itinerary',
+      optimize: '/api/optimize',
+      astronomy: '/api/astronomy',
+      pdf: '/api/pdf',
+      weather: '/api/weather',
+      flights: '/api/flights',
+      translations: '/api/translations',
     },
   });
 });
@@ -106,6 +123,15 @@ app.route('/api/guides', guideEnrichmentRouter);
 app.route('/api/training-datasets', trainingDatasetsRouter);
 app.route('/api/quality-reports', qualityReportsRouter);
 app.route('/api/ai', aiRouter);
+app.route('/api/chat', chatRouter);
+app.route('/api/ai-itinerary', aiItineraryRouter);
+app.route('/api/astronomy', astronomyRouter);
+app.route('/api/optimize', routeOptimizationRouter);
+app.route('/api/transport', transportRouter);
+app.route('/api/pdf', pdfExportRouter);
+app.route('/api/weather', weatherRouter);
+app.route('/api/flights', flightsRouter);
+app.route('/api/translations', translationsRouter);
 
 // 404 handler
 app.notFound((c: Context) => {

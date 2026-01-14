@@ -1,3 +1,4 @@
+import ARKit
 import MapKit
 import SwiftUI
 
@@ -7,15 +8,39 @@ struct ImportedItineraryView: View {
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var selectedPoi: AiPoi?
   @State private var showSaveSuccess = false
-  
+  @State private var showCopySheet = false
+  @State private var showOptimizationSheet = false
+  @State private var showShareSheet = false
+  @State private var showARNavigation = false
+  @State private var optimizedDays: [Int: [AiPoi]] = [:]
+
   @Environment(\.dismiss) private var dismiss
   @Environment(AppState.self) private var appState
-  
+
   private var store: ItineraryStore { ItineraryStore.shared }
   private var isSaved: Bool { store.isSaved(blogId: guide.id) }
 
   var days: [AiDay] { guide.aiDays ?? [] }
-  var currentDay: AiDay? { days.first { $0.dayNumber == selectedDay } }
+  var currentDay: AiDay? {
+    guard let day = days.first(where: { $0.dayNumber == selectedDay }) else { return nil }
+    // Return optimized version if available
+    if let optimizedPois = optimizedDays[selectedDay] {
+      return AiDay(dayNumber: day.dayNumber, theme: day.theme, pois: optimizedPois)
+    }
+    return day
+  }
+  var isCurrentDayOptimized: Bool { optimizedDays[selectedDay] != nil }
+
+  /// Check if AR navigation is available (device supports ARKit and has valid POIs)
+  var isARAvailable: Bool {
+    ARWorldTrackingConfiguration.isSupported && (currentDay?.pois.count ?? 0) > 0
+  }
+
+  /// Create AR navigation route from current day
+  var arRoute: ARNavigationRoute? {
+    guard let day = currentDay else { return nil }
+    return ARNavigationRoute(from: day)
+  }
 
   var annotations: [PoiAnnotation] {
     guard let day = currentDay else { return [] }
@@ -34,6 +59,9 @@ struct ImportedItineraryView: View {
 
   var body: some View {
     VStack(spacing: 0) {
+      // MARK: - Offline Status Banner
+      OfflineStatusBanner()
+
       // MARK: - Day Selector
       daySelectorView
         .background(.ultraThinMaterial)
@@ -50,13 +78,49 @@ struct ImportedItineraryView: View {
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
-        Button {
-          store.save(from: guide)
-          showSaveSuccess = true
-        } label: {
-          Label(isSaved ? "已保存" : "保存", systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+        HStack(spacing: DesignTokens.Spacing.sm) {
+          // AR Navigation button
+          if isARAvailable {
+            Button {
+              showARNavigation = true
+            } label: {
+              Image(systemName: "arkit")
+                .foregroundStyle(.indigo)
+            }
+          }
+
+          // Share button
+          Button {
+            showShareSheet = true
+          } label: {
+            Image(systemName: "square.and.arrow.up")
+          }
+
+          // Route optimization button
+          Button {
+            showOptimizationSheet = true
+          } label: {
+            Image(systemName: isCurrentDayOptimized ? "arrow.triangle.branch" : "wand.and.stars")
+              .foregroundStyle(isCurrentDayOptimized ? .green : .primary)
+          }
+          .disabled(currentDay == nil || (currentDay?.pois.count ?? 0) < 2)
+
+          // Copy with options button
+          Button {
+            showCopySheet = true
+          } label: {
+            Image(systemName: "doc.on.doc")
+          }
+
+          // Quick save button
+          Button {
+            store.save(from: guide)
+            showSaveSuccess = true
+          } label: {
+            Label(isSaved ? "已保存" : "保存", systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+          }
+          .disabled(isSaved)
         }
-        .disabled(isSaved)
       }
     }
     .alert("保存成功", isPresented: $showSaveSuccess) {
@@ -68,8 +132,34 @@ struct ImportedItineraryView: View {
     } message: {
       Text("行程已保存到「我的行程」")
     }
+    .sheet(isPresented: $showCopySheet) {
+      CopyGuideSheet(guide: guide) { _ in
+        // Copy completed - sheet handles navigation
+      }
+    }
     .sheet(item: $selectedPoi) { poi in
       PoiDetailSheet(poi: poi)
+    }
+    .sheet(isPresented: $showOptimizationSheet) {
+      if let day = currentDay {
+        RouteOptimizationSheet(day: day) { optimizedPois in
+          optimizedDays[selectedDay] = optimizedPois
+          updateCamera()
+        }
+      }
+    }
+    .sheet(isPresented: $showShareSheet) {
+      ShareSheet(
+        title: guide.title,
+        subtitle: guide.authorName,
+        content: .blogPost(guide),
+        onDismiss: { showShareSheet = false }
+      )
+    }
+    .fullScreenCover(isPresented: $showARNavigation) {
+      if let route = arRoute {
+        ARNavigationView(route: route)
+      }
     }
   }
 
@@ -80,7 +170,7 @@ struct ImportedItineraryView: View {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: DesignTokens.Spacing.sm) {
           ForEach(days) { day in
-            DaySelectorButton(
+            ImportedDaySelectorButton(
               day: day,
               isSelected: selectedDay == day.dayNumber
             ) {
@@ -143,12 +233,49 @@ struct ImportedItineraryView: View {
 
   private var poiListView: some View {
     VStack(spacing: 0) {
-      // Handle
-      Capsule()
-        .fill(Color(.systemGray4))
-        .frame(width: 36, height: 4)
-        .padding(.top, DesignTokens.Spacing.xs)
-        .padding(.bottom, DesignTokens.Spacing.sm)
+      // Handle and optimization status
+      HStack {
+        Capsule()
+          .fill(Color(.systemGray4))
+          .frame(width: 36, height: 4)
+
+        Spacer()
+
+        // Show optimization badge if optimized
+        if isCurrentDayOptimized {
+          HStack(spacing: 4) {
+            Image(systemName: "checkmark.circle.fill")
+              .font(.caption2)
+            Text("已优化")
+              .font(.caption2)
+          }
+          .foregroundStyle(.green)
+          .padding(.horizontal, 8)
+          .padding(.vertical, 4)
+          .background(Color.green.opacity(0.1))
+          .clipShape(Capsule())
+
+          // Reset button
+          Button {
+            optimizedDays.removeValue(forKey: selectedDay)
+            updateCamera()
+          } label: {
+            Image(systemName: "arrow.uturn.backward")
+              .font(.caption2)
+          }
+          .foregroundStyle(.secondary)
+        }
+
+        Spacer()
+
+        // Placeholder for symmetry
+        Capsule()
+          .fill(Color.clear)
+          .frame(width: 36, height: 4)
+      }
+      .padding(.top, DesignTokens.Spacing.xs)
+      .padding(.bottom, DesignTokens.Spacing.sm)
+      .padding(.horizontal, DesignTokens.Spacing.md)
 
       // List
       ScrollView {
@@ -217,7 +344,7 @@ struct ImportedItineraryView: View {
 
 // MARK: - Day Selector Button
 
-struct DaySelectorButton: View {
+private struct ImportedDaySelectorButton: View {
   let day: AiDay
   let isSelected: Bool
   let action: () -> Void
@@ -474,7 +601,7 @@ struct PoiAnnotation: Identifiable {
       guide: BlogPost(
         id: "1", title: "Test", authorName: nil, content: nil, summary: nil, coverImageUrl: nil,
         imageUrls: nil, sourcePlatform: "test", qualityScore: nil, viewsCount: nil, likesCount: nil,
-        savesCount: nil, createdAt: nil,
+        savesCount: nil, createdAt: nil, destinations: nil,
         aiSummary: nil, aiTips: nil, aiBestTime: nil, aiDuration: nil, aiBudget: nil,
         aiDays: [
           AiDay(

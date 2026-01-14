@@ -149,3 +149,4 @@ export const ollamaLogger = createLogger('Ollama');
 export const enrichLogger = createLogger('Enrich');
 export const geocodeLogger = createLogger('Geocode');
 export const crawlerLogger = createLogger('Crawler');
+export const translationLogger = createLogger('Translation');

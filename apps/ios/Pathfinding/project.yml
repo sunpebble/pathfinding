@@ -27,7 +27,9 @@ targets:
     type: application
     platform: iOS
     sources:
-      - Pathfinding
+      - path: Pathfinding
+        excludes:
+          - "**/.DS_Store"
     settings:
       base:
         INFOPLIST_FILE: Pathfinding/Info.plist
@@ -37,7 +39,7 @@ targets:
         DEVELOPMENT_TEAM: ""
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # Pass build settings to Info.plist
+        CODE_SIGN_ENTITLEMENTS: Pathfinding/Pathfinding.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: Pathfinding
     configFiles:
       Debug: Config/Debug.xcconfig
@@ -51,10 +53,6 @@ schemes:
         Pathfinding: all
     run:
       config: Debug
-      environmentVariables:
-        - variable: OS_ACTIVITY_MODE
-          value: disable
-          isEnabled: false
     test:
       config: Debug
     profile:
@@ -63,21 +61,6 @@ schemes:
       config: Debug
     archive:
       config: Release
-
-  Pathfinding-Staging:
-    build:
-      targets:
-        Pathfinding: all
-    run:
-      config: Staging
-    test:
-      config: Staging
-    profile:
-      config: Staging
-    analyze:
-      config: Staging
-    archive:
-      config: Staging
 
   Pathfinding-Release:
     build:
