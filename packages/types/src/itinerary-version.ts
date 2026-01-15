@@ -1,6 +1,6 @@
 import type { ItineraryVisibility } from './itinerary';
-import type { TransportMode } from './itinerary-item';
 import type { Poi } from './poi';
+import type { TransportMode } from './transport';
 
 /**
  * Snapshot of an itinerary item at a specific version
@@ -13,7 +13,10 @@ export interface VersionSnapshotItem {
   transportMode: TransportMode;
   notes?: string;
   // Enriched POI data (populated when fetching)
-  poi?: Pick<Poi, 'id' | 'name' | 'category' | 'address' | 'latitude' | 'longitude'>;
+  poi?: Pick<
+    Poi,
+    'id' | 'name' | 'category' | 'address' | 'latitude' | 'longitude'
+  >;
 }
 
 /**

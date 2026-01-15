@@ -1,14 +1,8 @@
 import type { Poi } from './poi';
+import type { TransportMode } from './transport';
 
-/**
- * Transport mode enum for travel between items
- */
-export type TransportMode =
-  | 'walking'
-  | 'driving'
-  | 'transit'
-  | 'cycling'
-  | 'taxi';
+// Re-export TransportMode for backward compatibility
+export type { TransportMode } from './transport';
 
 /**
  * ItineraryItem entity - single activity/POI on a day

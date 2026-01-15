@@ -15,8 +15,8 @@ import { checkConnection } from './lib/convex.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { initTracing } from './middleware/tracing.js';
 import { initSentry } from './monitoring/index.js';
-import { aiRouter } from './routes/ai.js';
 import { aiItineraryRouter } from './routes/ai-itinerary.js';
+import { aiRouter } from './routes/ai.js';
 import { astronomyRouter } from './routes/astronomy.js';
 import { chatRouter } from './routes/chat.js';
 import { crawlJobsRouter } from './routes/crawl-jobs.js';
@@ -55,7 +55,7 @@ app.get('/ping', (c: Context) => {
 });
 
 // Health check endpoint - responds immediately, checks db in background
-app.get('/health', async (c: Context) => {
+const healthCheck = async (c: Context) => {
   // Use a short timeout to not block the response
   let dbConnected = false;
   try {
@@ -82,7 +82,11 @@ app.get('/health', async (c: Context) => {
     },
     statusCode
   );
-});
+};
+
+// Register health check on both /health and /api/health
+app.get('/health', healthCheck);
+app.get('/api/health', healthCheck);
 
 // API info endpoint
 app.get('/', (c: Context) => {

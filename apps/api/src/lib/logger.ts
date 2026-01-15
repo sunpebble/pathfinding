@@ -13,7 +13,7 @@ export interface Logger {
   debug: (message: string, context?: LogContext) => void;
   info: (message: string, context?: LogContext) => void;
   warn: (message: string, context?: LogContext) => void;
-  error: (message: string, error?: Error | null, context?: LogContext) => void;
+  error: (message: string, context?: LogContext) => void;
   child: (prefix: string) => Logger;
 }
 
@@ -44,32 +44,19 @@ function formatContext(context?: LogContext): string {
   return ` ${JSON.stringify(context)}`;
 }
 
-function formatError(error?: Error | null): LogContext | undefined {
-  if (!error) {
-    return undefined;
-  }
-  return {
-    error_name: error.name,
-    error_message: error.message,
-    error_stack: error.stack?.split('\n').slice(0, 5).join('\n'),
-  };
-}
-
 interface StructuredLog {
   timestamp: string;
   level: LogLevel;
   prefix?: string;
   message: string;
   context?: LogContext;
-  error?: LogContext;
 }
 
 function formatStructuredLog(
   level: LogLevel,
   message: string,
   prefix?: string,
-  context?: LogContext,
-  error?: Error | null
+  context?: LogContext
 ): string {
   const timestamp = new Date().toISOString();
 
@@ -85,17 +72,13 @@ function formatStructuredLog(
     if (context && Object.keys(context).length > 0) {
       log.context = context;
     }
-    if (error) {
-      log.error = formatError(error);
-    }
     return JSON.stringify(log);
   }
 
   // Human-readable format for development
   const prefixStr = prefix ? `[${prefix}] ` : '';
   const contextStr = formatContext(context);
-  const errorStr = error ? ` | Error: ${error.message}` : '';
-  return `[${timestamp}] [${level.toUpperCase()}] ${prefixStr}${message}${contextStr}${errorStr}`;
+  return `[${timestamp}] [${level.toUpperCase()}] ${prefixStr}${message}${contextStr}`;
 }
 
 /**
@@ -119,15 +102,15 @@ export function createLogger(prefix?: string): Logger {
 
     warn(message: string, context?: LogContext): void {
       if (shouldLog('warn')) {
+         
         console.warn(formatStructuredLog('warn', message, prefix, context));
       }
     },
 
-    error(message: string, error?: Error | null, context?: LogContext): void {
+    error(message: string, context?: LogContext): void {
       if (shouldLog('error')) {
-        console.error(
-          formatStructuredLog('error', message, prefix, context, error)
-        );
+         
+        console.error(formatStructuredLog('error', message, prefix, context));
       }
     },
 
@@ -139,13 +122,9 @@ export function createLogger(prefix?: string): Logger {
 }
 
 // Default logger instance
-export const logger = createLogger();
+export const logger = createLogger('API');
 
 // Pre-configured loggers for common modules
-export const workerLogger = createLogger('Worker');
-export const ollamaLogger = createLogger('Ollama');
-export const enrichLogger = createLogger('Enrich');
-export const geocodeLogger = createLogger('Geocode');
-export const crawlerLogger = createLogger('Crawler');
-export const translationLogger = createLogger('Translation');
-export const chatLogger = createLogger('Chat');
+export const budgetLogger = createLogger('Budget');
+export const authLogger = createLogger('Auth');
+export const apiLogger = createLogger('API');
