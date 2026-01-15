@@ -24,7 +24,7 @@ struct ChatSessionListView: View {
           sessionsList
         }
       }
-      .navigationTitle("AI Travel Assistant")
+      .navigationTitle("AI 旅行助手")
       .toolbar {
         ToolbarItem(placement: .primaryAction) {
           Button {
@@ -45,11 +45,11 @@ struct ChatSessionListView: View {
           showNewSessionSheet = false
         }
       }
-      .alert("Delete Chat", isPresented: $showDeleteAlert) {
-        Button("Cancel", role: .cancel) {
+      .alert("删除对话", isPresented: $showDeleteAlert) {
+        Button("取消", role: .cancel) {
           sessionToDelete = nil
         }
-        Button("Delete", role: .destructive) {
+        Button("删除", role: .destructive) {
           if let session = sessionToDelete {
             Task {
               _ = await store.deleteSession(session)
@@ -57,7 +57,7 @@ struct ChatSessionListView: View {
           }
         }
       } message: {
-        Text("Are you sure you want to delete this chat? This action cannot be undone.")
+        Text("确定要删除这个对话吗？此操作无法撤销。")
       }
     }
   }
@@ -75,7 +75,7 @@ struct ChatSessionListView: View {
             sessionToDelete = session
             showDeleteAlert = true
           } label: {
-            Label("Delete", systemImage: "trash")
+            Label("删除", systemImage: "trash")
           }
 
           Button {
@@ -83,7 +83,7 @@ struct ChatSessionListView: View {
               _ = await store.archiveSession(session)
             }
           } label: {
-            Label("Archive", systemImage: "archivebox")
+            Label("归档", systemImage: "archivebox")
           }
           .tint(.orange)
         }
@@ -143,14 +143,14 @@ private struct EmptySessionsView: View {
 
   var body: some View {
     ContentUnavailableView {
-      Label("No Chats Yet", systemImage: "bubble.left.and.bubble.right")
+      Label("暂无对话", systemImage: "bubble.left.and.bubble.right")
     } description: {
-      Text("Start a conversation with your AI travel assistant to get personalized travel recommendations.")
+      Text("开始与 AI 旅行助手对话，获取个性化的旅行推荐。")
     } actions: {
       Button {
         onCreateNew()
       } label: {
-        Label("Start New Chat", systemImage: "plus.circle.fill")
+        Label("开始新对话", systemImage: "plus.circle.fill")
       }
       .buttonStyle(.borderedProminent)
     }
@@ -163,7 +163,7 @@ private struct LoadingView: View {
   var body: some View {
     VStack(spacing: DesignTokens.Spacing.md) {
       ProgressView()
-      Text("Loading chats...")
+      Text("加载中...")
         .font(.subheadline)
         .foregroundStyle(.secondary)
     }
@@ -185,54 +185,54 @@ private struct NewSessionSheet: View {
     NavigationStack {
       Form {
         Section {
-          TextField("Chat Title (optional)", text: $title)
+          TextField("对话标题（可选）", text: $title)
         } header: {
-          Text("Title")
+          Text("标题")
         } footer: {
-          Text("Leave empty to auto-generate from your first message")
+          Text("留空将根据您的第一条消息自动生成")
         }
 
         Section {
-          TextField("Additional context", text: $context, axis: .vertical)
+          TextField("附加上下文", text: $context, axis: .vertical)
             .lineLimit(3...6)
         } header: {
-          Text("Context")
+          Text("上下文")
         } footer: {
-          Text("Provide any additional context like travel preferences or constraints")
+          Text("提供任何额外的上下文，如旅行偏好或限制条件")
         }
 
         Section {
           HStack {
             Image(systemName: "sparkles")
               .foregroundStyle(.yellow)
-            Text("AI Travel Assistant")
+            Text("AI 旅行助手")
               .font(.headline)
           }
 
-          Text("I can help you with:")
+          Text("我可以帮助您：")
             .font(.subheadline)
             .foregroundStyle(.secondary)
 
           VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            FeatureRow(icon: "mappin.circle.fill", text: "POI recommendations", color: .red)
-            FeatureRow(icon: "calendar", text: "Itinerary planning", color: .blue)
-            FeatureRow(icon: "lightbulb.fill", text: "Travel tips & advice", color: .yellow)
-            FeatureRow(icon: "fork.knife", text: "Restaurant suggestions", color: .orange)
+            FeatureRow(icon: "mappin.circle.fill", text: "景点推荐", color: .red)
+            FeatureRow(icon: "calendar", text: "行程规划", color: .blue)
+            FeatureRow(icon: "lightbulb.fill", text: "旅行建议", color: .yellow)
+            FeatureRow(icon: "fork.knife", text: "美食推荐", color: .orange)
           }
         } header: {
-          Text("Features")
+          Text("功能")
         }
       }
-      .navigationTitle("New Chat")
+      .navigationTitle("新建对话")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("Cancel") {
+          Button("取消") {
             onDismiss()
           }
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button("Create") {
+          Button("创建") {
             Task {
               isCreating = true
               let session = await store.createSession(
@@ -296,7 +296,7 @@ struct ChatConversationView: View {
                 if store.isLoadingMessages {
                   ProgressView()
                 } else {
-                  Text("Load earlier messages")
+                  Text("加载更多消息")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
@@ -357,7 +357,7 @@ struct ChatConversationView: View {
           Button {
             showClearAlert = true
           } label: {
-            Label("Clear Chat", systemImage: "trash")
+            Label("清空对话", systemImage: "trash")
           }
         } label: {
           Image(systemName: "ellipsis.circle")
@@ -367,15 +367,15 @@ struct ChatConversationView: View {
     .task {
       await store.selectSession(session)
     }
-    .alert("Clear Chat", isPresented: $showClearAlert) {
-      Button("Cancel", role: .cancel) {}
-      Button("Clear", role: .destructive) {
+    .alert("清空对话", isPresented: $showClearAlert) {
+      Button("取消", role: .cancel) {}
+      Button("清空", role: .destructive) {
         Task {
           _ = await store.clearMessages()
         }
       }
     } message: {
-      Text("This will delete all messages in this chat.")
+      Text("这将删除此对话中的所有消息。")
     }
   }
 
@@ -463,7 +463,7 @@ private struct MetadataView: View {
       // POI Recommendations
       if let pois = metadata.pois, !pois.isEmpty {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-          Text("Recommended Places")
+          Text("推荐地点")
             .font(.caption)
             .fontWeight(.semibold)
             .foregroundStyle(.secondary)
@@ -676,7 +676,7 @@ private struct InputBar: View {
 
   var body: some View {
     HStack(spacing: DesignTokens.Spacing.sm) {
-      TextField("Ask anything about travel...", text: $text, axis: .vertical)
+      TextField("随便问我关于旅行的问题...", text: $text, axis: .vertical)
         .lineLimit(1...4)
         .padding(DesignTokens.Spacing.sm)
         .background(Color(.systemGray6))
