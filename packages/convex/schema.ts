@@ -266,13 +266,27 @@ export default defineSchema({
     priceLevel: v.optional(v.number()),
     businessHours: v.optional(
       v.object({
-        monday: v.optional(v.array(v.object({ open: v.string(), close: v.string() }))),
-        tuesday: v.optional(v.array(v.object({ open: v.string(), close: v.string() }))),
-        wednesday: v.optional(v.array(v.object({ open: v.string(), close: v.string() }))),
-        thursday: v.optional(v.array(v.object({ open: v.string(), close: v.string() }))),
-        friday: v.optional(v.array(v.object({ open: v.string(), close: v.string() }))),
-        saturday: v.optional(v.array(v.object({ open: v.string(), close: v.string() }))),
-        sunday: v.optional(v.array(v.object({ open: v.string(), close: v.string() }))),
+        monday: v.optional(
+          v.array(v.object({ open: v.string(), close: v.string() }))
+        ),
+        tuesday: v.optional(
+          v.array(v.object({ open: v.string(), close: v.string() }))
+        ),
+        wednesday: v.optional(
+          v.array(v.object({ open: v.string(), close: v.string() }))
+        ),
+        thursday: v.optional(
+          v.array(v.object({ open: v.string(), close: v.string() }))
+        ),
+        friday: v.optional(
+          v.array(v.object({ open: v.string(), close: v.string() }))
+        ),
+        saturday: v.optional(
+          v.array(v.object({ open: v.string(), close: v.string() }))
+        ),
+        sunday: v.optional(
+          v.array(v.object({ open: v.string(), close: v.string() }))
+        ),
         timezone: v.optional(v.string()), // IANA timezone identifier
         notes: v.optional(v.string()), // Additional notes about hours
       })
@@ -1803,7 +1817,11 @@ export default defineSchema({
   // ============================================
   chatMessages: defineTable({
     sessionId: v.id('chatSessions'),
-    role: v.union(v.literal('user'), v.literal('assistant'), v.literal('system')),
+    role: v.union(
+      v.literal('user'),
+      v.literal('assistant'),
+      v.literal('system')
+    ),
     content: v.string(),
     // Structured data for rich responses
     metadata: v.optional(
@@ -2966,7 +2984,7 @@ export default defineSchema({
   // ============================================
   // Travel Statistics (User Travel Stats)
   // ============================================
-  travelStats: defineTable({
+  userTravelStats: defineTable({
     userId: v.string(), // Auth user ID
 
     // Aggregate statistics
@@ -3858,7 +3876,6 @@ export default defineSchema({
     .index('by_expires', ['expiresAt'])
     .index('by_user_modified', ['userId', 'lastModifiedAt']),
 
-
   // ============================================
   // User Travel Preferences (旅行偏好)
   // ============================================
@@ -3896,15 +3913,30 @@ export default defineSchema({
       v.union(v.literal('male'), v.literal('female'), v.literal('other'))
     ),
     preferredPartnerGender: v.optional(
-      v.union(v.literal('male'), v.literal('female'), v.literal('other'), v.literal('any'))
+      v.union(
+        v.literal('male'),
+        v.literal('female'),
+        v.literal('other'),
+        v.literal('any')
+      )
     ),
     bio: v.optional(v.string()),
     interests: v.optional(v.array(v.string())),
     smokingPreference: v.optional(
-      v.union(v.literal('smoker'), v.literal('non_smoker'), v.literal('no_preference'))
+      v.union(
+        v.literal('smoker'),
+        v.literal('non_smoker'),
+        v.literal('no_preference')
+      )
     ),
     accommodationPreference: v.optional(
-      v.union(v.literal('hostel'), v.literal('budget_hotel'), v.literal('mid_range'), v.literal('luxury'), v.literal('no_preference'))
+      v.union(
+        v.literal('hostel'),
+        v.literal('budget_hotel'),
+        v.literal('mid_range'),
+        v.literal('luxury'),
+        v.literal('no_preference')
+      )
     ),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -3928,31 +3960,57 @@ export default defineSchema({
     currentGroupSize: v.number(),
     maxGroupSize: v.number(),
     preferredGender: v.optional(
-      v.union(v.literal('male'), v.literal('female'), v.literal('other'), v.literal('any'))
+      v.union(
+        v.literal('male'),
+        v.literal('female'),
+        v.literal('other'),
+        v.literal('any')
+      )
     ),
     preferredAgeRange: v.optional(
       v.array(
-        v.union(v.literal('18-25'), v.literal('26-35'), v.literal('36-45'), v.literal('46-55'), v.literal('55+'))
+        v.union(
+          v.literal('18-25'),
+          v.literal('26-35'),
+          v.literal('36-45'),
+          v.literal('46-55'),
+          v.literal('55+')
+        )
       )
     ),
     travelStyles: v.optional(
       v.array(
         v.union(
-          v.literal('adventure'), v.literal('relaxation'), v.literal('culture'),
-          v.literal('food'), v.literal('nature'), v.literal('shopping'),
-          v.literal('photography'), v.literal('budget'), v.literal('luxury')
+          v.literal('adventure'),
+          v.literal('relaxation'),
+          v.literal('culture'),
+          v.literal('food'),
+          v.literal('nature'),
+          v.literal('shopping'),
+          v.literal('photography'),
+          v.literal('budget'),
+          v.literal('luxury')
         )
       )
     ),
     budgetRange: v.optional(
-      v.union(v.literal('budget'), v.literal('moderate'), v.literal('comfortable'), v.literal('luxury'))
+      v.union(
+        v.literal('budget'),
+        v.literal('moderate'),
+        v.literal('comfortable'),
+        v.literal('luxury')
+      )
     ),
     estimatedBudget: v.optional(v.number()),
     itineraryId: v.optional(v.id('itineraries')),
     coverImageUrl: v.optional(v.string()),
     imageUrls: v.optional(v.array(v.string())),
     status: v.union(
-      v.literal('active'), v.literal('paused'), v.literal('fulfilled'), v.literal('cancelled'), v.literal('expired')
+      v.literal('active'),
+      v.literal('paused'),
+      v.literal('fulfilled'),
+      v.literal('cancelled'),
+      v.literal('expired')
     ),
     viewCount: v.number(),
     applicationCount: v.number(),
@@ -3987,7 +4045,11 @@ export default defineSchema({
       })
     ),
     status: v.union(
-      v.literal('pending'), v.literal('accepted'), v.literal('rejected'), v.literal('withdrawn'), v.literal('expired')
+      v.literal('pending'),
+      v.literal('accepted'),
+      v.literal('rejected'),
+      v.literal('withdrawn'),
+      v.literal('expired')
     ),
     responseMessage: v.optional(v.string()),
     respondedAt: v.optional(v.number()),
@@ -4015,7 +4077,11 @@ export default defineSchema({
     destination: v.string(),
     startDate: v.string(),
     endDate: v.string(),
-    status: v.union(v.literal('active'), v.literal('completed'), v.literal('cancelled')),
+    status: v.union(
+      v.literal('active'),
+      v.literal('completed'),
+      v.literal('cancelled')
+    ),
     conversationId: v.optional(v.id('conversations')),
     ownerFeedback: v.optional(
       v.object({
@@ -4049,10 +4115,19 @@ export default defineSchema({
   userVerifications: defineTable({
     userId: v.string(),
     verificationType: v.union(
-      v.literal('identity'), v.literal('phone'), v.literal('email'),
-      v.literal('social'), v.literal('travel_history'), v.literal('reference')
+      v.literal('identity'),
+      v.literal('phone'),
+      v.literal('email'),
+      v.literal('social'),
+      v.literal('travel_history'),
+      v.literal('reference')
     ),
-    status: v.union(v.literal('pending'), v.literal('verified'), v.literal('rejected'), v.literal('expired')),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('verified'),
+      v.literal('rejected'),
+      v.literal('expired')
+    ),
     verificationData: v.optional(v.string()),
     verificationMethod: v.optional(v.string()),
     socialPlatform: v.optional(v.string()),
@@ -4089,8 +4164,12 @@ export default defineSchema({
     badges: v.optional(
       v.array(
         v.union(
-          v.literal('verified_identity'), v.literal('trusted_traveler'), v.literal('super_host'),
-          v.literal('responsive'), v.literal('experienced'), v.literal('top_rated')
+          v.literal('verified_identity'),
+          v.literal('trusted_traveler'),
+          v.literal('super_host'),
+          v.literal('responsive'),
+          v.literal('experienced'),
+          v.literal('top_rated')
         )
       )
     ),
@@ -4769,7 +4848,10 @@ export default defineSchema({
   })
     .index('by_origin', ['originCountryCode'])
     .index('by_destination', ['destinationCountryCode'])
-    .index('by_origin_destination', ['originCountryCode', 'destinationCountryCode'])
+    .index('by_origin_destination', [
+      'originCountryCode',
+      'destinationCountryCode',
+    ])
     .index('by_visa_type', ['visaType'])
     .index('by_difficulty', ['difficultyLevel']),
 
@@ -5239,8 +5321,7 @@ export default defineSchema({
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index('by_airline_code', ['airlineCode']),
+  }).index('by_airline_code', ['airlineCode']),
 
   // ============================================
   // Local Events (本地活动/节日)
@@ -5656,14 +5737,14 @@ export default defineSchema({
     .index('by_created', ['createdAt']),
 
   // ============================================
-  // POI Questions & Answers (Q&A Community)
+  // POI Questions & Answers (Q&A Community) - Extended
   // ============================================
 
   /**
-   * Questions about POIs
+   * Questions about POIs - Extended
    * Users can ask questions about specific points of interest
    */
-  poiQuestions: defineTable({
+  poiQuestionsExtended: defineTable({
     poiId: v.id('pois'), // The POI this question is about
     userId: v.string(), // Auth user ID of the question author
 
@@ -5719,9 +5800,9 @@ export default defineSchema({
     }),
 
   /**
-   * Answers to POI questions
+   * Answers to POI questions - Extended
    */
-  poiAnswers: defineTable({
+  poiAnswersExtended: defineTable({
     questionId: v.id('poiQuestions'), // The question this answers
     poiId: v.id('pois'), // Denormalized for easier queries
     userId: v.string(), // Auth user ID of the answer author

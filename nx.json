@@ -1,20 +1,29 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "neverConnectToCloud": true,
+  "cacheDirectory": ".nx/cache",
+  "defaultBase": "main",
+  "parallel": 4,
+  "useDaemonProcess": true,
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": ["{workspaceRoot}/tsconfig.json"],
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/nx.json"
+    ],
     "production": [
       "default",
       "!{projectRoot}/**/*.spec.ts",
-      "!{projectRoot}/**/*.test.ts"
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/**/__tests__/**/*"
     ]
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"],
-      "outputs": ["{projectRoot}/dist", "{projectRoot}/.next"]
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/.next"],
+      "cache": true
     },
     "dev": {
       "dependsOn": ["^build"],
@@ -26,13 +35,17 @@
         "default",
         "{workspaceRoot}/.eslintrc*",
         "{workspaceRoot}/eslint.config.*"
-      ]
+      ],
+      "cache": true
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "inputs": ["default", "^default"],
+      "cache": true
     },
     "test": {
-      "inputs": ["default", "^production"]
+      "inputs": ["default", "^production"],
+      "cache": true
     }
   },
   "plugins": [

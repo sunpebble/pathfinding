@@ -191,7 +191,7 @@ function StatusBadge({ status }: { status: string }) {
     },
   };
 
-  const { icon, className } = config[status] || config.pending;
+  const { icon, className } = config[status] ?? config.pending!;
 
   return (
     <span

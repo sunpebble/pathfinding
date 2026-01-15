@@ -2,5 +2,21 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "dashboard",
   "projectType": "application",
-  "sourceRoot": "apps/dashboard/src"
+  "sourceRoot": "apps/dashboard/src",
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "apps/dashboard"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "apps/dashboard"
+      }
+    }
+  }
 }

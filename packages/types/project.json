@@ -2,5 +2,29 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "types",
   "projectType": "library",
-  "sourceRoot": "packages/types"
+  "sourceRoot": "packages/types/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsdown",
+        "cwd": "packages/types"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsdown --watch",
+        "cwd": "packages/types"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "packages/types"
+      }
+    }
+  }
 }
