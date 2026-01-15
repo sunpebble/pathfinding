@@ -62,6 +62,7 @@ function getStatusCode(error: Error): number {
     case 'ConflictError':
       return 409;
     case 'ValidationError':
+    case 'BadRequestError':
       return 400;
     default:
       return 500;
@@ -101,5 +102,12 @@ export class ValidationError extends Error {
   constructor(message = 'Validation error') {
     super(message);
     this.name = 'ValidationError';
+  }
+}
+
+export class BadRequestError extends Error {
+  constructor(message = 'Bad request') {
+    super(message);
+    this.name = 'BadRequestError';
   }
 }

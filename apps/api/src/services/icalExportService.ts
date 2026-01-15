@@ -4,8 +4,8 @@
  * Supports Apple Calendar, Google Calendar, and standard iCal format
  */
 
-import { convexClient } from '../lib/convex';
-import { api } from '@pathfinding/convex';
+import type { Id } from '../lib/convex';
+import { api, convex } from '../lib/convex';
 
 // Types for itinerary data
 interface ItineraryPoi {
@@ -57,7 +57,8 @@ export interface CalendarUrls {
 }
 
 export class ICalExportService {
-  private static readonly BASE_URL = process.env.API_BASE_URL || 'https://api.pathfinding.org';
+  private static readonly BASE_URL =
+    process.env.API_BASE_URL || 'https://api.pathfinding.org';
 
   /**
    * Generate navigation URLs for a POI
@@ -142,14 +143,12 @@ export class ICalExportService {
     itineraryId: string,
     userId: string,
     options: ICalExportOptions = {},
-    accessToken: string
+    _accessToken: string
   ): Promise<ICalExportResult> {
     // Fetch itinerary from Convex
-    const itinerary = await convexClient.query(
-      api.itineraries.getById,
-      { id: itineraryId as any },
-      accessToken
-    ) as Itinerary | null;
+    const itinerary = (await convex.query(api.itineraries.getById, {
+      id: itineraryId as Id<'itineraries'>,
+    })) as Itinerary | null;
 
     if (!itinerary) {
       throw new Error('Itinerary not found');
@@ -174,7 +173,7 @@ export class ICalExportService {
       includeNavigationLinks,
     });
 
-    const filename = `${itinerary.title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.ics`;
+    const filename = `${itinerary.title.replace(/[^a-z0-9\u4E00-\u9FA5]/gi, '_')}.ics`;
 
     return {
       data: icalData,
@@ -190,7 +189,13 @@ export class ICalExportService {
     itinerary: Itinerary,
     options: Required<ICalExportOptions>
   ): string {
-    const { startDate, enableReminders, reminderMinutes, timezone, includeNavigationLinks } = options;
+    const {
+      startDate,
+      enableReminders,
+      reminderMinutes,
+      timezone,
+      includeNavigationLinks,
+    } = options;
     const lines: string[] = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
@@ -234,7 +239,12 @@ export class ICalExportService {
           lines.push(`LOCATION:${this.escapeICalText(poi.address)}`);
         }
 
-        if (poi.latitude && poi.longitude && poi.latitude !== 0 && poi.longitude !== 0) {
+        if (
+          poi.latitude &&
+          poi.longitude &&
+          poi.latitude !== 0 &&
+          poi.longitude !== 0
+        ) {
           lines.push(`GEO:${poi.latitude};${poi.longitude}`);
         }
 
@@ -254,10 +264,12 @@ export class ICalExportService {
           descParts.push('--- Navigation ---');
           descParts.push(`Apple Maps: ${navUrls.appleMapsUrl}`);
           descParts.push(`Google Maps: ${navUrls.googleMapsUrl}`);
-        };
+        }
 
         if (descParts.length > 0) {
-          lines.push(`DESCRIPTION:${this.escapeICalText(descParts.join('\\n'))}`);
+          lines.push(
+            `DESCRIPTION:${this.escapeICalText(descParts.join('\\n'))}`
+          );
         }
 
         // Add reminder/alarm
@@ -290,8 +302,8 @@ export class ICalExportService {
     if (poi.time) {
       const timeMatch = poi.time.match(/^(\d{1,2}):(\d{2})$/);
       if (timeMatch) {
-        const hour = parseInt(timeMatch[1], 10);
-        const minute = parseInt(timeMatch[2], 10);
+        const hour = Number.parseInt(timeMatch[1], 10);
+        const minute = Number.parseInt(timeMatch[2], 10);
         const start = new Date(dayDate);
         start.setHours(hour, minute, 0, 0);
         const end = new Date(start);
@@ -304,7 +316,8 @@ export class ICalExportService {
     const startHour = 9;
     const endHour = 18;
     const totalMinutes = (endHour - startHour) * 60;
-    const minutesPerPoi = totalPois > 1 ? Math.floor(totalMinutes / totalPois) : 60;
+    const minutesPerPoi =
+      totalPois > 1 ? Math.floor(totalMinutes / totalPois) : 60;
 
     const poiStartMinutes = poiIndex * minutesPerPoi;
     const startMinute = poiStartMinutes % 60;

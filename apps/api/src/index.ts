@@ -6,97 +6,84 @@ import { authMiddleware } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
 import { responseSizeLimitMiddleware } from './middleware/responseSizeLimit';
 import { tracingMiddleware } from './middleware/tracing';
+import { analysisRoutes } from './routes/analysis';
+import { astronomyRoutes } from './routes/astronomy';
+import budgets from './routes/budgets';
 import { businessHoursRoutes } from './routes/businessHours';
+import {
+  chargingStationRoutes,
+  publicChargingStationRoutes,
+} from './routes/chargingStations';
+import { chatRoutes, publicChatRoutes } from './routes/chat';
+import { cityRoutes, publicCityRoutes } from './routes/cities';
+import { collaborationRoutes } from './routes/collaboration';
 import {
   commentRoutes,
   notificationRoutes,
   publicCommentRoutes,
 } from './routes/comments';
+import { eventsRoutes, publicEventsRoutes } from './routes/events';
+import { feedRoutes, publicFeedRoutes } from './routes/feed';
+import { flightRoutes, publicFlightRoutes } from './routes/flights';
+import { followRoutes, publicFollowRoutes } from './routes/follows';
 import { hiddenGemsRoutes } from './routes/hiddenGems';
 import { hotelBookingsRoutes } from './routes/hotelBookings';
+import { icalRoutes, publicICalRoutes } from './routes/ical';
+import { insuranceRoutes } from './routes/insurance';
 import {
   itinerariesRoutes,
   publicItinerariesRoutes,
 } from './routes/itineraries';
-import { itineraryItemsRoutes } from './routes/itinerary-items';
-import { poisRoutes } from './routes/pois';
-import { remindersRoutes } from './routes/reminders';
-import { safetyRoutes } from './routes/safety';
-import { statsRoutes } from './routes/stats';
-import {
-  publicRouteOptimizationRoutes,
-  routeOptimizationRoutes,
-} from './routes/route-optimization';
-import {
-  publicTransportRoutes,
-  transportRoutes,
-} from './routes/transport';
-import budgets from './routes/budgets';
-import { tippingRoutes } from './routes/tipping';
-import { insuranceRoutes } from './routes/insurance';
-import { collaborationRoutes } from './routes/collaboration';
-import { feedRoutes, publicFeedRoutes } from './routes/feed';
-import { astronomyRoutes } from './routes/astronomy';
-import { timezonesRoutes } from './routes/timezones';
-import {
-  publicTravelNotesRoutes,
-  travelNotesRoutes,
-} from './routes/travel-notes';
-import {
-  adminVerificationRoutes,
-  publicVerificationRoutes,
-  verificationRoutes,
-} from './routes/verification';
-import { voiceRoutes } from './routes/voice';
-import { weatherRoutes } from './routes/weather';
-import { publicWifiRoutes, wifiRoutes } from './routes/wifi';
-import { pdfExportRoutes, publicPdfExportRoutes } from './routes/pdf-export';
-import { icalRoutes, publicICalRoutes } from './routes/ical';
-import { draftRoutes } from './routes/drafts';
-import {
-  packingListRoutes,
-  publicPackingListRoutes,
-} from './routes/packingLists';
-import {
-  itineraryTemplateRoutes,
-  publicTemplateRoutes,
-  templateRoutes,
-} from './routes/templates';
-import { ticketReminderRoutes, ticketRoutes } from './routes/tickets';
-import {
-  chargingStationRoutes,
-  publicChargingStationRoutes,
-} from './routes/chargingStations';
-import {
-  photoAdminRoutes,
-  photoRoutes,
-  poiPhotosRoutes,
-} from './routes/poiPhotos';
-import {
-  itineraryShareRoutes,
-  publicShareRoutes,
-  shareRoutes,
-} from './routes/share';
-import { followRoutes, publicFollowRoutes } from './routes/follows';
-import { luggageRoutes, publicLuggageRoutes } from './routes/luggage';
-import {
-  itineraryLikesRoutes,
-  myLikesRoutes,
-} from './routes/itinerary-likes';
 import {
   favoriteCollectionsRoutes,
   itineraryFavoritesRoutes,
   myFavoritesRoutes,
   publicFavoriteCountRoutes,
 } from './routes/itinerary-favorites';
-import { analysisRoutes } from './routes/analysis';
-import { eventsRoutes, publicEventsRoutes } from './routes/events';
-import { preferencesRoutes } from './routes/preferences';
-import { flightRoutes, publicFlightRoutes } from './routes/flights';
-import { cityRoutes, publicCityRoutes } from './routes/cities';
+import { itineraryItemsRoutes } from './routes/itinerary-items';
+import { itineraryLikesRoutes, myLikesRoutes } from './routes/itinerary-likes';
 import { itineraryVersionsRoutes } from './routes/itinerary-versions';
+import { luggageRoutes, publicLuggageRoutes } from './routes/luggage';
+
+
+import { pdfExportRoutes, publicPdfExportRoutes } from './routes/pdf-export';
+import {
+  photoAdminRoutes,
+  photoRoutes,
+  poiPhotosRoutes,
+} from './routes/poiPhotos';
 import { publicQARoutes, qaRoutes } from './routes/poiQA';
+import { poisRoutes } from './routes/pois';
+import { preferencesRoutes } from './routes/preferences';
+import { remindersRoutes } from './routes/reminders';
+import {
+  publicRouteOptimizationRoutes,
+  routeOptimizationRoutes,
+} from './routes/route-optimization';
+import { safetyRoutes } from './routes/safety';
+import {
+  itineraryShareRoutes,
+  publicShareRoutes,
+  shareRoutes,
+} from './routes/share';
 import { simCardRoutes } from './routes/simCards';
+import { statsRoutes } from './routes/stats';
+import {
+  publicTemplateRoutes,
+} from './routes/templates';
+import { ticketReminderRoutes, ticketRoutes } from './routes/tickets';
+import { timezonesRoutes } from './routes/timezones';
+import { tippingRoutes } from './routes/tipping';
+import { publicTransportRoutes } from './routes/transport';
+import {
+  publicTravelNotesRoutes,
+  travelNotesRoutes,
+} from './routes/travel-notes';
+
+
+import { voiceRoutes } from './routes/voice';
+import { weatherRoutes } from './routes/weather';
+import { publicWifiRoutes, wifiRoutes } from './routes/wifi';
 import 'dotenv/config';
 
 const app = new Hono();
@@ -149,6 +136,7 @@ publicApi.route('/events', publicEventsRoutes); // Local events and festivals
 publicApi.route('/flights', publicFlightRoutes); // Flight lookup and search
 publicApi.route('/cities', publicCityRoutes); // City encyclopedia and information
 publicApi.route('/pois', publicQARoutes); // POI Q&A community (read-only)
+publicApi.route('/chat', publicChatRoutes); // Public chat health check
 
 // Protected API v1 routes (auth required)
 const protectedApi = new Hono();
@@ -199,6 +187,7 @@ protectedApi.route('/cities', cityRoutes); // City encyclopedia management
 protectedApi.route('/itineraries', itineraryVersionsRoutes); // Itinerary version history
 protectedApi.route('/pois', qaRoutes); // POI Q&A community (create, vote, answer)
 protectedApi.route('/sim-cards', simCardRoutes); // International SIM card recommendations
+protectedApi.route('/chat', chatRoutes); // AI Chat proxy to crawler service
 
 // Mount both API groups under /v1
 // Public routes first so they take precedence for matching paths
