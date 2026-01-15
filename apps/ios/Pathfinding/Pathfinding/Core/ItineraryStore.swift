@@ -416,8 +416,8 @@ final class ItineraryStore {
 
   /// Handle iCloud key-value store changes
   private func handleiCloudChange() {
-    guard let userInfo = NSUbiquitousKeyValueStore.default.dictionaryRepresentation as? [String: Any],
-          let reasonValue = userInfo[NSUbiquitousKeyValueStoreChangeReasonKey] as? Int
+    let userInfo = NSUbiquitousKeyValueStore.default.dictionaryRepresentation
+    guard let reasonValue = userInfo[NSUbiquitousKeyValueStoreChangeReasonKey] as? Int
     else {
       // Just sync from iCloud if we can't determine the reason
       Task {
@@ -555,7 +555,9 @@ final class ItineraryStore {
       object: nil,
       queue: .main
     ) { [weak self] _ in
-      self?.clearCache()
+      Task { @MainActor in
+        self?.clearCache()
+      }
     }
   }
 

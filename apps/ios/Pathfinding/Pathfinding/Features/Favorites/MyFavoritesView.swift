@@ -63,7 +63,7 @@ struct MyFavoritesView: View {
       Button("确定", role: .destructive) {
         if let favorite = favoriteToDelete {
           Task {
-            await store.removeFromFavorites(itineraryId: favorite.itineraryId)
+            _ = await store.removeFromFavorites(itineraryId: favorite.itineraryId)
             favoriteToDelete = nil
           }
         }

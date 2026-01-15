@@ -255,8 +255,10 @@ struct VideoPlayerView: View {
       forInterval: CMTime(seconds: 0.1, preferredTimescale: 600),
       queue: .main
     ) { time in
-      if !isSeeking {
-        currentTime = time.seconds
+      Task { @MainActor in
+        if !isSeeking {
+          currentTime = time.seconds
+        }
       }
     }
 
@@ -266,7 +268,9 @@ struct VideoPlayerView: View {
       object: player?.currentItem,
       queue: .main
     ) { _ in
-      isPlaying = false
+      Task { @MainActor in
+        isPlaying = false
+      }
     }
 
     resetControlsTimer()
@@ -286,7 +290,9 @@ struct VideoPlayerView: View {
     isSeeking = true
     let cmTime = CMTime(seconds: time, preferredTimescale: 600)
     player?.seek(to: cmTime, toleranceBefore: .zero, toleranceAfter: .zero) { _ in
-      isSeeking = false
+      Task { @MainActor in
+        isSeeking = false
+      }
     }
   }
 
@@ -305,9 +311,11 @@ struct VideoPlayerView: View {
   private func resetControlsTimer() {
     controlsTimer?.invalidate()
     controlsTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { _ in
-      if isPlaying {
-        withAnimation(.easeInOut(duration: 0.3)) {
-          showControls = false
+      Task { @MainActor in
+        if isPlaying {
+          withAnimation(.easeInOut(duration: 0.3)) {
+            showControls = false
+          }
         }
       }
     }

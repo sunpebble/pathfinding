@@ -171,7 +171,7 @@ final class ChatStore {
       )
 
       // Update local state
-      if let index = sessions.firstIndex(where: { $0.id == session.id }) {
+      if sessions.firstIndex(where: { $0.id == session.id }) != nil {
         // Create updated session (since ChatSession is a struct)
         await fetchSessions(userId: session.userId, refresh: true)
       }
@@ -258,7 +258,7 @@ final class ChatStore {
       await fetchMessages(sessionId: session.id, refresh: true)
 
       // Update session in list (message count changed)
-      if let index = sessions.firstIndex(where: { $0.id == session.id }) {
+      if sessions.firstIndex(where: { $0.id == session.id }) != nil {
         // Reload sessions to get updated counts
         await fetchSessions(userId: session.userId)
       }

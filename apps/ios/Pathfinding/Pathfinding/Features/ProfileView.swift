@@ -8,6 +8,7 @@ struct ProfileView: View {
   @State private var showThemeSettings = false
   @State private var showLanguageSettings = false
   @State private var showCloudSyncSettings = false
+  @State private var showLogin = false
   @State private var followStore = FollowStore.shared
   @State private var followStats: FollowStats?
   @State private var favoriteStore = FavoriteStore.shared
@@ -22,62 +23,68 @@ struct ProfileView: View {
       List {
         // MARK: - Profile Section
         Section {
-          HStack(spacing: DesignTokens.Spacing.lg) {
-            // Avatar with enhanced styling
-            ZStack {
-              // Outer glow
-              Circle()
-                .fill(
-                  LinearGradient(
-                    colors: [.indigo.opacity(0.3), .purple.opacity(0.3)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+          Button {
+            showLogin = true
+          } label: {
+            HStack(spacing: DesignTokens.Spacing.lg) {
+              // Avatar with enhanced styling
+              ZStack {
+                // Outer glow
+                Circle()
+                  .fill(
+                    LinearGradient(
+                      colors: [.indigo.opacity(0.3), .purple.opacity(0.3)],
+                      startPoint: .topLeading,
+                      endPoint: .bottomTrailing
+                    )
                   )
-                )
-                .frame(width: 80, height: 80)
-                .blur(radius: 8)
+                  .frame(width: 80, height: 80)
+                  .blur(radius: 8)
 
-              // Main avatar circle
-              Circle()
-                .fill(
-                  LinearGradient(
-                    colors: [.indigo, .purple],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                // Main avatar circle
+                Circle()
+                  .fill(
+                    LinearGradient(
+                      colors: [.indigo, .purple],
+                      startPoint: .topLeading,
+                      endPoint: .bottomTrailing
+                    )
                   )
-                )
-                .frame(width: 72, height: 72)
-                .shadow(color: .indigo.opacity(0.4), radius: 8, y: 4)
+                  .frame(width: 72, height: 72)
+                  .shadow(color: .indigo.opacity(0.4), radius: 8, y: 4)
 
-              Image(systemName: "person.fill")
-                .font(.system(size: 32, weight: .medium))
-                .foregroundStyle(.white)
-            }
-            .frame(width: 80, height: 80)
-
-            VStack(alignment: .leading, spacing: 6) {
-              Text("profile.guest".localized)
-                .font(.title2)
-                .fontWeight(.bold)
-
-              HStack(spacing: 4) {
-                Image(systemName: "arrow.right.circle.fill")
-                  .font(.caption)
-                  .foregroundStyle(.indigo)
-                Text("profile.login_prompt".localized)
-                  .font(.subheadline)
-                  .foregroundStyle(.secondary)
+                Image(systemName: "person.fill")
+                  .font(.system(size: 32, weight: .medium))
+                  .foregroundStyle(.white)
               }
+              .frame(width: 80, height: 80)
+
+              VStack(alignment: .leading, spacing: 6) {
+                Text("profile.guest".localized)
+                  .font(.title2)
+                  .fontWeight(.bold)
+                  .foregroundStyle(.primary)
+
+                HStack(spacing: 4) {
+                  Image(systemName: "arrow.right.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.indigo)
+                  Text("profile.login_prompt".localized)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+              }
+
+              Spacer()
+
+              Image(systemName: "chevron.right")
+                .font(.body)
+                .fontWeight(.semibold)
+                .foregroundStyle(.quaternary)
             }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-              .font(.body)
-              .fontWeight(.semibold)
-              .foregroundStyle(.quaternary)
+            .padding(.vertical, DesignTokens.Spacing.sm)
           }
-          .padding(.vertical, DesignTokens.Spacing.sm)
+          .buttonStyle(.plain)
         }
 
         // MARK: - Stats Section
@@ -351,6 +358,9 @@ struct ProfileView: View {
       }
       .sheet(isPresented: $showCloudSyncSettings) {
         iCloudSyncSettingsSheet()
+      }
+      .sheet(isPresented: $showLogin) {
+        LoginView()
       }
       .navigationDestination(isPresented: $navigateToFavorites) {
         MyFavoritesView()

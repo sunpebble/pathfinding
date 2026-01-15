@@ -152,7 +152,7 @@ final class FollowStore {
       )
 
       // Update cache
-      if var status = followStatusCache[targetUserId] {
+      if let status = followStatusCache[targetUserId] {
         followStatusCache[targetUserId] = FollowStatus(
           isFollowing: true,
           isFollowedBy: status.isFollowedBy,

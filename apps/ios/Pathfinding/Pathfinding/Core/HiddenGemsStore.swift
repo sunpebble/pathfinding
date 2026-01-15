@@ -224,7 +224,7 @@ final class HiddenGemsStore {
       let result = try await HiddenGemsAPIClient.shared.voteOnSubmission(poiId: poiId, voteType: voteType)
       logger.info("Vote \(result.action): \(result.voteType)")
       // Update local state
-      if let index = userSubmissions.firstIndex(where: { $0.id == poiId }) {
+      if userSubmissions.firstIndex(where: { $0.id == poiId }) != nil {
         await fetchUserSubmissions() // Refresh to get updated counts
       }
       return true

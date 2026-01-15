@@ -606,9 +606,9 @@ final class CloudKitSyncManager {
   private func itineraryFromRecord(_ record: CKRecord) -> SavedItinerary? {
     guard let idString = record[CloudKitField.id] as? String,
           let id = UUID(uuidString: idString),
-          let blogId = record[CloudKitField.blogId] as? String,
+          record[CloudKitField.blogId] is String,
           let title = record[CloudKitField.title] as? String,
-          let savedAt = record[CloudKitField.savedAt] as? Date
+          record[CloudKitField.savedAt] is Date
     else {
       return nil
     }
@@ -624,28 +624,24 @@ final class CloudKitSyncManager {
       days = (try? JSONDecoder().decode([AiDay].self, from: daysData)) ?? []
     }
 
-    // Decode tips
-    var aiTips: [String]?
+    // Decode tips (reserved for future use)
     if let tipsData = record[CloudKitField.aiTipsData] as? Data {
-      aiTips = try? JSONDecoder().decode([String].self, from: tipsData)
+      _ = try? JSONDecoder().decode([String].self, from: tipsData)
     }
 
-    // Decode image URLs
-    var imageUrls: [String]?
+    // Decode image URLs (reserved for future use)
     if let urlsData = record[CloudKitField.imageUrlsData] as? Data {
-      imageUrls = try? JSONDecoder().decode([String].self, from: urlsData)
+      _ = try? JSONDecoder().decode([String].self, from: urlsData)
     }
 
-    // Decode original author
-    var originalAuthor: SavedItineraryOriginalAuthor?
+    // Decode original author (reserved for future use)
     if let authorData = record[CloudKitField.originalAuthorData] as? Data {
-      originalAuthor = try? JSONDecoder().decode(SavedItineraryOriginalAuthor.self, from: authorData)
+      _ = try? JSONDecoder().decode(SavedItineraryOriginalAuthor.self, from: authorData)
     }
 
-    // Decode selected days
-    var selectedDays: [Int]?
+    // Decode selected days (reserved for future use)
     if let daysData = record[CloudKitField.selectedDaysData] as? Data {
-      selectedDays = try? JSONDecoder().decode([Int].self, from: daysData)
+      _ = try? JSONDecoder().decode([Int].self, from: daysData)
     }
 
     // Create itinerary using manual initialization

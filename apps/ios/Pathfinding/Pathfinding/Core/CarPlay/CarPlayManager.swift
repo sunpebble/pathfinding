@@ -367,7 +367,7 @@ final class CarPlayManager: NSObject {
 
   private func showPOIList() {
     guard let itinerary = currentItinerary,
-      let day = itinerary.days.first(where: { $0.dayNumber == currentDay })
+      itinerary.days.first(where: { $0.dayNumber == currentDay }) != nil
     else { return }
 
     showPOIListForDay(currentDay, in: itinerary)
@@ -399,7 +399,7 @@ final class CarPlayManager: NSObject {
   private func updateTripInfo(for poi: AiPoi) {
     guard let lat = poi.latitude, let lng = poi.longitude else { return }
 
-    let primaryText = CPTravelEstimates(
+    _ = CPTravelEstimates(
       distanceRemaining: Measurement(value: 0, unit: UnitLength.meters),
       timeRemaining: 0
     )

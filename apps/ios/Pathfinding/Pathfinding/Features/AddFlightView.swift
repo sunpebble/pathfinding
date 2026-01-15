@@ -175,7 +175,7 @@ struct AddFlightView: View {
         VStack(spacing: 4) {
           Image(systemName: "airplane")
             .foregroundStyle(DesignTokens.Colors.accent)
-          if let duration = flight.duration {
+          if flight.duration != nil {
             Text(flight.durationFormatted)
               .font(.caption2)
               .foregroundStyle(.secondary)

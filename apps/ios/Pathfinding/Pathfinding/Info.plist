@@ -120,7 +120,7 @@
     <key>NSMicrophoneUsageDescription</key>
     <string>Pathfinding 需要访问麦克风以进行语音输入和录制语音备忘录。</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Pathfinding 需要语音识别权限以将您的语音转换为文字，用于语音规划行程和添加景点。</string>
+    <string>Pathfinding 需要语音识别权限以将您的语音转换为文字,用于语音规划行程和添加景点。</string>
     <key>NSCalendarsUsageDescription</key>
     <string>Pathfinding 需要访问您的日历以同步行程安排和提醒。</string>
     <key>NSCalendarsFullAccessUsageDescription</key>

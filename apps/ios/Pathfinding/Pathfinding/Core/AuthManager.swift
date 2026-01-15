@@ -111,7 +111,7 @@ actor AuthManager {
   func signInWithOAuth(provider: OAuthProvider) async throws {
     // OAuth flow typically requires web-based authentication
     // This is a placeholder for the OAuth URL that would be opened in a web view
-    let url = convexURL.appendingPathComponent("api/auth/signin/\(provider.rawValue)")
+    _ = convexURL.appendingPathComponent("api/auth/signin/\(provider.rawValue)")
 
     logger.info("Initiating OAuth sign in with \(provider.rawValue)")
 

@@ -5,7 +5,7 @@ import CoreLocation
 final class OfflineMapStorage: @unchecked Sendable {
   // MARK: - Singleton
 
-  nonisolated(unsafe) static let shared = OfflineMapStorage()
+  static let shared = OfflineMapStorage()
 
   // MARK: - Properties
 

@@ -463,7 +463,9 @@ struct VideoEditorView: View {
 
   private func setupTimeObserver() {
     player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.1, preferredTimescale: 600), queue: .main) { time in
-      currentTime = time.seconds
+      Task { @MainActor in
+        currentTime = time.seconds
+      }
     }
   }
 

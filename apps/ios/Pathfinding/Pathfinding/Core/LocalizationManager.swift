@@ -87,13 +87,24 @@ final class LocalizationManager {
 
   static let shared = LocalizationManager()
 
+  /// Thread-safe bundle for non-MainActor access (used by String.localized)
+  nonisolated(unsafe) private static var _currentBundle: Bundle = .main
+
+  /// Thread-safe getter for current bundle
+  nonisolated static var currentBundle: Bundle { _currentBundle }
+
   // MARK: - Properties
 
   /// Current language selected by the user
   private(set) var currentLanguage: AppLanguage = .system
 
   /// Bundle for loading localized strings
-  private var localizedBundle: Bundle = .main
+  private var localizedBundle: Bundle = .main {
+    didSet {
+      // Keep the static bundle in sync
+      LocalizationManager._currentBundle = localizedBundle
+    }
+  }
 
   /// Key for UserDefaults storage
   private let languageKey = "app_language"
@@ -208,14 +219,14 @@ extension Notification.Name {
 // MARK: - String Extension for Localization
 
 extension String {
-  /// Returns the localized version of this string
+  /// Returns the localized version of this string using the current language bundle
   var localized: String {
-    NSLocalizedString(self, comment: "")
+    LocalizationManager.currentBundle.localizedString(forKey: self, value: nil, table: "Localizable")
   }
 
   /// Returns the localized version of this string with format arguments
   func localized(_ arguments: CVarArg...) -> String {
-    let format = NSLocalizedString(self, comment: "")
+    let format = LocalizationManager.currentBundle.localizedString(forKey: self, value: nil, table: "Localizable")
     return String(format: format, arguments: arguments)
   }
 }

@@ -20,7 +20,7 @@ final class CalendarManager {
 
   /// Whether calendar access is authorized
   var isAuthorized: Bool {
-    authorizationStatus == .fullAccess || authorizationStatus == .authorized
+    authorizationStatus == .fullAccess || authorizationStatus == .writeOnly
   }
 
   /// Available calendars for syncing

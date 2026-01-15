@@ -426,14 +426,14 @@ final class TravelNoteStore {
 
   /// Helper to update like count in note lists
   private func updateNoteLikeCount(noteId: String, liked: Bool) {
-    let delta = liked ? 1 : -1
+    _ = liked ? 1 : -1
 
-    if let index = publicNotes.firstIndex(where: { $0.id == noteId }) {
+    if publicNotes.firstIndex(where: { $0.id == noteId }) != nil {
       // Note: TravelNote is a struct, we need to create a new one
       // This is a simplified approach - in production you might want mutable models
     }
 
-    if let index = myNotes.firstIndex(where: { $0.id == noteId }) {
+    if myNotes.firstIndex(where: { $0.id == noteId }) != nil {
       // Same as above
     }
 
