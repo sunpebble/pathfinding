@@ -260,7 +260,7 @@ private struct TimezoneColumn: View {
             .foregroundStyle(DesignTokens.Colors.accent)
         }
 
-        Text(isHome ? "出发地" : "目的地")
+        Text(isHome ? "timezone.departure".localized : "timezone.destination".localized)
           .font(.caption)
           .foregroundStyle(.secondary)
       }

@@ -118,7 +118,7 @@ struct HomeClockCard: View {
         Image(systemName: "house.fill")
           .foregroundStyle(DesignTokens.Colors.accent)
 
-        Text("主时区")
+        Text("timezone.home_zone".localized)
           .font(.subheadline)
           .fontWeight(.medium)
           .foregroundStyle(.secondary)

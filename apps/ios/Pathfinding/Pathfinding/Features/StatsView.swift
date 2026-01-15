@@ -126,7 +126,7 @@ struct QuickStatsSection: View {
           icon: "airplane",
           title: "stats.trips_count".localized,
           value: "\(stats?.totalTrips ?? 0)",
-          color: .indigo
+          color: DesignTokens.Colors.accent
         )
 
         QuickStatCard(

@@ -383,3 +383,8 @@
 "itinerary.poi_navigate" = "Navigate";
 "itinerary.poi_favorite" = "Favorite";
 "itinerary.poi_detail" = "POI Details";
+
+// MARK: - Timezone
+"timezone.home_zone" = "Home Timezone";
+"timezone.departure" = "Departure";
+"timezone.destination" = "Destination";

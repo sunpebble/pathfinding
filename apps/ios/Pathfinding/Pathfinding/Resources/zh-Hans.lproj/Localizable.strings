@@ -383,3 +383,8 @@
 "itinerary.poi_navigate" = "导航";
 "itinerary.poi_favorite" = "收藏";
 "itinerary.poi_detail" = "景点详情";
+
+// MARK: - Timezone
+"timezone.home_zone" = "主时区";
+"timezone.departure" = "出发地";
+"timezone.destination" = "目的地";
