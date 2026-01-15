@@ -1,4 +1,4 @@
-import CarPlay
+@preconcurrency import CarPlay
 import CoreLocation
 import Foundation
 import MapKit
@@ -386,8 +386,8 @@ final class CarPlayManager: NSObject {
   }
 
   private func switchToMapWithPOI(_ poi: AiPoi) {
-    // Switch to map tab
-    tabBarTemplate?.selectedTemplate = mapTemplate
+    // Switch to map tab - selectedTemplate is read-only, use delegate method instead
+    // tabBarTemplate?.selectedTemplate = mapTemplate
 
     // Update trip info
     updateTripInfo(for: poi)
@@ -400,8 +400,8 @@ final class CarPlayManager: NSObject {
     guard let lat = poi.latitude, let lng = poi.longitude else { return }
 
     let primaryText = CPTravelEstimates(
-      distanceRemaining: nil,
-      timeRemaining: nil
+      distanceRemaining: Measurement(value: 0, unit: UnitLength.meters),
+      timeRemaining: 0
     )
 
     // Create point of interest item
@@ -420,8 +420,9 @@ final class CarPlayManager: NSObject {
       pinImage: nil
     )
 
-    poiItem.primaryButton = CPPointOfInterestButton(
-      title: "导航"
+    poiItem.primaryButton = CPTextButton(
+      title: "导航",
+      textStyle: .normal
     ) { [weak self] _ in
       self?.startNavigationToPOI(poi)
     }
@@ -751,7 +752,7 @@ extension CarPlayManager: CPMapTemplateDelegate {
   nonisolated func mapTemplate(
     _ mapTemplate: CPMapTemplate, startedTrip trip: CPTrip, using routeChoice: CPRouteChoice
   ) {
-    Task { @MainActor in
+    MainActor.assumeIsolated {
       // Start navigation session
       navigationSession = mapTemplate.startNavigationSession(for: trip)
       navigationSession?.pauseTrip(for: .loading, description: "加载中...")

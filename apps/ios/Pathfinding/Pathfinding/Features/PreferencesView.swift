@@ -19,19 +19,21 @@ struct PreferencesView: View {
 
       // MARK: - Top Categories
       if !preferenceStore.topCategories.isEmpty {
-        Section("preferences.learned_interests".localized) {
+        Section {
           ForEach(preferenceStore.topCategories) { categoryScore in
             if let category = categoryScore.preferenceCategory {
               CategoryScoreRow(category: category, score: categoryScore.normalized)
             }
           }
+        } header: {
+          Text("preferences.learned_interests".localized)
         } footer: {
           Text("preferences.learned_interests_footer".localized)
         }
       }
 
       // MARK: - Explicit Preferences
-      Section("preferences.your_preferences".localized) {
+      Section {
         NavigationLink {
           CategorySelectionView()
         } label: {
@@ -54,10 +56,12 @@ struct PreferencesView: View {
             }
           }
         }
+      } header: {
+        Text("preferences.your_preferences".localized)
       }
 
       // MARK: - Travel Style
-      Section("preferences.travel_style".localized) {
+      Section {
         NavigationLink {
           TravelStyleSelectionView()
         } label: {
@@ -90,10 +94,12 @@ struct PreferencesView: View {
             iconColor: .orange
           )
         }
+      } header: {
+        Text("preferences.travel_style".localized)
       }
 
       // MARK: - Additional Preferences
-      Section("preferences.additional".localized) {
+      Section {
         Toggle(isOn: Binding(
           get: { preferenceStore.preferences?.preferLocalFood ?? true },
           set: { newValue in
@@ -126,6 +132,8 @@ struct PreferencesView: View {
         )) {
           Label("preferences.accessibility".localized, systemImage: "figure.roll")
         }
+      } header: {
+        Text("preferences.additional".localized)
       }
 
       // MARK: - Reset Section

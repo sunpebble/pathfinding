@@ -35,7 +35,7 @@ struct QASearchView: View {
       }
       .onChange(of: searchQuery) { _, newValue in
         if newValue.isEmpty {
-          store.searchResults = []
+          store.clearSearchResults()
         }
       }
       .sheet(item: $selectedQuestion) { question in

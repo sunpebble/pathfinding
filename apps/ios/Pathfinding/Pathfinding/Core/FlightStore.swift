@@ -128,8 +128,11 @@ final class FlightStore {
       let response = try await APIClient.shared.createFlightBooking(input)
       // Refresh bookings to get the new one with full data
       await loadBookings(forceRefresh: true)
-      logger.info("Created flight booking: \(response.bookingId)")
-      return bookings.first { $0.id == response.bookingId }
+      if let bookingId = response.data?.bookingId {
+        logger.info("Created flight booking: \(bookingId)")
+        return bookings.first { $0.id == bookingId }
+      }
+      return nil
     } catch {
       logger.error("Failed to create booking: \(error.localizedDescription)")
       errorMessage = error.localizedDescription

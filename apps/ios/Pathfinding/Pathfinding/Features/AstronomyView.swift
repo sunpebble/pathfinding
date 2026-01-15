@@ -175,20 +175,20 @@ struct AstronomyView: View {
       VStack(spacing: DesignTokens.Spacing.sm) {
         twilightRow(
           title: "民用曙暮光",
-          start: sunTimes.civilTwilightBegin,
-          end: sunTimes.civilTwilightEnd,
+          start: sunTimes.civilDawn,
+          end: sunTimes.civilDusk,
           color: .blue
         )
         twilightRow(
           title: "航海曙暮光",
-          start: sunTimes.nauticalTwilightBegin,
-          end: sunTimes.nauticalTwilightEnd,
+          start: sunTimes.nauticalDawn,
+          end: sunTimes.nauticalDusk,
           color: .indigo
         )
         twilightRow(
           title: "天文曙暮光",
-          start: sunTimes.astronomicalTwilightBegin,
-          end: sunTimes.astronomicalTwilightEnd,
+          start: sunTimes.astronomicalDawn,
+          end: sunTimes.astronomicalDusk,
           color: .purple
         )
       }
@@ -232,7 +232,7 @@ struct AstronomyView: View {
           .font(.system(size: 64))
 
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-          Text(moonPhase.phaseName)
+          Text(moonPhase.phase.displayName)
             .font(.title3)
             .fontWeight(.semibold)
 
@@ -431,17 +431,15 @@ struct AstronomyView: View {
           .lineLimit(2)
 
         HStack {
-          Text(formatEventDate(event.date))
+          Text(formatEventDate(event.startDate))
             .font(.caption2)
             .foregroundStyle(.blue)
 
-          if let visibility = event.visibility {
-            Text("·")
-              .foregroundStyle(.secondary)
-            Text(visibility)
-              .font(.caption2)
-              .foregroundStyle(.secondary)
-          }
+          Text("·")
+            .foregroundStyle(.secondary)
+          Text(event.visibility.displayName)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
         }
       }
 
@@ -504,15 +502,15 @@ struct AstronomyView: View {
         .foregroundStyle(bortleColor(spot.bortleScale))
 
         // Light pollution
-        Text(spot.lightPollution)
+        Text(spot.lightPollutionLevel.displayName)
           .font(.caption)
           .foregroundStyle(.secondary)
 
         Spacer()
 
-        // Best months
-        if let months = spot.bestMonthsDescription {
-          Text(months)
+        // Best seasons
+        if let seasons = spot.bestSeasonsDescription {
+          Text(seasons)
             .font(.caption2)
             .foregroundStyle(.secondary)
             .lineLimit(1)

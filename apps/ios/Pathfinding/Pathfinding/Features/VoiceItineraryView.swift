@@ -169,7 +169,7 @@ struct VoiceItineraryView: View {
               Text("添加")
             }
             .font(.subheadline)
-            .foregroundStyle(.accentColor)
+            .foregroundStyle(Color.accentColor)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(Color.accentColor.opacity(0.1))
@@ -302,7 +302,7 @@ struct VoiceItineraryView: View {
             }
             Spacer()
             Image(systemName: "plus.circle.fill")
-              .foregroundStyle(.accentColor)
+              .foregroundStyle(Color.accentColor)
           }
           .padding()
           .background(Color(.secondarySystemBackground))
@@ -699,7 +699,7 @@ private struct QuickActionButton: View {
       VStack(spacing: 4) {
         Image(systemName: icon)
           .font(.title3)
-          .foregroundStyle(.accentColor)
+          .foregroundStyle(Color.accentColor)
         Text(title)
           .font(.caption2)
           .foregroundStyle(.secondary)
@@ -722,7 +722,7 @@ struct CommandHint: View {
       Text(command)
         .font(.caption)
         .fontWeight(.medium)
-        .foregroundStyle(.accentColor)
+        .foregroundStyle(Color.accentColor)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color.accentColor.opacity(0.1))

@@ -142,7 +142,7 @@ final class FavoriteStore {
       }
 
       likesPage = response.meta?.page ?? page
-      likesTotalPages = response.meta?.totalPages ?? 1
+      likesTotalPages = (response.meta?.total ?? 0) / (response.meta?.limit ?? 20) + 1
       totalLikesCount = response.meta?.total ?? likedItineraries.count
 
       logger.info("Fetched \(response.data.count) liked itineraries")
@@ -355,7 +355,7 @@ final class FavoriteStore {
       }
 
       favoritesPage = response.meta?.page ?? page
-      favoritesTotalPages = response.meta?.totalPages ?? 1
+      favoritesTotalPages = (response.meta?.total ?? 0) / (response.meta?.limit ?? 20) + 1
       totalFavoritesCount = response.meta?.total ?? favoritedItineraries.count
 
       logger.info("Fetched \(response.data.count) favorited itineraries")

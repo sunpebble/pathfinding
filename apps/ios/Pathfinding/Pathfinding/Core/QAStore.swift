@@ -319,9 +319,9 @@ final class QAStore {
     isSubmitting = true
 
     do {
-      let _: [String: Any] = try await apiClient.post(
+      let _: EmptyResponse = try await apiClient.post(
         path: "pois/questions/\(questionId)/close",
-        body: [:]
+        body: [String: String]()
       )
 
       // Refresh question
@@ -344,9 +344,9 @@ final class QAStore {
     isSubmitting = true
 
     do {
-      let _: [String: Any] = try await apiClient.post(
+      let _: EmptyResponse = try await apiClient.post(
         path: "pois/questions/\(questionId)/reopen",
-        body: [:]
+        body: [String: String]()
       )
 
       // Refresh question
@@ -370,12 +370,12 @@ final class QAStore {
     errorMessage = nil
 
     do {
-      var body: [String: Any] = ["reason": reason.rawValue]
+      var body: [String: String] = ["reason": reason.rawValue]
       if let description, !description.isEmpty {
         body["description"] = description
       }
 
-      let _: [String: Any] = try await apiClient.post(
+      let _: EmptyResponse = try await apiClient.post(
         path: "pois/questions/\(questionId)/report",
         body: body
       )
@@ -578,9 +578,9 @@ final class QAStore {
     isSubmitting = true
 
     do {
-      let _: [String: Any] = try await apiClient.post(
+      let _: EmptyResponse = try await apiClient.post(
         path: "pois/answers/\(answerId)/best",
-        body: [:]
+        body: [String: String]()
       )
 
       // Refresh answers and question
@@ -628,12 +628,12 @@ final class QAStore {
     errorMessage = nil
 
     do {
-      var body: [String: Any] = ["reason": reason.rawValue]
+      var body: [String: String] = ["reason": reason.rawValue]
       if let description, !description.isEmpty {
         body["description"] = description
       }
 
-      let _: [String: Any] = try await apiClient.post(
+      let _: EmptyResponse = try await apiClient.post(
         path: "pois/answers/\(answerId)/report",
         body: body
       )
@@ -650,6 +650,11 @@ final class QAStore {
   }
 
   // MARK: - Helpers
+
+  /// Clear search results
+  func clearSearchResults() {
+    searchResults = []
+  }
 
   /// Clear all data
   func clear() {

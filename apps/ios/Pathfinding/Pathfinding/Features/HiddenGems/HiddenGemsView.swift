@@ -249,7 +249,7 @@ struct HiddenGemsView: View {
     }
     .listRowSeparator(.hidden)
     .listRowBackground(Color.clear)
-    .listRowInsets(EdgeInsets(horizontal: DesignTokens.Spacing.md, vertical: 0))
+    .listRowInsets(EdgeInsets(top: 0, leading: DesignTokens.Spacing.md, bottom: 0, trailing: DesignTokens.Spacing.md))
   }
 
   private func popularityColor(_ level: PopularityLevel) -> Color {

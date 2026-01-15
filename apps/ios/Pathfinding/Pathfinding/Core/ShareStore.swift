@@ -104,9 +104,8 @@ final class ShareStore {
       )
 
       let bodyData = try JSONEncoder().encode(request)
-      let body = try JSONSerialization.jsonObject(with: bodyData) as? [String: Any] ?? [:]
 
-      let data = try await APIClient.shared.postData(endpoint: "share/links", body: body)
+      let data = try await APIClient.shared.postDataWithBody(endpoint: "share/links", bodyData: bodyData)
       let response = try JSONDecoder().decode(CreateShareLinkResponse.self, from: data)
 
       if let result = response.data {

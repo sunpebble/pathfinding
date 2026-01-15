@@ -137,7 +137,21 @@ struct FlightDetailView: View {
         // Status indicator
         if isRefreshingStatus {
           ProgressView()
-        } else if let status = flightStatus ?? currentBooking.flight?.status {
+        } else if let statusData = flightStatus {
+          VStack(alignment: .trailing, spacing: 4) {
+            StatusBadge(
+              text: statusData.status.displayName,
+              color: statusColor(for: statusData.status),
+              icon: statusData.status.icon
+            )
+
+            if let gate = statusData.gate ?? currentBooking.flight?.departureGate {
+              Text("登机口: \(gate)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+        } else if let status = currentBooking.flight?.status {
           VStack(alignment: .trailing, spacing: 4) {
             StatusBadge(
               text: status.displayName,
@@ -145,7 +159,7 @@ struct FlightDetailView: View {
               icon: status.icon
             )
 
-            if let gate = flightStatus?.gate ?? currentBooking.flight?.departureGate {
+            if let gate = currentBooking.flight?.departureGate {
               Text("登机口: \(gate)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -236,7 +250,7 @@ struct FlightDetailView: View {
     }
     .padding(DesignTokens.Spacing.lg)
     .background(DesignTokens.Colors.cardBackground)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+    .clipShape(RoundedRectangle(cornerRadius: CGFloat(DesignTokens.Radius.lg)))
   }
 
   // MARK: - Status Section

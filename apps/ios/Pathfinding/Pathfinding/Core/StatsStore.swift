@@ -219,6 +219,12 @@ extension APIClient {
   }
 
   func postData(endpoint: String, body: [String: Any]) async throws -> Data {
+    // Convert to Data on the calling side to avoid Sendable issues
+    let bodyData = try JSONSerialization.data(withJSONObject: body)
+    return try await postDataWithBody(endpoint: endpoint, bodyData: bodyData)
+  }
+
+  func postDataWithBody(endpoint: String, bodyData: Data) async throws -> Data {
     let url = URL(string: AppConfig.apiBaseURL)!
       .appendingPathComponent("v1")
       .appendingPathComponent(endpoint)
@@ -231,7 +237,7 @@ extension APIClient {
       request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     }
 
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
+    request.httpBody = bodyData
 
     let (data, response) = try await URLSession.shared.data(for: request)
 

@@ -268,27 +268,30 @@ extension ARNavigationManager: CLLocationManagerDelegate {
 
   nonisolated func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
     guard newHeading.headingAccuracy >= 0 else { return }
+    let heading = newHeading.trueHeading
 
     Task { @MainActor in
-      deviceHeading = newHeading.trueHeading
+      deviceHeading = heading
       updatePoiPositions()
     }
   }
 
   nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    let errorMessage = error.localizedDescription
     Task { @MainActor in
-      NSLog("[AR] Location error: \(error.localizedDescription)")
-      state = .error(message: "定位失败: \(error.localizedDescription)")
+      NSLog("[AR] Location error: \(errorMessage)")
+      state = .error(message: "定位失败: \(errorMessage)")
     }
   }
 
   nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    let status = manager.authorizationStatus
     Task { @MainActor in
-      switch manager.authorizationStatus {
+      switch status {
       case .authorizedWhenInUse, .authorizedAlways:
         NSLog("[AR] Location authorized")
-        manager.startUpdatingLocation()
-        manager.startUpdatingHeading()
+        locationManager?.startUpdatingLocation()
+        locationManager?.startUpdatingHeading()
       case .denied, .restricted:
         state = .error(message: "需要位置权限才能使用 AR 导航")
       case .notDetermined:

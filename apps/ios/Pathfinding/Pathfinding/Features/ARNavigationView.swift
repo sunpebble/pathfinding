@@ -536,50 +536,7 @@ struct ARPoiListSheet: View {
     NavigationStack {
       List {
         ForEach(Array(pois.enumerated()), id: \.element.id) { index, poi in
-          Button {
-            onSelect(index)
-          } label: {
-            HStack(spacing: DesignTokens.Spacing.md) {
-              // Index
-              ZStack {
-                Circle()
-                  .fill(index == currentIndex ? Color.accentColor : Color(.systemGray4))
-                  .frame(width: 32, height: 32)
-
-                Text("\(index + 1)")
-                  .font(.subheadline)
-                  .fontWeight(.bold)
-                  .foregroundStyle(index == currentIndex ? .white : .primary)
-              }
-
-              // Info
-              VStack(alignment: .leading, spacing: 4) {
-                Text(poi.name)
-                  .font(.subheadline)
-                  .fontWeight(.medium)
-                  .foregroundStyle(.primary)
-
-                HStack {
-                  if let type = poi.type {
-                    Text(type)
-                      .font(.caption)
-                      .foregroundStyle(.secondary)
-                  }
-
-                  Spacer()
-
-                  Text(poi.formattedDistance)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-              }
-
-              if index == currentIndex {
-                Image(systemName: "checkmark.circle.fill")
-                  .foregroundStyle(.accentColor)
-              }
-            }
-          }
+          poiRow(index: index, poi: poi)
         }
       }
       .navigationTitle("景点列表")
@@ -591,6 +548,53 @@ struct ARPoiListSheet: View {
       }
     }
     .presentationDetents([.medium, .large])
+  }
+
+  private func poiRow(index: Int, poi: ARPoi) -> some View {
+    Button {
+      onSelect(index)
+    } label: {
+      HStack(spacing: DesignTokens.Spacing.md) {
+        // Index
+        ZStack {
+          Circle()
+            .fill(index == currentIndex ? Color.accentColor : Color(.systemGray4))
+            .frame(width: 32, height: 32)
+
+          Text("\(index + 1)")
+            .font(.subheadline)
+            .fontWeight(.bold)
+            .foregroundStyle(index == currentIndex ? .white : .primary)
+        }
+
+        // Info
+        VStack(alignment: .leading, spacing: 4) {
+          Text(poi.name)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundStyle(.primary)
+
+          HStack {
+            if let type = poi.type {
+              Text(type)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Text(poi.formattedDistance)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
+        }
+
+        if index == currentIndex {
+          Image(systemName: "checkmark.circle.fill")
+            .foregroundStyle(Color.accentColor)
+        }
+      }
+    }
   }
 }
 

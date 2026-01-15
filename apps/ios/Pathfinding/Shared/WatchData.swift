@@ -9,7 +9,7 @@ struct WatchItinerary: Codable, Identifiable, Hashable {
   let title: String
   let destination: String?
   let date: Date
-  let pois: [WatchPOI]
+  var pois: [WatchPOI]
 
   /// Create from SavedItinerary for today's date
   init(id: String, title: String, destination: String?, date: Date, pois: [WatchPOI]) {

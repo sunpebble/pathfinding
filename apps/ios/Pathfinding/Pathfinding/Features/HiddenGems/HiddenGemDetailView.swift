@@ -52,19 +52,27 @@ struct HiddenGemDetailView: View {
       }
     }
     .navigationBarTitleDisplayMode(.inline)
-    .toolbar {
-      ToolbarItemGroup(placement: .topBarTrailing) {
+    .toolbar(content: {
+      ToolbarItem(placement: .topBarTrailing) {
         Button {
           showingRatingSheet = true
         } label: {
           Image(systemName: "star.bubble")
         }
-
-        ShareLink(item: gem.name) {
+      }
+      ToolbarItem(placement: .topBarTrailing) {
+        Button {
+          let url = URL(string: "https://pathfinding.app/gem/\(gem.id)")!
+          let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+             let rootVC = windowScene.windows.first?.rootViewController {
+            rootVC.present(activityVC, animated: true)
+          }
+        } label: {
           Image(systemName: "square.and.arrow.up")
         }
       }
-    }
+    })
     .sheet(isPresented: $showingRatingSheet) {
       RateHiddenGemSheet(gem: gem, store: store)
     }

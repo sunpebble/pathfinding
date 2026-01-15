@@ -448,9 +448,14 @@ struct VideoShareSheet: View {
   }
 
   private func saveToPhotos() {
-    VideoRecordingManager.shared.saveToPhotoLibrary(video) { success in
-      if success {
-        dismiss()
+    Task {
+      do {
+        try await VideoRecordingManager.shared.saveToPhotoLibrary(video)
+        await MainActor.run {
+          dismiss()
+        }
+      } catch {
+        // Handle error silently
       }
     }
   }
@@ -500,10 +505,7 @@ struct VideoInfoSheet: View {
           LabeledContent("录制时间", value: video.formattedDate)
 
           if let updatedAt = video.updatedAt {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .short
-            LabeledContent("修改时间", value: formatter.string(from: updatedAt))
+            LabeledContent("修改时间", value: formatUpdatedDate(updatedAt))
           }
         }
 
@@ -562,6 +564,13 @@ struct VideoInfoSheet: View {
         }
       }
     }
+  }
+
+  private func formatUpdatedDate(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    formatter.timeStyle = .short
+    return formatter.string(from: date)
   }
 }
 

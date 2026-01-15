@@ -37,7 +37,7 @@ final class TimezoneStore {
   var errorMessage: String?
 
   /// Timer for updating clocks
-  private var updateTimer: Timer?
+  nonisolated(unsafe) private var updateTimer: Timer?
 
   /// Current time (updated every second)
   var currentTime = Date()
@@ -362,8 +362,11 @@ final class TimezoneStore {
 
   private func patchUpdateClockLabel(cityId: String, label: String?) async throws -> String {
     let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/world-clock/cities/\(cityId)")
-    let body: [String: Any?] = ["label": label]
-    let data = try await apiClient.patchData(url: url, body: body.compactMapValues { $0 })
+    var body: [String: Any] = [:]
+    if let label = label {
+      body["label"] = label
+    }
+    let data = try await apiClient.patchData(url: url, body: body)
     let response = try JSONDecoder().decode(TimezoneIdResponse.self, from: data)
     return response.data.id
   }
@@ -475,7 +478,7 @@ extension APIClient {
   }
 
   /// PUT data to URL
-  func putData(url: URL, body: [String: Any]) async throws -> Data {
+  func putData(url: URL, body: sending [String: Any]) async throws -> Data {
     var request = URLRequest(url: url)
     request.httpMethod = "PUT"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -497,7 +500,7 @@ extension APIClient {
   }
 
   /// PATCH data to URL
-  func patchData(url: URL, body: [String: Any]) async throws -> Data {
+  func patchData(url: URL, body: sending [String: Any]) async throws -> Data {
     var request = URLRequest(url: url)
     request.httpMethod = "PATCH"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")

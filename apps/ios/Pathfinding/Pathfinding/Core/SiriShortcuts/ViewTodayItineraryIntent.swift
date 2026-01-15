@@ -6,11 +6,11 @@ import Foundation
 /// Intent to view today's itinerary via Siri
 @available(iOS 16.0, *)
 struct ViewTodayItineraryIntent: AppIntent {
-  static var title: LocalizedStringResource = "查看今日行程"
-  static var description = IntentDescription("显示今天的旅行行程安排")
+  nonisolated(unsafe) static var title: LocalizedStringResource = "查看今日行程"
+  nonisolated(unsafe) static var description = IntentDescription("显示今天的旅行行程安排")
 
   /// Opens the app when executed
-  static var openAppWhenRun: Bool = true
+  nonisolated(unsafe) static var openAppWhenRun: Bool = true
 
   @MainActor
   func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -63,8 +63,8 @@ struct ViewTodayItineraryIntent: AppIntent {
 /// Entity representing today's itinerary for Siri
 @available(iOS 16.0, *)
 struct TodayItineraryEntity: AppEntity {
-  static var typeDisplayRepresentation: TypeDisplayRepresentation = "今日行程"
-  static var defaultQuery = TodayItineraryQuery()
+  nonisolated(unsafe) static var typeDisplayRepresentation: TypeDisplayRepresentation = "今日行程"
+  nonisolated(unsafe) static var defaultQuery = TodayItineraryQuery()
 
   var id: String
   var title: String

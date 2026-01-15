@@ -101,7 +101,7 @@ struct MyFavoritesView: View {
       .padding(.horizontal, DesignTokens.Spacing.md)
       .padding(.vertical, DesignTokens.Spacing.sm)
     }
-    .background(DesignTokens.Colors.backgroundPrimary)
+    .background(DesignTokens.Colors.background)
   }
 
   private func selectCollection(_ collectionId: String?) {

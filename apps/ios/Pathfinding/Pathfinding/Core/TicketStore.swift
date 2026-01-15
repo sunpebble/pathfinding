@@ -107,11 +107,11 @@ final class TicketStore {
     isLoadingReminders = true
 
     do {
-      reminders = try await APIClient.shared.fetchTicketReminders(
+      self.reminders = try await APIClient.shared.fetchTicketReminders(
         includeTriggered: includeTriggered,
         limit: limit
       )
-      logger.info("Fetched \(reminders.count) reminders")
+      logger.info("Fetched \(self.reminders.count) reminders")
     } catch {
       logger.error("Failed to fetch reminders: \(error.localizedDescription)")
     }
@@ -122,8 +122,8 @@ final class TicketStore {
   /// Fetch upcoming reminders
   func fetchUpcomingReminders(days: Int = 7) async {
     do {
-      upcomingReminders = try await APIClient.shared.fetchUpcomingReminders(days: days)
-      logger.info("Fetched \(upcomingReminders.count) upcoming reminders")
+      self.upcomingReminders = try await APIClient.shared.fetchUpcomingReminders(days: days)
+      logger.info("Fetched \(self.upcomingReminders.count) upcoming reminders")
     } catch {
       logger.error("Failed to fetch upcoming reminders: \(error.localizedDescription)")
     }
@@ -133,7 +133,7 @@ final class TicketStore {
   func fetchUnreadCount() async {
     do {
       unreadCount = try await APIClient.shared.fetchTicketReminderUnreadCount()
-      logger.info("Unread reminder count: \(unreadCount)")
+      logger.info("Unread reminder count: \(self.unreadCount)")
     } catch {
       logger.error("Failed to fetch unread count: \(error.localizedDescription)")
     }
@@ -290,7 +290,7 @@ final class TicketStore {
           let decoded = try? JSONDecoder().decode([SavedTicket].self, from: data)
     else { return }
     savedTickets = decoded
-    logger.info("Loaded \(savedTickets.count) saved tickets")
+    logger.info("Loaded \(self.savedTickets.count) saved tickets")
   }
 
   /// Persist saved tickets to UserDefaults

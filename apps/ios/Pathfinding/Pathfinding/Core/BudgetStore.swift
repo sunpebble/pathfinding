@@ -1,6 +1,31 @@
 import Foundation
 import OSLog
 
+// MARK: - Request Types
+
+private struct CategoryBudgetInput: Encodable {
+  let categoryId: String
+  let amount: Double
+}
+
+private struct SaveBudgetRequest: Encodable {
+  let userId: String
+  let totalBudget: Double
+  let currency: String
+  let categoryBudgets: [CategoryBudgetInput]
+  let notes: String?
+}
+
+private struct UpdateExpenseRequest: Encodable {
+  let categoryId: String?
+  let amount: Double?
+  let description: String?
+  let date: String?
+  let time: String?
+  let paymentMethod: String?
+  let notes: String?
+}
+
 /// Store for managing budgets and expenses
 @Observable
 @MainActor
@@ -52,9 +77,9 @@ final class BudgetStore {
     errorMessage = nil
 
     do {
-      let _: [String: Any] = try await apiClient.post(
+      let _: EmptyResponse = try await apiClient.post(
         path: "categories/seed",
-        body: [:]
+        body: EmptyBody()
       )
       await fetchCategories()
       logger.info("Seeded default categories")
@@ -67,6 +92,9 @@ final class BudgetStore {
       return false
     }
   }
+
+  private struct EmptyBody: Encodable {}
+  private struct EmptyResponse: Decodable {}
 
   // MARK: - Budget Operations
 
@@ -109,19 +137,18 @@ final class BudgetStore {
     errorMessage = nil
 
     do {
-      var body: [String: Any] = [
-        "userId": userId,
-        "totalBudget": totalBudget,
-        "currency": currency,
-        "categoryBudgets": categoryBudgets.map { ["categoryId": $0.categoryId, "amount": $0.amount] },
-      ]
-      if let notes, !notes.isEmpty {
-        body["notes"] = notes
-      }
+      let budgetInputs = categoryBudgets.map { CategoryBudgetInput(categoryId: $0.categoryId, amount: $0.amount) }
+      let request = SaveBudgetRequest(
+        userId: userId,
+        totalBudget: totalBudget,
+        currency: currency,
+        categoryBudgets: budgetInputs,
+        notes: notes?.isEmpty == false ? notes : nil
+      )
 
-      let _: BudgetUpsertResponse = try await apiClient.put(
+      let _: BudgetUpsertResponse = try await apiClient.putWithBody(
         path: "itineraries/\(itineraryId)/budget",
-        body: body
+        body: request
       )
 
       // Refresh budget after saving
@@ -249,16 +276,31 @@ final class BudgetStore {
   func updateExpense(
     expenseId: String,
     itineraryId: String,
-    updates: [String: Any]
+    categoryId: String?,
+    amount: Double?,
+    description: String?,
+    date: String?,
+    time: String?,
+    paymentMethod: String?,
+    notes: String?
   ) async -> Bool {
     guard !isSubmitting else { return false }
     isSubmitting = true
     errorMessage = nil
 
     do {
-      let _: [String: Bool] = try await apiClient.patch(
+      let request = UpdateExpenseRequest(
+        categoryId: categoryId,
+        amount: amount,
+        description: description,
+        date: date,
+        time: time,
+        paymentMethod: paymentMethod,
+        notes: notes
+      )
+      let _: [String: Bool] = try await apiClient.patchWithBody(
         path: "expenses/\(expenseId)",
-        body: updates
+        body: request
       )
 
       // Refresh expenses

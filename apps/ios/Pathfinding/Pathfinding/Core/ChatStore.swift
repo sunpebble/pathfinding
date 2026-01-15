@@ -140,7 +140,7 @@ final class ChatStore {
   /// Delete a session
   func deleteSession(_ session: ChatSession) async -> Bool {
     do {
-      let _: [String: Any] = try await apiClient.delete(
+      try await apiClient.delete(
         path: "chat/sessions/\(session.id)"
       )
 
@@ -281,7 +281,7 @@ final class ChatStore {
     guard let session = currentSession else { return false }
 
     do {
-      let _: [String: Any] = try await apiClient.delete(
+      try await apiClient.delete(
         path: "chat/sessions/\(session.id)/messages"
       )
 

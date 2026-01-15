@@ -1,6 +1,30 @@
 import Foundation
-import WatchConnectivity
+@preconcurrency import WatchConnectivity
 import Observation
+
+// MARK: - Sendable Dictionary Wrapper
+
+/// A wrapper to make [String: Any] dictionary sendable across actor boundaries
+struct WatchSendableDict: @unchecked Sendable {
+  let value: [String: Any]
+
+  init(_ value: [String: Any]) {
+    self.value = value
+  }
+}
+
+/// A wrapper to make reply handler sendable across actor boundaries
+final class WatchSendableReplyHandler: @unchecked Sendable {
+  let handler: ([String: Any]) -> Void
+
+  init(_ handler: @escaping ([String: Any]) -> Void) {
+    self.handler = handler
+  }
+
+  func reply(_ dict: [String: Any]) {
+    handler(dict)
+  }
+}
 
 // MARK: - WatchConnectivity Manager (Watch Side)
 
@@ -222,15 +246,18 @@ extension WatchSessionManager: WCSessionDelegate {
   // MARK: - Receive Messages
 
   nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+    let wrapped = WatchSendableDict(message)
     Task { @MainActor in
-      handleMessage(message)
+      handleMessage(wrapped.value)
     }
   }
 
   nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+    let wrapped = WatchSendableDict(message)
+    let wrappedHandler = WatchSendableReplyHandler(replyHandler)
     Task { @MainActor in
-      handleMessage(message)
-      replyHandler(["received": true])
+      handleMessage(wrapped.value)
+      wrappedHandler.reply(["received": true])
     }
   }
 
@@ -253,8 +280,9 @@ extension WatchSessionManager: WCSessionDelegate {
   // MARK: - Receive Application Context
 
   nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+    let wrapped = WatchSendableDict(applicationContext)
     Task { @MainActor in
-      loadFromContext(applicationContext)
+      loadFromContext(wrapped.value)
       print("[WatchSession] Received application context update")
     }
   }
@@ -262,8 +290,21 @@ extension WatchSessionManager: WCSessionDelegate {
   // MARK: - Receive User Info
 
   nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+    let wrapped = WatchSendableDict(userInfo)
     Task { @MainActor in
-      handleMessage(userInfo)
+      handleMessage(wrapped.value)
     }
   }
+
+  #if os(iOS)
+  nonisolated func sessionDidBecomeInactive(_ session: WCSession) {
+    print("[WatchSession] Session became inactive")
+  }
+
+  nonisolated func sessionDidDeactivate(_ session: WCSession) {
+    print("[WatchSession] Session deactivated")
+    // Reactivate the session
+    session.activate()
+  }
+  #endif
 }

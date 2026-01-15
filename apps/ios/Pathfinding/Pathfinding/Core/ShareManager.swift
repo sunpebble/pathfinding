@@ -347,7 +347,8 @@ final class ShareManager {
     ]
 
     // Get the presenting view controller
-    let presenter = viewController ?? await getTopViewController()
+    let topVC = await getTopViewController()
+    let presenter = viewController ?? topVC
 
     guard let presenter = presenter else {
       throw ShareError.sharingCancelled

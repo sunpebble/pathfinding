@@ -336,6 +336,7 @@ struct AddFlightView: View {
       specialRequests: specialRequests.isEmpty ? nil : specialRequests,
       baggageAllowance: baggageAllowance.isEmpty ? nil : baggageAllowance,
       frequentFlyerNumber: frequentFlyerNumber.isEmpty ? nil : frequentFlyerNumber,
+      itineraryId: nil,
       notes: notes.isEmpty ? nil : notes
     )
 

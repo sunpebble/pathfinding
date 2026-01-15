@@ -1,8 +1,8 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import Foundation
 import Observation
 import OSLog
-import Speech
+@preconcurrency import Speech
 
 /// Manager for recording, transcribing, and storing voice memos
 @MainActor
@@ -353,7 +353,7 @@ final class VoiceMemoManager {
     if let index = memos.firstIndex(where: { $0.id == memoId }) {
       memos[index].transcription = transcription
       saveMemos()
-      logger.info("Updated transcription for memo: \(memos[index].title)")
+      logger.info("Updated transcription for memo: \(self.memos[index].title)")
     }
   }
 

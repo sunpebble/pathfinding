@@ -1,4 +1,4 @@
-import ActivityKit
+@preconcurrency import ActivityKit
 import Foundation
 
 /// Manager for handling Live Activities in the Pathfinding app
@@ -13,13 +13,13 @@ final class LiveActivityManager {
     // MARK: - Properties
 
     /// Currently active flight activity
-    private(set) var currentFlightActivity: Activity<FlightLiveActivityAttributes>?
+    private(set) var currentFlightActivity: ActivityKit.Activity<FlightLiveActivityAttributes>?
 
     /// Currently active itinerary activity
-    private(set) var currentItineraryActivity: Activity<ItineraryLiveActivityAttributes>?
+    private(set) var currentItineraryActivity: ActivityKit.Activity<ItineraryLiveActivityAttributes>?
 
     /// Currently active navigation activity
-    private(set) var currentNavigationActivity: Activity<NavigationLiveActivityAttributes>?
+    private(set) var currentNavigationActivity: ActivityKit.Activity<NavigationLiveActivityAttributes>?
 
     /// Whether Live Activities are supported on this device
     var isSupported: Bool {
@@ -57,7 +57,7 @@ final class LiveActivityManager {
         scheduledArrival: Int64,
         status: String = "Scheduled",
         statusColor: String = "blue"
-    ) async throws -> Activity<FlightLiveActivityAttributes>? {
+    ) async throws -> ActivityKit.Activity<FlightLiveActivityAttributes>? {
         guard isSupported else {
             print("[LiveActivity] Live Activities not supported on this device")
             return nil
@@ -90,9 +90,9 @@ final class LiveActivityManager {
         )
 
         do {
-            let activity = try Activity.request(
+            let activity = try ActivityKit.Activity<FlightLiveActivityAttributes>.request(
                 attributes: attributes,
-                content: .init(state: initialState, staleDate: nil),
+                content: ActivityContent(state: initialState, staleDate: nil),
                 pushType: nil
             )
             currentFlightActivity = activity
@@ -160,11 +160,12 @@ final class LiveActivityManager {
             lastUpdated: Int64(Date().timeIntervalSince1970 * 1000)
         )
 
-        await activity.end(
+        let activityToEnd = activity
+        currentFlightActivity = nil
+        await activityToEnd.end(
             ActivityContent(state: finalState, staleDate: nil),
             dismissalPolicy: .default
         )
-        currentFlightActivity = nil
         print("[LiveActivity] Ended flight activity")
     }
 
@@ -193,7 +194,7 @@ final class LiveActivityManager {
         currentPoiName: String,
         currentPoiCategory: String? = nil,
         totalItems: Int
-    ) async throws -> Activity<ItineraryLiveActivityAttributes>? {
+    ) async throws -> ActivityKit.Activity<ItineraryLiveActivityAttributes>? {
         guard isSupported else {
             print("[LiveActivity] Live Activities not supported on this device")
             return nil
@@ -226,9 +227,9 @@ final class LiveActivityManager {
         )
 
         do {
-            let activity = try Activity.request(
+            let activity = try ActivityKit.Activity<ItineraryLiveActivityAttributes>.request(
                 attributes: attributes,
-                content: .init(state: initialState, staleDate: nil),
+                content: ActivityContent(state: initialState, staleDate: nil),
                 pushType: nil
             )
             currentItineraryActivity = activity
@@ -306,11 +307,12 @@ final class LiveActivityManager {
             etaMinutes: nil
         )
 
-        await activity.end(
+        let activityToEnd = activity
+        currentItineraryActivity = nil
+        await activityToEnd.end(
             ActivityContent(state: finalState, staleDate: nil),
             dismissalPolicy: .default
         )
-        currentItineraryActivity = nil
         print("[LiveActivity] Ended itinerary activity")
     }
 
@@ -337,7 +339,7 @@ final class LiveActivityManager {
         distanceToDestination: String,
         timeToDestination: String,
         eta: String
-    ) async throws -> Activity<NavigationLiveActivityAttributes>? {
+    ) async throws -> ActivityKit.Activity<NavigationLiveActivityAttributes>? {
         guard isSupported else {
             print("[LiveActivity] Live Activities not supported on this device")
             return nil
@@ -371,9 +373,9 @@ final class LiveActivityManager {
         )
 
         do {
-            let activity = try Activity.request(
+            let activity = try ActivityKit.Activity<NavigationLiveActivityAttributes>.request(
                 attributes: attributes,
-                content: .init(state: initialState, staleDate: nil),
+                content: ActivityContent(state: initialState, staleDate: nil),
                 pushType: nil
             )
             currentNavigationActivity = activity
@@ -449,11 +451,12 @@ final class LiveActivityManager {
             totalSteps: 0
         )
 
-        await activity.end(
+        let activityToEnd = activity
+        currentNavigationActivity = nil
+        await activityToEnd.end(
             ActivityContent(state: finalState, staleDate: nil),
             dismissalPolicy: .default
         )
-        currentNavigationActivity = nil
         print("[LiveActivity] Ended navigation activity")
     }
 
@@ -488,7 +491,7 @@ final class LiveActivityManager {
 extension LiveActivityManager {
     /// Start a flight activity from a FlightInfo object
     @discardableResult
-    func startFlightActivity(from flight: FlightInfo) async throws -> Activity<FlightLiveActivityAttributes>? {
+    func startFlightActivity(from flight: FlightInfo) async throws -> ActivityKit.Activity<FlightLiveActivityAttributes>? {
         try await startFlightActivity(
             flightNumber: flight.flightNumber,
             airline: flight.airline,

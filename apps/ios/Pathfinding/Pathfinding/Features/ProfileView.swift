@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
   @Environment(ThemeManager.self) private var themeManager
-  @Environment(LocalizationManager.self) private var localizationManager
+  @Environment(\.localizationManager) private var localizationManager
   @State private var showAPISettings = false
   @State private var showAbout = false
   @State private var showThemeSettings = false

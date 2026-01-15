@@ -46,7 +46,7 @@ class AppState {
 
 struct ContentView: View {
   @State private var appState = AppState()
-  @Environment(LocalizationManager.self) private var localizationManager
+  @Environment(\.localizationManager) private var localizationManager
 
   var body: some View {
     TabView(selection: $appState.selectedTab) {

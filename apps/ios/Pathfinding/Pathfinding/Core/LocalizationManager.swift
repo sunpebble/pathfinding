@@ -15,7 +15,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
   /// Display name in the language itself
   var displayName: String {
     switch self {
-    case .system: return LocalizationManager.shared.localizedString("language.system")
+    case .system: return NSLocalizedString("language.system", comment: "System language")
     case .chinese: return "简体中文"
     case .english: return "English"
     }
@@ -24,7 +24,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
   /// Native name shown in settings
   var nativeName: String {
     switch self {
-    case .system: return LocalizationManager.shared.localizedString("language.system")
+    case .system: return NSLocalizedString("language.system", comment: "System language")
     case .chinese: return "简体中文"
     case .english: return "English"
     }
@@ -210,20 +210,20 @@ extension Notification.Name {
 extension String {
   /// Returns the localized version of this string
   var localized: String {
-    LocalizationManager.shared.localizedString(self)
+    NSLocalizedString(self, comment: "")
   }
 
   /// Returns the localized version of this string with format arguments
   func localized(_ arguments: CVarArg...) -> String {
-    let format = LocalizationManager.shared.localizedString(self)
+    let format = NSLocalizedString(self, comment: "")
     return String(format: format, arguments: arguments)
   }
 }
 
 // MARK: - Environment Key
 
-private struct LocalizationManagerKey: EnvironmentKey {
-  static let defaultValue: LocalizationManager = .shared
+private struct LocalizationManagerKey: @preconcurrency EnvironmentKey {
+  @MainActor static let defaultValue: LocalizationManager = .shared
 }
 
 extension EnvironmentValues {
@@ -237,7 +237,7 @@ extension EnvironmentValues {
 
 /// View modifier to apply localization and trigger updates on language change
 struct LocalizationModifier: ViewModifier {
-  @Environment(LocalizationManager.self) private var localizationManager
+  @Environment(\.localizationManager) private var localizationManager
 
   func body(content: Content) -> some View {
     content
@@ -259,7 +259,7 @@ struct LocalizedText: View {
   let key: String
   let arguments: [CVarArg]
 
-  @Environment(LocalizationManager.self) private var localizationManager
+  @Environment(\.localizationManager) private var localizationManager
 
   init(_ key: String, _ arguments: CVarArg...) {
     self.key = key

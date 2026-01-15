@@ -167,7 +167,7 @@ struct UserProfileView: View {
         }
       }
       .font(.headline)
-      .foregroundStyle(status.isFollowing ? .primary : .white)
+      .foregroundStyle(status.isFollowing ? Color.primary : Color.white)
       .frame(maxWidth: .infinity)
       .padding(.vertical, 14)
       .background(status.isFollowing ? Color.secondary.opacity(0.2) : Color.accentColor)
@@ -388,7 +388,7 @@ struct CompactRecommendationCard: View {
           Text(isFollowed ? "已关注" : "关注")
             .font(.caption)
             .fontWeight(.medium)
-            .foregroundStyle(isFollowed ? .secondary : .white)
+            .foregroundStyle(isFollowed ? Color.secondary : Color.white)
             .frame(width: 60, height: 28)
             .background(isFollowed ? Color.secondary.opacity(0.2) : Color.accentColor)
             .clipShape(Capsule())

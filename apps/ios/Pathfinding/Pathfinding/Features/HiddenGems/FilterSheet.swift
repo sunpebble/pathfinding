@@ -243,7 +243,7 @@ struct FilterOptionRow: View {
         // Selection indicator
         if isSelected {
           Image(systemName: "checkmark.circle.fill")
-            .foregroundStyle(.accentColor)
+            .foregroundStyle(Color.accentColor)
             .symbolEffect(.bounce, value: isSelected)
         }
       }

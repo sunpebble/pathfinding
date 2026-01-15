@@ -1,5 +1,5 @@
-import AVFoundation
-import CoreLocation
+@preconcurrency import AVFoundation
+@preconcurrency import CoreLocation
 import Foundation
 import Observation
 import OSLog
@@ -71,7 +71,7 @@ final class VideoRecordingManager: NSObject {
   private(set) var currentThumbnail: UIImage?
 
   /// Error message
-  private(set) var errorMessage: String?
+  var errorMessage: String?
 
   /// All saved videos
   private(set) var videos: [TravelVideo] = []
@@ -260,9 +260,10 @@ final class VideoRecordingManager: NSObject {
 
   func startSession() {
     guard let session = captureSession, !session.isRunning else { return }
-    Task.detached { [weak self] in
-      self?.captureSession?.startRunning()
-      await MainActor.run {
+    let sessionToStart = session
+    Task.detached {
+      sessionToStart.startRunning()
+      await MainActor.run { [weak self] in
         self?.logger.info("Camera session started")
       }
     }
@@ -270,9 +271,10 @@ final class VideoRecordingManager: NSObject {
 
   func stopSession() {
     guard let session = captureSession, session.isRunning else { return }
-    Task.detached { [weak self] in
-      self?.captureSession?.stopRunning()
-      await MainActor.run {
+    let sessionToStop = session
+    Task.detached {
+      sessionToStop.stopRunning()
+      await MainActor.run { [weak self] in
         self?.logger.info("Camera session stopped")
       }
     }

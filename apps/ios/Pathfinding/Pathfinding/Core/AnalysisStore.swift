@@ -75,16 +75,17 @@ final class AnalysisStore {
     error = nil
 
     do {
-      let body: [String: Any] = [
+      let bodyDict: [String: Any] = [
         "includeRouteOptimization": options.includeRouteOptimization,
         "includeBudgetAnalysis": options.includeBudgetAnalysis,
         "includeTimeAnalysis": options.includeTimeAnalysis,
         "preferredTransportMode": options.preferredTransportMode as Any,
       ].compactMapValues { $0 }
+      let bodyData = try JSONSerialization.data(withJSONObject: bodyDict)
 
-      let data = try await APIClient.shared.postData(
+      let data = try await APIClient.shared.postDataWithBody(
         endpoint: "analysis/\(itineraryId)",
-        body: body
+        bodyData: bodyData
       )
       let response = try JSONDecoder().decode(AnalysisReportResponse.self, from: data)
       currentReport = response.data

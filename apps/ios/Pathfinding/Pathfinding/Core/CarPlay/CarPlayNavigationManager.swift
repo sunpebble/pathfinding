@@ -138,16 +138,18 @@ final class CarPlayNavigationManager: NSObject {
 
         // Update session with route info
         if let session = navigationSession {
-          let estimates = CPTravelEstimates(
-            distanceRemaining: Measurement(value: route.distance, unit: .meters),
-            timeRemaining: route.expectedTravelTime
-          )
-
-          session.updateEstimates(estimates, for: currentTrip!)
-
           // Create maneuvers from route steps
           let maneuvers = createManeuvers(from: route)
           session.upcomingManeuvers = maneuvers
+
+          // Update estimates for the first maneuver
+          if let firstManeuver = maneuvers.first {
+            let estimates = CPTravelEstimates(
+              distanceRemaining: Measurement(value: route.distance, unit: .meters),
+              timeRemaining: route.expectedTravelTime
+            )
+            session.updateEstimates(estimates, for: firstManeuver)
+          }
 
           // Resume trip
           session.finishTrip()
@@ -157,7 +159,7 @@ final class CarPlayNavigationManager: NSObject {
       }
     } catch {
       logger.error("Route calculation failed: \(error.localizedDescription)")
-      navigationSession?.pauseTrip(for: .routingFailed, description: "路线计算失败")
+      navigationSession?.pauseTrip(for: .loading, description: "路线计算失败")
       delegate?.routeCalculationFailed(error: error)
     }
   }
@@ -169,11 +171,11 @@ final class CarPlayNavigationManager: NSObject {
       let maneuver = CPManeuver()
       maneuver.instructionVariants = [step.instructions]
 
-      // Estimate distance
-      let distanceText = formatDistance(step.distance)
+      // Estimate distance and time (assuming average speed of 10 m/s)
+      let estimatedTime = step.distance / 10.0
       maneuver.initialTravelEstimates = CPTravelEstimates(
         distanceRemaining: Measurement(value: step.distance, unit: .meters),
-        timeRemaining: nil
+        timeRemaining: estimatedTime
       )
 
       // Set maneuver type based on instructions
@@ -287,13 +289,15 @@ extension CarPlayNavigationManager: CLLocationManagerDelegate {
           delegate?.arrivedAtDestination(destination)
         }
 
-        // Update travel estimates
-        if let session = navigationSession, let trip = currentTrip {
+        // Update travel estimates for current maneuver
+        if let session = navigationSession,
+          let currentManeuver = session.upcomingManeuvers.first
+        {
           let estimates = CPTravelEstimates(
             distanceRemaining: Measurement(value: distance, unit: .meters),
             timeRemaining: distance / 10  // Rough estimate: 10 m/s
           )
-          session.updateEstimates(estimates, for: trip)
+          session.updateEstimates(estimates, for: currentManeuver)
         }
       }
     }

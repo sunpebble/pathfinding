@@ -6,11 +6,11 @@ import Foundation
 /// Intent to view the list of itineraries via Siri
 @available(iOS 16.0, *)
 struct ViewItineraryIntent: AppIntent {
-  static var title: LocalizedStringResource = "查看行程"
-  static var description = IntentDescription("查看我的旅行行程列表")
+  nonisolated(unsafe) static var title: LocalizedStringResource = "查看行程"
+  nonisolated(unsafe) static var description = IntentDescription("查看我的旅行行程列表")
 
   /// Opens the app when executed
-  static var openAppWhenRun: Bool = true
+  nonisolated(unsafe) static var openAppWhenRun: Bool = true
 
   @MainActor
   func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -48,10 +48,10 @@ struct ViewItineraryIntent: AppIntent {
 /// Intent to view a specific itinerary by name
 @available(iOS 16.0, *)
 struct ViewSpecificItineraryIntent: AppIntent {
-  static var title: LocalizedStringResource = "查看指定行程"
-  static var description = IntentDescription("查看指定名称的行程详情")
+  nonisolated(unsafe) static var title: LocalizedStringResource = "查看指定行程"
+  nonisolated(unsafe) static var description = IntentDescription("查看指定名称的行程详情")
 
-  static var openAppWhenRun: Bool = true
+  nonisolated(unsafe) static var openAppWhenRun: Bool = true
 
   @Parameter(title: "行程名称", description: "要查看的行程名称")
   var itineraryName: String?
@@ -91,8 +91,8 @@ struct ViewSpecificItineraryIntent: AppIntent {
 /// Entity representing an itinerary for Siri
 @available(iOS 16.0, *)
 struct ItineraryEntity: AppEntity {
-  static var typeDisplayRepresentation: TypeDisplayRepresentation = "行程"
-  static var defaultQuery = ItineraryEntityQuery()
+  nonisolated(unsafe) static var typeDisplayRepresentation: TypeDisplayRepresentation = "行程"
+  nonisolated(unsafe) static var defaultQuery = ItineraryEntityQuery()
 
   var id: String
   var title: String

@@ -219,12 +219,12 @@ enum DesignTokens {
     // MARK: - Accent Colors (Dynamic based on ThemeManager)
 
     /// Primary accent color - uses ThemeManager's accent
-    static var accent: Color {
+    @MainActor static var accent: Color {
       ThemeManager.shared.accentColor.color
     }
 
     /// Secondary accent color - pairs with primary
-    static var accentSecondary: Color {
+    @MainActor static var accentSecondary: Color {
       ThemeManager.shared.accentColor.secondaryColor
     }
 
@@ -234,7 +234,7 @@ enum DesignTokens {
     }
 
     /// Get accent color with opacity for backgrounds
-    static func accentBackground(opacity: Double = 0.1, for colorScheme: ColorScheme) -> Color {
+    @MainActor static func accentBackground(opacity: Double = 0.1, for colorScheme: ColorScheme) -> Color {
       colorScheme == .dark
         ? accent.opacity(opacity * 1.5)
         : accent.opacity(opacity)
@@ -277,7 +277,7 @@ enum DesignTokens {
     // MARK: - Gradients
 
     /// Hero gradient for headers (uses current accent)
-    static func heroGradient(for colorScheme: ColorScheme) -> LinearGradient {
+    @MainActor static func heroGradient(for colorScheme: ColorScheme) -> LinearGradient {
       let primary = ThemeManager.shared.accentColor.color
       let secondary = ThemeManager.shared.accentColor.secondaryColor
 
@@ -310,12 +310,12 @@ enum DesignTokens {
     }
 
     /// Primary gradient (uses current accent colors)
-    static var primaryGradient: LinearGradient {
+    @MainActor static var primaryGradient: LinearGradient {
       ThemeManager.shared.primaryGradient
     }
 
     /// Mesh gradient for premium features
-    static func meshGradient(for colorScheme: ColorScheme) -> LinearGradient {
+    @MainActor static func meshGradient(for colorScheme: ColorScheme) -> LinearGradient {
       let primary = ThemeManager.shared.accentColor.color
       let secondary = ThemeManager.shared.accentColor.secondaryColor
 
@@ -373,7 +373,7 @@ enum DesignTokens {
     // MARK: - Map Colors
 
     /// Map route line color
-    static func mapRouteLine(for colorScheme: ColorScheme) -> Color {
+    @MainActor static func mapRouteLine(for colorScheme: ColorScheme) -> Color {
       colorScheme == .dark
         ? accent.opacity(0.8)
         : accent.opacity(0.6)
@@ -394,12 +394,12 @@ extension Color {
   // MARK: - Dynamic Accent Colors (from ThemeManager)
 
   /// Primary accent color - uses ThemeManager's accent
-  static var themeAccent: Color {
+  @MainActor static var themeAccent: Color {
     ThemeManager.shared.accentColor.color
   }
 
   /// Secondary accent color - pairs with primary
-  static var themeAccentSecondary: Color {
+  @MainActor static var themeAccentSecondary: Color {
     ThemeManager.shared.accentColor.secondaryColor
   }
 
@@ -434,7 +434,7 @@ extension Color {
 
   // MARK: - Background Gradients
 
-  static var heroGradient: LinearGradient {
+  @MainActor static var heroGradient: LinearGradient {
     DesignTokens.Colors.primaryGradient
   }
 
@@ -452,7 +452,7 @@ extension Color {
   }
 
   /// Hero gradient that adapts to color scheme
-  static func adaptiveHeroGradient(for colorScheme: ColorScheme) -> LinearGradient {
+  @MainActor static func adaptiveHeroGradient(for colorScheme: ColorScheme) -> LinearGradient {
     DesignTokens.Colors.heroGradient(for: colorScheme)
   }
 

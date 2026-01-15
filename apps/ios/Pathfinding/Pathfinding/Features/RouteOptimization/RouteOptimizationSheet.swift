@@ -79,7 +79,7 @@ struct RouteOptimizationSheet: View {
             HStack {
                 Image(systemName: "map")
                     .font(.title2)
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
 
                 VStack(alignment: .leading) {
                     Text("Day \(day.dayNumber)")
@@ -503,7 +503,7 @@ struct RouteSegmentRow: View {
                 // Timeline
                 VStack(spacing: 0) {
                     Circle()
-                        .fill(.accent)
+                        .fill(Color.accentColor)
                         .frame(width: 10, height: 10)
 
                     if !isLast {

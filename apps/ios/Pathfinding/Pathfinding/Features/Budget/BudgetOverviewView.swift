@@ -298,7 +298,7 @@ struct BudgetOverviewView: View {
         } label: {
           Text("查看全部")
             .font(.subheadline)
-            .foregroundStyle(.accent)
+            .foregroundStyle(.blue)
         }
       }
 

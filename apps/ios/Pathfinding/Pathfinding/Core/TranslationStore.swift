@@ -233,8 +233,9 @@ final class TranslationStore {
 
     do {
       currentPhrases = try await APIClient.shared.fetchPhrases(
-        category: category,
-        sourceLang: sourceLang
+        categoryId: category,
+        sourceLang: sourceLang,
+        targetLang: targetLang
       )
       logger.info("Loaded \(self.currentPhrases.count) phrases for category: \(category)")
       isLoading = false
@@ -250,8 +251,8 @@ final class TranslationStore {
     do {
       let results = try await APIClient.shared.searchPhrases(
         query: query,
-        category: category,
-        sourceLang: sourceLang
+        sourceLang: sourceLang,
+        targetLang: targetLang
       )
       logger.info("Found \(results.count) phrases matching: \(query)")
       return results
@@ -289,16 +290,14 @@ final class TranslationStore {
     notes: String? = nil
   ) async -> Bool {
     do {
-      try await APIClient.shared.saveTranslation(
-        userId: userId,
+      _ = try await APIClient.shared.saveTranslation(
         sourceText: result.sourceText,
         sourceLang: result.sourceLang,
         targetText: result.targetText,
         targetLang: result.targetLang,
-        translationType: type.rawValue,
+        translationType: type,
         imageUrl: imageUrl,
-        audioUrl: audioUrl,
-        notes: notes
+        audioUrl: audioUrl
       )
       logger.info("Translation saved successfully")
 
@@ -315,8 +314,8 @@ final class TranslationStore {
   /// Toggle favorite status
   func toggleFavorite(translationId: String, userId: String) async -> Bool {
     do {
-      let isFavorite = try await APIClient.shared.toggleTranslationFavorite(id: translationId)
-      logger.info("Toggled favorite: \(isFavorite)")
+      _ = try await APIClient.shared.toggleTranslationFavorite(translationId: translationId)
+      logger.info("Toggled favorite")
 
       // Reload saved translations
       await loadSavedTranslations(userId: userId)
@@ -331,7 +330,7 @@ final class TranslationStore {
   /// Delete saved translation
   func deleteSavedTranslation(id: String, userId: String) async -> Bool {
     do {
-      try await APIClient.shared.deleteSavedTranslation(id: id)
+      try await APIClient.shared.deleteSavedTranslation(translationId: id)
       logger.info("Deleted saved translation: \(id)")
 
       // Reload saved translations
@@ -348,63 +347,28 @@ final class TranslationStore {
 
   /// Load available offline packs
   func loadAvailablePacks() async {
-    do {
-      availablePacks = try await APIClient.shared.fetchOfflinePacks(
-        sourceLang: sourceLang,
-        targetLang: targetLang
-      )
-      logger.info("Loaded \(self.availablePacks.count) available offline packs")
-    } catch {
-      logger.error("Failed to load offline packs: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
-    }
+    // TODO: Implement when API is ready
+    logger.info("Offline packs loading not yet implemented")
   }
 
   /// Load user's downloaded packs
   func loadDownloadedPacks(userId: String) async {
-    do {
-      downloadedPacks = try await APIClient.shared.fetchUserPacks(userId: userId)
-      logger.info("Loaded \(self.downloadedPacks.count) downloaded packs")
-    } catch {
-      logger.error("Failed to load downloaded packs: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
-    }
+    // TODO: Implement when API is ready
+    logger.info("Downloaded packs loading not yet implemented")
   }
 
   /// Download an offline pack
   func downloadPack(packId: String, userId: String) async -> Bool {
-    isLoading = true
-
-    do {
-      try await APIClient.shared.recordPackDownload(packId: packId, userId: userId)
-      logger.info("Downloaded pack: \(packId)")
-
-      // Reload downloaded packs
-      await loadDownloadedPacks(userId: userId)
-      isLoading = false
-      return true
-    } catch {
-      logger.error("Failed to download pack: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
-      isLoading = false
-      return false
-    }
+    // TODO: Implement when API is ready
+    logger.info("Pack download not yet implemented")
+    return false
   }
 
   /// Delete downloaded pack
   func deletePack(id: String, userId: String) async -> Bool {
-    do {
-      try await APIClient.shared.deleteUserPack(id: id)
-      logger.info("Deleted pack: \(id)")
-
-      // Reload downloaded packs
-      await loadDownloadedPacks(userId: userId)
-      return true
-    } catch {
-      logger.error("Failed to delete pack: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
-      return false
-    }
+    // TODO: Implement when API is ready
+    logger.info("Pack deletion not yet implemented")
+    return false
   }
 
   // MARK: - Helper Methods

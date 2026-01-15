@@ -231,7 +231,7 @@ struct PlatformStats: Codable {
 
 /// A top shared resource entry
 struct TopSharedResource: Codable, Identifiable {
-  var id: String { "\(resourceType.rawValue)-\(resourceId)" }
+  var id: String { "\(resourceType)-\(resourceId)" }
   let resourceType: String
   let resourceId: String
   let shareCount: Int

@@ -109,7 +109,7 @@ final class SpeechRecognitionManager {
       throw SpeechRecognitionError.recognizerNotAvailable
     }
 
-    guard isAuthorized else {
+    if !isAuthorized {
       let granted = await requestPermissions()
       if !granted {
         throw SpeechRecognitionError.notAuthorized

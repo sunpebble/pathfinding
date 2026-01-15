@@ -434,7 +434,7 @@ private struct SizeButton: View {
             if isSelected {
               Image(systemName: "checkmark")
                 .font(.caption)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             }
           }
 

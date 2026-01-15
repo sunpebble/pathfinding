@@ -456,7 +456,7 @@ struct CalendarSettingsView: View {
 
                 if calendarManager.selectedCalendarId == calendar.calendarIdentifier {
                   Image(systemName: "checkmark")
-                    .foregroundStyle(.accentColor)
+                    .foregroundStyle(Color.accentColor)
                 }
               }
               .contentShape(Rectangle())
@@ -516,7 +516,7 @@ struct CalendarSettingsView: View {
               Text("\(stats.totalEvents)")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(Color.accentColor)
               Text("总事件")
                 .font(.caption)
                 .foregroundStyle(.secondary)

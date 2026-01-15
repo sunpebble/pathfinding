@@ -30,6 +30,9 @@ targets:
       - path: Pathfinding
         excludes:
           - "**/.DS_Store"
+      - path: Shared
+        excludes:
+          - "**/.DS_Store"
     settings:
       base:
         INFOPLIST_FILE: Pathfinding/Info.plist

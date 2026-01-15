@@ -53,19 +53,19 @@ struct SiriShortcutsSettingsView: View {
 
       // Tips Section
       Section {
-        TipRow(
+        SiriTipRow(
           icon: "mic.fill",
           title: "语音触发",
           description: "对Siri说出你设定的唤醒短语即可快速执行"
         )
 
-        TipRow(
+        SiriTipRow(
           icon: "clock.arrow.circlepath",
           title: "智能建议",
           description: "探路会根据你的使用习惯自动推荐快捷指令"
         )
 
-        TipRow(
+        SiriTipRow(
           icon: "location.fill",
           title: "位置感知",
           description: "在旅途中，系统会智能推荐导航到下一个景点"
@@ -252,7 +252,7 @@ struct CustomShortcutRow: View {
 
 // MARK: - Tip Row
 
-struct TipRow: View {
+private struct SiriTipRow: View {
   let icon: String
   let title: String
   let description: String

@@ -167,7 +167,17 @@ final class VideoEditorManager {
     let cmTime = CMTime(seconds: time, preferredTimescale: 600)
 
     do {
-      let (cgImage, _) = try await generator.image(at: cmTime)
+      let cgImage = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CGImage, Error>) in
+        generator.generateCGImagesAsynchronously(forTimes: [NSValue(time: cmTime)]) { _, image, _, _, error in
+          if let error = error {
+            continuation.resume(throwing: error)
+          } else if let image = image {
+            continuation.resume(returning: image)
+          } else {
+            continuation.resume(throwing: NSError(domain: "VideoEditorManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to generate image"]))
+          }
+        }
+      }
       let originalImage = UIImage(cgImage: cgImage)
       return filteredImage(from: originalImage)
     } catch {

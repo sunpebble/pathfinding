@@ -4,7 +4,7 @@ import SwiftUI
 
 struct LanguageSettingsSheet: View {
   @Environment(\.dismiss) private var dismiss
-  @Environment(LocalizationManager.self) private var localizationManager
+  @Environment(\.localizationManager) private var localizationManager
 
   var body: some View {
     NavigationStack {
@@ -63,7 +63,7 @@ struct LanguageSettingsSheet: View {
 // MARK: - Language Preview Card
 
 struct LanguagePreviewCard: View {
-  @Environment(LocalizationManager.self) private var localizationManager
+  @Environment(\.localizationManager) private var localizationManager
 
   var body: some View {
     HStack(spacing: DesignTokens.Spacing.md) {

@@ -70,13 +70,20 @@ struct UserSubmissionDetailView: View {
       }
     }
     .navigationBarTitleDisplayMode(.inline)
-    .toolbar {
-      ToolbarItemGroup(placement: .topBarTrailing) {
-        ShareLink(item: submission.name) {
+    .toolbar(content: {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button {
+          let url = URL(string: "https://pathfinding.app/poi/\(submission.id)")!
+          let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+          if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+             let rootVC = windowScene.windows.first?.rootViewController {
+            rootVC.present(activityVC, animated: true)
+          }
+        } label: {
           Image(systemName: "square.and.arrow.up")
         }
       }
-    }
+    })
     .imageViewer(
       images: displayImages,
       isPresented: $showImageViewer,

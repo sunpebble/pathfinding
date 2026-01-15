@@ -485,27 +485,20 @@ struct EditExpenseView: View {
       timeStr = timeFormatter.string(from: time)
     }
 
-    var updates: [String: Any] = [
-      "categoryId": category.id,
-      "amount": amountValue,
-      "description": description.trimmingCharacters(in: .whitespaces),
-      "date": dateStr,
-      "paymentMethod": paymentMethod.rawValue,
-    ]
-
-    if let timeStr {
-      updates["time"] = timeStr
-    }
-
-    if !notes.isEmpty {
-      updates["notes"] = notes
-    }
+    let descriptionText = description.trimmingCharacters(in: .whitespaces)
+    let notesText = notes.isEmpty ? nil : notes
 
     Task {
       let success = await budgetStore.updateExpense(
         expenseId: expense.id,
         itineraryId: itineraryId,
-        updates: updates
+        categoryId: category.id,
+        amount: amountValue,
+        description: descriptionText,
+        date: dateStr,
+        time: timeStr,
+        paymentMethod: paymentMethod.rawValue,
+        notes: notesText
       )
 
       if success {

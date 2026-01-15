@@ -99,8 +99,14 @@ struct SubmitHiddenGemSheet: View {
           address: $address
         )
       }
-      .onChange(of: selectedCoordinate) { _, newValue in
-        if let coord = newValue {
+      .onChange(of: selectedCoordinate?.latitude) { _, _ in
+        if let coord = selectedCoordinate {
+          latitude = coord.latitude
+          longitude = coord.longitude
+        }
+      }
+      .onChange(of: selectedCoordinate?.longitude) { _, _ in
+        if let coord = selectedCoordinate {
           latitude = coord.latitude
           longitude = coord.longitude
         }
@@ -234,7 +240,7 @@ struct SubmitHiddenGemSheet: View {
           addSecret()
         } label: {
           Image(systemName: "plus.circle.fill")
-            .foregroundStyle(.accentColor)
+            .foregroundStyle(Color.accentColor)
         }
         .disabled(newSecret.isEmpty)
       }

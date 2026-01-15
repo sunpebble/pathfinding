@@ -404,9 +404,9 @@ final class ItineraryStore {
       forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
       object: NSUbiquitousKeyValueStore.default,
       queue: .main
-    ) { [weak self] notification in
+    ) { [weak self] _ in
       Task { @MainActor in
-        self?.handleiCloudChange(notification)
+        self?.handleiCloudChange()
       }
     }
 
@@ -415,27 +415,31 @@ final class ItineraryStore {
   }
 
   /// Handle iCloud key-value store changes
-  private func handleiCloudChange(_ notification: Notification) {
-    guard let userInfo = notification.userInfo,
+  private func handleiCloudChange() {
+    guard let userInfo = NSUbiquitousKeyValueStore.default.dictionaryRepresentation as? [String: Any],
           let reasonValue = userInfo[NSUbiquitousKeyValueStoreChangeReasonKey] as? Int
-    else { return }
+    else {
+      // Just sync from iCloud if we can't determine the reason
+      Task {
+        await syncFromiCloud()
+      }
+      return
+    }
 
-    let reason = NSUbiquitousKeyValueStore.ChangeReason(rawValue: reasonValue) ?? .accountChange
-
-    switch reason {
-    case .serverChange, .initialSyncChange:
+    switch reasonValue {
+    case NSUbiquitousKeyValueStoreServerChange, NSUbiquitousKeyValueStoreInitialSyncChange:
       // Reload data from iCloud
       Task {
         await syncFromiCloud()
       }
-    case .quotaViolationChange:
+    case NSUbiquitousKeyValueStoreQuotaViolationChange:
       NSLog("[iCloud] Quota exceeded, cannot sync")
-    case .accountChange:
+    case NSUbiquitousKeyValueStoreAccountChange:
       NSLog("[iCloud] Account changed, resyncing")
       Task {
         await syncFromiCloud()
       }
-    @unknown default:
+    default:
       break
     }
   }

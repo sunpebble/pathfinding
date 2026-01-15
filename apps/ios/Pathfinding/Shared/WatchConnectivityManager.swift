@@ -1,6 +1,30 @@
 import Foundation
-import WatchConnectivity
+@preconcurrency import WatchConnectivity
 import Observation
+
+// MARK: - Sendable Dictionary Wrapper
+
+/// A wrapper to make [String: Any] dictionary sendable across actor boundaries
+struct SendableDict: @unchecked Sendable {
+  let value: [String: Any]
+
+  init(_ value: [String: Any]) {
+    self.value = value
+  }
+}
+
+/// A wrapper to make reply handler sendable across actor boundaries
+final class SendableReplyHandler: @unchecked Sendable {
+  let handler: ([String: Any]) -> Void
+
+  init(_ handler: @escaping ([String: Any]) -> Void) {
+    self.handler = handler
+  }
+
+  func reply(_ dict: [String: Any]) {
+    handler(dict)
+  }
+}
 
 // MARK: - WatchConnectivity Manager (iPhone Side)
 
@@ -201,15 +225,18 @@ extension WatchConnectivityManager: WCSessionDelegate {
   // MARK: - Receive Messages
 
   nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+    let wrapped = SendableDict(message)
     Task { @MainActor in
-      handleMessage(message)
+      handleMessage(wrapped.value)
     }
   }
 
   nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+    let wrapped = SendableDict(message)
+    let wrappedHandler = SendableReplyHandler(replyHandler)
     Task { @MainActor in
-      let reply = handleMessageWithReply(message)
-      replyHandler(reply)
+      let reply = handleMessageWithReply(wrapped.value)
+      wrappedHandler.reply(reply)
     }
   }
 
@@ -277,17 +304,19 @@ extension WatchConnectivityManager: WCSessionDelegate {
   // MARK: - Receive User Info
 
   nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+    let wrapped = SendableDict(userInfo)
     Task { @MainActor in
-      handleMessage(userInfo)
+      handleMessage(wrapped.value)
     }
   }
 
   // MARK: - Receive Application Context
 
   nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+    let wrapped = SendableDict(applicationContext)
     Task { @MainActor in
       // Watch sent context update (usually notes or visited POIs)
-      handleMessage(applicationContext)
+      handleMessage(wrapped.value)
     }
   }
 }

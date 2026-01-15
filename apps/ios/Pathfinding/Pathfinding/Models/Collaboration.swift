@@ -95,7 +95,7 @@ enum CollaboratorRole: String, Codable {
 // MARK: - Edit Operations
 
 /// An edit operation for conflict tracking
-struct EditOperation: Identifiable, Codable {
+struct EditOperation: Identifiable, Codable, Sendable {
   var id: String { oderId }
   let oderId: String
   let itineraryId: String
@@ -154,14 +154,14 @@ struct EditOperation: Identifiable, Codable {
   }
 }
 
-enum OperationType: String, Codable {
+enum OperationType: String, Codable, Sendable {
   case create
   case update
   case delete
   case reorder
 }
 
-enum CollaborationTargetType: String, Codable {
+enum CollaborationTargetType: String, Codable, Sendable {
   case itinerary
   case day
   case item
@@ -178,7 +178,7 @@ enum CollaborationTargetType: String, Codable {
   }
 }
 
-enum OperationStatus: String, Codable {
+enum OperationStatus: String, Codable, Sendable {
   case pending
   case applied
   case conflicted
@@ -186,13 +186,13 @@ enum OperationStatus: String, Codable {
 }
 
 /// Conflict resolution details
-struct CollaborationConflictResolution: Codable {
+struct CollaborationConflictResolution: Codable, Sendable {
   let resolvedBy: String
   let resolvedAt: Double
   let resolution: ResolutionType
 }
 
-enum ResolutionType: String, Codable {
+enum ResolutionType: String, Codable, Sendable {
   case acceptMine = "accept_mine"
   case acceptTheirs = "accept_theirs"
   case merge
@@ -282,7 +282,7 @@ struct EmptyData: Decodable {}
 // MARK: - Helper Types
 
 /// A type-erased Codable value for dynamic JSON
-struct AnyCodableValue: Codable, Hashable {
+struct AnyCodableValue: Codable, Hashable, @unchecked Sendable {
   let value: Any
 
   init(_ value: Any) {

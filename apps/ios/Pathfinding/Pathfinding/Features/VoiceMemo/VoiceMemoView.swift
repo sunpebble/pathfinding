@@ -307,7 +307,7 @@ struct VoiceMemoRecordSheet: View {
           VStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: "mic.circle.fill")
               .font(.system(size: 80))
-              .foregroundStyle(.accent)
+              .foregroundStyle(Color.accentColor)
 
             Text("点击下方按钮开始录音")
               .font(.subheadline)

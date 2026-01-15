@@ -1,6 +1,9 @@
 import Foundation
 import OSLog
 
+/// Empty response type for API calls that don't return data
+struct EmptyResponse: Codable {}
+
 /// API client for Crawler service with caching and retry logic
 actor APIClient {
   static let shared = APIClient()
@@ -490,7 +493,7 @@ actor APIClient {
     }
 
     /// Get available transport modes
-    func getTransportModes() async throws -> [TransportMode] {
+    func getTransportModes() async throws -> [RouteTransportModeInfo] {
         let url = baseURL.appendingPathComponent("v1/route-optimization/transport-modes")
         let data = try await fetchWithRetry(url: url)
         let result = try decoder.decode(TransportModesResponse.self, from: data)
@@ -1924,6 +1927,66 @@ extension APIClient {
     return try JSONDecoder().decode(T.self, from: data)
   }
 
+  /// Generic POST request with path and Encodable body
+  func post<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("v1/\(path)")
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONEncoder().encode(body)
+
+    if let token = try? await AuthManager.shared.getAccessToken() {
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+
+    guard let httpResponse = response as? HTTPURLResponse,
+          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
+    else {
+      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
+      if statusCode == 401 {
+        throw APIError.unauthorized
+      } else if statusCode == 404 {
+        throw APIError.notFound
+      }
+      throw APIError.httpError(statusCode)
+    }
+
+    return try JSONDecoder().decode(T.self, from: data)
+  }
+
+  /// POST request that doesn't return a value
+  func postVoid(path: String, body: [String: Any]) async throws {
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("v1/\(path)")
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+    if let token = try? await AuthManager.shared.getAccessToken() {
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    let (_, response) = try await URLSession.shared.data(for: request)
+
+    guard let httpResponse = response as? HTTPURLResponse,
+          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
+    else {
+      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
+      if statusCode == 401 {
+        throw APIError.unauthorized
+      } else if statusCode == 404 {
+        throw APIError.notFound
+      }
+      throw APIError.httpError(statusCode)
+    }
+  }
+
   /// Generic PUT request with path and body
   func put<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
     let baseURL = URL(string: AppConfig.apiBaseURL)!
@@ -1955,6 +2018,37 @@ extension APIClient {
     return try JSONDecoder().decode(T.self, from: data)
   }
 
+  /// Generic PUT request with path and Encodable body
+  func putWithBody<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("v1/\(path)")
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "PUT"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONEncoder().encode(body)
+
+    if let token = try? await AuthManager.shared.getAccessToken() {
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+
+    guard let httpResponse = response as? HTTPURLResponse,
+          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
+    else {
+      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
+      if statusCode == 401 {
+        throw APIError.unauthorized
+      } else if statusCode == 404 {
+        throw APIError.notFound
+      }
+      throw APIError.httpError(statusCode)
+    }
+
+    return try JSONDecoder().decode(T.self, from: data)
+  }
+
   /// Generic PATCH request with path and body
   func patch<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
     let baseURL = URL(string: AppConfig.apiBaseURL)!
@@ -1964,6 +2058,37 @@ extension APIClient {
     request.httpMethod = "PATCH"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+    if let token = try? await AuthManager.shared.getAccessToken() {
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+
+    guard let httpResponse = response as? HTTPURLResponse,
+          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
+    else {
+      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
+      if statusCode == 401 {
+        throw APIError.unauthorized
+      } else if statusCode == 404 {
+        throw APIError.notFound
+      }
+      throw APIError.httpError(statusCode)
+    }
+
+    return try JSONDecoder().decode(T.self, from: data)
+  }
+
+  /// Generic PATCH request with path and Encodable body
+  func patchWithBody<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("v1/\(path)")
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "PATCH"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONEncoder().encode(body)
 
     if let token = try? await AuthManager.shared.getAccessToken() {
       request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -2023,6 +2148,403 @@ extension APIClient {
   }
 }
 
+// MARK: - Ticket API Extension
+
+extension APIClient {
+  /// Fetch tickets for a POI
+  func fetchPoiTickets(poiId: String, activeOnly: Bool = true) async throws -> [PoiTicket] {
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("v1/pois/\(poiId)/tickets"),
+      resolvingAgainstBaseURL: false
+    )!
+
+    components.queryItems = [
+      URLQueryItem(name: "activeOnly", value: activeOnly ? "true" : "false")
+    ]
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(PoiTicketListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch price range for a POI
+  func fetchTicketPriceRange(poiId: String) async throws -> TicketPriceRange? {
+    let url = baseURL.appendingPathComponent("v1/pois/\(poiId)/tickets/price-range")
+
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(TicketPriceRangeResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch recommended tickets for a POI
+  func fetchRecommendedTickets(poiId: String, limit: Int = 5) async throws -> [PoiTicket] {
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("v1/pois/\(poiId)/tickets/recommended"),
+      resolvingAgainstBaseURL: false
+    )!
+
+    components.queryItems = [
+      URLQueryItem(name: "limit", value: String(limit))
+    ]
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(PoiTicketListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch a single ticket by ID
+  func fetchTicketById(ticketId: String) async throws -> PoiTicket {
+    let url = baseURL.appendingPathComponent("v1/tickets/\(ticketId)")
+
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(PoiTicketResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch user's ticket reminders
+  func fetchTicketReminders(includeTriggered: Bool = false, limit: Int = 50) async throws -> [TicketReminder] {
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("v1/ticket-reminders"),
+      resolvingAgainstBaseURL: false
+    )!
+
+    components.queryItems = [
+      URLQueryItem(name: "includeTriggered", value: includeTriggered ? "true" : "false"),
+      URLQueryItem(name: "limit", value: String(limit))
+    ]
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
+    let data = try await fetchWithRetry(url: url, forceRefresh: true)
+    let result = try decoder.decode(TicketReminderListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch upcoming reminders
+  func fetchUpcomingReminders(days: Int = 7) async throws -> [TicketReminder] {
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("v1/ticket-reminders/upcoming"),
+      resolvingAgainstBaseURL: false
+    )!
+
+    components.queryItems = [
+      URLQueryItem(name: "days", value: String(days))
+    ]
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
+    let data = try await fetchWithRetry(url: url, forceRefresh: true)
+    let result = try decoder.decode(TicketReminderListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch unread reminder count
+  func fetchTicketReminderUnreadCount() async throws -> Int {
+    let url = baseURL.appendingPathComponent("v1/ticket-reminders/unread-count")
+
+    let data = try await fetchWithRetry(url: url, forceRefresh: true)
+    let result = try decoder.decode(TicketUnreadCountResponse.self, from: data)
+    return result.data.count
+  }
+
+  /// Create a new ticket reminder
+  func createTicketReminder(request: CreateTicketReminderRequest) async throws -> TicketReminder {
+    let url = baseURL.appendingPathComponent("v1/ticket-reminders")
+
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(TicketReminderResponse.self, from: data)
+    return result.data
+  }
+
+  /// Update a ticket reminder
+  func updateTicketReminder(reminderId: String, request: UpdateTicketReminderRequest) async throws -> TicketReminder {
+    let url = baseURL.appendingPathComponent("v1/ticket-reminders/\(reminderId)")
+
+    let data = try await patchWithRetry(url: url, body: request)
+    let result = try decoder.decode(TicketReminderResponse.self, from: data)
+    return result.data
+  }
+
+  /// Mark a reminder as read
+  func markTicketReminderRead(reminderId: String) async throws -> TicketReminder {
+    let url = baseURL.appendingPathComponent("v1/ticket-reminders/\(reminderId)/read")
+
+    let data = try await postWithRetry(url: url, body: EmptyBody())
+    let result = try decoder.decode(TicketReminderResponse.self, from: data)
+    return result.data
+  }
+
+  /// Mark all reminders as read
+  func markAllTicketRemindersRead() async throws -> Int {
+    let url = baseURL.appendingPathComponent("v1/ticket-reminders/read-all")
+
+    let data = try await postWithRetry(url: url, body: EmptyBody())
+    let result = try decoder.decode(MarkAllReadResponse.self, from: data)
+    return result.data.count
+  }
+
+  /// Delete a ticket reminder
+  func deleteTicketReminder(reminderId: String) async throws {
+    let url = baseURL.appendingPathComponent("v1/ticket-reminders/\(reminderId)")
+    _ = try await deleteWithRetry(url: url)
+  }
+
+  // MARK: - Translation Methods
+
+  /// Fetch supported languages
+  func fetchSupportedLanguages() async throws -> [SupportedLanguage] {
+    let url = baseURL.appendingPathComponent("v1/translation/languages")
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(SupportedLanguagesResponse.self, from: data)
+    return result.data
+  }
+
+  /// Translate text
+  func translateText(text: String, targetLang: String, sourceLang: String?) async throws -> TranslationResult {
+    let url = baseURL.appendingPathComponent("v1/translation/text")
+    let request = TranslateTextRequest(text: text, targetLang: targetLang, sourceLang: sourceLang)
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(TranslationResultResponse.self, from: data)
+    return result.data
+  }
+
+  /// Translate photo (OCR + translation)
+  func translatePhoto(imageBase64: String, targetLang: String) async throws -> PhotoTranslationResult {
+    let url = baseURL.appendingPathComponent("v1/translation/photo")
+    let request = TranslatePhotoRequest(imageBase64: imageBase64, targetLang: targetLang)
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(PhotoTranslationResultResponse.self, from: data)
+    return result.data
+  }
+
+  /// Translate voice
+  func translateVoice(recognizedText: String, targetLang: String, sourceLang: String?) async throws -> VoiceTranslationResult {
+    let url = baseURL.appendingPathComponent("v1/translation/voice")
+    let request = TranslateVoiceRequest(recognizedText: recognizedText, targetLang: targetLang, sourceLang: sourceLang)
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(VoiceTranslationResultResponse.self, from: data)
+    return result.data
+  }
+
+  /// Batch translate texts
+  func translateBatch(texts: [String], targetLang: String, sourceLang: String?) async throws -> [TranslationResult] {
+    let url = baseURL.appendingPathComponent("v1/translation/batch")
+    let request = TranslateBatchRequest(texts: texts, targetLang: targetLang, sourceLang: sourceLang)
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(TranslationBatchResponse.self, from: data)
+    return result.data
+  }
+
+  /// Detect language
+  func detectLanguage(text: String) async throws -> String {
+    let url = baseURL.appendingPathComponent("v1/translation/detect")
+    let request = DetectLanguageRequest(text: text)
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(DetectLanguageResponse.self, from: data)
+    return result.data.language
+  }
+
+  /// Get pinyin for Chinese text
+  func getPinyin(text: String) async throws -> String {
+    let url = baseURL.appendingPathComponent("v1/translation/pinyin")
+    let request = GetPinyinRequest(text: text)
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(PinyinResponse.self, from: data)
+    return result.data.pinyin ?? ""
+  }
+
+  /// Fetch phrase categories
+  func fetchPhraseCategories(sourceLang: String) async throws -> [PhraseCategory] {
+    var components = URLComponents(url: baseURL.appendingPathComponent("v1/translation/phrases/categories"), resolvingAgainstBaseURL: false)!
+    components.queryItems = [URLQueryItem(name: "source_lang", value: sourceLang)]
+    let data = try await fetchWithRetry(url: components.url!)
+    let result = try decoder.decode(PhraseCategoriesResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch phrases for a category
+  func fetchPhrases(categoryId: String, sourceLang: String, targetLang: String) async throws -> [TranslationPhrase] {
+    var components = URLComponents(url: baseURL.appendingPathComponent("v1/translation/phrases"), resolvingAgainstBaseURL: false)!
+    components.queryItems = [
+      URLQueryItem(name: "category", value: categoryId),
+      URLQueryItem(name: "source_lang", value: sourceLang),
+      URLQueryItem(name: "target_lang", value: targetLang)
+    ]
+    let data = try await fetchWithRetry(url: components.url!)
+    let result = try decoder.decode(PhrasesResponse.self, from: data)
+    return result.data
+  }
+
+  /// Search phrases
+  func searchPhrases(query: String, sourceLang: String, targetLang: String) async throws -> [TranslationPhrase] {
+    var components = URLComponents(url: baseURL.appendingPathComponent("v1/translation/phrases/search"), resolvingAgainstBaseURL: false)!
+    components.queryItems = [
+      URLQueryItem(name: "q", value: query),
+      URLQueryItem(name: "source_lang", value: sourceLang),
+      URLQueryItem(name: "target_lang", value: targetLang)
+    ]
+    let data = try await fetchWithRetry(url: components.url!)
+    let result = try decoder.decode(PhrasesResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch saved translations
+  func fetchSavedTranslations(userId: String) async throws -> [SavedTranslation] {
+    let url = baseURL.appendingPathComponent("v1/translation/saved")
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(SavedTranslationsResponse.self, from: data)
+    return result.data
+  }
+
+  /// Save a translation
+  func saveTranslation(sourceText: String, sourceLang: String, targetText: String, targetLang: String, translationType: SavedTranslation.TranslationType, imageUrl: String?, audioUrl: String?) async throws -> SavedTranslation {
+    let url = baseURL.appendingPathComponent("v1/translation/saved")
+    let request = SaveTranslationRequest(
+      sourceText: sourceText,
+      sourceLang: sourceLang,
+      targetText: targetText,
+      targetLang: targetLang,
+      translationType: translationType.rawValue,
+      imageUrl: imageUrl,
+      audioUrl: audioUrl
+    )
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(SavedTranslationResponse.self, from: data)
+    return result.data
+  }
+
+  /// Toggle translation favorite
+  func toggleTranslationFavorite(translationId: String) async throws -> SavedTranslation {
+    let url = baseURL.appendingPathComponent("v1/translation/saved/\(translationId)/favorite")
+    let data = try await postWithRetry(url: url, body: EmptyBody())
+    let result = try decoder.decode(SavedTranslationResponse.self, from: data)
+    return result.data
+  }
+
+  /// Delete saved translation
+  func deleteSavedTranslation(translationId: String) async throws {
+    let url = baseURL.appendingPathComponent("v1/translation/saved/\(translationId)")
+    _ = try await deleteWithRetry(url: url)
+  }
+}
+
+/// Response for mark all read
+struct MarkAllReadResponse: Codable {
+  let data: MarkAllReadData
+
+  struct MarkAllReadData: Codable {
+    let count: Int
+  }
+}
+
+// MARK: - Translation Request Types
+
+struct TranslateTextRequest: Codable {
+  let text: String
+  let targetLang: String
+  let sourceLang: String?
+
+  enum CodingKeys: String, CodingKey {
+    case text
+    case targetLang = "target_lang"
+    case sourceLang = "source_lang"
+  }
+}
+
+struct TranslatePhotoRequest: Codable {
+  let imageBase64: String
+  let targetLang: String
+
+  enum CodingKeys: String, CodingKey {
+    case imageBase64 = "image_base64"
+    case targetLang = "target_lang"
+  }
+}
+
+struct TranslateVoiceRequest: Codable {
+  let recognizedText: String
+  let targetLang: String
+  let sourceLang: String?
+
+  enum CodingKeys: String, CodingKey {
+    case recognizedText = "recognized_text"
+    case targetLang = "target_lang"
+    case sourceLang = "source_lang"
+  }
+}
+
+struct TranslateBatchRequest: Codable {
+  let texts: [String]
+  let targetLang: String
+  let sourceLang: String?
+
+  enum CodingKeys: String, CodingKey {
+    case texts
+    case targetLang = "target_lang"
+    case sourceLang = "source_lang"
+  }
+}
+
+struct TranslationBatchResponse: Codable {
+  let data: [TranslationResult]
+}
+
+struct DetectLanguageRequest: Codable {
+  let text: String
+}
+
+struct DetectLanguageResponse: Codable {
+  let data: DetectLanguageData
+
+  struct DetectLanguageData: Codable {
+    let language: String
+  }
+}
+
+struct GetPinyinRequest: Codable {
+  let text: String
+}
+
+struct PhrasesResponse: Codable {
+  let data: [TranslationPhrase]
+}
+
+struct SaveTranslationRequest: Codable {
+  let sourceText: String
+  let sourceLang: String
+  let targetText: String
+  let targetLang: String
+  let translationType: String
+  let imageUrl: String?
+  let audioUrl: String?
+
+  enum CodingKeys: String, CodingKey {
+    case sourceText = "source_text"
+    case sourceLang = "source_lang"
+    case targetText = "target_text"
+    case targetLang = "target_lang"
+    case translationType = "translation_type"
+    case imageUrl = "image_url"
+    case audioUrl = "audio_url"
+  }
+}
+
+struct SavedTranslationResponse: Codable {
+  let data: SavedTranslation
+}
+
 // MARK: - API Error
 
 enum APIError: LocalizedError {
@@ -2067,5 +2589,216 @@ enum APIError: LocalizedError {
     case .invalidURL, .invalidResponse, .unauthorized, .notFound, .cancelled, .httpError, .unknown:
       return false
     }
+  }
+}
+
+// MARK: - WiFi API Extension
+
+extension APIClient {
+  /// Fetch WiFi spots with optional filters
+  func fetchWiFiSpots(cityId: String? = nil, type: String? = nil, limit: Int? = nil) async throws -> [WiFiSpot] {
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("v1/wifi/spots"),
+      resolvingAgainstBaseURL: false
+    )!
+
+    var queryItems: [URLQueryItem] = []
+    if let cityId = cityId {
+      queryItems.append(URLQueryItem(name: "cityId", value: cityId))
+    }
+    if let type = type {
+      queryItems.append(URLQueryItem(name: "type", value: type))
+    }
+    if let limit = limit {
+      queryItems.append(URLQueryItem(name: "limit", value: String(limit)))
+    }
+    if !queryItems.isEmpty {
+      components.queryItems = queryItems
+    }
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiSpotListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch nearby WiFi spots
+  func fetchNearbyWiFiSpots(
+    latitude: Double,
+    longitude: Double,
+    radiusKm: Double,
+    type: String? = nil,
+    limit: Int? = nil
+  ) async throws -> [WiFiSpot] {
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("v1/wifi/spots/nearby"),
+      resolvingAgainstBaseURL: false
+    )!
+
+    var queryItems: [URLQueryItem] = [
+      URLQueryItem(name: "latitude", value: String(latitude)),
+      URLQueryItem(name: "longitude", value: String(longitude)),
+      URLQueryItem(name: "radiusKm", value: String(radiusKm))
+    ]
+    if let type = type {
+      queryItems.append(URLQueryItem(name: "type", value: type))
+    }
+    if let limit = limit {
+      queryItems.append(URLQueryItem(name: "limit", value: String(limit)))
+    }
+    components.queryItems = queryItems
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiSpotListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Search WiFi spots
+  func searchWiFiSpots(query: String, cityId: String? = nil, type: String? = nil) async throws -> [WiFiSpot] {
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("v1/wifi/spots/search"),
+      resolvingAgainstBaseURL: false
+    )!
+
+    var queryItems: [URLQueryItem] = [
+      URLQueryItem(name: "q", value: query)
+    ]
+    if let cityId = cityId {
+      queryItems.append(URLQueryItem(name: "cityId", value: cityId))
+    }
+    if let type = type {
+      queryItems.append(URLQueryItem(name: "type", value: type))
+    }
+    components.queryItems = queryItems
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiSpotListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch WiFi spot by ID
+  func fetchWiFiSpot(id: String) async throws -> WiFiSpot {
+    let url = baseURL.appendingPathComponent("v1/wifi/spots/\(id)")
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiSpotResponse.self, from: data)
+    return result.data
+  }
+
+  /// Create a new WiFi spot
+  func createWiFiSpot(_ request: CreateWiFiSpotRequest) async throws -> String {
+    let url = baseURL.appendingPathComponent("v1/wifi/spots")
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(WiFiCreateResponse.self, from: data)
+    return result.data.id
+  }
+
+  /// Fetch WiFi credentials for user
+  func fetchWiFiCredentials() async throws -> [WiFiCredential] {
+    let url = baseURL.appendingPathComponent("v1/wifi/credentials")
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiCredentialListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch WiFi credential for a spot
+  func fetchWiFiCredentialForSpot(spotId: String) async throws -> WiFiCredential? {
+    let url = baseURL.appendingPathComponent("v1/wifi/spots/\(spotId)/credential")
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiCredentialResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch shared WiFi credentials
+  func fetchSharedWiFiCredentials() async throws -> [WiFiCredential] {
+    let url = baseURL.appendingPathComponent("v1/wifi/credentials/shared")
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiCredentialListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Create a new WiFi credential
+  func createWiFiCredential(_ request: CreateWiFiCredentialRequest) async throws -> String {
+    let url = baseURL.appendingPathComponent("v1/wifi/credentials")
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(WiFiCreateResponse.self, from: data)
+    return result.data.id
+  }
+
+  /// Delete WiFi credential
+  func deleteWiFiCredential(id: String) async throws {
+    let url = baseURL.appendingPathComponent("v1/wifi/credentials/\(id)")
+    _ = try await deleteWithRetry(url: url)
+  }
+
+  /// Mark WiFi credential as used
+  func markWiFiCredentialUsed(id: String) async throws {
+    let url = baseURL.appendingPathComponent("v1/wifi/credentials/\(id)/used")
+    _ = try await postWithRetry(url: url, body: EmptyBody())
+  }
+
+  /// Fetch reviews for a WiFi spot
+  func fetchWiFiReviews(spotId: String, limit: Int? = nil, offset: Int? = nil) async throws -> [WiFiReview] {
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("v1/wifi/spots/\(spotId)/reviews"),
+      resolvingAgainstBaseURL: false
+    )!
+
+    var queryItems: [URLQueryItem] = []
+    if let limit = limit {
+      queryItems.append(URLQueryItem(name: "limit", value: String(limit)))
+    }
+    if let offset = offset {
+      queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
+    }
+    if !queryItems.isEmpty {
+      components.queryItems = queryItems
+    }
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiReviewListResponse.self, from: data)
+    return result.data
+  }
+
+  /// Fetch user's review for a WiFi spot
+  func fetchUserWiFiReview(spotId: String) async throws -> WiFiReview? {
+    let url = baseURL.appendingPathComponent("v1/wifi/spots/\(spotId)/reviews/me")
+    let data = try await fetchWithRetry(url: url)
+    let result = try decoder.decode(WiFiReviewResponse.self, from: data)
+    return result.data
+  }
+
+  /// Create a WiFi review
+  func createWiFiReview(_ request: CreateWiFiReviewRequest) async throws -> String {
+    let url = baseURL.appendingPathComponent("v1/wifi/reviews")
+    let data = try await postWithRetry(url: url, body: request)
+    let result = try decoder.decode(WiFiCreateResponse.self, from: data)
+    return result.data.id
+  }
+
+  /// Mark WiFi review as helpful
+  func markWiFiReviewHelpful(reviewId: String) async throws {
+    let url = baseURL.appendingPathComponent("v1/wifi/reviews/\(reviewId)/helpful")
+    _ = try await postWithRetry(url: url, body: EmptyBody())
+  }
+
+  /// Delete WiFi review
+  func deleteWiFiReview(reviewId: String) async throws {
+    let url = baseURL.appendingPathComponent("v1/wifi/reviews/\(reviewId)")
+    _ = try await deleteWithRetry(url: url)
   }
 }

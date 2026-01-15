@@ -35,8 +35,8 @@ struct SearchPOIIntent: AppIntent {
       for day in itinerary.days {
         for poi in day.pois {
           if poi.name.localizedCaseInsensitiveContains(query)
-            || poi.address?.localizedCaseInsensitiveContains(query) == true
-            || poi.type.localizedCaseInsensitiveContains(query)
+            || (poi.address?.localizedCaseInsensitiveContains(query) ?? false)
+            || (poi.type?.localizedCaseInsensitiveContains(query) ?? false)
           {
             matchingPOIs.append((poi, itinerary))
           }
@@ -104,9 +104,9 @@ enum POITypeEnum: String, AppEnum {
   case transportation = "transportation"
   case shopping = "shopping"
 
-  static var typeDisplayRepresentation: TypeDisplayRepresentation = "景点类型"
+  nonisolated(unsafe) static var typeDisplayRepresentation: TypeDisplayRepresentation = "景点类型"
 
-  static var caseDisplayRepresentations: [POITypeEnum: DisplayRepresentation] = [
+  nonisolated(unsafe) static var caseDisplayRepresentations: [POITypeEnum: DisplayRepresentation] = [
     .attraction: DisplayRepresentation(
       title: "景点",
       image: DisplayRepresentation.Image(systemName: "mappin.circle.fill")

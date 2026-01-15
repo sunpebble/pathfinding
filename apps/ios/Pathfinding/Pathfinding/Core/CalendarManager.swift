@@ -96,7 +96,8 @@ final class CalendarManager {
   }
 
   deinit {
-    stopObservingCalendarChanges()
+    // Note: Cannot call MainActor-isolated methods from deinit
+    // The observer will be cleaned up when the object is deallocated
   }
 
   // MARK: - Authorization

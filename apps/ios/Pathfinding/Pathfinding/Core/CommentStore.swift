@@ -217,7 +217,7 @@ final class CommentStore {
         body["description"] = description
       }
 
-      let _: [String: Any] = try await apiClient.post(
+      try await apiClient.postVoid(
         path: "comments/\(commentId)/report",
         body: body
       )
@@ -288,10 +288,10 @@ final class CommentStore {
   /// Mark notification as read
   func markNotificationRead(notificationId: String) async {
     do {
-      try await apiClient.post(
+      try await apiClient.postVoid(
         path: "notifications/\(notificationId)/read",
         body: [:]
-      ) as [String: Any]
+      )
 
       // Update local state
       if let index = notifications.firstIndex(where: { $0.id == notificationId }) {
@@ -313,10 +313,10 @@ final class CommentStore {
   /// Mark all notifications as read
   func markAllNotificationsRead() async {
     do {
-      try await apiClient.post(
+      try await apiClient.postVoid(
         path: "notifications/read-all",
         body: [:]
-      ) as [String: Any]
+      )
 
       unreadCount = 0
       await fetchNotifications(refresh: true)

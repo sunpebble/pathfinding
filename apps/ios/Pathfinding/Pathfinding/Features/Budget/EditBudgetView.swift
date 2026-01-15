@@ -318,7 +318,7 @@ struct CurrencyPickerView: View {
   var body: some View {
     NavigationStack {
       List {
-        ForEach(currencies, id: \.self) { currency in
+        ForEach(currencies, id: \.self) { (currency: String) in
           Button {
             selectedCurrency = currency
             dismiss()
@@ -341,7 +341,7 @@ struct CurrencyPickerView: View {
 
               if selectedCurrency == currency {
                 Image(systemName: "checkmark")
-                  .foregroundStyle(.accent)
+                  .foregroundStyle(Color.accentColor)
               }
             }
             .foregroundStyle(.primary)

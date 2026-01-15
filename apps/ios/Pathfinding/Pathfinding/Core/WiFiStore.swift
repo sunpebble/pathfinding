@@ -112,7 +112,7 @@ final class WiFiStore {
         error = nil
 
         do {
-            credentials = try await apiClient.fetchWiFiCredentials(limit: limit)
+            credentials = try await apiClient.fetchWiFiCredentials()
             logger.info("Loaded \(self.credentials.count) WiFi credentials")
         } catch {
             self.error = error.localizedDescription
@@ -135,7 +135,7 @@ final class WiFiStore {
     /// Get shared credentials for a spot (community passwords)
     func getSharedCredentials(spotId: String) async -> [WiFiCredential] {
         do {
-            return try await apiClient.fetchSharedWiFiCredentials(spotId: spotId)
+            return try await apiClient.fetchSharedWiFiCredentials()
         } catch {
             logger.error("Failed to fetch shared credentials: \(error.localizedDescription)")
             return []
@@ -247,7 +247,7 @@ final class WiFiStore {
     /// Delete a review
     func deleteReview(id: String) async -> Bool {
         do {
-            try await apiClient.deleteWiFiReview(id: id)
+            try await apiClient.deleteWiFiReview(reviewId: id)
             currentSpotReviews.removeAll { $0.id == id }
             logger.info("Deleted WiFi review: \(id)")
             return true

@@ -66,7 +66,7 @@ final class CollaborationManager {
     displayName: String? = nil,
     avatarUrl: String? = nil
   ) async throws {
-    guard !isInSession else {
+    if isInSession {
       logger.warning("Already in a session, leaving current session first")
       await leaveSession()
     }
