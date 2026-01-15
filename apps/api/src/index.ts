@@ -26,6 +26,7 @@ import { eventsRoutes, publicEventsRoutes } from './routes/events';
 import { feedRoutes, publicFeedRoutes } from './routes/feed';
 import { flightRoutes, publicFlightRoutes } from './routes/flights';
 import { followRoutes, publicFollowRoutes } from './routes/follows';
+import { guidesProxyRoutes } from './routes/guides-proxy';
 import { hiddenGemsRoutes } from './routes/hiddenGems';
 import { hotelBookingsRoutes } from './routes/hotelBookings';
 import { icalRoutes, publicICalRoutes } from './routes/ical';
@@ -44,7 +45,6 @@ import { itineraryItemsRoutes } from './routes/itinerary-items';
 import { itineraryLikesRoutes, myLikesRoutes } from './routes/itinerary-likes';
 import { itineraryVersionsRoutes } from './routes/itinerary-versions';
 import { luggageRoutes, publicLuggageRoutes } from './routes/luggage';
-
 
 import { pdfExportRoutes, publicPdfExportRoutes } from './routes/pdf-export';
 import {
@@ -68,9 +68,7 @@ import {
 } from './routes/share';
 import { simCardRoutes } from './routes/simCards';
 import { statsRoutes } from './routes/stats';
-import {
-  publicTemplateRoutes,
-} from './routes/templates';
+import { publicTemplateRoutes } from './routes/templates';
 import { ticketReminderRoutes, ticketRoutes } from './routes/tickets';
 import { timezonesRoutes } from './routes/timezones';
 import { tippingRoutes } from './routes/tipping';
@@ -79,7 +77,6 @@ import {
   publicTravelNotesRoutes,
   travelNotesRoutes,
 } from './routes/travel-notes';
-
 
 import { voiceRoutes } from './routes/voice';
 import { weatherRoutes } from './routes/weather';
@@ -109,6 +106,9 @@ app.use('*', responseSizeLimitMiddleware); // NFR-004: Monitor response sizes
 app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Proxy routes for crawler service (iOS uses /api/guides path)
+app.route('/api/guides', guidesProxyRoutes);
 
 // Public API v1 routes (no auth required)
 const publicApi = new Hono();
