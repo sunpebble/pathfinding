@@ -248,7 +248,7 @@ export default function GuideDetailPage() {
               Destinations
             </h3>
             <div className="flex flex-wrap gap-2">
-              {guide.destinations.map((dest) => (
+              {guide.destinations.map((dest: string) => (
                 <span
                   key={dest}
                   className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium"
@@ -264,7 +264,7 @@ export default function GuideDetailPage() {
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
             <div className="flex flex-wrap gap-2">
-              {guide.tags.map((tag) => (
+              {guide.tags.map((tag: string) => (
                 <span
                   key={tag}
                   className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
@@ -309,7 +309,7 @@ export default function GuideDetailPage() {
             Images ({guide.image_urls.length})
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {guide.image_urls.slice(0, 9).map((url, index) => (
+            {guide.image_urls.slice(0, 9).map((url: string, index: number) => (
               <a
                 key={index}
                 href={url}

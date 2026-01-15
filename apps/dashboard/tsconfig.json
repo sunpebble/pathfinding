@@ -1,21 +1,18 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "incremental": true,
     "target": "ES2017",
     "jsx": "preserve",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "esnext",
-    "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"]
     },
-    "resolveJsonModule": true,
     "allowJs": true,
-    "strict": true,
+    "strict": false,
+    "noUncheckedIndexedAccess": false,
     "noEmit": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "skipLibCheck": true,
+    "verbatimModuleSyntax": false,
     "plugins": [
       {
         "name": "next"

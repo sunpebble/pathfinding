@@ -1,0 +1,57 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - '8000:8000'
+    environment:
+      - NODE_ENV=development
+      - CONVEX_URL=${CONVEX_URL}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:8000/api/health',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  crawler:
+    build:
+      context: .
+      dockerfile: apps/crawler/Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - CONVEX_URL=${CONVEX_URL}
+      - AMAP_API_KEY=${AMAP_API_KEY}
+      - OVERPASS_API_URL=${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
+    volumes:
+      - crawler-storage:/app/apps/crawler/storage
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:3001/health',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  crawler-storage:

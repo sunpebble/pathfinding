@@ -5,8 +5,8 @@
   "private": true,
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "import": "./src/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     },
     "./api": {
       "types": "./_generated/api.d.ts",
