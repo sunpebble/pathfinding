@@ -59,6 +59,7 @@ function getStatusCode(error: Error): number {
     case 'ForbiddenError':
       return 403;
     case 'ConflictError':
+    case 'SyncConflictError':
       return 409;
     case 'ValidationError':
       return 400;

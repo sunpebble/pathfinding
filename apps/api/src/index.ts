@@ -13,6 +13,7 @@ import {
 import { itineraryItemsRoutes } from './routes/itinerary-items';
 import { poisRoutes } from './routes/pois';
 import { remindersRoutes } from './routes/reminders';
+import { syncRoutes } from './routes/sync';
 import 'dotenv/config';
 
 const app = new Hono();
@@ -49,6 +50,7 @@ protectedApi.use('*', authMiddleware);
 protectedApi.route('/itineraries', itinerariesRoutes);
 protectedApi.route('/itineraries', itineraryItemsRoutes); // Nested items routes
 protectedApi.route('/pois', poisRoutes);
+protectedApi.route('/sync', syncRoutes);
 protectedApi.route('/', remindersRoutes);
 
 // Mount both API groups under /v1

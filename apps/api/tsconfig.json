@@ -3,7 +3,7 @@
     "target": "ES2022",
     "lib": ["ES2022"],
     "rootDir": "./src",
-    "module": "nodenext",
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "strict": true,
