@@ -12,14 +12,32 @@ struct ProfileView: View {
   @State private var followStats: FollowStats?
   @State private var favoriteStore = FavoriteStore.shared
 
+  // Navigation destinations for stats
+  @State private var navigateToFavorites = false
+  @State private var navigateToLikes = false
+  @State private var navigateToFollowManagement = false
+
   var body: some View {
     NavigationStack {
       List {
         // MARK: - Profile Section
         Section {
-          HStack(spacing: DesignTokens.Spacing.md) {
-            // Avatar
+          HStack(spacing: DesignTokens.Spacing.lg) {
+            // Avatar with enhanced styling
             ZStack {
+              // Outer glow
+              Circle()
+                .fill(
+                  LinearGradient(
+                    colors: [.indigo.opacity(0.3), .purple.opacity(0.3)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                  )
+                )
+                .frame(width: 80, height: 80)
+                .blur(radius: 8)
+
+              // Main avatar circle
               Circle()
                 .fill(
                   LinearGradient(
@@ -28,91 +46,111 @@ struct ProfileView: View {
                     endPoint: .bottomTrailing
                   )
                 )
-                .frame(width: 70, height: 70)
+                .frame(width: 72, height: 72)
+                .shadow(color: .indigo.opacity(0.4), radius: 8, y: 4)
 
               Image(systemName: "person.fill")
-                .font(.system(size: 30))
+                .font(.system(size: 32, weight: .medium))
                 .foregroundStyle(.white)
             }
+            .frame(width: 80, height: 80)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
               Text("profile.guest".localized)
-                .font(.title3)
-                .fontWeight(.semibold)
+                .font(.title2)
+                .fontWeight(.bold)
 
-              Text("profile.login_prompt".localized)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+              HStack(spacing: 4) {
+                Image(systemName: "arrow.right.circle.fill")
+                  .font(.caption)
+                  .foregroundStyle(.indigo)
+                Text("profile.login_prompt".localized)
+                  .font(.subheadline)
+                  .foregroundStyle(.secondary)
+              }
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
-              .font(.caption)
-              .foregroundStyle(.tertiary)
+              .font(.body)
+              .fontWeight(.semibold)
+              .foregroundStyle(.quaternary)
           }
-          .padding(.vertical, DesignTokens.Spacing.xs)
+          .padding(.vertical, DesignTokens.Spacing.sm)
         }
 
         // MARK: - Stats Section
         Section {
-          HStack(spacing: 0) {
-            NavigationLink {
-              MyFavoritesView()
-            } label: {
-              StatItem(
-                value: "\(favoriteStore.totalFavoritesCount)",
-                label: "profile.favorites".localized,
-                icon: "bookmark.fill",
-                color: .orange
-              )
-            }
-            .buttonStyle(.plain)
-
-            Divider().frame(height: 40)
-
-            NavigationLink {
-              MyLikesView()
-            } label: {
-              StatItem(
-                value: "\(favoriteStore.totalLikesCount)",
-                label: "profile.likes".localized,
-                icon: "heart.fill",
-                color: .red
-              )
-            }
-            .buttonStyle(.plain)
-
-            Divider().frame(height: 40)
-
-            StatItem(value: "0", label: "profile.footprints".localized, icon: "shoeprints.fill", color: .green)
-          }
-          .listRowInsets(EdgeInsets())
-        }
-
-        // MARK: - Follow Stats Section
-        Section {
-          NavigationLink {
-            FollowManagementView()
-          } label: {
+          VStack(spacing: DesignTokens.Spacing.md) {
+            // Main stats row
             HStack(spacing: 0) {
-              FollowStatItem(
-                value: "\(followStats?.followersCount ?? 0)",
-                label: "profile.followers".localized,
-                icon: "person.2.fill",
-                color: .pink
-              )
-              Divider().frame(height: 40)
-              FollowStatItem(
-                value: "\(followStats?.followingCount ?? 0)",
-                label: "profile.following".localized,
-                icon: "heart.fill",
-                color: .red
+              Button {
+                navigateToFavorites = true
+              } label: {
+                EnhancedStatItem(
+                  value: "\(favoriteStore.totalFavoritesCount)",
+                  label: "profile.favorites".localized,
+                  icon: "bookmark.fill",
+                  color: .orange
+                )
+              }
+              .buttonStyle(.plain)
+
+              EnhancedStatDivider()
+
+              Button {
+                navigateToLikes = true
+              } label: {
+                EnhancedStatItem(
+                  value: "\(favoriteStore.totalLikesCount)",
+                  label: "profile.likes".localized,
+                  icon: "heart.fill",
+                  color: .red
+                )
+              }
+              .buttonStyle(.plain)
+
+              EnhancedStatDivider()
+
+              EnhancedStatItem(
+                value: "0",
+                label: "profile.footprints".localized,
+                icon: "shoeprints.fill",
+                color: .green
               )
             }
+
+            Divider()
+              .padding(.horizontal, DesignTokens.Spacing.md)
+
+            // Follow stats row
+            Button {
+              navigateToFollowManagement = true
+            } label: {
+              HStack(spacing: 0) {
+                EnhancedStatItem(
+                  value: "\(followStats?.followersCount ?? 0)",
+                  label: "profile.followers".localized,
+                  icon: "person.2.fill",
+                  color: .pink
+                )
+
+                EnhancedStatDivider()
+
+                EnhancedStatItem(
+                  value: "\(followStats?.followingCount ?? 0)",
+                  label: "profile.following".localized,
+                  icon: "person.wave.2.fill",
+                  color: .purple
+                )
+              }
+            }
+            .buttonStyle(.plain)
           }
-          .listRowInsets(EdgeInsets())
+          .padding(.vertical, DesignTokens.Spacing.xs)
         }
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
 
         // MARK: - Travel Stats Section
         Section("profile.section.travel_data".localized) {
@@ -198,7 +236,8 @@ struct ProfileView: View {
               icon: themeManager.currentMode.icon,
               title: "profile.theme".localized,
               subtitle: themeManager.currentMode.displayName,
-              iconColor: themeManager.currentMode.iconColor
+              iconColor: themeManager.currentMode.iconColor,
+              showChevron: true
             )
           }
 
@@ -209,7 +248,8 @@ struct ProfileView: View {
               icon: localizationManager.currentLanguage.icon,
               title: "profile.language".localized,
               subtitle: localizationManager.currentLanguage.nativeName,
-              iconColor: localizationManager.currentLanguage.iconColor
+              iconColor: localizationManager.currentLanguage.iconColor,
+              showChevron: true
             )
           }
         }
@@ -219,7 +259,7 @@ struct ProfileView: View {
           Button {
             showCloudSyncSettings = true
           } label: {
-            iCloudSyncSettingsRow()
+            iCloudSyncSettingsRow(showChevron: true)
           }
 
           NavigationLink {
@@ -248,7 +288,8 @@ struct ProfileView: View {
               icon: "server.rack",
               title: "profile.api_config".localized,
               subtitle: AppConfig.apiBaseURL,
-              iconColor: .blue
+              iconColor: .blue,
+              showChevron: true
             )
           }
 
@@ -270,7 +311,8 @@ struct ProfileView: View {
               icon: "info.circle",
               title: "profile.about".localized,
               subtitle: "profile.about_subtitle".localized,
-              iconColor: .purple
+              iconColor: .purple,
+              showChevron: true
             )
           }
         }
@@ -310,6 +352,15 @@ struct ProfileView: View {
       .sheet(isPresented: $showCloudSyncSettings) {
         iCloudSyncSettingsSheet()
       }
+      .navigationDestination(isPresented: $navigateToFavorites) {
+        MyFavoritesView()
+      }
+      .navigationDestination(isPresented: $navigateToLikes) {
+        MyLikesView()
+      }
+      .navigationDestination(isPresented: $navigateToFollowManagement) {
+        FollowManagementView()
+      }
       .task {
         await loadFollowStats()
         await loadFavoriteStats()
@@ -343,7 +394,51 @@ struct ProfileView: View {
   }
 }
 
-// MARK: - Stat Item
+// MARK: - Enhanced Stat Item
+
+struct EnhancedStatItem: View {
+  let value: String
+  let label: String
+  let icon: String
+  let color: Color
+
+  var body: some View {
+    VStack(spacing: 8) {
+      ZStack {
+        Circle()
+          .fill(color.opacity(0.12))
+          .frame(width: 44, height: 44)
+
+        Image(systemName: icon)
+          .font(.system(size: 18, weight: .semibold))
+          .foregroundStyle(color)
+      }
+
+      Text(value)
+        .font(.title3)
+        .fontWeight(.bold)
+        .monospacedDigit()
+
+      Text(label)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, DesignTokens.Spacing.sm)
+  }
+}
+
+// MARK: - Enhanced Stat Divider
+
+struct EnhancedStatDivider: View {
+  var body: some View {
+    Rectangle()
+      .fill(.quaternary)
+      .frame(width: 1, height: 50)
+  }
+}
+
+// MARK: - Stat Item (Legacy)
 
 struct StatItem: View {
   let value: String
@@ -370,7 +465,7 @@ struct StatItem: View {
   }
 }
 
-// MARK: - Follow Stat Item
+// MARK: - Follow Stat Item (Legacy)
 
 struct FollowStatItem: View {
   let value: String
@@ -404,16 +499,24 @@ struct SettingsRow: View {
   let title: String
   let subtitle: String
   let iconColor: Color
+  var showChevron: Bool = false
 
   var body: some View {
-    HStack(spacing: DesignTokens.Spacing.sm) {
-      Image(systemName: icon)
-        .font(.title3)
-        .foregroundStyle(iconColor)
-        .frame(width: 28)
+    HStack(spacing: DesignTokens.Spacing.md) {
+      // Icon with rounded background
+      ZStack {
+        RoundedRectangle(cornerRadius: 8)
+          .fill(iconColor.opacity(0.12))
+          .frame(width: 32, height: 32)
 
-      VStack(alignment: .leading, spacing: 2) {
+        Image(systemName: icon)
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(iconColor)
+      }
+
+      VStack(alignment: .leading, spacing: 3) {
         Text(title)
+          .font(.body)
           .foregroundStyle(.primary)
 
         Text(subtitle)
@@ -421,7 +524,16 @@ struct SettingsRow: View {
           .foregroundStyle(.secondary)
           .lineLimit(1)
       }
+
+      if showChevron {
+        Spacer()
+
+        Image(systemName: "chevron.right")
+          .font(.system(size: 13, weight: .semibold))
+          .foregroundStyle(.tertiary)
+      }
     }
+    .padding(.vertical, 2)
   }
 }
 
@@ -610,14 +722,21 @@ struct OfflineMapSettingsRow: View {
   @State private var manager = OfflineMapManager.shared
 
   var body: some View {
-    HStack(spacing: DesignTokens.Spacing.sm) {
-      Image(systemName: "map.fill")
-        .font(.title3)
-        .foregroundStyle(.green)
-        .frame(width: 28)
+    HStack(spacing: DesignTokens.Spacing.md) {
+      // Icon with rounded background
+      ZStack {
+        RoundedRectangle(cornerRadius: 8)
+          .fill(Color.green.opacity(0.12))
+          .frame(width: 32, height: 32)
 
-      VStack(alignment: .leading, spacing: 2) {
+        Image(systemName: "map.fill")
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(.green)
+      }
+
+      VStack(alignment: .leading, spacing: 3) {
         Text("profile.offline_maps".localized)
+          .font(.body)
           .foregroundStyle(.primary)
 
         Text(subtitleText)
@@ -632,14 +751,14 @@ struct OfflineMapSettingsRow: View {
       if !manager.downloadedRegions.isEmpty {
         Text("\(manager.downloadedRegions.count)")
           .font(.caption2)
-          .fontWeight(.medium)
+          .fontWeight(.semibold)
           .foregroundStyle(.white)
           .padding(.horizontal, 8)
           .padding(.vertical, 4)
-          .background(Color.green)
-          .clipShape(Capsule())
+          .background(Color.green, in: Capsule())
       }
     }
+    .padding(.vertical, 2)
   }
 
   private var subtitleText: String {
@@ -655,17 +774,25 @@ struct OfflineMapSettingsRow: View {
 
 struct iCloudSyncSettingsRow: View {
   @State private var syncManager = CloudKitSyncManager.shared
+  var showChevron: Bool = false
 
   var body: some View {
-    HStack(spacing: DesignTokens.Spacing.sm) {
-      Image(systemName: syncStatusIcon)
-        .font(.title3)
-        .foregroundStyle(syncStatusColor)
-        .frame(width: 28)
-        .symbolEffect(.pulse, isActive: syncManager.syncStatus == .syncing)
+    HStack(spacing: DesignTokens.Spacing.md) {
+      // Icon with rounded background
+      ZStack {
+        RoundedRectangle(cornerRadius: 8)
+          .fill(syncStatusColor.opacity(0.12))
+          .frame(width: 32, height: 32)
 
-      VStack(alignment: .leading, spacing: 2) {
+        Image(systemName: syncStatusIcon)
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(syncStatusColor)
+          .symbolEffect(.pulse, isActive: syncManager.syncStatus == .syncing)
+      }
+
+      VStack(alignment: .leading, spacing: 3) {
         Text("profile.icloud_sync".localized)
+          .font(.body)
           .foregroundStyle(.primary)
 
         Text(syncStatusText)
@@ -685,7 +812,14 @@ struct iCloudSyncSettingsRow: View {
           .padding(.vertical, 2)
           .background(.orange, in: Capsule())
       }
+
+      if showChevron {
+        Image(systemName: "chevron.right")
+          .font(.system(size: 13, weight: .semibold))
+          .foregroundStyle(.tertiary)
+      }
     }
+    .padding(.vertical, 2)
   }
 
   private var syncStatusIcon: String {
