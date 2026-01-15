@@ -85,7 +85,7 @@ struct ImportedItineraryView: View {
               showARNavigation = true
             } label: {
               Image(systemName: "arkit")
-                .foregroundStyle(.indigo)
+                .foregroundStyle(DesignTokens.Colors.accent)
             }
           }
 
@@ -117,20 +117,20 @@ struct ImportedItineraryView: View {
             store.save(from: guide)
             showSaveSuccess = true
           } label: {
-            Label(isSaved ? "已保存" : "保存", systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+            Label(isSaved ? "itinerary.saved".localized : "itinerary.save".localized, systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
           }
           .disabled(isSaved)
         }
       }
     }
-    .alert("保存成功", isPresented: $showSaveSuccess) {
-      Button("查看行程") {
+    .alert("itinerary.save_success".localized, isPresented: $showSaveSuccess) {
+      Button("itinerary.view_itinerary".localized) {
         appState.selectedTab = .itinerary
         dismiss() // Dismiss current view
       }
-      Button("继续浏览", role: .cancel) {}
+      Button("itinerary.continue_browsing".localized, role: .cancel) {}
     } message: {
-      Text("行程已保存到「我的行程」")
+      Text("itinerary.save_success_message".localized)
     }
     .sheet(isPresented: $showCopySheet) {
       CopyGuideSheet(guide: guide) { _ in
@@ -246,7 +246,7 @@ struct ImportedItineraryView: View {
           HStack(spacing: 4) {
             Image(systemName: "checkmark.circle.fill")
               .font(.caption2)
-            Text("已优化")
+            Text("itinerary.optimized".localized)
               .font(.caption2)
           }
           .foregroundStyle(.green)
@@ -511,7 +511,7 @@ struct PoiDetailSheet: View {
             Divider()
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-              Text("简介")
+              Text("itinerary.poi_intro".localized)
                 .font(.headline)
 
               Text(description)
@@ -525,7 +525,7 @@ struct PoiDetailSheet: View {
             Divider()
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-              Text("位置")
+              Text("itinerary.poi_location".localized)
                 .font(.headline)
 
               Map(initialPosition: .region(
@@ -547,7 +547,7 @@ struct PoiDetailSheet: View {
               Button {
                 openInMaps(name: poi.name, lat: lat, lng: lng)
               } label: {
-                Label("导航", systemImage: "arrow.triangle.turn.up.right.diamond")
+                Label("itinerary.poi_navigate".localized, systemImage: "arrow.triangle.turn.up.right.diamond")
                   .frame(maxWidth: .infinity)
               }
               .buttonStyle(.borderedProminent)
@@ -556,7 +556,7 @@ struct PoiDetailSheet: View {
             Button {
               // Add to favorites
             } label: {
-              Label("收藏", systemImage: "bookmark")
+              Label("itinerary.poi_favorite".localized, systemImage: "bookmark")
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -564,7 +564,7 @@ struct PoiDetailSheet: View {
         }
         .padding(DesignTokens.Spacing.lg)
       }
-      .navigationTitle("景点详情")
+      .navigationTitle("itinerary.poi_detail".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {

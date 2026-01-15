@@ -108,7 +108,7 @@ struct LanguageMiniPreview: View {
         HStack {
           ZStack {
             Circle()
-              .fill(isActive ? Color.indigo : Color.gray.opacity(0.3))
+              .fill(isActive ? DesignTokens.Colors.accent : Color.gray.opacity(0.3))
               .frame(width: 28, height: 28)
 
             Text(title)

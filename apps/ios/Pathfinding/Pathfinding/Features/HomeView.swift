@@ -51,11 +51,11 @@ struct HomeView: View {
   private var heroHeader: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
       HStack {
-        VStack(alignment: .leading, spacing: 4) {
-          Text("发现旅途")
-            .font(.system(size: 32, weight: .bold, design: .rounded))
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+          Text("home.hero_title".localized)
+            .font(DesignTokens.Typography.Display.small)
 
-          Text("探索精选攻略，开启下一段旅程")
+          Text("home.hero_subtitle".localized)
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }
@@ -79,7 +79,7 @@ struct HomeView: View {
 
   private var featuredSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      SectionHeader(title: "精选推荐", icon: "star.fill", iconColor: .orange)
+      SectionHeader(title: "home.section.featured".localized, icon: "star.fill", iconColor: .orange)
         .padding(.horizontal, DesignTokens.Spacing.lg)
 
       ScrollView(.horizontal, showsIndicators: false) {
@@ -101,7 +101,7 @@ struct HomeView: View {
 
   private var recentSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      SectionHeader(title: "最新攻略", icon: "clock.fill", iconColor: .indigo)
+      SectionHeader(title: "home.section.recent".localized, icon: "clock.fill", iconColor: DesignTokens.Colors.accent)
         .padding(.horizontal, DesignTokens.Spacing.lg)
 
       LazyVStack(spacing: DesignTokens.Spacing.sm) {
@@ -122,7 +122,7 @@ struct HomeView: View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
       // Featured skeleton
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-        SectionHeader(title: "精选推荐", icon: "star.fill", iconColor: .orange)
+        SectionHeader(title: "home.section.featured".localized, icon: "star.fill", iconColor: .orange)
           .padding(.horizontal, DesignTokens.Spacing.lg)
 
         ScrollView(.horizontal, showsIndicators: false) {
@@ -137,7 +137,7 @@ struct HomeView: View {
 
       // Recent skeleton
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-        SectionHeader(title: "最新攻略", icon: "clock.fill", iconColor: .indigo)
+        SectionHeader(title: "home.section.recent".localized, icon: "clock.fill", iconColor: DesignTokens.Colors.accent)
           .padding(.horizontal, DesignTokens.Spacing.lg)
 
         VStack(spacing: DesignTokens.Spacing.sm) {
@@ -154,11 +154,11 @@ struct HomeView: View {
 
   private func errorView(_ error: StoreError) -> some View {
     ContentUnavailableView {
-      Label("加载失败", systemImage: "wifi.exclamationmark")
+      Label("home.load_failed".localized, systemImage: "wifi.exclamationmark")
     } description: {
       Text(error.localizedDescription)
     } actions: {
-      Button("重试") {
+      Button("common.retry".localized) {
         Task { await store.fetchGuides(forceRefresh: true) }
       }
       .buttonStyle(.secondary)
@@ -171,9 +171,9 @@ struct HomeView: View {
 
   private var emptyView: some View {
     ContentUnavailableView {
-      Label("暂无攻略", systemImage: "book.closed")
+      Label("home.no_guides".localized, systemImage: "book.closed")
     } description: {
-      Text("下拉刷新加载最新内容")
+      Text("home.pull_to_refresh".localized)
     }
     .frame(minHeight: 300)
     .padding(.horizontal, DesignTokens.Spacing.lg)
@@ -216,7 +216,7 @@ struct FeaturedCard: View {
           Rectangle()
             .fill(
               LinearGradient(
-                colors: [.indigo.opacity(0.3), .purple.opacity(0.2)],
+                colors: [DesignTokens.Colors.accent.opacity(0.3), DesignTokens.Colors.accentSecondary.opacity(0.2)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
               )

@@ -262,7 +262,7 @@ struct QuestionDetailView: View {
         .clipShape(Circle())
       } else {
         Circle()
-          .fill(Color.indigo.gradient)
+          .fill(DesignTokens.Colors.accent.gradient)
           .frame(width: 36, height: 36)
           .overlay {
             Text(String(currentQ.authorName?.prefix(1) ?? "?"))

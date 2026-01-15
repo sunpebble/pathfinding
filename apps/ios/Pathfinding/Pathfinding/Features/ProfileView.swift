@@ -1260,7 +1260,7 @@ struct ThemeMiniPreview: View {
         // Header bar
         HStack {
           Circle()
-            .fill(isDark ? Color.indigo.opacity(0.8) : Color.indigo)
+            .fill(isDark ? DesignTokens.Colors.accent.opacity(0.8) : DesignTokens.Colors.accent)
             .frame(width: 20, height: 20)
 
           VStack(alignment: .leading, spacing: 2) {

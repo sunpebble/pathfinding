@@ -257,7 +257,7 @@ private struct TimezoneColumn: View {
         if isHome {
           Image(systemName: "house.fill")
             .font(.caption2)
-            .foregroundStyle(.indigo)
+            .foregroundStyle(DesignTokens.Colors.accent)
         }
 
         Text(isHome ? "出发地" : "目的地")
@@ -376,7 +376,7 @@ struct ItineraryTimeConverterView: View {
             Text(formatTime(for: homeTimezone))
               .font(.headline)
               .monospacedDigit()
-              .foregroundStyle(.indigo)
+              .foregroundStyle(DesignTokens.Colors.accent)
           }
         }
 

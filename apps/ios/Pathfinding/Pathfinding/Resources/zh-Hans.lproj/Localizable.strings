@@ -45,6 +45,13 @@
 "home.popular_destinations" = "热门目的地";
 "home.recommended" = "为你推荐";
 "home.recent" = "最近浏览";
+"home.hero_title" = "发现旅途";
+"home.hero_subtitle" = "探索精选攻略，开启下一段旅程";
+"home.section.featured" = "精选推荐";
+"home.section.recent" = "最新攻略";
+"home.load_failed" = "加载失败";
+"home.no_guides" = "暂无攻略";
+"home.pull_to_refresh" = "下拉刷新加载最新内容";
 
 // MARK: - Guides
 "guides.title" = "旅行攻略";
@@ -322,6 +329,36 @@
 "stats.cities_visited" = "到访城市";
 "stats.countries_visited" = "到访国家";
 "stats.yearly_review" = "年度回顾";
+"stats.overview" = "总览";
+"stats.trips_count" = "旅行次数";
+"stats.days_count" = "旅行天数";
+"stats.cities_count" = "城市数量";
+"stats.total_expenses" = "总花费";
+"stats.year_review" = "%d年回顾";
+"stats.first_trip" = "首次出行";
+"stats.longest_trip" = "最长旅程";
+"stats.most_expensive" = "最大花费";
+"stats.days_suffix" = "%d天";
+"stats.expense_analysis" = "费用分析";
+"stats.top_destinations" = "热门目的地";
+"stats.visits_days" = "%d次 / %d天";
+"stats.monthly_activity" = "月度活动";
+"stats.achievements" = "成就徽章";
+"stats.generate_report" = "生成%d年旅行报告";
+"stats.generate_report_desc" = "回顾这一年的旅行足迹，查看统计数据和成就";
+"stats.generate_button" = "生成报告";
+"stats.generating" = "正在生成报告...";
+"stats.analyzing" = "正在分析您的旅行数据";
+"stats.select_year" = "选择年份";
+"stats.no_data" = "无数据";
+"stats.year_suffix" = "%d年";
+
+// MARK: - Expense Categories
+"expense.transport" = "交通";
+"expense.accommodation" = "住宿";
+"expense.food" = "餐饮";
+"expense.tickets" = "门票";
+"expense.shopping" = "购物";
 
 // MARK: - Accessibility
 "accessibility.close_button" = "关闭";
@@ -332,3 +369,17 @@
 "accessibility.favorite_button" = "收藏";
 "accessibility.map_view" = "地图视图";
 "accessibility.list_view" = "列表视图";
+
+// MARK: - Imported Itinerary
+"itinerary.saved" = "已保存";
+"itinerary.save" = "保存";
+"itinerary.save_success" = "保存成功";
+"itinerary.save_success_message" = "行程已保存到「我的行程」";
+"itinerary.view_itinerary" = "查看行程";
+"itinerary.continue_browsing" = "继续浏览";
+"itinerary.optimized" = "已优化";
+"itinerary.poi_intro" = "简介";
+"itinerary.poi_location" = "位置";
+"itinerary.poi_navigate" = "导航";
+"itinerary.poi_favorite" = "收藏";
+"itinerary.poi_detail" = "景点详情";

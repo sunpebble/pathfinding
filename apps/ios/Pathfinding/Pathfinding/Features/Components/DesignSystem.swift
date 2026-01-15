@@ -29,25 +29,35 @@ enum DesignTokens {
     static let full: CGFloat = 9999
   }
 
-  // MARK: - Shadows (Adaptive for Dark Mode)
+  // MARK: - Shadows (Adaptive for Dark Mode - Apple Native Style)
 
   enum Shadow {
+    /// Subtle shadow - barely visible, for minimal elevation (Apple native style)
+    static func subtle(for colorScheme: ColorScheme) -> ShadowStyle {
+      colorScheme == .dark
+        ? ShadowStyle(color: .clear, radius: 0, y: 0)
+        : ShadowStyle(color: .black.opacity(0.03), radius: 2, y: 1)
+    }
+
+    /// Small shadow - light elevation for cards (Apple native style)
     static func sm(for colorScheme: ColorScheme) -> ShadowStyle {
       colorScheme == .dark
-        ? ShadowStyle(color: .black.opacity(0.4), radius: 4, y: 2)
+        ? ShadowStyle(color: .black.opacity(0.3), radius: 2, y: 1)
         : ShadowStyle(color: .black.opacity(0.04), radius: 4, y: 2)
     }
 
+    /// Medium shadow - moderate elevation for floating elements
     static func md(for colorScheme: ColorScheme) -> ShadowStyle {
       colorScheme == .dark
-        ? ShadowStyle(color: .black.opacity(0.5), radius: 8, y: 4)
-        : ShadowStyle(color: .black.opacity(0.08), radius: 8, y: 4)
+        ? ShadowStyle(color: .black.opacity(0.4), radius: 4, y: 2)
+        : ShadowStyle(color: .black.opacity(0.06), radius: 6, y: 3)
     }
 
+    /// Large shadow - prominent elevation for modals and popovers
     static func lg(for colorScheme: ColorScheme) -> ShadowStyle {
       colorScheme == .dark
-        ? ShadowStyle(color: .black.opacity(0.6), radius: 16, y: 6)
-        : ShadowStyle(color: .black.opacity(0.12), radius: 16, y: 6)
+        ? ShadowStyle(color: .black.opacity(0.5), radius: 8, y: 4)
+        : ShadowStyle(color: .black.opacity(0.08), radius: 10, y: 4)
     }
 
     /// Glow effect for dark mode (colored shadow)
@@ -58,9 +68,10 @@ enum DesignTokens {
     }
 
     // Static versions for backward compatibility
+    static let subtle = ShadowStyle(color: .black.opacity(0.03), radius: 2, y: 1)
     static let sm = ShadowStyle(color: .black.opacity(0.04), radius: 4, y: 2)
-    static let md = ShadowStyle(color: .black.opacity(0.08), radius: 8, y: 4)
-    static let lg = ShadowStyle(color: .black.opacity(0.12), radius: 16, y: 6)
+    static let md = ShadowStyle(color: .black.opacity(0.06), radius: 6, y: 3)
+    static let lg = ShadowStyle(color: .black.opacity(0.08), radius: 10, y: 4)
   }
 
   struct ShadowStyle {
@@ -77,6 +88,83 @@ enum DesignTokens {
     static let smooth = SwiftUI.Animation.easeInOut(duration: 0.35)
     static let spring = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.7)
     static let bouncy = SwiftUI.Animation.spring(response: 0.4, dampingFraction: 0.6)
+  }
+
+  // MARK: - Typography
+
+  enum Typography {
+    // MARK: - Apple HIG Standard Text Styles
+
+    /// Large title - 34pt, for prominent headings
+    static let largeTitle: Font = .largeTitle
+
+    /// Title - 28pt, for section headers
+    static let title: Font = .title
+
+    /// Title 2 - 22pt, for secondary headers
+    static let title2: Font = .title2
+
+    /// Title 3 - 20pt, for tertiary headers
+    static let title3: Font = .title3
+
+    /// Headline - 17pt semibold, for emphasized body text
+    static let headline: Font = .headline
+
+    /// Body - 17pt, for main content
+    static let body: Font = .body
+
+    /// Callout - 16pt, for supplementary content
+    static let callout: Font = .callout
+
+    /// Subheadline - 15pt, for secondary content
+    static let subheadline: Font = .subheadline
+
+    /// Footnote - 13pt, for footnotes and annotations
+    static let footnote: Font = .footnote
+
+    /// Caption - 12pt, for small labels
+    static let caption: Font = .caption
+
+    /// Caption 2 - 11pt, for very small labels
+    static let caption2: Font = .caption2
+
+    // MARK: - Display Fonts (Hero Headers)
+
+    enum Display {
+      /// Hero display - 48pt bold rounded, for main hero headers
+      static let hero: Font = .system(size: 48, weight: .bold, design: .rounded)
+
+      /// Jumbo display - 60pt bold rounded, for large decorative text
+      static let jumbo: Font = .system(size: 60, weight: .bold, design: .rounded)
+
+      /// Mega display - 72pt bold rounded, for splash screens
+      static let mega: Font = .system(size: 72, weight: .bold, design: .rounded)
+
+      /// Small display - 32pt bold rounded, for smaller hero text
+      static let small: Font = .system(size: 32, weight: .bold, design: .rounded)
+    }
+
+    // MARK: - Numeric Fonts (Stats, Clocks, Counters)
+
+    enum Numeric {
+      /// Small numeric - 28pt medium rounded, for small stats
+      static let small: Font = .system(size: 28, weight: .medium, design: .rounded)
+
+      /// Medium numeric - 36pt light rounded, for medium displays
+      static let medium: Font = .system(size: 36, weight: .light, design: .rounded)
+
+      /// Large numeric - 48pt light monospaced, for timers and counters
+      static let large: Font = .system(size: 48, weight: .light, design: .monospaced)
+
+      /// Extra large numeric - 56pt light rounded, for prominent numbers
+      static let xlarge: Font = .system(size: 56, weight: .light, design: .rounded)
+
+      /// Extra extra large numeric - 64pt thin rounded, for decorative numbers
+      static let xxlarge: Font = .system(size: 64, weight: .thin, design: .rounded)
+
+      /// Clock display - 80pt ultralight rounded, for clock faces
+      static let clock: Font = .system(size: 80, weight: .ultraLight, design: .rounded)
+    }
   }
 
   // MARK: - Semantic Colors (Adaptive for Light/Dark Mode)
@@ -403,9 +491,12 @@ extension Color {
     ThemeManager.shared.accentColor.secondaryColor
   }
 
-  // MARK: - Legacy Accent Colors (for backward compatibility)
+  // MARK: - Legacy Accent Colors (deprecated - use DesignTokens.Colors instead)
 
+  @available(*, deprecated, message: "Use DesignTokens.Colors.accent instead")
   static let accent = Color.indigo
+
+  @available(*, deprecated, message: "Use DesignTokens.Colors.accentSecondary instead")
   static let accentSecondary = Color.purple
 
   // MARK: - Semantic Colors
@@ -592,6 +683,42 @@ extension View {
     self
       .background(DesignTokens.Colors.sectionGradient(for: colorScheme))
   }
+
+  /// Apply Apple-native shadow with automatic color scheme adaptation
+  func appleShadow(_ level: ShadowLevel = .sm) -> some View {
+    modifier(AppleShadowModifier(level: level))
+  }
+}
+
+// MARK: - Shadow Level
+
+enum ShadowLevel {
+  case subtle
+  case sm
+  case md
+  case lg
+}
+
+// MARK: - Apple Shadow Modifier
+
+struct AppleShadowModifier: ViewModifier {
+  @Environment(\.colorScheme) private var colorScheme
+  let level: ShadowLevel
+
+  func body(content: Content) -> some View {
+    let shadow: DesignTokens.ShadowStyle
+    switch level {
+    case .subtle:
+      shadow = DesignTokens.Shadow.subtle(for: colorScheme)
+    case .sm:
+      shadow = DesignTokens.Shadow.sm(for: colorScheme)
+    case .md:
+      shadow = DesignTokens.Shadow.md(for: colorScheme)
+    case .lg:
+      shadow = DesignTokens.Shadow.lg(for: colorScheme)
+    }
+    return content.shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+  }
 }
 
 // MARK: - Custom Button Styles
@@ -701,7 +828,7 @@ struct Badge: View {
   }
 
   var body: some View {
-    HStack(spacing: 4) {
+    HStack(spacing: DesignTokens.Spacing.xxs) {
       if let icon {
         Image(systemName: icon)
       }
@@ -710,8 +837,8 @@ struct Badge: View {
     .font(.caption2)
     .fontWeight(.semibold)
     .foregroundStyle(.white)
-    .padding(.horizontal, 8)
-    .padding(.vertical, 4)
+    .padding(.horizontal, DesignTokens.Spacing.xs)
+    .padding(.vertical, DesignTokens.Spacing.xxs)
     .background(style.backgroundColor.gradient)
     .clipShape(Capsule())
   }
@@ -731,7 +858,7 @@ struct StatLabel: View {
   }
 
   var body: some View {
-    HStack(spacing: 3) {
+    HStack(spacing: DesignTokens.Spacing.xxs) {
       Image(systemName: icon)
         .foregroundStyle(color)
       Text(value)

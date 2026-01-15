@@ -518,7 +518,7 @@ struct TravelStyleSelectionView: View {
             HStack(spacing: DesignTokens.Spacing.sm) {
               Image(systemName: style.icon)
                 .font(.title3)
-                .foregroundStyle(.indigo)
+                .foregroundStyle(DesignTokens.Colors.accent)
                 .frame(width: 28)
 
               VStack(alignment: .leading, spacing: 2) {

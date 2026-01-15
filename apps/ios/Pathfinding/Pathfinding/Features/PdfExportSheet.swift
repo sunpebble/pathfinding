@@ -219,7 +219,7 @@ struct PdfExportSheet: View {
         .padding(.vertical, DesignTokens.Spacing.xs)
       }
       .disabled(isGenerating)
-      .listRowBackground(Color.indigo)
+      .listRowBackground(DesignTokens.Colors.accent)
       .foregroundStyle(.white)
     } footer: {
       if let days = guide.aiDays {
