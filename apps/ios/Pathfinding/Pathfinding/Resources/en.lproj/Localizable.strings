@@ -45,6 +45,13 @@
 "home.popular_destinations" = "Popular Destinations";
 "home.recommended" = "Recommended for You";
 "home.recent" = "Recently Viewed";
+"home.hero_title" = "Discover Journeys";
+"home.hero_subtitle" = "Explore curated guides and start your next adventure";
+"home.section.featured" = "Featured";
+"home.section.recent" = "Latest Guides";
+"home.load_failed" = "Failed to Load";
+"home.no_guides" = "No Guides";
+"home.pull_to_refresh" = "Pull to refresh for new content";
 
 // MARK: - Guides
 "guides.title" = "Travel Guides";
@@ -322,6 +329,36 @@
 "stats.cities_visited" = "Cities Visited";
 "stats.countries_visited" = "Countries Visited";
 "stats.yearly_review" = "Yearly Review";
+"stats.overview" = "Overview";
+"stats.trips_count" = "Trips";
+"stats.days_count" = "Days";
+"stats.cities_count" = "Cities";
+"stats.total_expenses" = "Total Spent";
+"stats.year_review" = "%d Review";
+"stats.first_trip" = "First Trip";
+"stats.longest_trip" = "Longest Trip";
+"stats.most_expensive" = "Most Expensive";
+"stats.days_suffix" = "%d days";
+"stats.expense_analysis" = "Expense Analysis";
+"stats.top_destinations" = "Top Destinations";
+"stats.visits_days" = "%d visits / %d days";
+"stats.monthly_activity" = "Monthly Activity";
+"stats.achievements" = "Achievements";
+"stats.generate_report" = "Generate %d Report";
+"stats.generate_report_desc" = "Review your travel footprints and achievements";
+"stats.generate_button" = "Generate Report";
+"stats.generating" = "Generating...";
+"stats.analyzing" = "Analyzing your travel data";
+"stats.select_year" = "Select Year";
+"stats.no_data" = "No Data";
+"stats.year_suffix" = "%d";
+
+// MARK: - Expense Categories
+"expense.transport" = "Transport";
+"expense.accommodation" = "Accommodation";
+"expense.food" = "Food & Dining";
+"expense.tickets" = "Tickets";
+"expense.shopping" = "Shopping";
 
 // MARK: - Accessibility
 "accessibility.close_button" = "Close";
@@ -332,3 +369,22 @@
 "accessibility.favorite_button" = "Favorite";
 "accessibility.map_view" = "Map View";
 "accessibility.list_view" = "List View";
+
+// MARK: - Imported Itinerary
+"itinerary.saved" = "Saved";
+"itinerary.save" = "Save";
+"itinerary.save_success" = "Saved Successfully";
+"itinerary.save_success_message" = "Itinerary saved to My Itineraries";
+"itinerary.view_itinerary" = "View Itinerary";
+"itinerary.continue_browsing" = "Continue Browsing";
+"itinerary.optimized" = "Optimized";
+"itinerary.poi_intro" = "Introduction";
+"itinerary.poi_location" = "Location";
+"itinerary.poi_navigate" = "Navigate";
+"itinerary.poi_favorite" = "Favorite";
+"itinerary.poi_detail" = "POI Details";
+
+// MARK: - Timezone
+"timezone.home_zone" = "Home Timezone";
+"timezone.departure" = "Departure";
+"timezone.destination" = "Destination";

@@ -324,7 +324,7 @@ struct ActionButtonsSection: View {
           Label("下载离线地图", systemImage: "arrow.down.circle.fill")
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.indigo)
+            .background(DesignTokens.Colors.accent)
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
@@ -362,7 +362,7 @@ struct ActionButtonsSection: View {
             Label("继续", systemImage: "play.fill")
               .frame(maxWidth: .infinity)
               .padding()
-              .background(Color.indigo)
+              .background(DesignTokens.Colors.accent)
               .foregroundStyle(.white)
               .clipShape(RoundedRectangle(cornerRadius: 12))
           }

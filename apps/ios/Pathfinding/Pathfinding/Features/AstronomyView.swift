@@ -85,7 +85,7 @@ struct AstronomyView: View {
       // Location info
       HStack {
         Image(systemName: "location.fill")
-          .foregroundStyle(.indigo)
+          .foregroundStyle(DesignTokens.Colors.accent)
         Text(locationName)
           .font(.headline)
         Spacer()

@@ -129,7 +129,7 @@ struct CommentRow: View {
           .clipShape(Circle())
         } else {
           Circle()
-            .fill(Color.indigo.gradient)
+            .fill(DesignTokens.Colors.accent.gradient)
             .frame(width: 32, height: 32)
             .overlay {
               Text(String(comment.authorName?.prefix(1) ?? "?"))

@@ -63,7 +63,7 @@ struct LoadingAnalysisView: View {
     VStack(spacing: DesignTokens.Spacing.lg) {
       ZStack {
         Circle()
-          .stroke(Color.indigo.opacity(0.2), lineWidth: 8)
+          .stroke(DesignTokens.Colors.accent.opacity(0.2), lineWidth: 8)
           .frame(width: 80, height: 80)
 
         Circle()
@@ -136,7 +136,7 @@ struct AnalysisEmptyView: View {
     VStack(spacing: DesignTokens.Spacing.md) {
       Image(systemName: "chart.bar.doc.horizontal")
         .font(.system(size: 48))
-        .foregroundStyle(.indigo)
+        .foregroundStyle(DesignTokens.Colors.accent)
 
       Text("生成行程分析报告")
         .font(.headline)
@@ -821,7 +821,7 @@ struct DayStatItem: View {
     VStack(spacing: 4) {
       Image(systemName: icon)
         .font(.title3)
-        .foregroundStyle(.indigo)
+        .foregroundStyle(DesignTokens.Colors.accent)
 
       Text(value)
         .font(.subheadline)
@@ -1016,10 +1016,10 @@ struct BudgetOverviewCard: View {
         }
         .font(.subheadline)
         .fontWeight(.medium)
-        .foregroundStyle(.indigo)
+        .foregroundStyle(DesignTokens.Colors.accent)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(Color.indigo.opacity(0.1))
+        .background(DesignTokens.Colors.accent.opacity(0.1))
         .clipShape(Capsule())
       }
 

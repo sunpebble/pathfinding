@@ -409,7 +409,7 @@ struct DayCard: View {
       // Day number circle
       ZStack {
         Circle()
-          .fill(Color.indigo.gradient)
+          .fill(DesignTokens.Colors.accent.gradient)
           .frame(width: 44, height: 44)
 
         Text("\(day.dayNumber)")

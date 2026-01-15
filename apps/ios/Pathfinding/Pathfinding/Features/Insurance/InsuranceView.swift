@@ -364,8 +364,8 @@ struct InsuranceProductCard: View {
               .font(.caption2)
               .padding(.horizontal, 8)
               .padding(.vertical, 4)
-              .background(Color.indigo.opacity(0.1))
-              .foregroundStyle(.indigo)
+              .background(DesignTokens.Colors.accent.opacity(0.1))
+              .foregroundStyle(DesignTokens.Colors.accent)
               .clipShape(Capsule())
           }
         }
@@ -541,7 +541,7 @@ struct UserInsuranceCard: View {
           Text(insurance.formattedPrice)
             .font(.subheadline)
             .fontWeight(.semibold)
-            .foregroundStyle(.indigo)
+            .foregroundStyle(DesignTokens.Colors.accent)
         }
       }
 
@@ -580,7 +580,7 @@ struct ClaimGuideCard: View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
         Image(systemName: "doc.text")
-          .foregroundStyle(.indigo)
+          .foregroundStyle(DesignTokens.Colors.accent)
         Text(guide.title)
           .font(.headline)
         Spacer()
@@ -649,7 +649,7 @@ struct InsuranceDetailView: View {
               Text(product.formattedPrice)
                 .font(.title3)
                 .fontWeight(.semibold)
-                .foregroundStyle(.indigo)
+                .foregroundStyle(DesignTokens.Colors.accent)
             }
 
             VStack(alignment: .leading) {
@@ -697,7 +697,7 @@ struct InsuranceDetailView: View {
                 Text(detail.formattedAmount)
                   .font(.subheadline)
                   .fontWeight(.medium)
-                  .foregroundStyle(.indigo)
+                  .foregroundStyle(DesignTokens.Colors.accent)
               }
               .padding(DesignTokens.Spacing.sm)
 
@@ -771,7 +771,7 @@ struct InsuranceDetailView: View {
             if let phone = product.contactPhone {
               HStack {
                 Image(systemName: "phone")
-                  .foregroundStyle(.indigo)
+                  .foregroundStyle(DesignTokens.Colors.accent)
                 Text(phone)
                 Spacer()
                 Button {
@@ -789,7 +789,7 @@ struct InsuranceDetailView: View {
             if let email = product.contactEmail {
               HStack {
                 Image(systemName: "envelope")
-                  .foregroundStyle(.indigo)
+                  .foregroundStyle(DesignTokens.Colors.accent)
                 Text(email)
                 Spacer()
               }
@@ -967,7 +967,7 @@ struct ClaimGuideDetailView: View {
             ForEach(guide.requiredDocuments, id: \.self) { doc in
               HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "doc.text")
-                  .foregroundStyle(.indigo)
+                  .foregroundStyle(DesignTokens.Colors.accent)
                 Text(doc)
                   .font(.subheadline)
               }
@@ -992,7 +992,7 @@ struct ClaimGuideDetailView: View {
                 HStack {
                   ZStack {
                     Circle()
-                      .fill(Color.indigo)
+                      .fill(DesignTokens.Colors.accent)
                       .frame(width: 28, height: 28)
                     Text("\(step.stepNumber)")
                       .font(.caption)
@@ -1067,7 +1067,7 @@ struct ClaimGuideDetailView: View {
               if let phone = contact.phone {
                 HStack {
                   Image(systemName: "phone")
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(DesignTokens.Colors.accent)
                   Text(phone)
                   Spacer()
                   Button {
@@ -1085,7 +1085,7 @@ struct ClaimGuideDetailView: View {
               if let email = contact.email {
                 HStack {
                   Image(systemName: "envelope")
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(DesignTokens.Colors.accent)
                   Text(email)
                   Spacer()
                 }
@@ -1094,7 +1094,7 @@ struct ClaimGuideDetailView: View {
               if let website = contact.website {
                 HStack {
                   Image(systemName: "globe")
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(DesignTokens.Colors.accent)
                   Text(website)
                     .lineLimit(1)
                   Spacer()

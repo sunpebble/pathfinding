@@ -234,12 +234,12 @@ struct AvailableRegionRow: View {
       // City icon
       ZStack {
         Circle()
-          .fill(Color.indigo.opacity(0.1))
+          .fill(DesignTokens.Colors.accent.opacity(0.1))
           .frame(width: 44, height: 44)
 
         Image(systemName: "building.2")
           .font(.title3)
-          .foregroundStyle(.indigo)
+          .foregroundStyle(DesignTokens.Colors.accent)
       }
 
       // Info
@@ -272,7 +272,7 @@ struct AvailableRegionRow: View {
         } label: {
           Image(systemName: "arrow.down.circle.fill")
             .font(.title2)
-            .foregroundStyle(.indigo)
+            .foregroundStyle(DesignTokens.Colors.accent)
         }
 
       case .downloading:
@@ -317,13 +317,13 @@ struct DownloadProgressButton: View {
 
         Circle()
           .trim(from: 0, to: progress)
-          .stroke(Color.indigo, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+          .stroke(DesignTokens.Colors.accent, style: StrokeStyle(lineWidth: 3, lineCap: .round))
           .frame(width: 32, height: 32)
           .rotationEffect(.degrees(-90))
 
         Image(systemName: "stop.fill")
           .font(.caption2)
-          .foregroundStyle(.indigo)
+          .foregroundStyle(DesignTokens.Colors.accent)
       }
     }
   }

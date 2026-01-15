@@ -220,7 +220,7 @@ struct BudgetOverviewView: View {
             x: .value("日期", item.date),
             y: .value("金额", item.amount)
           )
-          .foregroundStyle(Color.indigo.gradient)
+          .foregroundStyle(DesignTokens.Colors.accent.gradient)
           .cornerRadius(4)
         }
         .chartXAxis {

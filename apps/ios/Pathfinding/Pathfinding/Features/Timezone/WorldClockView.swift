@@ -116,9 +116,9 @@ struct HomeClockCard: View {
       // Header
       HStack {
         Image(systemName: "house.fill")
-          .foregroundStyle(.indigo)
+          .foregroundStyle(DesignTokens.Colors.accent)
 
-        Text("主时区")
+        Text("timezone.home_zone".localized)
           .font(.subheadline)
           .fontWeight(.medium)
           .foregroundStyle(.secondary)
@@ -170,7 +170,7 @@ struct HomeClockCard: View {
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
     .overlay(
       RoundedRectangle(cornerRadius: DesignTokens.Radius.lg)
-        .stroke(Color.indigo.opacity(0.2), lineWidth: 1)
+        .stroke(DesignTokens.Colors.accent.opacity(0.2), lineWidth: 1)
     )
   }
 

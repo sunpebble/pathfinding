@@ -53,14 +53,14 @@ struct StatsView: View {
         .padding()
       }
       .background(Color(.systemGroupedBackground))
-      .navigationTitle("旅行统计")
+      .navigationTitle("stats.title".localized)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             showYearPicker = true
           } label: {
             HStack(spacing: 4) {
-              Text("\(selectedYear)年")
+              Text(String(format: "stats.year_suffix".localized, selectedYear))
               Image(systemName: "chevron.down")
                 .font(.caption)
             }
@@ -114,7 +114,7 @@ struct QuickStatsSection: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("总览")
+      Text("stats.overview".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
@@ -124,28 +124,28 @@ struct QuickStatsSection: View {
       ], spacing: DesignTokens.Spacing.sm) {
         QuickStatCard(
           icon: "airplane",
-          title: "旅行次数",
+          title: "stats.trips_count".localized,
           value: "\(stats?.totalTrips ?? 0)",
-          color: .indigo
+          color: DesignTokens.Colors.accent
         )
 
         QuickStatCard(
           icon: "calendar",
-          title: "旅行天数",
+          title: "stats.days_count".localized,
           value: "\(stats?.totalDays ?? 0)",
           color: .orange
         )
 
         QuickStatCard(
           icon: "building.2",
-          title: "城市数量",
+          title: "stats.cities_count".localized,
           value: "\(stats?.totalCities ?? 0)",
           color: .green
         )
 
         QuickStatCard(
           icon: "yensign.circle",
-          title: "总花费",
+          title: "stats.total_expenses".localized,
           value: formatCurrency(stats?.totalExpenses ?? 0),
           color: .purple
         )
@@ -205,7 +205,7 @@ struct YearlyReviewSection: View {
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
       HStack {
-        Text("\(review.year)年回顾")
+        Text(String(format: "stats.year_review".localized, review.year))
           .font(.headline)
           .foregroundStyle(.secondary)
 
@@ -221,7 +221,7 @@ struct YearlyReviewSection: View {
         if let firstTrip = review.firstTripOfYear {
           HighlightRow(
             icon: "flag.fill",
-            title: "首次出行",
+            title: "stats.first_trip".localized,
             subtitle: "\(firstTrip.cityName) - \(firstTrip.title)",
             color: .green
           )
@@ -230,8 +230,8 @@ struct YearlyReviewSection: View {
         if let longestTrip = review.longestTrip {
           HighlightRow(
             icon: "clock.fill",
-            title: "最长旅程",
-            subtitle: "\(longestTrip.cityName) - \(longestTrip.days)天",
+            title: "stats.longest_trip".localized,
+            subtitle: "\(longestTrip.cityName) - " + String(format: "stats.days_suffix".localized, longestTrip.days),
             color: .orange
           )
         }
@@ -239,7 +239,7 @@ struct YearlyReviewSection: View {
         if let mostExpensive = review.mostExpensiveTrip {
           HighlightRow(
             icon: "creditcard.fill",
-            title: "最大花费",
+            title: "stats.most_expensive".localized,
             subtitle: "\(mostExpensive.title) - \(Int(mostExpensive.amount))元",
             color: .purple
           )
@@ -313,18 +313,18 @@ struct GenerateReviewCard: View {
     VStack(spacing: DesignTokens.Spacing.md) {
       Image(systemName: "chart.bar.doc.horizontal")
         .font(.system(size: 48))
-        .foregroundStyle(.indigo)
+        .foregroundStyle(DesignTokens.Colors.accent)
 
-      Text("生成\(year)年旅行报告")
+      Text(String(format: "stats.generate_report".localized, year))
         .font(.headline)
 
-      Text("回顾这一年的旅行足迹，查看统计数据和成就")
+      Text("stats.generate_report_desc".localized)
         .font(.subheadline)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
 
       Button(action: onGenerate) {
-        Text("生成报告")
+        Text("stats.generate_button".localized)
           .fontWeight(.semibold)
       }
       .buttonStyle(.primary)
@@ -347,10 +347,10 @@ struct GeneratingReviewCard: View {
       ProgressView()
         .scaleEffect(1.5)
 
-      Text("正在生成报告...")
+      Text("stats.generating".localized)
         .font(.headline)
 
-      Text("正在分析您的旅行数据")
+      Text("stats.analyzing".localized)
         .font(.subheadline)
         .foregroundStyle(.secondary)
     }
@@ -373,7 +373,7 @@ struct ExpenseBreakdownSection: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("费用分析")
+      Text("stats.expense_analysis".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
@@ -444,7 +444,7 @@ struct TopDestinationsSection: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("热门目的地")
+      Text("stats.top_destinations".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
@@ -464,7 +464,7 @@ struct TopDestinationsSection: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-              Text("\(destination.visitCount)次 / \(destination.totalDays)天")
+              Text(String(format: "stats.visits_days".localized, destination.visitCount, destination.totalDays))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
@@ -517,7 +517,7 @@ struct MonthlyActivitySection: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("月度活动")
+      Text("stats.monthly_activity".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
@@ -565,7 +565,7 @@ struct AchievementsSection: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("成就徽章")
+      Text("stats.achievements".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
@@ -640,18 +640,18 @@ struct YearPickerSheet: View {
             onSelect()
           } label: {
             HStack {
-              Text("\(year)年")
+              Text(String(format: "stats.year_suffix".localized, year))
                 .foregroundStyle(.primary)
 
               Spacer()
 
               if year == selectedYear {
                 Image(systemName: "checkmark")
-                  .foregroundStyle(.indigo)
+                  .foregroundStyle(DesignTokens.Colors.accent)
               }
 
               if !availableYears.contains(year) {
-                Text("无数据")
+                Text("stats.no_data".localized)
                   .font(.caption)
                   .foregroundStyle(.secondary)
               }
@@ -659,11 +659,11 @@ struct YearPickerSheet: View {
           }
         }
       }
-      .navigationTitle("选择年份")
+      .navigationTitle("stats.select_year".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          Button("完成") { dismiss() }
+          Button("common.done".localized) { dismiss() }
         }
       }
     }
