@@ -144,22 +144,22 @@ struct SignupView: View {
 
           // MARK: - Social Signup
           VStack(spacing: DesignTokens.Spacing.sm) {
-            // Google Sign Up
+            // WeChat Sign Up
             Button {
               Task {
-                await handleSocialSignup(.google)
+                await handleSocialSignup(.wechat)
               }
             } label: {
               HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "globe")
+                Image(systemName: "message.fill")
                   .font(.title3)
-                Text("使用 Google 注册")
+                Text("使用微信注册")
                   .fontWeight(.medium)
               }
               .frame(maxWidth: .infinity)
               .padding(.vertical, DesignTokens.Spacing.sm)
-              .background(Color(.systemGray6))
-              .foregroundStyle(.primary)
+              .background(Color(red: 0.07, green: 0.73, blue: 0.31)) // WeChat green
+              .foregroundStyle(.white)
               .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
             }
             .disabled(isLoading)

@@ -1,13 +1,42 @@
 import SwiftUI
 
+/// Login method options
+enum LoginMethod: String, CaseIterable {
+  case phone = "phone"
+  case email = "email"
+
+  var title: String {
+    switch self {
+    case .phone: return "手机号登录"
+    case .email: return "邮箱登录"
+    }
+  }
+}
+
 struct LoginView: View {
   @Environment(AuthViewModel.self) private var authViewModel
 
+  // Login method state
+  @State private var loginMethod: LoginMethod = .phone
+
+  // Phone login state
+  @State private var phoneNumber = ""
+  @State private var verificationCode = ""
+  @State private var isCodeSent = false
+  @State private var countdown = 0
+
+  // Email login state
   @State private var email = ""
   @State private var password = ""
+
+  // Common state
   @State private var isLoading = false
+  @State private var isSendingCode = false
   @State private var errorMessage: String?
   @State private var showSignup = false
+
+  // Timer for countdown
+  @State private var countdownTimer: Timer?
 
   var body: some View {
     NavigationStack {
@@ -44,35 +73,21 @@ struct LoginView: View {
           }
           .padding(.bottom, DesignTokens.Spacing.lg)
 
+          // MARK: - Login Method Picker
+          Picker("登录方式", selection: $loginMethod) {
+            ForEach(LoginMethod.allCases, id: \.self) { method in
+              Text(method.title).tag(method)
+            }
+          }
+          .pickerStyle(.segmented)
+          .padding(.horizontal, DesignTokens.Spacing.lg)
+
           // MARK: - Login Form
           VStack(spacing: DesignTokens.Spacing.md) {
-            // Email Field
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-              Text("邮箱")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-              TextField("输入邮箱地址", text: $email)
-                .textInputAutocapitalization(.never)
-                .keyboardType(.emailAddress)
-                .autocorrectionDisabled()
-                .padding()
-                .background(Color(.systemGray6))
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-            }
-
-            // Password Field
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-              Text("密码")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-              SecureField("输入密码", text: $password)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .padding()
-                .background(Color(.systemGray6))
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+            if loginMethod == .phone {
+              phoneLoginForm
+            } else {
+              emailLoginForm
             }
 
             // Error Message
@@ -105,18 +120,8 @@ struct LoginView: View {
               .frame(maxWidth: .infinity)
             }
             .buttonStyle(.primary)
-            .disabled(isLoading || email.isEmpty || password.isEmpty)
+            .disabled(isLoginDisabled)
             .padding(.top, DesignTokens.Spacing.xs)
-
-            // Forgot Password
-            Button {
-              // TODO: Implement forgot password
-            } label: {
-              Text("忘记密码？")
-                .font(.subheadline)
-                .foregroundStyle(Color.accentColor)
-            }
-            .padding(.top, DesignTokens.Spacing.xxs)
           }
           .padding(.horizontal, DesignTokens.Spacing.lg)
 
@@ -138,22 +143,22 @@ struct LoginView: View {
 
           // MARK: - Social Login
           VStack(spacing: DesignTokens.Spacing.sm) {
-            // Google Sign In
+            // WeChat Sign In
             Button {
               Task {
-                await handleSocialLogin(.google)
+                await handleSocialLogin(.wechat)
               }
             } label: {
               HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "globe")
+                Image(systemName: "message.fill")
                   .font(.title3)
-                Text("使用 Google 登录")
+                Text("使用微信登录")
                   .fontWeight(.medium)
               }
               .frame(maxWidth: .infinity)
               .padding(.vertical, DesignTokens.Spacing.sm)
-              .background(Color(.systemGray6))
-              .foregroundStyle(.primary)
+              .background(Color(red: 0.07, green: 0.73, blue: 0.31)) // WeChat green
+              .foregroundStyle(.white)
               .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
             }
             .disabled(isLoading)
@@ -212,19 +217,197 @@ struct LoginView: View {
       .sheet(isPresented: $showSignup) {
         SignupView()
       }
+      .onDisappear {
+        countdownTimer?.invalidate()
+      }
+    }
+  }
+
+  // MARK: - Phone Login Form
+
+  private var phoneLoginForm: some View {
+    VStack(spacing: DesignTokens.Spacing.md) {
+      // Phone Number Field
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        Text("手机号")
+          .font(.subheadline)
+          .fontWeight(.medium)
+
+        HStack {
+          Text("+86")
+            .foregroundStyle(.secondary)
+            .padding(.leading, DesignTokens.Spacing.sm)
+
+          Divider()
+            .frame(height: 20)
+
+          TextField("输入手机号", text: $phoneNumber)
+            .textInputAutocapitalization(.never)
+            .keyboardType(.phonePad)
+            .autocorrectionDisabled()
+        }
+        .padding(.vertical, DesignTokens.Spacing.sm)
+        .padding(.horizontal, DesignTokens.Spacing.xs)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+      }
+
+      // Verification Code Field
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        Text("验证码")
+          .font(.subheadline)
+          .fontWeight(.medium)
+
+        HStack {
+          TextField("输入验证码", text: $verificationCode)
+            .textInputAutocapitalization(.never)
+            .keyboardType(.numberPad)
+            .autocorrectionDisabled()
+            .padding()
+
+          Button {
+            Task {
+              await sendVerificationCode()
+            }
+          } label: {
+            if isSendingCode {
+              ProgressView()
+                .progressViewStyle(.circular)
+                .frame(width: 100)
+            } else {
+              Text(countdown > 0 ? "\(countdown)s 后重发" : "获取验证码")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .frame(width: 100)
+            }
+          }
+          .disabled(countdown > 0 || !isValidPhoneNumber || isSendingCode)
+          .foregroundStyle(countdown > 0 || !isValidPhoneNumber ? .secondary : Color.accentColor)
+          .padding(.trailing, DesignTokens.Spacing.sm)
+        }
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+      }
+    }
+  }
+
+  // MARK: - Email Login Form
+
+  private var emailLoginForm: some View {
+    VStack(spacing: DesignTokens.Spacing.md) {
+      // Email Field
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        Text("邮箱")
+          .font(.subheadline)
+          .fontWeight(.medium)
+
+        TextField("输入邮箱地址", text: $email)
+          .textInputAutocapitalization(.never)
+          .keyboardType(.emailAddress)
+          .autocorrectionDisabled()
+          .padding()
+          .background(Color(.systemGray6))
+          .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+      }
+
+      // Password Field
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        Text("密码")
+          .font(.subheadline)
+          .fontWeight(.medium)
+
+        SecureField("输入密码", text: $password)
+          .textInputAutocapitalization(.never)
+          .autocorrectionDisabled()
+          .padding()
+          .background(Color(.systemGray6))
+          .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+      }
+
+      // Forgot Password
+      HStack {
+        Spacer()
+        Button {
+          // TODO: Implement forgot password
+        } label: {
+          Text("忘记密码？")
+            .font(.subheadline)
+            .foregroundStyle(Color.accentColor)
+        }
+      }
+    }
+  }
+
+  // MARK: - Computed Properties
+
+  private var isValidPhoneNumber: Bool {
+    let phoneRegex = "^1[3-9]\\d{9}$"
+    return phoneNumber.range(of: phoneRegex, options: .regularExpression) != nil
+  }
+
+  private var isLoginDisabled: Bool {
+    if isLoading { return true }
+
+    switch loginMethod {
+    case .phone:
+      return phoneNumber.isEmpty || verificationCode.isEmpty || verificationCode.count != 6
+    case .email:
+      return email.isEmpty || password.isEmpty
     }
   }
 
   // MARK: - Actions
 
-  private func handleLogin() async {
-    guard !email.isEmpty, !password.isEmpty else { return }
+  private func sendVerificationCode() async {
+    guard isValidPhoneNumber else {
+      errorMessage = "请输入正确的手机号"
+      return
+    }
 
+    isSendingCode = true
+    errorMessage = nil
+
+    do {
+      try await AuthManager.shared.requestVerificationCode(phoneNumber: phoneNumber)
+      isCodeSent = true
+      startCountdown()
+    } catch {
+      await MainActor.run {
+        errorMessage = error.localizedDescription
+      }
+    }
+
+    isSendingCode = false
+  }
+
+  private func startCountdown() {
+    countdown = 60
+    countdownTimer?.invalidate()
+    countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+      Task { @MainActor in
+        if countdown > 0 {
+          countdown -= 1
+        } else {
+          countdownTimer?.invalidate()
+        }
+      }
+    }
+  }
+
+  private func handleLogin() async {
     isLoading = true
     errorMessage = nil
 
     do {
-      try await AuthManager.shared.signIn(email: email, password: password)
+      switch loginMethod {
+      case .phone:
+        try await AuthManager.shared.signInWithPhone(
+          phoneNumber: phoneNumber,
+          verificationCode: verificationCode
+        )
+      case .email:
+        try await AuthManager.shared.signIn(email: email, password: password)
+      }
 
       // Update auth state to trigger UI refresh
       await authViewModel.updateAuthState()
