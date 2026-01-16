@@ -54,7 +54,7 @@ packages/
 
 ### Authentication
 
-All protected endpoints require JWT Bearer token from Supabase Auth.
+All protected endpoints require JWT Bearer token from Convex Auth.
 
 ```bash
 curl -H "Authorization: Bearer <token>" http://localhost:8000/v1/itineraries
@@ -618,7 +618,7 @@ All error responses follow this format:
 
    ```bash
    cp .env.example .env
-   # Edit .env with your Supabase credentials
+   # Edit .env with your Convex credentials
    ```
 
 2. **Start all services**:
@@ -668,19 +668,18 @@ docker compose up -d
 
 ## Database Schema
 
-The application uses PostgreSQL with the following main tables:
+The application uses Convex with the following main tables:
 
-- **users**: Extended Supabase Auth profiles
+- **users**: User profiles and authentication
 - **cities**: Reference data for destinations
 - **itineraries**: Travel plans owned by users
-- **itinerary_days**: Days within an itinerary
-- **itinerary_items**: POIs added to specific days
+- **itineraryDays**: Days within an itinerary
+- **itineraryItems**: POIs added to specific days
 - **pois**: Point of interest reference data
 - **reminders**: Scheduled reminders for items
+- **travelGuides**: Crawled travel guide content with AI enrichment
 
-Row-level security (RLS) policies enforce that users can only access their own itineraries.
-
-See [specs/001-travel-itinerary/data-model.md](./specs/001-travel-itinerary/data-model.md) for detailed schema.
+See [packages/convex/schema.ts](./packages/convex/schema.ts) for detailed schema.
 
 ---
 
@@ -696,15 +695,12 @@ See [specs/001-travel-itinerary/data-model.md](./specs/001-travel-itinerary/data
 
 ## Security
 
-- All API endpoints require Supabase JWT authentication
-- Row-level security policies enforce data isolation
-- Passwords hashed with Supabase Auth
+- All API endpoints require Convex Auth JWT authentication
+- Convex functions enforce data access control
 - HTTPS in production
 - Input validation with Zod
 - CORS configured for trusted origins
 - Rate limiting on public endpoints
-
-See [specs/001-travel-itinerary/data-model.md](./specs/001-travel-itinerary/data-model.md) for RLS policy details.
 
 ---
 

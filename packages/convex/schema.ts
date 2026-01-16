@@ -4,7 +4,7 @@ import { v } from 'convex/values';
 
 /**
  * Pathfinding Database Schema
- * Migrated from Supabase PostgreSQL to Convex
+ * Using Convex for data storage
  * Includes Convex Auth tables
  */
 export default defineSchema({

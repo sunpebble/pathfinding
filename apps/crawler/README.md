@@ -16,8 +16,7 @@ A high-performance POI data crawler and ML training dataset generation service. 
 
 - Node.js 20+
 - pnpm 9+
-- PostgreSQL with PostGIS extension
-- Supabase account (or self-hosted Supabase)
+- Convex account (self-hosted or cloud)
 
 ## Quick Start
 
@@ -39,10 +38,8 @@ cp .env.example .env
 Required environment variables:
 
 ```env
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-key
+# Convex
+CONVEX_URL=https://your-convex-instance.convex.cloud
 
 # API Keys (optional, for specific platforms)
 AMAP_API_KEY=your-amap-key
@@ -51,13 +48,7 @@ AMAP_API_KEY=your-amap-key
 SENTRY_DSN=https://xxx@sentry.io/xxx
 ```
 
-### 3. Run Database Migrations
-
-```bash
-pnpm supabase db push
-```
-
-### 4. Start Development Server
+### 3. Start Development Server
 
 ```bash
 pnpm dev

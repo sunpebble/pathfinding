@@ -17,9 +17,9 @@
   the iteration process.
 -->
 
-**Language/Version**: Deno (stable), TypeScript 5.x, React Native (Expo SDK latest)  
-**Primary Dependencies**: Hono (backend), Expo Router (mobile), Supabase client, React Native Maps  
-**Storage**: Supabase (PostgreSQL + Realtime), AsyncStorage (mobile offline cache)  
+**Language/Version**: Deno (stable), TypeScript 5.x, React Native (Expo SDK latest)
+**Primary Dependencies**: Hono (backend), Expo Router (mobile), Convex client, React Native Maps
+**Storage**: Convex, AsyncStorage (mobile offline cache)
 **Testing**: Deno test (backend), Jest + React Native Testing Library (mobile)  
 **Target Platform**: iOS 14+, Android 8+, Deno runtime on server  
 **Project Type**: Monorepo (mobile app + API backend + shared packages)  
@@ -87,14 +87,11 @@ apps/
 │   └── tests/              # Backend tests
 │
 packages/
+├── convex/                  # Convex schema and functions
 ├── types/                   # Shared TypeScript types
 ├── utils/                   # Shared utility functions
 ├── config/                  # Shared configuration (ESLint, Prettier, Commitlint)
 └── constants/               # Shared constants
-
-supabase/
-├── migrations/              # Database migrations
-└── functions/               # Supabase Edge Functions (if needed)
 ```
 
 **Structure Decision**: [Document the selected packages and their responsibilities for this specific feature]

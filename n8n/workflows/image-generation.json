@@ -72,18 +72,10 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/travel_guides?id=eq.{{ $('Webhook Trigger').item.json.data.guideId }}",
+        "url": "={{ $env.CRAWLER_API_URL }}/api/guides/{{ $('Webhook Trigger').item.json.data.guideId }}/image",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -92,7 +84,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"hero_image_url\": \"{{ $json.images[0].url }}\",\n  \"updated_at\": \"{{ $now.toISO() }}\"\n}",
+        "jsonBody": "={\n  \"hero_image_url\": \"{{ $json.images[0].url }}\"\n}",
         "options": {}
       },
       "id": "update-guide",

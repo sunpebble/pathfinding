@@ -9,9 +9,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=8000
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - CONVEX_URL=${CONVEX_URL}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
     healthcheck:
@@ -39,9 +37,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3001
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - CONVEX_URL=${CONVEX_URL}
       - AMAP_API_KEY=${AMAP_API_KEY:-}
       - AMAP_SECRET_KEY=${AMAP_SECRET_KEY:-}
       - OVERPASS_API_URL=${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
@@ -141,8 +137,7 @@ services:
       - GENERIC_TIMEZONE=${TZ:-Asia/Shanghai}
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-your-encryption-key-here}
       # External service connections
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - CONVEX_URL=${CONVEX_URL}
       - CRAWLER_API_URL=http://crawler:3001
     volumes:
       - n8n-data:/home/node/.n8n

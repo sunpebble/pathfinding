@@ -65,7 +65,7 @@ User location data and personal travel information MUST be protected with highes
 - Location sharing MUST be opt-in with configurable visibility (team-only, private)
 - Personal travel plans MUST NOT be publicly visible by default
 - Third-party integrations (Didi, Gaode Maps) MUST NOT receive user data without explicit consent
-- Supabase Row Level Security (RLS) policies MUST be enforced on all user data tables
+- Convex functions MUST enforce data access control on all user data tables
 - Sentry error logging MUST scrub sensitive data (coordinates, user IDs, personal info)
 
 **Rationale**: Travel apps handle highly sensitive location and itinerary data. Privacy breaches could expose users' real-time locations and travel patterns, creating physical safety risks.
@@ -108,7 +108,7 @@ All operations MUST be observable with travel-specific context for debugging pro
 
 - Runtime: Deno (stable channel)
 - Framework: Hono for API routes
-- Database: Supabase (PostgreSQL + Realtime + Auth + Storage)
+- Database: Convex (self-hosted)
 - Error Tracking: Sentry
 - Observability: OpenTelemetry for distributed tracing
 
@@ -128,7 +128,7 @@ All operations MUST be observable with travel-specific context for debugging pro
 - Map providers MUST support offline tile caching (evaluate Mapbox, Gaode Maps SDK)
 - Third-party SDKs (Didi, WeChat, Weibo) MUST be wrapped in adapter interfaces to allow swapping
 - Image processing MUST use native mobile libraries (not web-based) for performance
-- Database migrations MUST be versioned and reversible (use Supabase migrations)
+- Database schema changes MUST be reflected in Convex schema with proper migration plan
 
 ### Performance Standards
 

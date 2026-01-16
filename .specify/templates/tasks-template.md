@@ -63,8 +63,8 @@ description: 'Task list template for feature implementation'
 
 Examples of foundational tasks for 探路 (adjust based on your feature):
 
-- [ ] T004 Setup Supabase project, database schema, and Row Level Security policies
-- [ ] T005 [P] Configure Supabase authentication (email/OAuth) in mobile app
+- [ ] T004 Setup Convex project and database schema
+- [ ] T005 [P] Configure Convex authentication in mobile app
 - [ ] T006 [P] Setup Hono API routing and middleware (auth, error handling, CORS)
 - [ ] T007 [P] Initialize React Native navigation structure (Expo Router)
 - [ ] T008 Configure OpenTelemetry tracing in Deno backend

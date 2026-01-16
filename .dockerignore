@@ -50,10 +50,6 @@ apps/mobile/
 !README.md
 docs/
 
-# Supabase local development
-supabase/.branches/
-supabase/.temp/
-
 # GitHub
 .github/
 
