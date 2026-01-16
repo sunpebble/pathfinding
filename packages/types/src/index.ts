@@ -1,5 +1,6 @@
 export * from './api';
 export * from './astronomy';
+export * from './auth';
 export * from './blog';
 export * from './city';
 // @pathfinding/types - Shared TypeScript types

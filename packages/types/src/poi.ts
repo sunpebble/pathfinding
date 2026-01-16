@@ -1,11 +1,17 @@
 /**
- * POI category enum
+ * POI category enum - matches Convex category strings
  */
 export type PoiCategory =
   | 'attraction'
   | 'restaurant'
   | 'hotel'
   | 'shopping'
+  | 'cafe'
+  | 'bar'
+  | 'museum'
+  | 'park'
+  | 'entertainment'
+  | 'transport'
   | 'other';
 
 /**
@@ -22,47 +28,46 @@ export interface BusinessHours {
 }
 
 /**
- * POI entity - Point of Interest
+ * POI entity - Point of Interest (matches Convex schema)
  */
 export interface Poi {
   id: string;
-  externalId?: string;
+  cityId: string;
   name: string;
   nameEn?: string;
-  category: PoiCategory;
-  cityId: string;
+  category: string; // More flexible - Convex stores as string
+  subcategory?: string;
+  description?: string;
+  descriptionEn?: string;
   address?: string;
   latitude: number;
   longitude: number;
   rating?: number;
-  ratingCount: number;
   priceLevel?: number;
-  businessHours?: BusinessHours;
+  openingHours?: unknown; // Convex uses v.any()
   phone?: string;
+  website?: string;
   imageUrls?: string[];
-  source: string;
-  createdAt: Date;
-  updatedAt: Date;
+  externalId?: string;
+  externalSource?: string;
 }
 
 /**
  * POI input for creating a new POI
  */
-export type CreatePoiInput = Omit<Poi, 'id' | 'createdAt' | 'updatedAt'>;
+export type CreatePoiInput = Omit<Poi, 'id'>;
 
 /**
  * POI update input for partial updates
  */
-export type UpdatePoiInput = Partial<
-  Omit<Poi, 'id' | 'createdAt' | 'updatedAt'>
->;
+export type UpdatePoiInput = Partial<Omit<Poi, 'id'>>;
 
 /**
  * POI search filters
  */
 export interface PoiSearchFilters {
   cityId: string;
-  category?: PoiCategory;
+  category?: string;
   query?: string;
   minRating?: number;
   priceLevel?: number;
