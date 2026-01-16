@@ -152,3 +152,56 @@ export function getRelativeTime(
     return `${Math.floor(diffDays / 365)}y ago`;
   }
 }
+
+/**
+ * Format date for display with localization
+ */
+export function formatLocalizedDate(
+  date: Date | string,
+  locale: 'zh' | 'en' = 'en',
+  options?: Intl.DateTimeFormatOptions
+): string {
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    // Check for invalid date
+    if (Number.isNaN(d.getTime())) {
+      return typeof date === 'string' ? date : 'Invalid Date';
+    }
+    const localeStr = locale === 'zh' ? 'zh-CN' : 'en-US';
+    return d.toLocaleDateString(localeStr, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      ...options,
+    });
+  } catch {
+    return typeof date === 'string' ? date : 'Invalid Date';
+  }
+}
+
+/**
+ * Format date range for display
+ */
+export function formatDateRange(
+  startDate: Date | string,
+  endDate: Date | string,
+  locale: 'zh' | 'en' = 'en'
+): string {
+  const localeStr = locale === 'zh' ? 'zh-CN' : 'en-US';
+  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+
+  const shortOptions: Intl.DateTimeFormatOptions = {
+    month: 'short',
+    day: 'numeric',
+  };
+
+  if (start.getTime() === end.getTime()) {
+    return start.toLocaleDateString(localeStr, {
+      ...shortOptions,
+      year: 'numeric',
+    });
+  }
+
+  return `${start.toLocaleDateString(localeStr, shortOptions)} - ${end.toLocaleDateString(localeStr, { ...shortOptions, year: 'numeric' })}`;
+}

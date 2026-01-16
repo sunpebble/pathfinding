@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatDate,
+  formatDateRange,
+  formatLocalizedDate,
   formatTime,
   getDateRange,
   getDaysBetween,
@@ -110,5 +112,36 @@ describe('isDateInRange', () => {
   it('should return false for date outside range', () => {
     const result = isDateInRange('2024-01-25', '2024-01-10', '2024-01-20');
     expect(result).toBe(false);
+  });
+});
+
+describe('formatLocalizedDate', () => {
+  it('should format date with English locale', () => {
+    const result = formatLocalizedDate('2024-01-15', 'en');
+    expect(result).toContain('2024');
+    expect(result).toContain('January');
+  });
+
+  it('should format date with Chinese locale', () => {
+    const result = formatLocalizedDate('2024-01-15', 'zh');
+    expect(result).toContain('2024');
+  });
+
+  it('should handle invalid date gracefully', () => {
+    const result = formatLocalizedDate('invalid-date', 'en');
+    expect(result).toBe('invalid-date');
+  });
+});
+
+describe('formatDateRange', () => {
+  it('should format single date when start equals end', () => {
+    const result = formatDateRange('2024-01-15', '2024-01-15', 'en');
+    expect(result).toContain('2024');
+  });
+
+  it('should format date range with different dates', () => {
+    const result = formatDateRange('2024-01-15', '2024-01-20', 'en');
+    expect(result).toContain('-');
+    expect(result).toContain('2024');
   });
 });
