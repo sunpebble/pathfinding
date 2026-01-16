@@ -130,10 +130,6 @@ export function ItineraryDetailScreen() {
           </Text>
         </View>
 
-        {currentItinerary.description && (
-          <Text style={styles.description}>{currentItinerary.description}</Text>
-        )}
-
         {/* Action buttons */}
         <View style={styles.actionRow}>
           <TouchableOpacity
@@ -165,6 +161,7 @@ export function ItineraryDetailScreen() {
       {/* Timeline */}
       <TimelineView
         days={currentItinerary.days || []}
+        itineraryId={id || ''}
         onAddItem={handleAddItem}
         onItemPress={handleItemPress}
         isEditing={isEditing}
@@ -227,12 +224,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     color: '#666',
-  },
-  description: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
   },
   actionRow: {
     flexDirection: 'row',

@@ -1,4 +1,5 @@
 import type { Itinerary } from '@pathfinding/types';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -12,6 +13,7 @@ import {
 import { Text } from 'react-native-paper';
 import { CommunityItineraryCard } from '@/components/community';
 import { CopyDatePicker } from '@/components/itinerary';
+import { useAuth } from '@/providers/AuthProvider';
 import { itineraryService } from '@/services/itineraryService';
 
 type CommunityItinerary = Itinerary & {
@@ -24,6 +26,7 @@ type CommunityItinerary = Itinerary & {
  */
 export const CommunityScreen: React.FC = () => {
   const router = useRouter();
+  const { userId } = useAuth();
 
   const [itineraries, setItineraries] = useState<CommunityItinerary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +50,7 @@ export const CommunityScreen: React.FC = () => {
         const { data, meta } = await itineraryService.listPublic({
           page: currentPage,
           pageSize: 20,
-          sortBy: 'copy_count',
+          sortBy: 'popular',
         });
 
         if (reset) {
@@ -117,24 +120,25 @@ export const CommunityScreen: React.FC = () => {
    */
   const handleCopyConfirm = useCallback(
     async (startDate: string) => {
-      if (!selectedItinerary) return;
+      if (!selectedItinerary || !userId) return;
 
       setIsCopying(true);
       try {
         const newItinerary = await itineraryService.copy(
-          selectedItinerary.id,
+          selectedItinerary.id as Id<'itineraries'>,
+          userId as Id<'users'>,
           startDate
         );
         setShowCopyModal(false);
         setSelectedItinerary(null);
 
-        Alert.alert('复制成功', `"${newItinerary.title}" 已添加到您的行程`, [
+        Alert.alert('复制成功', '行程已添加到您的行程列表', [
           {
             text: '查看',
             onPress: () =>
               router.push({
                 pathname: '/(tabs)/itinerary/[id]',
-                params: { id: newItinerary.id },
+                params: { id: String(newItinerary) },
               }),
           },
           { text: '继续浏览', style: 'cancel' },
@@ -145,7 +149,7 @@ export const CommunityScreen: React.FC = () => {
         setIsCopying(false);
       }
     },
-    [selectedItinerary, router]
+    [selectedItinerary, userId, router]
   );
 
   /**

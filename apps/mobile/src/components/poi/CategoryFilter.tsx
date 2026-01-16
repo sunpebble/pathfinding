@@ -1,5 +1,4 @@
 import type { PoiCategory } from '@pathfinding/types';
-import { POI_CATEGORIES } from '@pathfinding/constants';
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native-paper';
@@ -17,6 +16,9 @@ const CATEGORY_LABELS: Record<PoiCategory | 'all', string> = {
   attraction: '景点',
   restaurant: '餐厅',
   cafe: '咖啡',
+  bar: '酒吧',
+  museum: '博物馆',
+  park: '公园',
   shopping: '购物',
   hotel: '酒店',
   transport: '交通',
@@ -32,6 +34,9 @@ const CATEGORY_ICONS: Record<PoiCategory | 'all', string> = {
   attraction: '🏛️',
   restaurant: '🍜',
   cafe: '☕',
+  bar: '🍺',
+  museum: '🏛️',
+  park: '🌳',
   shopping: '🛍️',
   hotel: '🏨',
   transport: '🚇',
@@ -49,8 +54,18 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   // Build categories array with 'all' first
   const categories: Array<PoiCategory | 'all'> = [
     'all',
-    ...POI_CATEGORIES,
-  ] as Array<PoiCategory | 'all'>;
+    'attraction',
+    'restaurant',
+    'cafe',
+    'bar',
+    'museum',
+    'park',
+    'shopping',
+    'hotel',
+    'transport',
+    'entertainment',
+    'other',
+  ];
 
   const handleCategoryPress = useCallback(
     (category: PoiCategory | 'all') => {

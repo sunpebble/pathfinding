@@ -20,19 +20,15 @@ import { useItineraryStore } from '@/store/itineraryStore';
  */
 export default function EditItineraryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { currentItinerary, updateItinerary, isLoading } = useItineraryStore();
+  const { currentItinerary, updateItinerary, isUpdating } = useItineraryStore();
 
   const [title, setTitle] = useState(currentItinerary?.title || '');
-  const [description, setDescription] = useState(
-    currentItinerary?.description || ''
-  );
-  const [visibility, setVisibility] = useState<'private' | 'public' | 'shared'>(
+  const [visibility, setVisibility] = useState<'private' | 'public'>(
     currentItinerary?.visibility || 'private'
   );
 
   const hasChanges =
     title !== currentItinerary?.title ||
-    description !== (currentItinerary?.description || '') ||
     visibility !== currentItinerary?.visibility;
 
   const handleSave = async () => {
@@ -42,9 +38,8 @@ export default function EditItineraryScreen() {
     }
 
     try {
-      await updateItinerary(id, {
+      updateItinerary(id, {
         title: title.trim(),
-        description: description.trim() || undefined,
         visibility,
       });
       router.back();
@@ -94,25 +89,10 @@ export default function EditItineraryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>行程描述</Text>
-          <TextInput
-            style={[styles.textInput, styles.multilineInput]}
-            placeholder="简单描述一下这次旅行（选填）"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            numberOfLines={4}
-            maxLength={500}
-            textAlignVertical="top"
-          />
-        </View>
-
-        <View style={styles.section}>
           <Text style={styles.label}>可见性</Text>
           <View style={styles.visibilityOptions}>
             {[
               { value: 'private', label: '仅自己可见', icon: 'lock-closed' },
-              { value: 'shared', label: '链接可见', icon: 'link' },
               { value: 'public', label: '公开', icon: 'globe' },
             ].map((option) => (
               <TouchableOpacity
@@ -124,7 +104,7 @@ export default function EditItineraryScreen() {
                 onPress={() => setVisibility(option.value as typeof visibility)}
               >
                 <Ionicons
-                  name={option.icon as 'lock-closed' | 'link' | 'globe'}
+                  name={option.icon as 'lock-closed' | 'globe'}
                   size={20}
                   color={visibility === option.value ? '#007AFF' : '#666'}
                 />
@@ -149,9 +129,9 @@ export default function EditItineraryScreen() {
         <TouchableOpacity
           style={[styles.saveButton, !hasChanges && styles.disabledButton]}
           onPress={handleSave}
-          disabled={!hasChanges || isLoading}
+          disabled={!hasChanges || isUpdating}
         >
-          {isLoading ? (
+          {isUpdating ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.saveButtonText}>保存</Text>
@@ -199,9 +179,6 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: '#333',
-  },
-  multilineInput: {
-    minHeight: 100,
   },
   visibilityOptions: {
     gap: 8,

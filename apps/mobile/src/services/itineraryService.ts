@@ -1,226 +1,146 @@
-import type {
-  ApiMeta,
-  CreateItineraryInput,
-  Itinerary,
-  ItineraryDay,
-  ItineraryItem,
-  ItineraryWithStats,
-  TransportMode,
-  UpdateItineraryInput,
-} from '@pathfinding/types';
-import { supabase } from '@/lib/supabase';
-
-// API base URL should NOT include /v1 - it will be added in request URLs
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL?.replace(/\/v1$/, '') ||
-  'http://localhost:8000';
-
-interface ListResponse {
-  success: boolean;
-  data: ItineraryWithStats[];
-  meta: ApiMeta;
-}
-
-interface SingleResponse {
-  success: boolean;
-  data: Itinerary & { days: ItineraryDay[] };
-}
-
 /**
- * Get authorization header with current session token
+ * Itinerary Service - Convex-based implementation
+ *
+ * This service provides direct access to Convex itinerary functions.
+ * For React components, prefer using Convex hooks (useQuery, useMutation) directly.
  */
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    throw new Error('Not authenticated');
-  }
-  return {
-    Authorization: `Bearer ${session.access_token}`,
-    'Content-Type': 'application/json',
-  };
+
+import type { TransportMode } from '@pathfinding/types';
+import type { Id, TableNames } from '../../../../convex/_generated/dataModel';
+import { convex } from '@/providers/ConvexProvider';
+import { api } from '../../../../convex/_generated/api';
+
+// Helper to cast string to Convex ID type
+function asId<T extends TableNames>(id: string): Id<T> {
+  return id as Id<T>;
 }
 
 /**
- * Itinerary service for API communication
+ * Create itinerary input
+ */
+export interface CreateItineraryInput {
+  userId: Id<'users'>;
+  cityId: Id<'cities'>;
+  title: string;
+  startDate: string;
+  endDate: string;
+  visibility?: 'private' | 'public';
+  coverImage?: string;
+}
+
+/**
+ * Itinerary service for mobile app using Convex
+ *
+ * Note: For reactive UI updates, use Convex hooks directly in components:
+ * - useQuery(api.itineraries.list, { userId, page, pageSize })
+ * - useQuery(api.itineraries.getById, { id })
+ * - useMutation(api.itineraries.create)
+ * - useMutation(api.itineraries.update)
+ * - useMutation(api.itineraries.remove)
  */
 export const itineraryService = {
   /**
+   * List user's itineraries
+   */
+  async list(args: { userId: Id<'users'>; page?: number; pageSize?: number }) {
+    return convex.query(api.itineraries.list, args);
+  },
+
+  /**
+   * Get itinerary by ID
+   */
+  async getById(id: string | Id<'itineraries'>) {
+    return convex.query(api.itineraries.getById, {
+      id: typeof id === 'string' ? asId<'itineraries'>(id) : id,
+    });
+  },
+
+  /**
    * Create a new itinerary
    */
-  async create(input: CreateItineraryInput): Promise<ItineraryWithStats> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(`${API_BASE_URL}/v1/itineraries`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        title: input.title,
-        cityId: input.cityId,
-        startDate:
-          typeof input.startDate === 'string'
-            ? input.startDate
-            : input.startDate.toISOString().split('T')[0],
-        endDate:
-          typeof input.endDate === 'string'
-            ? input.endDate
-            : input.endDate.toISOString().split('T')[0],
-        visibility: input.visibility,
-        coverImageUrl: input.coverImageUrl,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to create itinerary');
-    }
-
-    const result = await response.json();
-    return result.data;
+  async create(input: CreateItineraryInput) {
+    return convex.mutation(api.itineraries.create, input);
   },
 
   /**
-   * List user's itineraries with pagination
+   * Update itinerary
    */
-  async list(
-    params: {
-      page?: number;
-      pageSize?: number;
-      sortBy?: string;
-      sortOrder?: 'asc' | 'desc';
-    } = {}
-  ): Promise<{ data: ItineraryWithStats[]; meta: ApiMeta }> {
-    const headers = await getAuthHeader();
-
-    const searchParams = new URLSearchParams();
-    if (params.page) searchParams.set('page', String(params.page));
-    if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
-    if (params.sortBy) searchParams.set('sortBy', params.sortBy);
-    if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
-
-    const url = `${API_BASE_URL}/v1/itineraries?${searchParams}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to fetch itineraries');
+  async update(
+    id: Id<'itineraries'>,
+    userId: Id<'users'>,
+    updates: {
+      title?: string;
+      visibility?: 'private' | 'public';
+      coverImage?: string;
     }
-
-    const result: ListResponse = await response.json();
-    return { data: result.data, meta: result.meta };
+  ) {
+    return convex.mutation(api.itineraries.update, { id, userId, ...updates });
   },
 
   /**
-   * Get itinerary by ID with days and items
+   * Delete itinerary
    */
-  async getById(id: string): Promise<Itinerary & { days: ItineraryDay[] }> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(`${API_BASE_URL}/v1/itineraries/${id}`, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to fetch itinerary');
-    }
-
-    const result: SingleResponse = await response.json();
-    return result.data;
+  async remove(id: Id<'itineraries'>, userId: Id<'users'>) {
+    return convex.mutation(api.itineraries.remove, { id, userId });
   },
 
   /**
-   * Update an itinerary
+   * Delete itinerary (alias for remove)
    */
-  async update(id: string, input: UpdateItineraryInput): Promise<Itinerary> {
-    const headers = await getAuthHeader();
-
-    const body: Record<string, unknown> = {};
-    if (input.title !== undefined) body.title = input.title;
-    if (input.cityId !== undefined) body.cityId = input.cityId;
-    if (input.visibility !== undefined) body.visibility = input.visibility;
-    if (input.coverImageUrl !== undefined)
-      body.coverImageUrl = input.coverImageUrl;
-    if (input.startDate !== undefined) {
-      body.startDate =
-        typeof input.startDate === 'string'
-          ? input.startDate
-          : input.startDate.toISOString().split('T')[0];
+  async delete(id: string, userId?: string) {
+    if (!userId) {
+      throw new Error('User ID is required');
     }
-    if (input.endDate !== undefined) {
-      body.endDate =
-        typeof input.endDate === 'string'
-          ? input.endDate
-          : input.endDate.toISOString().split('T')[0];
-    }
-
-    const response = await fetch(`${API_BASE_URL}/v1/itineraries/${id}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify(body),
+    return convex.mutation(api.itineraries.remove, {
+      id: asId<'itineraries'>(id),
+      userId: asId<'users'>(userId),
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to update itinerary');
-    }
-
-    const result = await response.json();
-    return result.data;
   },
 
   /**
-   * Delete an itinerary
+   * List public itineraries (community)
    */
-  async delete(id: string): Promise<void> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(`${API_BASE_URL}/v1/itineraries/${id}`, {
-      method: 'DELETE',
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to delete itinerary');
-    }
+  async listPublic(args: {
+    cityId?: Id<'cities'>;
+    sortBy?: 'recent' | 'popular';
+    page?: number;
+    pageSize?: number;
+  }) {
+    return convex.query(api.itineraries.listPublic, args);
   },
 
-  // ==================== Item Operations ====================
+  /**
+   * Copy a public itinerary
+   */
+  async copy(
+    sourceId: Id<'itineraries'>,
+    userId: Id<'users'>,
+    startDate: string
+  ) {
+    return convex.mutation(api.itineraries.copy, {
+      sourceId,
+      userId,
+      startDate,
+    });
+  },
 
   /**
    * Get items for a specific day
+   * @param _itineraryId - The itinerary ID (not used, kept for API compatibility)
+   * @param dayId - The day ID
    */
-  async getItems(itineraryId: string, dayId: string): Promise<ItineraryItem[]> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/itineraries/${itineraryId}/days/${dayId}/items`,
-      {
-        method: 'GET',
-        headers,
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to fetch items');
-    }
-
-    const result = await response.json();
-    return result.data;
+  async getItems(_itineraryId: string, dayId: string) {
+    const items = await convex.query(api.itineraryItems.listByDay, {
+      dayId: asId<'itineraryDays'>(dayId),
+    });
+    return items;
   },
 
   /**
    * Add an item to a day
    */
   async addItem(
-    itineraryId: string,
+    _itineraryId: string,
     dayId: string,
     input: {
       poiId?: string;
@@ -229,28 +149,38 @@ export const itineraryService = {
       notes?: string;
       transportMode?: TransportMode;
       transportMinutes?: number;
-    }
-  ): Promise<{ item: ItineraryItem; conflicts: TimeConflict[] }> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/itineraries/${itineraryId}/days/${dayId}/items`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(input),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to add item');
+    },
+    userId?: string
+  ) {
+    if (!userId) {
+      throw new Error('User ID is required');
     }
 
-    const result = await response.json();
+    const result = await convex.mutation(api.itineraryItems.create, {
+      dayId: asId<'itineraryDays'>(dayId),
+      userId: asId<'users'>(userId),
+      poiId: input.poiId ? asId<'pois'>(input.poiId) : undefined,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      notes: input.notes,
+      transportMode: input.transportMode,
+      transportMinutes: input.transportMinutes,
+    });
+
+    // Return in the format expected by useItinerary hook
+    const items = await convex.query(api.itineraryItems.listByDay, {
+      dayId: asId<'itineraryDays'>(dayId),
+    });
+    const newItem = items.find((item) => item.id === result.id);
+
     return {
-      item: result.data,
-      conflicts: result.conflicts || [],
+      item: newItem || { id: result.id },
+      conflicts: [] as Array<{
+        itemId: string;
+        startTime: string;
+        endTime: string;
+        poiName?: string;
+      }>,
     };
   },
 
@@ -258,7 +188,7 @@ export const itineraryService = {
    * Update an item
    */
   async updateItem(
-    itineraryId: string,
+    _itineraryId: string,
     dayId: string,
     itemId: string,
     input: {
@@ -268,28 +198,38 @@ export const itineraryService = {
       notes?: string;
       transportMode?: TransportMode;
       transportMinutes?: number | null;
-    }
-  ): Promise<{ item: ItineraryItem; conflicts: TimeConflict[] }> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/itineraries/${itineraryId}/days/${dayId}/items/${itemId}`,
-      {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify(input),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to update item');
+    },
+    userId?: string
+  ) {
+    if (!userId) {
+      throw new Error('User ID is required');
     }
 
-    const result = await response.json();
+    await convex.mutation(api.itineraryItems.update, {
+      id: asId<'itineraryItems'>(itemId),
+      userId: asId<'users'>(userId),
+      poiId: input.poiId ? asId<'pois'>(input.poiId) : undefined,
+      startTime: input.startTime ?? undefined,
+      endTime: input.endTime ?? undefined,
+      notes: input.notes,
+      transportMode: input.transportMode,
+      transportMinutes: input.transportMinutes ?? undefined,
+    });
+
+    // Fetch updated item
+    const items = await convex.query(api.itineraryItems.listByDay, {
+      dayId: asId<'itineraryDays'>(dayId),
+    });
+    const updatedItem = items.find((item) => String(item.id) === itemId);
+
     return {
-      item: result.data,
-      conflicts: result.conflicts || [],
+      item: updatedItem || { id: itemId },
+      conflicts: [] as Array<{
+        itemId: string;
+        startTime: string;
+        endTime: string;
+        poiName?: string;
+      }>,
     };
   },
 
@@ -297,130 +237,49 @@ export const itineraryService = {
    * Delete an item
    */
   async deleteItem(
-    itineraryId: string,
-    dayId: string,
-    itemId: string
-  ): Promise<void> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/itineraries/${itineraryId}/days/${dayId}/items/${itemId}`,
-      {
-        method: 'DELETE',
-        headers,
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to delete item');
+    _itineraryId: string,
+    _dayId: string,
+    itemId: string,
+    userId?: string
+  ) {
+    if (!userId) {
+      throw new Error('User ID is required');
     }
+
+    await convex.mutation(api.itineraryItems.remove, {
+      id: asId<'itineraryItems'>(itemId),
+      userId: asId<'users'>(userId),
+    });
   },
 
   /**
-   * Reorder items within a day
+   * Reorder items in a day
    */
   async reorderItems(
-    itineraryId: string,
+    _itineraryId: string,
     dayId: string,
-    itemIds: string[]
-  ): Promise<ItineraryItem[]> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/itineraries/${itineraryId}/days/${dayId}/items/reorder`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ itemIds }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to reorder items');
+    itemIds: string[],
+    userId?: string
+  ) {
+    if (!userId) {
+      throw new Error('User ID is required');
     }
 
-    const result = await response.json();
-    return result.data;
-  },
-
-  // ==================== Community Operations ====================
-
-  /**
-   * List public itineraries for community discovery
-   * Note: This endpoint does not require authentication
-   */
-  async listPublic(
-    params: {
-      cityId?: string;
-      page?: number;
-      pageSize?: number;
-      sortBy?: 'created_at' | 'copy_count';
-    } = {}
-  ): Promise<{
-    data: (ItineraryWithStats & { authorName?: string; copyCount?: number })[];
-    meta: ApiMeta;
-  }> {
-    const searchParams = new URLSearchParams();
-    if (params.cityId) searchParams.set('cityId', params.cityId);
-    if (params.page) searchParams.set('page', String(params.page));
-    if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
-    if (params.sortBy) searchParams.set('sortBy', params.sortBy);
-
-    const url = `${API_BASE_URL}/v1/itineraries/public?${searchParams}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    await convex.mutation(api.itineraryItems.reorder, {
+      dayId: asId<'itineraryDays'>(dayId),
+      userId: asId<'users'>(userId),
+      itemIds: itemIds.map((id) => asId<'itineraryItems'>(id)),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.error?.message || 'Failed to fetch public itineraries'
-      );
-    }
-
-    const result = await response.json();
-    return { data: result.data, meta: result.meta };
-  },
-
-  /**
-   * Copy a public itinerary to user's collection
-   */
-  async copy(
-    itineraryId: string,
-    startDate: string
-  ): Promise<ItineraryWithStats> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/itineraries/${itineraryId}/copy`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ startDate }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to copy itinerary');
-    }
-
-    const result = await response.json();
-    return result.data;
+    // Return updated items
+    const items = await convex.query(api.itineraryItems.listByDay, {
+      dayId: asId<'itineraryDays'>(dayId),
+    });
+    return items;
   },
 };
 
-/**
- * Time conflict information
- */
-interface TimeConflict {
-  itemId: string;
-  startTime: string;
-  endTime: string;
-  poiName?: string;
-}
+// Re-export the API for use with Convex hooks
+export { api };
+
+export default itineraryService;

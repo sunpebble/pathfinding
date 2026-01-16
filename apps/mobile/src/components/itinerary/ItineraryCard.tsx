@@ -67,7 +67,7 @@ export function ItineraryCard({
             {formatDate(startDate)} - {formatDate(endDate)}
           </Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{itinerary.daysCount}天</Text>
+            <Text style={styles.badgeText}>{itinerary.dayCount}天</Text>
           </View>
         </View>
 
@@ -75,11 +75,13 @@ export function ItineraryCard({
           <View style={styles.statsRow}>
             <Ionicons name="list-outline" size={14} color="#999" />
             <Text style={styles.statsText}>
-              {itinerary.itemsCount || 0} 个景点
+              {itinerary.itemCount || 0} 个景点
             </Text>
           </View>
           <Text style={styles.timeAgo}>
-            {getRelativeTime(itinerary.updatedAt, 'zh')}
+            {itinerary.createdAt
+              ? getRelativeTime(new Date(itinerary.createdAt), 'zh')
+              : ''}
           </Text>
         </View>
       </View>

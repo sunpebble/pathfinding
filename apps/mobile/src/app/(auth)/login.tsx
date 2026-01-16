@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,73 +14,78 @@ import {
 import { useAuth } from '@/providers/AuthProvider';
 
 /**
- * Login screen - Phone number authentication (production)
- * or Email/Password authentication (development with local Supabase)
+ * Login screen - Phone number OTP authentication
  */
 export default function LoginScreen() {
-  const {
-    signInWithPhone,
-    signInWithEmail,
-    signUpWithEmail,
-    verifyOtp,
-    isLoading,
-    error,
-    clearError,
-    isDevelopment,
-  } = useAuth();
+  const { signInWithPhone, verifyOtp, isLoading, error, clearError } =
+    useAuth();
 
-  // Phone login state (production)
+  // Phone login state
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Email login state (development)
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-
-  // Development mode: Email/Password login
-  const handleEmailLogin = async () => {
-    if (!email.trim()) {
-      Alert.alert('提示', '请输入邮箱');
-      return;
+  // Countdown timer for resend cooldown
+  useEffect(() => {
+    if (cooldown > 0) {
+      cooldownRef.current = setInterval(() => {
+        setCooldown((prev) => {
+          if (prev <= 1) {
+            if (cooldownRef.current) {
+              clearInterval(cooldownRef.current);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
-    if (!password.trim()) {
-      Alert.alert('提示', '请输入密码');
-      return;
-    }
 
-    clearError();
-
-    if (isSignUp) {
-      const result = await signUpWithEmail(email, password);
-      if (result.success) {
-        // After signup, auto login
-        const loginResult = await signInWithEmail(email, password);
-        if (loginResult.success) {
-          router.replace('/(tabs)');
-        }
+    return () => {
+      if (cooldownRef.current) {
+        clearInterval(cooldownRef.current);
       }
-    } else {
-      const result = await signInWithEmail(email, password);
-      if (result.success) {
-        router.replace('/(tabs)');
-      }
-    }
-  };
+    };
+  }, [cooldown > 0]);
 
-  // Production mode: Phone OTP login
   const handleSendOtp = async () => {
-    if (!phone.trim()) {
+    const trimmedPhone = phone.trim();
+    if (!trimmedPhone) {
       Alert.alert('提示', '请输入手机号');
       return;
     }
 
+    // Basic phone number validation
+    if (
+      !/^1[3-9]\d{9}$/.test(trimmedPhone) &&
+      !/^\+861[3-9]\d{9}$/.test(trimmedPhone)
+    ) {
+      Alert.alert('提示', '请输入有效的中国大陆手机号');
+      return;
+    }
+
     clearError();
-    const result = await signInWithPhone(phone);
+    const result = await signInWithPhone(trimmedPhone);
 
     if (result.needsVerification) {
       setStep('otp');
+      if (result.cooldown) {
+        setCooldown(result.cooldown);
+      }
+    }
+  };
+
+  // Resend OTP
+  const handleResendOtp = async () => {
+    if (cooldown > 0) return;
+
+    clearError();
+    const result = await signInWithPhone(phone);
+
+    if (result.needsVerification && result.cooldown) {
+      setCooldown(result.cooldown);
     }
   };
 
@@ -90,97 +95,34 @@ export default function LoginScreen() {
       return;
     }
 
+    if (otp.length !== 6) {
+      Alert.alert('提示', '验证码必须是6位数字');
+      return;
+    }
+
     clearError();
-    await verifyOtp(phone, otp);
-    router.replace('/(tabs)');
+    try {
+      const result = await verifyOtp(phone, otp);
+      if (result.isNewUser) {
+        // New user - could show onboarding or welcome message
+        Alert.alert('欢迎', '注册成功！', [
+          { text: '开始探索', onPress: () => router.replace('/(tabs)') },
+        ]);
+      } else {
+        router.replace('/(tabs)');
+      }
+    } catch {
+      // Error is already handled by AuthProvider and displayed in UI
+    }
   };
 
   const handleBack = () => {
     setStep('phone');
     setOtp('');
+    setCooldown(0);
     clearError();
   };
 
-  // Development mode: Email/Password form
-  if (isDevelopment) {
-    return (
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <View style={styles.content}>
-          <Text style={styles.title}>探路</Text>
-          <Text style={styles.subtitle}>智能旅行攻略助手</Text>
-
-          <View style={styles.devBanner}>
-            <Text style={styles.devText}>
-              开发模式：使用邮箱密码登录本地 Supabase
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.formContainer}>
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error.message}</Text>
-            </View>
-          )}
-
-          <Text style={styles.label}>邮箱</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="请输入邮箱"
-            placeholderTextColor="#999"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-            editable={!isLoading}
-            autoFocus
-          />
-
-          <Text style={styles.label}>密码</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="请输入密码"
-            placeholderTextColor="#999"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            editable={!isLoading}
-          />
-
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleEmailLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>
-                {isSignUp ? '注册' : '登录'}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() => {
-              setIsSignUp(!isSignUp);
-              clearError();
-            }}
-          >
-            <Text style={styles.switchText}>
-              {isSignUp ? '已有账号？去登录' : '没有账号？去注册'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    );
-  }
-
-  // Production mode: Phone OTP form
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -233,7 +175,7 @@ export default function LoginScreen() {
             <Text style={styles.hint}>验证码已发送至 {phone}</Text>
             <TextInput
               style={styles.input}
-              placeholder="请输入验证码"
+              placeholder="请输入6位验证码"
               placeholderTextColor="#999"
               keyboardType="number-pad"
               value={otp}
@@ -250,8 +192,26 @@ export default function LoginScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>验证</Text>
+                <Text style={styles.buttonText}>验证并登录</Text>
               )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.resendButton,
+                cooldown > 0 && styles.resendButtonDisabled,
+              ]}
+              onPress={handleResendOtp}
+              disabled={cooldown > 0 || isLoading}
+            >
+              <Text
+                style={[
+                  styles.resendText,
+                  cooldown > 0 && styles.resendTextDisabled,
+                ]}
+              >
+                {cooldown > 0 ? `${cooldown}秒后可重新获取` : '重新获取验证码'}
+              </Text>
             </TouchableOpacity>
           </>
         )}
@@ -279,17 +239,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     color: '#666',
-  },
-  devBanner: {
-    marginTop: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#FFF3CD',
-    borderRadius: 8,
-  },
-  devText: {
-    color: '#856404',
-    fontSize: 12,
   },
   formContainer: {
     padding: 20,
@@ -346,12 +295,19 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 16,
   },
-  switchButton: {
+  resendButton: {
     marginTop: 16,
     alignItems: 'center',
+    padding: 12,
   },
-  switchText: {
+  resendButtonDisabled: {
+    opacity: 0.6,
+  },
+  resendText: {
     color: '#007AFF',
     fontSize: 14,
+  },
+  resendTextDisabled: {
+    color: '#999',
   },
 });

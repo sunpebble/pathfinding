@@ -11,7 +11,7 @@ export type TransportMode =
   | 'taxi';
 
 /**
- * ItineraryItem entity - single activity/POI on a day
+ * ItineraryItem entity - single activity/POI on a day (matches Convex schema)
  */
 export interface ItineraryItem {
   id: string;
@@ -21,12 +21,10 @@ export interface ItineraryItem {
   startTime?: string; // HH:mm format
   endTime?: string; // HH:mm format
   notes?: string;
-  transportMode: TransportMode;
+  transportMode?: string; // Optional in Convex
   transportMinutes?: number;
-  createdAt: Date;
-  updatedAt: Date;
   // Populated relation
-  poi?: Poi;
+  poi?: Partial<Poi> | null;
 }
 
 /**

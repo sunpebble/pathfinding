@@ -1,4 +1,4 @@
-import type { ItineraryItem } from '@pathfinding/types';
+import type { ItineraryItem, TransportMode } from '@pathfinding/types';
 import { Ionicons } from '@expo/vector-icons';
 import { TRANSPORT_MODES } from '@pathfinding/constants';
 import React from 'react';
@@ -24,7 +24,9 @@ export function ItineraryItemCard({
   isFirst = false,
 }: ItineraryItemCardProps) {
   const poi = item.poi;
-  const transportInfo = TRANSPORT_MODES[item.transportMode];
+  const transportInfo = item.transportMode
+    ? TRANSPORT_MODES[item.transportMode as TransportMode]
+    : undefined;
 
   return (
     <View style={styles.wrapper}>

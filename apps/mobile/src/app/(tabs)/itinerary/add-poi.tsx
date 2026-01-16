@@ -1,4 +1,5 @@
 import type { Poi, PoiCategory } from '@pathfinding/types';
+import type { Id } from '../../../../../../convex/_generated/dataModel';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -44,10 +45,13 @@ export default function AddPoiScreen() {
     const loadRecommendations = async () => {
       setIsLoading(true);
       try {
-        const category =
-          selectedCategory === 'all' ? undefined : selectedCategory;
-        const data = await poiService.getRecommendations(cityId, category, 30);
-        setPois(data);
+        const result = await poiService.getRecommendations(cityId);
+        // Filter by category if needed
+        let poiList = result.data;
+        if (selectedCategory !== 'all') {
+          poiList = poiList.filter((p) => p.category === selectedCategory);
+        }
+        setPois(poiList as Poi[]);
       } catch {
         console.error('Failed to load recommendations');
       } finally {
@@ -68,13 +72,13 @@ export default function AddPoiScreen() {
     try {
       const category =
         selectedCategory === 'all' ? undefined : selectedCategory;
-      const result = await poiService.search({
-        cityId,
-        query: searchQuery.trim(),
+      const result = await poiService.search(
+        cityId as Id<'cities'>,
+        searchQuery.trim(),
         category,
-        pageSize: 30,
-      });
-      setPois(result.data);
+        30
+      );
+      setPois(result as Poi[]);
     } catch {
       console.error('Failed to search POIs');
     } finally {
@@ -103,7 +107,7 @@ export default function AddPoiScreen() {
       <POICard
         poi={item}
         onPress={() => handleSelectPoi(item)}
-        onAdd={() => handleSelectPoi(item)}
+        onAddPress={() => handleSelectPoi(item)}
         showAddButton
       />
     ),

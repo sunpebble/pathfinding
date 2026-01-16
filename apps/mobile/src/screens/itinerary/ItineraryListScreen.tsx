@@ -12,12 +12,14 @@ import {
   View,
 } from 'react-native';
 import { ItineraryCard } from '@/components/itinerary';
+import { useAuth } from '@/providers/AuthProvider';
 import { useItineraryStore } from '@/store/itineraryStore';
 
 /**
  * Screen for listing user's itineraries
  */
 export function ItineraryListScreen() {
+  const { userId } = useAuth();
   const {
     itineraries,
     isLoading,
@@ -30,18 +32,22 @@ export function ItineraryListScreen() {
   } = useItineraryStore();
 
   useEffect(() => {
-    fetchItineraries();
-  }, [fetchItineraries]);
+    if (userId) {
+      fetchItineraries(userId);
+    }
+  }, [userId, fetchItineraries]);
 
   const handleRefresh = useCallback(() => {
-    refreshItineraries();
-  }, [refreshItineraries]);
+    if (userId) {
+      refreshItineraries(userId);
+    }
+  }, [userId, refreshItineraries]);
 
   const handleLoadMore = useCallback(() => {
-    if (hasMore && !isLoadingMore) {
-      fetchMoreItineraries();
+    if (hasMore && !isLoadingMore && userId) {
+      fetchMoreItineraries(userId);
     }
-  }, [hasMore, isLoadingMore, fetchMoreItineraries]);
+  }, [hasMore, isLoadingMore, userId, fetchMoreItineraries]);
 
   const handleItineraryPress = useCallback((itinerary: ItineraryWithStats) => {
     router.push(`/(tabs)/itinerary/${itinerary.id}`);

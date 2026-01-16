@@ -1,4 +1,5 @@
 import type { Poi, PoiCategory } from '@pathfinding/types';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import type { SortOption } from '@/components/poi';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -14,18 +15,16 @@ import { CategoryFilter, POICard, SortSelector } from '@/components/poi';
 import { useLocation } from '@/hooks/useLocation';
 import { poiService } from '@/services/poiService';
 
-interface POIRecommendScreenParams {
-  cityId: string;
-  cityName?: string;
-  itineraryId?: string;
-  dayId?: string;
-}
-
 /**
  * POIRecommendScreen - shows POI recommendations with category filter and sorting
  */
 export const POIRecommendScreen: React.FC = () => {
-  const params = useLocalSearchParams<POIRecommendScreenParams>();
+  const params = useLocalSearchParams<{
+    cityId: string;
+    cityName?: string;
+    itineraryId?: string;
+    dayId?: string;
+  }>();
   const router = useRouter();
   const { cityId, cityName, itineraryId, dayId } = params;
 
@@ -47,29 +46,33 @@ export const POIRecommendScreen: React.FC = () => {
     if (!cityId) return;
 
     try {
-      const category =
-        selectedCategory === 'all' ? undefined : selectedCategory;
-
       if (sortOption === 'distance' && location) {
         // Use nearby endpoint for distance sorting
-        const data = await poiService.getNearby(
-          location.latitude,
-          location.longitude,
-          10, // 10km radius
-          category,
-          50
-        );
-        setPois(data);
+        const data = await poiService.getNearby({
+          cityId: cityId as Id<'cities'>,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          radiusKm: 10,
+          limit: 50,
+        });
+        // Filter by category if needed
+        let filtered = data;
+        if (selectedCategory !== 'all') {
+          filtered = data.filter((p) => p.category === selectedCategory);
+        }
+        setPois(filtered as Poi[]);
       } else {
         // Use recommendations endpoint for rating/popularity sorting
-        const data = await poiService.getRecommendations(cityId, category, 50);
+        const result = await poiService.getRecommendations(cityId);
+        let poiList = result.data;
 
-        // Sort by popularity (rating_count) if selected
-        if (sortOption === 'popularity') {
-          data.sort((a, b) => (b.ratingCount || 0) - (a.ratingCount || 0));
+        // Filter by category if needed
+        if (selectedCategory !== 'all') {
+          poiList = poiList.filter((p) => p.category === selectedCategory);
         }
 
-        setPois(data);
+        // Sort by rating (default behavior from API)
+        setPois(poiList as Poi[]);
       }
     } catch {
       console.error('Failed to load recommendations');
@@ -145,7 +148,7 @@ export const POIRecommendScreen: React.FC = () => {
       <POICard
         poi={item}
         onPress={() => handleSelectPoi(item)}
-        onAdd={() => handleSelectPoi(item)}
+        onAddPress={() => handleSelectPoi(item)}
         showAddButton={!!itineraryId && !!dayId}
       />
     ),

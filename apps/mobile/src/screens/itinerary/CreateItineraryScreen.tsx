@@ -1,4 +1,5 @@
 import type { City } from '@pathfinding/types';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -15,33 +16,35 @@ import {
   View,
 } from 'react-native';
 import { CityPicker, DateRangePicker } from '@/components/itinerary';
+import { useAuth } from '@/providers/AuthProvider';
 import { useItineraryStore } from '@/store/itineraryStore';
 
 /**
  * Screen for creating a new itinerary
  */
 export function CreateItineraryScreen() {
+  const { userId } = useAuth();
   const [title, setTitle] = useState('');
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [description, setDescription] = useState('');
 
   const { createItinerary, isCreating } = useItineraryStore();
 
   const isFormValid =
-    title.trim().length > 0 && selectedCity && startDate && endDate;
+    title.trim().length > 0 && selectedCity && startDate && endDate && userId;
 
   const handleCreate = async () => {
-    if (!isFormValid || !selectedCity || !startDate || !endDate) return;
+    if (!isFormValid || !selectedCity || !startDate || !endDate || !userId)
+      return;
 
     try {
       const itinerary = await createItinerary({
+        userId: userId as Id<'users'>,
+        cityId: selectedCity.id as Id<'cities'>,
         title: title.trim(),
-        cityId: selectedCity.id,
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
-        description: description.trim() || undefined,
         visibility: 'private',
       });
 
@@ -96,20 +99,6 @@ export function CreateItineraryScreen() {
             maxDays={30}
           />
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>行程描述</Text>
-          <TextInput
-            style={[styles.textInput, styles.multilineInput]}
-            placeholder="简单描述一下这次旅行（选填）"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            numberOfLines={4}
-            maxLength={500}
-            textAlignVertical="top"
-          />
-        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -160,9 +149,6 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: '#333',
-  },
-  multilineInput: {
-    minHeight: 100,
   },
   footer: {
     padding: 16,

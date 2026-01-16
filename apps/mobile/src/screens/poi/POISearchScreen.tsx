@@ -1,4 +1,5 @@
 import type { Poi, PoiCategory } from '@pathfinding/types';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Ionicons } from '@expo/vector-icons';
 import { POI_CATEGORIES, POI_CATEGORY_VALUES } from '@pathfinding/constants';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -33,38 +34,32 @@ export default function POISearchScreen() {
   >();
   const [pois, setPois] = useState<Poi[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
   const searchPois = useCallback(
-    async (reset = false) => {
+    async (_reset = false) => {
       if (!cityId) return;
 
       setIsLoading(true);
       try {
-        const currentPage = reset ? 1 : page;
-        const result = await poiService.search({
-          cityId,
-          query: searchQuery || undefined,
-          category: selectedCategory,
-          page: currentPage,
-          pageSize: 20,
-        });
+        const result = await poiService.search(
+          cityId as Id<'cities'>,
+          searchQuery || '',
+          selectedCategory,
+          50
+        );
 
-        if (reset) {
-          setPois(result.data);
-          setPage(1);
-        } else {
-          setPois((prev) => [...prev, ...result.data]);
-        }
-        setHasMore(result.meta.page < result.meta.totalPages);
+        // The search returns an array directly
+        const poiList = result as Poi[];
+        setPois(poiList);
+        setHasMore(false); // Simple search doesn't have pagination
       } catch {
         // Handle error silently for now
       } finally {
         setIsLoading(false);
       }
     },
-    [cityId, searchQuery, selectedCategory, page]
+    [cityId, searchQuery, selectedCategory]
   );
 
   // Search on mount and when filters change
@@ -74,7 +69,6 @@ export default function POISearchScreen() {
 
   const handleLoadMore = useCallback(() => {
     if (!isLoading && hasMore) {
-      setPage((prev) => prev + 1);
       searchPois(false);
     }
   }, [isLoading, hasMore, searchPois]);

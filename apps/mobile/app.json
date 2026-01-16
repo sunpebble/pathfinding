@@ -77,7 +77,8 @@
       },
       "eas": {
         "projectId": "your-project-id"
-      }
+      },
+      "convexUrl": "${EXPO_PUBLIC_CONVEX_URL}"
     }
   }
 }

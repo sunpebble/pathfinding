@@ -138,15 +138,16 @@ export function useItinerary(itineraryId: string | undefined) {
       const result = await itineraryService.addItem(itineraryId, dayId, input);
 
       // Update local state
+      const newItem = result.item as ItineraryItem;
       setState((prev) => ({
         ...prev,
         items: {
           ...prev.items,
-          [dayId]: [...(prev.items[dayId] || []), result.item],
+          [dayId]: [...(prev.items[dayId] || []), newItem],
         },
       }));
 
-      return result;
+      return { item: newItem, conflicts: result.conflicts };
     },
     [itineraryId]
   );
@@ -179,17 +180,18 @@ export function useItinerary(itineraryId: string | undefined) {
       );
 
       // Update local state
+      const updatedItem = result.item as ItineraryItem;
       setState((prev) => ({
         ...prev,
         items: {
           ...prev.items,
           [dayId]: (prev.items[dayId] || []).map((item) =>
-            item.id === itemId ? result.item : item
+            item.id === itemId ? updatedItem : item
           ),
         },
       }));
 
-      return result;
+      return { item: updatedItem, conflicts: result.conflicts };
     },
     [itineraryId]
   );

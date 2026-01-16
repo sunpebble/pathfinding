@@ -27,6 +27,36 @@ export const POI_CATEGORIES: Record<
     labelEn: 'Shopping',
     icon: 'shopping-bag',
   },
+  cafe: {
+    label: '咖啡',
+    labelEn: 'Cafe',
+    icon: 'coffee',
+  },
+  bar: {
+    label: '酒吧',
+    labelEn: 'Bar',
+    icon: 'wine',
+  },
+  museum: {
+    label: '博物馆',
+    labelEn: 'Museum',
+    icon: 'building-columns',
+  },
+  park: {
+    label: '公园',
+    labelEn: 'Park',
+    icon: 'tree',
+  },
+  entertainment: {
+    label: '娱乐',
+    labelEn: 'Entertainment',
+    icon: 'theater-masks',
+  },
+  transport: {
+    label: '交通',
+    labelEn: 'Transport',
+    icon: 'train',
+  },
   other: {
     label: '其他',
     labelEn: 'Other',
@@ -42,6 +72,12 @@ export const POI_CATEGORY_VALUES: PoiCategory[] = [
   'restaurant',
   'hotel',
   'shopping',
+  'cafe',
+  'bar',
+  'museum',
+  'park',
+  'entertainment',
+  'transport',
   'other',
 ];
 

@@ -1,9 +1,9 @@
 import type { ItineraryItem } from './itinerary-item';
 
 /**
- * Itinerary visibility enum
+ * Itinerary visibility enum (Convex: 'private' | 'public')
  */
-export type ItineraryVisibility = 'private' | 'team' | 'public';
+export type ItineraryVisibility = 'private' | 'public';
 
 /**
  * ItineraryDay entity - single day within an itinerary
@@ -12,9 +12,7 @@ export interface ItineraryDay {
   id: string;
   itineraryId: string;
   dayNumber: number;
-  date: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  date: string; // ISO date string YYYY-MM-DD
   // Populated relation
   items?: ItineraryItem[];
 }
@@ -27,13 +25,14 @@ export interface Itinerary {
   userId: string;
   title: string;
   cityId: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string; // ISO date string YYYY-MM-DD
+  endDate: string;
   visibility: ItineraryVisibility;
   coverImageUrl?: string;
-  copiedFromId?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  sourceItineraryId?: string;
+  copyCount?: number;
+  // Convex provides _creationTime as timestamp
+  createdAt?: number;
   // Populated relations
   days?: ItineraryDay[];
   cityName?: string;
@@ -45,8 +44,8 @@ export interface Itinerary {
 export interface CreateItineraryInput {
   title: string;
   cityId: string;
-  startDate: Date | string;
-  endDate: Date | string;
+  startDate: string;
+  endDate: string;
   visibility?: ItineraryVisibility;
   coverImageUrl?: string;
 }
@@ -57,8 +56,8 @@ export interface CreateItineraryInput {
 export interface UpdateItineraryInput {
   title?: string;
   cityId?: string;
-  startDate?: Date | string;
-  endDate?: Date | string;
+  startDate?: string;
+  endDate?: string;
   visibility?: ItineraryVisibility;
   coverImageUrl?: string;
 }
@@ -70,14 +69,14 @@ export interface ItineraryFilters {
   userId?: string;
   cityId?: string;
   visibility?: ItineraryVisibility;
-  startDateFrom?: Date | string;
-  startDateTo?: Date | string;
+  startDateFrom?: string;
+  startDateTo?: string;
 }
 
 /**
- * Itinerary with computed fields for display
+ * Itinerary with computed fields for display (matches Convex list response)
  */
 export interface ItineraryWithStats extends Itinerary {
-  daysCount: number;
-  itemsCount: number;
+  dayCount: number;
+  itemCount: number;
 }

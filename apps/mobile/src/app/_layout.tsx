@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/providers/AuthProvider';
-import { DatabaseProvider } from '@/providers/DatabaseProvider';
+import { ConvexProvider } from '@/providers/ConvexProvider';
 
 // Initialize Sentry
 const SENTRY_DSN = Constants.expoConfig?.extra?.sentryDsn;
@@ -25,16 +25,16 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <DatabaseProvider>
+        <ConvexProvider>
+          <AuthProvider>
             <Stack
               screenOptions={{
                 headerShown: false,
               }}
             />
             <StatusBar style="auto" />
-          </DatabaseProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </ConvexProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

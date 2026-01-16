@@ -1,168 +1,73 @@
-import { supabase } from '@/lib/supabase';
-
-// API base URL should NOT include /v1 - it will be added in request URLs
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL?.replace(/\/v1$/, '') ||
-  'http://localhost:8000';
-
 /**
- * Reminder type
+ * Reminder Service - Convex-based implementation
+ *
+ * This service provides direct access to Convex reminder functions.
+ * For React components, prefer using Convex hooks (useQuery, useMutation) directly.
  */
-export interface Reminder {
-  id: string;
-  userId: string;
-  itemId: string;
-  minutesBefore: number;
-  scheduledAt: string;
-  sentAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+
+import type { Id } from '../../../../convex/_generated/dataModel';
+import { convex } from '@/providers/ConvexProvider';
+import { api } from '../../../../convex/_generated/api';
 
 /**
- * Get authorization header with current session token
- */
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    throw new Error('Not authenticated');
-  }
-  return {
-    Authorization: `Bearer ${session.access_token}`,
-    'Content-Type': 'application/json',
-  };
-}
-
-/**
- * Reminder service for managing item reminders
+ * Reminder service for mobile app using Convex
+ *
+ * Note: For reactive UI updates, use Convex hooks directly in components:
+ * - useQuery(api.reminders.listByUser, { userId })
+ * - useMutation(api.reminders.create)
+ * - useMutation(api.reminders.update)
+ * - useMutation(api.reminders.remove)
  */
 export const reminderService = {
   /**
-   * Schedule a reminder for an item
-   */
-  async schedule(itemId: string, minutesBefore: number): Promise<Reminder> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/items/${itemId}/reminders`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ minutesBefore }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to schedule reminder');
-    }
-
-    const result = await response.json();
-    return result.data;
-  },
-
-  /**
-   * Get reminder for an item
-   */
-  async getByItemId(itemId: string): Promise<Reminder | null> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/items/${itemId}/reminders`,
-      {
-        method: 'GET',
-        headers,
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to get reminder');
-    }
-
-    const result = await response.json();
-    return result.data;
-  },
-
-  /**
-   * Cancel (delete) reminder for an item
-   */
-  async cancel(itemId: string): Promise<void> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/items/${itemId}/reminders`,
-      {
-        method: 'DELETE',
-        headers,
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to cancel reminder');
-    }
-  },
-
-  /**
    * List all user reminders
    */
-  async list(): Promise<Reminder[]> {
-    const headers = await getAuthHeader();
+  async list(userId: Id<'users'>) {
+    return convex.query(api.reminders.listByUser, { userId });
+  },
 
-    const response = await fetch(`${API_BASE_URL}/v1/reminders`, {
-      method: 'GET',
-      headers,
+  /**
+   * Create a reminder for an item
+   */
+  async create(
+    itemId: Id<'itineraryItems'>,
+    userId: Id<'users'>,
+    minutesBefore: number
+  ) {
+    return convex.mutation(api.reminders.create, {
+      itemId,
+      userId,
+      minutesBefore,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to list reminders');
-    }
-
-    const result = await response.json();
-    return result.data;
   },
 
   /**
    * Update a reminder
    */
-  async update(reminderId: string, minutesBefore: number): Promise<Reminder> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(`${API_BASE_URL}/v1/reminders/${reminderId}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ minutesBefore }),
+  async update(
+    reminderId: Id<'reminders'>,
+    userId: Id<'users'>,
+    minutesBefore: number
+  ) {
+    return convex.mutation(api.reminders.update, {
+      id: reminderId,
+      userId,
+      minutesBefore,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to update reminder');
-    }
-
-    const result = await response.json();
-    return result.data;
   },
 
   /**
    * Delete a reminder by ID
    */
-  async delete(reminderId: string): Promise<void> {
-    const headers = await getAuthHeader();
-
-    const response = await fetch(`${API_BASE_URL}/v1/reminders/${reminderId}`, {
-      method: 'DELETE',
-      headers,
+  async remove(reminderId: Id<'reminders'>, userId: Id<'users'>) {
+    return convex.mutation(api.reminders.remove, {
+      id: reminderId,
+      userId,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to delete reminder');
-    }
   },
 };
+
+// Re-export the API for use with Convex hooks
+export { api };
 
 export default reminderService;

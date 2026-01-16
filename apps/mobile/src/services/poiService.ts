@@ -1,200 +1,121 @@
-import type { Poi, PoiCategory } from '@pathfinding/types';
-import { supabase } from '@/lib/supabase';
+/**
+ * POI Service - Convex-based implementation
+ *
+ * This service provides direct access to Convex POI functions.
+ * For React components, prefer using Convex hooks (useQuery) directly.
+ */
 
-// API base URL should NOT include /v1 - it will be added in request URLs
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL?.replace(/\/v1$/, '') ||
-  'http://localhost:8000';
+import type { Id, TableNames } from '../../../../convex/_generated/dataModel';
+import { convex } from '@/providers/ConvexProvider';
+import { api } from '../../../../convex/_generated/api';
+
+// Helper to cast string to Convex ID type
+function asId<T extends TableNames>(id: string): Id<T> {
+  return id as Id<T>;
+}
 
 /**
  * POI search filters
  */
-interface PoiSearchFilters {
-  cityId: string;
-  category?: PoiCategory;
-  query?: string;
-  minRating?: number;
-  priceLevel?: number;
-  nearbyLat?: number;
-  nearbyLng?: number;
-  radiusKm?: number;
+export interface PoiSearchFilters {
+  cityId: Id<'cities'>;
+  category?: string;
+  keyword?: string;
   page?: number;
   pageSize?: number;
 }
 
 /**
- * POI search response
+ * Nearby POI filters
  */
-interface PoiSearchResponse {
-  data: Poi[];
-  meta: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
+export interface NearbyFilters {
+  cityId: Id<'cities'>;
+  latitude: number;
+  longitude: number;
+  radiusKm?: number;
+  limit?: number;
 }
 
 /**
- * Get access token for authenticated requests
- */
-async function getAccessToken(): Promise<string | null> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session?.access_token || null;
-}
-
-/**
- * POI service for mobile app
+ * POI service for mobile app using Convex
+ *
+ * Note: For reactive UI updates, use Convex hooks directly in components:
+ * - useQuery(api.pois.listByCity, { cityId, category, page, pageSize })
+ * - useQuery(api.pois.getById, { id })
+ * - useQuery(api.pois.search, { cityId, keyword, category, limit })
+ * - useQuery(api.pois.getNearby, { cityId, latitude, longitude, radiusKm, limit })
  */
 export const poiService = {
   /**
-   * Search POIs with filters
+   * List POIs by city with optional category filter
    */
-  async search(filters: PoiSearchFilters): Promise<PoiSearchResponse> {
-    const token = await getAccessToken();
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
-
-    const params = new URLSearchParams();
-    params.append('cityId', filters.cityId);
-    if (filters.category) params.append('category', filters.category);
-    if (filters.query) params.append('query', filters.query);
-    if (filters.minRating !== undefined)
-      params.append('minRating', filters.minRating.toString());
-    if (filters.priceLevel !== undefined)
-      params.append('priceLevel', filters.priceLevel.toString());
-    if (filters.nearbyLat !== undefined)
-      params.append('nearbyLat', filters.nearbyLat.toString());
-    if (filters.nearbyLng !== undefined)
-      params.append('nearbyLng', filters.nearbyLng.toString());
-    if (filters.radiusKm !== undefined)
-      params.append('radiusKm', filters.radiusKm.toString());
-    if (filters.page !== undefined)
-      params.append('page', filters.page.toString());
-    if (filters.pageSize !== undefined)
-      params.append('pageSize', filters.pageSize.toString());
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/pois/search?${params.toString()}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to search POIs');
-    }
-
-    return response.json();
+  async listByCity(filters: PoiSearchFilters) {
+    return convex.query(api.pois.listByCity, {
+      cityId: filters.cityId,
+      category: filters.category,
+      page: filters.page,
+      pageSize: filters.pageSize,
+    });
   },
 
   /**
-   * Get POI recommendations for a city
+   * Search POIs by keyword
    */
-  async getRecommendations(
-    cityId: string,
-    category?: PoiCategory,
-    limit = 20
-  ): Promise<Poi[]> {
-    const token = await getAccessToken();
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
-
-    const params = new URLSearchParams();
-    params.append('cityId', cityId);
-    if (category) params.append('category', category);
-    params.append('limit', limit.toString());
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/pois/recommend?${params.toString()}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to get recommendations');
-    }
-
-    const result = await response.json();
-    return result.data;
+  async search(
+    cityId: Id<'cities'>,
+    keyword: string,
+    category?: string,
+    limit?: number
+  ) {
+    return convex.query(api.pois.search, {
+      cityId,
+      keyword,
+      category,
+      limit,
+    });
   },
 
   /**
-   * Get nearby POIs
+   * Get nearby POIs based on location
    */
-  async getNearby(
-    lat: number,
-    lng: number,
-    radiusKm = 5,
-    category?: PoiCategory,
-    limit = 20
-  ): Promise<Poi[]> {
-    const token = await getAccessToken();
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
-
-    const params = new URLSearchParams();
-    params.append('lat', lat.toString());
-    params.append('lng', lng.toString());
-    params.append('radiusKm', radiusKm.toString());
-    if (category) params.append('category', category);
-    params.append('limit', limit.toString());
-
-    const response = await fetch(
-      `${API_BASE_URL}/v1/pois/nearby?${params.toString()}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to get nearby POIs');
-    }
-
-    const result = await response.json();
-    return result.data;
+  async getNearby(filters: NearbyFilters) {
+    return convex.query(api.pois.getNearby, {
+      cityId: filters.cityId,
+      latitude: filters.latitude,
+      longitude: filters.longitude,
+      radiusKm: filters.radiusKm,
+      limit: filters.limit,
+    });
   },
 
   /**
    * Get POI by ID
    */
-  async getById(poiId: string): Promise<Poi> {
-    const token = await getAccessToken();
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
+  async getById(poiId: Id<'pois'>) {
+    return convex.query(api.pois.getById, { id: poiId });
+  },
 
-    const response = await fetch(`${API_BASE_URL}/v1/pois/${poiId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+  /**
+   * Get POI categories for a city
+   */
+  async getCategories(cityId: Id<'cities'>) {
+    return convex.query(api.pois.getCategories, { cityId });
+  },
+
+  /**
+   * Get recommended POIs (alias for getNearby, for backward compatibility)
+   * Used by add-poi.tsx and POIRecommendScreen
+   */
+  async getRecommendations(cityId: string | Id<'cities'>) {
+    // Return nearby POIs based on a default location
+    // In a real implementation, this would use the user's current location
+    return convex.query(api.pois.listByCity, {
+      cityId: typeof cityId === 'string' ? asId<'cities'>(cityId) : cityId,
+      page: 1,
+      pageSize: 20,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to get POI');
-    }
-
-    const result = await response.json();
-    return result.data;
   },
 };
+
+// Re-export the API for use with Convex hooks
+export { api };

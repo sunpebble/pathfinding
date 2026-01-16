@@ -69,7 +69,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
         setStartTime(item.startTime);
         setEndTime(item.endTime);
         setNotes(item.notes || '');
-        setTransportMode(item.transportMode || 'walking');
+        setTransportMode((item.transportMode as TransportMode) || 'walking');
         setTransportMinutes(item.transportMinutes?.toString() || '');
         setConflicts([]);
       };

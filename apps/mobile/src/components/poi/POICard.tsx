@@ -24,7 +24,9 @@ export function POICard({
   showAddButton = false,
   compact = false,
 }: POICardProps) {
-  const categoryInfo = POI_CATEGORIES[poi.category] || {
+  const categoryInfo = POI_CATEGORIES[
+    poi.category as keyof typeof POI_CATEGORIES
+  ] || {
     label: poi.category,
     icon: 'location',
   };
@@ -96,7 +98,6 @@ export function POICard({
             <>
               <RatingStars rating={poi.rating} size={14} />
               <Text style={styles.ratingValue}>{poi.rating.toFixed(1)}</Text>
-              <Text style={styles.ratingCount}>({poi.ratingCount})</Text>
             </>
           ) : (
             <Text style={styles.noRating}>暂无评分</Text>
@@ -220,11 +221,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#FFB800',
     marginLeft: 4,
-  },
-  ratingCount: {
-    fontSize: 12,
-    color: '#999',
-    marginLeft: 2,
   },
   noRating: {
     fontSize: 12,
