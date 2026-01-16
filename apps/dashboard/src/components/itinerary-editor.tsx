@@ -43,6 +43,7 @@ interface Day {
   _id: string;
   dayNumber: number;
   date: string;
+  items?: Item[];
 }
 
 interface ItineraryEditorProps {
@@ -612,7 +613,7 @@ export function ItineraryEditor({
               <DayEditor
                 key={`${day._id}-${refreshKey}`}
                 day={day}
-                items={(day as any).items || []}
+                items={day.items || []}
                 userId={userId}
                 cityId={cityId}
                 onItemsChange={handleItemsChange}

@@ -1,5 +1,6 @@
 'use client';
 
+import type { AiDay, AiPoi, GuideWithAI } from '@/types/api';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -80,27 +81,6 @@ function formatDate(dateString?: string) {
   }
 }
 
-// Extended interface for TravelGuide with AI enrichment data
-interface AiPoi {
-  name: string;
-  type: string;
-  description?: string;
-  latitude: number;
-  longitude: number;
-  address?: string;
-  geocodeConfidence?: number;
-  geocodeSource?: string;
-  isManuallyVerified?: boolean;
-  verifiedAt?: number;
-  verifiedBy?: string;
-}
-
-interface AiDay {
-  dayNumber: number;
-  theme?: string;
-  pois: AiPoi[];
-}
-
 export default function GuideDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -117,7 +97,7 @@ export default function GuideDetailPage() {
     enabled: !!id,
   });
 
-  const guide = data?.data as any; // Extended with AI fields
+  const guide = data?.data as GuideWithAI | undefined;
 
   if (isLoading) {
     return (
