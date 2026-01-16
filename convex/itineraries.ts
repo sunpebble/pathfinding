@@ -1,311 +1,280 @@
-import type { Doc} from './_generated/dataModel';
+import type { Id } from './_generated/dataModel';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
 /**
- * 计算两个日期之间的天数
+ * Itineraries - Travel Plan Queries and Mutations
  */
-function daysBetween(startDate: string, endDate: string): number {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const diffTime = end.getTime() - start.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-}
+
+const visibilityValidator = v.union(
+  v.literal('private'),
+  v.literal('team'),
+  v.literal('public')
+);
 
 /**
- * 生成日期数组
+ * Permission checking helpers
  */
-function generateDates(startDate: string, days: number): string[] {
-  const dates: string[] = [];
-  const start = new Date(startDate);
 
-  for (let i = 0; i < days; i++) {
-    const date = new Date(start);
-    date.setDate(start.getDate() + i);
-    dates.push(date.toISOString().split('T')[0]);
+// Check if user can edit itinerary (owner or editor)
+async function checkEditPermission(
+  ctx: QueryCtx | MutationCtx,
+  itineraryId: Id<'itineraries'>,
+  userId: string
+): Promise<boolean> {
+  const itinerary = await ctx.db.get(itineraryId);
+  if (!itinerary) {
+    throw new Error('Itinerary not found');
   }
 
-  return dates;
+  // Check if user is the owner (via itinerary.userId)
+  if (itinerary.userId === userId) {
+    return true;
+  }
+
+  // Check if user is a collaborator with edit permissions
+  const collab = await ctx.db
+    .query('itineraryCollaborators')
+    .withIndex('by_itinerary_user', (q) =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId)
+    )
+    .first();
+
+  if (!collab) {
+    throw new Error('You do not have access to this itinerary');
+  }
+
+  if (collab.role === 'viewer') {
+    throw new Error('You do not have edit permissions for this itinerary');
+  }
+
+  return true;
 }
 
-/**
- * 列出用户的行程
- */
-export const list = query({
+// Check if user is the owner
+async function checkOwnerPermission(
+  ctx: QueryCtx | MutationCtx,
+  itineraryId: Id<'itineraries'>,
+  userId: string
+): Promise<boolean> {
+  const itinerary = await ctx.db.get(itineraryId);
+  if (!itinerary) {
+    throw new Error('Itinerary not found');
+  }
+
+  // Check if user is the owner (via itinerary.userId)
+  if (itinerary.userId === userId) {
+    return true;
+  }
+
+  // Check if user is a collaborator with owner role
+  const collab = await ctx.db
+    .query('itineraryCollaborators')
+    .withIndex('by_itinerary_user', (q) =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId)
+    )
+    .first();
+
+  if (!collab || collab.role !== 'owner') {
+    throw new Error('Only the owner can perform this action');
+  }
+
+  return true;
+}
+
+// List itineraries for a user
+export const listByUser = query({
   args: {
-    userId: v.id('users'),
+    userId: v.string(),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
   },
-  handler: async (ctx, { userId, page = 1, pageSize = 20 }) => {
+  handler: async (ctx, args) => {
+    const page = args.page ?? 1;
+    const pageSize = args.pageSize ?? 10;
+    const offset = (page - 1) * pageSize;
+
     const itineraries = await ctx.db
       .query('itineraries')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
-    // 获取城市信息
-    const cityIds = [...new Set(itineraries.map((i) => i.cityId))];
-    const cities = await Promise.all(cityIds.map((id) => ctx.db.get(id)));
-    const cityMap = new Map(cities.filter(Boolean).map((c) => [c!._id, c!]));
+    const total = itineraries.length;
+    const data = itineraries.slice(offset, offset + pageSize);
 
-    // 分页
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    const paginatedItineraries = itineraries.slice(start, end);
-
-    // 获取每个行程的天数和项目统计
-    const result = await Promise.all(
-      paginatedItineraries.map(async (itinerary) => {
-        const days = await ctx.db
-          .query('itineraryDays')
-          .withIndex('by_itinerary', (q) => q.eq('itineraryId', itinerary._id))
-          .collect();
-
-        let itemCount = 0;
-        for (const day of days) {
-          const items = await ctx.db
-            .query('itineraryItems')
-            .withIndex('by_day', (q) => q.eq('dayId', day._id))
-            .collect();
-          itemCount += items.length;
-        }
-
-        const city = cityMap.get(itinerary.cityId);
-
+    // Enrich with city data
+    const enriched = await Promise.all(
+      data.map(async (itinerary) => {
+        const city = await ctx.db.get(itinerary.cityId);
+        const daysCount = calculateDaysCount(
+          itinerary.startDate,
+          itinerary.endDate
+        );
         return {
           ...itinerary,
-          id: itinerary._id,
           cityName: city?.name,
-          dayCount: days.length,
-          itemCount,
-          createdAt: itinerary._creationTime,
+          daysCount,
         };
       })
     );
 
-    return {
-      data: result,
-      meta: {
-        page,
-        pageSize,
-        totalCount: itineraries.length,
-        totalPages: Math.ceil(itineraries.length / pageSize),
-      },
-    };
+    return { data: enriched, total };
   },
 });
 
-/**
- * 列出公开行程 (社区发现)
- */
+// List public itineraries
 export const listPublic = query({
   args: {
     cityId: v.optional(v.id('cities')),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
-    sortBy: v.optional(v.union(v.literal('recent'), v.literal('popular'))),
   },
-  handler: async (
-    ctx,
-    { cityId, page = 1, pageSize = 20, sortBy = 'recent' }
-  ) => {
-    const itinerariesQuery = ctx.db
+  handler: async (ctx, args) => {
+    const page = args.page ?? 1;
+    const pageSize = args.pageSize ?? 10;
+    const offset = (page - 1) * pageSize;
+
+    let itineraries = await ctx.db
       .query('itineraries')
-      .withIndex('by_visibility', (q) => q.eq('visibility', 'public'));
+      .withIndex('by_visibility', (q) => q.eq('visibility', 'public'))
+      .order('desc')
+      .collect();
 
-    const allPublic = await itinerariesQuery.collect();
-
-    // 按城市过滤
-    const filtered = cityId
-      ? allPublic.filter((i) => i.cityId === cityId)
-      : allPublic;
-
-    // 排序
-    if (sortBy === 'popular') {
-      filtered.sort((a, b) => (b.copyCount || 0) - (a.copyCount || 0));
-    } else {
-      filtered.sort((a, b) => b._creationTime - a._creationTime);
+    if (args.cityId) {
+      itineraries = itineraries.filter((i) => i.cityId === args.cityId);
     }
 
-    // 分页
-    const start = (page - 1) * pageSize;
-    const paginatedItineraries = filtered.slice(start, start + pageSize);
+    const total = itineraries.length;
+    const data = itineraries.slice(offset, offset + pageSize);
 
-    // 获取城市和用户信息
-    const result = await Promise.all(
-      paginatedItineraries.map(async (itinerary) => {
+    const enriched = await Promise.all(
+      data.map(async (itinerary) => {
         const city = await ctx.db.get(itinerary.cityId);
-        const user = await ctx.db.get(itinerary.userId);
-
-        const days = await ctx.db
-          .query('itineraryDays')
-          .withIndex('by_itinerary', (q) => q.eq('itineraryId', itinerary._id))
-          .collect();
-
         return {
           ...itinerary,
-          id: itinerary._id,
           cityName: city?.name,
-          authorName: user?.displayName || '匿名用户',
-          dayCount: days.length,
-          createdAt: itinerary._creationTime,
+          daysCount: calculateDaysCount(itinerary.startDate, itinerary.endDate),
         };
       })
     );
 
-    return {
-      data: result,
-      meta: {
-        page,
-        pageSize,
-        totalCount: filtered.length,
-        totalPages: Math.ceil(filtered.length / pageSize),
-      },
-    };
+    return { data: enriched, total };
   },
 });
 
-/**
- * 获取单个行程详情
- */
+// Get itinerary by ID with full details (days and items) - optimized to avoid N+1
 export const getById = query({
-  args: {
-    id: v.id('itineraries'),
-    userId: v.optional(v.id('users')),
-  },
-  handler: async (ctx, { id, userId }) => {
-    const itinerary = await ctx.db.get(id);
+  args: { id: v.id('itineraries') },
+  handler: async (ctx, args) => {
+    const itinerary = await ctx.db.get(args.id);
+    if (!itinerary) return null;
 
-    if (!itinerary) {
-      throw new Error('行程不存在');
-    }
-
-    // 权限检查: 只能查看自己的或公开的行程
-    if (itinerary.visibility !== 'public' && itinerary.userId !== userId) {
-      throw new Error('无权访问此行程');
-    }
-
-    // 获取城市信息
     const city = await ctx.db.get(itinerary.cityId);
 
-    // 获取所有天数
+    // Get days
     const days = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', id))
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
       .collect();
 
-    // 按天数排序
+    // Sort days by dayNumber
     days.sort((a, b) => a.dayNumber - b.dayNumber);
 
-    // 获取每天的项目
-    const daysWithItems = await Promise.all(
-      days.map(async (day) => {
-        const items = await ctx.db
+    // Get all items for all days in a single batch
+    const allItems = await Promise.all(
+      days.map((day) =>
+        ctx.db
           .query('itineraryItems')
           .withIndex('by_day', (q) => q.eq('dayId', day._id))
-          .collect();
-
-        // 按 orderIndex 排序
-        items.sort((a, b) => a.orderIndex - b.orderIndex);
-
-        // 获取 POI 信息
-        const itemsWithPoi = await Promise.all(
-          items.map(async (item) => {
-            const poi = item.poiId ? await ctx.db.get(item.poiId) : null;
-            return {
-              ...item,
-              id: item._id,
-              poi: poi
-                ? {
-                    id: poi._id,
-                    name: poi.name,
-                    category: poi.category,
-                    latitude: poi.latitude,
-                    longitude: poi.longitude,
-                    imageUrls: poi.imageUrls,
-                  }
-                : null,
-            };
-          })
-        );
-
-        return {
-          ...day,
-          id: day._id,
-          items: itemsWithPoi,
-        };
-      })
+          .collect()
+      )
     );
+
+    // Collect all unique POI IDs
+    const poiIds = new Set<string>();
+    allItems.flat().forEach((item) => poiIds.add(item.poiId));
+
+    // Batch load all POIs at once (single query per POI, but parallel)
+    const poiMap = new Map();
+    const pois = await Promise.all(
+      Array.from(poiIds).map((id) => ctx.db.get(id as any))
+    );
+    Array.from(poiIds).forEach((id, idx) => {
+      poiMap.set(id, pois[idx]);
+    });
+
+    // Build the response with pre-loaded POI data
+    const daysWithItems = days.map((day, dayIdx) => {
+      const items = allItems[dayIdx];
+      items.sort((a, b) => a.orderIndex - b.orderIndex);
+
+      const enrichedItems = items.map((item) => {
+        const poi = poiMap.get(item.poiId);
+        return {
+          ...item,
+          poi: poi
+            ? {
+                id: poi._id,
+                name: poi.name,
+                category: poi.category,
+                address: poi.address,
+                latitude: poi.latitude,
+                longitude: poi.longitude,
+                rating: poi.rating,
+              }
+            : null,
+        };
+      });
+
+      return {
+        ...day,
+        items: enrichedItems,
+      };
+    });
+
+    // Get collaborators
+    const collaborators = await ctx.db
+      .query('itineraryCollaborators')
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .collect();
 
     return {
       ...itinerary,
-      id: itinerary._id,
-      city: city
-        ? {
-            id: city._id,
-            name: city.name,
-            country: city.country,
-          }
-        : null,
+      cityName: city?.name,
+      daysCount: calculateDaysCount(itinerary.startDate, itinerary.endDate),
       days: daysWithItems,
-      createdAt: itinerary._creationTime,
+      collaborators,
     };
   },
 });
 
-/**
- * 创建行程
- */
+// Create a new itinerary with auto-generated days
 export const create = mutation({
   args: {
-    userId: v.id('users'),
-    cityId: v.id('cities'),
+    userId: v.string(),
     title: v.string(),
+    cityId: v.id('cities'),
     startDate: v.string(),
     endDate: v.string(),
-    visibility: v.optional(v.union(v.literal('private'), v.literal('public'))),
+    visibility: v.optional(visibilityValidator),
     coverImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const {
-      userId,
-      cityId,
-      title,
-      startDate,
-      endDate,
-      visibility = 'private',
-      coverImageUrl,
-    } = args;
-
-    // 验证用户存在
-    const user = await ctx.db.get(userId);
-    if (!user) {
-      throw new Error('用户不存在');
-    }
-
-    // 验证城市存在
-    const city = await ctx.db.get(cityId);
-    if (!city) {
-      throw new Error('城市不存在');
-    }
-
-    // 创建行程
+    // Create itinerary
     const itineraryId = await ctx.db.insert('itineraries', {
-      userId,
-      cityId,
-      title,
-      startDate,
-      endDate,
-      visibility,
-      coverImageUrl,
-      copyCount: 0,
+      userId: args.userId,
+      title: args.title,
+      cityId: args.cityId,
+      startDate: args.startDate,
+      endDate: args.endDate,
+      visibility: args.visibility ?? 'private',
+      coverImageUrl: args.coverImageUrl,
     });
 
-    // 计算天数并创建 itinerary_days
-    const totalDays = daysBetween(startDate, endDate);
-    const dates = generateDates(startDate, totalDays);
-
+    // Generate days
+    const dates = getDateRange(args.startDate, args.endDate);
     for (let i = 0; i < dates.length; i++) {
       await ctx.db.insert('itineraryDays', {
         itineraryId,
@@ -314,182 +283,378 @@ export const create = mutation({
       });
     }
 
-    return { id: itineraryId };
+    return itineraryId;
   },
 });
 
-/**
- * 更新行程
- */
+// Update an itinerary
 export const update = mutation({
   args: {
     id: v.id('itineraries'),
-    userId: v.id('users'),
+    userId: v.string(),
     title: v.optional(v.string()),
-    visibility: v.optional(v.union(v.literal('private'), v.literal('public'))),
+    cityId: v.optional(v.id('cities')),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
+    visibility: v.optional(visibilityValidator),
     coverImageUrl: v.optional(v.string()),
   },
-  handler: async (ctx, { id, userId, ...updates }) => {
-    const itinerary = await ctx.db.get(id);
+  handler: async (ctx, args) => {
+    // Check edit permission
+    await checkEditPermission(ctx, args.id, args.userId);
 
-    if (!itinerary) {
-      throw new Error('行程不存在');
-    }
-
-    if (itinerary.userId !== userId) {
-      throw new Error('无权修改此行程');
-    }
-
-    const patchData: Partial<Doc<'itineraries'>> = {};
-    if (updates.title !== undefined) patchData.title = updates.title;
-    if (updates.visibility !== undefined)
-      patchData.visibility = updates.visibility;
-    if (updates.coverImageUrl !== undefined)
-      patchData.coverImageUrl = updates.coverImageUrl;
-
-    await ctx.db.patch(id, patchData);
-
-    return { success: true };
+    const { id, userId, ...updates } = args;
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([, v]) => v !== undefined)
+    );
+    await ctx.db.patch(id, filteredUpdates);
+    return await ctx.db.get(id);
   },
 });
 
-/**
- * 删除行程
- */
+// Delete an itinerary (cascades to days and items)
 export const remove = mutation({
   args: {
     id: v.id('itineraries'),
-    userId: v.id('users'),
+    userId: v.string(),
   },
-  handler: async (ctx, { id, userId }) => {
-    const itinerary = await ctx.db.get(id);
+  handler: async (ctx, args) => {
+    // Check owner permission (only owner can delete)
+    await checkOwnerPermission(ctx, args.id, args.userId);
 
-    if (!itinerary) {
-      throw new Error('行程不存在');
-    }
-
-    if (itinerary.userId !== userId) {
-      throw new Error('无权删除此行程');
-    }
-
-    // 删除所有天数和项目
+    // Get all days
     const days = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', id))
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
       .collect();
 
+    // Delete all items for each day
     for (const day of days) {
-      // 删除该天的所有项目
       const items = await ctx.db
         .query('itineraryItems')
         .withIndex('by_day', (q) => q.eq('dayId', day._id))
         .collect();
-
       for (const item of items) {
-        // 删除项目的提醒
-        const reminders = await ctx.db
-          .query('reminders')
-          .withIndex('by_item', (q) => q.eq('itemId', item._id))
-          .collect();
-
-        for (const reminder of reminders) {
-          await ctx.db.delete(reminder._id);
-        }
-
         await ctx.db.delete(item._id);
       }
-
       await ctx.db.delete(day._id);
     }
 
-    // 删除行程
-    await ctx.db.delete(id);
+    // Delete all collaborators
+    const collaborators = await ctx.db
+      .query('itineraryCollaborators')
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .collect();
+    for (const collab of collaborators) {
+      await ctx.db.delete(collab._id);
+    }
 
-    return { success: true };
+    // Delete itinerary
+    await ctx.db.delete(args.id);
   },
 });
 
-/**
- * 复制公开行程
- */
+// Copy an itinerary (full copy)
 export const copy = mutation({
   args: {
-    sourceId: v.id('itineraries'),
-    userId: v.id('users'),
-    startDate: v.string(),
+    itineraryId: v.id('itineraries'),
+    userId: v.string(),
+    newStartDate: v.string(),
   },
-  handler: async (ctx, { sourceId, userId, startDate }) => {
-    const source = await ctx.db.get(sourceId);
+  handler: async (ctx, args) => {
+    const original = await ctx.db.get(args.itineraryId);
+    if (!original) throw new Error('Itinerary not found');
 
-    if (!source) {
-      throw new Error('源行程不存在');
+    // Check access - must be owner or public itinerary
+    if (original.userId !== args.userId && original.visibility !== 'public') {
+      throw new Error('You do not have access to copy this itinerary');
     }
 
-    if (source.visibility !== 'public' && source.userId !== userId) {
-      throw new Error('无权复制此行程');
-    }
+    // Calculate new end date
+    const daysCount = calculateDaysCount(original.startDate, original.endDate);
+    const newStart = new Date(args.newStartDate);
+    const newEnd = new Date(newStart);
+    newEnd.setDate(newEnd.getDate() + daysCount - 1);
+    const newEndDate = newEnd.toISOString().split('T')[0];
 
-    // 计算新的日期范围
-    const totalDays = daysBetween(source.startDate, source.endDate);
-    const dates = generateDates(startDate, totalDays);
-    const endDate = dates[dates.length - 1];
+    // Calculate date offset
+    const originalStart = new Date(original.startDate);
+    const dateOffset = Math.floor(
+      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
-    // 创建新行程
+    // Create new itinerary
     const newItineraryId = await ctx.db.insert('itineraries', {
-      userId,
-      cityId: source.cityId,
-      title: `${source.title} (副本)`,
-      startDate,
-      endDate,
+      userId: args.userId,
+      title: original.title,
+      cityId: original.cityId,
+      startDate: args.newStartDate,
+      endDate: newEndDate,
       visibility: 'private',
-      coverImageUrl: source.coverImageUrl,
-      copyCount: 0,
-      sourceItineraryId: sourceId,
+      coverImageUrl: original.coverImageUrl,
+      copiedFromId: args.itineraryId,
     });
 
-    // 获取源行程的天数
-    const sourceDays = await ctx.db
+    // Get original days
+    const originalDays = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', sourceId))
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
       .collect();
+    originalDays.sort((a, b) => a.dayNumber - b.dayNumber);
 
-    sourceDays.sort((a, b) => a.dayNumber - b.dayNumber);
-
-    // 复制天数和项目
-    for (let i = 0; i < sourceDays.length; i++) {
-      const sourceDay = sourceDays[i];
-
+    // Create new days with copied items
+    const newDates = getDateRange(args.newStartDate, newEndDate);
+    for (let i = 0; i < newDates.length; i++) {
       const newDayId = await ctx.db.insert('itineraryDays', {
         itineraryId: newItineraryId,
         dayNumber: i + 1,
-        date: dates[i],
+        date: newDates[i],
       });
 
-      // 复制该天的项目
-      const sourceItems = await ctx.db
-        .query('itineraryItems')
-        .withIndex('by_day', (q) => q.eq('dayId', sourceDay._id))
-        .collect();
+      // Copy items from original day if it exists
+      if (i < originalDays.length) {
+        const originalItems = await ctx.db
+          .query('itineraryItems')
+          .withIndex('by_day', (q) => q.eq('dayId', originalDays[i]._id))
+          .collect();
 
-      for (const item of sourceItems) {
-        await ctx.db.insert('itineraryItems', {
-          dayId: newDayId,
-          poiId: item.poiId,
-          orderIndex: item.orderIndex,
-          startTime: item.startTime,
-          endTime: item.endTime,
-          notes: item.notes,
-          transportMode: item.transportMode,
-          transportMinutes: item.transportMinutes,
-        });
+        for (const item of originalItems) {
+          await ctx.db.insert('itineraryItems', {
+            dayId: newDayId,
+            poiId: item.poiId,
+            orderIndex: item.orderIndex,
+            startTime: item.startTime,
+            endTime: item.endTime,
+            transportMode: item.transportMode,
+            notes: item.notes,
+          });
+        }
       }
     }
 
-    // 更新源行程的复制计数
-    await ctx.db.patch(sourceId, {
-      copyCount: (source.copyCount || 0) + 1,
+    // Record copy history
+    await ctx.db.insert('itineraryCopyHistory', {
+      originalItineraryId: args.itineraryId,
+      copiedItineraryId: newItineraryId,
+      userId: args.userId,
+      copyType: 'full',
+      originalStartDate: original.startDate,
+      newStartDate: args.newStartDate,
+      dateOffset,
+      createdAt: Date.now(),
     });
 
-    return { id: newItineraryId };
+    return newItineraryId;
   },
 });
+
+// Copy an itinerary with partial days selection
+export const copyPartial = mutation({
+  args: {
+    itineraryId: v.id('itineraries'),
+    userId: v.string(),
+    newStartDate: v.string(),
+    selectedDays: v.array(v.number()), // Array of day numbers to copy
+    newTitle: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const original = await ctx.db.get(args.itineraryId);
+    if (!original) throw new Error('Itinerary not found');
+
+    // Check access - must be owner or public itinerary
+    if (original.userId !== args.userId && original.visibility !== 'public') {
+      throw new Error('You do not have access to copy this itinerary');
+    }
+
+    // Validate selected days
+    if (args.selectedDays.length === 0) {
+      throw new Error('At least one day must be selected');
+    }
+
+    const sortedDays = [...args.selectedDays].sort((a, b) => a - b);
+
+    // Calculate new end date based on selected days count
+    const newStart = new Date(args.newStartDate);
+    const newEnd = new Date(newStart);
+    newEnd.setDate(newEnd.getDate() + sortedDays.length - 1);
+    const newEndDate = newEnd.toISOString().split('T')[0];
+
+    // Calculate date offset
+    const originalStart = new Date(original.startDate);
+    const dateOffset = Math.floor(
+      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Create new itinerary
+    const newItineraryId = await ctx.db.insert('itineraries', {
+      userId: args.userId,
+      title: args.newTitle || original.title,
+      cityId: original.cityId,
+      startDate: args.newStartDate,
+      endDate: newEndDate,
+      visibility: 'private',
+      coverImageUrl: original.coverImageUrl,
+      copiedFromId: args.itineraryId,
+    });
+
+    // Get original days
+    const originalDays = await ctx.db
+      .query('itineraryDays')
+      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .collect();
+
+    // Create a map of original days by day number
+    const originalDaysMap = new Map(originalDays.map((d) => [d.dayNumber, d]));
+
+    // Create new days with copied items
+    const newDates = getDateRange(args.newStartDate, newEndDate);
+    for (let i = 0; i < sortedDays.length; i++) {
+      const originalDayNumber = sortedDays[i];
+      const newDayId = await ctx.db.insert('itineraryDays', {
+        itineraryId: newItineraryId,
+        dayNumber: i + 1,
+        date: newDates[i],
+      });
+
+      // Copy items from original day if it exists
+      const originalDay = originalDaysMap.get(originalDayNumber);
+      if (originalDay) {
+        const originalItems = await ctx.db
+          .query('itineraryItems')
+          .withIndex('by_day', (q) => q.eq('dayId', originalDay._id))
+          .collect();
+
+        for (const item of originalItems) {
+          await ctx.db.insert('itineraryItems', {
+            dayId: newDayId,
+            poiId: item.poiId,
+            orderIndex: item.orderIndex,
+            startTime: item.startTime,
+            endTime: item.endTime,
+            transportMode: item.transportMode,
+            notes: item.notes,
+          });
+        }
+      }
+    }
+
+    // Record copy history
+    await ctx.db.insert('itineraryCopyHistory', {
+      originalItineraryId: args.itineraryId,
+      copiedItineraryId: newItineraryId,
+      userId: args.userId,
+      copyType: 'partial',
+      selectedDays: sortedDays,
+      originalStartDate: original.startDate,
+      newStartDate: args.newStartDate,
+      dateOffset,
+      createdAt: Date.now(),
+    });
+
+    return newItineraryId;
+  },
+});
+
+// Get copy history for a user
+export const getCopyHistory = query({
+  args: {
+    userId: v.string(),
+    page: v.optional(v.number()),
+    pageSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const page = args.page ?? 1;
+    const pageSize = args.pageSize ?? 10;
+    const offset = (page - 1) * pageSize;
+
+    const history = await ctx.db
+      .query('itineraryCopyHistory')
+      .withIndex('by_user_created', (q) => q.eq('userId', args.userId))
+      .order('desc')
+      .collect();
+
+    const total = history.length;
+    const data = history.slice(offset, offset + pageSize);
+
+    // Enrich with itinerary details
+    const enriched = await Promise.all(
+      data.map(async (record) => {
+        const [original, copied] = await Promise.all([
+          ctx.db.get(record.originalItineraryId),
+          ctx.db.get(record.copiedItineraryId),
+        ]);
+
+        return {
+          ...record,
+          originalItinerary: original
+            ? {
+                id: original._id,
+                title: original.title,
+                startDate: original.startDate,
+                endDate: original.endDate,
+              }
+            : null,
+          copiedItinerary: copied
+            ? {
+                id: copied._id,
+                title: copied.title,
+                startDate: copied.startDate,
+                endDate: copied.endDate,
+              }
+            : null,
+        };
+      })
+    );
+
+    return { data: enriched, total };
+  },
+});
+
+// Get copy history for a specific itinerary (to see who copied it)
+export const getItineraryCopyStats = query({
+  args: {
+    itineraryId: v.id('itineraries'),
+  },
+  handler: async (ctx, args) => {
+    const copies = await ctx.db
+      .query('itineraryCopyHistory')
+      .withIndex('by_original', (q) =>
+        q.eq('originalItineraryId', args.itineraryId)
+      )
+      .collect();
+
+    return {
+      copyCount: copies.length,
+      recentCopies: copies
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 5)
+        .map((c) => ({
+          copiedAt: c.createdAt,
+          copyType: c.copyType,
+        })),
+    };
+  },
+});
+
+// Helper functions
+function calculateDaysCount(startDate: string, endDate: string): number {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  return (
+    Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  );
+}
+
+function getDateRange(startDate: string, endDate: string): string[] {
+  const dates: string[] = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const current = new Date(start);
+
+  while (current <= end) {
+    dates.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+}

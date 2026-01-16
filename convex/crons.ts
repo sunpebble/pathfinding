@@ -18,7 +18,7 @@ crons.interval(
 crons.interval(
   'cleanup-expired-otps',
   { hours: 1 },
-  internal.auth.cleanupExpiredOtps
+  internal.phoneAuth.cleanupExpiredOtps
 );
 
 /**
@@ -27,7 +27,7 @@ crons.interval(
 crons.interval(
   'cleanup-expired-rate-limits',
   { hours: 24 },
-  internal.auth.cleanupExpiredRateLimits
+  internal.phoneAuth.cleanupExpiredRateLimits
 );
 
 export default crons;

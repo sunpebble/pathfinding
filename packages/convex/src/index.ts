@@ -1,17 +1,18 @@
 /**
  * @pathfinding/convex - Shared Convex Client
  * Re-exports Convex API and client utilities for use across the monorepo
+ * Now references the unified /convex directory at project root
  */
 
 import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../_generated/api.js';
+import { api } from '../../../convex/_generated/api.js';
 
 // Re-export generated API
 export { api };
-export { internal } from '../_generated/api.js';
+export { internal } from '../../../convex/_generated/api.js';
 
 // Re-export types
-export type { Doc, Id } from '../_generated/dataModel.js';
+export type { Doc, Id } from '../../../convex/_generated/dataModel.js';
 
 // Environment-aware client factory
 export function createConvexClient(url?: string): ConvexHttpClient {

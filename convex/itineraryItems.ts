@@ -1,348 +1,282 @@
+import type { Id } from './_generated/dataModel';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
 /**
- * 获取单个项目详情
+ * Itinerary Items - POIs within a day
  */
-export const getById = query({
-  args: {
-    id: v.id('itineraryItems'),
-  },
-  handler: async (ctx, { id }) => {
-    const item = await ctx.db.get(id);
-    if (!item) {
-      return null;
-    }
 
-    const poi = item.poiId ? await ctx.db.get(item.poiId) : null;
-
-    return {
-      ...item,
-      id: item._id,
-      poi: poi
-        ? {
-            id: poi._id,
-            name: poi.name,
-            category: poi.category,
-            latitude: poi.latitude,
-            longitude: poi.longitude,
-          }
-        : null,
-    };
-  },
-});
+const transportModeValidator = v.union(
+  v.literal('walking'),
+  v.literal('driving'),
+  v.literal('transit'),
+  v.literal('cycling'),
+  v.literal('taxi')
+);
 
 /**
- * 列出某天的所有项目
+ * Permission checking helper for items
  */
+
+// Check if user can edit items in a day (checks itinerary permission)
+async function checkItemEditPermission(
+  ctx: QueryCtx | MutationCtx,
+  dayId: Id<'itineraryDays'>,
+  userId: string
+): Promise<boolean> {
+  const day = await ctx.db.get(dayId);
+  if (!day) {
+    throw new Error('Day not found');
+  }
+
+  const itinerary = await ctx.db.get(day.itineraryId);
+  if (!itinerary) {
+    throw new Error('Itinerary not found');
+  }
+
+  // Check if user is the owner (via itinerary.userId)
+  if (itinerary.userId === userId) {
+    return true;
+  }
+
+  // Check if user is a collaborator with edit permissions
+  const collab = await ctx.db
+    .query('itineraryCollaborators')
+    .withIndex('by_itinerary_user', (q) =>
+      q.eq('itineraryId', day.itineraryId).eq('userId', userId)
+    )
+    .first();
+
+  if (!collab) {
+    throw new Error('You do not have access to this itinerary');
+  }
+
+  if (collab.role === 'viewer') {
+    throw new Error('You do not have edit permissions for this itinerary');
+  }
+
+  return true;
+}
+
+// List items for a day
 export const listByDay = query({
-  args: {
-    dayId: v.id('itineraryDays'),
-  },
-  handler: async (ctx, { dayId }) => {
+  args: { dayId: v.id('itineraryDays') },
+  handler: async (ctx, args) => {
     const items = await ctx.db
       .query('itineraryItems')
-      .withIndex('by_day', (q) => q.eq('dayId', dayId))
+      .withIndex('by_day', (q) => q.eq('dayId', args.dayId))
       .collect();
 
-    // 按 orderIndex 排序
+    // Sort by orderIndex
     items.sort((a, b) => a.orderIndex - b.orderIndex);
 
-    // 获取 POI 信息
-    const itemsWithPoi = await Promise.all(
+    // Enrich with POI data
+    return await Promise.all(
       items.map(async (item) => {
-        const poi = item.poiId ? await ctx.db.get(item.poiId) : null;
+        const poi = await ctx.db.get(item.poiId);
         return {
           ...item,
-          id: item._id,
           poi: poi
             ? {
                 id: poi._id,
                 name: poi.name,
+                nameEn: poi.nameEn,
                 category: poi.category,
+                address: poi.address,
                 latitude: poi.latitude,
                 longitude: poi.longitude,
-                imageUrls: poi.imageUrls,
+                rating: poi.rating,
               }
             : null,
         };
       })
     );
-
-    return itemsWithPoi;
   },
 });
 
-/**
- * 添加项目到某天
- */
+// Get an item by ID
+export const getById = query({
+  args: { id: v.id('itineraryItems') },
+  handler: async (ctx, args) => {
+    const item = await ctx.db.get(args.id);
+    if (!item) return null;
+
+    const poi = await ctx.db.get(item.poiId);
+    return {
+      ...item,
+      poi,
+    };
+  },
+});
+
+// Add an item to a day
 export const create = mutation({
   args: {
     dayId: v.id('itineraryDays'),
-    userId: v.id('users'),
-    poiId: v.optional(v.id('pois')),
+    userId: v.string(),
+    poiId: v.id('pois'),
+    orderIndex: v.optional(v.number()),
     startTime: v.optional(v.string()),
     endTime: v.optional(v.string()),
+    transportMode: v.optional(transportModeValidator),
     notes: v.optional(v.string()),
-    transportMode: v.optional(v.string()),
-    transportMinutes: v.optional(v.number()),
   },
-  handler: async (ctx, { dayId, userId, ...itemData }) => {
-    // 验证 day 存在并检查权限
-    const day = await ctx.db.get(dayId);
-    if (!day) {
-      throw new Error('行程天不存在');
+  handler: async (ctx, args) => {
+    // Check edit permission
+    await checkItemEditPermission(ctx, args.dayId, args.userId);
+
+    // If no orderIndex provided, add at the end
+    let orderIndex = args.orderIndex;
+    if (orderIndex === undefined) {
+      const existingItems = await ctx.db
+        .query('itineraryItems')
+        .withIndex('by_day', (q) => q.eq('dayId', args.dayId))
+        .collect();
+      orderIndex =
+        existingItems.length > 0
+          ? Math.max(...existingItems.map((i) => i.orderIndex)) + 1
+          : 0;
     }
 
-    const itinerary = await ctx.db.get(day.itineraryId);
-    if (!itinerary) {
-      throw new Error('行程不存在');
-    }
-
-    if (itinerary.userId !== userId) {
-      throw new Error('无权修改此行程');
-    }
-
-    // 获取当前最大 orderIndex
-    const existingItems = await ctx.db
-      .query('itineraryItems')
-      .withIndex('by_day', (q) => q.eq('dayId', dayId))
-      .collect();
-
-    const maxOrderIndex = existingItems.reduce(
-      (max, item) => Math.max(max, item.orderIndex),
-      -1
-    );
-
-    // 创建项目
-    const itemId = await ctx.db.insert('itineraryItems', {
-      dayId,
-      poiId: itemData.poiId,
-      orderIndex: maxOrderIndex + 1,
-      startTime: itemData.startTime,
-      endTime: itemData.endTime,
-      notes: itemData.notes,
-      transportMode: itemData.transportMode,
-      transportMinutes: itemData.transportMinutes,
+    return await ctx.db.insert('itineraryItems', {
+      dayId: args.dayId,
+      poiId: args.poiId,
+      orderIndex,
+      startTime: args.startTime,
+      endTime: args.endTime,
+      transportMode: args.transportMode ?? 'walking',
+      notes: args.notes,
     });
-
-    return { id: itemId };
   },
 });
 
-/**
- * 更新项目
- */
+// Update an item
 export const update = mutation({
   args: {
     id: v.id('itineraryItems'),
-    userId: v.id('users'),
-    poiId: v.optional(v.id('pois')),
+    userId: v.string(),
+    orderIndex: v.optional(v.number()),
     startTime: v.optional(v.string()),
     endTime: v.optional(v.string()),
+    transportMode: v.optional(transportModeValidator),
     notes: v.optional(v.string()),
-    transportMode: v.optional(v.string()),
-    transportMinutes: v.optional(v.number()),
   },
-  handler: async (ctx, { id, userId, ...updates }) => {
-    const item = await ctx.db.get(id);
-    if (!item) {
-      throw new Error('项目不存在');
-    }
+  handler: async (ctx, args) => {
+    // Get item to check permissions
+    const item = await ctx.db.get(args.id);
+    if (!item) throw new Error('Item not found');
 
-    // 验证权限
-    const day = await ctx.db.get(item.dayId);
-    if (!day) {
-      throw new Error('行程天不存在');
-    }
+    // Check edit permission
+    await checkItemEditPermission(ctx, item.dayId, args.userId);
 
-    const itinerary = await ctx.db.get(day.itineraryId);
-    if (!itinerary || itinerary.userId !== userId) {
-      throw new Error('无权修改此项目');
-    }
-
-    // 更新项目
-    await ctx.db.patch(id, {
-      poiId: updates.poiId,
-      startTime: updates.startTime,
-      endTime: updates.endTime,
-      notes: updates.notes,
-      transportMode: updates.transportMode,
-      transportMinutes: updates.transportMinutes,
-    });
-
-    return { success: true };
+    const { id, userId, ...updates } = args;
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([, v]) => v !== undefined)
+    );
+    await ctx.db.patch(id, filteredUpdates);
+    return await ctx.db.get(id);
   },
 });
 
-/**
- * 删除项目
- */
+// Delete an item
 export const remove = mutation({
   args: {
     id: v.id('itineraryItems'),
-    userId: v.id('users'),
+    userId: v.string(),
   },
-  handler: async (ctx, { id, userId }) => {
-    const item = await ctx.db.get(id);
-    if (!item) {
-      throw new Error('项目不存在');
-    }
+  handler: async (ctx, args) => {
+    // Get item to check permissions
+    const item = await ctx.db.get(args.id);
+    if (!item) throw new Error('Item not found');
 
-    // 验证权限
-    const day = await ctx.db.get(item.dayId);
-    if (!day) {
-      throw new Error('行程天不存在');
-    }
+    // Check edit permission
+    await checkItemEditPermission(ctx, item.dayId, args.userId);
 
-    const itinerary = await ctx.db.get(day.itineraryId);
-    if (!itinerary || itinerary.userId !== userId) {
-      throw new Error('无权删除此项目');
-    }
+    await ctx.db.delete(args.id);
+  },
+});
 
-    // 删除关联的提醒
-    const reminders = await ctx.db
-      .query('reminders')
-      .withIndex('by_item', (q) => q.eq('itemId', id))
-      .collect();
+// Reorder items within a day
+export const reorder = mutation({
+  args: {
+    itemId: v.id('itineraryItems'),
+    userId: v.string(),
+    newOrderIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const item = await ctx.db.get(args.itemId);
+    if (!item) throw new Error('Item not found');
 
-    for (const reminder of reminders) {
-      await ctx.db.delete(reminder._id);
-    }
+    // Check edit permission
+    await checkItemEditPermission(ctx, item.dayId, args.userId);
 
-    // 删除项目
-    await ctx.db.delete(id);
+    const oldOrder = item.orderIndex;
+    const newOrder = args.newOrderIndex;
 
-    // 重新排序剩余项目
-    const remainingItems = await ctx.db
+    if (oldOrder === newOrder) return;
+
+    // Get all items in the same day
+    const items = await ctx.db
       .query('itineraryItems')
       .withIndex('by_day', (q) => q.eq('dayId', item.dayId))
       .collect();
 
-    remainingItems.sort((a, b) => a.orderIndex - b.orderIndex);
-
-    for (let i = 0; i < remainingItems.length; i++) {
-      if (remainingItems[i].orderIndex !== i) {
-        await ctx.db.patch(remainingItems[i]._id, { orderIndex: i });
-      }
-    }
-
-    return { success: true };
-  },
-});
-
-/**
- * 重新排序项目
- */
-export const reorder = mutation({
-  args: {
-    dayId: v.id('itineraryDays'),
-    userId: v.id('users'),
-    itemIds: v.array(v.id('itineraryItems')),
-  },
-  handler: async (ctx, { dayId, userId, itemIds }) => {
-    // 验证权限
-    const day = await ctx.db.get(dayId);
-    if (!day) {
-      throw new Error('行程天不存在');
-    }
-
-    const itinerary = await ctx.db.get(day.itineraryId);
-    if (!itinerary || itinerary.userId !== userId) {
-      throw new Error('无权修改此行程');
-    }
-
-    // 验证所有项目都属于这一天
-    const existingItems = await ctx.db
-      .query('itineraryItems')
-      .withIndex('by_day', (q) => q.eq('dayId', dayId))
-      .collect();
-
-    const existingIds = new Set(existingItems.map((i) => i._id));
-
-    for (const itemId of itemIds) {
-      if (!existingIds.has(itemId)) {
-        throw new Error('项目不属于此行程天');
-      }
-    }
-
-    // 更新顺序
-    for (let i = 0; i < itemIds.length; i++) {
-      await ctx.db.patch(itemIds[i], { orderIndex: i });
-    }
-
-    return { success: true };
-  },
-});
-
-/**
- * 移动项目到另一天
- */
-export const moveToDay = mutation({
-  args: {
-    itemId: v.id('itineraryItems'),
-    targetDayId: v.id('itineraryDays'),
-    userId: v.id('users'),
-    newOrderIndex: v.optional(v.number()),
-  },
-  handler: async (ctx, { itemId, targetDayId, userId, newOrderIndex }) => {
-    const item = await ctx.db.get(itemId);
-    if (!item) {
-      throw new Error('项目不存在');
-    }
-
-    const sourceDay = await ctx.db.get(item.dayId);
-    const targetDay = await ctx.db.get(targetDayId);
-
-    if (!sourceDay || !targetDay) {
-      throw new Error('行程天不存在');
-    }
-
-    // 验证两天属于同一行程
-    if (sourceDay.itineraryId !== targetDay.itineraryId) {
-      throw new Error('目标天不属于同一行程');
-    }
-
-    // 验证权限
-    const itinerary = await ctx.db.get(sourceDay.itineraryId);
-    if (!itinerary || itinerary.userId !== userId) {
-      throw new Error('无权修改此行程');
-    }
-
-    // 获取目标天的项目
-    const targetItems = await ctx.db
-      .query('itineraryItems')
-      .withIndex('by_day', (q) => q.eq('dayId', targetDayId))
-      .collect();
-
-    // 计算新的 orderIndex
-    const orderIndex =
-      newOrderIndex !== undefined
-        ? newOrderIndex
-        : targetItems.reduce((max, i) => Math.max(max, i.orderIndex), -1) + 1;
-
-    // 更新项目
-    await ctx.db.patch(itemId, {
-      dayId: targetDayId,
-      orderIndex,
-    });
-
-    // 重新排序源天的项目
-    if (item.dayId !== targetDayId) {
-      const sourceItems = await ctx.db
-        .query('itineraryItems')
-        .withIndex('by_day', (q) => q.eq('dayId', item.dayId))
-        .collect();
-
-      sourceItems.sort((a, b) => a.orderIndex - b.orderIndex);
-
-      for (let i = 0; i < sourceItems.length; i++) {
-        if (sourceItems[i].orderIndex !== i) {
-          await ctx.db.patch(sourceItems[i]._id, { orderIndex: i });
+    // Reorder items
+    for (const i of items) {
+      if (i._id === args.itemId) {
+        await ctx.db.patch(i._id, { orderIndex: newOrder });
+      } else if (newOrder < oldOrder) {
+        // Moving up: shift items between newOrder and oldOrder down
+        if (i.orderIndex >= newOrder && i.orderIndex < oldOrder) {
+          await ctx.db.patch(i._id, { orderIndex: i.orderIndex + 1 });
+        }
+      } else {
+        // Moving down: shift items between oldOrder and newOrder up
+        if (i.orderIndex > oldOrder && i.orderIndex <= newOrder) {
+          await ctx.db.patch(i._id, { orderIndex: i.orderIndex - 1 });
         }
       }
     }
+  },
+});
 
-    return { success: true };
+// Move item to a different day
+export const moveToDay = mutation({
+  args: {
+    itemId: v.id('itineraryItems'),
+    userId: v.string(),
+    newDayId: v.id('itineraryDays'),
+    orderIndex: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const item = await ctx.db.get(args.itemId);
+    if (!item) throw new Error('Item not found');
+
+    // Check edit permission for the source day
+    await checkItemEditPermission(ctx, item.dayId, args.userId);
+
+    // Check edit permission for the destination day
+    await checkItemEditPermission(ctx, args.newDayId, args.userId);
+
+    // Calculate new order index if not provided
+    let orderIndex = args.orderIndex;
+    if (orderIndex === undefined) {
+      const existingItems = await ctx.db
+        .query('itineraryItems')
+        .withIndex('by_day', (q) => q.eq('dayId', args.newDayId))
+        .collect();
+      orderIndex =
+        existingItems.length > 0
+          ? Math.max(...existingItems.map((i) => i.orderIndex)) + 1
+          : 0;
+    }
+
+    await ctx.db.patch(args.itemId, {
+      dayId: args.newDayId,
+      orderIndex,
+    });
+
+    return await ctx.db.get(args.itemId);
   },
 });

@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@auth/core':
+        specifier: ^0.37.4
+        version: 0.37.4
+      '@convex-dev/auth':
+        specifier: ^0.0.90
+        version: 0.0.90(@auth/core@0.37.4)(convex@1.31.4(react@19.1.0))(react@19.1.0)
       '@types/node':
         specifier: ^25.0.3
         version: 25.0.3
@@ -17,6 +23,9 @@ importers:
       expo-server-sdk:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
+      jose:
+        specifier: ^6.1.3
+        version: 6.1.3
       tencentcloud-sdk-nodejs:
         specifier: ^4.1.171
         version: 4.1.171(encoding@0.1.13)
@@ -8547,6 +8556,9 @@ packages:
   jose@5.10.0:
     resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
+  jose@6.1.3:
+    resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
+
   jquery@3.7.1:
     resolution: {integrity: sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==}
 
@@ -13604,6 +13616,23 @@ snapshots:
       '@oslojs/crypto': 1.0.1
       '@oslojs/encoding': 1.1.0
       convex: 1.31.3(react@19.1.0)
+      cookie: 1.1.1
+      is-network-error: 1.3.0
+      jose: 5.10.0
+      jwt-decode: 4.0.0
+      lucia: 3.2.2
+      oauth4webapi: 3.8.3
+      path-to-regexp: 6.3.0
+      server-only: 0.0.1
+    optionalDependencies:
+      react: 19.1.0
+
+  '@convex-dev/auth@0.0.90(@auth/core@0.37.4)(convex@1.31.4(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@auth/core': 0.37.4
+      '@oslojs/crypto': 1.0.1
+      '@oslojs/encoding': 1.1.0
+      convex: 1.31.4(react@19.1.0)
       cookie: 1.1.1
       is-network-error: 1.3.0
       jose: 5.10.0
@@ -22421,6 +22450,8 @@ snapshots:
   jiti@2.6.1: {}
 
   jose@5.10.0: {}
+
+  jose@6.1.3: {}
 
   jquery@3.7.1: {}
 

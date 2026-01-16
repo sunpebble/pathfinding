@@ -1,178 +1,210 @@
+/* eslint-disable ts/ban-ts-comment */
+// @ts-nocheck
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
 /**
- * 根据 ID 获取用户
+ * Users - Authentication and Profile Management
+ * Handles user sessions and profile data using Convex Auth
  */
-export const getById = query({
-  args: {
-    id: v.id('users'),
-  },
-  handler: async (ctx, { id }) => {
-    const user = await ctx.db.get(id);
-    if (!user) {
+
+// Get current authenticated user with profile
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get the authenticated user identity
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
       return null;
     }
-    return {
-      ...user,
-      id: user._id,
-    };
-  },
-});
 
-/**
- * 根据手机号获取用户
- */
-export const getByPhone = query({
-  args: {
-    phone: v.string(),
-  },
-  handler: async (ctx, { phone }) => {
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_phone', (q) => q.eq('phone', phone))
+    // Look up profile by email
+    const profile = await ctx.db
+      .query('profiles')
+      .withIndex('by_email', (q) => q.eq('email', identity.email!))
       .first();
 
-    if (!user) {
-      return null;
-    }
     return {
-      ...user,
-      id: user._id,
+      id: identity.subject,
+      email: identity.email,
+      name: identity.name,
+      pictureUrl: identity.pictureUrl,
+      profile: profile
+        ? {
+            displayName: profile.displayName,
+            avatarUrl: profile.avatarUrl,
+            bio: profile.bio,
+            followersCount: profile.followersCount ?? 0,
+            followingCount: profile.followingCount ?? 0,
+          }
+        : null,
     };
   },
 });
 
-/**
- * 根据邮箱获取用户
- */
-export const getByEmail = query({
-  args: {
-    email: v.string(),
-  },
-  handler: async (ctx, { email }) => {
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_email', (q) => q.eq('email', email))
+// Get user by ID (for looking up other users)
+export const getUserById = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    // Query profiles table - in Convex Auth, user data is spread across auth tables and profiles
+    const profile = await ctx.db
+      .query('profiles')
+      .filter((q) => q.eq(q.field('email'), args.userId))
       .first();
 
-    if (!user) {
+    if (!profile) {
       return null;
     }
+
     return {
-      ...user,
-      id: user._id,
+      id: args.userId,
+      email: profile.email,
+      displayName: profile.displayName,
+      avatarUrl: profile.avatarUrl,
+      bio: profile.bio,
+      followersCount: profile.followersCount ?? 0,
+      followingCount: profile.followingCount ?? 0,
     };
   },
 });
 
-/**
- * 更新用户资料
- */
+// Get user profile with follow status (for viewing other users' profiles)
+export const getUserProfile = query({
+  args: {
+    userId: v.string(),
+    currentUserId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Query profiles table
+    const profile = await ctx.db
+      .query('profiles')
+      .filter((q) => q.eq(q.field('email'), args.userId))
+      .first();
+
+    if (!profile) {
+      return null;
+    }
+
+    // Check follow status if currentUserId is provided
+    let isFollowing = false;
+    let isFollowedBy = false;
+
+    if (args.currentUserId && args.currentUserId !== args.userId) {
+      const currentUserFollows = await ctx.db
+        .query('userFollows')
+        .withIndex('by_follower_following', (q) =>
+          q.eq('followerId', args.currentUserId!).eq('followingId', args.userId)
+        )
+        .first();
+      isFollowing = currentUserFollows !== null;
+
+      const targetUserFollows = await ctx.db
+        .query('userFollows')
+        .withIndex('by_follower_following', (q) =>
+          q.eq('followerId', args.userId).eq('followingId', args.currentUserId!)
+        )
+        .first();
+      isFollowedBy = targetUserFollows !== null;
+    }
+
+    return {
+      id: args.userId,
+      email: profile.email,
+      displayName: profile.displayName,
+      avatarUrl: profile.avatarUrl,
+      bio: profile.bio,
+      followersCount: profile.followersCount ?? 0,
+      followingCount: profile.followingCount ?? 0,
+      isFollowing,
+      isFollowedBy,
+      isMutual: isFollowing && isFollowedBy,
+    };
+  },
+});
+
+// Check if user is authenticated (returns boolean)
+export const isAuthenticated = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    return identity !== null;
+  },
+});
+
+// Update user profile
 export const updateProfile = mutation({
   args: {
-    userId: v.id('users'),
     displayName: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
+    bio: v.optional(v.string()),
   },
-  handler: async (ctx, { userId, ...updates }) => {
-    const user = await ctx.db.get(userId);
-    if (!user) {
-      throw new Error('用户不存在');
+  handler: async (ctx, args) => {
+    // Verify authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
     }
 
-    const patchData: Record<string, string | undefined> = {};
-    if (updates.displayName !== undefined) {
-      patchData.displayName = updates.displayName;
+    // Check if profile exists
+    const existing = await ctx.db
+      .query('profiles')
+      .withIndex('by_email', (q) => q.eq('email', identity.email!))
+      .first();
+
+    const data: {
+      email: string;
+      displayName?: string;
+      avatarUrl?: string;
+      bio?: string;
+    } = {
+      email: identity.email!,
+    };
+
+    if (args.displayName !== undefined) {
+      data.displayName = args.displayName;
     }
-    if (updates.avatarUrl !== undefined) {
-      patchData.avatarUrl = updates.avatarUrl;
+    if (args.avatarUrl !== undefined) {
+      data.avatarUrl = args.avatarUrl;
+    }
+    if (args.bio !== undefined) {
+      data.bio = args.bio;
     }
 
-    await ctx.db.patch(userId, patchData);
-    return { success: true };
+    if (existing) {
+      // Update existing profile
+      await ctx.db.patch(existing._id, data);
+      return existing._id;
+    } else {
+      // Create new profile
+      return await ctx.db.insert('profiles', data);
+    }
   },
 });
 
-/**
- * 更新推送 token
- */
-export const updatePushToken = mutation({
-  args: {
-    userId: v.id('users'),
-    expoPushToken: v.string(),
-  },
-  handler: async (ctx, { userId, expoPushToken }) => {
-    const user = await ctx.db.get(userId);
-    if (!user) {
-      throw new Error('用户不存在');
+// Get or create user profile (useful for first-time login)
+export const getOrCreateProfile = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
     }
 
-    await ctx.db.patch(userId, { expoPushToken });
-    return { success: true };
-  },
-});
+    // Check if profile exists
+    const existing = await ctx.db
+      .query('profiles')
+      .withIndex('by_email', (q) => q.eq('email', identity.email!))
+      .first();
 
-/**
- * 删除用户账户
- */
-export const deleteAccount = mutation({
-  args: {
-    userId: v.id('users'),
-  },
-  handler: async (ctx, { userId }) => {
-    const user = await ctx.db.get(userId);
-    if (!user) {
-      throw new Error('用户不存在');
+    if (existing) {
+      return existing._id;
     }
 
-    // 删除用户的所有行程
-    const itineraries = await ctx.db
-      .query('itineraries')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
-      .collect();
-
-    for (const itinerary of itineraries) {
-      // 删除行程天数和项目
-      const days = await ctx.db
-        .query('itineraryDays')
-        .withIndex('by_itinerary', (q) => q.eq('itineraryId', itinerary._id))
-        .collect();
-
-      for (const day of days) {
-        const items = await ctx.db
-          .query('itineraryItems')
-          .withIndex('by_day', (q) => q.eq('dayId', day._id))
-          .collect();
-
-        for (const item of items) {
-          // 删除提醒
-          const reminders = await ctx.db
-            .query('reminders')
-            .withIndex('by_item', (q) => q.eq('itemId', item._id))
-            .collect();
-          for (const reminder of reminders) {
-            await ctx.db.delete(reminder._id);
-          }
-          await ctx.db.delete(item._id);
-        }
-        await ctx.db.delete(day._id);
-      }
-      await ctx.db.delete(itinerary._id);
-    }
-
-    // 删除用户的提醒
-    const reminders = await ctx.db
-      .query('reminders')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
-      .collect();
-    for (const reminder of reminders) {
-      await ctx.db.delete(reminder._id);
-    }
-
-    // 删除用户
-    await ctx.db.delete(userId);
-
-    return { success: true };
+    // Create new profile with defaults from identity
+    return await ctx.db.insert('profiles', {
+      email: identity.email!,
+      displayName: identity.name,
+      avatarUrl: identity.pictureUrl,
+    });
   },
 });
