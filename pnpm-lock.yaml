@@ -114,6 +114,9 @@ importers:
       '@pathfinding/crawler-types':
         specifier: workspace:*
         version: link:../../packages/crawler-types
+      '@pathfinding/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@sentry/node':
         specifier: ^9.5.0
         version: 9.47.1

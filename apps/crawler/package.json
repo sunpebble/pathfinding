@@ -28,6 +28,7 @@
     "@opentelemetry/semantic-conventions": "^1.30.0",
     "@pathfinding/convex": "workspace:*",
     "@pathfinding/crawler-types": "workspace:*",
+    "@pathfinding/logger": "workspace:*",
     "@sentry/node": "^9.5.0",
     "convex": "^1.31.3",
     "crawlee": "^3.13.0",
