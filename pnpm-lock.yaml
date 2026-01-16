@@ -262,6 +262,9 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.28
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/crawler-types:
     devDependencies:
