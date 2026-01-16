@@ -1,0 +1,15 @@
+echo "Running quality checks before push..."
+
+# Run typecheck
+pnpm typecheck || {
+  echo "TypeScript check failed. Please fix type errors before pushing."
+  exit 1
+}
+
+# Run tests
+pnpm test || {
+  echo "Tests failed. Please fix failing tests before pushing."
+  exit 1
+}
+
+echo "All quality checks passed!"
