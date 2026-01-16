@@ -12,7 +12,11 @@ export { api };
 export { internal } from '../../../convex/_generated/api.js';
 
 // Re-export types
-export type { Doc, Id } from '../../../convex/_generated/dataModel.js';
+export type {
+  Doc,
+  Id,
+  TableNames,
+} from '../../../convex/_generated/dataModel.js';
 
 // Environment-aware client factory
 export function createConvexClient(url?: string): ConvexHttpClient {

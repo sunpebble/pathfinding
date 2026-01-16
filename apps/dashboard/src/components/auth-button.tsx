@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuthActions } from '@convex-dev/auth/react';
-import { api } from '@pathfinding/convex/api';
+import { api } from '@pathfinding/convex';
 import { useQuery } from 'convex/react';
 import { ChevronDown, LogOut, User } from 'lucide-react';
 import Link from 'next/link';

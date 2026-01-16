@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { CollaboratorPanel } from '@/components/collaborator-panel';
 import { InviteDialog } from '@/components/invite-dialog';
 import { cn } from '@/lib/utils';
+import { toConvexId } from '@/types/convex';
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
   const icons = {
@@ -231,7 +232,7 @@ export default function ItineraryDetailPage() {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
   const itinerary = useQuery(api.itineraries.getById, {
-    id: id as any,
+    id: toConvexId<'itineraries'>(id),
   }) as Itinerary | null | undefined;
 
   const isLoading = itinerary === undefined;

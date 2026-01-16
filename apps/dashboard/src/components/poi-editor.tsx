@@ -1,10 +1,11 @@
 'use client';
 
-import { api } from '@pathfinding/convex/api';
+import { api } from '@pathfinding/convex';
 import { useMutation } from 'convex/react';
 import { CheckCircle2, MapPin, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { toConvexId } from '@/types/convex';
 
 interface PoiEditorProps {
   isOpen: boolean;
@@ -108,7 +109,7 @@ export function PoiEditor({
 
     try {
       await updatePoiCoordinates({
-        guideId: guideId as any, // Convex ID type
+        guideId: toConvexId<'travelGuides'>(guideId),
         dayNumber,
         poiIndex,
         latitude: lat,

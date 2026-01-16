@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { toConvexId } from '@/types/convex';
 
 interface PoiOption {
   id: string;
@@ -299,23 +300,29 @@ function DayEditor({
     cityId && isSearching
       ? {
           query: searchQuery || '',
-          cityId: cityId as any,
-          category: selectedCategory || undefined,
+          cityId: toConvexId<'cities'>(cityId),
+          category: selectedCategory as
+            | 'attraction'
+            | 'restaurant'
+            | 'hotel'
+            | 'shopping'
+            | 'other'
+            | undefined,
           limit: 20,
         }
       : 'skip'
   );
 
-  const pois = (poisQuery as any) || [];
+  const pois = poisQuery || [];
 
   const handleAddPoi = async (poiId: string) => {
     setIsSaving(true);
     setError('');
     try {
       await createItem({
-        dayId: day._id as any,
+        dayId: toConvexId<'itineraryDays'>(day._id),
         userId,
-        poiId: poiId as any,
+        poiId: toConvexId<'pois'>(poiId),
       });
       setIsSearching(false);
       setSearchQuery('');
@@ -332,12 +339,18 @@ function DayEditor({
     setError('');
     try {
       await updateItem({
-        id: itemId as any,
+        id: toConvexId<'itineraryItems'>(itemId),
         userId,
         startTime: updates.startTime,
         endTime: updates.endTime,
         notes: updates.notes,
-        transportMode: updates.transportMode,
+        transportMode: updates.transportMode as
+          | 'walking'
+          | 'driving'
+          | 'transit'
+          | 'cycling'
+          | 'taxi'
+          | undefined,
       });
       onItemsChange();
     } catch (err) {
@@ -352,7 +365,7 @@ function DayEditor({
     setError('');
     try {
       await removeItem({
-        id: itemId as any,
+        id: toConvexId<'itineraryItems'>(itemId),
         userId,
       });
       onItemsChange();
@@ -370,7 +383,7 @@ function DayEditor({
     setError('');
     try {
       await reorderItem({
-        itemId: item._id as any,
+        itemId: toConvexId<'itineraryItems'>(item._id),
         userId,
         newOrderIndex: item.orderIndex - 1,
       });
@@ -389,7 +402,7 @@ function DayEditor({
     setError('');
     try {
       await reorderItem({
-        itemId: item._id as any,
+        itemId: toConvexId<'itineraryItems'>(item._id),
         userId,
         newOrderIndex: item.orderIndex + 1,
       });
@@ -555,8 +568,8 @@ export function ItineraryEditor({
 
   // Fetch itinerary to get cityId
   const itinerary = useQuery(api.itineraries.getById, {
-    id: itineraryId as any,
-  }) as any;
+    id: toConvexId<'itineraries'>(itineraryId),
+  });
 
   const handleItemsChange = () => {
     setRefreshKey((prev) => prev + 1);

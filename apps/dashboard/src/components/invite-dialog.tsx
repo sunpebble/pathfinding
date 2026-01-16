@@ -5,6 +5,7 @@ import { useMutation } from 'convex/react';
 import { Check, Copy, Link2, Mail, UserPlus, X } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { toConvexId } from '@/types/convex';
 
 interface InviteDialogProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ export function InviteDialog({
 
     try {
       await inviteCollaborator({
-        itineraryId: itineraryId as any, // Convex ID type
+        itineraryId: toConvexId<'itineraries'>(itineraryId),
         userId: userId.trim(),
         role,
         invitedBy: currentUserId,

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { toConvexId } from '@/types/convex';
 
 interface Collaborator {
   _id: string;
@@ -77,7 +78,7 @@ export function CollaboratorPanel({
 
     try {
       await removeCollaborator({
-        itineraryId: itineraryId as any, // Convex ID type
+        itineraryId: toConvexId<'itineraries'>(itineraryId),
         userId,
         removedBy: currentUserId,
       });
@@ -100,7 +101,7 @@ export function CollaboratorPanel({
 
     try {
       await updateRole({
-        itineraryId: itineraryId as any, // Convex ID type
+        itineraryId: toConvexId<'itineraries'>(itineraryId),
         userId,
         newRole,
         updatedBy: currentUserId,
