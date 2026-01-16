@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Bundle Configuration -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleDisplayName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+
+    <!-- Custom Build Settings -->
+    <key>PFEnvironment</key>
+    <string>$(PF_ENVIRONMENT)</string>
+    <key>PFAPIBaseURL</key>
+    <string>$(PF_API_BASE_URL)</string>
+    <key>PFAPITimeout</key>
+    <string>$(PF_API_TIMEOUT)</string>
+    <key>PFEnableDebugLogging</key>
+    <string>$(PF_ENABLE_DEBUG_LOGGING)</string>
+    <key>PFEnableNetworkLogging</key>
+    <string>$(PF_ENABLE_NETWORK_LOGGING)</string>
+
+    <!-- Scene Configuration -->
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <true/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <!-- CarPlay Scene Configuration -->
+            <key>CPTemplateApplicationSceneSessionRoleApplication</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>CarPlay</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).CarPlaySceneDelegate</string>
+                </dict>
+            </array>
+        </dict>
+    </dict>
+
+    <!-- Launch Screen -->
+    <key>UILaunchScreen</key>
+    <dict>
+        <key>UIColorName</key>
+        <string>LaunchScreenBackground</string>
+    </dict>
+
+    <!-- Device Capabilities -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+
+    <!-- Supported Orientations -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- App Transport Security -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <!-- Disable arbitrary loads by default for security -->
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <!-- Allow localhost for development -->
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>localhost</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+            <key>127.0.0.1</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+
+    <!-- Privacy - Usage Descriptions -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Pathfinding 需要访问您的位置以显示附近的旅行目的地和导航。</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Pathfinding 需要访问您的位置以提供旅行导航和位置提醒。</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Pathfinding 需要访问您的相册以保存旅行照片。</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Pathfinding 需要访问相机以拍摄旅行照片。</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Pathfinding 需要访问麦克风以进行语音输入和录制语音备忘录。</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Pathfinding 需要语音识别权限以将您的语音转换为文字,用于语音规划行程和添加景点。</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Pathfinding 需要访问您的日历以同步行程安排和提醒。</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Pathfinding 需要完整访问您的日历以同步行程安排、创建事件和设置提醒。</string>
+
+    <!-- Live Activities Support -->
+    <key>NSSupportsLiveActivities</key>
+    <true/>
+    <key>NSSupportsLiveActivitiesFrequentUpdates</key>
+    <true/>
+
+    <!-- Background Modes (if needed) -->
+    <!-- <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+        <string>fetch</string>
+    </array> -->
+
+    <!-- URL Schemes -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>org.pathfinding.app</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>pathfinding</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>

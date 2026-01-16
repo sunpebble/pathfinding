@@ -4,14 +4,7 @@ node_modules/
 # Build outputs
 dist/
 build/
-.turbo/
-
-# React Native / Expo
-.expo/
-web-build/
-ios/
-android/
-expo-env.d.ts
+.nx/
 
 # Environment variables
 .env
@@ -46,13 +39,25 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 
-# Supabase
-supabase/.branches/
-supabase/.temp/
-
 # Sentry
 .sentryclirc
 
 # Cache
 .cache/
 *.cache
+
+# Next.js
+.next/
+out/
+
+# Auto Claude generated files
+.auto-claude/
+.auto-claude-security.json
+.auto-claude-status
+.claude_settings.json
+.worktrees/
+.security-key
+logs/security/
+
+# iOS
+*.xcuserstate

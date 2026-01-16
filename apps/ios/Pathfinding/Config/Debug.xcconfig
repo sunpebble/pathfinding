@@ -1,0 +1,26 @@
+// Debug.xcconfig
+// Development environment configuration
+
+#include "Base.xcconfig"
+
+// Environment
+PF_ENVIRONMENT = development
+BUNDLE_ID_SUFFIX = .debug
+
+// API Configuration - points to main API service (8000), not crawler (3001)
+PF_API_BASE_URL = http:$()/127.0.0.1:8000
+PF_API_TIMEOUT = 30
+
+// Debug Settings
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+GCC_OPTIMIZATION_LEVEL = 0
+SWIFT_OPTIMIZATION_LEVEL = -Onone
+SWIFT_COMPILATION_MODE = singlefile
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG
+
+// Enable Address Sanitizer for debug builds (optional, can be enabled in scheme)
+// ENABLE_ADDRESS_SANITIZER = YES
+
+// Logging
+PF_ENABLE_DEBUG_LOGGING = YES
+PF_ENABLE_NETWORK_LOGGING = YES

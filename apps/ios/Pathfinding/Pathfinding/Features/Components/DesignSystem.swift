@@ -1,0 +1,1030 @@
+import SwiftUI
+
+// MARK: - Design Tokens
+
+enum DesignTokens {
+  // MARK: - Spacing
+
+  enum Spacing {
+    static let xxs: CGFloat = 4
+    static let xs: CGFloat = 8
+    static let sm: CGFloat = 12
+    static let md: CGFloat = 16
+    static let lg: CGFloat = 20
+    static let xl: CGFloat = 24
+    static let xxl: CGFloat = 32
+    static let xxxl: CGFloat = 48
+  }
+
+  // MARK: - Corner Radius
+
+  enum Radius {
+    static let xxs: CGFloat = 4
+    static let xs: CGFloat = 6
+    static let sm: CGFloat = 10
+    static let md: CGFloat = 14
+    static let lg: CGFloat = 18
+    static let xl: CGFloat = 24
+    static let xxl: CGFloat = 32
+    static let full: CGFloat = 9999
+  }
+
+  // MARK: - Shadows (Adaptive for Dark Mode - Apple Native Style)
+
+  enum Shadow {
+    /// Subtle shadow - barely visible, for minimal elevation (Apple native style)
+    static func subtle(for colorScheme: ColorScheme) -> ShadowStyle {
+      colorScheme == .dark
+        ? ShadowStyle(color: .clear, radius: 0, y: 0)
+        : ShadowStyle(color: .black.opacity(0.03), radius: 2, y: 1)
+    }
+
+    /// Small shadow - light elevation for cards (Apple native style)
+    static func sm(for colorScheme: ColorScheme) -> ShadowStyle {
+      colorScheme == .dark
+        ? ShadowStyle(color: .black.opacity(0.3), radius: 2, y: 1)
+        : ShadowStyle(color: .black.opacity(0.04), radius: 4, y: 2)
+    }
+
+    /// Medium shadow - moderate elevation for floating elements
+    static func md(for colorScheme: ColorScheme) -> ShadowStyle {
+      colorScheme == .dark
+        ? ShadowStyle(color: .black.opacity(0.4), radius: 4, y: 2)
+        : ShadowStyle(color: .black.opacity(0.06), radius: 6, y: 3)
+    }
+
+    /// Large shadow - prominent elevation for modals and popovers
+    static func lg(for colorScheme: ColorScheme) -> ShadowStyle {
+      colorScheme == .dark
+        ? ShadowStyle(color: .black.opacity(0.5), radius: 8, y: 4)
+        : ShadowStyle(color: .black.opacity(0.08), radius: 10, y: 4)
+    }
+
+    /// Glow effect for dark mode (colored shadow)
+    static func glow(color: Color, for colorScheme: ColorScheme) -> ShadowStyle {
+      colorScheme == .dark
+        ? ShadowStyle(color: color.opacity(0.4), radius: 12, y: 0)
+        : ShadowStyle(color: color.opacity(0.2), radius: 8, y: 2)
+    }
+
+    // Static versions for backward compatibility
+    static let subtle = ShadowStyle(color: .black.opacity(0.03), radius: 2, y: 1)
+    static let sm = ShadowStyle(color: .black.opacity(0.04), radius: 4, y: 2)
+    static let md = ShadowStyle(color: .black.opacity(0.06), radius: 6, y: 3)
+    static let lg = ShadowStyle(color: .black.opacity(0.08), radius: 10, y: 4)
+  }
+
+  struct ShadowStyle {
+    let color: Color
+    let radius: CGFloat
+    let y: CGFloat
+  }
+
+  // MARK: - Animation
+
+  enum Animation {
+    static let quick = SwiftUI.Animation.easeOut(duration: 0.15)
+    static let standard = SwiftUI.Animation.easeInOut(duration: 0.25)
+    static let smooth = SwiftUI.Animation.easeInOut(duration: 0.35)
+    static let spring = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.7)
+    static let bouncy = SwiftUI.Animation.spring(response: 0.4, dampingFraction: 0.6)
+  }
+
+  // MARK: - Typography
+
+  enum Typography {
+    // MARK: - Apple HIG Standard Text Styles
+
+    /// Large title - 34pt, for prominent headings
+    static let largeTitle: Font = .largeTitle
+
+    /// Title - 28pt, for section headers
+    static let title: Font = .title
+
+    /// Title 2 - 22pt, for secondary headers
+    static let title2: Font = .title2
+
+    /// Title 3 - 20pt, for tertiary headers
+    static let title3: Font = .title3
+
+    /// Headline - 17pt semibold, for emphasized body text
+    static let headline: Font = .headline
+
+    /// Body - 17pt, for main content
+    static let body: Font = .body
+
+    /// Callout - 16pt, for supplementary content
+    static let callout: Font = .callout
+
+    /// Subheadline - 15pt, for secondary content
+    static let subheadline: Font = .subheadline
+
+    /// Footnote - 13pt, for footnotes and annotations
+    static let footnote: Font = .footnote
+
+    /// Caption - 12pt, for small labels
+    static let caption: Font = .caption
+
+    /// Caption 2 - 11pt, for very small labels
+    static let caption2: Font = .caption2
+
+    // MARK: - Display Fonts (Hero Headers)
+
+    enum Display {
+      /// Hero display - 48pt bold rounded, for main hero headers
+      static let hero: Font = .system(size: 48, weight: .bold, design: .rounded)
+
+      /// Jumbo display - 60pt bold rounded, for large decorative text
+      static let jumbo: Font = .system(size: 60, weight: .bold, design: .rounded)
+
+      /// Mega display - 72pt bold rounded, for splash screens
+      static let mega: Font = .system(size: 72, weight: .bold, design: .rounded)
+
+      /// Small display - 32pt bold rounded, for smaller hero text
+      static let small: Font = .system(size: 32, weight: .bold, design: .rounded)
+    }
+
+    // MARK: - Numeric Fonts (Stats, Clocks, Counters)
+
+    enum Numeric {
+      /// Small numeric - 28pt medium rounded, for small stats
+      static let small: Font = .system(size: 28, weight: .medium, design: .rounded)
+
+      /// Medium numeric - 36pt light rounded, for medium displays
+      static let medium: Font = .system(size: 36, weight: .light, design: .rounded)
+
+      /// Large numeric - 48pt light monospaced, for timers and counters
+      static let large: Font = .system(size: 48, weight: .light, design: .monospaced)
+
+      /// Extra large numeric - 56pt light rounded, for prominent numbers
+      static let xlarge: Font = .system(size: 56, weight: .light, design: .rounded)
+
+      /// Extra extra large numeric - 64pt thin rounded, for decorative numbers
+      static let xxlarge: Font = .system(size: 64, weight: .thin, design: .rounded)
+
+      /// Clock display - 80pt ultralight rounded, for clock faces
+      static let clock: Font = .system(size: 80, weight: .ultraLight, design: .rounded)
+    }
+  }
+
+  // MARK: - Semantic Colors (Adaptive for Light/Dark Mode)
+
+  enum Colors {
+    // MARK: - Background Colors
+
+    /// Primary background color
+    static var background: Color {
+      Color(.systemBackground)
+    }
+
+    /// Secondary background color (slightly elevated)
+    static var backgroundSecondary: Color {
+      Color(.secondarySystemBackground)
+    }
+
+    /// Tertiary background color (more elevated)
+    static var backgroundTertiary: Color {
+      Color(.tertiarySystemBackground)
+    }
+
+    /// Grouped background color
+    static var backgroundGrouped: Color {
+      Color(.systemGroupedBackground)
+    }
+
+    /// Card background color
+    static var cardBackground: Color {
+      Color(.secondarySystemBackground)
+    }
+
+    /// True black background for OLED (dark mode only)
+    static func trueBlackBackground(for colorScheme: ColorScheme, enabled: Bool = false) -> Color {
+      if colorScheme == .dark && enabled {
+        return Color(white: 0.0)
+      }
+      return background
+    }
+
+    /// Elevated background for dark mode cards
+    static func elevatedBackground(for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? Color(UIColor.secondarySystemBackground)
+        : Color(UIColor.systemBackground)
+    }
+
+    // MARK: - Surface Colors
+
+    /// Elevated surface (for cards, modals)
+    static var surfaceElevated: Color {
+      Color(.secondarySystemBackground)
+    }
+
+    /// Overlay background (semi-transparent)
+    static var overlay: Color {
+      Color(.systemFill)
+    }
+
+    /// Dark overlay for modals
+    static func modalOverlay(for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? Color.black.opacity(0.7)
+        : Color.black.opacity(0.4)
+    }
+
+    // MARK: - Text Colors
+
+    /// Primary text color
+    static var textPrimary: Color {
+      Color(.label)
+    }
+
+    /// Secondary text color
+    static var textSecondary: Color {
+      Color(.secondaryLabel)
+    }
+
+    /// Tertiary text color
+    static var textTertiary: Color {
+      Color(.tertiaryLabel)
+    }
+
+    /// Quaternary text color (most subtle)
+    static var textQuaternary: Color {
+      Color(.quaternaryLabel)
+    }
+
+    /// Inverted text (for colored backgrounds)
+    static var textInverted: Color {
+      .white
+    }
+
+    // MARK: - Border & Separator Colors
+
+    /// Standard separator color
+    static var separator: Color {
+      Color(.separator)
+    }
+
+    /// Opaque separator color
+    static var separatorOpaque: Color {
+      Color(.opaqueSeparator)
+    }
+
+    /// Border color for inputs and cards
+    static var border: Color {
+      Color(.systemGray4)
+    }
+
+    /// Subtle border for dark mode cards
+    static func cardBorder(for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? Color.white.opacity(0.08)
+        : Color.black.opacity(0.05)
+    }
+
+    // MARK: - Fill Colors
+
+    /// Primary fill color
+    static var fill: Color {
+      Color(.systemFill)
+    }
+
+    /// Secondary fill color
+    static var fillSecondary: Color {
+      Color(.secondarySystemFill)
+    }
+
+    /// Tertiary fill color
+    static var fillTertiary: Color {
+      Color(.tertiarySystemFill)
+    }
+
+    /// Quaternary fill color
+    static var fillQuaternary: Color {
+      Color(.quaternarySystemFill)
+    }
+
+    // MARK: - Accent Colors (Dynamic based on ThemeManager)
+
+    /// Primary accent color - uses ThemeManager's accent
+    @MainActor static var accent: Color {
+      ThemeManager.shared.accentColor.color
+    }
+
+    /// Secondary accent color - pairs with primary
+    @MainActor static var accentSecondary: Color {
+      ThemeManager.shared.accentColor.secondaryColor
+    }
+
+    /// AI-related features
+    static var aiPurple: Color {
+      .purple
+    }
+
+    /// Get accent color with opacity for backgrounds
+    @MainActor static func accentBackground(opacity: Double = 0.1, for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? accent.opacity(opacity * 1.5)
+        : accent.opacity(opacity)
+    }
+
+    // MARK: - Semantic State Colors
+
+    /// Success state
+    static var success: Color {
+      .green
+    }
+
+    /// Warning state
+    static var warning: Color {
+      .orange
+    }
+
+    /// Error state
+    static var error: Color {
+      .red
+    }
+
+    /// Info state
+    static var info: Color {
+      .blue
+    }
+
+    // MARK: - Dark Mode Specific Colors
+
+    /// Muted color for dark mode (reduces eye strain)
+    static func muted(_ color: Color, for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark ? color.opacity(0.85) : color
+    }
+
+    /// Vibrant color for dark mode (increases visibility)
+    static func vibrant(_ color: Color, for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark ? color.opacity(1.0) : color.opacity(0.9)
+    }
+
+    // MARK: - Gradients
+
+    /// Hero gradient for headers (uses current accent)
+    @MainActor static func heroGradient(for colorScheme: ColorScheme) -> LinearGradient {
+      let primary = ThemeManager.shared.accentColor.color
+      let secondary = ThemeManager.shared.accentColor.secondaryColor
+
+      return colorScheme == .dark
+        ? LinearGradient(
+            colors: [primary.opacity(0.3), secondary.opacity(0.2), .clear],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+        : LinearGradient(
+            colors: [primary.opacity(0.15), secondary.opacity(0.1), .clear],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+    }
+
+    /// Card gradient
+    static func cardGradient(for colorScheme: ColorScheme) -> LinearGradient {
+      colorScheme == .dark
+        ? LinearGradient(
+            colors: [Color(.systemGray5).opacity(0.6), Color(.systemGray6).opacity(0.3)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+        : LinearGradient(
+            colors: [.white.opacity(0.9), .white.opacity(0.5)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+    }
+
+    /// Primary gradient (uses current accent colors)
+    @MainActor static var primaryGradient: LinearGradient {
+      ThemeManager.shared.primaryGradient
+    }
+
+    /// Mesh gradient for premium features
+    @MainActor static func meshGradient(for colorScheme: ColorScheme) -> LinearGradient {
+      let primary = ThemeManager.shared.accentColor.color
+      let secondary = ThemeManager.shared.accentColor.secondaryColor
+
+      return colorScheme == .dark
+        ? LinearGradient(
+            colors: [primary.opacity(0.4), secondary.opacity(0.3), primary.opacity(0.2)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+        : LinearGradient(
+            colors: [primary.opacity(0.2), secondary.opacity(0.15), primary.opacity(0.1)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+    }
+
+    /// Subtle background gradient for sections
+    static func sectionGradient(for colorScheme: ColorScheme) -> LinearGradient {
+      colorScheme == .dark
+        ? LinearGradient(
+            colors: [Color(.systemGray6).opacity(0.5), Color(.systemGray6).opacity(0.2)],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+        : LinearGradient(
+            colors: [Color(.systemGray6).opacity(0.3), Color(.systemGray6).opacity(0.1)],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+    }
+
+    // MARK: - Placeholder Colors
+
+    /// Image placeholder background
+    static func imagePlaceholder(for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? Color(.systemGray4)
+        : Color(.systemGray5)
+    }
+
+    /// Shimmer base color
+    static func shimmerBase(for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? Color(.systemGray5)
+        : Color(.systemGray6)
+    }
+
+    /// Shimmer highlight color
+    static func shimmerHighlight(for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? Color(.systemGray4)
+        : Color(.systemGray5)
+    }
+
+    // MARK: - Map Colors
+
+    /// Map route line color
+    @MainActor static func mapRouteLine(for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? accent.opacity(0.8)
+        : accent.opacity(0.6)
+    }
+
+    /// Map marker background
+    static func mapMarkerBackground(for colorScheme: ColorScheme) -> Color {
+      colorScheme == .dark
+        ? Color(.systemGray5)
+        : .white
+    }
+  }
+}
+
+// MARK: - Color Extension
+
+extension Color {
+  // MARK: - Dynamic Accent Colors (from ThemeManager)
+
+  /// Primary accent color - uses ThemeManager's accent
+  @MainActor static var themeAccent: Color {
+    ThemeManager.shared.accentColor.color
+  }
+
+  /// Secondary accent color - pairs with primary
+  @MainActor static var themeAccentSecondary: Color {
+    ThemeManager.shared.accentColor.secondaryColor
+  }
+
+  // MARK: - Legacy Accent Colors (deprecated - use DesignTokens.Colors instead)
+
+  @available(*, deprecated, message: "Use DesignTokens.Colors.accent instead")
+  static let accent = Color.indigo
+
+  @available(*, deprecated, message: "Use DesignTokens.Colors.accentSecondary instead")
+  static let accentSecondary = Color.purple
+
+  // MARK: - Semantic Colors
+
+  static let aiPurple = Color.purple
+  static let success = Color.green
+  static let warning = Color.orange
+  static let error = Color.red
+
+  // MARK: - Background Colors (Adaptive)
+
+  /// Primary background - adapts to light/dark mode
+  static var adaptiveBackground: Color {
+    DesignTokens.Colors.background
+  }
+
+  /// Secondary background for cards and elevated surfaces
+  static var adaptiveCardBackground: Color {
+    DesignTokens.Colors.cardBackground
+  }
+
+  /// Grouped background for lists
+  static var adaptiveGroupedBackground: Color {
+    DesignTokens.Colors.backgroundGrouped
+  }
+
+  // MARK: - Background Gradients
+
+  @MainActor static var heroGradient: LinearGradient {
+    DesignTokens.Colors.primaryGradient
+  }
+
+  static var cardGradient: LinearGradient {
+    LinearGradient(
+      colors: [.white.opacity(0.8), .white.opacity(0.4)],
+      startPoint: .topLeading,
+      endPoint: .bottomTrailing
+    )
+  }
+
+  /// Gradient that adapts to color scheme
+  static func adaptiveCardGradient(for colorScheme: ColorScheme) -> LinearGradient {
+    DesignTokens.Colors.cardGradient(for: colorScheme)
+  }
+
+  /// Hero gradient that adapts to color scheme
+  @MainActor static func adaptiveHeroGradient(for colorScheme: ColorScheme) -> LinearGradient {
+    DesignTokens.Colors.heroGradient(for: colorScheme)
+  }
+
+  // MARK: - Hex Color Initialization
+
+  /// Initialize Color from hex string (e.g., "#FF5733" or "FF5733")
+  init?(hex: String) {
+    var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+    hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+
+    var rgb: UInt64 = 0
+    var alpha: Double = 1.0
+
+    guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else {
+      return nil
+    }
+
+    let length = hexSanitized.count
+    if length == 8 {
+      alpha = Double((rgb & 0xFF00_0000) >> 24) / 255.0
+      rgb = rgb & 0x00FF_FFFF
+    }
+
+    let red = Double((rgb & 0xFF0000) >> 16) / 255.0
+    let green = Double((rgb & 0x00FF00) >> 8) / 255.0
+    let blue = Double(rgb & 0x0000FF) / 255.0
+
+    self.init(red: red, green: green, blue: blue, opacity: alpha)
+  }
+
+  /// Convert Color to hex string
+  var hexString: String {
+    guard let components = UIColor(self).cgColor.components else { return "#FFFFFF" }
+    let r = Int(components[0] * 255)
+    let g = Int(components.count > 1 ? components[1] * 255 : components[0] * 255)
+    let b = Int(components.count > 2 ? components[2] * 255 : components[0] * 255)
+    return String(format: "#%02X%02X%02X", r, g, b)
+  }
+}
+
+// MARK: - View Extensions
+
+extension View {
+  /// Apply card styling with shadow
+  func cardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
+    self
+      .background(DesignTokens.Colors.cardBackground)
+      .clipShape(RoundedRectangle(cornerRadius: radius))
+      .shadow(
+        color: DesignTokens.Shadow.md.color,
+        radius: DesignTokens.Shadow.md.radius,
+        y: DesignTokens.Shadow.md.y
+      )
+  }
+
+  /// Apply subtle card styling
+  func subtleCardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
+    self
+      .background(DesignTokens.Colors.cardBackground)
+      .clipShape(RoundedRectangle(cornerRadius: radius))
+      .shadow(
+        color: DesignTokens.Shadow.sm.color,
+        radius: DesignTokens.Shadow.sm.radius,
+        y: DesignTokens.Shadow.sm.y
+      )
+  }
+
+  /// Apply card styling with adaptive shadow for color scheme
+  func adaptiveCardStyle(radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
+    let shadow = DesignTokens.Shadow.md(for: colorScheme)
+    let border = DesignTokens.Colors.cardBorder(for: colorScheme)
+    return self
+      .background(DesignTokens.Colors.cardBackground)
+      .clipShape(RoundedRectangle(cornerRadius: radius))
+      .overlay(
+        RoundedRectangle(cornerRadius: radius)
+          .stroke(border, lineWidth: colorScheme == .dark ? 0.5 : 0)
+      )
+      .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+  }
+
+  /// Apply subtle card styling with adaptive shadow for color scheme
+  func adaptiveSubtleCardStyle(radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
+    let shadow = DesignTokens.Shadow.sm(for: colorScheme)
+    let border = DesignTokens.Colors.cardBorder(for: colorScheme)
+    return self
+      .background(DesignTokens.Colors.cardBackground)
+      .clipShape(RoundedRectangle(cornerRadius: radius))
+      .overlay(
+        RoundedRectangle(cornerRadius: radius)
+          .stroke(border, lineWidth: colorScheme == .dark ? 0.5 : 0)
+      )
+      .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+  }
+
+  /// Glassmorphism effect
+  func glassCard(radius: CGFloat = DesignTokens.Radius.md) -> some View {
+    self
+      .background(.ultraThinMaterial)
+      .clipShape(RoundedRectangle(cornerRadius: radius))
+  }
+
+  /// Elevated card style for dark mode
+  func elevatedCardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
+    self
+      .background(DesignTokens.Colors.surfaceElevated)
+      .clipShape(RoundedRectangle(cornerRadius: radius))
+      .overlay(
+        RoundedRectangle(cornerRadius: radius)
+          .stroke(DesignTokens.Colors.border.opacity(0.1), lineWidth: 0.5)
+      )
+  }
+
+  /// Dark mode optimized card with glow effect
+  func glowCardStyle(color: Color, radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
+    let shadow = DesignTokens.Shadow.glow(color: color, for: colorScheme)
+    return self
+      .background(DesignTokens.Colors.cardBackground)
+      .clipShape(RoundedRectangle(cornerRadius: radius))
+      .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+  }
+
+  /// Bordered card style (good for dark mode)
+  func borderedCardStyle(radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
+    let border = DesignTokens.Colors.cardBorder(for: colorScheme)
+    return self
+      .background(DesignTokens.Colors.elevatedBackground(for: colorScheme))
+      .clipShape(RoundedRectangle(cornerRadius: radius))
+      .overlay(
+        RoundedRectangle(cornerRadius: radius)
+          .stroke(border, lineWidth: 1)
+      )
+  }
+
+  /// Apply section background with subtle gradient
+  func sectionBackground(for colorScheme: ColorScheme) -> some View {
+    self
+      .background(DesignTokens.Colors.sectionGradient(for: colorScheme))
+  }
+
+  /// Apply Apple-native shadow with automatic color scheme adaptation
+  func appleShadow(_ level: ShadowLevel = .sm) -> some View {
+    modifier(AppleShadowModifier(level: level))
+  }
+}
+
+// MARK: - Shadow Level
+
+enum ShadowLevel {
+  case subtle
+  case sm
+  case md
+  case lg
+}
+
+// MARK: - Apple Shadow Modifier
+
+struct AppleShadowModifier: ViewModifier {
+  @Environment(\.colorScheme) private var colorScheme
+  let level: ShadowLevel
+
+  func body(content: Content) -> some View {
+    let shadow: DesignTokens.ShadowStyle
+    switch level {
+    case .subtle:
+      shadow = DesignTokens.Shadow.subtle(for: colorScheme)
+    case .sm:
+      shadow = DesignTokens.Shadow.sm(for: colorScheme)
+    case .md:
+      shadow = DesignTokens.Shadow.md(for: colorScheme)
+    case .lg:
+      shadow = DesignTokens.Shadow.lg(for: colorScheme)
+    }
+    return content.shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+  }
+}
+
+// MARK: - Custom Button Styles
+
+struct PrimaryButtonStyle: ButtonStyle {
+  @Environment(\.isEnabled) private var isEnabled
+  @Environment(\.colorScheme) private var colorScheme
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .font(.headline)
+      .foregroundStyle(.white)
+      .padding(.horizontal, DesignTokens.Spacing.lg)
+      .padding(.vertical, DesignTokens.Spacing.sm)
+      .background(
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+          .fill(isEnabled ? DesignTokens.Colors.primaryGradient : LinearGradient(colors: [.gray], startPoint: .leading, endPoint: .trailing))
+      )
+      .shadow(
+        color: isEnabled && colorScheme == .dark ? DesignTokens.Colors.accent.opacity(0.4) : .clear,
+        radius: 8,
+        y: 2
+      )
+      .scaleEffect(configuration.isPressed ? 0.96 : 1)
+      .animation(DesignTokens.Animation.quick, value: configuration.isPressed)
+  }
+}
+
+struct SecondaryButtonStyle: ButtonStyle {
+  @Environment(\.colorScheme) private var colorScheme
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .font(.subheadline)
+      .fontWeight(.medium)
+      .foregroundStyle(DesignTokens.Colors.accent)
+      .padding(.horizontal, DesignTokens.Spacing.md)
+      .padding(.vertical, DesignTokens.Spacing.xs)
+      .background(
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
+          .fill(DesignTokens.Colors.accentBackground(opacity: 0.12, for: colorScheme))
+      )
+      .scaleEffect(configuration.isPressed ? 0.96 : 1)
+      .animation(DesignTokens.Animation.quick, value: configuration.isPressed)
+  }
+}
+
+/// Outline button style for dark mode
+struct OutlineButtonStyle: ButtonStyle {
+  @Environment(\.colorScheme) private var colorScheme
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .font(.subheadline)
+      .fontWeight(.medium)
+      .foregroundStyle(DesignTokens.Colors.accent)
+      .padding(.horizontal, DesignTokens.Spacing.md)
+      .padding(.vertical, DesignTokens.Spacing.xs)
+      .background(
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
+          .stroke(DesignTokens.Colors.accent, lineWidth: 1.5)
+      )
+      .scaleEffect(configuration.isPressed ? 0.96 : 1)
+      .animation(DesignTokens.Animation.quick, value: configuration.isPressed)
+  }
+}
+
+extension ButtonStyle where Self == PrimaryButtonStyle {
+  static var primary: PrimaryButtonStyle { PrimaryButtonStyle() }
+}
+
+extension ButtonStyle where Self == SecondaryButtonStyle {
+  static var secondary: SecondaryButtonStyle { SecondaryButtonStyle() }
+}
+
+extension ButtonStyle where Self == OutlineButtonStyle {
+  static var outline: OutlineButtonStyle { OutlineButtonStyle() }
+}
+
+// MARK: - Badge Component
+
+struct Badge: View {
+  let text: String
+  let icon: String?
+  let style: BadgeStyle
+
+  enum BadgeStyle {
+    case ai
+    case info
+    case success
+    case warning
+
+    var backgroundColor: Color {
+      switch self {
+      case .ai: return .purple
+      case .info: return .blue
+      case .success: return .green
+      case .warning: return .orange
+      }
+    }
+  }
+
+  init(_ text: String, icon: String? = nil, style: BadgeStyle = .info) {
+    self.text = text
+    self.icon = icon
+    self.style = style
+  }
+
+  var body: some View {
+    HStack(spacing: DesignTokens.Spacing.xxs) {
+      if let icon {
+        Image(systemName: icon)
+      }
+      Text(text)
+    }
+    .font(.caption2)
+    .fontWeight(.semibold)
+    .foregroundStyle(.white)
+    .padding(.horizontal, DesignTokens.Spacing.xs)
+    .padding(.vertical, DesignTokens.Spacing.xxs)
+    .background(style.backgroundColor.gradient)
+    .clipShape(Capsule())
+  }
+}
+
+// MARK: - Stat Label Component
+
+struct StatLabel: View {
+  let icon: String
+  let value: String
+  let color: Color
+
+  init(icon: String, value: String, color: Color = .secondary) {
+    self.icon = icon
+    self.value = value
+    self.color = color
+  }
+
+  var body: some View {
+    HStack(spacing: DesignTokens.Spacing.xxs) {
+      Image(systemName: icon)
+        .foregroundStyle(color)
+      Text(value)
+    }
+    .font(.caption)
+    .foregroundStyle(.secondary)
+  }
+}
+
+// MARK: - Preview
+
+#Preview("Design System - Light") {
+  ScrollView {
+    VStack(spacing: 24) {
+      // Badges
+      HStack(spacing: 12) {
+        Badge("AI", icon: "sparkles", style: .ai)
+        Badge("New", style: .info)
+        Badge("Hot", style: .warning)
+      }
+
+      // Buttons
+      VStack(spacing: 12) {
+        Button("Primary Button") {}
+          .buttonStyle(.primary)
+
+        Button("Secondary Button") {}
+          .buttonStyle(.secondary)
+      }
+
+      // Cards
+      VStack(spacing: 12) {
+        Text("Card Style")
+          .padding()
+          .frame(maxWidth: .infinity)
+          .cardStyle()
+
+        Text("Subtle Card")
+          .padding()
+          .frame(maxWidth: .infinity)
+          .subtleCardStyle()
+
+        Text("Glass Card")
+          .padding()
+          .frame(maxWidth: .infinity)
+          .glassCard()
+
+        Text("Elevated Card")
+          .padding()
+          .frame(maxWidth: .infinity)
+          .elevatedCardStyle()
+      }
+      .padding(.horizontal)
+
+      // Stats
+      HStack(spacing: 16) {
+        StatLabel(icon: "eye", value: "1.2k")
+        StatLabel(icon: "heart.fill", value: "256", color: .red)
+        StatLabel(icon: "bookmark.fill", value: "42", color: .orange)
+      }
+
+      // Theme Colors
+      VStack(alignment: .leading, spacing: 8) {
+        Text("Semantic Colors")
+          .font(.headline)
+
+        HStack(spacing: 8) {
+          ColorSwatch(color: DesignTokens.Colors.accent, name: "Accent")
+          ColorSwatch(color: DesignTokens.Colors.success, name: "Success")
+          ColorSwatch(color: DesignTokens.Colors.warning, name: "Warning")
+          ColorSwatch(color: DesignTokens.Colors.error, name: "Error")
+        }
+      }
+      .padding(.horizontal)
+    }
+    .padding()
+  }
+  .background(DesignTokens.Colors.backgroundGrouped)
+  .preferredColorScheme(.light)
+}
+
+#Preview("Design System - Dark") {
+  ScrollView {
+    VStack(spacing: 24) {
+      // Badges
+      HStack(spacing: 12) {
+        Badge("AI", icon: "sparkles", style: .ai)
+        Badge("New", style: .info)
+        Badge("Hot", style: .warning)
+      }
+
+      // Buttons
+      VStack(spacing: 12) {
+        Button("Primary Button") {}
+          .buttonStyle(.primary)
+
+        Button("Secondary Button") {}
+          .buttonStyle(.secondary)
+      }
+
+      // Cards
+      VStack(spacing: 12) {
+        Text("Card Style")
+          .padding()
+          .frame(maxWidth: .infinity)
+          .cardStyle()
+
+        Text("Subtle Card")
+          .padding()
+          .frame(maxWidth: .infinity)
+          .subtleCardStyle()
+
+        Text("Glass Card")
+          .padding()
+          .frame(maxWidth: .infinity)
+          .glassCard()
+
+        Text("Elevated Card")
+          .padding()
+          .frame(maxWidth: .infinity)
+          .elevatedCardStyle()
+      }
+      .padding(.horizontal)
+
+      // Stats
+      HStack(spacing: 16) {
+        StatLabel(icon: "eye", value: "1.2k")
+        StatLabel(icon: "heart.fill", value: "256", color: .red)
+        StatLabel(icon: "bookmark.fill", value: "42", color: .orange)
+      }
+
+      // Theme Colors
+      VStack(alignment: .leading, spacing: 8) {
+        Text("Semantic Colors")
+          .font(.headline)
+
+        HStack(spacing: 8) {
+          ColorSwatch(color: DesignTokens.Colors.accent, name: "Accent")
+          ColorSwatch(color: DesignTokens.Colors.success, name: "Success")
+          ColorSwatch(color: DesignTokens.Colors.warning, name: "Warning")
+          ColorSwatch(color: DesignTokens.Colors.error, name: "Error")
+        }
+      }
+      .padding(.horizontal)
+    }
+    .padding()
+  }
+  .background(DesignTokens.Colors.backgroundGrouped)
+  .preferredColorScheme(.dark)
+}
+
+// MARK: - Color Swatch Helper
+
+private struct ColorSwatch: View {
+  let color: Color
+  let name: String
+
+  var body: some View {
+    VStack(spacing: 4) {
+      RoundedRectangle(cornerRadius: 8)
+        .fill(color)
+        .frame(width: 50, height: 50)
+
+      Text(name)
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+    }
+  }
+}

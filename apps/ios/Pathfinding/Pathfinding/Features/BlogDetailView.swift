@@ -1,0 +1,544 @@
+import MapKit
+import SwiftUI
+
+struct BlogDetailView: View {
+  let guide: BlogPost
+  @State private var selectedDay: AiDay?
+  @State private var currentImageIndex: Int = 0
+  @State private var isLiked = false
+  @State private var isSaved = false
+  @State private var showImageViewer = false
+  @State private var showPdfExport = false
+  @State private var showShareSheet = false
+
+  private var displayImages: [String] {
+    if let images = guide.imageUrls, !images.isEmpty {
+      return Array(images.prefix(10))
+    } else if let cover = guide.coverImage {
+      return [cover]
+    }
+    return []
+  }
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 0) {
+        // MARK: - Image Gallery
+        imageGallery
+
+        // MARK: - Content
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+          // Title & Meta
+          titleSection
+
+          // Quick Info Cards
+          if guide.aiProcessedAt != nil {
+            quickInfoSection
+          }
+
+          // AI Summary
+          if let summary = guide.aiSummary {
+            aiSummarySection(summary)
+          }
+
+          // Itinerary Days
+          if let days = guide.aiDays, !days.isEmpty {
+            itinerarySection(days)
+          }
+
+          // Tips
+          if let tips = guide.aiTips, !tips.isEmpty {
+            tipsSection(tips)
+          }
+
+          // Import Button
+          if guide.aiDays != nil {
+            importButton
+          }
+
+          // MARK: - Comments Section
+          Divider()
+            .padding(.vertical, DesignTokens.Spacing.sm)
+
+          CommentSectionView(itineraryId: guide.id)
+        }
+        .padding(DesignTokens.Spacing.lg)
+      }
+    }
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItemGroup(placement: .topBarTrailing) {
+        Button {
+          withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            isLiked.toggle()
+          }
+        } label: {
+          Image(systemName: isLiked ? "heart.fill" : "heart")
+            .foregroundStyle(isLiked ? .red : .secondary)
+            .symbolEffect(.bounce, value: isLiked)
+        }
+
+        Button {
+          withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            isSaved.toggle()
+          }
+        } label: {
+          Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+            .foregroundStyle(isSaved ? .orange : .secondary)
+            .symbolEffect(.bounce, value: isSaved)
+        }
+
+        Button {
+          showShareSheet = true
+        } label: {
+          Image(systemName: "square.and.arrow.up")
+        }
+
+        // PDF Export button
+        if guide.aiDays != nil {
+          Button {
+            showPdfExport = true
+          } label: {
+            Image(systemName: "doc.richtext")
+          }
+        }
+      }
+    }
+    .sheet(item: $selectedDay) { day in
+      DayDetailSheet(day: day) {
+        selectedDay = nil
+      }
+    }
+    .sheet(isPresented: $showPdfExport) {
+      PdfExportSheet(guide: guide) {
+        showPdfExport = false
+      }
+    }
+    .imageViewer(
+      images: displayImages,
+      isPresented: $showImageViewer,
+      selectedIndex: $currentImageIndex
+    )
+    .sheet(isPresented: $showShareSheet) {
+      ShareSheet(
+        title: guide.title,
+        subtitle: guide.author,
+        content: .blogPost(guide),
+        onDismiss: { showShareSheet = false }
+      )
+    }
+  }
+
+  // MARK: - Image Gallery
+
+  @ViewBuilder
+  private var imageGallery: some View {
+    if displayImages.isEmpty {
+      Rectangle()
+        .fill(Color(.systemGray5))
+        .aspectRatio(16 / 9, contentMode: .fill)
+        .frame(maxWidth: .infinity)
+    } else if displayImages.count == 1 {
+      CachedAsyncImage(url: URL(string: displayImages[0])) { image in
+        image
+          .resizable()
+          .aspectRatio(16 / 9, contentMode: .fill)
+      } placeholder: {
+        Rectangle()
+          .fill(Color(.systemGray5))
+          .aspectRatio(16 / 9, contentMode: .fill)
+          .overlay { ProgressView() }
+      }
+      .frame(maxWidth: .infinity)
+      .clipped()
+      .contentShape(Rectangle())
+      .onTapGesture {
+        showImageViewer = true
+      }
+    } else {
+      ZStack(alignment: .bottom) {
+        TabView(selection: $currentImageIndex) {
+          ForEach(Array(displayImages.enumerated()), id: \.offset) { index, imageUrl in
+            CachedAsyncImage(url: URL(string: imageUrl)) { image in
+              image
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+            } placeholder: {
+              Rectangle()
+                .fill(Color(.systemGray5))
+                .overlay { ProgressView() }
+            }
+            .tag(index)
+            .contentShape(Rectangle())
+            .onTapGesture {
+              currentImageIndex = index
+              showImageViewer = true
+            }
+          }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .aspectRatio(16 / 9, contentMode: .fill)
+        .frame(maxWidth: .infinity)
+        .clipped()
+
+        // Custom page indicator & tap hint
+        HStack {
+          // Page indicator
+          HStack(spacing: 6) {
+            ForEach(0..<displayImages.count, id: \.self) { index in
+              Capsule()
+                .fill(index == currentImageIndex ? Color.white : Color.white.opacity(0.5))
+                .frame(width: index == currentImageIndex ? 16 : 6, height: 6)
+                .animation(.spring(response: 0.3), value: currentImageIndex)
+            }
+          }
+
+          Spacer()
+
+          // Tap to view hint
+          HStack(spacing: 4) {
+            Image(systemName: "arrow.up.left.and.arrow.down.right")
+              .font(.caption2)
+            Text("点击查看")
+              .font(.caption2)
+          }
+          .foregroundStyle(.white.opacity(0.8))
+        }
+        .padding(.horizontal, DesignTokens.Spacing.sm)
+        .padding(.vertical, DesignTokens.Spacing.xs)
+        .background(Capsule().fill(.black.opacity(0.3)))
+        .padding(.horizontal, DesignTokens.Spacing.sm)
+        .padding(.bottom, DesignTokens.Spacing.sm)
+      }
+    }
+  }
+
+  // MARK: - Title Section
+
+  private var titleSection: some View {
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+      // AI Badge
+      if guide.aiProcessedAt != nil {
+        Badge("AI 智能分析", icon: "sparkles", style: .ai)
+      }
+
+      Text(guide.title)
+        .font(.title2)
+        .fontWeight(.bold)
+
+      // Author & Stats
+      HStack(spacing: DesignTokens.Spacing.md) {
+        if let author = guide.author {
+          Label(author, systemImage: "person.circle.fill")
+        }
+        Spacer()
+        if let views = guide.viewCount {
+          StatLabel(icon: "eye", value: "\(views)")
+        }
+        if let likes = guide.likeCount {
+          StatLabel(icon: "heart.fill", value: "\(likes)", color: .red.opacity(0.7))
+        }
+      }
+      .font(.caption)
+      .foregroundStyle(.secondary)
+    }
+  }
+
+  // MARK: - Quick Info Section
+
+  private var quickInfoSection: some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      HStack(spacing: DesignTokens.Spacing.sm) {
+        if let duration = guide.aiDuration {
+          QuickInfoCard(icon: "clock", title: "时长", value: duration, color: .blue)
+        }
+        if let budget = guide.aiBudget {
+          QuickInfoCard(icon: "yensign.circle", title: "预算", value: budget, color: .green)
+        }
+        if let bestTime = guide.aiBestTime {
+          QuickInfoCard(icon: "calendar", title: "最佳时间", value: bestTime, color: .orange)
+        }
+        if let days = guide.aiDays {
+          QuickInfoCard(
+            icon: "map",
+            title: "行程",
+            value: "\(days.count)天",
+            color: .purple
+          )
+        }
+        // Safety info card with navigation
+        if let destination = guide.destinations?.first {
+          NavigationLink {
+            SafetyRatingView(destinationName: destination)
+          } label: {
+            QuickInfoCard(icon: "shield.fill", title: "安全", value: "查看", color: .red)
+          }
+          .buttonStyle(.plain)
+        }
+      }
+    }
+    .scrollClipDisabled()
+  }
+
+  // MARK: - AI Summary Section
+
+  private func aiSummarySection(_ summary: String) -> some View {
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+      Label("AI 摘要", systemImage: "sparkles")
+        .font(.headline)
+        .foregroundStyle(.purple)
+
+      Text(summary)
+        .font(.body)
+        .lineSpacing(4)
+    }
+    .padding(DesignTokens.Spacing.md)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(
+      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
+        .fill(Color.purple.opacity(0.08))
+    )
+  }
+
+  // MARK: - Itinerary Section
+
+  private func itinerarySection(_ days: [AiDay]) -> some View {
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+      Label("行程安排", systemImage: "map")
+        .font(.headline)
+
+      VStack(spacing: DesignTokens.Spacing.xs) {
+        ForEach(days) { day in
+          Button {
+            selectedDay = day
+          } label: {
+            DayCard(day: day)
+          }
+          .buttonStyle(.plain)
+        }
+      }
+    }
+  }
+
+  // MARK: - Tips Section
+
+  private func tipsSection(_ tips: [String]) -> some View {
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+      Label("旅行贴士", systemImage: "lightbulb.fill")
+        .font(.headline)
+        .foregroundStyle(.orange)
+
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        ForEach(Array(tips.enumerated()), id: \.offset) { _, tip in
+          HStack(alignment: .top, spacing: DesignTokens.Spacing.xs) {
+            Image(systemName: "checkmark.circle.fill")
+              .foregroundStyle(.green)
+              .font(.subheadline)
+            Text(tip)
+              .font(.subheadline)
+          }
+        }
+      }
+    }
+    .padding(DesignTokens.Spacing.md)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(
+      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
+        .fill(Color.orange.opacity(0.08))
+    )
+  }
+
+  // MARK: - Import Button
+
+  private var importButton: some View {
+    NavigationLink {
+      ImportedItineraryView(guide: guide)
+    } label: {
+      HStack {
+        Image(systemName: "square.and.arrow.down")
+        Text("导入行程到我的旅程")
+      }
+      .font(.headline)
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, DesignTokens.Spacing.md)
+    }
+    .buttonStyle(.borderedProminent)
+    .tint(.indigo)
+  }
+}
+
+// MARK: - Quick Info Card
+
+struct QuickInfoCard: View {
+  let icon: String
+  let title: String
+  let value: String
+  let color: Color
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Image(systemName: icon)
+        .font(.title3)
+        .foregroundStyle(color)
+
+      Text(title)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+
+      Text(value)
+        .font(.subheadline)
+        .fontWeight(.semibold)
+        .lineLimit(1)
+    }
+    .padding(DesignTokens.Spacing.sm)
+    .frame(width: 100, alignment: .leading)
+    .background(
+      RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+        .fill(color.opacity(0.1))
+    )
+  }
+}
+
+// MARK: - Day Card
+
+struct DayCard: View {
+  let day: AiDay
+
+  var body: some View {
+    HStack {
+      // Day number circle
+      ZStack {
+        Circle()
+          .fill(DesignTokens.Colors.accent.gradient)
+          .frame(width: 44, height: 44)
+
+        Text("\(day.dayNumber)")
+          .font(.headline)
+          .foregroundStyle(.white)
+      }
+
+      VStack(alignment: .leading, spacing: 2) {
+        Text("第 \(day.dayNumber) 天")
+          .font(.subheadline)
+          .fontWeight(.semibold)
+
+        if let theme = day.theme {
+          Text(theme)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+
+        Text("\(day.pois.count) 个景点")
+          .font(.caption2)
+          .foregroundStyle(.tertiary)
+      }
+
+      Spacer()
+
+      Image(systemName: "chevron.right")
+        .font(.caption)
+        .foregroundStyle(.tertiary)
+    }
+    .padding(DesignTokens.Spacing.sm)
+    .subtleCardStyle(radius: DesignTokens.Radius.sm)
+  }
+}
+
+// MARK: - Day Detail Sheet
+
+struct DayDetailSheet: View {
+  let day: AiDay
+  let onDismiss: () -> Void
+
+  var body: some View {
+    NavigationStack {
+      List {
+        ForEach(Array(day.pois.enumerated()), id: \.element.id) { index, poi in
+          PoiRow(poi: poi, index: index + 1)
+        }
+      }
+      .listStyle(.insetGrouped)
+      .navigationTitle("第 \(day.dayNumber) 天")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button("完成") { onDismiss() }
+        }
+      }
+    }
+  }
+}
+
+// MARK: - POI Row
+
+struct PoiRow: View {
+  let poi: AiPoi
+  let index: Int
+
+  var body: some View {
+    HStack(spacing: DesignTokens.Spacing.sm) {
+      // Index badge
+      ZStack {
+        Circle()
+          .fill(colorForType(poi.type).gradient)
+          .frame(width: 32, height: 32)
+
+        Text("\(index)")
+          .font(.caption)
+          .fontWeight(.bold)
+          .foregroundStyle(.white)
+      }
+
+      VStack(alignment: .leading, spacing: 4) {
+        HStack(spacing: DesignTokens.Spacing.xs) {
+          Text(poi.name)
+            .font(.subheadline)
+            .fontWeight(.medium)
+
+          if let type = poi.type {
+            Text(type)
+              .font(.caption2)
+              .padding(.horizontal, 6)
+              .padding(.vertical, 2)
+              .background(colorForType(type).opacity(0.15))
+              .clipShape(Capsule())
+          }
+        }
+
+        if let desc = poi.description {
+          Text(desc)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+        }
+
+        if let address = poi.address {
+          Label(address, systemImage: "mappin")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+            .lineLimit(1)
+        }
+      }
+
+      Spacer()
+
+      if poi.latitude != nil && poi.latitude != 0 {
+        Image(systemName: "location.fill")
+          .foregroundStyle(.green)
+          .font(.caption)
+      }
+    }
+    .padding(.vertical, 4)
+  }
+
+  private func colorForType(_ type: String?) -> Color {
+    switch type?.lowercased() {
+    case "景点", "attraction": return .orange
+    case "餐厅", "restaurant", "美食", "food": return .red
+    case "酒店", "hotel", "住宿", "accommodation": return .blue
+    case "交通", "transport", "transportation": return .green
+    default: return .purple
+    }
+  }
+}

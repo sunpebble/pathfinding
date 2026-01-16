@@ -1,0 +1,390 @@
+/*
+  Localizable.strings (English)
+  Pathfinding
+
+  English localization for Pathfinding app
+*/
+
+// MARK: - Common
+"common.cancel" = "Cancel";
+"common.confirm" = "Confirm";
+"common.save" = "Save";
+"common.delete" = "Delete";
+"common.edit" = "Edit";
+"common.done" = "Done";
+"common.close" = "Close";
+"common.back" = "Back";
+"common.next" = "Next";
+"common.previous" = "Previous";
+"common.loading" = "Loading...";
+"common.error" = "Error";
+"common.success" = "Success";
+"common.retry" = "Retry";
+"common.search" = "Search";
+"common.share" = "Share";
+"common.copy" = "Copy";
+"common.more" = "More";
+"common.less" = "Less";
+"common.all" = "All";
+"common.none" = "None";
+"common.yes" = "Yes";
+"common.no" = "No";
+"common.ok" = "OK";
+
+// MARK: - Tab Bar
+"tab.home" = "Home";
+"tab.guides" = "Guides";
+"tab.chat" = "Assistant";
+"tab.itinerary" = "Itinerary";
+"tab.profile" = "Profile";
+
+// MARK: - Home
+"home.title" = "Pathfinding";
+"home.welcome" = "Welcome to Pathfinding";
+"home.discover" = "Discover Amazing Journeys";
+"home.popular_destinations" = "Popular Destinations";
+"home.recommended" = "Recommended for You";
+"home.recent" = "Recently Viewed";
+"home.hero_title" = "Discover Journeys";
+"home.hero_subtitle" = "Explore curated guides and start your next adventure";
+"home.section.featured" = "Featured";
+"home.section.recent" = "Latest Guides";
+"home.load_failed" = "Failed to Load";
+"home.no_guides" = "No Guides";
+"home.pull_to_refresh" = "Pull to refresh for new content";
+
+// MARK: - Guides
+"guides.title" = "Travel Guides";
+"guides.empty" = "No Guides Available";
+"guides.empty_description" = "Check back later for new content";
+"guides.search_placeholder" = "Search guides...";
+"guides.filter" = "Filter";
+"guides.sort" = "Sort";
+"guides.sort.latest" = "Latest";
+"guides.sort.popular" = "Popular";
+"guides.sort.rating" = "Rating";
+
+// MARK: - Itinerary
+"itinerary.title" = "My Itineraries";
+"itinerary.empty" = "No Itineraries";
+"itinerary.empty_description" = "Import from guides or create a new itinerary";
+"itinerary.create" = "Create Itinerary";
+"itinerary.import" = "Import Itinerary";
+"itinerary.day" = "Day %d";
+"itinerary.days" = "%d Days";
+"itinerary.poi_count" = "%d Places";
+"itinerary.start_date" = "Start Date";
+"itinerary.end_date" = "End Date";
+"itinerary.duration" = "Duration";
+"itinerary.budget" = "Budget";
+"itinerary.notes" = "Notes";
+"itinerary.delete_confirm" = "Delete this itinerary?";
+"itinerary.delete_confirm_message" = "This action cannot be undone";
+
+// MARK: - Profile
+"profile.title" = "Profile";
+"profile.guest" = "Guest";
+"profile.login_prompt" = "Sign in to unlock more features";
+"profile.favorites" = "Favorites";
+"profile.trips" = "Trips";
+"profile.footprints" = "Footprints";
+
+// MARK: - Profile Sections
+"profile.section.travel_data" = "Travel Data";
+"profile.section.travel_services" = "Travel Services";
+"profile.section.appearance" = "Appearance";
+"profile.section.settings" = "Settings";
+
+// MARK: - Profile Items
+"profile.travel_stats" = "Travel Statistics";
+"profile.travel_stats_subtitle" = "View travel reports and annual review";
+"profile.insurance" = "Travel Insurance";
+"profile.insurance_subtitle" = "Insurance recommendations and claims guide";
+"profile.theme" = "Theme";
+"profile.language" = "Language";
+"profile.language_subtitle" = "Change app display language";
+"profile.offline_maps" = "Offline Maps";
+"profile.offline_maps_subtitle" = "Download maps for offline use";
+"profile.offline_maps_downloaded" = "Downloaded %@";
+"profile.icloud_sync" = "iCloud Sync";
+"profile.icloud_sync_subtitle" = "Sync itineraries and favorites across devices";
+
+// MARK: - iCloud Sync
+"icloud.title" = "iCloud Sync";
+"icloud.connected" = "Connected to iCloud";
+"icloud.last_sync" = "Last synced: %@";
+"icloud.never_synced" = "Never synced";
+"icloud.sync_options" = "Sync Options";
+"icloud.sync_itineraries" = "Sync Itineraries";
+"icloud.sync_favorites" = "Sync Favorites";
+"icloud.sync_preferences" = "Sync Preferences";
+"icloud.sync_now" = "Sync Now";
+"icloud.about" = "About iCloud Sync";
+"icloud.about_description" = "When iCloud Sync is enabled, your itineraries, favorites, and preferences will automatically sync across all devices signed in with the same Apple ID. Data is stored encrypted in iCloud.";
+
+// MARK: - Follow System
+"follow.followers" = "Followers";
+"follow.following" = "Following";
+"follow.mutual" = "Mutual";
+"follow.follow_back" = "Follow Back";
+"follow.follows_you" = "Follows you";
+"follow.follow" = "Follow";
+"follow.followed" = "Following";
+"follow.unfollow" = "Unfollow";
+"follow.no_followers" = "No Followers";
+"follow.no_followers_description" = "No one is following you yet";
+"follow.no_following" = "Not Following Anyone";
+"follow.no_following_description" = "Discover interesting people to follow";
+"follow.no_mutual" = "No Mutual Follows";
+"follow.no_mutual_description" = "Follow more people to get mutual follows";
+"follow.no_recommendations" = "No Recommendations";
+"follow.no_recommendations_description" = "Follow more people to get personalized recommendations";
+"follow.recommendations" = "Recommendations";
+"follow.management" = "Follow Management";
+"follow.followers_count" = "%d Followers";
+"follow.following_count" = "%d Following";
+
+"profile.api_config" = "API Configuration";
+"profile.cache" = "Cache Management";
+"profile.cache_subtitle" = "Clear image and data cache";
+"profile.about" = "About";
+"profile.about_subtitle" = "Version info and developers";
+"profile.version" = "Version";
+"profile.environment" = "Environment";
+"profile.followers" = "Followers";
+"profile.following" = "Following";
+"profile.preferences" = "Preferences";
+"profile.preferences_subtitle" = "Personalized recommendations and travel style";
+"profile.siri_shortcuts" = "Siri Shortcuts";
+"profile.siri_shortcuts_subtitle" = "Voice control for itineraries and POI navigation";
+"profile.likes" = "Likes";
+"profile.my_favorites" = "My Favorites";
+"profile.my_likes" = "My Likes";
+"profile.favorites_count" = "%d Favorites";
+"profile.likes_count" = "%d Likes";
+"profile.collections" = "Collections";
+"profile.collections_count" = "%d Collections";
+"profile.section.likes_favorites" = "Likes & Favorites";
+
+// MARK: - Preferences
+"preferences.title" = "Preferences";
+"preferences.your_profile" = "Your Travel Profile";
+"preferences.profile_learned" = "Generated from your behavior analysis";
+"preferences.profile_learning" = "Learning your preferences...";
+"preferences.learned_interests" = "Interest Analysis";
+"preferences.learned_interests_footer" = "Based on your browsing, saving, and copying behavior";
+"preferences.your_preferences" = "Explicit Preferences";
+"preferences.favorite_categories" = "Favorite Categories";
+"preferences.not_set" = "Not Set";
+"preferences.travel_style" = "Travel Style";
+"preferences.style" = "Style";
+"preferences.budget" = "Budget";
+"preferences.pace" = "Pace";
+"preferences.additional" = "Additional Preferences";
+"preferences.local_food" = "Prefer Local Cuisine";
+"preferences.off_beat" = "Like Off-the-beaten-path Places";
+"preferences.accessibility" = "Accessibility Needs";
+"preferences.reset" = "Reset Preferences";
+"preferences.reset_footer" = "Resetting will clear learned preference data from your behavior, but will keep your manually set preferences.";
+"preferences.reset_confirm_title" = "Reset Preferences?";
+"preferences.reset_confirm_message" = "This will clear all learned preference data, but will keep your manually set preferences.";
+"preferences.cancel" = "Cancel";
+"preferences.save" = "Save";
+"preferences.category_selection_footer" = "Select categories you're interested in, and we'll provide more accurate recommendations.";
+
+// MARK: - Theme
+"theme.title" = "Theme";
+"theme.system" = "System";
+"theme.system_description" = "Automatically switch based on system settings";
+"theme.light" = "Light Mode";
+"theme.light_description" = "Always use light appearance";
+"theme.dark" = "Dark Mode";
+"theme.dark_description" = "Always use dark appearance";
+"theme.select" = "Select Theme";
+"theme.about" = "About Theme";
+"theme.about_description" = "Selecting 'System' will automatically switch between light and dark mode based on your device's appearance settings. You can change system appearance in Settings > Display & Brightness.";
+"theme.preview.light" = "Light";
+"theme.preview.dark" = "Dark";
+
+// MARK: - Accent Colors
+"color.indigo" = "Indigo";
+"color.blue" = "Blue";
+"color.purple" = "Purple";
+"color.pink" = "Pink";
+"color.red" = "Red";
+"color.orange" = "Orange";
+"color.green" = "Green";
+"color.teal" = "Teal";
+"color.cyan" = "Cyan";
+"color.mint" = "Mint";
+
+// MARK: - Map Styles
+"map.style.standard" = "Standard";
+"map.style.satellite" = "Satellite";
+"map.style.hybrid" = "Hybrid";
+"map.style.followTheme" = "Follow Theme";
+
+// MARK: - Language
+"language.title" = "Language";
+"language.system" = "System";
+"language.system_description" = "Automatically switch based on system language";
+"language.chinese" = "Simplified Chinese";
+"language.chinese_description" = "Display in Simplified Chinese";
+"language.english" = "English";
+"language.english_description" = "Display in English";
+"language.select" = "Select Language";
+"language.about" = "About Language";
+"language.about_description" = "Selecting 'System' will automatically switch the display language based on your device's language settings. You can change system language in Settings > General > Language & Region.";
+"language.restart_hint" = "Some content may require restarting the app to take effect";
+
+// MARK: - API Settings
+"api.title" = "API Configuration";
+"api.server" = "API Server";
+"api.url_placeholder" = "API URL";
+"api.current_environment" = "Current Environment: %@";
+"api.restart_hint" = "Changes to API URL require restarting the app to take effect";
+
+// MARK: - Cache Settings
+"cache.title" = "Cache Management";
+"cache.image" = "Image Cache";
+"cache.image_size_limit" = "Cache Size Limit";
+"cache.clear_image" = "Clear Image Cache";
+"cache.api" = "API Cache";
+"cache.api_validity" = "Cache Validity";
+"cache.api_validity_minutes" = "%d minutes";
+"cache.clear_api" = "Clear API Cache";
+
+// MARK: - About
+"about.title" = "About";
+"about.app_name" = "Pathfinding";
+"about.version" = "Version %@";
+"about.tagline" = "Discover amazing journeys, AI-powered itinerary planning for every trip";
+"about.developer" = "Developer";
+"about.developer_name" = "Pathfinding Team";
+"about.build_number" = "Build Number";
+"about.swift_version" = "Swift Version";
+"about.min_ios" = "Minimum iOS";
+
+// MARK: - Map
+"map.title" = "Map";
+"map.satellite" = "Satellite";
+"map.hybrid" = "Hybrid";
+"map.standard" = "Standard";
+"map.offline" = "Offline Maps";
+"map.download" = "Download Map";
+"map.downloading" = "Downloading...";
+"map.download_complete" = "Download Complete";
+"map.download_failed" = "Download Failed";
+"map.storage_used" = "Storage Used";
+"map.delete_region" = "Delete Region";
+
+// MARK: - POI Types
+"poi.attraction" = "Attraction";
+"poi.restaurant" = "Restaurant";
+"poi.hotel" = "Hotel";
+"poi.transportation" = "Transportation";
+"poi.shopping" = "Shopping";
+"poi.entertainment" = "Entertainment";
+"poi.other" = "Other";
+
+// MARK: - Time
+"time.today" = "Today";
+"time.yesterday" = "Yesterday";
+"time.tomorrow" = "Tomorrow";
+"time.days_ago" = "%d days ago";
+"time.hours_ago" = "%d hours ago";
+"time.minutes_ago" = "%d minutes ago";
+"time.just_now" = "Just now";
+
+// MARK: - Errors
+"error.network" = "Network Connection Failed";
+"error.network_description" = "Please check your network connection and try again";
+"error.server" = "Server Error";
+"error.server_description" = "Server is temporarily unavailable, please try again later";
+"error.unknown" = "Unknown Error";
+"error.unknown_description" = "An unknown error occurred, please try again";
+"error.load_failed" = "Failed to Load";
+"error.save_failed" = "Failed to Save";
+
+// MARK: - Empty States
+"empty.no_data" = "No Data";
+"empty.no_results" = "No Results Found";
+"empty.try_again" = "Please try again later";
+
+// MARK: - Authentication
+"auth.login" = "Sign In";
+"auth.logout" = "Sign Out";
+"auth.signup" = "Sign Up";
+"auth.guest_mode" = "Guest Mode";
+"auth.continue_as_guest" = "Continue as Guest";
+"auth.email" = "Email";
+"auth.password" = "Password";
+"auth.forgot_password" = "Forgot Password?";
+
+// MARK: - Stats
+"stats.title" = "Travel Statistics";
+"stats.total_trips" = "Total Trips";
+"stats.total_days" = "Total Days";
+"stats.total_pois" = "Total Places";
+"stats.cities_visited" = "Cities Visited";
+"stats.countries_visited" = "Countries Visited";
+"stats.yearly_review" = "Yearly Review";
+"stats.overview" = "Overview";
+"stats.trips_count" = "Trips";
+"stats.days_count" = "Days";
+"stats.cities_count" = "Cities";
+"stats.total_expenses" = "Total Spent";
+"stats.year_review" = "%d Review";
+"stats.first_trip" = "First Trip";
+"stats.longest_trip" = "Longest Trip";
+"stats.most_expensive" = "Most Expensive";
+"stats.days_suffix" = "%d days";
+"stats.expense_analysis" = "Expense Analysis";
+"stats.top_destinations" = "Top Destinations";
+"stats.visits_days" = "%d visits / %d days";
+"stats.monthly_activity" = "Monthly Activity";
+"stats.achievements" = "Achievements";
+"stats.generate_report" = "Generate %d Report";
+"stats.generate_report_desc" = "Review your travel footprints and achievements";
+"stats.generate_button" = "Generate Report";
+"stats.generating" = "Generating...";
+"stats.analyzing" = "Analyzing your travel data";
+"stats.select_year" = "Select Year";
+"stats.no_data" = "No Data";
+"stats.year_suffix" = "%d";
+
+// MARK: - Expense Categories
+"expense.transport" = "Transport";
+"expense.accommodation" = "Accommodation";
+"expense.food" = "Food & Dining";
+"expense.tickets" = "Tickets";
+"expense.shopping" = "Shopping";
+
+// MARK: - Accessibility
+"accessibility.close_button" = "Close";
+"accessibility.back_button" = "Back";
+"accessibility.menu_button" = "Menu";
+"accessibility.search_button" = "Search";
+"accessibility.share_button" = "Share";
+"accessibility.favorite_button" = "Favorite";
+"accessibility.map_view" = "Map View";
+"accessibility.list_view" = "List View";
+
+// MARK: - Imported Itinerary
+"itinerary.saved" = "Saved";
+"itinerary.save" = "Save";
+"itinerary.save_success" = "Saved Successfully";
+"itinerary.save_success_message" = "Itinerary saved to My Itineraries";
+"itinerary.view_itinerary" = "View Itinerary";
+"itinerary.continue_browsing" = "Continue Browsing";
+"itinerary.optimized" = "Optimized";
+"itinerary.poi_intro" = "Introduction";
+"itinerary.poi_location" = "Location";
+"itinerary.poi_navigate" = "Navigate";
+"itinerary.poi_favorite" = "Favorite";
+"itinerary.poi_detail" = "POI Details";
+
+// MARK: - Timezone
+"timezone.home_zone" = "Home Timezone";
+"timezone.departure" = "Departure";
+"timezone.destination" = "Destination";

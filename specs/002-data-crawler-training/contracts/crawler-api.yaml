@@ -1,0 +1,1275 @@
+openapi: 3.1.0
+info:
+  title: Data Crawler & Training Dataset API
+  version: 1.0.0
+  description: |
+    API for managing data crawling jobs, normalized POI data, and ML training datasets.
+    
+    ## Overview
+    This API provides endpoints for:
+    - Managing crawl jobs (CRUD, scheduling, monitoring)
+    - Querying normalized POI data
+    - Generating and managing training datasets
+    - Data quality reporting
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://api.pathfinding.app/v1
+    description: Production
+
+tags:
+  - name: Crawl Jobs
+    description: Manage data crawling jobs
+  - name: Raw Records
+    description: Access raw crawl records
+  - name: Normalized POIs
+    description: Query normalized POI data
+  - name: Training Datasets
+    description: Generate and manage training datasets
+  - name: Quality Reports
+    description: Data quality monitoring
+
+paths:
+  # ============ Crawl Jobs ============
+  /crawl-jobs:
+    get:
+      summary: List crawl jobs
+      operationId: listCrawlJobs
+      tags: [Crawl Jobs]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/CrawlJobStatus'
+        - name: platform
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of crawl jobs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CrawlJob'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+    
+    post:
+      summary: Create a new crawl job
+      operationId: createCrawlJob
+      tags: [Crawl Jobs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCrawlJobRequest'
+      responses:
+        '201':
+          description: Crawl job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrawlJob'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /crawl-jobs/{jobId}:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: Get crawl job details
+      operationId: getCrawlJob
+      tags: [Crawl Jobs]
+      responses:
+        '200':
+          description: Crawl job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrawlJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    patch:
+      summary: Update crawl job
+      operationId: updateCrawlJob
+      tags: [Crawl Jobs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCrawlJobRequest'
+      responses:
+        '200':
+          description: Crawl job updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrawlJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    delete:
+      summary: Delete crawl job
+      operationId: deleteCrawlJob
+      tags: [Crawl Jobs]
+      responses:
+        '204':
+          description: Crawl job deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /crawl-jobs/{jobId}/start:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Start a crawl job
+      operationId: startCrawlJob
+      tags: [Crawl Jobs]
+      responses:
+        '200':
+          description: Crawl job started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrawlJob'
+        '400':
+          description: Job cannot be started (already running or completed)
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /crawl-jobs/{jobId}/cancel:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Cancel a running crawl job
+      operationId: cancelCrawlJob
+      tags: [Crawl Jobs]
+      responses:
+        '200':
+          description: Crawl job cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrawlJob'
+        '400':
+          description: Job cannot be cancelled (not running)
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /crawl-jobs/{jobId}/records:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: List raw records for a crawl job
+      operationId: listJobRawRecords
+      tags: [Raw Records]
+      parameters:
+        - name: parse_status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ParseStatus'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of raw records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RawCrawlRecordSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  # ============ Normalized POIs ============
+  /pois:
+    get:
+      summary: Search normalized POIs
+      operationId: searchPOIs
+      tags: [Normalized POIs]
+      parameters:
+        - name: q
+          in: query
+          description: Search query (name, description)
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: lat
+          in: query
+          description: Latitude for geo search
+          schema:
+            type: number
+        - name: lng
+          in: query
+          description: Longitude for geo search
+          schema:
+            type: number
+        - name: radius
+          in: query
+          description: Search radius in meters (requires lat/lng)
+          schema:
+            type: integer
+            default: 5000
+            maximum: 50000
+        - name: min_quality
+          in: query
+          description: Minimum quality score (0-1)
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+        - name: min_rating
+          in: query
+          description: Minimum rating (0-5)
+          schema:
+            type: number
+            minimum: 0
+            maximum: 5
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [relevance, rating, quality, distance, updated]
+            default: relevance
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of POIs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NormalizedPOI'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /pois/{poiId}:
+    parameters:
+      - name: poiId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get POI details
+      operationId: getPOI
+      tags: [Normalized POIs]
+      responses:
+        '200':
+          description: POI details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NormalizedPOIDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /pois/{poiId}/reviews:
+    parameters:
+      - name: poiId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get POI reviews
+      operationId: getPOIReviews
+      tags: [Normalized POIs]
+      parameters:
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [recent, helpful, rating_high, rating_low]
+            default: recent
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/POIReview'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /pois/stats:
+    get:
+      summary: Get POI statistics
+      operationId: getPOIStats
+      tags: [Normalized POIs]
+      parameters:
+        - name: group_by
+          in: query
+          schema:
+            type: string
+            enum: [category, city, platform]
+            default: category
+      responses:
+        '200':
+          description: POI statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/POIStats'
+
+  # ============ Training Datasets ============
+  /training-datasets:
+    get:
+      summary: List training datasets
+      operationId: listTrainingDatasets
+      tags: [Training Datasets]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TrainingDatasetStatus'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of training datasets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TrainingDataset'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+    
+    post:
+      summary: Create a new training dataset
+      operationId: createTrainingDataset
+      tags: [Training Datasets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTrainingDatasetRequest'
+      responses:
+        '201':
+          description: Training dataset creation started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingDataset'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /training-datasets/{datasetId}:
+    parameters:
+      - name: datasetId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get training dataset details
+      operationId: getTrainingDataset
+      tags: [Training Datasets]
+      responses:
+        '200':
+          description: Training dataset details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingDataset'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    delete:
+      summary: Delete training dataset
+      operationId: deleteTrainingDataset
+      tags: [Training Datasets]
+      responses:
+        '204':
+          description: Training dataset deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /training-datasets/{datasetId}/download:
+    parameters:
+      - name: datasetId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Download training dataset
+      operationId: downloadTrainingDataset
+      tags: [Training Datasets]
+      responses:
+        '200':
+          description: Training dataset file
+          content:
+            application/json:
+              schema:
+                type: object
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============ Quality Reports ============
+  /quality-reports:
+    get:
+      summary: List quality reports
+      operationId: listQualityReports
+      tags: [Quality Reports]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, on_demand]
+        - name: platform
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of quality reports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DataQualityReport'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+    
+    post:
+      summary: Generate a new quality report
+      operationId: generateQualityReport
+      tags: [Quality Reports]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateQualityReportRequest'
+      responses:
+        '201':
+          description: Quality report generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataQualityReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /quality-reports/{reportId}:
+    parameters:
+      - name: reportId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get quality report details
+      operationId: getQualityReport
+      tags: [Quality Reports]
+      responses:
+        '200':
+          description: Quality report details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataQualityReport'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    # ============ Enums ============
+    CrawlJobStatus:
+      type: string
+      enum: [pending, running, completed, failed, cancelled]
+
+    CrawlJobType:
+      type: string
+      enum: [full, incremental]
+
+    ParseStatus:
+      type: string
+      enum: [pending, success, failed, skipped]
+
+    TrainingDatasetStatus:
+      type: string
+      enum: [pending, generating, completed, failed]
+
+    OutputFormat:
+      type: string
+      enum: [json, csv, parquet]
+
+    SentimentLabel:
+      type: string
+      enum: [positive, neutral, negative]
+
+    # ============ Common ============
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+
+    Location:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+        address:
+          type: string
+        city:
+          type: string
+        district:
+          type: string
+        country:
+          type: string
+        postal_code:
+          type: string
+
+    RatingInfo:
+      type: object
+      properties:
+        overall:
+          type: number
+          minimum: 0
+          maximum: 5
+        count:
+          type: integer
+        breakdown:
+          type: object
+          additionalProperties:
+            type: number
+
+    SourceAttribution:
+      type: object
+      required: [platform, external_id, confidence, last_crawled]
+      properties:
+        platform:
+          type: string
+        external_id:
+          type: string
+        url:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        last_crawled:
+          type: string
+          format: date-time
+
+    # ============ Crawl Jobs ============
+    CrawlJobConfig:
+      type: object
+      properties:
+        geographic_scope:
+          type: object
+          properties:
+            cities:
+              type: array
+              items:
+                type: string
+            bounds:
+              type: object
+              properties:
+                ne:
+                  type: array
+                  items:
+                    type: number
+                  minItems: 2
+                  maxItems: 2
+                sw:
+                  type: array
+                  items:
+                    type: number
+                  minItems: 2
+                  maxItems: 2
+        categories:
+          type: array
+          items:
+            type: string
+        rate_limit:
+          type: object
+          properties:
+            requests_per_second:
+              type: number
+            max_concurrent:
+              type: integer
+
+    CrawlJobStatistics:
+      type: object
+      properties:
+        requests_total:
+          type: integer
+        requests_success:
+          type: integer
+        requests_failed:
+          type: integer
+        records_extracted:
+          type: integer
+        bytes_downloaded:
+          type: integer
+        duration_seconds:
+          type: integer
+
+    CrawlJob:
+      type: object
+      required: [id, name, platform, job_type, config, status, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        platform:
+          type: string
+        job_type:
+          $ref: '#/components/schemas/CrawlJobType'
+        config:
+          $ref: '#/components/schemas/CrawlJobConfig'
+        schedule_cron:
+          type: string
+        next_run_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/CrawlJobStatus'
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        statistics:
+          $ref: '#/components/schemas/CrawlJobStatistics'
+        error_message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateCrawlJobRequest:
+      type: object
+      required: [name, platform]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        platform:
+          type: string
+        job_type:
+          $ref: '#/components/schemas/CrawlJobType'
+          default: full
+        config:
+          $ref: '#/components/schemas/CrawlJobConfig'
+        schedule_cron:
+          type: string
+
+    UpdateCrawlJobRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        config:
+          $ref: '#/components/schemas/CrawlJobConfig'
+        schedule_cron:
+          type: string
+
+    # ============ Raw Records ============
+    RawCrawlRecordSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        source_platform:
+          type: string
+        source_url:
+          type: string
+        source_external_id:
+          type: string
+        content_type:
+          type: string
+        content_size_bytes:
+          type: integer
+        http_status:
+          type: integer
+        parse_status:
+          $ref: '#/components/schemas/ParseStatus'
+        crawled_at:
+          type: string
+          format: date-time
+
+    # ============ Normalized POIs ============
+    NormalizedPOI:
+      type: object
+      required: [id, name, category, location, quality_score, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        name_en:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        ratings:
+          $ref: '#/components/schemas/RatingInfo'
+        price_range:
+          type: string
+        photos_count:
+          type: integer
+        quality_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        sources_count:
+          type: integer
+        last_updated_at:
+          type: string
+          format: date-time
+
+    NormalizedPOIDetail:
+      allOf:
+        - $ref: '#/components/schemas/NormalizedPOI'
+        - type: object
+          properties:
+            name_aliases:
+              type: array
+              items:
+                type: string
+            operating_hours:
+              type: object
+            price_avg:
+              type: number
+            phone:
+              type: string
+            website:
+              type: string
+            photo_urls:
+              type: array
+              items:
+                type: string
+            completeness_score:
+              type: number
+            freshness_score:
+              type: number
+            sources:
+              type: array
+              items:
+                $ref: '#/components/schemas/SourceAttribution'
+            is_duplicate:
+              type: boolean
+            first_seen_at:
+              type: string
+              format: date-time
+            created_at:
+              type: string
+              format: date-time
+
+    POIReview:
+      type: object
+      required: [id, poi_id, content, source_platform, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        poi_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        content_language:
+          type: string
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+        author_name:
+          type: string
+        author_level:
+          type: string
+        published_at:
+          type: string
+          format: date-time
+        helpful_count:
+          type: integer
+        sentiment_label:
+          $ref: '#/components/schemas/SentimentLabel'
+        source_platform:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    POIStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        by_group:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              count:
+                type: integer
+              avg_quality:
+                type: number
+              avg_rating:
+                type: number
+
+    # ============ Training Datasets ============
+    TrainingDatasetParams:
+      type: object
+      properties:
+        time_range:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        geographic_scope:
+          type: array
+          items:
+            type: string
+        categories:
+          type: array
+          items:
+            type: string
+        min_quality_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        min_reviews:
+          type: integer
+        sampling:
+          type: object
+          properties:
+            method:
+              type: string
+              enum: [random, stratified]
+            train_ratio:
+              type: number
+            val_ratio:
+              type: number
+            test_ratio:
+              type: number
+
+    TrainingDatasetStats:
+      type: object
+      properties:
+        total_records:
+          type: integer
+        train_size:
+          type: integer
+        val_size:
+          type: integer
+        test_size:
+          type: integer
+        categories_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        cities_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+
+    TrainingDataset:
+      type: object
+      required: [id, name, version, generation_params, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        generation_params:
+          $ref: '#/components/schemas/TrainingDatasetParams'
+        statistics:
+          $ref: '#/components/schemas/TrainingDatasetStats'
+        output_format:
+          $ref: '#/components/schemas/OutputFormat'
+        output_size_bytes:
+          type: integer
+        source_data_cutoff:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/TrainingDatasetStatus'
+        error_message:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    CreateTrainingDatasetRequest:
+      type: object
+      required: [name, version]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        version:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+        generation_params:
+          $ref: '#/components/schemas/TrainingDatasetParams'
+        output_format:
+          $ref: '#/components/schemas/OutputFormat'
+          default: json
+
+    # ============ Quality Reports ============
+    QualityMetrics:
+      type: object
+      properties:
+        completeness:
+          type: object
+          properties:
+            total_pois:
+              type: integer
+            with_description:
+              type: integer
+            with_photos:
+              type: integer
+            with_ratings:
+              type: integer
+            with_hours:
+              type: integer
+            completeness_rate:
+              type: number
+        freshness:
+          type: object
+          properties:
+            updated_last_24h:
+              type: integer
+            updated_last_7d:
+              type: integer
+            stale_30d:
+              type: integer
+            freshness_rate:
+              type: number
+        accuracy:
+          type: object
+          properties:
+            duplicates_found:
+              type: integer
+            duplicates_merged:
+              type: integer
+            conflicts_resolved:
+              type: integer
+            accuracy_rate:
+              type: number
+        coverage:
+          type: object
+          properties:
+            cities_covered:
+              type: integer
+            categories_covered:
+              type: integer
+            avg_pois_per_city:
+              type: number
+
+    QualityAnomaly:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [spike, drop, error, warning]
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high]
+        affected_platform:
+          type: string
+        details:
+          type: object
+
+    DataQualityReport:
+      type: object
+      required: [id, report_type, period_start, period_end, metrics, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        report_type:
+          type: string
+          enum: [daily, weekly, monthly, on_demand]
+        scope_platform:
+          type: string
+        scope_city:
+          type: string
+        period_start:
+          type: string
+          format: date-time
+        period_end:
+          type: string
+          format: date-time
+        metrics:
+          $ref: '#/components/schemas/QualityMetrics'
+        anomalies:
+          type: array
+          items:
+            $ref: '#/components/schemas/QualityAnomaly'
+        created_at:
+          type: string
+          format: date-time
+
+    GenerateQualityReportRequest:
+      type: object
+      required: [report_type, period_start, period_end]
+      properties:
+        report_type:
+          type: string
+          enum: [daily, weekly, monthly, on_demand]
+        scope_platform:
+          type: string
+        scope_city:
+          type: string
+        period_start:
+          type: string
+          format: date-time
+        period_end:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
