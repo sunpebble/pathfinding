@@ -101,7 +101,7 @@ struct ItineraryListView: View {
 
         HStack(spacing: DesignTokens.Spacing.md) {
           NavigationLink {
-            BlogListView()
+            DiscoverView()
           } label: {
             Label("浏览攻略", systemImage: "book")
           }
