@@ -323,12 +323,60 @@ struct BlogDetailView: View {
       .aspectRatio(16/9, contentMode: .fill)
       .clipped()
 
-      // POI List placeholder - will be implemented in Task 5
-      Text("POI List placeholder")
+      mapPoiListView
         .frame(height: 220)
-        .frame(maxWidth: .infinity)
-        .background(Color(.systemGray6))
     }
+  }
+
+  // MARK: - Map POI List View
+
+  private var mapPoiListView: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+        if let days = guide.aiDays {
+          ForEach(days) { day in
+            // Day header
+            HStack {
+              Circle()
+                .fill(colorForDay(day.dayNumber).gradient)
+                .frame(width: 24, height: 24)
+                .overlay {
+                  Text("\(day.dayNumber)")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                }
+
+              Text("Day \(day.dayNumber)")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+              if let theme = day.theme {
+                Text("- \(theme)")
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
+              }
+            }
+            .padding(.top, day.dayNumber == 1 ? 0 : DesignTokens.Spacing.sm)
+
+            // POIs for this day
+            ForEach(day.pois) { poi in
+              MapPoiListRow(
+                poi: poi,
+                dayColor: colorForDay(day.dayNumber),
+                isSelected: selectedMapPoi?.name == poi.name
+              ) {
+                selectedMapPoi = poi
+              }
+            }
+          }
+        }
+      }
+      .padding(.horizontal, DesignTokens.Spacing.md)
+      .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+    .background(.background)
   }
 
   // MARK: - Title Section
@@ -691,5 +739,52 @@ private struct MapMarkerByDay: View {
         .foregroundStyle(.white)
     }
     .animation(.spring(response: 0.3), value: isSelected)
+  }
+}
+
+// MARK: - Map POI List Row
+
+private struct MapPoiListRow: View {
+  let poi: AiPoi
+  let dayColor: Color
+  let isSelected: Bool
+  let onTap: () -> Void
+
+  var body: some View {
+    Button(action: onTap) {
+      HStack(spacing: DesignTokens.Spacing.sm) {
+        Circle()
+          .fill(dayColor.opacity(0.2))
+          .frame(width: 8, height: 8)
+
+        VStack(alignment: .leading, spacing: 2) {
+          Text(poi.name)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundStyle(.primary)
+
+          if let type = poi.type {
+            Text(type)
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+          }
+        }
+
+        Spacer()
+
+        if poi.latitude != nil && poi.latitude != 0 {
+          Image(systemName: "location.fill")
+            .font(.caption)
+            .foregroundStyle(.green)
+        }
+      }
+      .padding(.vertical, DesignTokens.Spacing.xs)
+      .padding(.horizontal, DesignTokens.Spacing.sm)
+      .background(
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
+          .fill(isSelected ? dayColor.opacity(0.1) : Color.clear)
+      )
+    }
+    .buttonStyle(.plain)
   }
 }
