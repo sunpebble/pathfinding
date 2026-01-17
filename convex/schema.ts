@@ -1002,7 +1002,15 @@ export default defineSchema({
     .index('by_platform', ['sourcePlatform'])
     .index('by_platform_external', ['sourcePlatform', 'sourceExternalId'])
     .index('by_quality', ['qualityScore'])
-    .index('by_destinations', ['destinations']),
+    .index('by_destinations', ['destinations'])
+    .searchIndex('search_content', {
+      searchField: 'content',
+      filterFields: ['destinations', 'aiProcessedAt'],
+    })
+    .searchIndex('search_title', {
+      searchField: 'title',
+      filterFields: ['destinations', 'aiProcessedAt'],
+    }),
 
   // ============================================
   // Itinerary Comments
