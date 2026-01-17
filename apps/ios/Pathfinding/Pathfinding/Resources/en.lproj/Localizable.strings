@@ -32,11 +32,16 @@
 "common.ok" = "OK";
 
 // MARK: - Tab Bar
-"tab.home" = "Home";
-"tab.guides" = "Guides";
+"tab.discover" = "Discover";
 "tab.chat" = "Assistant";
 "tab.itinerary" = "Itinerary";
 "tab.profile" = "Profile";
+
+// MARK: - Discover
+"discover.title" = "Discover";
+"discover.search_placeholder" = "Search destinations, guides...";
+"discover.featured" = "Featured";
+"discover.recent" = "Recent";
 
 // MARK: - Home
 "home.title" = "Pathfinding";

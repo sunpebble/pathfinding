@@ -2,16 +2,14 @@ import SwiftUI
 import Observation
 
 enum Tab: String, CaseIterable {
-  case home
-  case guides
+  case discover
   case chat
   case itinerary
   case profile
 
   var title: String {
     switch self {
-    case .home: return "tab.home".localized
-    case .guides: return "tab.guides".localized
+    case .discover: return "tab.discover".localized
     case .chat: return "tab.chat".localized
     case .itinerary: return "tab.itinerary".localized
     case .profile: return "tab.profile".localized
@@ -20,8 +18,7 @@ enum Tab: String, CaseIterable {
 
   var icon: String {
     switch self {
-    case .home: return "house"
-    case .guides: return "book"
+    case .discover: return "sparkle.magnifyingglass"
     case .chat: return "bubble.left.and.bubble.right"
     case .itinerary: return "map"
     case .profile: return "person"
@@ -30,8 +27,7 @@ enum Tab: String, CaseIterable {
 
   var selectedIcon: String {
     switch self {
-    case .home: return "house.fill"
-    case .guides: return "book.fill"
+    case .discover: return "sparkle.magnifyingglass"
     case .chat: return "bubble.left.and.bubble.right.fill"
     case .itinerary: return "map.fill"
     case .profile: return "person.fill"
@@ -41,7 +37,7 @@ enum Tab: String, CaseIterable {
 
 @Observable
 class AppState {
-  var selectedTab: Tab = .home
+  var selectedTab: Tab = .discover
 }
 
 struct ContentView: View {
@@ -50,16 +46,10 @@ struct ContentView: View {
 
   var body: some View {
     TabView(selection: $appState.selectedTab) {
-      HomeView()
-        .tag(Tab.home)
+      DiscoverView()
+        .tag(Tab.discover)
         .tabItem {
-          Label(Tab.home.title, systemImage: appState.selectedTab == .home ? Tab.home.selectedIcon : Tab.home.icon)
-        }
-
-      BlogListView()
-        .tag(Tab.guides)
-        .tabItem {
-          Label(Tab.guides.title, systemImage: appState.selectedTab == .guides ? Tab.guides.selectedIcon : Tab.guides.icon)
+          Label(Tab.discover.title, systemImage: appState.selectedTab == .discover ? Tab.discover.selectedIcon : Tab.discover.icon)
         }
 
       ChatSessionListView(userId: AuthManager.shared.currentUserId ?? "guest")

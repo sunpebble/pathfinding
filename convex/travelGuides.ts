@@ -107,32 +107,119 @@ export const getById = query({
   },
 });
 
-// Search guides by destination or tags
+// Search travel guides with filters
 export const search = query({
   args: {
-    query: v.string(),
-    platform: v.optional(platformValidator),
+    query: v.optional(v.string()),
+    destination: v.optional(v.string()),
+    hasAiData: v.optional(v.boolean()),
+    daysAgo: v.optional(v.number()),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let guides = await ctx.db.query('travelGuides').collect();
+    const effectiveLimit = args.limit || 50;
+    let guides;
 
-    if (args.platform) {
-      guides = guides.filter((g) => g.sourcePlatform === args.platform);
+    // If query is provided, use search index
+    if (args.query && args.query.trim().length > 0) {
+      guides = await ctx.db
+        .query('travelGuides')
+        .withSearchIndex('search_title', (q) => q.search('title', args.query!))
+        .take(effectiveLimit * 2);
+    } else {
+      guides = await ctx.db
+        .query('travelGuides')
+        .order('desc')
+        .take(effectiveLimit * 2);
     }
 
-    const searchLower = args.query.toLowerCase();
-    guides = guides.filter(
-      (g) =>
-        g.title?.toLowerCase().includes(searchLower) ||
-        g.destinations.some((d) => d.toLowerCase().includes(searchLower)) ||
-        g.tags.some((t) => t.toLowerCase().includes(searchLower))
-    );
+    // Apply filters
+    if (args.destination) {
+      guides = guides.filter((g) =>
+        g.destinations.some((d) =>
+          d.toLowerCase().includes(args.destination!.toLowerCase())
+        )
+      );
+    }
 
-    // Sort by quality score
-    guides.sort((a, b) => b.qualityScore - a.qualityScore);
+    if (args.hasAiData) {
+      guides = guides.filter((g) => g.aiProcessedAt !== undefined);
+    }
 
-    return args.limit ? guides.slice(0, args.limit) : guides;
+    if (args.daysAgo) {
+      const cutoffTime = Date.now() - args.daysAgo * 24 * 60 * 60 * 1000;
+      guides = guides.filter((g) => g.crawledAt >= cutoffTime);
+    }
+
+    return guides.slice(0, effectiveLimit);
+  },
+});
+
+// Get destinations from a batch of guides (paginated, lightweight)
+// Returns only destinations array to minimize data transfer
+export const listDestinationsBatch = query({
+  args: {
+    cursor: v.optional(v.string()),
+    batchSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Use smaller batch size to stay well under 16MB limit
+    const batchSize = args.batchSize || 50;
+
+    const result = await ctx.db
+      .query('travelGuides')
+      .order('desc')
+      .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
+
+    // Return only the destinations arrays (minimal data)
+    const destinations = result.page.flatMap((g) => g.destinations);
+
+    return {
+      destinations,
+      cursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+// Get popular destinations - now just aggregates pre-fetched data
+// This is called from HTTP action after it has collected all destinations
+export const getPopularDestinations = query({
+  args: {
+    limit: v.optional(v.number()),
+    destinations: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10;
+
+    // If destinations are provided, aggregate them (called from HTTP action)
+    if (args.destinations && args.destinations.length > 0) {
+      const destCounts: Record<string, number> = {};
+      for (const dest of args.destinations) {
+        destCounts[dest] = (destCounts[dest] || 0) + 1;
+      }
+
+      return Object.entries(destCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([name, count]) => ({ name, count }));
+    }
+
+    // Fallback: fetch a small sample if called directly (for backward compatibility)
+    // Use small limit to avoid 16MB error
+    const guides = await ctx.db.query('travelGuides').order('desc').take(20);
+
+    const destCounts: Record<string, number> = {};
+    for (const guide of guides) {
+      for (const dest of guide.destinations) {
+        destCounts[dest] = (destCounts[dest] || 0) + 1;
+      }
+    }
+
+    return Object.entries(destCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([name, count]) => ({ name, count }));
   },
 });
 
