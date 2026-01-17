@@ -374,7 +374,7 @@ http.route({
 
 /**
  * GET /api/guides/destinations
- * Get popular destinations
+ * Get popular destinations (uses pagination to avoid 16MB limit)
  */
 http.route({
   path: '/api/guides/destinations',
@@ -386,12 +386,34 @@ http.route({
       : 10;
 
     try {
-      const destinations = await ctx.runQuery(
-        api.travelGuides.getPopularDestinations,
-        { limit }
-      );
+      // Collect destinations from all guides using pagination
+      const allDestinations: string[] = [];
+      let cursor: string | undefined;
+      let isDone = false;
 
-      return jsonResponse({ data: destinations });
+      // Loop through all pages to collect destinations
+      while (!isDone) {
+        const batch = await ctx.runQuery(
+          api.travelGuides.listDestinationsBatch,
+          { cursor, batchSize: 50 }
+        );
+        allDestinations.push(...batch.destinations);
+        cursor = batch.cursor ?? undefined;
+        isDone = batch.isDone;
+      }
+
+      // Aggregate destinations and get top N
+      const destCounts: Record<string, number> = {};
+      for (const dest of allDestinations) {
+        destCounts[dest] = (destCounts[dest] || 0) + 1;
+      }
+
+      const topDestinations = Object.entries(destCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([name, count]) => ({ name, count }));
+
+      return jsonResponse({ data: topDestinations });
     } catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : '获取目的地失败',
