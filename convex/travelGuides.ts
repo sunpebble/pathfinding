@@ -107,32 +107,76 @@ export const getById = query({
   },
 });
 
-// Search guides by destination or tags
+// Search travel guides with filters
 export const search = query({
   args: {
-    query: v.string(),
-    platform: v.optional(platformValidator),
+    query: v.optional(v.string()),
+    destination: v.optional(v.string()),
+    hasAiData: v.optional(v.boolean()),
+    daysAgo: v.optional(v.number()),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let guides = await ctx.db.query('travelGuides').collect();
+    const effectiveLimit = args.limit || 50;
+    let guides;
 
-    if (args.platform) {
-      guides = guides.filter((g) => g.sourcePlatform === args.platform);
+    // If query is provided, use search index
+    if (args.query && args.query.trim().length > 0) {
+      guides = await ctx.db
+        .query('travelGuides')
+        .withSearchIndex('search_title', (q) => q.search('title', args.query!))
+        .take(effectiveLimit * 2);
+    } else {
+      guides = await ctx.db
+        .query('travelGuides')
+        .order('desc')
+        .take(effectiveLimit * 2);
     }
 
-    const searchLower = args.query.toLowerCase();
-    guides = guides.filter(
-      (g) =>
-        g.title?.toLowerCase().includes(searchLower) ||
-        g.destinations.some((d) => d.toLowerCase().includes(searchLower)) ||
-        g.tags.some((t) => t.toLowerCase().includes(searchLower))
-    );
+    // Apply filters
+    if (args.destination) {
+      guides = guides.filter((g) =>
+        g.destinations.some((d) =>
+          d.toLowerCase().includes(args.destination!.toLowerCase())
+        )
+      );
+    }
 
-    // Sort by quality score
-    guides.sort((a, b) => b.qualityScore - a.qualityScore);
+    if (args.hasAiData) {
+      guides = guides.filter((g) => g.aiProcessedAt !== undefined);
+    }
 
-    return args.limit ? guides.slice(0, args.limit) : guides;
+    if (args.daysAgo) {
+      const cutoffTime = Date.now() - args.daysAgo * 24 * 60 * 60 * 1000;
+      guides = guides.filter((g) => g.crawledAt >= cutoffTime);
+    }
+
+    return guides.slice(0, effectiveLimit);
+  },
+});
+
+// Get popular destinations from guides
+export const getPopularDestinations = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10;
+    const guides = await ctx.db.query('travelGuides').take(500);
+
+    // Count destination occurrences
+    const destCounts: Record<string, number> = {};
+    for (const guide of guides) {
+      for (const dest of guide.destinations) {
+        destCounts[dest] = (destCounts[dest] || 0) + 1;
+      }
+    }
+
+    // Sort by count and return top destinations
+    return Object.entries(destCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([name, count]) => ({ name, count }));
   },
 });
 
