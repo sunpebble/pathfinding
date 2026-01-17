@@ -281,6 +281,56 @@ struct BlogDetailView: View {
     }
   }
 
+  // MARK: - Map Content View
+
+  @ViewBuilder
+  private var mapContentView: some View {
+    VStack(spacing: 0) {
+      // Map
+      Map(position: $mapCameraPosition) {
+        ForEach(allAnnotations) { annotation in
+          Annotation(
+            annotation.poi.name,
+            coordinate: annotation.coordinate,
+            anchor: .bottom
+          ) {
+            MapMarkerByDay(
+              index: annotation.index,
+              dayColor: colorForDay(annotation.dayNumber),
+              isSelected: selectedMapPoi?.name == annotation.poi.name
+            )
+          }
+        }
+
+        // Route lines per day
+        if let days = guide.aiDays {
+          ForEach(days) { day in
+            let dayAnnotations = allAnnotations.filter { $0.dayNumber == day.dayNumber }
+            if dayAnnotations.count > 1 {
+              MapPolyline(coordinates: dayAnnotations.map(\.coordinate))
+                .stroke(colorForDay(day.dayNumber).opacity(0.6), style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
+            }
+          }
+        }
+      }
+      .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .including([.restaurant, .hotel, .museum, .park])))
+      .mapControls {
+        MapCompass()
+        MapScaleView()
+        MapUserLocationButton()
+      }
+      .frame(maxWidth: .infinity)
+      .aspectRatio(16/9, contentMode: .fill)
+      .clipped()
+
+      // POI List placeholder - will be implemented in Task 5
+      Text("POI List placeholder")
+        .frame(height: 220)
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemGray6))
+    }
+  }
+
   // MARK: - Title Section
 
   private var titleSection: some View {
@@ -619,4 +669,27 @@ struct BlogDetailPoiAnnotation: Identifiable {
   let dayNumber: Int
   let index: Int
   let coordinate: CLLocationCoordinate2D
+}
+
+// MARK: - Map Marker By Day
+
+private struct MapMarkerByDay: View {
+  let index: Int
+  let dayColor: Color
+  let isSelected: Bool
+
+  var body: some View {
+    ZStack {
+      Circle()
+        .fill(dayColor.gradient)
+        .frame(width: isSelected ? 40 : 32, height: isSelected ? 40 : 32)
+        .shadow(color: dayColor.opacity(0.5), radius: isSelected ? 8 : 4, y: 2)
+
+      Text("\(index)")
+        .font(isSelected ? .headline : .caption)
+        .fontWeight(.bold)
+        .foregroundStyle(.white)
+    }
+    .animation(.spring(response: 0.3), value: isSelected)
+  }
 }
