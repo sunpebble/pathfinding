@@ -29,6 +29,46 @@ struct BlogDetailView: View {
     return []
   }
 
+  private let dayColors: [Color] = [
+    .blue,    // Day 1
+    .orange,  // Day 2
+    .green,   // Day 3
+    .purple,  // Day 4
+    .pink,    // Day 5
+    .teal,    // Day 6
+    .red,     // Day 7+
+  ]
+
+  private func colorForDay(_ dayNumber: Int) -> Color {
+    let index = min(dayNumber - 1, dayColors.count - 1)
+    return dayColors[max(0, index)]
+  }
+
+  private var allAnnotations: [BlogDetailPoiAnnotation] {
+    guard let days = guide.aiDays else { return [] }
+    var annotations: [BlogDetailPoiAnnotation] = []
+    var globalIndex = 0
+
+    for day in days {
+      for poi in day.pois {
+        guard let lat = poi.latitude, let lng = poi.longitude,
+              lat != 0 && lng != 0,
+              lat >= -90 && lat <= 90,
+              lng >= -180 && lng <= 180
+        else { continue }
+
+        globalIndex += 1
+        annotations.append(BlogDetailPoiAnnotation(
+          poi: poi,
+          dayNumber: day.dayNumber,
+          index: globalIndex,
+          coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)
+        ))
+      }
+    }
+    return annotations
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 0) {
@@ -569,4 +609,14 @@ struct PoiRow: View {
     default: return .purple
     }
   }
+}
+
+// MARK: - Blog Detail POI Annotation
+
+struct BlogDetailPoiAnnotation: Identifiable {
+  let id = UUID()
+  let poi: AiPoi
+  let dayNumber: Int
+  let index: Int
+  let coordinate: CLLocationCoordinate2D
 }
