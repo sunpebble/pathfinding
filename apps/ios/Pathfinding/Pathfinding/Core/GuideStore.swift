@@ -13,6 +13,11 @@ final class GuideStore {
   private(set) var error: StoreError?
   private(set) var lastFetchedAt: Date?
 
+  // Search state
+  private(set) var searchResults: [BlogPost] = []
+  private(set) var popularDestinations: [PopularDestination] = []
+  private(set) var isSearching = false
+
   // MARK: - Cache Configuration
   private let cacheValidityDuration: TimeInterval = 5 * 60 // 5 minutes
 
@@ -89,6 +94,50 @@ final class GuideStore {
     lastFetchedAt = nil
     error = nil
     logger.info("Cache cleared")
+  }
+
+  // MARK: - Search
+
+  /// Search guides with filters
+  func search(
+    query: String = "",
+    destination: String? = nil,
+    hasAiData: Bool = false,
+    daysAgo: Int? = nil
+  ) async {
+    guard !isSearching else { return }
+
+    isSearching = true
+
+    do {
+      searchResults = try await APIClient.shared.searchGuides(
+        query: query.isEmpty ? nil : query,
+        destination: destination,
+        hasAiData: hasAiData ? true : nil,
+        daysAgo: daysAgo
+      )
+      logger.info("Search returned \(self.searchResults.count) results")
+    } catch {
+      logger.error("Search error: \(error.localizedDescription)")
+      searchResults = []
+    }
+
+    isSearching = false
+  }
+
+  /// Fetch popular destinations
+  func fetchPopularDestinations() async {
+    do {
+      popularDestinations = try await APIClient.shared.fetchPopularDestinations()
+      logger.info("Fetched \(self.popularDestinations.count) popular destinations")
+    } catch {
+      logger.error("Fetch destinations error: \(error.localizedDescription)")
+    }
+  }
+
+  /// Clear search results
+  func clearSearch() {
+    searchResults = []
   }
 }
 
