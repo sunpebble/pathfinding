@@ -73,16 +73,18 @@ actor APIClient {
   private func baseURL(for path: String) -> URL {
     switch serviceType(for: path) {
     case .convex:
-      return convexURL
+      // Convex HTTP Actions require /http prefix for self-hosted deployments
+      return convexURL.appendingPathComponent("http")
     case .aiService:
       return aiServiceURL
     }
   }
 
-  /// Default baseURL - points to Convex for CRUD operations
+  /// Default baseURL - points to Convex HTTP Actions for CRUD operations
   /// AI Service endpoints should use aiServiceURL directly
   var baseURL: URL {
-    convexURL
+    // Convex HTTP Actions require /http prefix for self-hosted deployments
+    convexURL.appendingPathComponent("http")
   }
 
   /// Construct full URL for a given path, routing to the appropriate service

@@ -293,7 +293,7 @@ http.route({
 
     try {
       const guides = await ctx.runQuery(api.travelGuides.list, {
-        platform: platform as any,
+        platform: platform || undefined,
         minQuality,
         limit: limit + offset,
       });
