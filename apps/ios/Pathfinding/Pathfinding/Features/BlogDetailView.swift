@@ -1,6 +1,11 @@
 import MapKit
 import SwiftUI
 
+enum MediaMode: String, CaseIterable {
+  case images = "图片"
+  case map = "地图"
+}
+
 struct BlogDetailView: View {
   let guide: BlogPost
   @State private var selectedDay: AiDay?
@@ -10,6 +15,10 @@ struct BlogDetailView: View {
   @State private var showImageViewer = false
   @State private var showPdfExport = false
   @State private var showShareSheet = false
+  @State private var mediaMode: MediaMode = .images
+  @State private var mapCameraPosition: MapCameraPosition = .automatic
+  @State private var mapCameraInitialized = false
+  @State private var selectedMapPoi: AiPoi?
 
   private var displayImages: [String] {
     if let images = guide.imageUrls, !images.isEmpty {
