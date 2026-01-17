@@ -160,3 +160,11 @@ struct Pagination: Codable {
   let limit: Int
   let offset: Int
 }
+
+// MARK: - Popular Destination
+
+struct PopularDestination: Codable, Identifiable, Hashable {
+  var id: String { name }
+  let name: String
+  let count: Int
+}
