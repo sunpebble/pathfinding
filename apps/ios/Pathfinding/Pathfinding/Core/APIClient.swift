@@ -121,7 +121,18 @@ actor APIClient {
 
   /// Fetch single guide by ID
   func fetchGuide(id: String) async throws -> BlogPost {
-    let url = baseURL.appendingPathComponent("api/guides/\(id)")
+    var components = URLComponents(
+      url: baseURL.appendingPathComponent("api/guides/by-id"),
+      resolvingAgainstBaseURL: false
+    )!
+    components.queryItems = [
+      URLQueryItem(name: "id", value: id),
+    ]
+
+    guard let url = components.url else {
+      throw APIError.invalidURL
+    }
+
     let data = try await fetchWithRetry(url: url)
     return try decoder.decode(BlogPost.self, from: data)
   }

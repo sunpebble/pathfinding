@@ -219,6 +219,37 @@ http.route({
 // ============================================
 
 /**
+ * Convert camelCase keys to snake_case for API compatibility with iOS
+ */
+function toSnakeCase(str: string): string {
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+/**
+ * Convert object keys from camelCase to snake_case recursively
+ */
+function convertKeysToSnakeCase(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(convertKeysToSnakeCase);
+  }
+  if (typeof obj === 'object' && !(obj instanceof Date)) {
+    const converted: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        // Skip internal Convex fields like _id and _creationTime
+        const newKey = key.startsWith('_') ? key : toSnakeCase(key);
+        converted[newKey] = convertKeysToSnakeCase(obj[key]);
+      }
+    }
+    return converted;
+  }
+  return obj;
+}
+
+/**
  * Helper to create JSON response
  */
 function jsonResponse(data: any, status = 200) {
@@ -254,7 +285,9 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
     const platform = url.searchParams.get('platform');
-    const minQuality = Number.parseFloat(url.searchParams.get('min_quality') ?? '0');
+    const minQuality = Number.parseFloat(
+      url.searchParams.get('min_quality') ?? '0'
+    );
     const limit = Number.parseInt(url.searchParams.get('limit') ?? '20');
     const offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
 
@@ -267,8 +300,9 @@ http.route({
 
       const data = guides.slice(offset, offset + limit);
 
+      // Convert to snake_case for iOS compatibility
       return jsonResponse({
-        data,
+        data: convertKeysToSnakeCase(data),
         pagination: {
           limit,
           offset,
@@ -308,8 +342,9 @@ http.route({
 
       const data = guides.slice(offset, offset + limit);
 
+      // Convert to snake_case for iOS compatibility
       return jsonResponse({
-        data,
+        data: convertKeysToSnakeCase(data),
         query,
         pagination: {
           limit,
@@ -319,6 +354,40 @@ http.route({
       });
     } catch (error) {
       return errorResponse(error instanceof Error ? error.message : '搜索失败');
+    }
+  }),
+});
+
+/**
+ * GET /api/guides/by-id?id=<id>
+ * Get a single guide by ID
+ */
+http.route({
+  path: '/api/guides/by-id',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+
+    if (!id) {
+      return errorResponse('缺少 id 参数', 400);
+    }
+
+    try {
+      const guide = await ctx.runQuery(api.travelGuides.getById, {
+        id: id as any,
+      });
+
+      if (!guide) {
+        return errorResponse('指南未找到', 404);
+      }
+
+      // Convert to snake_case for iOS compatibility
+      return jsonResponse(convertKeysToSnakeCase(guide));
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : '获取指南失败'
+      );
     }
   }),
 });
