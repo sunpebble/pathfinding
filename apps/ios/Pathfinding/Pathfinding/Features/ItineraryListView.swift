@@ -51,7 +51,7 @@ struct ItineraryListView: View {
       }
       .sheet(isPresented: $showCreateSheet) {
         CreateItinerarySheet { itinerary in
-          store.update(itinerary) // Use update (or add logic in store)
+          store.add(itinerary)
         }
       }
       .fullScreenCover(isPresented: $showVoiceItinerary) {

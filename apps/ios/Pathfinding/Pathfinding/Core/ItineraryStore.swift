@@ -127,6 +127,7 @@ final class ItineraryStore {
     }
   }
 
+
   // MARK: - Copy Operations
 
   /// 复制行程（完整复制）- 本地存储
@@ -341,6 +342,14 @@ final class ItineraryStore {
       pageSize: pageSize,
       sortBy: sortBy
     )
+  }
+
+  /// 添加新行程
+  func add(_ itinerary: SavedItinerary) {
+    allItineraries.insert(itinerary, at: 0)
+    persist()
+    reloadAll()
+
   }
   
   // MARK: - Persistence
