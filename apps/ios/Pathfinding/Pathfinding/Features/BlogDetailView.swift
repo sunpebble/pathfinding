@@ -118,14 +118,24 @@ struct BlogDetailView: View {
     }
   }
 
+  @ViewBuilder
+  private var mediaArea: some View {
+    switch mediaMode {
+    case .images:
+      imageGallery
+    case .map:
+      mapContentView
+    }
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 0) {
         // MARK: - Media Mode Picker
         mediaModePicker
 
-        // MARK: - Image Gallery
-        imageGallery
+        // MARK: - Media Area (Images or Map)
+        mediaArea
 
         // MARK: - Content
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
@@ -235,7 +245,14 @@ struct BlogDetailView: View {
   @ViewBuilder
   private var mediaModePicker: some View {
     if let days = guide.aiDays, !days.isEmpty {
-      Picker("", selection: $mediaMode) {
+      Picker("", selection: Binding(
+        get: { mediaMode },
+        set: { newValue in
+          withAnimation(.easeInOut(duration: 0.3)) {
+            mediaMode = newValue
+          }
+        }
+      )) {
         ForEach(MediaMode.allCases, id: \.self) { mode in
           Text(mode.rawValue).tag(mode)
         }
