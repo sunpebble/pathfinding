@@ -6,6 +6,7 @@ struct ImportedItineraryView: View {
   let guide: BlogPost
   @State private var selectedDay: Int = 1
   @State private var cameraPosition: MapCameraPosition = .automatic
+  @State private var cameraInitialized = false
   @State private var selectedPoi: AiPoi?
   @State private var showSaveSuccess = false
   @State private var showCopySheet = false
@@ -224,7 +225,8 @@ struct ImportedItineraryView: View {
     .onChange(of: selectedDay) { _, _ in
       updateCamera()
     }
-    .onAppear {
+    .task {
+      // Use task to ensure view is fully loaded before updating camera
       updateCamera()
     }
   }
@@ -331,13 +333,19 @@ struct ImportedItineraryView: View {
     let latDelta = min(max((maxLat - minLat) * 1.5, 0.01), 2.0)
     let lngDelta = min(max((maxLng - minLng) * 1.5, 0.01), 2.0)
 
-    withAnimation(.easeInOut(duration: 0.5)) {
-      cameraPosition = .region(
-        MKCoordinateRegion(
-          center: center,
-          span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
-        )
-      )
+    let region = MKCoordinateRegion(
+      center: center,
+      span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
+    )
+
+    // First update: set immediately without animation to avoid showing wrong location
+    if !cameraInitialized {
+      cameraPosition = .region(region)
+      cameraInitialized = true
+    } else {
+      withAnimation(.easeInOut(duration: 0.5)) {
+        cameraPosition = .region(region)
+      }
     }
   }
 }
