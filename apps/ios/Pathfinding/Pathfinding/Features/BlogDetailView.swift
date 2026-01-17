@@ -69,6 +69,55 @@ struct BlogDetailView: View {
     return annotations
   }
 
+  private func updateMapCamera() {
+    guard !allAnnotations.isEmpty else { return }
+
+    let coords = allAnnotations.map(\.coordinate)
+    let lats = coords.map(\.latitude)
+    let lngs = coords.map(\.longitude)
+
+    let minLat = lats.min()!
+    let maxLat = lats.max()!
+    let minLng = lngs.min()!
+    let maxLng = lngs.max()!
+
+    let center = CLLocationCoordinate2D(
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2
+    )
+
+    let latDelta = min(max((maxLat - minLat) * 1.5, 0.01), 2.0)
+    let lngDelta = min(max((maxLng - minLng) * 1.5, 0.01), 2.0)
+
+    let region = MKCoordinateRegion(
+      center: center,
+      span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
+    )
+
+    if !mapCameraInitialized {
+      mapCameraPosition = .region(region)
+      mapCameraInitialized = true
+    } else {
+      withAnimation(.easeInOut(duration: 0.5)) {
+        mapCameraPosition = .region(region)
+      }
+    }
+  }
+
+  private func centerMapOnPoi(_ poi: AiPoi) {
+    guard let lat = poi.latitude, let lng = poi.longitude,
+          lat != 0, lng != 0 else { return }
+
+    withAnimation(.easeInOut(duration: 0.3)) {
+      mapCameraPosition = .region(
+        MKCoordinateRegion(
+          center: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+          span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+      )
+    }
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 0) {
@@ -322,6 +371,9 @@ struct BlogDetailView: View {
       .frame(maxWidth: .infinity)
       .aspectRatio(16/9, contentMode: .fill)
       .clipped()
+      .task {
+        updateMapCamera()
+      }
 
       mapPoiListView
         .frame(height: 220)
@@ -368,6 +420,7 @@ struct BlogDetailView: View {
                 isSelected: selectedMapPoi?.name == poi.name
               ) {
                 selectedMapPoi = poi
+                centerMapOnPoi(poi)
               }
             }
           }
