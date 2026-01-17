@@ -130,19 +130,28 @@ struct ItineraryListView: View {
   // MARK: - Itinerary List
 
   private var itineraryList: some View {
-    ScrollView {
-      LazyVStack(spacing: DesignTokens.Spacing.sm) {
-        ForEach(store.itineraries) { itinerary in
-          NavigationLink(value: itinerary) {
-            ItineraryCard(itinerary: itinerary)
-          }
-          .buttonStyle(.plain)
+    List {
+      ForEach(store.itineraries) { itinerary in
+        NavigationLink(value: itinerary) {
+          ItineraryCard(itinerary: itinerary)
         }
+        .buttonStyle(.plain)
+        .listRowInsets(EdgeInsets(
+          top: DesignTokens.Spacing.xs,
+          leading: DesignTokens.Spacing.md,
+          bottom: DesignTokens.Spacing.xs,
+          trailing: DesignTokens.Spacing.md
+        ))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
       }
-      .padding(.horizontal, DesignTokens.Spacing.md)
-      .padding(.vertical, DesignTokens.Spacing.sm)
+      .onDelete { offsets in
+        store.delete(at: offsets)
+      }
     }
+    .listStyle(.plain)
     .background(Color(.systemGroupedBackground))
+    .scrollContentBackground(.hidden)
   }
 }
 
