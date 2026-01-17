@@ -24,7 +24,7 @@ struct BlogPost: Codable, Identifiable, Hashable {
   let aiDuration: String?
   let aiBudget: String?
   var aiDays: [AiDay]?
-  let aiProcessedAt: String?
+  let aiProcessedAt: Int?
 
   // Match actual API snake_case field names
   enum CodingKeys: String, CodingKey {
@@ -78,7 +78,13 @@ struct AiDay: Codable, Identifiable, Hashable {
   var dayNumber: Int
   var theme: String?
   var pois: [AiPoi]
-  
+
+  enum CodingKeys: String, CodingKey {
+    case dayNumber = "day_number"
+    case theme
+    case pois
+  }
+
   // Hashable conformance for var properties
   func hash(into hasher: inout Hasher) {
     hasher.combine(dayNumber)

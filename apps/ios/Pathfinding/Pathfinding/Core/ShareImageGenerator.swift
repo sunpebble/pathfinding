@@ -713,7 +713,7 @@ private struct ShareCardFooter: View {
       aiDuration: "5天",
       aiBudget: "8000-12000元",
       aiDays: [],
-      aiProcessedAt: "2024-01-01"
+      aiProcessedAt: 1704067200
     ),
     style: .modern,
     coverImage: nil

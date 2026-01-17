@@ -296,7 +296,7 @@ struct PdfExportSheet: View {
         AiDay(dayNumber: 2, theme: "涩谷与原宿", pois: []),
         AiDay(dayNumber: 3, theme: "迪士尼乐园", pois: []),
       ],
-      aiProcessedAt: "2024-01-16"
+      aiProcessedAt: 1705363200
     ),
     onDismiss: {}
   )

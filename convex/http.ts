@@ -239,8 +239,16 @@ function convertKeysToSnakeCase(obj: any): any {
     const converted: any = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        // Skip internal Convex fields like _id and _creationTime
-        const newKey = key.startsWith('_') ? key : toSnakeCase(key);
+        let newKey: string;
+        if (key === '_id') {
+          // Convert Convex _id to standard id for iOS compatibility
+          newKey = 'id';
+        } else if (key.startsWith('_')) {
+          // Skip other internal Convex fields like _creationTime
+          continue;
+        } else {
+          newKey = toSnakeCase(key);
+        }
         converted[newKey] = convertKeysToSnakeCase(obj[key]);
       }
     }
