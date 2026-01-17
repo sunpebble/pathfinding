@@ -32,6 +32,9 @@ struct BlogDetailView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 0) {
+        // MARK: - Media Mode Picker
+        mediaModePicker
+
         // MARK: - Image Gallery
         imageGallery
 
@@ -135,6 +138,22 @@ struct BlogDetailView: View {
         content: .blogPost(guide),
         onDismiss: { showShareSheet = false }
       )
+    }
+  }
+
+  // MARK: - Media Mode Picker
+
+  @ViewBuilder
+  private var mediaModePicker: some View {
+    if let days = guide.aiDays, !days.isEmpty {
+      Picker("", selection: $mediaMode) {
+        ForEach(MediaMode.allCases, id: \.self) { mode in
+          Text(mode.rawValue).tag(mode)
+        }
+      }
+      .pickerStyle(.segmented)
+      .padding(.horizontal, DesignTokens.Spacing.lg)
+      .padding(.vertical, DesignTokens.Spacing.sm)
     }
   }
 
