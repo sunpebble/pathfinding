@@ -15,6 +15,7 @@ struct BlogDetailView: View {
   @State private var showImageViewer = false
   @State private var showPdfExport = false
   @State private var showShareSheet = false
+  @State private var showSaveSuccess = false
   @State private var mediaMode: MediaMode = .images
   @State private var mapCameraPosition: MapCameraPosition = .automatic
   @State private var mapCameraInitialized = false
@@ -240,6 +241,14 @@ struct BlogDetailView: View {
     }
     .sheet(item: $selectedMapPoi) { poi in
       BlogDetailPoiSheet(poi: poi)
+    }
+    .alert("保存成功", isPresented: $showSaveSuccess) {
+      Button("查看我的行程") {
+        // Navigate to itinerary tab if needed
+      }
+      Button("继续浏览", role: .cancel) {}
+    } message: {
+      Text("行程已保存到\"我的旅程\"")
     }
   }
 
@@ -590,8 +599,9 @@ struct BlogDetailView: View {
   // MARK: - Import Button
 
   private var importButton: some View {
-    NavigationLink {
-      ImportedItineraryView(guide: guide)
+    Button {
+      ItineraryStore.shared.save(from: guide)
+      showSaveSuccess = true
     } label: {
       HStack {
         Image(systemName: "square.and.arrow.down")
