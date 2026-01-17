@@ -327,41 +327,76 @@ http.route({
 
 /**
  * GET /api/guides/search
- * Search travel guides by query
+ * Search guides with filters
  */
 http.route({
   path: '/api/guides/search',
   method: 'GET',
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
-    const query = url.searchParams.get('q');
-    const limit = Number.parseInt(url.searchParams.get('limit') ?? '20');
-    const offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
-
-    if (!query) {
-      return errorResponse('缺少查询参数 q', 400);
-    }
+    const query = url.searchParams.get('q') || undefined;
+    const destination = url.searchParams.get('destination') || undefined;
+    const hasAiData = url.searchParams.get('hasAiData') === 'true' || undefined;
+    const daysAgo = url.searchParams.get('daysAgo')
+      ? Number.parseInt(url.searchParams.get('daysAgo')!)
+      : undefined;
+    const limit = url.searchParams.get('limit')
+      ? Number.parseInt(url.searchParams.get('limit')!)
+      : 30;
 
     try {
       const guides = await ctx.runQuery(api.travelGuides.search, {
         query,
-        limit: limit + offset,
+        destination,
+        hasAiData,
+        daysAgo,
+        limit,
       });
 
-      const data = guides.slice(offset, offset + limit);
+      const converted = guides.map(convertKeysToSnakeCase);
 
-      // Convert to snake_case for iOS compatibility
       return jsonResponse({
-        data: convertKeysToSnakeCase(data),
-        query,
+        data: converted,
         pagination: {
+          total: converted.length,
           limit,
-          offset,
-          total: guides.length,
+          offset: 0,
         },
       });
     } catch (error) {
-      return errorResponse(error instanceof Error ? error.message : '搜索失败');
+      return errorResponse(
+        error instanceof Error ? error.message : '搜索失败',
+        500
+      );
+    }
+  }),
+});
+
+/**
+ * GET /api/guides/destinations
+ * Get popular destinations
+ */
+http.route({
+  path: '/api/guides/destinations',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const limit = url.searchParams.get('limit')
+      ? Number.parseInt(url.searchParams.get('limit')!)
+      : 10;
+
+    try {
+      const destinations = await ctx.runQuery(
+        api.travelGuides.getPopularDestinations,
+        { limit }
+      );
+
+      return jsonResponse({ data: destinations });
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : '获取目的地失败',
+        500
+      );
     }
   }),
 });
