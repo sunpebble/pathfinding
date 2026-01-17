@@ -331,7 +331,7 @@ struct FlightDetailView: View {
           InfoRow(label: "常旅客号", value: ffn)
         }
 
-        if let itineraryId = currentBooking.itineraryId {
+        if currentBooking.itineraryId != nil {
           InfoRow(label: "关联行程", value: "已关联")
         }
       }

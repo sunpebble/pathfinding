@@ -6,7 +6,7 @@
  */
 
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
 
 // List data quality reports with pagination
 export const list = query({
@@ -112,5 +112,31 @@ export const getSummary = query({
           ? Math.max(...reports.map((r) => r.generatedAt))
           : null,
     };
+  },
+});
+
+/**
+ * Clean up old quality reports (internal, called by cron)
+ * Deletes reports older than 90 days
+ */
+export const cleanupOld = internalMutation({
+  handler: async (ctx) => {
+    const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+
+    // Find old reports
+    const oldReports = await ctx.db
+      .query('dataQualityReports')
+      .filter((q) => q.lt(q.field('generatedAt'), ninetyDaysAgo))
+      .collect();
+
+    // Delete them
+    let deletedCount = 0;
+    for (const report of oldReports) {
+      await ctx.db.delete(report._id);
+      deletedCount++;
+    }
+
+    console.log(`Cleaned up ${deletedCount} old quality reports`);
+    return { deletedCount };
   },
 });

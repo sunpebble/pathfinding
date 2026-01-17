@@ -59,7 +59,7 @@ struct FavoriteCollectionsView: View {
       Button("删除", role: .destructive) {
         if let collection = collectionToDelete {
           Task {
-            await store.deleteCollection(id: collection.id)
+            _ = await store.deleteCollection(id: collection.id)
             collectionToDelete = nil
           }
         }
@@ -275,7 +275,7 @@ struct CollectionDetailView: View {
       Button("确定", role: .destructive) {
         if let favorite = favoriteToDelete {
           Task {
-            await store.removeFromFavorites(itineraryId: favorite.itineraryId)
+            _ = await store.removeFromFavorites(itineraryId: favorite.itineraryId)
             await store.fetchCollection(id: collection.id)
             favoriteToDelete = nil
           }

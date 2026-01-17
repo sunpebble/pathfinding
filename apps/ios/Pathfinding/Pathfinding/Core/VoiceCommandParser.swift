@@ -104,7 +104,7 @@ final class VoiceCommandParser {
     ]
 
     for pattern in createPatterns {
-      if let match = text.range(of: pattern, options: .regularExpression) {
+      if text.range(of: pattern, options: .regularExpression) != nil {
         // Extract destination if present
         var destination: String?
         if pattern.contains("(.+)") {

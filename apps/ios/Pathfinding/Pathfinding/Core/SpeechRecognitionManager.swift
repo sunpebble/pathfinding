@@ -1,3 +1,4 @@
+import AVFAudio
 import AVFoundation
 import Foundation
 import Observation
@@ -19,7 +20,7 @@ final class SpeechRecognitionManager {
   private(set) var authorizationStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
 
   /// Microphone authorization status
-  private(set) var microphoneStatus: AVAudioSession.RecordPermission = .undetermined
+  private(set) var microphoneStatus: AVAudioApplication.recordPermission = .undetermined
 
   /// Current transcribed text
   private(set) var transcribedText = ""
@@ -62,7 +63,7 @@ final class SpeechRecognitionManager {
   /// Check and update authorization status
   func checkPermissions() {
     authorizationStatus = SFSpeechRecognizer.authorizationStatus()
-    microphoneStatus = AVAudioSession.sharedInstance().recordPermission
+    microphoneStatus = AVAudioApplication.shared.recordPermission
   }
 
   /// Request all necessary permissions
@@ -83,7 +84,7 @@ final class SpeechRecognitionManager {
 
     // Request microphone permission
     let micAuthorized = await withCheckedContinuation { continuation in
-      AVAudioSession.sharedInstance().requestRecordPermission { granted in
+      AVAudioApplication.requestRecordPermission { granted in
         continuation.resume(returning: granted)
       }
     }
@@ -240,7 +241,7 @@ final class SpeechRecognitionManager {
 
   private func startAudioLevelMonitoring() {
     audioLevelTimer?.invalidate()
-    audioLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+    audioLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
       // Timer keeps the audio level updates flowing
       // Actual level is updated in updateAudioLevel()
     }

@@ -27,8 +27,10 @@
     <!-- Custom Build Settings -->
     <key>PFEnvironment</key>
     <string>$(PF_ENVIRONMENT)</string>
-    <key>PFAPIBaseURL</key>
-    <string>$(PF_API_BASE_URL)</string>
+    <key>PFConvexURL</key>
+    <string>$(PF_CONVEX_URL)</string>
+    <key>PFAIServiceURL</key>
+    <string>$(PF_AI_SERVICE_URL)</string>
     <key>PFAPITimeout</key>
     <string>$(PF_API_TIMEOUT)</string>
     <key>PFEnableDebugLogging</key>

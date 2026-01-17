@@ -123,8 +123,8 @@ describe('sortByDistance', () => {
 
     const result = sortByDistance(items, 39.9042, 116.4074);
 
-    expect(result[0].name).toBe('near');
-    expect(result[2].name).toBe('far');
+    expect(result[0]?.name).toBe('near');
+    expect(result[2]?.name).toBe('far');
   });
 });
 
@@ -138,7 +138,7 @@ describe('filterByRadius', () => {
     const result = filterByRadius(items, 39.9042, 116.4074, 10);
 
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('near');
+    expect(result[0]?.name).toBe('near');
   });
 
   it('should return empty array if no items in radius', () => {

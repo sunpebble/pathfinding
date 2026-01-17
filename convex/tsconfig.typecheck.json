@@ -9,11 +9,14 @@
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
+    "declaration": false,
+    "declarationMap": false,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["*.ts", "_generated/**/*"]
+  "include": ["*.ts"],
+  "exclude": ["_generated/**/*"]
 }

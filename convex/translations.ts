@@ -173,7 +173,7 @@ export const listSavedTranslations = query({
         .withIndex('by_user_type', (q) =>
           q
             .eq('userId', args.userId)
-            .eq('translationType', args.translationType)
+            .eq('translationType', args.translationType!)
         );
     } else {
       q = ctx.db

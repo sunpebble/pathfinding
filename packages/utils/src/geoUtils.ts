@@ -102,7 +102,11 @@ export function calculateCenter(
   }
 
   if (coordinates.length === 1) {
-    return { lat: coordinates[0].lat, lon: coordinates[0].lon };
+    const coord = coordinates[0];
+    if (!coord) {
+      throw new Error('Invalid coordinate at index 0');
+    }
+    return { lat: coord.lat, lon: coord.lon };
   }
 
   let x = 0;

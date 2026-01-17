@@ -432,50 +432,50 @@ static var aiServiceURL: String {
 
 ### Phase 1: Convex HTTP Actions (预计 80+ 端点)
 
-- [ ] Guides API (`/api/guides/*`)
-- [ ] Chat Sessions API (`/api/chat/sessions/*`)
-- [ ] Translations Data API (`/api/translations/*`)
-- [ ] POIs API (`/api/pois/*`)
-- [ ] Follows API (`/api/follows/*`)
-- [ ] Travel Notes API (`/api/travel-notes/*`)
-- [ ] Budgets API (`/api/budgets/*`)
-- [ ] QA API (`/api/qa/*`)
-- [ ] Notifications API (`/api/notifications/*`)
-- [ ] Route Optimization API (`/api/optimize/*`)
-- [ ] Astronomy API (`/api/astronomy/*`)
-- [ ] Crawl Jobs API (`/api/crawl-jobs/*`)
-- [ ] Quality Reports API (`/api/quality-reports/*`)
-- [ ] Training Datasets API (`/api/training-datasets/*`)
+- [x] Guides API (`/api/guides/*`)
+- [x] Chat Sessions API (`/api/chat/sessions/*`)
+- [x] Translations Data API (`/api/translations/*`)
+- [x] POIs API (`/api/pois/*`)
+- [x] Follows API (`/api/follows/*`)
+- [x] Travel Notes API (`/api/travel-notes/*`)
+- [x] Budgets API (`/api/budgets/*`)
+- [x] QA API (`/api/qa/*`)
+- [x] Notifications API (`/api/notifications/*`)
+- [x] Crawl Jobs API (`/api/crawl-jobs/*`)
+- [x] Quality Reports API (`/api/quality-reports/*`)
+- [x] Training Datasets API (`/api/training-datasets/*`)
+- [x] Currency Rates API (`/api/currency/*`)
+- [x] Share Events API (`/api/share/*`)
 
 ### Phase 2: AI Service 精简
 
-- [ ] 创建 `apps/ai-service` 目录
-- [ ] 迁移 AI 相关路由
-- [ ] 迁移外部 API 路由 (天气、汇率、交通、航班)
+- [x] 创建 `apps/ai-service` 目录
+- [x] 迁移 AI 相关路由
+- [x] 迁移外部 API 路由 (天气、翻译 AI)
 - [ ] 迁移 PDF 导出
-- [ ] 迁移分享卡片生成
-- [ ] 更新 package.json 依赖
-- [ ] 配置独立启动脚本
+- [ ] 迁移交通、航班路由
+- [x] 更新 package.json 依赖
+- [x] 配置独立启动脚本
 
 ### Phase 3: iOS 应用修改
 
-- [ ] 更新 `AppConfig.swift` (双 URL)
-- [ ] 更新 `APIClient.swift` (路由逻辑)
-- [ ] 修改所有 Store 文件
-- [ ] 更新 xcconfig 配置
-- [ ] 端到端测试
+- [x] 更新 `AppConfig.swift` (双 URL)
+- [x] 更新 `APIClient.swift` (路由逻辑)
+- [x] 修改所有 Store 文件
+- [x] 更新 xcconfig 配置
+- [x] 端到端测试
 
 ### Phase 4: Dashboard 迁移
 
-- [ ] 爬虫任务管理页面
-- [ ] 数据质量报告页面
-- [ ] AI 富化控制页面
-- [ ] 训练数据集管理页面
+- [x] 爬虫任务管理页面
+- [x] 数据质量报告页面
+- [x] AI 富化控制页面
+- [x] 训练数据集管理页面
 
 ### Phase 5: 清理
 
-- [ ] 删除 `apps/crawler` 目录
-- [ ] 更新 NX workspace 配置
-- [ ] 更新 CLAUDE.md
-- [ ] 更新 README.md
+- [x] 删除 `apps/crawler` 目录
+- [x] 更新 NX workspace 配置
+- [x] 更新 CLAUDE.md
+- [x] 更新 README.md
 - [ ] 提交并部署

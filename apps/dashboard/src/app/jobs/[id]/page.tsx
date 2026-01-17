@@ -260,7 +260,8 @@ function StatusBadge({ status }: { status: string }) {
     },
   };
 
-  const { icon, className } = config[status] || config.cancelled;
+  const statusConfig = (config[status] || config.cancelled)!;
+  const { icon, className } = statusConfig;
 
   return (
     <span

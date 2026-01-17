@@ -107,7 +107,8 @@ struct DebugMenuView: View {
 
       // Log memory after generation
       let memory = MemoryManager.shared.appMemoryFootprint()
-      NSLog("[DebugMenu] Generated \(poiCount) POI itinerary. Memory: \(memory)")
+      let memoryStr = memory.map { "\($0)" } ?? "unknown"
+      NSLog("[DebugMenu] Generated \(poiCount) POI itinerary. Memory: \(memoryStr)")
     }
   }
 

@@ -46,9 +46,27 @@ enum AppConfig {
 
   // MARK: - API Configuration
 
-  static var apiBaseURL: String {
+  /// Convex URL for CRUD operations (guides, chat sessions, translations data, etc.)
+  static var convexURL: String {
     // Read from Info.plist (set via xcconfig)
-    if let url = infoPlistString(forKey: "PFAPIBaseURL"), !url.isEmpty {
+    if let url = infoPlistString(forKey: "PFConvexURL"), !url.isEmpty {
+      return url
+    }
+    // Fallback based on environment
+    switch Environment.current {
+    case .development:
+      return "https://convex.kunish.org"
+    case .staging:
+      return "https://convex.kunish.org"
+    case .production:
+      return "https://convex.kunish.org"
+    }
+  }
+
+  /// AI Service URL for AI/LLM, weather, transport, translations AI, PDF export
+  static var aiServiceURL: String {
+    // Read from Info.plist (set via xcconfig)
+    if let url = infoPlistString(forKey: "PFAIServiceURL"), !url.isEmpty {
       return url
     }
     // Fallback based on environment
@@ -56,10 +74,16 @@ enum AppConfig {
     case .development:
       return "http://127.0.0.1:3001"
     case .staging:
-      return "https://staging-api.pathfinding.org"
+      return "https://ai.pathfinding.org"
     case .production:
-      return "https://api.pathfinding.org"
+      return "https://ai.pathfinding.org"
     }
+  }
+
+  /// Legacy apiBaseURL - points to Convex for backwards compatibility
+  @available(*, deprecated, message: "Use convexURL or aiServiceURL instead")
+  static var apiBaseURL: String {
+    convexURL
   }
 
   // MARK: - Feature Flags
@@ -133,15 +157,16 @@ enum AppConfig {
   static func printConfiguration() {
     guard isDebugLoggingEnabled else { return }
     print("""
-      ╔════════════════════════════════════════╗
-      ║        Pathfinding Configuration       ║
-      ╠════════════════════════════════════════╣
-      ║ Environment: \(Environment.current.rawValue.padding(toLength: 20, withPad: " ", startingAt: 0)) ║
-      ║ API URL: \(apiBaseURL.prefix(28).padding(toLength: 28, withPad: " ", startingAt: 0)) ║
-      ║ Version: \(fullVersionString.padding(toLength: 28, withPad: " ", startingAt: 0)) ║
-      ║ Debug Logging: \(isDebugLoggingEnabled ? "Enabled " : "Disabled")                  ║
-      ║ Network Logging: \(isNetworkLoggingEnabled ? "Enabled " : "Disabled")                ║
-      ╚════════════════════════════════════════╝
+      ╔═══════════════════════════════════════════════╗
+      ║           Pathfinding Configuration           ║
+      ╠═══════════════════════════════════════════════╣
+      ║ Environment: \(Environment.current.rawValue.padding(toLength: 30, withPad: " ", startingAt: 0)) ║
+      ║ Convex URL: \(convexURL.prefix(31).padding(toLength: 31, withPad: " ", startingAt: 0)) ║
+      ║ AI Service URL: \(aiServiceURL.prefix(27).padding(toLength: 27, withPad: " ", startingAt: 0)) ║
+      ║ Version: \(fullVersionString.padding(toLength: 34, withPad: " ", startingAt: 0)) ║
+      ║ Debug Logging: \(isDebugLoggingEnabled ? "Enabled " : "Disabled")                       ║
+      ║ Network Logging: \(isNetworkLoggingEnabled ? "Enabled " : "Disabled")                     ║
+      ╚═══════════════════════════════════════════════╝
       """)
   }
 }

@@ -252,7 +252,7 @@ struct FlightBookingCard: View {
             }
             .frame(width: 100)
 
-            if let duration = flight.duration {
+            if flight.duration != nil {
               Text(flight.durationFormatted)
                 .font(.caption2)
                 .foregroundStyle(.secondary)

@@ -246,7 +246,7 @@ final class ShareManager {
     }
 
     if let url = URL(string: urlString) {
-      await UIApplication.shared.open(url)
+      _ = await UIApplication.shared.open(url)
     }
   }
 
@@ -268,7 +268,7 @@ final class ShareManager {
     components?.queryItems = queryItems
 
     if let url = components?.url {
-      await UIApplication.shared.open(url)
+      _ = await UIApplication.shared.open(url)
     }
   }
 
@@ -282,7 +282,7 @@ final class ShareManager {
     let urlString = "xhsdiscover://share"
 
     if let url = URL(string: urlString) {
-      await UIApplication.shared.open(url)
+      _ = await UIApplication.shared.open(url)
     }
   }
 
@@ -301,7 +301,7 @@ final class ShareManager {
     }
 
     if let url = URL(string: urlString) {
-      await UIApplication.shared.open(url)
+      _ = await UIApplication.shared.open(url)
     }
   }
 
@@ -314,7 +314,7 @@ final class ShareManager {
     let urlString = "snssdk1128://share"
 
     if let url = URL(string: urlString) {
-      await UIApplication.shared.open(url)
+      _ = await UIApplication.shared.open(url)
     }
   }
 
@@ -366,7 +366,7 @@ final class ShareManager {
       popover.permittedArrowDirections = []
     }
 
-    await presenter.present(activityVC, animated: true)
+    presenter.present(activityVC, animated: true)
   }
 
   private func getTopViewController() async -> UIViewController? {
@@ -393,12 +393,8 @@ final class ShareManager {
     platform: SharePlatform,
     shareUrl: String? = nil
   ) async {
-    do {
-      // This would call the API to record the share event
-      logger.info("Recorded share event for \(resourceType.rawValue)/\(resourceId) to \(platform.rawValue)")
-    } catch {
-      logger.error("Failed to record share event: \(error.localizedDescription)")
-    }
+    // This would call the API to record the share event
+    logger.info("Recorded share event for \(resourceType.rawValue)/\(resourceId) to \(platform.rawValue)")
   }
 
   /// Fetch share statistics for a resource

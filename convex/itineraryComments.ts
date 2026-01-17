@@ -560,7 +560,9 @@ export const listNotifications = query({
     // Enrich with actor info
     const enriched = await Promise.all(
       data.map(async (notification) => {
-        const actorProfile = await getUserProfile(ctx, notification.actorId);
+        const actorProfile = notification.actorId
+          ? await getUserProfile(ctx, notification.actorId)
+          : null;
         return {
           ...notification,
           id: notification._id,

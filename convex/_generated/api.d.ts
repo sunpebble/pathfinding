@@ -17,6 +17,7 @@ import type * as cities from '../cities.js';
 import type * as collaboratorPresence from '../collaboratorPresence.js';
 import type * as crawlJobs from '../crawlJobs.js';
 import type * as crons from '../crons.js';
+import type * as currencyRates from '../currencyRates.js';
 import type * as dataQualityReports from '../dataQualityReports.js';
 import type * as editOperations from '../editOperations.js';
 import type * as emergencyContacts from '../emergencyContacts.js';
@@ -104,6 +105,7 @@ declare const fullApi: ApiFromModules<{
   collaboratorPresence: typeof collaboratorPresence;
   crawlJobs: typeof crawlJobs;
   crons: typeof crons;
+  currencyRates: typeof currencyRates;
   dataQualityReports: typeof dataQualityReports;
   editOperations: typeof editOperations;
   emergencyContacts: typeof emergencyContacts;

@@ -135,7 +135,7 @@ export const listQuestionsByPoi = query({
         questions.sort((a, b) => a.createdAt - b.createdAt);
         break;
       case 'most_upvoted':
-        questions.sort((a, b) => b.upvotesCount - a.upvotesCount);
+        questions.sort((a, b) => (b.upvotesCount ?? 0) - (a.upvotesCount ?? 0));
         break;
       case 'most_active':
         questions.sort((a, b) => b.lastActivityAt - a.lastActivityAt);
@@ -169,7 +169,7 @@ export const listQuestionsByPoi = query({
             profile?.displayName ?? question.authorName ?? 'Anonymous',
           authorAvatarUrl: profile?.avatarUrl ?? question.authorAvatarUrl,
           userVote,
-          score: question.upvotesCount - question.downvotesCount,
+          score: (question.upvotesCount ?? 0) - (question.downvotesCount ?? 0),
         };
       })
     );
@@ -221,7 +221,7 @@ export const getQuestionById = query({
       authorName: profile?.displayName ?? question.authorName ?? 'Anonymous',
       authorAvatarUrl: profile?.avatarUrl ?? question.authorAvatarUrl,
       userVote,
-      score: question.upvotesCount - question.downvotesCount,
+      score: (question.upvotesCount ?? 0) - (question.downvotesCount ?? 0),
       poiName: poi?.name,
     };
   },
@@ -262,7 +262,7 @@ export const searchQuestions = query({
           authorName:
             profile?.displayName ?? question.authorName ?? 'Anonymous',
           authorAvatarUrl: profile?.avatarUrl ?? question.authorAvatarUrl,
-          score: question.upvotesCount - question.downvotesCount,
+          score: (question.upvotesCount ?? 0) - (question.downvotesCount ?? 0),
           poiName: poi?.name,
         };
       })
@@ -319,7 +319,7 @@ export const getMyQuestions = query({
           ...question,
           id: question._id,
           poiName: poi?.name,
-          score: question.upvotesCount - question.downvotesCount,
+          score: (question.upvotesCount ?? 0) - (question.downvotesCount ?? 0),
         };
       })
     );
@@ -487,12 +487,12 @@ export const getMyAnswers = query({
     const enriched = await Promise.all(
       paginated.map(async (answer) => {
         const question = await ctx.db.get(answer.questionId);
-        const poi = await ctx.db.get(answer.poiId);
+        const poi = answer.poiId ? await ctx.db.get(answer.poiId) : null;
         return {
           ...answer,
           id: answer._id,
           questionTitle: question?.title,
-          poiName: poi?.name,
+          poiName: poi && 'name' in poi ? poi.name : undefined,
           score: answer.upvotesCount - answer.downvotesCount,
         };
       })
@@ -715,8 +715,8 @@ export const voteQuestion = mutation({
         // Update counts
         const countUpdate =
           args.voteType === 'up'
-            ? { upvotesCount: question.upvotesCount - 1 }
-            : { downvotesCount: question.downvotesCount - 1 };
+            ? { upvotesCount: (question.upvotesCount ?? 0) - 1 }
+            : { downvotesCount: (question.downvotesCount ?? 0) - 1 };
         await ctx.db.patch(args.questionId, countUpdate);
 
         return { action: 'removed', voteType: null };
@@ -731,12 +731,12 @@ export const voteQuestion = mutation({
         const countUpdate =
           args.voteType === 'up'
             ? {
-                upvotesCount: question.upvotesCount + 1,
-                downvotesCount: question.downvotesCount - 1,
+                upvotesCount: (question.upvotesCount ?? 0) + 1,
+                downvotesCount: (question.downvotesCount ?? 0) - 1,
               }
             : {
-                upvotesCount: question.upvotesCount - 1,
-                downvotesCount: question.downvotesCount + 1,
+                upvotesCount: (question.upvotesCount ?? 0) - 1,
+                downvotesCount: (question.downvotesCount ?? 0) + 1,
               };
         await ctx.db.patch(args.questionId, countUpdate);
 
@@ -754,8 +754,8 @@ export const voteQuestion = mutation({
       // Update counts
       const countUpdate =
         args.voteType === 'up'
-          ? { upvotesCount: question.upvotesCount + 1 }
-          : { downvotesCount: question.downvotesCount + 1 };
+          ? { upvotesCount: (question.upvotesCount ?? 0) + 1 }
+          : { downvotesCount: (question.downvotesCount ?? 0) + 1 };
       await ctx.db.patch(args.questionId, countUpdate);
 
       // Notify question author of upvote

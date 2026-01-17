@@ -400,9 +400,7 @@ final class VideoRecordingManager: NSObject {
 
     // Set video orientation
     if let connection = output.connection(with: .video) {
-      if connection.isVideoOrientationSupported {
-        connection.videoOrientation = currentVideoOrientation()
-      }
+      connection.videoRotationAngle = currentVideoRotationAngle()
       if connection.isVideoMirroringSupported && cameraPosition == .front {
         connection.isVideoMirrored = true
       }
@@ -539,17 +537,17 @@ final class VideoRecordingManager: NSObject {
     recordingTimer = nil
   }
 
-  private func currentVideoOrientation() -> AVCaptureVideoOrientation {
+  private func currentVideoRotationAngle() -> CGFloat {
     guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
-      return .portrait
+      return 0  // 0 degrees = portrait
     }
 
     switch windowScene.interfaceOrientation {
-    case .portrait: return .portrait
-    case .portraitUpsideDown: return .portraitUpsideDown
-    case .landscapeLeft: return .landscapeLeft
-    case .landscapeRight: return .landscapeRight
-    default: return .portrait
+    case .portrait: return 0
+    case .portraitUpsideDown: return 180
+    case .landscapeLeft: return 270
+    case .landscapeRight: return 90
+    default: return 0
     }
   }
 

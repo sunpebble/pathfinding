@@ -225,17 +225,7 @@ final class TicketStore {
       let count = try await APIClient.shared.markAllTicketRemindersRead()
       unreadCount = 0
 
-      // Update local state
-      for i in reminders.indices {
-        if reminders[i].isTriggered && !reminders[i].isRead {
-          // Create updated reminder (since TicketReminder is a struct)
-          var updated = reminders[i]
-          // Note: We can't directly modify isRead since it's let,
-          // so we'll refetch reminders
-        }
-      }
-
-      // Refetch to get updated state
+      // Refetch to get updated state from server
       await fetchReminders(includeTriggered: true)
 
       logger.info("Marked \(count) reminders as read")

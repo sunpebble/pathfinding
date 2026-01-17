@@ -62,7 +62,7 @@ struct ContentView: View {
           Label(Tab.guides.title, systemImage: appState.selectedTab == .guides ? Tab.guides.selectedIcon : Tab.guides.icon)
         }
 
-      ChatSessionListView(userId: AuthManager.shared.userId ?? "guest")
+      ChatSessionListView(userId: AuthManager.shared.currentUserId ?? "guest")
         .tag(Tab.chat)
         .tabItem {
           Label(Tab.chat.title, systemImage: appState.selectedTab == .chat ? Tab.chat.selectedIcon : Tab.chat.icon)

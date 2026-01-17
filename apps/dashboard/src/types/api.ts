@@ -3,13 +3,17 @@
  */
 export interface GuideWithAI {
   _id: string;
+  id?: string; // Duplicate ID field for compatibility
   title: string;
   content?: string;
   content_html?: string;
   source_platform: string;
   source_url?: string;
+  source_external_id?: string;
   author_name?: string;
   published_at?: string;
+  crawled_at?: string;
+  updated_at?: string;
   likes_count: number;
   views_count: number;
   comments_count: number;
@@ -26,7 +30,13 @@ export interface GuideWithAI {
   aiDuration?: string;
   aiBudget?: string;
   aiDays?: AiDay[];
+  ai_days?: AiDay[]; // Duplicate for snake_case compatibility
   aiProcessedAt?: number;
+  geocoding_metrics?: {
+    total_pois: number;
+    average_confidence: number;
+    low_confidence_count: number;
+  };
 }
 
 export interface AiDay {

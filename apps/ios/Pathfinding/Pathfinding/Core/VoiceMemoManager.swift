@@ -1,4 +1,5 @@
 @preconcurrency import AVFoundation
+@preconcurrency import AVFAudio
 import Foundation
 import Observation
 import OSLog
@@ -90,10 +91,9 @@ final class VoiceMemoManager {
   /// Start recording a voice memo
   func startRecording() async throws {
     // Request microphone permission if needed
-    let audioSession = AVAudioSession.sharedInstance()
-    if audioSession.recordPermission != .granted {
+    if AVAudioApplication.shared.recordPermission != .granted {
       let granted = await withCheckedContinuation { continuation in
-        audioSession.requestRecordPermission { granted in
+        AVAudioApplication.requestRecordPermission { granted in
           continuation.resume(returning: granted)
         }
       }
@@ -103,6 +103,7 @@ final class VoiceMemoManager {
     }
 
     // Configure audio session
+    let audioSession = AVAudioSession.sharedInstance()
     try audioSession.setCategory(.playAndRecord, mode: .default, options: .defaultToSpeaker)
     try audioSession.setActive(true)
 

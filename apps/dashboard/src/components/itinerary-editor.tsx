@@ -314,7 +314,15 @@ function DayEditor({
       : 'skip'
   );
 
-  const pois = poisQuery || [];
+  const pois = (poisQuery || []).map((poi) => ({
+    id: poi._id,
+    name: poi.name,
+    category: poi.category,
+    address: poi.address,
+    rating: poi.rating,
+    latitude: poi.latitude,
+    longitude: poi.longitude,
+  }));
 
   const handleAddPoi = async (poiId: string) => {
     setIsSaving(true);

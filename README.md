@@ -17,18 +17,18 @@ A mobile-first travel itinerary planning application with offline support, POI r
 
 **Tech Stack**:
 
-- **Backend**: Hono (Node.js/TypeScript)
+- **Backend**: Convex (self-hosted) - handles all data storage, queries, and real-time sync via HTTP Actions
+- **AI Service**: Hono (Node.js/TypeScript) - AI/LLM, weather, transport, PDF export
 - **Frontend**: Next.js (Dashboard), SwiftUI (iOS)
-- **Database**: Convex (self-hosted)
 - **AI**: Ollama with Gemma 3 model
+- **Geocoding**: Nominatim (OpenStreetMap)
 - **Build**: pnpm workspaces + nx
 
 **Project Structure**:
 
 ```
 apps/
-├── api/              # Hono API server (port 8000)
-├── crawler/          # Data crawler + AI enrichment (port 3001)
+├── ai-service/       # AI/LLM, weather, transport, PDF export (port 3001)
 ├── dashboard/        # Next.js admin dashboard (port 3002)
 └── ios/              # SwiftUI iOS app (iOS 17+)
     └── Pathfinding/
@@ -39,7 +39,7 @@ apps/
             └── Features/ # SwiftUI views
 
 packages/
-├── convex/    # Convex database schema and functions
+├── convex/    # Convex database schema, functions, and HTTP Actions
 ├── types/     # Shared TypeScript types
 ├── utils/     # Shared utility functions
 └── constants/ # Shared constants
@@ -47,18 +47,62 @@ packages/
 
 ## 📚 API Documentation
 
-### Base URL
+### Service URLs
 
-- **Production**: `https://api.pathfinding.app/v1`
-- **Local**: `http://localhost:8000/v1`
+| Service    | Port | Description                                            |
+| ---------- | ---- | ------------------------------------------------------ |
+| Convex     | -    | CRUD operations via HTTP Actions (`convex.kunish.org`) |
+| AI Service | 3001 | AI/LLM, weather, transport, PDF export                 |
+| Dashboard  | 3002 | Admin dashboard (Next.js)                              |
+
+### Base URLs
+
+- **Convex (CRUD)**: `https://convex.kunish.org/api`
+- **AI Service (Local)**: `http://localhost:3001/api`
+- **AI Service (Production)**: `https://ai.pathfinding.org/api`
 
 ### Authentication
 
 All protected endpoints require JWT Bearer token from Convex Auth.
 
 ```bash
-curl -H "Authorization: Bearer <token>" http://localhost:8000/v1/itineraries
+curl -H "Authorization: Bearer <token>" https://convex.kunish.org/api/guides
 ```
+
+---
+
+## Convex HTTP Actions (CRUD)
+
+The primary backend for all data operations. All CRUD endpoints are served via Convex HTTP Actions:
+
+- `/api/guides/*` - Travel guides
+- `/api/chat/sessions/*` - Chat session management
+- `/api/translations/*` - Translation data
+- `/api/pois/*` - Points of interest
+- `/api/follows/*` - User follows
+- `/api/travel-notes/*` - Travel notes
+- `/api/budgets/*` - Budget tracking
+- `/api/qa/*` - Q&A
+- `/api/notifications/*` - Notifications
+- `/api/comments/*` - Comments
+- `/api/collections/*` - Collections
+- `/api/share/*` - Share events
+
+See [packages/convex/http.ts](./packages/convex/http.ts) for all HTTP Actions.
+
+---
+
+## AI Service Endpoints
+
+The AI Service handles external API integrations:
+
+- `/api/ai/*` - AI processing (Ollama)
+- `/api/weather/*` - Weather data (OpenWeatherMap)
+- `/api/transport/*` - Transport routing (高德地图)
+- `/api/pdf/*` - PDF export
+- `/api/flights/*` - Flight lookup
+- `/api/translations/text` - AI translation
+- `/api/chat/query` - AI chat query
 
 ---
 
@@ -67,7 +111,7 @@ curl -H "Authorization: Bearer <token>" http://localhost:8000/v1/itineraries
 ### List User's Itineraries
 
 ```
-GET /itineraries
+GET /api/itineraries
 ```
 
 **Query Parameters**:
@@ -107,7 +151,7 @@ GET /itineraries
 ### Create Itinerary
 
 ```
-POST /itineraries
+POST /api/itineraries
 Content-Type: application/json
 Authorization: Bearer <token>
 ```
@@ -139,18 +183,6 @@ Authorization: Bearer <token>
       "day_number": 1,
       "date": "2026-01-10",
       "items": []
-    },
-    {
-      "id": "uuid",
-      "day_number": 2,
-      "date": "2026-01-11",
-      "items": []
-    },
-    {
-      "id": "uuid",
-      "day_number": 3,
-      "date": "2026-01-12",
-      "items": []
     }
   ],
   "visibility": "private",
@@ -162,253 +194,12 @@ Authorization: Bearer <token>
 
 ---
 
-### Get Itinerary Details
-
-```
-GET /itineraries/:id
-Authorization: Bearer <token>
-```
-
-**Response** (200 OK):
-
-```json
-{
-  "id": "uuid",
-  "title": "杭州 3 日游",
-  "city_id": "uuid",
-  "city_name": "杭州",
-  "start_date": "2026-01-10",
-  "end_date": "2026-01-12",
-  "days": [
-    {
-      "id": "uuid",
-      "day_number": 1,
-      "date": "2026-01-10",
-      "items": [
-        {
-          "id": "uuid",
-          "order_index": 0,
-          "poi_id": "uuid",
-          "poi_name": "西湖",
-          "poi_category": "attraction",
-          "start_time": "09:00",
-          "end_time": "12:00",
-          "notes": "Beautiful lake with scenic views",
-          "transport_mode": "walk",
-          "transport_minutes": 0,
-          "address": "浙江省杭州市..."
-        }
-      ]
-    }
-  ],
-  "visibility": "private",
-  "created_at": "2026-01-03T00:00:00Z",
-  "updated_at": "2026-01-03T00:00:00Z"
-}
-```
-
----
-
-### Copy Itinerary
-
-```
-POST /itineraries/:id/copy
-Content-Type: application/json
-Authorization: Bearer <token>
-```
-
-**Request Body**:
-
-```json
-{
-  "start_date": "2026-02-10",
-  "end_date": "2026-02-12"
-}
-```
-
-**Response** (201 Created): Same as Create Itinerary response
-
----
-
-### List Public Itineraries (Community)
-
-```
-GET /itineraries/public
-```
-
-**Query Parameters**:
-
-- `limit` (integer, default: 20): Results per page
-- `offset` (integer, default: 0): Pagination offset
-- `city_id` (string, optional): Filter by city
-- `sort` (string): 'recent' (default) or 'popular'
-
-**Response** (200 OK): Same structure as List User's Itineraries
-
----
-
-## Itinerary Items
-
-### Add Item to Day
-
-```
-POST /itineraries/:itinerary_id/days/:day_id/items
-Content-Type: application/json
-Authorization: Bearer <token>
-```
-
-**Request Body**:
-
-```json
-{
-  "poi_id": "uuid",
-  "start_time": "09:00",
-  "end_time": "12:00",
-  "notes": "Optional notes about this activity",
-  "order_index": 0
-}
-```
-
-**Response** (201 Created):
-
-```json
-{
-  "id": "uuid",
-  "poi_id": "uuid",
-  "poi_name": "西湖",
-  "poi_category": "attraction",
-  "start_time": "09:00",
-  "end_time": "12:00",
-  "notes": "Optional notes about this activity",
-  "transport_mode": null,
-  "transport_minutes": 0,
-  "order_index": 0,
-  "created_at": "2026-01-03T00:00:00Z",
-  "updated_at": "2026-01-03T00:00:00Z"
-}
-```
-
----
-
-### List Day's Items
-
-```
-GET /itineraries/:itinerary_id/days/:day_id/items
-Authorization: Bearer <token>
-```
-
-**Response** (200 OK):
-
-```json
-{
-  "data": [
-    {
-      "id": "uuid",
-      "poi_id": "uuid",
-      "poi_name": "西湖",
-      "poi_category": "attraction",
-      "start_time": "09:00",
-      "end_time": "12:00",
-      "notes": "Beautiful lake view",
-      "order_index": 0,
-      "created_at": "2026-01-03T00:00:00Z"
-    }
-  ]
-}
-```
-
----
-
-### Update Item
-
-```
-PATCH /itineraries/:itinerary_id/days/:day_id/items/:item_id
-Content-Type: application/json
-Authorization: Bearer <token>
-```
-
-**Request Body** (partial update):
-
-```json
-{
-  "start_time": "10:00",
-  "end_time": "13:00",
-  "notes": "Updated notes",
-  "transport_mode": "taxi",
-  "transport_minutes": 15
-}
-```
-
-**Response** (200 OK): Updated item object
-
----
-
-### Delete Item
-
-```
-DELETE /itineraries/:itinerary_id/days/:day_id/items/:item_id
-Authorization: Bearer <token>
-```
-
-**Response** (204 No Content)
-
----
-
-### Reorder Items
-
-```
-POST /itineraries/:itinerary_id/days/:day_id/items/reorder
-Content-Type: application/json
-Authorization: Bearer <token>
-```
-
-**Request Body**:
-
-```json
-{
-  "items": [
-    { "id": "uuid1", "order_index": 0 },
-    { "id": "uuid2", "order_index": 1 },
-    { "id": "uuid3", "order_index": 2 }
-  ]
-}
-```
-
-**Response** (200 OK):
-
-```json
-{
-  "data": [
-    {
-      "id": "uuid1",
-      "order_index": 0,
-      "poi_name": "西湖",
-      "start_time": "09:00"
-    },
-    {
-      "id": "uuid2",
-      "order_index": 1,
-      "poi_name": "龙井茶园",
-      "start_time": "13:00"
-    },
-    {
-      "id": "uuid3",
-      "order_index": 2,
-      "poi_name": "雷峰塔",
-      "start_time": "16:00"
-    }
-  ]
-}
-```
-
----
-
 ## Points of Interest (POIs)
 
 ### Search POIs
 
 ```
-GET /pois/search
+GET /api/pois/search
 ```
 
 **Query Parameters**:
@@ -449,86 +240,6 @@ GET /pois/search
   }
 }
 ```
-
----
-
-### Get Recommendations
-
-```
-GET /pois/recommend
-```
-
-**Query Parameters**:
-
-- `city_id` (string, required): City to get recommendations for
-- `category` (string, optional): Filter by category
-- `sort` (string): 'rating' (default), 'distance', 'popularity'
-- `limit` (integer, default: 20): Results per page
-
-**Response** (200 OK): Same structure as Search POIs
-
----
-
-### Get Nearby POIs
-
-```
-GET /pois/nearby
-```
-
-**Query Parameters**:
-
-- `latitude` (number, required): User's latitude
-- `longitude` (number, required): User's longitude
-- `radius_km` (number, default: 1): Search radius in kilometers
-- `category` (string, optional): Filter by category
-- `limit` (integer, default: 20): Results per page
-
-**Response** (200 OK): Same structure as Search POIs
-
----
-
-## Reminders
-
-### Create Reminder
-
-```
-POST /items/:item_id/reminders
-Content-Type: application/json
-Authorization: Bearer <token>
-```
-
-**Request Body**:
-
-```json
-{
-  "minutes_before": 30
-}
-```
-
-**Response** (201 Created):
-
-```json
-{
-  "id": "uuid",
-  "item_id": "uuid",
-  "user_id": "uuid",
-  "minutes_before": 30,
-  "scheduled_at": "2026-01-10T08:30:00Z",
-  "sent_at": null,
-  "created_at": "2026-01-03T00:00:00Z"
-}
-```
-
----
-
-### Delete Reminder
-
-```
-DELETE /reminders/:id
-Authorization: Bearer <token>
-```
-
-**Response** (204 No Content)
 
 ---
 
@@ -587,11 +298,13 @@ All error responses follow this format:
 3. **Start Backend Services**:
 
    ```bash
-   pnpm dev  # Starts API, Crawler, Dashboard
+   pnpm dev              # Starts Dashboard
+   pnpm dev:ai-service   # Starts AI Service (separate terminal)
+   pnpm dev:convex       # Starts Convex dev server (separate terminal)
    ```
 
-   - API: `http://localhost:8000`
-   - Crawler: `http://localhost:3001`
+   - Convex: `https://convex.kunish.org`
+   - AI Service: `http://localhost:3001`
    - Dashboard: `http://localhost:3002`
 
 4. **Start iOS App**:
@@ -627,8 +340,7 @@ All error responses follow this format:
    docker compose up -d
    ```
 
-   - API: `http://localhost:8000`
-   - Crawler: `http://localhost:3001`
+   - AI Service: `http://localhost:3001`
 
 3. **View logs**:
 
@@ -644,11 +356,8 @@ All error responses follow this format:
 ### Building Individual Images
 
 ```bash
-# Build API image
-docker build -f apps/api/Dockerfile -t pathfinding-api .
-
-# Build Crawler image
-docker build -f apps/crawler/Dockerfile -t pathfinding-crawler .
+# Build AI Service image
+docker build -f apps/ai-service/Dockerfile -t pathfinding-ai-service .
 ```
 
 ### Production Deployment
@@ -657,8 +366,7 @@ Pre-built images are available from GitHub Container Registry:
 
 ```bash
 # Pull latest images
-docker pull ghcr.io/kunish-homelab/pathfinding-api:latest
-docker pull ghcr.io/kunish-homelab/pathfinding-crawler:latest
+docker pull ghcr.io/kunish-homelab/pathfinding-ai-service:latest
 
 # Run with docker compose
 docker compose up -d
@@ -709,7 +417,7 @@ See [packages/convex/schema.ts](./packages/convex/schema.ts) for detailed schema
 1. Follow the setup in [specs/001-travel-itinerary/quickstart.md](./specs/001-travel-itinerary/quickstart.md)
 2. Create feature branch from `main`
 3. Make changes following ESLint/Prettier rules (auto-fixed with pre-commit)
-4. Run tests: `pnpm lint && cd apps/api && deno task test`
+4. Run tests: `pnpm lint && pnpm test`
 5. Submit PR with description of changes
 
 ---

@@ -24,7 +24,9 @@ struct VideoRecordingView: View {
         .ignoresSafeArea()
         .onTapGesture(coordinateSpace: .local) { location in
           // Tap to focus
-          if let view = UIApplication.shared.windows.first?.rootViewController?.view {
+          if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+             let window = scene.windows.first,
+             let view = window.rootViewController?.view {
             videoManager.focus(at: location, in: view)
           }
         }

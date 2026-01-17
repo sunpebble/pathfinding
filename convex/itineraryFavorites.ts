@@ -264,9 +264,11 @@ export const listByUser = query({
         const city = (await ctx.db.get(
           itinerary.cityId
         )) as Doc<'cities'> | null;
-        const collection = (await ctx.db.get(
-          fav.collectionId
-        )) as Doc<'favoriteCollections'> | null;
+        const collection = fav.collectionId
+          ? ((await ctx.db.get(
+              fav.collectionId
+            )) as Doc<'favoriteCollections'> | null)
+          : null;
 
         return {
           ...fav,

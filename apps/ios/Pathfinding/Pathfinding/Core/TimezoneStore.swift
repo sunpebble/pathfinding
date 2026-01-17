@@ -37,6 +37,8 @@ final class TimezoneStore {
   var errorMessage: String?
 
   /// Timer for updating clocks
+  /// Note: Using nonisolated(unsafe) because Timer is not Sendable
+  /// and we need mutable access from both actor and timer callback
   nonisolated(unsafe) private var updateTimer: Timer?
 
   /// Current time (updated every second)

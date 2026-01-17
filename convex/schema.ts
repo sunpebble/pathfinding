@@ -6060,4 +6060,44 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_public', ['isPublic']),
+
+  // ============================================
+  // Currency Rates Cache (汇率缓存)
+  // ============================================
+
+  /**
+   * Cached exchange rates for a base currency
+   */
+  currencyRates: defineTable({
+    base: v.string(), // ISO 4217 currency code (e.g., 'CNY', 'USD')
+    rates: v.any(), // Record<string, number> - rates for all target currencies
+    fetchedAt: v.number(), // Unix timestamp in milliseconds
+  })
+    .index('by_base', ['base'])
+    .index('by_fetched_at', ['fetchedAt']),
+
+  /**
+   * Cached exchange rate history for currency pairs
+   */
+  currencyHistory: defineTable({
+    base: v.string(), // Base currency code
+    target: v.string(), // Target currency code
+    days: v.number(), // Number of days in history
+    data: v.object({
+      base: v.string(),
+      target: v.string(),
+      rates: v.array(
+        v.object({
+          date: v.string(), // ISO date string YYYY-MM-DD
+          rate: v.number(),
+        })
+      ),
+      change: v.number(), // Percentage change over the period
+      trend: v.union(v.literal('up'), v.literal('down'), v.literal('stable')),
+    }),
+    fetchedAt: v.number(), // Unix timestamp in milliseconds
+  })
+    .index('by_pair', ['base', 'target'])
+    .index('by_pair_days', ['base', 'target', 'days'])
+    .index('by_fetched_at', ['fetchedAt']),
 });

@@ -233,7 +233,7 @@ final class WiFiStore {
         do {
             try await apiClient.markWiFiReviewHelpful(reviewId: reviewId)
             // Update local state
-            if let index = currentSpotReviews.firstIndex(where: { $0.id == reviewId }) {
+            if currentSpotReviews.contains(where: { $0.id == reviewId }) {
                 // Note: In a real app, we'd update the helpfulCount properly
                 logger.info("Marked review as helpful: \(reviewId)")
             }

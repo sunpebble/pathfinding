@@ -1,0 +1,36 @@
+{
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "name": "convex",
+  "projectType": "library",
+  "sourceRoot": "convex",
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint . --ext .ts",
+        "cwd": "convex"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.typecheck.json",
+        "cwd": "convex"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx convex deploy",
+        "cwd": "."
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx convex dev",
+        "cwd": "."
+      }
+    }
+  }
+}

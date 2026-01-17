@@ -4,11 +4,18 @@ import OSLog
 /// Empty response type for API calls that don't return data
 struct EmptyResponse: Codable {}
 
-/// API client for Crawler service with caching and retry logic
+/// Service type for API routing
+enum APIServiceType {
+  case convex      // CRUD operations - guides, chat sessions, translations data, etc.
+  case aiService   // AI/LLM, weather, transport, translations AI, PDF export
+}
+
+/// API client with dual-service routing and caching
 actor APIClient {
   static let shared = APIClient()
 
-  let baseURL: URL
+  let convexURL: URL
+  let aiServiceURL: URL
   let session: URLSession
   private let decoder: JSONDecoder
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "APIClient")
@@ -22,9 +29,25 @@ actor APIClient {
     let cachedAt: Date
   }
 
-  init(baseURL: String? = nil) {
-    let urlString = baseURL ?? AppConfig.apiBaseURL
-    self.baseURL = URL(string: urlString)!
+  /// Paths that should be routed to AI Service
+  private static let aiServicePaths: Set<String> = [
+    "api/ai",
+    "api/weather",
+    "api/transport",
+    "api/pdf",
+    "api/flights",
+    "api/translations/text",
+    "api/translations/photo",
+    "api/translations/detect",
+    "api/translations/batch",
+    "api/chat/query",
+  ]
+
+  init(convexURL: String? = nil, aiServiceURL: String? = nil) {
+    let convexUrlString = convexURL ?? AppConfig.convexURL
+    let aiServiceUrlString = aiServiceURL ?? AppConfig.aiServiceURL
+    self.convexURL = URL(string: convexUrlString)!
+    self.aiServiceURL = URL(string: aiServiceUrlString)!
 
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = AppConfig.networkTimeoutRequest
@@ -33,6 +56,38 @@ actor APIClient {
     self.session = URLSession(configuration: config)
 
     self.decoder = JSONDecoder()
+  }
+
+  /// Determine which service to use for a given path
+  private func serviceType(for path: String) -> APIServiceType {
+    // Check if path starts with any AI service path
+    for aiPath in Self.aiServicePaths {
+      if path.hasPrefix(aiPath) {
+        return .aiService
+      }
+    }
+    return .convex
+  }
+
+  /// Get base URL for a given path
+  private func baseURL(for path: String) -> URL {
+    switch serviceType(for: path) {
+    case .convex:
+      return convexURL
+    case .aiService:
+      return aiServiceURL
+    }
+  }
+
+  /// Default baseURL - points to Convex for CRUD operations
+  /// AI Service endpoints should use aiServiceURL directly
+  var baseURL: URL {
+    convexURL
+  }
+
+  /// Construct full URL for a given path, routing to the appropriate service
+  private func url(for path: String) -> URL {
+    baseURL(for: path).appendingPathComponent(path)
   }
 
   /// Fetch travel guides with caching
@@ -877,7 +932,7 @@ actor APIClient {
     city: String? = nil,
     modes: [TransportMode]? = nil
   ) async throws -> TransportComparison {
-    let url = baseURL.appendingPathComponent("api/transport/compare")
+    let url = aiServiceURL.appendingPathComponent("api/transport/compare")
 
     let body = TransportCompareRequest(
       origin: origin,
@@ -898,7 +953,7 @@ actor APIClient {
     destination: TransportCoordinate
   ) async throws -> TransportRoute {
     var components = URLComponents(
-      url: baseURL.appendingPathComponent("api/transport/walking"),
+      url: aiServiceURL.appendingPathComponent("api/transport/walking"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -922,7 +977,7 @@ actor APIClient {
     destination: TransportCoordinate
   ) async throws -> TransportRoute {
     var components = URLComponents(
-      url: baseURL.appendingPathComponent("api/transport/cycling"),
+      url: aiServiceURL.appendingPathComponent("api/transport/cycling"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -947,7 +1002,7 @@ actor APIClient {
     city: String? = nil
   ) async throws -> DrivingRouteData {
     var components = URLComponents(
-      url: baseURL.appendingPathComponent("api/transport/driving"),
+      url: aiServiceURL.appendingPathComponent("api/transport/driving"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -976,7 +1031,7 @@ actor APIClient {
     city: String
   ) async throws -> TransportRoute {
     var components = URLComponents(
-      url: baseURL.appendingPathComponent("api/transport/transit"),
+      url: aiServiceURL.appendingPathComponent("api/transport/transit"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -998,7 +1053,7 @@ actor APIClient {
   /// Get city transit information
   func getCityTransitInfo(cityName: String) async throws -> CityTransitInfo {
     let encodedCity = cityName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? cityName
-    let url = baseURL.appendingPathComponent("api/transport/city/\(encodedCity)")
+    let url = aiServiceURL.appendingPathComponent("api/transport/city/\(encodedCity)")
 
     let data = try await fetchWithRetry(url: url)
     let result = try decoder.decode(CityTransitInfoResponse.self, from: data)
@@ -1008,7 +1063,7 @@ actor APIClient {
   /// Get transit pass recommendations for a city
   func getTransitPasses(cityName: String) async throws -> [TransitPassRecommendation] {
     let encodedCity = cityName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? cityName
-    let url = baseURL.appendingPathComponent("api/transport/passes/\(encodedCity)")
+    let url = aiServiceURL.appendingPathComponent("api/transport/passes/\(encodedCity)")
 
     let data = try await fetchWithRetry(url: url)
     let result = try decoder.decode(TransitPassesResponse.self, from: data)
@@ -1018,7 +1073,7 @@ actor APIClient {
   /// Get transit tips for a city
   func getTransitTips(cityName: String) async throws -> [String] {
     let encodedCity = cityName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? cityName
-    let url = baseURL.appendingPathComponent("api/transport/tips/\(encodedCity)")
+    let url = aiServiceURL.appendingPathComponent("api/transport/tips/\(encodedCity)")
 
     let data = try await fetchWithRetry(url: url)
     let result = try decoder.decode(TransitTipsResponse.self, from: data)
@@ -1030,7 +1085,7 @@ actor APIClient {
     routes: [TransportRouteRequest],
     city: String? = nil
   ) async throws -> [TransportComparison] {
-    let url = baseURL.appendingPathComponent("api/transport/batch")
+    let url = aiServiceURL.appendingPathComponent("api/transport/batch")
 
     let body = BatchTransportRequest(routes: routes, city: city)
     let data = try await postWithRetry(url: url, body: body)
@@ -1043,7 +1098,7 @@ actor APIClient {
   /// Fetch available PDF templates
   func fetchPdfTemplates(language: String = "zh") async throws -> [String: PdfTemplate] {
     var components = URLComponents(
-      url: baseURL.appendingPathComponent("api/pdf/templates"),
+      url: aiServiceURL.appendingPathComponent("api/pdf/templates"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -1062,7 +1117,7 @@ actor APIClient {
 
   /// Get PDF preview info for a guide
   func fetchGuidePdfPreview(guideId: String) async throws -> PdfPreviewInfo {
-    let url = baseURL.appendingPathComponent("api/pdf/guide/\(guideId)/preview")
+    let url = aiServiceURL.appendingPathComponent("api/pdf/guide/\(guideId)/preview")
 
     let body = EmptyBody()
     let data = try await postWithRetry(url: url, body: body)
@@ -1075,7 +1130,7 @@ actor APIClient {
     guideId: String,
     options: PdfExportOptions
   ) async throws -> URL {
-    let url = baseURL.appendingPathComponent("api/pdf/guide/\(guideId)")
+    let url = aiServiceURL.appendingPathComponent("api/pdf/guide/\(guideId)")
 
     logger.info("Generating PDF for guide \(guideId)")
 

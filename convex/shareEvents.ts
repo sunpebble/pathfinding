@@ -146,7 +146,7 @@ export const trackEvent = mutation({
     if (args.shareCode) {
       shareLink = await ctx.db
         .query('shareLinks')
-        .withIndex('by_share_code', (q) => q.eq('shareCode', args.shareCode))
+        .withIndex('by_share_code', (q) => q.eq('shareCode', args.shareCode!))
         .first();
     } else if (args.shareLinkId) {
       shareLink = await ctx.db.get(args.shareLinkId);
@@ -331,7 +331,9 @@ export const getStats = query({
       }
     > = {};
 
-    const totalShares = shareEvents.filter((e) => e.eventType === 'share').length;
+    const totalShares = shareEvents.filter(
+      (e) => e.eventType === 'share'
+    ).length;
     let totalClicks = 0;
     let totalViews = 0;
     let totalSaves = 0;

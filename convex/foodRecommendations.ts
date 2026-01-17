@@ -1,4 +1,5 @@
 import type { Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -650,7 +651,7 @@ export const getCuisineTypes = query({
       pois = await ctx.db
         .query('pois')
         .withIndex('by_city_category', (q) =>
-          q.eq('cityId', args.cityId).eq('category', 'restaurant')
+          q.eq('cityId', args.cityId!).eq('category', 'restaurant')
         )
         .collect();
     } else {
@@ -712,7 +713,7 @@ function toRad(deg: number): number {
  * Update restaurant's average rating based on reviews
  */
 async function updateRestaurantRating(
-  ctx: any,
+  ctx: MutationCtx,
   restaurantId: Id<'pois'>
 ): Promise<void> {
   const reviews = await ctx.db

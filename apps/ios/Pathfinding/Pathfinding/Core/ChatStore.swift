@@ -245,7 +245,7 @@ final class ChatStore {
     pendingAssistantMessage = nil
 
     do {
-      let response: SendMessageResponse = try await apiClient.post(
+      let _: SendMessageResponse = try await apiClient.post(
         path: "chat/sessions/\(session.id)/messages",
         body: ["content": content]
       )

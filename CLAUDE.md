@@ -13,12 +13,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 pathfinding/
 ├── apps/
-│   ├── api/          # Hono API server (port 8000)
-│   ├── crawler/      # Data crawler + AI enrichment (port 3001)
+│   ├── ai-service/   # AI/LLM + external APIs (port 3001)
 │   ├── dashboard/    # Next.js admin dashboard (port 3002)
 │   └── ios/          # SwiftUI iOS app (iOS 17+)
 ├── packages/
-│   ├── convex/       # Convex database schema and functions
+│   ├── convex/       # Convex database schema, functions, and HTTP Actions
 │   ├── types/        # Shared TypeScript types
 │   ├── constants/    # Shared constants
 │   └── utils/        # Shared utilities
@@ -27,66 +26,99 @@ pathfinding/
 
 ### Tech Stack
 
-- **Database**: Convex (self-hosted at `convex.kunish.org`)
-- **Backend**: Hono (Node.js/TypeScript)
+- **Database & Backend**: Convex (self-hosted at `convex.kunish.org`)
+  - Handles all data storage, queries, and real-time sync
+  - Provides HTTP Actions for REST API endpoints (CRUD operations)
+- **AI Service**: Lightweight Node.js/Hono service for external API integrations
+  - AI/LLM processing (Ollama)
+  - Weather API (OpenWeatherMap)
+  - Transport routing (高德地图)
+  - PDF export
 - **Frontend**: Next.js (Dashboard), SwiftUI (iOS)
 - **AI**: Ollama with Gemma 3 model
 - **Geocoding**: Nominatim (OpenStreetMap)
-- **Package Manager**: pnpm with Turborepo
+- **Package Manager**: pnpm with Nx
+
+### API Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         iOS App                              │
+├─────────────────────────────────────────────────────────────┤
+│  Data Operations (CRUD)        │  AI/External Services       │
+│  ↓                             │  ↓                          │
+│  Convex HTTP Actions           │  AI Service (Node.js)       │
+│  https://convex.kunish.org     │  http://localhost:3001      │
+├─────────────────────────────────────────────────────────────┤
+│                    Convex Database                           │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ## Development Commands
 
 ### Quick Start
 
 ```bash
-pnpm dev       # Start all services (API, Crawler, Dashboard)
-pnpm ios       # Build and launch iOS app in simulator
-pnpm ios:open  # Open iOS project in Xcode
+pnpm dev              # Start Dashboard
+pnpm dev:ai-service   # Start AI Service
+pnpm dev:convex       # Start Convex dev server
+pnpm ios              # Build and launch iOS app in simulator
+pnpm ios:open         # Open iOS project in Xcode
 ```
 
 ### Service Ports
 
-| Service   | Port | Description                      |
-| --------- | ---- | -------------------------------- |
-| API       | 8000 | Main REST API                    |
-| Crawler   | 3001 | Data crawler + AI enrichment API |
-| Dashboard | 3002 | Admin dashboard                  |
+| Service    | Port | Description                     |
+| ---------- | ---- | ------------------------------- |
+| AI Service | 3001 | AI/LLM, weather, transport, PDF |
+| Dashboard  | 3002 | Admin dashboard (Next.js)       |
+| Convex     | -    | https://convex.kunish.org       |
 
 ### Individual Services
 
 ```bash
-pnpm dev              # Start API, Crawler, Dashboard
+pnpm dev:ai-service   # Start AI Service only
+pnpm dev:dashboard    # Start Dashboard only
+pnpm dev:convex       # Start Convex dev server
 pnpm ios              # Build and launch iOS in simulator
 pnpm ios:build        # Build iOS only
 pnpm ios:open         # Open Xcode project
 ```
 
-### AI Enrichment
-
-```bash
-# Enrich a single guide
-make enrich ID=<guide_id>
-
-# Force re-enrich (ignore already processed)
-curl -X POST "http://localhost:3001/api/guides/<id>/enrich?force=true"
-
-# List guides
-make guides
-```
-
 ## Key APIs
 
-### Crawler API (port 3001)
+### Convex HTTP Actions
 
-- `GET /health` - Health check
-- `GET /api/guides` - List travel guides
-- `GET /api/guides/:id` - Get guide details
-- `POST /api/guides/:id/enrich` - AI enrich a guide
-- `POST /api/guides/:id/enrich?force=true` - Force re-enrich
+The primary REST API for all data operations (hosted at `https://convex.kunish.org`):
+
+- `/api/guides/*` - Travel guides CRUD
+- `/api/chat/sessions/*` - Chat session management
+- `/api/translations/*` - Translation data
+- `/api/pois/*` - Points of Interest
+- `/api/follows/*` - User follows
+- `/api/travel-notes/*` - Travel notes
+- `/api/budgets/*` - Budget tracking
+- `/api/qa/*` - Q&A system
+- `/api/notifications/*` - Notifications
+- `/api/comments/*` - Comments
+- `/api/collections/*` - Collections
+- `/api/crawl-jobs/*` - Crawl job management
+- `/api/quality-reports/*` - Data quality reports
+- `/api/training-datasets/*` - Training datasets
+
+### AI Service REST API (port 3001)
+
+External API integrations that require third-party services:
+
+- `/api/ai/*` - AI/LLM processing (Ollama)
+- `/api/weather/*` - Weather forecasts (OpenWeatherMap)
+- `/api/transport/*` - Route planning (高德地图)
+- `/api/translations/text` - AI translation
+- `/api/pdf/*` - PDF export
 
 ### Convex Functions
 
-Key mutations in `packages/convex/travelGuides.ts`:
+Core database functions in `packages/convex/`:
 
 - `travelGuides:list` - List guides with pagination
 - `travelGuides:getById` - Get single guide
@@ -100,14 +132,14 @@ Key mutations in `packages/convex/travelGuides.ts`:
 apps/ios/Pathfinding/
 ├── Config/
 │   ├── Base.xcconfig       # Shared settings
-│   ├── Debug.xcconfig      # Development (localhost API)
+│   ├── Debug.xcconfig      # Development (local AI Service, Convex)
 │   ├── Release.xcconfig    # Production
 │   └── Staging.xcconfig    # QA/Staging
 ├── Pathfinding/
 │   ├── Core/
-│   │   ├── APIClient.swift     # REST API client
+│   │   ├── APIClient.swift     # Dual-URL API client (Convex + AI Service)
 │   │   ├── AppConfig.swift     # Build configuration reader
-│   │   └── AuthManager.swift   # Authentication manager
+│   │   └── AuthManager.swift   # Authentication manager (Convex Auth)
 │   ├── Models/
 │   │   └── BlogPost.swift      # Data models
 │   ├── Features/
@@ -122,11 +154,11 @@ apps/ios/Pathfinding/
 
 ### iOS Build Configurations
 
-| Scheme              | Environment | API URL                             | Debug Logging |
-| ------------------- | ----------- | ----------------------------------- | ------------- |
-| Pathfinding-Debug   | development | http://127.0.0.1:3001               | Enabled       |
-| Pathfinding-Staging | staging     | https://staging-api.pathfinding.org | Enabled       |
-| Pathfinding-Release | production  | https://api.pathfinding.org         | Disabled      |
+| Scheme              | Environment | Convex URL                | AI Service URL             |
+| ------------------- | ----------- | ------------------------- | -------------------------- |
+| Pathfinding-Debug   | development | https://convex.kunish.org | http://127.0.0.1:3001      |
+| Pathfinding-Staging | staging     | https://convex.kunish.org | https://ai-staging...      |
+| Pathfinding-Release | production  | https://convex.kunish.org | https://ai.pathfinding.org |
 
 ### iOS Conventions
 
@@ -185,12 +217,14 @@ CONVEX_SELF_HOSTED_ADMIN_KEY=<key>
 CONVEX_URL=https://convex.kunish.org
 ```
 
-### `apps/crawler/.env`
+### `apps/ai-service/.env`
 
 ```
 CONVEX_URL=https://convex.kunish.org
 OLLAMA_BASE_URL=https://ol.svc.kunish.org
 OLLAMA_MODEL=gemma3:latest
+OPENWEATHERMAP_API_KEY=<key>
+PORT=3001
 ```
 
 ## Code Style
@@ -202,17 +236,25 @@ OLLAMA_MODEL=gemma3:latest
 
 ## Common Tasks
 
-### Adding a new API endpoint
-
-1. Add route in `apps/crawler/src/routes/` or `apps/api/src/routes/`
-2. Register in `src/index.ts` with `app.route()`
-3. Update types in `packages/types/` if needed
-
 ### Adding a new Convex function
 
 1. Add to `packages/convex/*.ts`
 2. Run `npx convex dev` to sync
 3. Import via `api.<module>.<function>` in backend code
+4. Use from iOS/Dashboard via Convex client
+
+### Adding a new Convex HTTP Action
+
+1. Add route in `packages/convex/http.ts`
+2. Use `httpAction` for the handler
+3. Register with `http.route()` for method and path
+4. Deploy with `npx convex deploy`
+
+### Adding a new AI Service endpoint
+
+1. Add route in `apps/ai-service/src/routes/`
+2. Register in `src/index.ts` with `app.route()`
+3. Update types in `packages/types/` if needed
 
 ### Modifying iOS data models
 
@@ -225,8 +267,12 @@ OLLAMA_MODEL=gemma3:latest
 ### Services won't start
 
 ```bash
-make stop    # Kill any orphaned processes
-make dev     # Restart all
+# Check AI Service health
+pnpm health
+
+# Restart services
+pnpm dev:ai-service
+pnpm dev:dashboard
 ```
 
 ### Convex sync issues
@@ -252,12 +298,6 @@ The Nominatim geocoder may return inaccurate results for Chinese POIs. The servi
 - `countrycodes=cn` filter
 - Multiple result fetching with city-name matching
 - Query string cleaning (removes parentheses, special chars)
-
-To re-enrich with improved geocoding:
-
-```bash
-curl -X POST "http://localhost:3001/api/guides/<id>/enrich?force=true"
-```
 
 <!-- BEGIN BYTEROVER RULES -->
 

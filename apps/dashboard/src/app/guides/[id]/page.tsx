@@ -97,7 +97,7 @@ export default function GuideDetailPage() {
     enabled: !!id,
   });
 
-  const guide = data?.data as GuideWithAI | undefined;
+  const guide = data?.data as unknown as GuideWithAI | undefined;
 
   if (isLoading) {
     return (
@@ -222,7 +222,7 @@ export default function GuideDetailPage() {
           Destinations & Tags
         </h2>
 
-        {guide.destinations.length > 0 && (
+        {guide.destinations && guide.destinations.length > 0 && (
           <div className="mb-4">
             <h3 className="text-sm font-medium text-gray-700 mb-2">
               Destinations
@@ -240,7 +240,7 @@ export default function GuideDetailPage() {
           </div>
         )}
 
-        {guide.tags.length > 0 && (
+        {guide.tags && guide.tags.length > 0 && (
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
             <div className="flex flex-wrap gap-2">
@@ -256,11 +256,12 @@ export default function GuideDetailPage() {
           </div>
         )}
 
-        {guide.destinations.length === 0 && guide.tags.length === 0 && (
-          <p className="text-gray-500 text-sm">
-            No destinations or tags available
-          </p>
-        )}
+        {(!guide.destinations || guide.destinations.length === 0) &&
+          (!guide.tags || guide.tags.length === 0) && (
+            <p className="text-gray-500 text-sm">
+              No destinations or tags available
+            </p>
+          )}
       </div>
 
       {/* Content */}
@@ -342,7 +343,7 @@ export default function GuideDetailPage() {
           </div>
 
           <div className="space-y-6">
-            {guide.ai_days.map((day: AiDay) => (
+            {(guide.ai_days || guide.aiDays || []).map((day: AiDay) => (
               <div
                 key={day.dayNumber}
                 className="border border-gray-200 rounded-lg p-4"
@@ -454,22 +455,26 @@ export default function GuideDetailPage() {
           <div>
             <dt className="text-gray-500">Guide ID</dt>
             <dd className="font-mono text-gray-900">
-              {guide.id.slice(0, 8)}...
+              {(guide.id || guide._id).slice(0, 8)}...
             </dd>
           </div>
           <div>
             <dt className="text-gray-500">External ID</dt>
             <dd className="font-mono text-gray-900">
-              {guide.source_external_id.slice(0, 20)}...
+              {guide.source_external_id?.slice(0, 20) || 'N/A'}...
             </dd>
           </div>
           <div>
             <dt className="text-gray-500">Crawled At</dt>
-            <dd className="text-gray-900">{formatDate(guide.crawled_at)}</dd>
+            <dd className="text-gray-900">
+              {guide.crawled_at ? formatDate(guide.crawled_at) : 'N/A'}
+            </dd>
           </div>
           <div>
             <dt className="text-gray-500">Last Updated</dt>
-            <dd className="text-gray-900">{formatDate(guide.updated_at)}</dd>
+            <dd className="text-gray-900">
+              {guide.updated_at ? formatDate(guide.updated_at) : 'N/A'}
+            </dd>
           </div>
         </dl>
       </div>

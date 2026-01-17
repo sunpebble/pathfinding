@@ -259,7 +259,7 @@ export const listExpenses = query({
         .withIndex('by_itinerary_category', (q) =>
           q
             .eq('itineraryId', args.itineraryId)
-            .eq('categoryId', args.categoryId)
+            .eq('categoryId', args.categoryId!)
         )
         .collect();
     } else {

@@ -783,3 +783,34 @@ export const sendPendingReminders = internalMutation({
     return { sentCount, total: pendingNotifications.length };
   },
 });
+
+/**
+ * Clean up old read notifications (internal, called by cron)
+ * Deletes read notifications older than 30 days
+ */
+export const cleanupOldNotifications = internalMutation({
+  handler: async (ctx) => {
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+    // Find old read notifications
+    const oldNotifications = await ctx.db
+      .query('notifications')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('isRead'), true),
+          q.lt(q.field('createdAt'), thirtyDaysAgo)
+        )
+      )
+      .collect();
+
+    // Delete them
+    let deletedCount = 0;
+    for (const notification of oldNotifications) {
+      await ctx.db.delete(notification._id);
+      deletedCount++;
+    }
+
+    console.log(`Cleaned up ${deletedCount} old notifications`);
+    return { deletedCount };
+  },
+});

@@ -37,6 +37,18 @@ export const TRANSPORT_MODES: Record<
     icon: 'car-taxi',
     defaultSpeed: 35, // km/h (slightly slower than driving due to pickup)
   },
+  bus: {
+    label: '公交',
+    labelEn: 'Bus',
+    icon: 'bus',
+    defaultSpeed: 20, // km/h (urban average with stops)
+  },
+  subway: {
+    label: '地铁',
+    labelEn: 'Subway',
+    icon: 'subway',
+    defaultSpeed: 35, // km/h (faster than bus)
+  },
 };
 
 /**
@@ -48,6 +60,8 @@ export const TRANSPORT_MODE_VALUES: TransportMode[] = [
   'transit',
   'cycling',
   'taxi',
+  'bus',
+  'subway',
 ];
 
 /**

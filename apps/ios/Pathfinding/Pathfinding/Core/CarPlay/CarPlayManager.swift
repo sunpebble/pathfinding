@@ -534,8 +534,8 @@ final class CarPlayManager: NSObject {
   private func showNextPOIAlert(_ poi: AiPoi, index: Int) {
     let alert = CPNavigationAlert(
       titleVariants: ["\(index). \(poi.name)"],
-      subtitleVariants: [poi.type ?? ""],
-      imageSet: nil,
+      subtitleVariants: poi.type.map { [$0] },
+      image: nil,
       primaryAction: CPAlertAction(
         title: "导航",
         style: .default
@@ -553,7 +553,7 @@ final class CarPlayManager: NSObject {
     let alert = CPNavigationAlert(
       titleVariants: ["第\(day)天"],
       subtitleVariants: ["1. \(poi.name)"],
-      imageSet: nil,
+      image: nil,
       primaryAction: CPAlertAction(
         title: "导航",
         style: .default
@@ -633,7 +633,7 @@ final class CarPlayManager: NSObject {
     let alert = CPNavigationAlert(
       titleVariants: ["语音识别失败"],
       subtitleVariants: ["请重试"],
-      imageSet: nil,
+      image: nil,
       primaryAction: CPAlertAction(title: "重试", style: .default) { [weak self] _ in
         self?.startVoiceRecognition()
       },
@@ -648,7 +648,7 @@ final class CarPlayManager: NSObject {
     let alert = CPNavigationAlert(
       titleVariants: ["搜索功能"],
       subtitleVariants: ["请在手机上进行搜索"],
-      imageSet: nil,
+      image: nil,
       primaryAction: CPAlertAction(title: "好的", style: .default) { _ in },
       secondaryAction: nil,
       duration: 3.0

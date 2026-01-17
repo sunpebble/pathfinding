@@ -6,22 +6,38 @@ const nextConfig: NextConfig = {
 
   // Environment variables exposed to the browser
   env: {
-    NEXT_PUBLIC_CRAWLER_API_URL:
-      process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:3001',
+    NEXT_PUBLIC_CONVEX_URL:
+      process.env.NEXT_PUBLIC_CONVEX_URL || 'https://convex.kunish.org',
+    NEXT_PUBLIC_AI_SERVICE_URL:
+      process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:3001',
   },
 
-  // Rewrites to proxy API requests to the crawler service
+  // Rewrites to proxy API requests to the appropriate services
   async rewrites() {
-    const apiUrl =
-      process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:3001';
+    const convexUrl =
+      process.env.NEXT_PUBLIC_CONVEX_URL || 'https://convex.kunish.org';
+    const aiServiceUrl =
+      process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:3001';
     return [
+      // Convex HTTP Actions for CRUD operations
       {
-        source: '/api/crawler/:path*',
-        destination: `${apiUrl}/api/:path*`,
+        source: '/api/convex/:path*',
+        destination: `${convexUrl}/api/:path*`,
       },
+      // AI Service for AI/weather/transport/pdf
+      {
+        source: '/api/ai-service/:path*',
+        destination: `${aiServiceUrl}/api/:path*`,
+      },
+      // Health check for AI Service
       {
         source: '/api/health',
-        destination: `${apiUrl}/health`,
+        destination: `${aiServiceUrl}/health`,
+      },
+      // Legacy crawler proxy - redirects to Convex
+      {
+        source: '/api/crawler/:path*',
+        destination: `${convexUrl}/api/:path*`,
       },
     ];
   },

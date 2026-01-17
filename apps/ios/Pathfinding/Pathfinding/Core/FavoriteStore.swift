@@ -404,7 +404,7 @@ final class FavoriteStore {
       )
 
       // Update local state
-      if let index = favoritedItineraries.firstIndex(where: { $0.id == favoriteId }) {
+      if favoritedItineraries.contains(where: { $0.id == favoriteId }) {
         // Note: Would need mutable model to update collectionId
         // For now, trigger a refresh
         await fetchFavoritedItineraries(refresh: true)
@@ -588,7 +588,7 @@ final class FavoriteStore {
   /// Get or create default collection
   func getOrCreateDefaultCollection() async -> FavoriteCollection? {
     do {
-      let response: CollectionResponse = try await apiClient.fetch(path: "collections/default")
+      let _: CollectionResponse = try await apiClient.fetch(path: "collections/default")
 
       // Update collections list
       await fetchCollections()

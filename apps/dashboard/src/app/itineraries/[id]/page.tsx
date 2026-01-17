@@ -233,7 +233,7 @@ export default function ItineraryDetailPage() {
 
   const itinerary = useQuery(api.itineraries.getById, {
     id: toConvexId<'itineraries'>(id),
-  }) as Itinerary | null | undefined;
+  }) as unknown as Itinerary | null | undefined;
 
   const isLoading = itinerary === undefined;
 
