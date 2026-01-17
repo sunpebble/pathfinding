@@ -32,11 +32,16 @@
 "common.ok" = "好��";
 
 // MARK: - Tab Bar
-"tab.home" = "首页";
-"tab.guides" = "攻略";
+"tab.discover" = "发现";
 "tab.chat" = "助手";
 "tab.itinerary" = "行程";
 "tab.profile" = "我的";
+
+// MARK: - Discover
+"discover.title" = "发现";
+"discover.search_placeholder" = "搜索目的地、攻略...";
+"discover.featured" = "精选攻略";
+"discover.recent" = "最近更新";
 
 // MARK: - Home
 "home.title" = "探路";
