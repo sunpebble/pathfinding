@@ -1,4 +1,7 @@
 import SwiftUI
+import OSLog
+
+private let logger = Logger(subsystem: "org.pathfinding.app", category: "CommentSection")
 
 // MARK: - Comment Section View
 
@@ -106,7 +109,7 @@ struct CommentRow: View {
   let onReply: () -> Void
   let onLike: () -> Void
   let onDelete: () -> Void
-  let store: CommentStore
+  @Bindable var store: CommentStore
 
   @State private var showReplies = false
   @State private var showReportSheet = false
@@ -353,11 +356,13 @@ struct EmptyCommentView: View {
 struct CommentComposeSheet: View {
   let itineraryId: String
   let replyTo: ItineraryComment?
-  let store: CommentStore
+  @Bindable var store: CommentStore
   let onDismiss: () -> Void
 
   @State private var content = ""
+  @State private var debugStatus = "Ready"
   @FocusState private var isFocused: Bool
+  @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     NavigationStack {
@@ -390,10 +395,20 @@ struct CommentComposeSheet: View {
 
         // Character count
         HStack {
+          Text(debugStatus)
+            .font(.caption)
+            .foregroundStyle(.blue)
           Spacer()
           Text("\(content.count)/2000")
             .font(.caption)
             .foregroundStyle(content.count > 2000 ? .red : .secondary)
+        }
+
+        // Error message
+        if let error = store.errorMessage {
+          Text(error)
+            .font(.caption)
+            .foregroundStyle(.red)
         }
 
         Spacer()
@@ -409,23 +424,54 @@ struct CommentComposeSheet: View {
         }
 
         ToolbarItem(placement: .confirmationAction) {
-          Button("Post") {
-            Task {
-              let success = await store.createComment(
-                itineraryId: itineraryId,
-                content: content,
-                parentId: replyTo?.id
-              )
-              if success {
-                onDismiss()
-              }
-            }
+          Button {
+            logger.info("🔘 Post button tapped! content length: \(self.content.count)")
+            print("🔘 Post button tapped!")
+            submitComment()
+          } label: {
+            Text("Post")
           }
-          .disabled(content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || content.count > 2000 || store.isSubmitting)
         }
       }
       .onAppear {
         isFocused = true
+      }
+    }
+  }
+
+  private func submitComment() {
+    debugStatus = "Submitting..."
+    guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      debugStatus = "Error: Empty content"
+      logger.info("🔘 Content is empty, returning")
+      return
+    }
+    guard content.count <= 2000 else {
+      debugStatus = "Error: Too long"
+      logger.info("🔘 Content too long, returning")
+      return
+    }
+    guard !store.isSubmitting else {
+      debugStatus = "Error: Already submitting"
+      logger.info("🔘 Already submitting, returning")
+      return
+    }
+    Task {
+      debugStatus = "Calling API..."
+      logger.info("🔘 Task started, calling createComment...")
+      let success = await store.createComment(
+        itineraryId: itineraryId,
+        content: content,
+        parentId: replyTo?.id
+      )
+      logger.info("🔘 createComment returned: \(success)")
+      if success {
+        debugStatus = "Success!"
+        dismiss()
+        onDismiss()
+      } else {
+        debugStatus = "Failed: \(store.errorMessage ?? "unknown")"
+        logger.error("🔘 createComment failed: \(self.store.errorMessage ?? "nil")")
       }
     }
   }
@@ -435,7 +481,7 @@ struct CommentComposeSheet: View {
 
 struct ReportCommentSheet: View {
   let commentId: String
-  let store: CommentStore
+  @Bindable var store: CommentStore
   let onDismiss: () -> Void
 
   @State private var selectedReason: CommentReportReason?

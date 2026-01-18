@@ -15,12 +15,171 @@ const http = httpRouter();
 auth.addHttpRoutes(http);
 
 // ============================================
+// Password Authentication API (for native iOS/Android apps)
+// ============================================
+
+/**
+ * POST /api/auth/signin/password
+ * Sign in or sign up with email and password
+ * Body: { email: string, password: string, flow?: "signIn" | "signUp", name?: string }
+ */
+http.route({
+  path: '/api/auth/signin/password',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const body = await request.json();
+      const { email, password, flow = 'signIn', name } = body;
+
+      if (!email || !password) {
+        return new Response(
+          JSON.stringify({ error: 'Email and password are required' }),
+          {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Call the signIn action with password provider
+      const params: Record<string, string> = {
+        email,
+        password,
+        flow,
+      };
+      if (name) {
+        params.name = name;
+      }
+
+      const result = await ctx.runAction(api.auth.signIn, {
+        provider: 'password',
+        params,
+      });
+
+      // Transform response to iOS expected format
+      // Convex Auth returns: { tokens?: { token, refreshToken }, started?, redirect?, verifier? }
+      // iOS expects: { token, refreshToken?, userId?, email? }
+      const iosResponse = {
+        token: result.tokens?.token ?? '',
+        refreshToken: result.tokens?.refreshToken,
+        userId: null, // User ID is obtained via authenticated queries
+        email,
+      };
+
+      // Check if authentication was successful
+      if (!result.tokens?.token) {
+        // This might be email verification flow
+        return new Response(
+          JSON.stringify({
+            error:
+              flow === 'signUp'
+                ? 'Registration successful, please login'
+                : 'Invalid email or password',
+            needsVerification: result.started,
+          }),
+          {
+            status: result.started ? 200 : 401,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      return new Response(JSON.stringify(iosResponse), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': `convex-auth-token=${result.tokens.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
+        },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Authentication failed';
+      const status =
+        message.includes('Invalid') || message.includes('not found')
+          ? 401
+          : 500;
+
+      return new Response(JSON.stringify({ error: message }), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }),
+});
+
+/**
+ * POST /api/auth/signout
+ * Sign out the current user
+ */
+http.route({
+  path: '/api/auth/signout',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const authHeader = request.headers.get('Authorization');
+      const token = authHeader?.replace('Bearer ', '');
+
+      if (token) {
+        await ctx.runAction(api.auth.signOut, {});
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie':
+            'convex-auth-token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
+        },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : 'Sign out failed',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  }),
+});
+
+// ============================================
 // Comments API
 // ============================================
 
 /**
+ * Helper to extract userId from Authorization header JWT token
+ */
+async function getUserIdFromAuth(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.substring(7);
+  try {
+    // Decode JWT payload (base64url encoded)
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const payload = parts[1];
+    // Convert base64url to base64
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(base64);
+    const json = JSON.parse(decoded);
+
+    // Convex Auth uses 'sub' for the user ID
+    return json.sub || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * GET /api/comments?itineraryId=<id>&page=1&pageSize=20
- * List comments for an itinerary
+ * List comments for a guide (travel guide / blog post)
  */
 http.route({
   path: '/api/comments',
@@ -40,21 +199,369 @@ http.route({
     }
 
     try {
-      const result = await ctx.runQuery(api.itineraryComments.listByItinerary, {
-        itineraryId: itineraryId as any,
+      const result = await ctx.runQuery(api.guideComments.listByGuide, {
+        guideId: itineraryId,
         page,
         pageSize,
         userId: userId ?? undefined,
       });
 
-      return new Response(JSON.stringify(result), {
+      // Transform to iOS expected format
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: result.data,
+          meta: {
+            page: result.page,
+            page_size: result.pageSize,
+            total_count: result.total,
+            total_pages: result.totalPages,
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : '请求失败',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  }),
+});
+
+/**
+ * POST /api/comments
+ * Create a new comment
+ * Body: { itineraryId: string, content: string, parentId?: string }
+ * Note: itineraryId can be either an itinerary ID or a travelGuide ID (string)
+ * Requires: Authorization header with JWT token
+ */
+http.route({
+  path: '/api/comments',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      // Extract userId from JWT token
+      const userId = await getUserIdFromAuth(request);
+      if (!userId) {
+        return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const body = await request.json();
+      const { itineraryId, content, parentId } = body;
+
+      if (!itineraryId || !content) {
+        return new Response(JSON.stringify({ error: '缺少必要参数' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Store the comment with guide/itinerary ID as string
+      // Using a simplified insert that stores reference as string
+      const now = Date.now();
+      const commentId = await ctx.runMutation(api.guideComments.create, {
+        guideId: itineraryId,
+        userId,
+        content,
+        parentId: parentId || undefined,
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            id: commentId,
+            itinerary_id: itineraryId,
+            user_id: userId,
+            parent_id: parentId || null,
+            content,
+            likes_count: 0,
+            replies_count: 0,
+            is_edited: false,
+            is_deleted: false,
+            created_at: now,
+            updated_at: null,
+            author_name: 'User',
+            author_avatar: null,
+            is_liked_by_user: false,
+          },
+        }),
+        {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } catch (error) {
+      console.error('Create comment error:', error);
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : '创建评论失败',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  }),
+});
+
+/**
+ * PATCH /api/comments
+ * Update a comment
+ * Body: { id: string, content: string }
+ * Requires: Authorization header with JWT token
+ */
+http.route({
+  path: '/api/comments',
+  method: 'PATCH',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const userId = await getUserIdFromAuth(request);
+      if (!userId) {
+        return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const body = await request.json();
+      const { id, content } = body;
+
+      if (!id || !content) {
+        return new Response(JSON.stringify({ error: '缺少必要参数' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const comment = await ctx.runMutation(api.itineraryComments.update, {
+        id: id as any,
+        userId,
+        content,
+      });
+
+      return new Response(JSON.stringify({ data: comment }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: error instanceof Error ? error.message : '请求失败',
+          error: error instanceof Error ? error.message : '更新评论失败',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  }),
+});
+
+/**
+ * DELETE /api/comments
+ * Delete a comment
+ * Body: { id: string }
+ * Requires: Authorization header with JWT token
+ */
+http.route({
+  path: '/api/comments',
+  method: 'DELETE',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const userId = await getUserIdFromAuth(request);
+      if (!userId) {
+        return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const body = await request.json();
+      const { id } = body;
+
+      if (!id) {
+        return new Response(JSON.stringify({ error: '缺少id参数' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      await ctx.runMutation(api.itineraryComments.remove, {
+        id: id as any,
+        userId,
+      });
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : '删除评论失败',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  }),
+});
+
+/**
+ * GET /api/comments/replies?commentId=<id>
+ * Get replies for a comment
+ */
+http.route({
+  path: '/api/comments/replies',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const commentId = url.searchParams.get('commentId');
+    const userId = url.searchParams.get('userId');
+
+    if (!commentId) {
+      return new Response(JSON.stringify({ error: '缺少commentId参数' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    try {
+      const replies = await ctx.runQuery(api.itineraryComments.getReplies, {
+        commentId: commentId as any,
+        userId: userId ?? undefined,
+      });
+
+      return new Response(JSON.stringify({ data: replies }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : '获取回复失败',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  }),
+});
+
+/**
+ * POST /api/comments/like
+ * Toggle like on a comment
+ * Body: { commentId: string }
+ * Requires: Authorization header with JWT token
+ */
+http.route({
+  path: '/api/comments/like',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const userId = await getUserIdFromAuth(request);
+      if (!userId) {
+        return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const body = await request.json();
+      const { commentId } = body;
+
+      if (!commentId) {
+        return new Response(JSON.stringify({ error: '缺少commentId参数' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const result = await ctx.runMutation(api.itineraryComments.toggleLike, {
+        commentId: commentId as any,
+        userId,
+      });
+
+      return new Response(JSON.stringify({ data: result }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : '操作失败',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  }),
+});
+
+/**
+ * POST /api/comments/report
+ * Report a comment
+ * Body: { commentId: string, reason: string, description?: string }
+ * Requires: Authorization header with JWT token
+ */
+http.route({
+  path: '/api/comments/report',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const userId = await getUserIdFromAuth(request);
+      if (!userId) {
+        return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const body = await request.json();
+      const { commentId, reason, description } = body;
+
+      if (!commentId || !reason) {
+        return new Response(JSON.stringify({ error: '缺少必要参数' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const result = await ctx.runMutation(api.itineraryComments.report, {
+        commentId: commentId as any,
+        userId,
+        reason: reason as any,
+        description,
+      });
+
+      return new Response(JSON.stringify({ data: result }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : '举报失败',
         }),
         {
           status: 500,

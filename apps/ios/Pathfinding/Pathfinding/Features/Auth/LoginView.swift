@@ -1,4 +1,7 @@
 import SwiftUI
+import OSLog
+
+private let authLogger = Logger(subsystem: "org.pathfinding.app", category: "Auth")
 
 /// Login method options
 enum LoginMethod: String, CaseIterable {
@@ -14,7 +17,8 @@ enum LoginMethod: String, CaseIterable {
 }
 
 struct LoginView: View {
-  @Environment(AuthViewModel.self) private var authViewModel
+  @EnvironmentObject private var authViewModel: AuthViewModel
+  @Environment(\.dismiss) private var dismiss
 
   // Login method state
   @State private var loginMethod: LoginMethod = .phone
@@ -102,26 +106,42 @@ struct LoginView: View {
               .padding(.vertical, DesignTokens.Spacing.xs)
             }
 
-            // Login Button
-            Button {
-              Task {
-                await handleLogin()
-              }
-            } label: {
-              HStack {
-                if isLoading {
-                  ProgressView()
-                    .progressViewStyle(.circular)
-                    .tint(.white)
-                }
-                Text(isLoading ? "登录中..." : "登录")
-                  .fontWeight(.semibold)
-              }
+            // Login Button - using simple tappable view for debugging
+            Text(isLoading ? "登录中..." : "登录 (点我)")
+              .fontWeight(.semibold)
+              .foregroundStyle(.white)
               .frame(maxWidth: .infinity)
+              .padding(.vertical, 14)
+              .background(isLoginDisabled ? Color.gray : Color.blue)
+              .clipShape(RoundedRectangle(cornerRadius: 12))
+              .simultaneousGesture(
+                TapGesture()
+                  .onEnded { _ in
+                    guard !isLoginDisabled else { return }
+                    authLogger.error("LOGIN BUTTON TAPPED!")
+                    print("🔘🔘🔘 LOGIN BUTTON TAPPED! 🔘🔘🔘")
+
+                    // Show alert to confirm tap is working
+                    errorMessage = "按钮已点击，正在登录..."
+
+                    Task {
+                      await handleLogin()
+                    }
+                  }
+              )
+              .allowsHitTesting(!isLoginDisabled)
+              .opacity(isLoginDisabled ? 0.6 : 1.0)
+              .padding(.top, DesignTokens.Spacing.xs)
+
+            // Debug info
+            #if DEBUG
+            VStack(alignment: .leading, spacing: 4) {
+              Text(verbatim: "Debug: disabled=\(isLoginDisabled), email=\(email.isEmpty ? "empty" : "filled"), pwd=\(password.isEmpty ? "empty" : "filled"), method=\(loginMethod.rawValue)")
+              Text(verbatim: "AuthVM: isAuth=\(authViewModel.isAuthenticated), isLoading=\(authViewModel.isLoading), isGuest=\(authViewModel.isGuestMode)")
             }
-            .buttonStyle(.primary)
-            .disabled(isLoginDisabled)
-            .padding(.top, DesignTokens.Spacing.xs)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            #endif
           }
           .padding(.horizontal, DesignTokens.Spacing.lg)
 
@@ -395,25 +415,44 @@ struct LoginView: View {
   }
 
   private func handleLogin() async {
+    print("🔐 handleLogin() called - loginMethod: \(loginMethod)")
     isLoading = true
     errorMessage = nil
 
     do {
       switch loginMethod {
       case .phone:
+        print("🔐 Calling signInWithPhone...")
         try await AuthManager.shared.signInWithPhone(
           phoneNumber: phoneNumber,
           verificationCode: verificationCode
         )
       case .email:
+        print("🔐 Calling signIn with email: \(email)")
         try await AuthManager.shared.signIn(email: email, password: password)
       }
+
+      print("🔐 Auth successful, updating state...")
+
+      // Check auth state before update
+      let isAuthBefore = await AuthManager.shared.isAuthenticated
+      print("🔐 isAuthenticated BEFORE update: \(isAuthBefore)")
 
       // Update auth state to trigger UI refresh
       await authViewModel.updateAuthState()
 
+      // Check auth state after update
+      print("🔐 authViewModel.isAuthenticated AFTER update: \(authViewModel.isAuthenticated)")
+
+      await MainActor.run {
+        isLoading = false
+        // Dismiss the login view if presented as sheet
+        dismiss()
+      }
+      print("🔐 Login complete!")
       // No need to dismiss - the app will automatically show ContentView
     } catch {
+      print("🔐 Login error: \(error)")
       await MainActor.run {
         errorMessage = error.localizedDescription
         isLoading = false
@@ -441,5 +480,5 @@ struct LoginView: View {
 
 #Preview {
   LoginView()
-    .environment(AuthViewModel())
+    .environmentObject(AuthViewModel())
 }

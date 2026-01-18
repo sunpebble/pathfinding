@@ -1034,6 +1034,38 @@ export default defineSchema({
     .index('by_itinerary_created', ['itineraryId', 'createdAt']),
 
   // ============================================
+  // Guide Comments (for Travel Guides / BlogPosts)
+  // ============================================
+  guideComments: defineTable({
+    guideId: v.string(), // Travel guide ID (string, can be from travelGuides table)
+    userId: v.string(), // Auth user ID
+    parentId: v.optional(v.string()), // For nested replies (string ID)
+    content: v.string(),
+    likesCount: v.number(),
+    repliesCount: v.number(),
+    isEdited: v.boolean(),
+    isDeleted: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_guide', ['guideId'])
+    .index('by_user', ['userId'])
+    .index('by_parent', ['parentId'])
+    .index('by_guide_created', ['guideId', 'createdAt']),
+
+  // ============================================
+  // Guide Comment Likes
+  // ============================================
+  guideCommentLikes: defineTable({
+    commentId: v.id('guideComments'),
+    userId: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_comment', ['commentId'])
+    .index('by_user', ['userId'])
+    .index('by_comment_user', ['commentId', 'userId']),
+
+  // ============================================
   // Comment Likes
   // ============================================
   commentLikes: defineTable({

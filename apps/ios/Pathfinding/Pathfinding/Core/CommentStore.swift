@@ -42,8 +42,9 @@ final class CommentStore {
 
     do {
       let response: CommentListResponse = try await apiClient.fetch(
-        path: "itineraries/\(itineraryId)/comments",
+        path: "comments",
         queryItems: [
+          URLQueryItem(name: "itineraryId", value: itineraryId),
           URLQueryItem(name: "page", value: String(page)),
           URLQueryItem(name: "pageSize", value: "20"),
         ]
@@ -74,7 +75,10 @@ final class CommentStore {
 
     do {
       let response: CommentListResponse = try await apiClient.fetch(
-        path: "comments/\(commentId)/replies"
+        path: "comments/replies",
+        queryItems: [
+          URLQueryItem(name: "commentId", value: commentId)
+        ]
       )
 
       replies[commentId] = response.data
@@ -89,21 +93,31 @@ final class CommentStore {
 
   /// Create a new comment
   func createComment(itineraryId: String, content: String, parentId: String? = nil) async -> Bool {
-    guard !isSubmitting else { return false }
+    print("📝 createComment called - itineraryId: \(itineraryId), content: \(content.prefix(50))...")
+
+    guard !isSubmitting else {
+      print("📝 Already submitting, returning false")
+      return false
+    }
     isSubmitting = true
     errorMessage = nil
 
     do {
-      var body: [String: Any] = ["content": content]
+      var body: [String: Any] = [
+        "itineraryId": itineraryId,
+        "content": content
+      ]
       if let parentId {
         body["parentId"] = parentId
       }
 
+      print("📝 Calling API post with body: \(body)")
       let _: CommentResponse = try await apiClient.post(
-        path: "itineraries/\(itineraryId)/comments",
+        path: "comments",
         body: body
       )
 
+      print("📝 Comment created successfully, refreshing comments...")
       // Refresh comments after creating
       await fetchComments(itineraryId: itineraryId, refresh: true)
 
@@ -116,6 +130,7 @@ final class CommentStore {
       isSubmitting = false
       return true
     } catch {
+      print("📝 Failed to create comment: \(error)")
       logger.error("Failed to create comment: \(error.localizedDescription)")
       errorMessage = error.localizedDescription
       isSubmitting = false
@@ -131,8 +146,8 @@ final class CommentStore {
 
     do {
       let _: CommentResponse = try await apiClient.patch(
-        path: "comments/\(commentId)",
-        body: ["content": content]
+        path: "comments",
+        body: ["id": commentId, "content": content]
       )
 
       // Refresh comments
@@ -156,7 +171,7 @@ final class CommentStore {
     errorMessage = nil
 
     do {
-      try await apiClient.delete(path: "comments/\(commentId)")
+      try await apiClient.delete(path: "comments", body: ["id": commentId])
 
       // Refresh comments
       await fetchComments(itineraryId: itineraryId, refresh: true)
@@ -176,8 +191,8 @@ final class CommentStore {
   func toggleLike(commentId: String) async -> Bool {
     do {
       let response: CommentLikeToggleResponse = try await apiClient.post(
-        path: "comments/\(commentId)/like",
-        body: [:]
+        path: "comments/like",
+        body: ["commentId": commentId]
       )
 
       // Update local state
@@ -212,13 +227,16 @@ final class CommentStore {
     errorMessage = nil
 
     do {
-      var body: [String: Any] = ["reason": reason.rawValue]
+      var body: [String: Any] = [
+        "commentId": commentId,
+        "reason": reason.rawValue
+      ]
       if let description, !description.isEmpty {
         body["description"] = description
       }
 
       try await apiClient.postVoid(
-        path: "comments/\(commentId)/report",
+        path: "comments/report",
         body: body
       )
 

@@ -1,13 +1,10 @@
 import SwiftUI
-import Observation
 
 @main
 struct PathfindingApp: App {
-  @State private var authViewModel = AuthViewModel()
+  @StateObject private var authViewModel = AuthViewModel()
   @State private var themeManager = ThemeManager.shared
   @State private var localizationManager = LocalizationManager.shared
-  @State private var siriNavigationAction: SiriNavigationAction?
-  @Environment(\.scenePhase) private var scenePhase
 
   init() {
     configureAppearance()
@@ -15,45 +12,12 @@ struct PathfindingApp: App {
 
   var body: some Scene {
     WindowGroup {
-      Group {
-        if authViewModel.isLoading {
-          // Show loading state while checking authentication
-          ProgressView()
-            .controlSize(.large)
-        } else if authViewModel.isAuthenticated || authViewModel.isGuestMode {
-          // Show main app when authenticated or in guest mode
-          ContentView()
-            .onSiriNavigationAction(siriNavigationAction)
-        } else {
-          // Show login when not authenticated
-          LoginView()
-        }
-      }
-      .environment(authViewModel)
-      .environment(themeManager)
-      .environment(localizationManager)
-      .withTheme(themeManager)
-      .withLocalization()
-      .task {
-        await authViewModel.initialize()
-        // Apply theme immediately on app launch
-        themeManager.applyThemeImmediately()
-        // Check for pending Siri navigation on app launch
-        checkPendingSiriNavigation()
-      }
-      .onChange(of: scenePhase) { oldPhase, newPhase in
-        if newPhase == .active {
-          // Check for pending Siri navigation when app becomes active
-          checkPendingSiriNavigation()
-        }
-      }
-    }
-  }
-
-  /// Check for pending Siri navigation actions
-  private func checkPendingSiriNavigation() {
-    if #available(iOS 16.0, *) {
-      siriNavigationAction = SiriShortcutsManager.shared.checkPendingNavigation()
+      RootView()
+        .environmentObject(authViewModel)
+        .environment(themeManager)
+        .environment(localizationManager)
+        .withTheme(themeManager)
+        .withLocalization()
     }
   }
 
@@ -81,16 +45,51 @@ struct PathfindingApp: App {
   }
 }
 
+// MARK: - RootView
+
+struct RootView: View {
+  @EnvironmentObject private var authViewModel: AuthViewModel
+  @State private var siriNavigationAction: SiriNavigationAction?
+  @Environment(\.scenePhase) private var scenePhase
+
+  var body: some View {
+    Group {
+      if authViewModel.isLoading {
+        ProgressView()
+          .controlSize(.large)
+      } else if authViewModel.isAuthenticated || authViewModel.isGuestMode {
+        ContentView()
+          .onSiriNavigationAction(siriNavigationAction)
+      } else {
+        LoginView()
+      }
+    }
+    .task {
+      await authViewModel.initialize()
+    }
+    .onChange(of: scenePhase) { oldPhase, newPhase in
+      if newPhase == .active {
+        checkPendingSiriNavigation()
+      }
+    }
+  }
+
+  private func checkPendingSiriNavigation() {
+    if #available(iOS 16.0, *) {
+      siriNavigationAction = SiriShortcutsManager.shared.checkPendingNavigation()
+    }
+  }
+}
+
 // MARK: - AuthViewModel
 
 /// Observable wrapper for AuthManager to provide reactive authentication state to SwiftUI
 @MainActor
-@Observable
-final class AuthViewModel {
-  private(set) var isAuthenticated: Bool = false
-  private(set) var isLoading: Bool = true
-  private(set) var userEmail: String?
-  private(set) var isGuestMode: Bool = false
+final class AuthViewModel: ObservableObject {
+  @Published private(set) var isAuthenticated: Bool = false
+  @Published private(set) var isLoading: Bool = true
+  @Published private(set) var userEmail: String?
+  @Published private(set) var isGuestMode: Bool = false
 
   /// Initialize and check for existing session
   func initialize() async {
@@ -112,8 +111,22 @@ final class AuthViewModel {
   /// Update authentication state from AuthManager
   func updateAuthState() async {
     let authManager = AuthManager.shared
-    isAuthenticated = await authManager.isAuthenticated
-    userEmail = await authManager.userEmail
+    let newIsAuthenticated = await authManager.isAuthenticated
+    let newUserEmail = await authManager.userEmail
+
+    // Ensure UI updates happen on main thread with proper observation
+    await MainActor.run {
+      self.isAuthenticated = newIsAuthenticated
+      self.userEmail = newUserEmail
+
+      // If user logged in successfully, clear guest mode
+      if newIsAuthenticated {
+        self.isGuestMode = false
+        UserDefaults.standard.set(false, forKey: "isGuestMode")
+      }
+
+      print("🔄 AuthViewModel updated: isAuthenticated=\(newIsAuthenticated), email=\(newUserEmail ?? "nil")")
+    }
   }
 
   /// Continue as guest without authentication

@@ -43,7 +43,7 @@ final class FollowStore {
     error = nil
 
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/followers?page=\(page)&pageSize=\(pageSize)"
+      let url = "\(AppConfig.convexURL)/v1/follows/followers?page=\(page)&pageSize=\(pageSize)"
       let response: FollowListResponse = try await performAuthenticatedRequest(url: url)
 
       if page == 1 {
@@ -70,7 +70,7 @@ final class FollowStore {
     error = nil
 
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/following?page=\(page)&pageSize=\(pageSize)"
+      let url = "\(AppConfig.convexURL)/v1/follows/following?page=\(page)&pageSize=\(pageSize)"
       let response: FollowListResponse = try await performAuthenticatedRequest(url: url)
 
       if page == 1 {
@@ -97,7 +97,7 @@ final class FollowStore {
     error = nil
 
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/mutual?page=\(page)&pageSize=\(pageSize)"
+      let url = "\(AppConfig.convexURL)/v1/follows/mutual?page=\(page)&pageSize=\(pageSize)"
       let response: FollowListResponse = try await performAuthenticatedRequest(url: url)
 
       if page == 1 {
@@ -124,7 +124,7 @@ final class FollowStore {
     error = nil
 
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/recommendations?limit=\(limit)"
+      let url = "\(AppConfig.convexURL)/v1/follows/recommendations?limit=\(limit)"
       let response: FollowRecommendationsResponse = try await performAuthenticatedRequest(url: url)
 
       recommendations = response.data
@@ -145,7 +145,7 @@ final class FollowStore {
     error = nil
 
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/\(targetUserId)"
+      let url = "\(AppConfig.convexURL)/v1/follows/\(targetUserId)"
       let _: FollowActionResponse = try await performAuthenticatedRequest(
         url: url,
         method: "POST"
@@ -188,7 +188,7 @@ final class FollowStore {
     error = nil
 
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/\(targetUserId)"
+      let url = "\(AppConfig.convexURL)/v1/follows/\(targetUserId)"
       let _: FollowActionResponse = try await performAuthenticatedRequest(
         url: url,
         method: "DELETE"
@@ -229,7 +229,7 @@ final class FollowStore {
     }
 
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/status/\(targetUserId)"
+      let url = "\(AppConfig.convexURL)/v1/follows/status/\(targetUserId)"
       let response: FollowStatusResponse = try await performAuthenticatedRequest(url: url)
 
       followStatusCache[targetUserId] = response.data
@@ -244,7 +244,7 @@ final class FollowStore {
 
   func batchCheckFollowStatus(_ targetUserIds: [String]) async -> [String: FollowStatus] {
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/batch-status"
+      let url = "\(AppConfig.convexURL)/v1/follows/batch-status"
       let body = ["targetUserIds": targetUserIds]
       let response: BatchFollowStatusResponse = try await performAuthenticatedRequest(
         url: url,
@@ -268,7 +268,7 @@ final class FollowStore {
 
   func getFollowStats(for userId: String) async -> FollowStats? {
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/user/\(userId)/stats"
+      let url = "\(AppConfig.convexURL)/v1/follows/user/\(userId)/stats"
       let response: FollowStatsResponse = try await performPublicRequest(url: url)
       return response.data
     } catch {
@@ -281,7 +281,7 @@ final class FollowStore {
 
   func fetchUserFollowers(userId: String, page: Int = 1, pageSize: Int = 20) async -> (users: [FollowUser], meta: FollowPaginationMeta?) {
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/user/\(userId)/followers?page=\(page)&pageSize=\(pageSize)"
+      let url = "\(AppConfig.convexURL)/v1/follows/user/\(userId)/followers?page=\(page)&pageSize=\(pageSize)"
       let response: FollowListResponse = try await performPublicRequest(url: url)
       return (response.data, response.meta)
     } catch {
@@ -294,7 +294,7 @@ final class FollowStore {
 
   func fetchUserFollowing(userId: String, page: Int = 1, pageSize: Int = 20) async -> (users: [FollowUser], meta: FollowPaginationMeta?) {
     do {
-      let url = "\(AppConfig.apiBaseURL)/v1/follows/user/\(userId)/following?page=\(page)&pageSize=\(pageSize)"
+      let url = "\(AppConfig.convexURL)/v1/follows/user/\(userId)/following?page=\(page)&pageSize=\(pageSize)"
       let response: FollowListResponse = try await performPublicRequest(url: url)
       return (response.data, response.meta)
     } catch {

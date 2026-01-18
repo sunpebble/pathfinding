@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ProfileView: View {
+  @EnvironmentObject private var authViewModel: AuthViewModel
   @Environment(ThemeManager.self) private var themeManager
   @Environment(\.localizationManager) private var localizationManager
   @State private var showAPISettings = false
@@ -18,14 +19,68 @@ struct ProfileView: View {
   @State private var navigateToLikes = false
   @State private var navigateToFollowManagement = false
 
+  /// Whether user is logged in (not guest mode)
+  private var isLoggedIn: Bool {
+    authViewModel.isAuthenticated && !authViewModel.isGuestMode
+  }
+
   var body: some View {
     NavigationStack {
       List {
         // MARK: - Profile Section
         Section {
-          Button {
-            showLogin = true
-          } label: {
+          if isLoggedIn {
+            // Show logged-in user info
+            HStack(spacing: DesignTokens.Spacing.lg) {
+              // Avatar with enhanced styling
+              ZStack {
+                Circle()
+                  .fill(
+                    LinearGradient(
+                      colors: [.indigo.opacity(0.3), .purple.opacity(0.3)],
+                      startPoint: .topLeading,
+                      endPoint: .bottomTrailing
+                    )
+                  )
+                  .frame(width: 80, height: 80)
+                  .blur(radius: 8)
+
+                Circle()
+                  .fill(
+                    LinearGradient(
+                      colors: [.indigo, .purple],
+                      startPoint: .topLeading,
+                      endPoint: .bottomTrailing
+                    )
+                  )
+                  .frame(width: 72, height: 72)
+                  .shadow(color: .indigo.opacity(0.4), radius: 8, y: 4)
+
+                Image(systemName: "person.fill")
+                  .font(.system(size: 32, weight: .medium))
+                  .foregroundStyle(.white)
+              }
+              .frame(width: 80, height: 80)
+
+              VStack(alignment: .leading, spacing: 6) {
+                Text(authViewModel.userEmail ?? "User")
+                  .font(.title2)
+                  .fontWeight(.bold)
+                  .foregroundStyle(.primary)
+
+                Text("profile.logged_in".localized)
+                  .font(.subheadline)
+                  .foregroundStyle(.secondary)
+              }
+
+              Spacer()
+            }
+            .padding(.vertical, DesignTokens.Spacing.sm)
+          } else {
+            // Show guest prompt
+            Button {
+              showLogin = true
+            } label: {
             HStack(spacing: DesignTokens.Spacing.lg) {
               // Avatar with enhanced styling
               ZStack {
@@ -85,6 +140,7 @@ struct ProfileView: View {
             .padding(.vertical, DesignTokens.Spacing.sm)
           }
           .buttonStyle(.plain)
+          } // end else (guest)
         }
 
         // MARK: - Stats Section
@@ -294,7 +350,7 @@ struct ProfileView: View {
             SettingsRow(
               icon: "server.rack",
               title: "profile.api_config".localized,
-              subtitle: AppConfig.apiBaseURL,
+              subtitle: AppConfig.convexURL,
               iconColor: .blue,
               showChevron: true
             )
@@ -551,7 +607,7 @@ struct SettingsRow: View {
 
 struct APISettingsSheet: View {
   @Environment(\.dismiss) private var dismiss
-  @State private var apiURL = AppConfig.apiBaseURL
+  @State private var apiURL = AppConfig.convexURL
 
   var body: some View {
     NavigationStack {

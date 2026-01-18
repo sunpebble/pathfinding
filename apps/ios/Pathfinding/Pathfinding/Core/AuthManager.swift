@@ -61,7 +61,7 @@ actor AuthManager {
 
   /// Sign in with email and password
   func signIn(email: String, password: String) async throws {
-    let url = convexURL.appendingPathComponent("api/auth/signin/password")
+    let url = convexURL.appendingPathComponent("http/api/auth/signin/password")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -83,7 +83,7 @@ actor AuthManager {
 
   /// Sign up with email and password
   func signUp(email: String, password: String, name: String? = nil) async throws {
-    let url = convexURL.appendingPathComponent("api/auth/signin/password")
+    let url = convexURL.appendingPathComponent("http/api/auth/signin/password")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -128,7 +128,7 @@ actor AuthManager {
       throw AuthError.invalidPhoneNumber
     }
 
-    let url = convexURL.appendingPathComponent("api/auth/sms/send")
+    let url = convexURL.appendingPathComponent("http/api/auth/sms/send")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -147,7 +147,7 @@ actor AuthManager {
 
     guard httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
       if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
-        throw AuthError.serverError(errorResponse.message)
+        throw AuthError.serverError(errorResponse.errorMessage)
       }
       throw AuthError.httpError(httpResponse.statusCode)
     }
@@ -165,7 +165,7 @@ actor AuthManager {
       throw AuthError.invalidVerificationCode
     }
 
-    let url = convexURL.appendingPathComponent("api/auth/signin/phone")
+    let url = convexURL.appendingPathComponent("http/api/auth/signin/phone")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -197,7 +197,7 @@ actor AuthManager {
 
     // Call sign out endpoint if we have a token
     if let token = accessToken {
-      let url = convexURL.appendingPathComponent("api/auth/signout")
+      let url = convexURL.appendingPathComponent("http/api/auth/signout")
 
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
@@ -227,7 +227,7 @@ actor AuthManager {
 
     logger.info("Refreshing access token")
 
-    let url = convexURL.appendingPathComponent("api/auth/refresh")
+    let url = convexURL.appendingPathComponent("http/api/auth/refresh")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -264,27 +264,64 @@ actor AuthManager {
   // MARK: - Private Methods
 
   private func performAuthRequest(_ request: URLRequest) async throws -> AuthResponse {
-    let (data, response) = try await session.data(for: request)
+    logger.info("Making auth request to: \(request.url?.absoluteString ?? "unknown")")
+
+    // Log request body for debugging
+    if let body = request.httpBody, let bodyString = String(data: body, encoding: .utf8) {
+      logger.debug("Request body: \(bodyString)")
+    }
+
+    let data: Data
+    let response: URLResponse
+    do {
+      (data, response) = try await session.data(for: request)
+    } catch {
+      logger.error("Network error: \(String(describing: error))")
+      throw error
+    }
 
     guard let httpResponse = response as? HTTPURLResponse else {
       throw AuthError.invalidResponse
     }
 
+    logger.info("Auth response status: \(httpResponse.statusCode)")
+
+    // Log response body for debugging
+    if let responseString = String(data: data, encoding: .utf8) {
+      logger.debug("Response body: \(responseString.prefix(500))")
+    }
+
     switch httpResponse.statusCode {
     case 200...299:
-      return try decoder.decode(AuthResponse.self, from: data)
+      do {
+        return try decoder.decode(AuthResponse.self, from: data)
+      } catch {
+        logger.error("Failed to decode AuthResponse: \(error)")
+        // Try to get error message from response
+        if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
+          throw AuthError.serverError(errorResponse.errorMessage)
+        }
+        throw AuthError.invalidResponse
+      }
 
     case 401:
+      // Try to get error message
+      if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
+        throw AuthError.serverError(errorResponse.errorMessage)
+      }
       throw AuthError.invalidCredentials
 
     case 400:
       // Try to decode error message
       if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
-        throw AuthError.serverError(errorResponse.message)
+        throw AuthError.serverError(errorResponse.errorMessage)
       }
       throw AuthError.invalidRequest
 
     case 500...599:
+      if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
+        throw AuthError.serverError(errorResponse.errorMessage)
+      }
       throw AuthError.serverError("Server error (\(httpResponse.statusCode))")
 
     default:
@@ -477,5 +514,10 @@ private struct AuthResponse: Codable {
 }
 
 private struct ErrorResponse: Codable {
-  let message: String
+  let error: String?
+  let message: String?
+
+  var errorMessage: String {
+    error ?? message ?? "Unknown error"
+  }
 }

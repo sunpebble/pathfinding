@@ -1986,10 +1986,11 @@ actor APIClient {
 
 extension APIClient {
   /// Generic GET request with path and optional query items
+  /// Path should be like "comments", "notifications", etc. (without api/ prefix)
   func fetch<T: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let baseURL = URL(string: AppConfig.convexURL)!
     var components = URLComponents(
-      url: baseURL.appendingPathComponent("v1/\(path)"),
+      url: baseURL.appendingPathComponent("http/api/\(path)"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -2026,9 +2027,13 @@ extension APIClient {
   }
 
   /// Generic POST request with path and body
+  /// Path should be like "comments", "notifications", etc. (without api/ prefix)
   func post<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
+
+    print("🌐 POST \(url.absoluteString)")
+    print("🌐 Body: \(body)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -2036,15 +2041,26 @@ extension APIClient {
     request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
     if let token = try? await AuthManager.shared.getAccessToken() {
+      print("🌐 Token found: \(token.prefix(20))...")
       request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    } else {
+      print("🌐 No token available!")
     }
 
     let (data, response) = try await URLSession.shared.data(for: request)
 
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw APIError.httpError(500)
+    }
+
+    print("🌐 Response status: \(httpResponse.statusCode)")
+    if let responseStr = String(data: data, encoding: .utf8) {
+      print("🌐 Response body: \(responseStr.prefix(200))")
+    }
+
+    guard httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
     else {
-      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
+      let statusCode = httpResponse.statusCode
       if statusCode == 401 {
         throw APIError.unauthorized
       } else if statusCode == 404 {
@@ -2058,8 +2074,8 @@ extension APIClient {
 
   /// Generic POST request with path and Encodable body
   func post<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -2089,8 +2105,8 @@ extension APIClient {
 
   /// POST request that doesn't return a value
   func postVoid(path: String, body: [String: Any]) async throws {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -2118,8 +2134,8 @@ extension APIClient {
 
   /// Generic PUT request with path and body
   func put<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "PUT"
@@ -2149,8 +2165,8 @@ extension APIClient {
 
   /// Generic PUT request with path and Encodable body
   func putWithBody<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "PUT"
@@ -2180,8 +2196,8 @@ extension APIClient {
 
   /// Generic PATCH request with path and body
   func patch<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "PATCH"
@@ -2211,8 +2227,8 @@ extension APIClient {
 
   /// Generic PATCH request with path and Encodable body
   func patchWithBody<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "PATCH"
@@ -2242,11 +2258,40 @@ extension APIClient {
 
   /// Generic DELETE request with path
   func delete(path: String) async throws {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "DELETE"
+
+    if let token = try? await AuthManager.shared.getAccessToken() {
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    let (_, response) = try await URLSession.shared.data(for: request)
+
+    guard let httpResponse = response as? HTTPURLResponse,
+          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
+    else {
+      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
+      if statusCode == 401 {
+        throw APIError.unauthorized
+      } else if statusCode == 404 {
+        throw APIError.notFound
+      }
+      throw APIError.httpError(statusCode)
+    }
+  }
+
+  /// Generic DELETE request with path and body
+  func delete(path: String, body: [String: Any]) async throws {
+    let baseURL = URL(string: AppConfig.convexURL)!
+    let url = baseURL.appendingPathComponent("http/api/\(path)")
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "DELETE"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
     if let token = try? await AuthManager.shared.getAccessToken() {
       request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
