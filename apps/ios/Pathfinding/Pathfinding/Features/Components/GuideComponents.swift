@@ -26,54 +26,85 @@ struct FeaturedCard: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      // Cover Image
-      ZStack(alignment: .topTrailing) {
-        CachedAsyncImage(url: URL(string: guide.coverImage ?? "")) { image in
-          image
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-        } placeholder: {
-          Rectangle()
-            .fill(
-              LinearGradient(
-                colors: [DesignTokens.Colors.accent.opacity(0.3), DesignTokens.Colors.accentSecondary.opacity(0.2)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+      // Cover Image with Core Data Overlay
+      ZStack(alignment: .bottom) {
+        ZStack(alignment: .topTrailing) {
+          CachedAsyncImage(url: URL(string: guide.coverImage ?? "")) { image in
+            image
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+          } placeholder: {
+            Rectangle()
+              .fill(
+                LinearGradient(
+                  colors: [DesignTokens.Colors.accent.opacity(0.3), DesignTokens.Colors.accentSecondary.opacity(0.2)],
+                  startPoint: .topLeading,
+                  endPoint: .bottomTrailing
+                )
               )
-            )
-            .overlay {
-              Image(systemName: "photo")
-                .font(.title)
-                .foregroundStyle(.white.opacity(0.5))
-            }
-        }
-        .frame(width: 280, height: 180)
-        .clipped()
+              .overlay {
+                Image(systemName: "photo")
+                  .font(.title)
+                  .foregroundStyle(.white.opacity(0.5))
+              }
+          }
+          .frame(width: 280, height: 180)
+          .clipped()
 
-        // AI Badge
+          // AI Badge
+          if guide.aiProcessedAt != nil {
+            Badge("AI", icon: "sparkles", style: .ai)
+              .padding(DesignTokens.Spacing.sm)
+          }
+        }
+
+        // Core Travel Data Bar - only show if AI processed
         if guide.aiProcessedAt != nil {
-          Badge("AI", icon: "sparkles", style: .ai)
-            .padding(DesignTokens.Spacing.sm)
+          HStack(spacing: DesignTokens.Spacing.sm) {
+            if let duration = guide.aiDuration {
+              CoreDataBadge(icon: "clock", text: duration)
+            }
+            if let budget = guide.aiBudget {
+              CoreDataBadge(icon: "yensign.circle", text: budget)
+            }
+            if let days = guide.aiDays {
+              CoreDataBadge(icon: "calendar", text: "\(days.count)天")
+            }
+            Spacer()
+          }
+          .padding(.horizontal, DesignTokens.Spacing.sm)
+          .padding(.vertical, DesignTokens.Spacing.xs)
+          .background(.ultraThinMaterial)
         }
       }
 
       // Content
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        // Destination tags
+        if let destinations = guide.destinations, !destinations.isEmpty {
+          HStack(spacing: DesignTokens.Spacing.xxs) {
+            ForEach(destinations.prefix(2), id: \.self) { dest in
+              Text(dest)
+                .font(.caption2)
+                .fontWeight(.medium)
+                .padding(.horizontal, DesignTokens.Spacing.xs)
+                .padding(.vertical, DesignTokens.Spacing.xxs)
+                .background(DesignTokens.Colors.accent.opacity(0.1))
+                .foregroundStyle(DesignTokens.Colors.accent)
+                .clipShape(Capsule())
+            }
+          }
+        }
+
         Text(guide.title)
           .font(.headline)
+          .fontWeight(.bold)
           .lineLimit(2)
           .foregroundStyle(.primary)
 
-        if let summary = guide.aiSummary ?? guide.summary {
-          Text(summary)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(2)
-        }
-
         HStack(spacing: DesignTokens.Spacing.sm) {
           if let author = guide.author {
-            HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {
               Image(systemName: "person.circle.fill")
                 .foregroundStyle(.tertiary)
               Text(author)
@@ -103,6 +134,33 @@ struct FeaturedCard: View {
       return String(format: "%.1fk", Double(num) / 1000)
     }
     return "\(num)"
+  }
+}
+
+// MARK: - Core Data Badge
+
+private struct CoreDataBadge: View {
+  let icon: String
+  let text: String
+
+  /// Truncate long text to max characters
+  private var displayText: String {
+    if text.count > 8 {
+      return String(text.prefix(7)) + "…"
+    }
+    return text
+  }
+
+  var body: some View {
+    HStack(spacing: DesignTokens.Spacing.xxs) {
+      Image(systemName: icon)
+        .font(.caption2)
+      Text(displayText)
+        .font(.caption2)
+        .fontWeight(.medium)
+        .lineLimit(1)
+    }
+    .foregroundStyle(.white)
   }
 }
 
@@ -194,7 +252,7 @@ struct GuideListRow: View {
             .aspectRatio(contentMode: .fill)
         } placeholder: {
           Rectangle()
-            .fill(Color(.systemGray5))
+            .fill(DesignTokens.Colors.fillTertiary)
         }
         .frame(width: 90, height: 68)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
@@ -202,7 +260,7 @@ struct GuideListRow: View {
         // AI indicator
         if guide.aiProcessedAt != nil {
           Circle()
-            .fill(Color.aiPurple.gradient)
+            .fill(DesignTokens.Colors.aiPurple.gradient)
             .frame(width: 18, height: 18)
             .overlay {
               Image(systemName: "sparkles")
@@ -217,9 +275,21 @@ struct GuideListRow: View {
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
         Text(guide.title)
           .font(.subheadline)
-          .fontWeight(.medium)
+          .fontWeight(.semibold)
           .lineLimit(2)
           .foregroundStyle(.primary)
+
+        // Core travel data - compact display
+        if guide.aiProcessedAt != nil {
+          HStack(spacing: DesignTokens.Spacing.xs) {
+            if let duration = guide.aiDuration {
+              CompactInfoTag(icon: "clock", text: duration)
+            }
+            if let budget = guide.aiBudget {
+              CompactInfoTag(icon: "yensign.circle", text: budget)
+            }
+          }
+        }
 
         Spacer()
 
@@ -237,7 +307,7 @@ struct GuideListRow: View {
               StatLabel(icon: "eye", value: formatNumber(views))
             }
             if let likes = guide.likeCount, likes > 0 {
-              StatLabel(icon: "heart.fill", value: formatNumber(likes), color: .red.opacity(0.7))
+              StatLabel(icon: "heart.fill", value: formatNumber(likes), color: DesignTokens.Colors.error.opacity(0.7))
             }
           }
         }
@@ -259,6 +329,35 @@ struct GuideListRow: View {
   }
 }
 
+// MARK: - Compact Info Tag
+
+private struct CompactInfoTag: View {
+  let icon: String
+  let text: String
+
+  /// Truncate long text to max characters
+  private var displayText: String {
+    if text.count > 8 {
+      return String(text.prefix(7)) + "…"
+    }
+    return text
+  }
+
+  var body: some View {
+    HStack(spacing: DesignTokens.Spacing.xxs) {
+      Image(systemName: icon)
+      Text(displayText)
+        .lineLimit(1)
+    }
+    .font(.caption2)
+    .foregroundStyle(.secondary)
+    .padding(.horizontal, DesignTokens.Spacing.xs)
+    .padding(.vertical, 2)
+    .background(DesignTokens.Colors.fillQuaternary)
+    .clipShape(Capsule())
+  }
+}
+
 // MARK: - Guide List Row Skeleton
 
 struct GuideListRowSkeleton: View {
@@ -271,25 +370,25 @@ struct GuideListRowSkeleton: View {
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
         ShimmerView()
           .frame(height: 16)
-          .clipShape(RoundedRectangle(cornerRadius: 4))
+          .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xxs))
 
         ShimmerView()
           .frame(height: 14)
           .frame(width: 150)
-          .clipShape(RoundedRectangle(cornerRadius: 4))
+          .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xxs))
 
         Spacer()
 
         HStack {
           ShimmerView()
             .frame(width: 60, height: 12)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xxs))
 
           Spacer()
 
           ShimmerView()
             .frame(width: 80, height: 12)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xxs))
         }
       }
     }

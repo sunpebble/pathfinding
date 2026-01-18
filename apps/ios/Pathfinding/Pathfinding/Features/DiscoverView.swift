@@ -95,7 +95,7 @@ struct DiscoverView: View {
         }
         .toggleStyle(.button)
         .buttonStyle(.bordered)
-        .tint(onlyAiGuides ? .indigo : .secondary)
+        .tint(onlyAiGuides ? DesignTokens.Colors.accent : .secondary)
 
         Menu {
           ForEach(TimeFilter.allCases, id: \.self) { filter in
@@ -115,7 +115,7 @@ struct DiscoverView: View {
             .font(.subheadline)
         }
         .buttonStyle(.bordered)
-        .tint(timeFilter != .all ? .indigo : .secondary)
+        .tint(timeFilter != .all ? DesignTokens.Colors.accent : .secondary)
 
         Spacer()
       }
@@ -130,7 +130,7 @@ struct DiscoverView: View {
         .font(.subheadline)
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
-        .background(selectedCity == city ? Color.indigo : Color(.systemGray5))
+        .background(selectedCity == city ? DesignTokens.Colors.accent : DesignTokens.Colors.fillTertiary)
         .foregroundStyle(selectedCity == city ? .white : .primary)
         .clipShape(Capsule())
     }

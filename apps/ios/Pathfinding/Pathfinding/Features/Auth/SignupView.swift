@@ -105,7 +105,6 @@ struct SignupView: View {
 
             // Signup Button
             Button {
-              print("🔘 Signup button tapped!")
               Task {
                 await handleSignup()
               }
@@ -231,34 +230,25 @@ struct SignupView: View {
   // MARK: - Actions
 
   private func handleSignup() async {
-    print("📝 handleSignup() called")
     guard isFormValid else {
-      print("📝 Form not valid")
       errorMessage = "请确保所有字段都已填写且密码匹配"
       return
     }
 
-    print("📝 Starting signup with email: \(email)")
     isLoading = true
     errorMessage = nil
 
     do {
-      print("📝 Calling AuthManager.signUp...")
       try await AuthManager.shared.signUp(email: email, password: password)
 
-      print("📝 Signup successful, updating auth state...")
       // Update auth state to trigger UI refresh
       await authViewModel.updateAuthState()
 
       await MainActor.run {
         isLoading = false
-        // Dismiss the signup view
         dismiss()
       }
-      print("📝 Signup complete!")
-      // No need to dismiss - the app will automatically show ContentView
     } catch {
-      print("📝 Signup error: \(error)")
       await MainActor.run {
         errorMessage = error.localizedDescription
         isLoading = false

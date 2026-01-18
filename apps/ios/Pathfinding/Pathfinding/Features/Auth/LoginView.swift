@@ -1,7 +1,4 @@
 import SwiftUI
-import OSLog
-
-private let authLogger = Logger(subsystem: "org.pathfinding.app", category: "Auth")
 
 /// Login method options
 enum LoginMethod: String, CaseIterable {
@@ -50,21 +47,15 @@ struct LoginView: View {
           VStack(spacing: DesignTokens.Spacing.sm) {
             // App Icon
             ZStack {
-              RoundedRectangle(cornerRadius: 24)
-                .fill(
-                  LinearGradient(
-                    colors: [.indigo, .purple],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                  )
-                )
+              RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
+                .fill(DesignTokens.Colors.primaryGradient)
                 .frame(width: 80, height: 80)
 
               Image(systemName: "map.fill")
-                .font(.system(size: 36))
+                .font(DesignTokens.Typography.Display.small)
                 .foregroundStyle(.white)
             }
-            .shadow(color: .indigo.opacity(0.3), radius: 20, y: 10)
+            .shadow(color: DesignTokens.Colors.accent.opacity(0.3), radius: 20, y: 10)
             .padding(.top, DesignTokens.Spacing.xl)
 
             Text("欢迎回来")
@@ -98,57 +89,43 @@ struct LoginView: View {
             if let errorMessage {
               HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: "exclamationmark.circle.fill")
-                  .foregroundStyle(.red)
+                .foregroundStyle(DesignTokens.Colors.error)
                 Text(errorMessage)
                   .font(.caption)
-                  .foregroundStyle(.red)
+                .foregroundStyle(DesignTokens.Colors.error)
               }
               .padding(.vertical, DesignTokens.Spacing.xs)
             }
 
-            // Login Button - using simple tappable view for debugging
-            Text(isLoading ? "登录中..." : "登录 (点我)")
-              .fontWeight(.semibold)
-              .foregroundStyle(.white)
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, 14)
-              .background(isLoginDisabled ? Color.gray : Color.blue)
-              .clipShape(RoundedRectangle(cornerRadius: 12))
-              .simultaneousGesture(
-                TapGesture()
-                  .onEnded { _ in
-                    guard !isLoginDisabled else { return }
-                    authLogger.error("LOGIN BUTTON TAPPED!")
-                    print("🔘🔘🔘 LOGIN BUTTON TAPPED! 🔘🔘🔘")
-
-                    // Show alert to confirm tap is working
-                    errorMessage = "按钮已点击，正在登录..."
-
-                    Task {
-                      await handleLogin()
-                    }
-                  }
-              )
-              .allowsHitTesting(!isLoginDisabled)
-              .opacity(isLoginDisabled ? 0.6 : 1.0)
-              .padding(.top, DesignTokens.Spacing.xs)
-
-            // Debug info
-            #if DEBUG
-            VStack(alignment: .leading, spacing: 4) {
-              Text(verbatim: "Debug: disabled=\(isLoginDisabled), email=\(email.isEmpty ? "empty" : "filled"), pwd=\(password.isEmpty ? "empty" : "filled"), method=\(loginMethod.rawValue)")
-              Text(verbatim: "AuthVM: isAuth=\(authViewModel.isAuthenticated), isLoading=\(authViewModel.isLoading), isGuest=\(authViewModel.isGuestMode)")
+            // Login Button
+            Button {
+              Task {
+                await handleLogin()
+              }
+            } label: {
+              if isLoading {
+                ProgressView()
+                  .progressViewStyle(.circular)
+                  .tint(.white)
+              } else {
+                Text("登录")
+                  .fontWeight(.semibold)
+              }
             }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            #endif
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .background(isLoginDisabled ? DesignTokens.Colors.textTertiary : DesignTokens.Colors.accent)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+            .disabled(isLoginDisabled)
+            .padding(.top, DesignTokens.Spacing.xs)
           }
           .padding(.horizontal, DesignTokens.Spacing.lg)
 
           // MARK: - Divider
           HStack(spacing: DesignTokens.Spacing.sm) {
             Rectangle()
-              .fill(Color(.systemGray4))
+              .fill(DesignTokens.Colors.border)
               .frame(height: 1)
 
             Text("或")
@@ -156,7 +133,7 @@ struct LoginView: View {
               .foregroundStyle(.secondary)
 
             Rectangle()
-              .fill(Color(.systemGray4))
+              .fill(DesignTokens.Colors.border)
               .frame(height: 1)
           }
           .padding(.horizontal, DesignTokens.Spacing.lg)
@@ -206,7 +183,7 @@ struct LoginView: View {
           .padding(.horizontal, DesignTokens.Spacing.lg)
 
           // MARK: - Sign Up Link
-          HStack(spacing: 4) {
+          HStack(spacing: DesignTokens.Spacing.xxs) {
             Text("还没有账号？")
               .font(.subheadline)
               .foregroundStyle(.secondary)
@@ -326,7 +303,7 @@ struct LoginView: View {
           .keyboardType(.emailAddress)
           .autocorrectionDisabled()
           .padding()
-          .background(Color(.systemGray6))
+          .background(DesignTokens.Colors.fillQuaternary)
           .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
       }
 
@@ -340,7 +317,7 @@ struct LoginView: View {
           .textInputAutocapitalization(.never)
           .autocorrectionDisabled()
           .padding()
-          .background(Color(.systemGray6))
+          .background(DesignTokens.Colors.fillQuaternary)
           .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
       }
 
@@ -415,44 +392,28 @@ struct LoginView: View {
   }
 
   private func handleLogin() async {
-    print("🔐 handleLogin() called - loginMethod: \(loginMethod)")
     isLoading = true
     errorMessage = nil
 
     do {
       switch loginMethod {
       case .phone:
-        print("🔐 Calling signInWithPhone...")
         try await AuthManager.shared.signInWithPhone(
           phoneNumber: phoneNumber,
           verificationCode: verificationCode
         )
       case .email:
-        print("🔐 Calling signIn with email: \(email)")
         try await AuthManager.shared.signIn(email: email, password: password)
       }
-
-      print("🔐 Auth successful, updating state...")
-
-      // Check auth state before update
-      let isAuthBefore = await AuthManager.shared.isAuthenticated
-      print("🔐 isAuthenticated BEFORE update: \(isAuthBefore)")
 
       // Update auth state to trigger UI refresh
       await authViewModel.updateAuthState()
 
-      // Check auth state after update
-      print("🔐 authViewModel.isAuthenticated AFTER update: \(authViewModel.isAuthenticated)")
-
       await MainActor.run {
         isLoading = false
-        // Dismiss the login view if presented as sheet
         dismiss()
       }
-      print("🔐 Login complete!")
-      // No need to dismiss - the app will automatically show ContentView
     } catch {
-      print("🔐 Login error: \(error)")
       await MainActor.run {
         errorMessage = error.localizedDescription
         isLoading = false

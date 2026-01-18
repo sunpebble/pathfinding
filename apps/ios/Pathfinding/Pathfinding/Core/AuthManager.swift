@@ -26,6 +26,7 @@ actor AuthManager {
   private(set) var userId: String?
   private(set) var userEmail: String?
   private(set) var isAuthenticated: Bool = false
+  private var sessionLoaded: Bool = false
 
   /// Synchronous access to current user ID (cached value)
   nonisolated var currentUserId: String? {
@@ -244,6 +245,12 @@ actor AuthManager {
 
   // MARK: - Session Management
 
+  /// Ensure stored session is loaded (call this before checking auth state)
+  func ensureSessionLoaded() async {
+    guard !sessionLoaded else { return }
+    await loadStoredSession()
+  }
+
   /// Get current access token (refreshing if needed)
   func getAccessToken() async throws -> String {
     if let token = accessToken {
@@ -353,25 +360,27 @@ actor AuthManager {
   }
 
   private func loadStoredSession() async {
-    do {
-      let token = try? loadFromKeychain(key: accessTokenKey)
-      let refresh = try? loadFromKeychain(key: refreshTokenKey)
-      let userId = try? loadFromKeychain(key: userIdKey)
-      let email = try? loadFromKeychain(key: userEmailKey)
+    guard !sessionLoaded else { return }
 
-      if let token = token {
-        self.accessToken = token
-        self.refreshToken = refresh
-        self.userId = userId
-        self.userEmail = email
-        self.isAuthenticated = true
+    let token = try? loadFromKeychain(key: accessTokenKey)
+    let refresh = try? loadFromKeychain(key: refreshTokenKey)
+    let storedUserId = try? loadFromKeychain(key: userIdKey)
+    let email = try? loadFromKeychain(key: userEmailKey)
 
-        // Update cached userId for synchronous access
-        AuthManager._sharedCachedUserId = userId
+    if let token = token {
+      self.accessToken = token
+      self.refreshToken = refresh
+      self.userId = storedUserId
+      self.userEmail = email
+      self.isAuthenticated = true
 
-        logger.info("Restored session from Keychain")
-      }
+      // Update cached userId for synchronous access
+      AuthManager._sharedCachedUserId = storedUserId
+
+      logger.info("Restored session from Keychain")
     }
+
+    sessionLoaded = true
   }
 
   private func clearSession() async {

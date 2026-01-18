@@ -101,8 +101,8 @@ final class AuthViewModel: ObservableObject {
       return
     }
 
-    // Give AuthManager time to load stored session
-    try? await Task.sleep(for: .milliseconds(100))
+    // Ensure AuthManager has loaded stored session from Keychain
+    await AuthManager.shared.ensureSessionLoaded()
 
     await updateAuthState()
     isLoading = false
@@ -114,18 +114,13 @@ final class AuthViewModel: ObservableObject {
     let newIsAuthenticated = await authManager.isAuthenticated
     let newUserEmail = await authManager.userEmail
 
-    // Ensure UI updates happen on main thread with proper observation
-    await MainActor.run {
-      self.isAuthenticated = newIsAuthenticated
-      self.userEmail = newUserEmail
+    self.isAuthenticated = newIsAuthenticated
+    self.userEmail = newUserEmail
 
-      // If user logged in successfully, clear guest mode
-      if newIsAuthenticated {
-        self.isGuestMode = false
-        UserDefaults.standard.set(false, forKey: "isGuestMode")
-      }
-
-      print("🔄 AuthViewModel updated: isAuthenticated=\(newIsAuthenticated), email=\(newUserEmail ?? "nil")")
+    // If user logged in successfully, clear guest mode
+    if newIsAuthenticated {
+      self.isGuestMode = false
+      UserDefaults.standard.set(false, forKey: "isGuestMode")
     }
   }
 

@@ -31,13 +31,13 @@ struct BlogDetailView: View {
   }
 
   private let dayColors: [Color] = [
-    .blue,    // Day 1
-    .orange,  // Day 2
-    .green,   // Day 3
-    .purple,  // Day 4
-    .pink,    // Day 5
-    .teal,    // Day 6
-    .red,     // Day 7+
+    DesignTokens.Colors.info,     // Day 1
+    DesignTokens.Colors.warning,  // Day 2
+    DesignTokens.Colors.success,  // Day 3
+    DesignTokens.Colors.aiPurple, // Day 4
+    .pink,                        // Day 5
+    .teal,                        // Day 6
+    DesignTokens.Colors.error,    // Day 7+
   ]
 
   private func colorForDay(_ dayNumber: Int) -> Color {
@@ -281,7 +281,7 @@ struct BlogDetailView: View {
   private var imageGallery: some View {
     if displayImages.isEmpty {
       Rectangle()
-        .fill(Color(.systemGray5))
+        .fill(DesignTokens.Colors.fillTertiary)
         .aspectRatio(16 / 9, contentMode: .fill)
         .frame(maxWidth: .infinity)
     } else if displayImages.count == 1 {
@@ -291,7 +291,7 @@ struct BlogDetailView: View {
           .aspectRatio(16 / 9, contentMode: .fill)
       } placeholder: {
         Rectangle()
-          .fill(Color(.systemGray5))
+          .fill(DesignTokens.Colors.fillTertiary)
           .aspectRatio(16 / 9, contentMode: .fill)
           .overlay { ProgressView() }
       }
@@ -311,7 +311,7 @@ struct BlogDetailView: View {
                 .aspectRatio(contentMode: .fill)
             } placeholder: {
               Rectangle()
-                .fill(Color(.systemGray5))
+                .fill(DesignTokens.Colors.fillTertiary)
                 .overlay { ProgressView() }
             }
             .tag(index)
@@ -333,7 +333,7 @@ struct BlogDetailView: View {
           HStack(spacing: 6) {
             ForEach(0..<displayImages.count, id: \.self) { index in
               Capsule()
-                .fill(index == currentImageIndex ? Color.white : Color.white.opacity(0.5))
+                .fill(index == currentImageIndex ? DesignTokens.Colors.textInverted : DesignTokens.Colors.textInverted.opacity(0.5))
                 .frame(width: index == currentImageIndex ? 16 : 6, height: 6)
                 .animation(.spring(response: 0.3), value: currentImageIndex)
             }
@@ -495,57 +495,64 @@ struct BlogDetailView: View {
   // MARK: - Quick Info Section
 
   private var quickInfoSection: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: DesignTokens.Spacing.sm) {
-        if let duration = guide.aiDuration {
-          QuickInfoCard(icon: "clock", title: "时长", value: duration, color: .blue)
-        }
-        if let budget = guide.aiBudget {
-          QuickInfoCard(icon: "yensign.circle", title: "预算", value: budget, color: .green)
-        }
-        if let bestTime = guide.aiBestTime {
-          QuickInfoCard(icon: "calendar", title: "最佳时间", value: bestTime, color: .orange)
-        }
-        if let days = guide.aiDays {
-          QuickInfoCard(
-            icon: "map",
-            title: "行程",
-            value: "\(days.count)天",
-            color: .purple
-          )
-        }
-        // Safety info card with navigation
-        if let destination = guide.destinations?.first {
-          NavigationLink {
-            SafetyRatingView(destinationName: destination)
-          } label: {
-            QuickInfoCard(icon: "shield.fill", title: "安全", value: "查看", color: .red)
-          }
-          .buttonStyle(.plain)
-        }
+    let columns = [
+      GridItem(.flexible(), spacing: DesignTokens.Spacing.sm),
+      GridItem(.flexible(), spacing: DesignTokens.Spacing.sm)
+    ]
+
+    return LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.sm) {
+      if let duration = guide.aiDuration {
+        QuickInfoCard(icon: "clock", title: "时长", value: duration, color: DesignTokens.Colors.info)
+      }
+      if let budget = guide.aiBudget {
+        QuickInfoCard(icon: "yensign.circle", title: "预算", value: budget, color: DesignTokens.Colors.success)
+      }
+      if let bestTime = guide.aiBestTime {
+        QuickInfoCard(icon: "calendar", title: "最佳时间", value: bestTime, color: DesignTokens.Colors.warning)
+      }
+      if let days = guide.aiDays {
+        QuickInfoCard(
+          icon: "map",
+          title: "行程",
+          value: "\(days.count)天",
+          color: DesignTokens.Colors.aiPurple
+        )
       }
     }
-    .scrollClipDisabled()
   }
 
   // MARK: - AI Summary Section
 
   private func aiSummarySection(_ summary: String) -> some View {
-    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Label("AI 摘要", systemImage: "sparkles")
-        .font(.headline)
-        .foregroundStyle(.purple)
+    HStack(spacing: 0) {
+      // Left gradient border accent
+      RoundedRectangle(cornerRadius: DesignTokens.Radius.xxs)
+        .fill(
+          LinearGradient(
+            colors: [DesignTokens.Colors.aiPurple, DesignTokens.Colors.accent],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+        )
+        .frame(width: 4)
 
-      Text(summary)
-        .font(.body)
-        .lineSpacing(4)
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+        Label("AI 摘要", systemImage: "sparkles")
+          .font(.headline)
+          .foregroundStyle(DesignTokens.Colors.aiPurple)
+
+        Text(summary)
+          .font(.body)
+          .lineSpacing(4)
+      }
+      .padding(DesignTokens.Spacing.md)
+      .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(DesignTokens.Spacing.md)
-    .frame(maxWidth: .infinity, alignment: .leading)
     .background(
       RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color.purple.opacity(0.08))
+        .fill(DesignTokens.Colors.aiPurple.opacity(0.08))
     )
+    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
   }
 
   // MARK: - Itinerary Section
@@ -592,7 +599,7 @@ struct BlogDetailView: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(
       RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color.orange.opacity(0.08))
+        .fill(DesignTokens.Colors.warning.opacity(0.08))
     )
   }
 
@@ -612,7 +619,7 @@ struct BlogDetailView: View {
       .padding(.vertical, DesignTokens.Spacing.md)
     }
     .buttonStyle(.borderedProminent)
-    .tint(.indigo)
+    .tint(DesignTokens.Colors.accent)
   }
 }
 
@@ -625,10 +632,14 @@ struct QuickInfoCard: View {
   let color: Color
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+      // Icon with colored background
       Image(systemName: icon)
         .font(.title3)
         .foregroundStyle(color)
+        .frame(width: 32, height: 32)
+        .background(color.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
 
       Text(title)
         .font(.caption)
@@ -637,13 +648,14 @@ struct QuickInfoCard: View {
       Text(value)
         .font(.subheadline)
         .fontWeight(.semibold)
-        .lineLimit(1)
+        .lineLimit(2)
+        .minimumScaleFactor(0.8)
     }
     .padding(DesignTokens.Spacing.sm)
-    .frame(width: 100, alignment: .leading)
+    .frame(maxWidth: .infinity, alignment: .leading)
     .background(
       RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-        .fill(color.opacity(0.1))
+        .fill(color.opacity(0.08))
     )
   }
 }
@@ -739,7 +751,7 @@ struct PoiRow: View {
           .foregroundStyle(.white)
       }
 
-      VStack(alignment: .leading, spacing: 4) {
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
         HStack(spacing: DesignTokens.Spacing.xs) {
           Text(poi.name)
             .font(.subheadline)
@@ -778,7 +790,7 @@ struct PoiRow: View {
           .font(.caption)
       }
     }
-    .padding(.vertical, 4)
+    .padding(.vertical, DesignTokens.Spacing.xxs)
   }
 
   private func colorForType(_ type: String?) -> Color {
@@ -840,7 +852,7 @@ private struct MapPoiListRow: View {
           .fill(dayColor.opacity(0.2))
           .frame(width: 8, height: 8)
 
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
           Text(poi.name)
             .font(.subheadline)
             .fontWeight(.medium)
