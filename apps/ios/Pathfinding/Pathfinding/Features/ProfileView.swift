@@ -26,8 +26,12 @@ struct ProfileView: View {
 
   var body: some View {
     NavigationStack {
-      List {
-        // MARK: - Profile Section
+      ZStack {
+        // Explorer background
+        ExplorerPageBackground(style: .list, accentColor: .purple)
+
+        List {
+          // MARK: - Profile Section
         Section {
           if isLoggedIn {
             // Show logged-in user info
@@ -399,6 +403,8 @@ struct ProfileView: View {
           #endif
         }
       }
+      .scrollContentBackground(.hidden)
+      .listStyle(.insetGrouped)
       .navigationTitle("profile.title".localized)
       .sheet(isPresented: $showAPISettings) {
         APISettingsSheet()
@@ -431,6 +437,7 @@ struct ProfileView: View {
         await loadFollowStats()
         await loadFavoriteStats()
       }
+      } // end ZStack
     }
   }
 

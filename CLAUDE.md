@@ -168,6 +168,53 @@ apps/ios/Pathfinding/
 - Configuration via xcconfig files (not hardcoded)
 - All API field names use `snake_case`, Swift uses `camelCase` with `CodingKeys`
 
+### iOS Design System - Explorer Aesthetic
+
+The iOS app uses an **「探索者/地形」** (Explorer/Topographic) design aesthetic, featuring map-inspired visual elements that reinforce the travel/exploration theme.
+
+#### Core Design Files
+
+| File                    | Description                                                     |
+| ----------------------- | --------------------------------------------------------------- |
+| `DesignSystem.swift`    | Design tokens (spacing, colors, typography, shadows)            |
+| `ThemeManager.swift`    | Theme/accent color management with persistence                  |
+| `VisualEffects.swift`   | Visual texture components (topographic lines, gradients, noise) |
+| `AnimationSystem.swift` | Enhanced animation modifiers and components                     |
+| `ExplorerCards.swift`   | Explorer-themed card components                                 |
+
+#### Key Visual Components
+
+- **TopographicLinesView**: Contour line decorations (地形等高线)
+- **CompassRoseDecoration**: Compass decoration element (指南针)
+- **GradientMeshBackground**: Multi-layer radial gradient background
+- **NoiseTextureOverlay**: Subtle grain texture for depth
+
+#### Card Components
+
+- **ExplorerFeaturedCard**: Featured guide card with topographic background, dynamic theme color, glowing AI badge
+- **ExplorerGuideRow**: List row with left accent line, staggered entrance animation
+- **ExplorerHeroHeader**: Large hero header with topographic + compass decorations
+
+#### Animation Modifiers
+
+```swift
+.staggeredAnimation(index: i)     // Staggered list entrance
+.pulseAnimation()                  // Breathing/pulse effect
+.floatAnimation()                  // Floating/hovering effect
+.bounceIn(from: .bottom)           // Bounce entrance
+.glowAnimation(color: .purple)     // Glow effect (dark mode)
+.shakeAnimation(trigger: $error)   // Error shake feedback
+```
+
+#### View Modifiers
+
+```swift
+.topographicBackground()           // Add contour lines
+.gradientMeshBackground()          // Add mesh gradient
+.noiseTexture()                    // Add grain overlay
+.explorerCardStyle()               // Explorer-themed card
+```
+
 ## Data Models
 
 ### BlogPost (Travel Guide)

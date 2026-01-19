@@ -9,11 +9,16 @@ struct ItineraryListView: View {
 
   var body: some View {
     NavigationStack {
-      Group {
-        if store.itineraries.isEmpty {
-          emptyView
-        } else {
-          itineraryList
+      ZStack {
+        // Explorer background
+        ExplorerPageBackground(style: .list, accentColor: .blue)
+
+        Group {
+          if store.itineraries.isEmpty {
+            emptyView
+          } else {
+            itineraryList
+          }
         }
       }
       .navigationTitle("我的行程")

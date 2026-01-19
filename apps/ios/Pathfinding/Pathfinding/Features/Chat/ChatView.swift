@@ -13,15 +13,20 @@ struct ChatSessionListView: View {
 
   var body: some View {
     NavigationStack {
-      Group {
-        if store.isLoadingSessions && store.sessions.isEmpty {
-          LoadingView()
-        } else if store.sessions.isEmpty {
-          EmptySessionsView {
-            showNewSessionSheet = true
+      ZStack {
+        // Explorer background
+        ExplorerPageBackground(style: .list, accentColor: .cyan)
+
+        Group {
+          if store.isLoadingSessions && store.sessions.isEmpty {
+            LoadingView()
+          } else if store.sessions.isEmpty {
+            EmptySessionsView {
+              showNewSessionSheet = true
+            }
+          } else {
+            sessionsList
           }
-        } else {
-          sessionsList
         }
       }
       .navigationTitle("AI 旅行助手")

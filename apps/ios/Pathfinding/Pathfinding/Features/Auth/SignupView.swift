@@ -13,7 +13,11 @@ struct SignupView: View {
 
   var body: some View {
     NavigationStack {
-      ScrollView {
+      ZStack {
+        // Explorer background
+        ExplorerPageBackground(style: .immersive, accentColor: .purple)
+
+        ScrollView {
         VStack(spacing: DesignTokens.Spacing.xl) {
           // MARK: - Header
           VStack(spacing: DesignTokens.Spacing.sm) {
@@ -218,6 +222,7 @@ struct SignupView: View {
       .sheet(isPresented: $showLogin) {
         LoginView()
       }
+      } // end ZStack
     }
   }
 

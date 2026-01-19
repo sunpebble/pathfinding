@@ -41,7 +41,11 @@ struct LoginView: View {
 
   var body: some View {
     NavigationStack {
-      ScrollView {
+      ZStack {
+        // Explorer background
+        ExplorerPageBackground(style: .immersive, accentColor: .indigo)
+
+        ScrollView {
         VStack(spacing: DesignTokens.Spacing.xl) {
           // MARK: - Header
           VStack(spacing: DesignTokens.Spacing.sm) {
@@ -217,6 +221,7 @@ struct LoginView: View {
       .onDisappear {
         countdownTimer?.invalidate()
       }
+      } // end ZStack
     }
   }
 

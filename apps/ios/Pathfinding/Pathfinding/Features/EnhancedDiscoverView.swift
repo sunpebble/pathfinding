@@ -1,67 +1,50 @@
 import SwiftUI
 
-struct DiscoverView: View {
+// MARK: - Enhanced Discover View
+// 优化后的探索页面 - 展示如何使用探索者美学组件
+
+struct EnhancedDiscoverView: View {
   @State private var store = GuideStore.shared
   @State private var searchText = ""
   @State private var selectedCity: String? = nil
   @State private var onlyAiGuides = false
-  @State private var timeFilter: TimeFilter = .all
   @State private var searchTask: Task<Void, Never>?
 
   @Environment(\.colorScheme) private var colorScheme
 
-  enum TimeFilter: String, CaseIterable {
-    case all = "全部"
-    case week = "一周内"
-    case month = "一月内"
-    case threeMonths = "三月内"
-
-    var daysAgo: Int? {
-      switch self {
-      case .all: return nil
-      case .week: return 7
-      case .month: return 30
-      case .threeMonths: return 90
-      }
-    }
-  }
-
   var isSearchMode: Bool {
-    !searchText.isEmpty || selectedCity != nil || onlyAiGuides || timeFilter != .all
+    !searchText.isEmpty || selectedCity != nil || onlyAiGuides
   }
 
   var body: some View {
     NavigationStack {
       ZStack {
-        // Explorer background
-        explorerBackground
+        // 背景层 - 渐变 + 等高线
+        backgroundLayer
 
+        // 内容层
         VStack(spacing: 0) {
-          // Filter bar
-          filterBar
+          // 增强的筛选栏
+          enhancedFilterBar
             .padding(.horizontal, DesignTokens.Spacing.md)
             .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(.ultraThinMaterial)
 
-          // Content
+          // 内容
           if store.isLoading && store.guides.isEmpty {
-            loadingView
+            enhancedLoadingView
           } else if isSearchMode {
             searchResultsView
           } else {
-            cardLayoutView
+            mainContentView
           }
         }
       }
       .navigationTitle("discover.title".localized)
       .navigationBarTitleDisplayMode(.large)
       .searchable(text: $searchText, prompt: "discover.search_placeholder".localized)
-      .onChange(of: searchText) { _, newValue in
-        triggerSearch()
-      }
+      .onChange(of: searchText) { _, _ in triggerSearch() }
       .onChange(of: selectedCity) { _, _ in triggerSearch() }
       .onChange(of: onlyAiGuides) { _, _ in triggerSearch() }
-      .onChange(of: timeFilter) { _, _ in triggerSearch() }
       .navigationDestination(for: BlogPost.self) { guide in
         BlogDetailView(guide: guide)
       }
@@ -79,20 +62,18 @@ struct DiscoverView: View {
     }
   }
 
-  // MARK: - Filter Bar
+  // MARK: - Background Layer
 
-  // MARK: - Explorer Background
-
-  private var explorerBackground: some View {
+  private var backgroundLayer: some View {
     ZStack {
-      // Base background
+      // 基础背景
       Color(.systemGroupedBackground)
         .ignoresSafeArea()
 
-      // Top gradient decoration
+      // 顶部渐变装饰
       VStack {
         ZStack {
-          // Gradient
+          // 渐变
           LinearGradient(
             colors: [
               DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.15 : 0.08),
@@ -103,14 +84,14 @@ struct DiscoverView: View {
           )
           .frame(height: 300)
 
-          // Topographic lines
+          // 等高线装饰
           TopographicLinesView(
             lineCount: 5,
             lineColor: DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.08 : 0.04)
           )
           .frame(height: 300)
 
-          // Compass decoration
+          // 指南针装饰（右上角）
           HStack {
             Spacer()
             VStack {
@@ -130,98 +111,128 @@ struct DiscoverView: View {
       }
       .ignoresSafeArea()
 
-      // Subtle noise texture
+      // 微妙的噪点
       NoiseTextureOverlay(opacity: colorScheme == .dark ? 0.02 : 0.015)
         .ignoresSafeArea()
     }
   }
 
-  // MARK: - Filter Bar
+  // MARK: - Enhanced Filter Bar
 
-  private var filterBar: some View {
+  private var enhancedFilterBar: some View {
     VStack(spacing: DesignTokens.Spacing.sm) {
-      // City tags
+      // 城市标签
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: DesignTokens.Spacing.xs) {
-          cityTag(nil, label: "全部")
+          enhancedCityTag(nil, label: "全部")
           ForEach(store.popularDestinations) { dest in
-            cityTag(dest.name, label: dest.name)
+            enhancedCityTag(dest.name, label: dest.name)
           }
         }
       }
 
-      // Filter buttons
+      // 筛选按钮
       HStack(spacing: DesignTokens.Spacing.md) {
-        Toggle(isOn: $onlyAiGuides) {
-          Label("仅AI行程", systemImage: "sparkles")
-            .font(.subheadline)
-        }
-        .toggleStyle(.button)
-        .buttonStyle(.bordered)
-        .tint(onlyAiGuides ? DesignTokens.Colors.accent : .secondary)
-
-        Menu {
-          ForEach(TimeFilter.allCases, id: \.self) { filter in
-            Button {
-              timeFilter = filter
-            } label: {
-              HStack {
-                Text(filter.rawValue)
-                if timeFilter == filter {
-                  Image(systemName: "checkmark")
-                }
-              }
-            }
+        // AI 筛选按钮 - 带发光效果
+        Button {
+          withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            onlyAiGuides.toggle()
           }
         } label: {
-          Label(timeFilter.rawValue, systemImage: "calendar")
-            .font(.subheadline)
+          HStack(spacing: DesignTokens.Spacing.xxs) {
+            Image(systemName: "sparkles")
+              .symbolEffect(.bounce, value: onlyAiGuides)
+            Text("AI 行程")
+          }
+          .font(.subheadline)
+          .fontWeight(.medium)
+          .padding(.horizontal, DesignTokens.Spacing.md)
+          .padding(.vertical, DesignTokens.Spacing.xs)
+          .background(
+            ZStack {
+              if onlyAiGuides {
+                LinearGradient(
+                  colors: [.purple, .indigo],
+                  startPoint: .topLeading,
+                  endPoint: .bottomTrailing
+                )
+              } else {
+                DesignTokens.Colors.fillTertiary
+              }
+            }
+          )
+          .foregroundStyle(onlyAiGuides ? .white : .primary)
+          .clipShape(Capsule())
+          .shadow(
+            color: onlyAiGuides ? .purple.opacity(0.3) : .clear,
+            radius: 8,
+            y: 2
+          )
         }
-        .buttonStyle(.bordered)
-        .tint(timeFilter != .all ? DesignTokens.Colors.accent : .secondary)
+        .buttonStyle(.plain)
 
         Spacer()
       }
     }
   }
 
-  private func cityTag(_ city: String?, label: String) -> some View {
+  private func enhancedCityTag(_ city: String?, label: String) -> some View {
     Button {
-      withAnimation { selectedCity = city }
+      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        selectedCity = city
+      }
     } label: {
       Text(label)
         .font(.subheadline)
-        .padding(.horizontal, DesignTokens.Spacing.sm)
+        .fontWeight(selectedCity == city ? .semibold : .regular)
+        .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, DesignTokens.Spacing.xs)
-        .background(selectedCity == city ? DesignTokens.Colors.accent : DesignTokens.Colors.fillTertiary)
+        .background(
+          ZStack {
+            if selectedCity == city {
+              DesignTokens.Colors.accent
+            } else {
+              DesignTokens.Colors.fillTertiary
+            }
+          }
+        )
         .foregroundStyle(selectedCity == city ? .white : .primary)
         .clipShape(Capsule())
+        .overlay(
+          Capsule()
+            .stroke(
+              selectedCity == city ? .clear : DesignTokens.Colors.border.opacity(0.3),
+              lineWidth: 0.5
+            )
+        )
     }
     .buttonStyle(.plain)
+    .scaleEffect(selectedCity == city ? 1.05 : 1)
+    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedCity)
   }
 
-  // MARK: - Card Layout (Default)
+  // MARK: - Main Content
 
-  private var cardLayoutView: some View {
+  private var mainContentView: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
-        // Featured section
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxl) {
+        // 精选区域
         if !store.featuredGuides.isEmpty {
-          featuredSection
+          enhancedFeaturedSection
         }
 
-        // Recent section
+        // 最近更新区域
         if !store.recentGuides.isEmpty {
-          recentSection
+          enhancedRecentSection
         }
       }
       .padding(.vertical, DesignTokens.Spacing.md)
     }
   }
 
-  private var featuredSection: some View {
+  private var enhancedFeaturedSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      // Section header with icon background
+      // 区域头部
       HStack(spacing: DesignTokens.Spacing.sm) {
         ZStack {
           Circle()
@@ -231,13 +242,16 @@ struct DiscoverView: View {
             .foregroundStyle(.orange)
             .font(.subheadline)
         }
+
         Text("discover.featured".localized)
           .font(.title3)
           .fontWeight(.bold)
+
         Spacer()
       }
       .padding(.horizontal, DesignTokens.Spacing.lg)
 
+      // 水平滚动卡片
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: DesignTokens.Spacing.md) {
           ForEach(store.featuredGuides) { guide in
@@ -253,9 +267,9 @@ struct DiscoverView: View {
     }
   }
 
-  private var recentSection: some View {
+  private var enhancedRecentSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      // Section header with icon background
+      // 区域头部
       HStack(spacing: DesignTokens.Spacing.sm) {
         ZStack {
           Circle()
@@ -265,13 +279,16 @@ struct DiscoverView: View {
             .foregroundStyle(.blue)
             .font(.subheadline)
         }
+
         Text("discover.recent".localized)
           .font(.title3)
           .fontWeight(.bold)
+
         Spacer()
       }
       .padding(.horizontal, DesignTokens.Spacing.lg)
 
+      // 列表
       LazyVStack(spacing: DesignTokens.Spacing.sm) {
         ForEach(Array(store.recentGuides.enumerated()), id: \.element.id) { index, guide in
           NavigationLink(value: guide) {
@@ -289,8 +306,7 @@ struct DiscoverView: View {
   private var searchResultsView: some View {
     Group {
       if store.isSearching {
-        ProgressView()
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
+        enhancedLoadingView
       } else if store.searchResults.isEmpty {
         ContentUnavailableView(
           "无搜索结果",
@@ -320,12 +336,37 @@ struct DiscoverView: View {
     }
   }
 
-  // MARK: - Loading
+  // MARK: - Enhanced Loading View
 
-  private var loadingView: some View {
-    VStack(spacing: DesignTokens.Spacing.md) {
-      ProgressView()
-      Text("加载中...")
+  private var enhancedLoadingView: some View {
+    VStack(spacing: DesignTokens.Spacing.lg) {
+      ZStack {
+        // 背景圆环
+        Circle()
+          .stroke(DesignTokens.Colors.fillTertiary, lineWidth: 4)
+          .frame(width: 60, height: 60)
+
+        // 旋转的渐变圆环
+        Circle()
+          .trim(from: 0, to: 0.7)
+          .stroke(
+            AngularGradient(
+              colors: [DesignTokens.Colors.accent, DesignTokens.Colors.accent.opacity(0.3)],
+              center: .center
+            ),
+            style: StrokeStyle(lineWidth: 4, lineCap: .round)
+          )
+          .frame(width: 60, height: 60)
+          .rotationEffect(.degrees(-90))
+
+        // 中心图标
+        Image(systemName: "map")
+          .font(.title2)
+          .foregroundStyle(DesignTokens.Colors.accent)
+          .pulseAnimation(duration: 1.2)
+      }
+
+      Text("探索中...")
         .font(.subheadline)
         .foregroundStyle(.secondary)
     }
@@ -348,11 +389,19 @@ struct DiscoverView: View {
       query: searchText,
       destination: selectedCity,
       hasAiData: onlyAiGuides,
-      daysAgo: timeFilter.daysAgo
+      daysAgo: nil
     )
   }
 }
 
-#Preview {
-  DiscoverView()
+// MARK: - Preview
+
+#Preview("Enhanced Discover - Light") {
+  EnhancedDiscoverView()
+    .preferredColorScheme(.light)
+}
+
+#Preview("Enhanced Discover - Dark") {
+  EnhancedDiscoverView()
+    .preferredColorScheme(.dark)
 }

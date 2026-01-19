@@ -130,7 +130,11 @@ struct BlogDetailView: View {
   }
 
   var body: some View {
-    ScrollView {
+    ZStack {
+      // Explorer background
+      ExplorerPageBackground(style: .minimal, accentColor: colorForDay(1))
+
+      ScrollView {
       VStack(alignment: .leading, spacing: 0) {
         // MARK: - Media Mode Picker
         mediaModePicker
@@ -177,6 +181,8 @@ struct BlogDetailView: View {
         .padding(DesignTokens.Spacing.lg)
       }
     }
+    .scrollContentBackground(.hidden)
+    } // end ZStack
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarItemGroup(placement: .topBarTrailing) {
