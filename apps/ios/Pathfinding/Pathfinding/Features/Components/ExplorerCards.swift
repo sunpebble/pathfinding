@@ -157,11 +157,6 @@ struct ExplorerFeaturedCard: View {
         isVisible = true
       }
     }
-    .simultaneousGesture(
-      DragGesture(minimumDistance: 0)
-        .onChanged { _ in isPressed = true }
-        .onEnded { _ in isPressed = false }
-    )
   }
 
   private func formatNumber(_ num: Int) -> String {
@@ -401,11 +396,6 @@ struct ExplorerGuideRow: View {
     .scaleEffect(isPressed ? 0.98 : 1)
     .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
     .staggeredAnimation(index: index, baseDelay: 0.03)
-    .simultaneousGesture(
-      DragGesture(minimumDistance: 0)
-        .onChanged { _ in isPressed = true }
-        .onEnded { _ in isPressed = false }
-    )
   }
 
   private func formatNumber(_ num: Int) -> String {

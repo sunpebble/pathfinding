@@ -299,10 +299,12 @@ final class CommentStore {
     }
     
     do {
+      print("🔄 [Like] Calling API for commentId: \(commentId)")
       let response: CommentLikeToggleResponse = try await apiClient.post(
         path: "comments/like",
         body: ["commentId": commentId]
       )
+      print("🔄 [Like] API response: liked=\(response.data.liked), count=\(response.data.likesCount)")
 
       // Update with actual server state
       if let index = comments.firstIndex(where: { $0.id == commentId }) {
@@ -343,6 +345,7 @@ final class CommentStore {
         }
       }
       
+      print("❌ [Like] API failed: \(error)")
       logger.error("Failed to toggle like: \(error.localizedDescription)")
       errorMessage = error.localizedDescription
       likeInProgress.remove(commentId)

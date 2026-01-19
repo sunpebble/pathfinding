@@ -48,7 +48,9 @@ struct CommentSectionView: View {
               CommentRow(
                 comment: comment,
                 onReply: {
+                  print("📩 Reply button clicked for comment: \(comment.id)")
                   replyToComment = comment
+                  print("📩 replyToComment set to: \(replyToComment?.id ?? "nil")")
                   showCommentSheet = true
                 },
                 onLike: {
@@ -156,6 +158,11 @@ struct CommentRow: View {
   let onDelete: () -> Void
   let currentUserId: String?
   @Bindable var store: CommentStore
+  
+  /// Get the latest comment state from store (for reactive updates)
+  private var liveComment: ItineraryComment {
+    store.comments.first(where: { $0.id == comment.id }) ?? comment
+  }
   
   private var isOwnComment: Bool {
     // TODO: Frontend userId retrieval not working. Let backend handle permission checking.
@@ -272,11 +279,11 @@ struct CommentRow: View {
           onLike()
         } label: {
           HStack(spacing: 4) {
-            Image(systemName: comment.isLikedByUser == true ? "heart.fill" : "heart")
-              .foregroundStyle(comment.isLikedByUser == true ? .red : .secondary)
+            Image(systemName: liveComment.isLikedByUser == true ? "heart.fill" : "heart")
+              .foregroundStyle(liveComment.isLikedByUser == true ? .red : .secondary)
               .scaleEffect(likeButtonScale)
-            if comment.likesCount > 0 {
-              Text("\(comment.likesCount)")
+            if liveComment.likesCount > 0 {
+              Text("\(liveComment.likesCount)")
                 .foregroundStyle(.secondary)
             }
           }
@@ -387,6 +394,11 @@ struct ReplyRow: View {
   let onLike: () -> Void
   @Bindable var store: CommentStore
   
+  /// Get the latest reply state from store (for reactive updates)
+  private var liveReply: ItineraryComment {
+    store.replies[parentCommentId]?.first(where: { $0.id == reply.id }) ?? reply
+  }
+  
   @State private var showDeleteAlert = false
   @State private var showDeleteErrorAlert = false
   
@@ -443,10 +455,10 @@ struct ReplyRow: View {
         // Like button
         Button(action: onLike) {
           HStack(spacing: 2) {
-            Image(systemName: reply.isLikedByUser == true ? "heart.fill" : "heart")
-              .foregroundStyle(reply.isLikedByUser == true ? .red : .secondary)
-            if reply.likesCount > 0 {
-              Text("\(reply.likesCount)")
+            Image(systemName: liveReply.isLikedByUser == true ? "heart.fill" : "heart")
+              .foregroundStyle(liveReply.isLikedByUser == true ? .red : .secondary)
+            if liveReply.likesCount > 0 {
+              Text("\(liveReply.likesCount)")
             }
           }
           .font(.caption2)
@@ -462,10 +474,8 @@ struct ReplyRow: View {
           let success = await store.deleteComment(commentId: reply.id, itineraryId: reply.itineraryId)
           if !success {
             showDeleteErrorAlert = true
-          } else {
-            // Refresh replies after deletion
-            await store.fetchReplies(commentId: parentCommentId)
           }
+          // No need to refresh - deleteComment already handles local removal
         }
       }
     } message: {
