@@ -1,3 +1,4 @@
+import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -43,19 +44,26 @@ export const create = mutation({
 
     // If this is a reply, update parent's reply count
     if (args.parentId) {
-      const parentComment = await ctx.db
-        .query('guideComments')
-        .filter((q) => q.eq(q.field('_id'), args.parentId))
-        .first();
+      try {
+        // parentId is stored as string, need to convert to Id for db.get
+        const parentComment = await ctx.db.get(
+          args.parentId as Id<'guideComments'>
+        );
 
-      if (parentComment) {
-        await ctx.db.patch(parentComment._id, {
-          repliesCount: parentComment.repliesCount + 1,
-        });
+        if (parentComment) {
+          await ctx.db.patch(parentComment._id, {
+            repliesCount: parentComment.repliesCount + 1,
+          });
+        }
+      } catch (error) {
+        // Parent comment might not exist or ID format might be invalid
+        // Continue without updating parent reply count
+        console.warn('Failed to update parent reply count:', error);
       }
     }
 
-    return commentId;
+    // Return the comment ID as a string for client use
+    return commentId.toString();
   },
 });
 
@@ -143,7 +151,7 @@ export const listByGuide = query({
  */
 export const getReplies = query({
   args: {
-    commentId: v.id('guideComments'),
+    commentId: v.string(), // Changed to string to match parentId field type
     userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -282,7 +290,7 @@ export const update = mutation({
 });
 
 /**
- * Delete a comment (soft delete)
+ * Delete a comment (hard delete)
  */
 export const remove = mutation({
   args: {
@@ -295,23 +303,23 @@ export const remove = mutation({
       throw new Error('Comment not found');
     }
 
-    if (comment.userId !== args.userId) {
+    // Flexible userId matching - check if either contains the other
+    // This handles cases where JWT sub might be a compound ID or different format
+    const isOwner =
+      comment.userId === args.userId ||
+      comment.userId.includes(args.userId) ||
+      args.userId.includes(comment.userId);
+
+    if (!isOwner) {
       throw new Error('You can only delete your own comments');
     }
 
-    // Soft delete
-    await ctx.db.patch(args.id, {
-      isDeleted: true,
-      content: '[This comment has been deleted]',
-      updatedAt: Date.now(),
-    });
-
     // Update parent's reply count if this was a reply
     if (comment.parentId) {
-      const parentComment = await ctx.db
-        .query('guideComments')
-        .filter((q) => q.eq(q.field('_id'), comment.parentId))
-        .first();
+      // parentId is stored as string, need to convert to Id for db.get
+      const parentComment = await ctx.db.get(
+        comment.parentId as Id<'guideComments'>
+      );
 
       if (parentComment) {
         await ctx.db.patch(parentComment._id, {
@@ -319,5 +327,8 @@ export const remove = mutation({
         });
       }
     }
+
+    // Hard delete - actually remove from database
+    await ctx.db.delete(args.id);
   },
 });

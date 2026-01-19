@@ -267,6 +267,39 @@ actor AuthManager {
 
     throw AuthError.notAuthenticated
   }
+  
+  /// Get user ID by decoding the JWT access token (same as backend)
+  func getUserIdFromToken() async -> String? {
+    // Use getAccessToken which is proven to work for API calls
+    guard let token = try? await getAccessToken() else {
+      return nil
+    }
+    return decodeUserIdFromJWT(token)
+  }
+
+  
+  /// Decode the 'sub' claim from a JWT token
+  private func decodeUserIdFromJWT(_ token: String) -> String? {
+    let parts = token.split(separator: ".")
+    guard parts.count == 3 else { return nil }
+    
+    var payload = String(parts[1])
+    // Convert base64url to base64
+    payload = payload.replacingOccurrences(of: "-", with: "+")
+    payload = payload.replacingOccurrences(of: "_", with: "/")
+    // Add padding if needed
+    while payload.count % 4 != 0 {
+      payload += "="
+    }
+    
+    guard let data = Data(base64Encoded: payload),
+          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+          let sub = json["sub"] as? String else {
+      return nil
+    }
+    
+    return sub
+  }
 
   // MARK: - Private Methods
 
@@ -339,19 +372,22 @@ actor AuthManager {
   private func updateSession(from response: AuthResponse, email: String?) async throws {
     self.accessToken = response.token
     self.refreshToken = response.refreshToken
-    self.userId = response.userId
     self.userEmail = email ?? response.email
     self.isAuthenticated = true
 
+    // Get userId from response or decode from JWT token
+    let resolvedUserId = response.userId ?? decodeUserIdFromJWT(response.token)
+    self.userId = resolvedUserId
+    
     // Update cached userId for synchronous access
-    AuthManager._sharedCachedUserId = response.userId
+    AuthManager._sharedCachedUserId = resolvedUserId
 
     // Persist to Keychain
     try saveToKeychain(response.token, key: accessTokenKey)
     if let refreshToken = response.refreshToken {
       try saveToKeychain(refreshToken, key: refreshTokenKey)
     }
-    if let userId = response.userId {
+    if let userId = resolvedUserId {
       try saveToKeychain(userId, key: userIdKey)
     }
     if let email = userEmail {
@@ -364,10 +400,19 @@ actor AuthManager {
 
     let token = try? loadFromKeychain(key: accessTokenKey)
     let refresh = try? loadFromKeychain(key: refreshTokenKey)
-    let storedUserId = try? loadFromKeychain(key: userIdKey)
+    var storedUserId = try? loadFromKeychain(key: userIdKey)
     let email = try? loadFromKeychain(key: userEmailKey)
 
     if let token = token {
+      // If userId not stored, decode from JWT token
+      if storedUserId == nil {
+        storedUserId = decodeUserIdFromJWT(token)
+        // Save the decoded userId to keychain for next time
+        if let userId = storedUserId {
+          try? saveToKeychain(userId, key: userIdKey)
+        }
+      }
+      
       self.accessToken = token
       self.refreshToken = refresh
       self.userId = storedUserId
@@ -484,6 +529,7 @@ enum AuthError: LocalizedError {
   case invalidPhoneNumber
   case invalidVerificationCode
   case verificationCodeExpired
+  case invalidPassword
 
   var errorDescription: String? {
     switch self {
@@ -494,7 +540,17 @@ enum AuthError: LocalizedError {
     case .invalidResponse:
       return "服务器响应无效"
     case .serverError(let message):
-      return "服务器错误: \(message)"
+      // Parse specific error messages for user-friendly display
+      if message.contains("Invalid password") || message.contains("validateDefaultPasswordRequirements") {
+        return "密码至少需要8个字符"
+      }
+      if message.contains("already exists") || message.contains("duplicate") {
+        return "该邮箱已被注册"
+      }
+      if message.contains("Invalid email") {
+        return "邮箱格式不正确"
+      }
+      return "服务器错误，请稍后重试"
     case .httpError(let code):
       return "请求失败 (\(code))"
     case .notAuthenticated:
@@ -511,6 +567,8 @@ enum AuthError: LocalizedError {
       return "验证码错误"
     case .verificationCodeExpired:
       return "验证码已过期，请重新获取"
+    case .invalidPassword:
+      return "密码至少需要8个字符"
     }
   }
 }

@@ -73,12 +73,18 @@ struct SignupView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-              SecureField("输入密码", text: $password)
+              SecureField("输入密码（至少8个字符）", text: $password)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .padding()
                 .background(Color(.systemGray6))
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+
+              if let message = passwordValidationMessage {
+                Text(message)
+                  .font(.caption)
+                  .foregroundStyle(.orange)
+              }
             }
 
             // Confirm Password Field
@@ -229,7 +235,20 @@ struct SignupView: View {
   // MARK: - Computed Properties
 
   private var isFormValid: Bool {
-    !email.isEmpty && !password.isEmpty && !confirmPassword.isEmpty && password == confirmPassword
+    !email.isEmpty && !password.isEmpty && !confirmPassword.isEmpty && password == confirmPassword && password.count >= 8
+  }
+
+  private var passwordValidationMessage: String? {
+    if password.isEmpty {
+      return nil
+    }
+    if password.count < 8 {
+      return "密码至少需要8个字符"
+    }
+    if !confirmPassword.isEmpty && password != confirmPassword {
+      return "两次输入的密码不一致"
+    }
+    return nil
   }
 
   // MARK: - Actions

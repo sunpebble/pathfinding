@@ -1,4 +1,5 @@
-/* eslint-disable ts/ban-ts-comment */
+ 
+import type { Id } from './_generated/dataModel';
 // @ts-nocheck
 import { httpRouter } from 'convex/server';
 import { api } from './_generated/api';
@@ -261,6 +262,13 @@ http.route({
       const body = await request.json();
       const { itineraryId, content, parentId } = body;
 
+      console.log('📝 Create comment request:', {
+        itineraryId,
+        contentLength: content?.length,
+        parentId,
+        parentIdType: typeof parentId,
+      });
+
       if (!itineraryId || !content) {
         return new Response(JSON.stringify({ error: '缺少必要参数' }), {
           status: 400,
@@ -400,8 +408,8 @@ http.route({
         });
       }
 
-      await ctx.runMutation(api.itineraryComments.remove, {
-        id: id as any,
+      await ctx.runMutation(api.guideComments.remove, {
+        id: id as Id<'guideComments'>,
         userId,
       });
 
@@ -443,12 +451,12 @@ http.route({
     }
 
     try {
-      const replies = await ctx.runQuery(api.itineraryComments.getReplies, {
-        commentId: commentId as any,
+      const replies = await ctx.runQuery(api.guideComments.getReplies, {
+        commentId, // Now expects string
         userId: userId ?? undefined,
       });
 
-      return new Response(JSON.stringify({ data: replies }), {
+      return new Response(JSON.stringify({ success: true, data: replies }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -478,6 +486,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const userId = await getUserIdFromAuth(request);
+      console.log('[Like API] userId from auth:', userId);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
@@ -487,6 +496,7 @@ http.route({
 
       const body = await request.json();
       const { commentId } = body;
+      console.log('[Like API] commentId from body:', commentId);
 
       if (!commentId) {
         return new Response(JSON.stringify({ error: '缺少commentId参数' }), {
@@ -495,15 +505,27 @@ http.route({
         });
       }
 
-      const result = await ctx.runMutation(api.itineraryComments.toggleLike, {
-        commentId: commentId as any,
+      console.log('[Like API] Calling toggleLike mutation...');
+      const result = await ctx.runMutation(api.guideComments.toggleLike, {
+        commentId: commentId as Id<'guideComments'>,
         userId,
       });
+      console.log('[Like API] Result:', result);
 
-      return new Response(JSON.stringify({ data: result }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // Convert to snake_case for iOS compatibility
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            liked: result.liked,
+            likes_count: result.likesCount,
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     } catch (error) {
       return new Response(
         JSON.stringify({

@@ -9,7 +9,7 @@ struct ItineraryComment: Codable, Identifiable, Hashable {
   let userId: String
   let parentId: String?
   let content: String
-  let likesCount: Int
+  var likesCount: Int
   let repliesCount: Int
   let isEdited: Bool
   let isDeleted: Bool
@@ -50,9 +50,18 @@ struct ItineraryComment: Codable, Identifiable, Hashable {
   }
 
   var timeAgo: String {
+    let now = Date()
+    let interval = now.timeIntervalSince(createdDate)
+
+    // Less than 1 minute
+    if interval < 60 {
+      return "刚刚"
+    }
+
     let formatter = RelativeDateTimeFormatter()
     formatter.unitsStyle = .short
-    return formatter.localizedString(for: createdDate, relativeTo: Date())
+    formatter.locale = Locale(identifier: "zh_CN")
+    return formatter.localizedString(for: createdDate, relativeTo: now)
   }
 
   // MARK: - Hashable
@@ -116,9 +125,17 @@ struct UserNotification: Codable, Identifiable, Hashable {
   }
 
   var timeAgo: String {
+    let now = Date()
+    let interval = now.timeIntervalSince(createdDate)
+
+    if interval < 60 {
+      return "刚刚"
+    }
+
     let formatter = RelativeDateTimeFormatter()
     formatter.unitsStyle = .short
-    return formatter.localizedString(for: createdDate, relativeTo: Date())
+    formatter.locale = Locale(identifier: "zh_CN")
+    return formatter.localizedString(for: createdDate, relativeTo: now)
   }
 
   var icon: String {

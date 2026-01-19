@@ -12,10 +12,16 @@ final class CommentStore {
   private(set) var notifications: [UserNotification] = []
   private(set) var unreadCount: Int = 0
 
+  /// Set of comment IDs whose replies are expanded
+  var expandedCommentIds: Set<String> = []
+
   private(set) var isLoadingComments = false
   private(set) var isLoadingReplies = false
   private(set) var isLoadingNotifications = false
   private(set) var isSubmitting = false
+  
+  /// Set of comment IDs currently being liked (for UI feedback)
+  private(set) var likeInProgress: Set<String> = []
 
   private(set) var commentsPage = 1
   private(set) var commentsTotalPages = 1
@@ -41,13 +47,21 @@ final class CommentStore {
     errorMessage = nil
 
     do {
+      // Get current user ID for like status
+      let currentUserId = await AuthManager.shared.userId
+      
+      var queryItems = [
+        URLQueryItem(name: "itineraryId", value: itineraryId),
+        URLQueryItem(name: "page", value: String(page)),
+        URLQueryItem(name: "pageSize", value: "20"),
+      ]
+      if let userId = currentUserId {
+        queryItems.append(URLQueryItem(name: "userId", value: userId))
+      }
+      
       let response: CommentListResponse = try await apiClient.fetch(
         path: "comments",
-        queryItems: [
-          URLQueryItem(name: "itineraryId", value: itineraryId),
-          URLQueryItem(name: "page", value: String(page)),
-          URLQueryItem(name: "pageSize", value: "20"),
-        ]
+        queryItems: queryItems
       )
 
       if refresh || page == 1 {
@@ -74,11 +88,19 @@ final class CommentStore {
     isLoadingReplies = true
 
     do {
+      // Get current user ID for like status
+      let currentUserId = await AuthManager.shared.userId
+      
+      var queryItems = [
+        URLQueryItem(name: "commentId", value: commentId)
+      ]
+      if let userId = currentUserId {
+        queryItems.append(URLQueryItem(name: "userId", value: userId))
+      }
+      
       let response: CommentListResponse = try await apiClient.fetch(
         path: "comments/replies",
-        queryItems: [
-          URLQueryItem(name: "commentId", value: commentId)
-        ]
+        queryItems: queryItems
       )
 
       replies[commentId] = response.data
@@ -92,12 +114,13 @@ final class CommentStore {
   }
 
   /// Create a new comment
-  func createComment(itineraryId: String, content: String, parentId: String? = nil) async -> Bool {
+  /// Returns the ID of the newly created comment, or nil if failed
+  func createComment(itineraryId: String, content: String, parentId: String? = nil) async -> String? {
     print("📝 createComment called - itineraryId: \(itineraryId), content: \(content.prefix(50))...")
 
     guard !isSubmitting else {
-      print("📝 Already submitting, returning false")
-      return false
+      print("📝 Already submitting, returning nil")
+      return nil
     }
     isSubmitting = true
     errorMessage = nil
@@ -112,29 +135,55 @@ final class CommentStore {
       }
 
       print("📝 Calling API post with body: \(body)")
-      let _: CommentResponse = try await apiClient.post(
+      let response: CommentResponse = try await apiClient.post(
         path: "comments",
         body: body
       )
 
       print("📝 Comment created successfully, refreshing comments...")
-      // Refresh comments after creating
-      await fetchComments(itineraryId: itineraryId, refresh: true)
+      
+      // Get the new comment ID
+      let newCommentId = response.data?.id
 
-      // If it's a reply, refresh replies too
+      // If it's a reply, only refresh replies (not the whole list) to preserve scroll position
       if let parentId {
+        expandedCommentIds.insert(parentId)
         await fetchReplies(commentId: parentId)
+        // Update local repliesCount for the parent comment
+        if let index = comments.firstIndex(where: { $0.id == parentId }) {
+          var updated = comments[index]
+          // Create a new comment with incremented repliesCount
+          comments[index] = ItineraryComment(
+            id: updated.id,
+            itineraryId: updated.itineraryId,
+            userId: updated.userId,
+            parentId: updated.parentId,
+            content: updated.content,
+            likesCount: updated.likesCount,
+            repliesCount: updated.repliesCount + 1,
+            isEdited: updated.isEdited,
+            isDeleted: updated.isDeleted,
+            createdAt: updated.createdAt,
+            updatedAt: updated.updatedAt,
+            authorName: updated.authorName,
+            authorAvatar: updated.authorAvatar,
+            isLikedByUser: updated.isLikedByUser
+          )
+        }
+      } else {
+        // Only refresh full list for top-level comments
+        await fetchComments(itineraryId: itineraryId, refresh: true)
       }
 
       logger.info("Created comment for itinerary \(itineraryId)")
       isSubmitting = false
-      return true
+      return newCommentId ?? comments.first?.id
     } catch {
       print("📝 Failed to create comment: \(error)")
       logger.error("Failed to create comment: \(error.localizedDescription)")
       errorMessage = error.localizedDescription
       isSubmitting = false
-      return false
+      return nil
     }
   }
 
@@ -173,8 +222,38 @@ final class CommentStore {
     do {
       try await apiClient.delete(path: "comments", body: ["id": commentId])
 
-      // Refresh comments
-      await fetchComments(itineraryId: itineraryId, refresh: true)
+      // Remove comment locally instead of refreshing to avoid scroll
+      if let index = comments.firstIndex(where: { $0.id == commentId }) {
+        comments.remove(at: index)
+      }
+      
+      // Also remove from replies if it was a reply
+      for (parentId, replyList) in replies {
+        if let index = replyList.firstIndex(where: { $0.id == commentId }) {
+          replies[parentId]?.remove(at: index)
+          // Update parent's repliesCount
+          if let parentIndex = comments.firstIndex(where: { $0.id == parentId }) {
+            var updated = comments[parentIndex]
+            comments[parentIndex] = ItineraryComment(
+              id: updated.id,
+              itineraryId: updated.itineraryId,
+              userId: updated.userId,
+              parentId: updated.parentId,
+              content: updated.content,
+              likesCount: updated.likesCount,
+              repliesCount: max(0, updated.repliesCount - 1),
+              isEdited: updated.isEdited,
+              isDeleted: updated.isDeleted,
+              createdAt: updated.createdAt,
+              updatedAt: updated.updatedAt,
+              authorName: updated.authorName,
+              authorAvatar: updated.authorAvatar,
+              isLikedByUser: updated.isLikedByUser
+            )
+          }
+          break
+        }
+      }
 
       logger.info("Deleted comment \(commentId)")
       isSubmitting = false
@@ -188,35 +267,86 @@ final class CommentStore {
   }
 
   /// Toggle like on a comment
+  /// Returns true if now liked, false if unliked
   func toggleLike(commentId: String) async -> Bool {
+    // Prevent duplicate requests
+    guard !likeInProgress.contains(commentId) else {
+      return false
+    }
+    likeInProgress.insert(commentId)
+    
+    // Optimistic update - immediately toggle the UI state
+    let originalCommentState = comments.first(where: { $0.id == commentId })
+    let wasLiked = originalCommentState?.isLikedByUser ?? false
+    let originalLikesCount = originalCommentState?.likesCount ?? 0
+    
+    // Apply optimistic update to main comments
+    if let index = comments.firstIndex(where: { $0.id == commentId }) {
+      var updated = comments[index]
+      updated.isLikedByUser = !wasLiked
+      updated.likesCount = wasLiked ? max(0, originalLikesCount - 1) : originalLikesCount + 1
+      comments[index] = updated
+    }
+    
+    // Apply optimistic update to replies
+    for (parentId, replyList) in replies {
+      if let index = replyList.firstIndex(where: { $0.id == commentId }) {
+        var updated = replyList[index]
+        updated.isLikedByUser = !wasLiked
+        updated.likesCount = wasLiked ? max(0, originalLikesCount - 1) : originalLikesCount + 1
+        replies[parentId]?[index] = updated
+      }
+    }
+    
     do {
       let response: CommentLikeToggleResponse = try await apiClient.post(
         path: "comments/like",
         body: ["commentId": commentId]
       )
 
-      // Update local state
+      // Update with actual server state
       if let index = comments.firstIndex(where: { $0.id == commentId }) {
         var updated = comments[index]
         updated.isLikedByUser = response.data.liked
+        updated.likesCount = response.data.likesCount
         comments[index] = updated
       }
 
-      // Also check replies
+      // Also update replies
       for (parentId, replyList) in replies {
         if let index = replyList.firstIndex(where: { $0.id == commentId }) {
           var updated = replyList[index]
           updated.isLikedByUser = response.data.liked
+          updated.likesCount = response.data.likesCount
           replies[parentId]?[index] = updated
         }
       }
 
       logger.info("Toggled like on comment \(commentId): \(response.data.liked)")
+      likeInProgress.remove(commentId)
       return response.data.liked
     } catch {
+      // Revert optimistic update on error
+      if let index = comments.firstIndex(where: { $0.id == commentId }) {
+        var updated = comments[index]
+        updated.isLikedByUser = wasLiked
+        updated.likesCount = originalLikesCount
+        comments[index] = updated
+      }
+      
+      for (parentId, replyList) in replies {
+        if let index = replyList.firstIndex(where: { $0.id == commentId }) {
+          var updated = replyList[index]
+          updated.isLikedByUser = wasLiked
+          updated.likesCount = originalLikesCount
+          replies[parentId]?[index] = updated
+        }
+      }
+      
       logger.error("Failed to toggle like: \(error.localizedDescription)")
       errorMessage = error.localizedDescription
-      return false
+      likeInProgress.remove(commentId)
+      return wasLiked
     }
   }
 
