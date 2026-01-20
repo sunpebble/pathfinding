@@ -5,12 +5,11 @@
  * Flow: parse_intent → gather_info → generate_draft → human_review (interrupt) → refine → add_transport → END
  */
 
-import type {BaseMessage} from '@langchain/core/messages';
+import type { BaseMessage } from '@langchain/core/messages';
 import {
   AIMessage,
-  
   HumanMessage,
-  SystemMessage
+  SystemMessage,
 } from '@langchain/core/messages';
 import {
   Annotation,
@@ -157,17 +156,32 @@ JSON:`;
 }
 
 /**
+ * Check if tool calling is supported
+ */
+function isToolCallingSupported(): boolean {
+  const provider = process.env.LLM_PROVIDER || 'ollama';
+  return provider === 'openai' || provider === 'claude';
+}
+
+/**
  * Node: Gather information (weather, guides, POIs)
+ * Falls back to simple mode if tool calling is not supported
  */
 async function gatherInfo(
   state: TravelPlanStateType
 ): Promise<Partial<TravelPlanStateType>> {
+  const destination = state.destination || '未知目的地';
+
+  // If tool calling is not supported, skip tool-based gathering
+  if (!isToolCallingSupported()) {
+    console.log('Tool calling not supported, skipping gatherInfo tools');
+    return { currentStep: 'info_gathered' };
+  }
+
   const tools = toolsByUseCase.travelPlanning;
   const llm = createLLM({ temperature: 0.5 });
   // @ts-expect-error - bindTools exists on LangChain chat models
   const llmWithTools = llm.bindTools(tools);
-
-  const destination = state.destination || '未知目的地';
 
   // Create a message to trigger tool calls
   const gatherPrompt = `我需要为用户规划去${destination}的旅行。

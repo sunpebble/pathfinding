@@ -14,17 +14,19 @@
  */
 
 import { serve } from '@hono/node-server';
+
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { checkConnection } from './lib/convex.js';
-
 import { agentRouter } from './routes/agent.js';
-// Import routes (to be migrated from crawler)
-import { aiRouter } from './routes/ai.js';
 
+import { aiRouter } from './routes/ai.js';
+import { crawlerRouter } from './routes/crawler.js';
 import { translationsRouter } from './routes/translations.js';
+
 import { weatherRouter } from './routes/weather.js';
+// Load environment variables FIRST, before any other imports
 import 'dotenv/config';
 
 const app = new Hono();
@@ -68,6 +70,7 @@ app.get('/', (c) => {
     endpoints: {
       ai: '/api/ai',
       agent: '/api/agent',
+      crawler: '/api/crawler',
       weather: '/api/weather',
       translations: '/api/translations',
     },
@@ -77,6 +80,7 @@ app.get('/', (c) => {
 // Mount API routers
 app.route('/api/ai', aiRouter);
 app.route('/api/agent', agentRouter);
+app.route('/api/crawler', crawlerRouter);
 app.route('/api/weather', weatherRouter);
 app.route('/api/translations', translationsRouter);
 

@@ -3,12 +3,11 @@
  * LangGraph agent for enhanced conversational AI with tool calling
  */
 
-import type {BaseMessage} from '@langchain/core/messages';
+import type { BaseMessage } from '@langchain/core/messages';
 import {
   AIMessage,
-  
   HumanMessage,
-  SystemMessage
+  SystemMessage,
 } from '@langchain/core/messages';
 import {
   Annotation,
@@ -52,17 +51,54 @@ const SYSTEM_PROMPT = `你是一个专业的旅行规划助手。你可以帮助
 
 如果用户问的问题需要实时信息（如天气、交通），请使用相应的工具获取最新数据。`;
 
+// Simple system prompt for models without tool support
+const SIMPLE_SYSTEM_PROMPT = `你是一个专业的旅行规划助手。你可以帮助用户：
+
+1. 提供目的地旅行建议
+2. 推荐景点、餐厅、酒店
+3. 提供旅行攻略和行程规划
+4. 回答旅行相关问题
+
+回答时请：
+- 使用中文回答
+- 提供实用、具体的建议
+- 保持友好和专业的语气`;
+
 /**
- * Build the chat agent graph
+ * Check if the LLM supports tool calling
+ * Returns false for Ollama models that don't support native tool calling
  */
-export function buildChatAgentGraph() {
+function checkToolSupport(): boolean {
+  // Check environment to determine provider
+  const provider = process.env.LLM_PROVIDER || 'ollama';
+
+  // Only OpenAI and Claude reliably support tool calling
+  return provider === 'openai' || provider === 'claude';
+}
+
+/**
+ * Build the chat agent graph with optional tool support
+ */
+export function buildChatAgentGraph(enableTools = true) {
   const tools = toolsByUseCase.chat;
   const llm = createLLM({ temperature: 0.7 });
-  // @ts-expect-error - bindTools exists on LangChain chat models
-  const llmWithTools = llm.bindTools(tools);
 
-  // Tool node for executing tools
-  const toolNode = new ToolNode(tools);
+  // Check if we should use tools based on provider support
+  let llmWithTools: ReturnType<typeof createLLM> | null = null;
+  let useTools = enableTools && checkToolSupport();
+
+  if (useTools) {
+    try {
+      // @ts-expect-error - bindTools exists on LangChain chat models
+      llmWithTools = llm.bindTools(tools);
+    } catch (error) {
+      console.warn('Tool binding failed, falling back to simple chat:', error);
+      useTools = false;
+    }
+  }
+
+  // Tool node for executing tools (only if tools are enabled)
+  const toolNode = useTools ? new ToolNode(tools) : null;
 
   // Agent node: decide whether to call tools or respond
   async function agentNode(
@@ -72,9 +108,10 @@ export function buildChatAgentGraph() {
 
     // Add system message if this is the first message
     const hasSystemMessage = messages.some((m) => m instanceof SystemMessage);
+    const systemPrompt = useTools ? SYSTEM_PROMPT : SIMPLE_SYSTEM_PROMPT;
     const messagesWithSystem = hasSystemMessage
       ? messages
-      : [new SystemMessage(SYSTEM_PROMPT), ...messages];
+      : [new SystemMessage(systemPrompt), ...messages];
 
     // Add context if provided
     if (state.context && !hasSystemMessage) {
@@ -85,13 +122,18 @@ export function buildChatAgentGraph() {
       );
     }
 
-    const response = await llmWithTools.invoke(messagesWithSystem);
+    const activeLLM = llmWithTools || llm;
+    const response = await activeLLM.invoke(messagesWithSystem);
 
     return { messages: [response] };
   }
 
   // Routing function: check if we should call tools
   function shouldContinue(state: ChatStateType): 'tools' | '__end__' {
+    if (!useTools) {
+      return '__end__';
+    }
+
     const lastMessage = state.messages[state.messages.length - 1];
 
     if (lastMessage instanceof AIMessage && lastMessage.tool_calls?.length) {
@@ -104,13 +146,19 @@ export function buildChatAgentGraph() {
   // Build the graph
   const workflow = new StateGraph(ChatState)
     .addNode('agent', agentNode)
-    .addNode('tools', toolNode)
-    .addEdge(START, 'agent')
-    .addConditionalEdges('agent', shouldContinue, {
-      tools: 'tools',
-      __end__: END,
-    })
-    .addEdge('tools', 'agent');
+    .addEdge(START, 'agent');
+
+  if (useTools && toolNode) {
+    workflow
+      .addNode('tools', toolNode)
+      .addConditionalEdges('agent', shouldContinue, {
+        tools: 'tools',
+        __end__: END,
+      })
+      .addEdge('tools', 'agent');
+  } else {
+    workflow.addEdge('agent', END);
+  }
 
   // Compile with memory saver for session persistence
   const checkpointer = new MemorySaver();
@@ -242,8 +290,8 @@ export async function* streamChat(options: {
     }
 
     // Handle tool output
-    if ('tools' in chunk) {
-      const toolMessages = chunk.tools.messages || [];
+    if ('tools' in chunk && chunk.tools) {
+      const toolMessages = (chunk.tools as any).messages || [];
       for (const msg of toolMessages) {
         yield {
           type: 'tool_end',

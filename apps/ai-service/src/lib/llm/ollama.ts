@@ -3,11 +3,12 @@
  * Wrapper for ChatOllama from @langchain/ollama
  */
 
-import type { LLMConfig } from './types.js';
+import type {LLMConfig} from './types.js';
 import { ChatOllama } from '@langchain/ollama';
+import { DEFAULT_MODELS  } from './types.js';
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma3:12b';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || DEFAULT_MODELS.ollama;
 
 export function createOllamaLLM(config?: Partial<LLMConfig>): ChatOllama {
   return new ChatOllama({

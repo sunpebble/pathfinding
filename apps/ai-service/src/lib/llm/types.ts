@@ -32,7 +32,7 @@ export interface LLMProviderConfig {
  * Default models for each provider
  */
 export const DEFAULT_MODELS: Record<LLMProvider, string> = {
-  ollama: 'gemma3:12b',
+  ollama: 'gemma3:latest',
   openai: 'gpt-4o',
   claude: 'claude-sonnet-4-20250514',
 };
