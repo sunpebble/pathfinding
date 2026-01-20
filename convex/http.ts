@@ -1,4 +1,3 @@
- 
 import type { Id } from './_generated/dataModel';
 // @ts-nocheck
 import { httpRouter } from 'convex/server';
@@ -829,8 +828,24 @@ http.route({
     const offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
 
     try {
+      const validPlatforms = [
+        'xiaohongshu',
+        'weibo',
+        'ctrip',
+        'douyin',
+        'tripadvisor',
+        'qunar',
+        'tongcheng',
+        'mafengwo',
+      ] as const;
+      const validPlatform =
+        platform &&
+        validPlatforms.includes(platform as (typeof validPlatforms)[number])
+          ? (platform as (typeof validPlatforms)[number])
+          : undefined;
+
       const guides = await ctx.runQuery(api.travelGuides.list, {
-        platform: platform || undefined,
+        platform: validPlatform,
         minQuality,
         limit: limit + offset,
       });

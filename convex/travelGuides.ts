@@ -11,7 +11,10 @@ const platformValidator = v.union(
   v.literal('weibo'),
   v.literal('ctrip'),
   v.literal('douyin'),
-  v.literal('tripadvisor')
+  v.literal('tripadvisor'),
+  v.literal('tongcheng'),
+  v.literal('mafengwo'),
+  v.literal('qunar')
 );
 
 // List travel guides with filters
@@ -570,10 +573,26 @@ export const removeDuplicates = mutation({
     // If platform specified, only query that platform
     // Otherwise query all platforms one by one
     const platforms: Array<
-      'xiaohongshu' | 'weibo' | 'ctrip' | 'douyin' | 'tripadvisor'
+      | 'xiaohongshu'
+      | 'weibo'
+      | 'ctrip'
+      | 'douyin'
+      | 'tripadvisor'
+      | 'qunar'
+      | 'tongcheng'
+      | 'mafengwo'
     > = args.platform
       ? [args.platform]
-      : ['xiaohongshu', 'weibo', 'ctrip', 'douyin', 'tripadvisor'];
+      : [
+          'xiaohongshu',
+          'weibo',
+          'ctrip',
+          'douyin',
+          'tripadvisor',
+          'qunar',
+          'tongcheng',
+          'mafengwo',
+        ];
 
     for (const platform of platforms) {
       const guides = await ctx.db

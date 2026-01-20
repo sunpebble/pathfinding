@@ -23,6 +23,7 @@
     "dotenv": "^16.4.7",
     "hono": "^4.6.14",
     "pdfkit": "^0.16.0",
+    "playwright": "^1.57.0",
     "zod": "^4.3.5"
   },
   "devDependencies": {

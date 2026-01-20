@@ -11,7 +11,10 @@ export type GuidePlatform =
   | 'weibo'
   | 'ctrip'
   | 'douyin'
-  | 'tripadvisor';
+  | 'tripadvisor'
+  | 'tongcheng'
+  | 'mafengwo'
+  | 'qunar';
 
 /**
  * Raw travel guide data as extracted from source platforms
