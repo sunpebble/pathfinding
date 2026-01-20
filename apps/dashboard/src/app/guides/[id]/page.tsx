@@ -28,11 +28,17 @@ function PlatformBadge({ platform }: { platform: string }) {
     ctrip: 'bg-blue-100 text-blue-800 border-blue-200',
     xiaohongshu: 'bg-red-100 text-red-800 border-red-200',
     weibo: 'bg-orange-100 text-orange-800 border-orange-200',
+    tongcheng: 'bg-purple-100 text-purple-800 border-purple-200',
+    mafengwo: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    qunar: 'bg-green-100 text-green-800 border-green-200',
   };
   const names: Record<string, string> = {
     ctrip: '携程',
     xiaohongshu: '小红书',
     weibo: '微博',
+    tongcheng: '同程旅行',
+    mafengwo: '马蜂窝',
+    qunar: '去哪儿',
   };
   return (
     <span

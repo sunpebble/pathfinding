@@ -34,11 +34,6 @@ const nextConfig: NextConfig = {
         source: '/api/health',
         destination: `${aiServiceUrl}/health`,
       },
-      // Legacy crawler proxy - redirects to Convex
-      {
-        source: '/api/crawler/:path*',
-        destination: `${convexUrl}/api/:path*`,
-      },
     ];
   },
 };
