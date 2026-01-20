@@ -904,7 +904,10 @@ export default defineSchema({
       v.literal('weibo'),
       v.literal('ctrip'),
       v.literal('douyin'),
-      v.literal('tripadvisor')
+      v.literal('tripadvisor'),
+      v.literal('qunar'),
+      v.literal('tongcheng'),
+      v.literal('mafengwo')
     ),
     sourceExternalId: v.string(),
     sourceUrl: v.optional(v.string()),
@@ -925,6 +928,18 @@ export default defineSchema({
     crawledAt: v.number(),
     qualityScore: v.number(), // 0-1
     contentHash: v.optional(v.string()),
+
+    // AI Enrichment Status (for LangGraph pipeline)
+    enrichmentStatus: v.optional(
+      v.union(
+        v.literal('pending'),
+        v.literal('processing'),
+        v.literal('completed'),
+        v.literal('failed')
+      )
+    ),
+    enrichmentError: v.optional(v.string()),
+    enrichmentStartedAt: v.optional(v.number()),
 
     // AI Enhanced Fields
     aiProcessedAt: v.optional(v.number()),
@@ -6140,4 +6155,72 @@ export default defineSchema({
     .index('by_pair', ['base', 'target'])
     .index('by_pair_days', ['base', 'target', 'days'])
     .index('by_fetched_at', ['fetchedAt']),
+
+  // ============================================
+  // Agent Sessions (LangGraph Memory)
+  // ============================================
+  agentSessions: defineTable({
+    sessionId: v.string(), // Unique session identifier
+    userId: v.optional(v.string()), // Auth user ID (optional for anonymous)
+    sessionType: v.union(
+      v.literal('chat'), // General chat
+      v.literal('travel_plan'), // Travel planning session
+      v.literal('enrichment') // Content enrichment task
+    ),
+    status: v.union(
+      v.literal('active'),
+      v.literal('paused'), // Waiting for user input (interrupt)
+      v.literal('completed'),
+      v.literal('expired')
+    ),
+    messages: v.array(
+      v.object({
+        role: v.union(
+          v.literal('human'),
+          v.literal('ai'),
+          v.literal('system'),
+          v.literal('tool')
+        ),
+        content: v.string(),
+        toolCalls: v.optional(v.any()), // Tool call info if role is 'tool'
+        toolName: v.optional(v.string()),
+        timestamp: v.number(),
+      })
+    ),
+    // Session metadata
+    metadata: v.optional(v.any()), // Custom metadata (destination, dates, etc.)
+    currentNode: v.optional(v.string()), // Current graph node (for resume)
+    interruptData: v.optional(v.any()), // Data passed to interrupt()
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    expiresAt: v.optional(v.number()), // Optional session expiry
+  })
+    .index('by_session', ['sessionId'])
+    .index('by_user', ['userId'])
+    .index('by_user_type', ['userId', 'sessionType'])
+    .index('by_status', ['status'])
+    .index('by_created', ['createdAt']),
+
+  // ============================================
+  // Agent Checkpoints (LangGraph State Persistence)
+  // ============================================
+  agentCheckpoints: defineTable({
+    threadId: v.string(), // Thread identifier (matches sessionId)
+    checkpointNs: v.string(), // Checkpoint namespace
+    checkpointId: v.string(), // Unique checkpoint identifier
+    parentCheckpointId: v.optional(v.string()), // Parent checkpoint for history
+    // Checkpoint data
+    channelValues: v.any(), // Serialized channel state
+    channelVersions: v.any(), // Channel version tracking
+    versionsSeen: v.any(), // Versions seen by each node
+    pendingSends: v.optional(v.array(v.any())), // Pending message sends
+    // Metadata
+    metadata: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index('by_thread', ['threadId'])
+    .index('by_thread_ns', ['threadId', 'checkpointNs'])
+    .index('by_thread_ns_id', ['threadId', 'checkpointNs', 'checkpointId'])
+    .index('by_created', ['createdAt']),
 });

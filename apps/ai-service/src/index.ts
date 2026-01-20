@@ -19,6 +19,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { checkConnection } from './lib/convex.js';
 
+import { agentRouter } from './routes/agent.js';
 // Import routes (to be migrated from crawler)
 import { aiRouter } from './routes/ai.js';
 
@@ -66,15 +67,16 @@ app.get('/', (c) => {
     description: 'AI and external API integrations for Pathfinding',
     endpoints: {
       ai: '/api/ai',
+      agent: '/api/agent',
       weather: '/api/weather',
       translations: '/api/translations',
-      // More to be added
     },
   });
 });
 
 // Mount API routers
 app.route('/api/ai', aiRouter);
+app.route('/api/agent', agentRouter);
 app.route('/api/weather', weatherRouter);
 app.route('/api/translations', translationsRouter);
 
