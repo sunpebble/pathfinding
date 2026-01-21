@@ -10,7 +10,6 @@ import {
   createPage,
   scrollToLoadContent,
   sleep,
-  waitForContent,
 } from './browser.js';
 
 // City ID/slug mapping for Tongcheng
@@ -40,13 +39,14 @@ const CITY_SLUGS: Record<string, string> = {
 
 /**
  * Crawl Tongcheng travel guides for a city
+ * Uses the new travels list page at www.ly.com/travels/
  */
 export async function crawlTongcheng(
   city: string,
   options: CrawlOptions = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
-  const maxPages = options.maxPages || 5;
+  const maxGuides = (options.maxPages || 5) * 10; // Convert pages to guide count
   const citySlug = CITY_SLUGS[city] || city.toLowerCase();
 
   console.log(`[Tongcheng] Crawling guides for ${city} (${citySlug})`);
@@ -55,37 +55,16 @@ export async function crawlTongcheng(
   const context = await createContext();
 
   try {
-    for (let page = 1; page <= maxPages; page++) {
-      try {
-        // Try primary URL format first
-        const listUrl = `https://go.ly.com/youji/list-${citySlug}-0-0-0-0-0-${page}.html`;
-        console.log(`[Tongcheng] Fetching page ${page}: ${listUrl}`);
+    // Use the main travels list page and extract guides
+    const listUrl = 'https://www.ly.com/travels/';
+    console.log(`[Tongcheng] Fetching travels list: ${listUrl}`);
 
-        const guideLinks = await fetchListPage(context, listUrl);
+    const guides = await fetchGuidesFromTravelsList(context, listUrl, city, maxGuides);
+    console.log(`[Tongcheng] Found ${guides.length} guides from travels list`);
 
-        // If primary URL fails, try alternative URL format
-        if (guideLinks.length === 0) {
-          const altUrl = `https://www.ly.com/destination/${citySlug}/youji/p${page}.html`;
-          console.log(`[Tongcheng] Trying alternative URL: ${altUrl}`);
-          const altLinks = await fetchListPage(context, altUrl);
-
-          if (altLinks.length > 0) {
-            console.log(
-              `[Tongcheng] Found ${altLinks.length} guides on page ${page} (alt URL)`
-            );
-            await processGuideLinks(context, altLinks, city, options, results);
-            continue;
-          }
-        }
-
-        console.log(
-          `[Tongcheng] Found ${guideLinks.length} guides on page ${page}`
-        );
-        await processGuideLinks(context, guideLinks, city, options, results);
-      } catch (error) {
-        console.error(`[Tongcheng] Error crawling page ${page}:`, error);
-      }
-    }
+    results.push(...guides);
+  } catch (error) {
+    console.error(`[Tongcheng] Error crawling travels list:`, error);
   } finally {
     // Always close the context (but not the shared browser)
     await context.close();
@@ -96,245 +75,108 @@ export async function crawlTongcheng(
 }
 
 /**
- * Fetch list page using Playwright and extract guide links
+ * Fetch guides directly from the travels list page
+ * The page uses JavaScript to load content, so we need to wait for it
  */
-async function fetchListPage(
+async function fetchGuidesFromTravelsList(
   context: Awaited<ReturnType<typeof createContext>>,
-  url: string
-): Promise<string[]> {
-  const page = await createPage(context);
-
-  try {
-    // Navigate to the list page
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded' });
-
-    if (!response || !response.ok()) {
-      console.log(
-        `[Tongcheng] Failed to load: ${url} (status: ${response?.status()})`
-      );
-      return [];
-    }
-
-    // Wait for content to load
-    await waitForContent(
-      page,
-      '.youji-list, .travel-item, .note-card, .article-item'
-    );
-
-    // Scroll to load lazy content
-    await scrollToLoadContent(page);
-
-    // Get the rendered HTML
-    const html = await page.content();
-
-    // Extract guide links from HTML
-    return extractGuideLinks(html);
-  } catch (error) {
-    console.error(`[Tongcheng] Error fetching list page: ${url}`, error);
-    return [];
-  } finally {
-    await page.close();
-  }
-}
-
-/**
- * Extract guide links from HTML
- */
-function extractGuideLinks(html: string): string[] {
-  const $ = cheerio.load(html);
-  const guideLinks: string[] = [];
-
-  // Tongcheng travel note selectors (may need adjustment based on actual HTML structure)
-  $(
-    '.youji-list a.title, .travel-item a, .note-card a, .article-item a, [class*="youji"] a[href*="youji"]'
-  ).each((_, el) => {
-    const href = $(el).attr('href');
-    if (href && (href.includes('/youji/') || href.includes('/travels/'))) {
-      const fullUrl = href.startsWith('http')
-        ? href
-        : `https://go.ly.com${href}`;
-      if (!guideLinks.includes(fullUrl)) {
-        guideLinks.push(fullUrl);
-      }
-    }
-  });
-
-  // Fallback: try to find any travel note links
-  if (guideLinks.length === 0) {
-    $('a[href*="/youji/"], a[href*="/travels/"]').each((_, el) => {
-      const href = $(el).attr('href');
-      if (href && href.match(/\/youji\/\d+|\/travels\/\d+/)) {
-        const fullUrl = href.startsWith('http')
-          ? href
-          : `https://go.ly.com${href}`;
-        if (!guideLinks.includes(fullUrl)) {
-          guideLinks.push(fullUrl);
-        }
-      }
-    });
-  }
-
-  return guideLinks;
-}
-
-/**
- * Process guide links and fetch details
- */
-async function processGuideLinks(
-  context: Awaited<ReturnType<typeof createContext>>,
-  guideLinks: string[],
+  listUrl: string,
   city: string,
-  options: CrawlOptions,
-  results: CrawlResult[]
-): Promise<void> {
-  for (const guideUrl of guideLinks.slice(0, 10)) {
-    try {
-      const guide = await fetchTongchengGuide(context, guideUrl, city);
-      if (guide) {
-        results.push(guide);
-      }
-      // Rate limiting
-      await sleep(1000 / (options.rateLimit || 0.5));
-    } catch (error) {
-      console.error(`[Tongcheng] Error fetching guide: ${guideUrl}`, error);
-    }
-  }
-}
-
-/**
- * Fetch Tongcheng guide detail page using Playwright
- */
-async function fetchTongchengGuide(
-  context: Awaited<ReturnType<typeof createContext>>,
-  url: string,
-  city: string
-): Promise<CrawlResult | null> {
+  maxGuides: number
+): Promise<CrawlResult[]> {
   const page = await createPage(context);
+  const guides: CrawlResult[] = [];
+  const seenIds = new Set<string>();
 
   try {
-    // Navigate to the guide detail page
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded' });
+    // Navigate to the travels list page
+    await page.goto(listUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-    if (!response || !response.ok()) {
-      console.log(
-        `[Tongcheng] Failed to load guide: ${url} (status: ${response?.status()})`
-      );
-      return null;
+    // Wait for the guide list to load
+    try {
+      await page.waitForSelector('a[href*="/travels/"]', { timeout: 15000 });
+      console.log('[Tongcheng] Found travel links');
+    } catch {
+      console.log('[Tongcheng] Travel links not found immediately, waiting...');
     }
 
-    // Wait for content to load
-    await waitForContent(
-      page,
-      '.article-content, .youji-content, .detail-content, .travel-content'
-    );
+    // Wait for network to settle
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
-    // Scroll to load lazy images
+    // Scroll to load more content
     await scrollToLoadContent(page);
+
+    // Additional wait for dynamic content
+    await sleep(2000);
 
     // Get the rendered HTML
     const html = await page.content();
     const $ = cheerio.load(html);
 
-    // Extract content - Tongcheng specific selectors
-    const title =
-      $('h1.title, .article-title, .youji-title, .detail-title')
-        .first()
-        .text()
-        .trim() ||
-      $('title').text().split('-')[0].trim() ||
-      $('h1').first().text().trim();
+    // Extract guide items from the list
+    // Based on the page structure: links with /travels/{id}.html format
+    $('a[href*="/travels/"]').each((_, el) => {
+      if (guides.length >= maxGuides) return false;
 
-    const content =
-      $('.article-content, .youji-content, .detail-content, .travel-content')
-        .text()
-        .trim() ||
-      $('article').text().trim() ||
-      $('.content').text().trim() ||
-      $('[class*="content"]').text().trim();
+      const href = $(el).attr('href');
+      if (!href || !href.match(/\/travels\/\d+\.html/)) return;
 
-    const authorName =
-      $('.author-name, .user-name, .nickname, .author').first().text().trim() ||
-      $('[class*="author"]').first().text().trim();
+      // Extract guide ID
+      const urlMatch = href.match(/\/travels\/(\d+)\.html/);
+      const guideId = urlMatch?.[1];
+      if (!guideId || seenIds.has(guideId)) return;
+      seenIds.add(guideId);
 
-    // Extract images
-    const imageUrls: string[] = [];
-    $(
-      '.article-content img, .youji-content img, .detail-content img, .travel-content img, article img'
-    ).each((_, el) => {
-      const src =
-        $(el).attr('src') ||
-        $(el).attr('data-src') ||
-        $(el).attr('data-original');
-      if (
-        src &&
-        !src.includes('avatar') &&
-        !src.includes('icon') &&
-        !src.includes('logo')
-      ) {
-        const fullSrc = src.startsWith('http') ? src : `https:${src}`;
-        if (!imageUrls.includes(fullSrc)) {
-          imageUrls.push(fullSrc);
-        }
+      // Try to extract title from the link or nearby elements
+      const $el = $(el);
+      let title = $el.text().trim();
+
+      // If this is an image link, look for title in parent or sibling
+      if (!title || title.length < 5) {
+        const $parent = $el.closest('li, .item, [class*="item"]');
+        title = $parent.find('p a, h1 a, h2 a, h3 a, .title').text().trim() ||
+                $parent.find('p, h1, h2, h3').first().text().trim();
       }
+
+      // Skip if still no title
+      if (!title || title.length < 5) return;
+
+      // Try to get cover image
+      const $img = $el.find('img').first();
+      const coverImageUrl = $img.attr('src') || $img.attr('data-src') || $img.attr('data-original');
+
+      // Try to get author
+      const $parent = $el.closest('li, .item, [class*="item"]');
+      const authorName = $parent.find('[class*="author"], [class*="user"], [class*="name"]').text().trim() || '同程用户';
+
+      const sourceExternalId = `tongcheng_${guideId}`;
+      const fullUrl = href.startsWith('http') ? href : `https://www.ly.com${href}`;
+
+      guides.push({
+        sourceExternalId,
+        sourceUrl: fullUrl,
+        title,
+        content: `${title} - ${city}旅游攻略`, // Will be enriched with full content if needed
+        authorName,
+        coverImageUrl: coverImageUrl?.startsWith('http') ? coverImageUrl : (coverImageUrl ? `https:${coverImageUrl}` : undefined),
+        imageUrls: [],
+        destinations: [city],
+        tags: extractTags(title, ''),
+        viewsCount: 0,
+        qualityScore: 50,
+      });
     });
 
-    const coverImageUrl = imageUrls[0];
-
-    // Extract stats
-    const viewsText = $(
-      '.view-count, .views, .read-count, [class*="view"]'
-    ).text();
-    const likesText = $('.like-count, .likes, .zan, [class*="like"]').text();
-    const commentsText = $(
-      '.comment-count, .comments, [class*="comment"]'
-    ).text();
-
-    const viewsCount = Number.parseInt(viewsText.match(/\d+/)?.[0] || '0', 10);
-    const likesCount = Number.parseInt(likesText.match(/\d+/)?.[0] || '0', 10);
-    const commentsCount = Number.parseInt(
-      commentsText.match(/\d+/)?.[0] || '0',
-      10
-    );
-
-    // Generate external ID from URL
-    const urlMatch = url.match(/\/youji\/(\d+)|\/travels\/(\d+)|(\d+)\.html/);
-    const idPart =
-      urlMatch?.[1] || urlMatch?.[2] || urlMatch?.[3] || Date.now().toString();
-    const sourceExternalId = `tongcheng_${idPart}`;
-
-    if (!content || content.length < 100) {
-      console.log(
-        `[Tongcheng] Skipping guide with insufficient content: ${url}`
-      );
-      return null;
-    }
-
-    return {
-      sourceExternalId,
-      sourceUrl: url,
-      title: title || `${city}旅游攻略`,
-      content: content.substring(0, 50000), // Limit content length
-      authorName: authorName || '同程用户',
-      coverImageUrl,
-      imageUrls: imageUrls.slice(0, 20),
-      destinations: [city],
-      tags: extractTags(title, content),
-      likesCount,
-      viewsCount,
-      commentsCount,
-      qualityScore: calculateQualityScore(
-        content,
-        imageUrls.length,
-        viewsCount
-      ),
-    };
+    console.log(`[Tongcheng] Extracted ${guides.length} guides from list`);
   } catch (error) {
-    console.error(`[Tongcheng] Error parsing guide:`, error);
-    return null;
+    console.error(`[Tongcheng] Error fetching travels list:`, error);
   } finally {
     await page.close();
   }
+
+  return guides;
 }
+
 
 /**
  * Extract tags from title and content

@@ -1,90 +1,67 @@
 /**
  * AI Processing Routes
  * API endpoints for AI-powered content extraction and summarization
+ * Refactored to use LangChain.js with Claude Opus 4.5
  */
 
 import { Hono } from 'hono';
+import { HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { createLLM, getProvidersStatus } from '../lib/llm/index.js';
 
 export const aiRouter = new Hono();
 
-// Ollama configuration
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma3:12b';
-
 /**
- * Call Ollama API
+ * Get the configured LLM instance
  */
-async function callOllama(
-  prompt: string,
-  options?: { stream?: boolean }
-): Promise<string> {
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: OLLAMA_MODEL,
-      prompt,
-      stream: options?.stream ?? false,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Ollama API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.response || '';
+function getLLM() {
+  return createLLM();
 }
 
 /**
- * Check Ollama health
+ * Call LLM with a prompt
  */
-async function checkOllamaHealth(): Promise<boolean> {
-  try {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`, {
-      signal: AbortSignal.timeout(5000),
-    });
-    return response.ok;
-  } catch {
-    return false;
+async function callLLM(prompt: string, systemPrompt?: string): Promise<string> {
+  const llm = getLLM();
+  const messages = [];
+
+  if (systemPrompt) {
+    messages.push(new SystemMessage(systemPrompt));
   }
+  messages.push(new HumanMessage(prompt));
+
+  const response = await llm.invoke(messages);
+  return typeof response.content === 'string'
+    ? response.content
+    : JSON.stringify(response.content);
 }
 
 // Health check
 aiRouter.get('/health', async (c) => {
-  const ollamaHealthy = await checkOllamaHealth();
+  const status = await getProvidersStatus();
+
+  const currentProvider = process.env.LLM_PROVIDER || 'claude';
+  const providerStatus = status[currentProvider as keyof typeof status];
+  const isHealthy = providerStatus?.available ?? false;
 
   return c.json(
     {
-      status: ollamaHealthy ? 'healthy' : 'degraded',
-      services: {
-        ollama: {
-          status: ollamaHealthy ? 'healthy' : 'unhealthy',
-          url: OLLAMA_BASE_URL,
-          model: OLLAMA_MODEL,
-        },
-      },
+      status: isHealthy ? 'healthy' : 'degraded',
+      provider: currentProvider,
+      model: process.env.ANTHROPIC_MODEL || process.env.OLLAMA_MODEL,
+      services: status,
       timestamp: new Date().toISOString(),
     },
-    ollamaHealthy ? 200 : 503
+    isHealthy ? 200 : 503
   );
 });
 
-// Get available models
-aiRouter.get('/models', async (c) => {
-  try {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`);
-    if (!response.ok) {
-      return c.json({ error: 'Failed to fetch models' }, 503);
-    }
-    const data = await response.json();
-    return c.json({
-      models: data.models || [],
-      configured_model: OLLAMA_MODEL,
-    });
-  } catch {
-    return c.json({ error: 'Ollama service unavailable' }, 503);
-  }
+// Get available providers status
+aiRouter.get('/providers', async (c) => {
+  const status = await getProvidersStatus();
+  return c.json({
+    providers: status,
+    current: process.env.LLM_PROVIDER || 'claude',
+  });
 });
 
 // Summarize content
@@ -96,13 +73,12 @@ aiRouter.post('/summarize', async (c) => {
       return c.json({ error: 'Content is required' }, 400);
     }
 
+    const systemPrompt = '你是一个专业的内容摘要助手，擅长提取和总结关键信息。';
     const prompt = `请用中文总结以下内容，限制在${maxLength}字以内，突出关键信息：
 
-${content}
+${content}`;
 
-总结：`;
-
-    const summary = await callOllama(prompt);
+    const summary = await callLLM(prompt, systemPrompt);
     return c.json({ success: true, summary });
   } catch (error) {
     const message =
@@ -120,15 +96,21 @@ aiRouter.post('/extract-pois', async (c) => {
       return c.json({ error: 'Content is required' }, 400);
     }
 
-    const prompt = `从以下旅行内容中提取所有景点、餐厅、住宿等地点信息，返回JSON数组格式：
+    const systemPrompt = `你是一个旅行信息提取专家。你的任务是从旅行内容中提取所有地点信息，并以JSON数组格式返回。
+只返回JSON数组，不要包含任何其他文字说明。`;
+
+    const prompt = `从以下旅行内容中提取所有景点、餐厅、住宿等地点信息：
 
 ${content}
 
-请返回JSON数组，每个元素包含：name（名称）、type（类型：attraction/restaurant/hotel/transportation）、description（描述）
+请返回JSON数组，每个元素包含：
+- name: 地点名称
+- type: 类型（attraction/restaurant/hotel/transportation）
+- description: 简短描述
 
-JSON:`;
+只返回JSON数组：`;
 
-    const response = await callOllama(prompt);
+    const response = await callLLM(prompt, systemPrompt);
 
     // Try to parse JSON from response
     try {
@@ -161,13 +143,12 @@ aiRouter.post('/translate', async (c) => {
       ko: '한국어',
     };
 
-    const prompt = `请将以下内容翻译成${langNames[targetLang] || '中文'}：
+    const systemPrompt = '你是一个专业的翻译助手，能够准确地进行多语言翻译。';
+    const prompt = `请将以下内容翻译成${langNames[targetLang] || '中文'}，只返回翻译结果，不要包含其他说明：
 
-${content}
+${content}`;
 
-翻译：`;
-
-    const translation = await callOllama(prompt);
+    const translation = await callLLM(prompt, systemPrompt);
     return c.json({ success: true, translation, targetLang });
   } catch (error) {
     const message =
@@ -185,16 +166,15 @@ aiRouter.post('/chat', async (c) => {
       return c.json({ error: 'Message is required' }, 400);
     }
 
-    let prompt = message;
-    if (context) {
-      prompt = `背景信息：${context}\n\n用户问题：${message}\n\n请用中文回答：`;
-    }
+    const systemPrompt = context
+      ? `你是一个友好的旅行助手。以下是相关背景信息：\n\n${context}`
+      : '你是一个友好的旅行助手，可以回答关于旅行规划、景点推荐等问题。';
 
-    const response = await callOllama(prompt);
+    const response = await callLLM(message, systemPrompt);
     return c.json({ success: true, response });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Chat failed';
-    return c.json({ error: message }, 500);
+    const msg = error instanceof Error ? error.message : 'Chat failed';
+    return c.json({ error: msg }, 500);
   }
 });
 

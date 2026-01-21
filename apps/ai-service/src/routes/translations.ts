@@ -7,9 +7,16 @@ import { Hono } from 'hono';
 
 export const translationsRouter = new Hono();
 
-// Ollama configuration
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma3:12b';
+/**
+ * Get Ollama configuration from environment
+ * Read at runtime to ensure dotenv is loaded first
+ */
+function getOllamaConfig() {
+  return {
+    baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+    model: process.env.OLLAMA_MODEL || 'gemma3:latest',
+  };
+}
 
 /**
  * Call Ollama for translation
@@ -37,11 +44,12 @@ ${text}
 
 翻译：`;
 
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+  const config = getOllamaConfig();
+  const response = await fetch(`${config.baseUrl}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: OLLAMA_MODEL,
+      model: config.model,
       prompt,
       stream: false,
     }),
@@ -65,11 +73,12 @@ ${text}
 
 语言代码：`;
 
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+  const config = getOllamaConfig();
+  const response = await fetch(`${config.baseUrl}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: OLLAMA_MODEL,
+      model: config.model,
       prompt,
       stream: false,
     }),
@@ -203,8 +212,9 @@ translationsRouter.post('/batch', async (c) => {
 
 // Health check
 translationsRouter.get('/health', async (c) => {
+  const config = getOllamaConfig();
   try {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`, {
+    const response = await fetch(`${config.baseUrl}/api/tags`, {
       signal: AbortSignal.timeout(5000),
     });
 
@@ -215,8 +225,8 @@ translationsRouter.get('/health', async (c) => {
         status: healthy ? 'healthy' : 'unhealthy',
         service: 'translations',
         ollama: {
-          url: OLLAMA_BASE_URL,
-          model: OLLAMA_MODEL,
+          url: config.baseUrl,
+          model: config.model,
           available: healthy,
         },
       },

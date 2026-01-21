@@ -34,13 +34,14 @@ const CITY_IDS: Record<string, string> = {
 
 /**
  * Crawl Mafengwo travel guides for a city
+ * Uses the destination page which is publicly accessible and contains guide previews
  */
 export async function crawlMafengwo(
   city: string,
   options: CrawlOptions = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
-  const maxPages = options.maxPages || 5;
+  const maxGuides = (options.maxPages || 5) * 10; // Convert pages to guide count
   const cityId = CITY_IDS[city];
 
   if (!cityId) {
@@ -54,38 +55,17 @@ export async function crawlMafengwo(
   const context = await createContext();
 
   try {
-    for (let page = 1; page <= maxPages; page++) {
-      try {
-        // Mafengwo travel notes list
-        const listUrl = `https://www.mafengwo.cn/yj/${cityId}/1-0-${page}.html`;
-        console.log(`[Mafengwo] Fetching page ${page}: ${listUrl}`);
+    // Use destination page which is publicly accessible
+    const destUrl = `https://www.mafengwo.cn/travel-scenic-spot/mafengwo/${cityId}.html`;
+    console.log(`[Mafengwo] Fetching destination page: ${destUrl}`);
 
-        // Fetch list page with Playwright
-        const guideLinks = await fetchListPage(context, listUrl);
-        console.log(
-          `[Mafengwo] Found ${guideLinks.length} guides on page ${page}`
-        );
+    // Extract guides from the destination page
+    const guides = await fetchGuidesFromDestPage(context, destUrl, city, maxGuides);
+    console.log(`[Mafengwo] Found ${guides.length} guides from destination page`);
 
-        // Fetch each guide detail
-        for (const guideUrl of guideLinks.slice(0, 10)) {
-          try {
-            const guide = await fetchMafengwoGuide(context, guideUrl, city);
-            if (guide) {
-              results.push(guide);
-            }
-            // Rate limiting
-            await sleep(1000 / (options.rateLimit || 0.5));
-          } catch (error) {
-            console.error(
-              `[Mafengwo] Error fetching guide: ${guideUrl}`,
-              error
-            );
-          }
-        }
-      } catch (error) {
-        console.error(`[Mafengwo] Error crawling page ${page}:`, error);
-      }
-    }
+    results.push(...guides);
+  } catch (error) {
+    console.error(`[Mafengwo] Error crawling destination page:`, error);
   } finally {
     // Always close the context when done
     await context.close();
@@ -93,6 +73,174 @@ export async function crawlMafengwo(
   }
 
   return results;
+}
+
+/**
+ * Fetch guides from destination page which contains guide previews
+ * The page structure has guide items in .tn-item.clearfix containers with:
+ * - Title link in dt a.title-link[href*="/i/"]
+ * - Preview content in dd > a[href*="/i/"]
+ * - Author info in .tn-user a
+ * - Cover image in .tn-image img (data-original attribute)
+ * - Stats in .tn-nums (format: "views/likes")
+ */
+async function fetchGuidesFromDestPage(
+  context: Awaited<ReturnType<typeof createContext>>,
+  destUrl: string,
+  city: string,
+  maxGuides: number
+): Promise<CrawlResult[]> {
+  const page = await createPage(context);
+  const guides: CrawlResult[] = [];
+  const seenIds = new Set<string>();
+
+  try {
+    // Navigate to the destination page
+    await page.goto(destUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+    // Wait for the specific guide container to load
+    try {
+      await page.waitForSelector('.tn-item', { timeout: 15000 });
+      console.log('[Mafengwo] Found .tn-item elements');
+    } catch {
+      console.log('[Mafengwo] .tn-item not found, trying alternative selectors...');
+      await page.waitForSelector('a[href*="/i/"]', { timeout: 10000 }).catch(() => {});
+    }
+
+    // Wait for network to settle
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+
+    // Scroll to load lazy content
+    await scrollToLoadContent(page);
+
+    // Additional wait for dynamic content
+    await sleep(2000);
+
+    // Get the rendered HTML
+    const html = await page.content();
+
+    // Debug: Save HTML to file for analysis
+    const fs = await import('fs/promises');
+    await fs.writeFile('/tmp/mafengwo-debug.html', html);
+    console.log('[Mafengwo] Saved HTML to /tmp/mafengwo-debug.html, length:', html.length);
+
+    const $ = cheerio.load(html);
+
+    // Debug: Log what we find
+    const tnItemCount = $('.tn-item').length;
+    const titleLinkCount = $('a.title-link').length;
+    console.log(`[Mafengwo] Found ${tnItemCount} .tn-item containers, ${titleLinkCount} title links`);
+
+    // Strategy 1: Find guide items by .tn-item container (preferred)
+    $('.tn-item').each((index, container) => {
+      if (guides.length >= maxGuides) return false;
+
+      const $container = $(container);
+
+      // Find the title link - use .title-link class which is more specific
+      const titleLink = $container.find('a.title-link').first();
+      let href = titleLink.attr('href');
+
+      // Fallback: find any link with /i/ pattern in dt
+      if (!href) {
+        const dtLink = $container.find('dt a[href*="/i/"]').first();
+        href = dtLink.attr('href');
+      }
+
+      if (!href || !href.match(/\/i\/\d+\.html/)) return;
+
+      // Extract guide ID to avoid duplicates
+      const urlMatch = href.match(/\/i\/(\d+)/);
+      const guideId = urlMatch?.[1];
+      if (!guideId || seenIds.has(guideId)) return;
+      seenIds.add(guideId);
+
+      // Get title from the title link
+      const title = (titleLink.text().trim() || $container.find('dt a[href*="/i/"]').first().text().trim()).replace(/_游记$/, '');
+      if (!title || title.length < 3) return;
+
+      // Get preview content from dd
+      const preview = $container.find('dd a').first().text().trim();
+
+      // Get author name from .tn-user
+      const authorName = $container.find('.tn-user a').text().trim() || '马蜂窝用户';
+
+      // Get cover image from .tn-image - use data-original for lazy-loaded images
+      const img = $container.find('.tn-image img').first();
+      const coverImageUrl = img.attr('data-original') || img.attr('src') || img.attr('data-src');
+
+      // Get stats from .tn-nums - format is "views/likes"
+      const statsText = $container.find('.tn-nums').text().trim();
+      const statsMatch = statsText.match(/(\d+)\/(\d+)/);
+      const viewsCount = statsMatch ? Number.parseInt(statsMatch[1], 10) : 0;
+
+      const sourceExternalId = `mafengwo_${guideId}`;
+      const fullUrl = `https://www.mafengwo.cn${href}`;
+
+      guides.push({
+        sourceExternalId,
+        sourceUrl: fullUrl,
+        title,
+        content: preview.length > 50 ? preview : `${title} - ${city}旅游攻略`,
+        authorName,
+        coverImageUrl: coverImageUrl?.startsWith('http') ? coverImageUrl : (coverImageUrl ? `https:${coverImageUrl}` : undefined),
+        imageUrls: [],
+        destinations: [city],
+        tags: extractTags(title, preview),
+        viewsCount,
+        qualityScore: calculateQualityScore(preview, 1, viewsCount),
+      });
+    });
+
+    // Strategy 2: Fallback - find title links with .title-link class
+    if (guides.length === 0) {
+      console.log('[Mafengwo] Using fallback strategy...');
+      $('a.title-link[href*="/i/"]').each((index, el) => {
+        if (guides.length >= maxGuides) return false;
+
+        const href = $(el).attr('href');
+        if (!href || !href.match(/\/i\/\d+\.html/)) return;
+
+        const urlMatch = href.match(/\/i\/(\d+)/);
+        const guideId = urlMatch?.[1];
+        if (!guideId || seenIds.has(guideId)) return;
+        seenIds.add(guideId);
+
+        const title = $(el).text().trim().replace(/_游记$/, '');
+        if (!title || title.length < 3) return;
+
+        // Try to find parent container for more info
+        const container = $(el).closest('.tn-item');
+        const preview = container.find('dd a').first().text().trim();
+        const authorName = container.find('.tn-user a').text().trim() || '马蜂窝用户';
+
+        const sourceExternalId = `mafengwo_${guideId}`;
+        const fullUrl = `https://www.mafengwo.cn${href}`;
+
+        guides.push({
+          sourceExternalId,
+          sourceUrl: fullUrl,
+          title,
+          content: preview.length > 50 ? preview : `${title} - ${city}旅游攻略`,
+          authorName,
+          coverImageUrl: undefined,
+          imageUrls: [],
+          destinations: [city],
+          tags: extractTags(title, preview),
+          viewsCount: 0,
+          qualityScore: calculateQualityScore(preview, 1, 0),
+        });
+      });
+    }
+
+    console.log(`[Mafengwo] Extracted ${guides.length} guides`);
+  } catch (error) {
+    console.error(`[Mafengwo] Error fetching destination page:`, error);
+  } finally {
+    await page.close();
+  }
+
+  return guides;
 }
 
 /**

@@ -7,7 +7,7 @@ import type { LLMConfig } from './types.js';
 import { ChatAnthropic } from '@langchain/anthropic';
 
 const ANTHROPIC_MODEL =
-  process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
+  process.env.ANTHROPIC_MODEL || 'claude-opus-4-5-20251101';
 
 export function createClaudeLLM(config?: Partial<LLMConfig>): ChatAnthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -15,11 +15,14 @@ export function createClaudeLLM(config?: Partial<LLMConfig>): ChatAnthropic {
     throw new Error('ANTHROPIC_API_KEY is not set');
   }
 
+  const baseUrl = process.env.ANTHROPIC_BASE_URL;
+
   return new ChatAnthropic({
     apiKey,
     model: config?.model || ANTHROPIC_MODEL,
     temperature: config?.temperature ?? 0.7,
     maxTokens: config?.maxTokens || 4096,
+    ...(baseUrl && { clientOptions: { baseURL: baseUrl } }),
   });
 }
 

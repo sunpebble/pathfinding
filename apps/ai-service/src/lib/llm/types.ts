@@ -34,7 +34,7 @@ export interface LLMProviderConfig {
 export const DEFAULT_MODELS: Record<LLMProvider, string> = {
   ollama: 'gemma3:latest',
   openai: 'gpt-4o',
-  claude: 'claude-sonnet-4-20250514',
+  claude: 'claude-opus-4-5-20251101',
 };
 
 /**
@@ -45,7 +45,7 @@ export function getDefaultProvider(): LLMProvider {
   if (provider && ['ollama', 'openai', 'claude'].includes(provider)) {
     return provider;
   }
-  return 'ollama';
+  return 'claude';
 }
 
 /**

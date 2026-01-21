@@ -2,6 +2,7 @@
 
 import {
   BookOpen,
+  Bot,
   Bug,
   Database,
   LayoutDashboard,
@@ -17,6 +18,7 @@ import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Overview', href: '/', icon: LayoutDashboard },
+  { name: 'AI 助手', href: '/chat', icon: Bot },
   { name: 'Crawl Jobs', href: '/jobs', icon: ListTodo },
   { name: 'POIs', href: '/pois', icon: MapPin },
   { name: 'Travel Guides', href: '/guides', icon: BookOpen },

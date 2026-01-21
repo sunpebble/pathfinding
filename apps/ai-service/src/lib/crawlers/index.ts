@@ -7,6 +7,7 @@ import { crawlCtrip } from './ctrip.js';
 import { crawlMafengwo } from './mafengwo.js';
 import { crawlQunar } from './qunar.js';
 import { crawlTongcheng } from './tongcheng.js';
+import { crawlXiaohongshu } from './xiaohongshu.js';
 
 export interface CrawlResult {
   sourceExternalId: string;
@@ -40,6 +41,7 @@ const crawlers: Record<string, CrawlerFunction> = {
   mafengwo: crawlMafengwo,
   tongcheng: crawlTongcheng,
   qunar: crawlQunar,
+  xiaohongshu: crawlXiaohongshu,
 };
 
 /**

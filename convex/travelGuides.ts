@@ -110,6 +110,30 @@ export const getById = query({
   },
 });
 
+// Update a guide by ID (for content cleaning and updates)
+export const update = mutation({
+  args: {
+    id: v.id('travelGuides'),
+    title: v.optional(v.string()),
+    content: v.optional(v.string()),
+    aiSummary: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...updates } = args;
+    // Filter out undefined values
+    const cleanUpdates: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined) {
+        cleanUpdates[key] = value;
+      }
+    }
+    if (Object.keys(cleanUpdates).length > 0) {
+      await ctx.db.patch(id, cleanUpdates);
+    }
+    return await ctx.db.get(id);
+  },
+});
+
 // Search travel guides with filters
 export const search = query({
   args: {

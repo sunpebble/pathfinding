@@ -279,11 +279,21 @@ export async function* streamChat(options: {
           }
           // Yield content if present
           if (msg.content) {
-            const content =
-              typeof msg.content === 'string'
-                ? msg.content
-                : JSON.stringify(msg.content);
-            yield { type: 'token', content };
+            let content: string;
+            if (typeof msg.content === 'string') {
+              content = msg.content;
+            } else if (Array.isArray(msg.content)) {
+              // Extract text from content blocks (Claude format)
+              content = msg.content
+                .filter((block: any) => block.type === 'text' && block.text)
+                .map((block: any) => block.text)
+                .join('');
+            } else {
+              content = String(msg.content);
+            }
+            if (content) {
+              yield { type: 'token', content };
+            }
           }
         }
       }
