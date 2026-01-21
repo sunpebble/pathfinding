@@ -22,6 +22,9 @@ export default antfu({
     'node_modules/**',
     'pnpm-workspace.yaml',
     '**/\_generated/**',
+    // Ignore auto-generated shadcn/ui and AI Elements components
+    '**/components/ui/**',
+    '**/components/ai-elements/**',
   ],
 
   // Custom rule overrides
