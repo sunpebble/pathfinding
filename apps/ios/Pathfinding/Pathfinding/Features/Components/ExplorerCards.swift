@@ -202,7 +202,9 @@ private struct ExplorerDataBadge: View {
 // MARK: - Explorer AI Badge
 
 private struct ExplorerAIBadge: View {
+  @Environment(\.colorScheme) private var colorScheme
   @State private var glowOpacity: Double = 0.4
+  @State private var shimmerPhase: CGFloat = 0
 
   var body: some View {
     HStack(spacing: DesignTokens.Spacing.xxs) {
@@ -225,9 +227,17 @@ private struct ExplorerAIBadge: View {
             )
           )
         Capsule()
+          .fill(
+            LinearGradient(
+              colors: [.clear, .white.opacity(0.3), .clear],
+              startPoint: UnitPoint(x: shimmerPhase - 0.5, y: 0.5),
+              endPoint: UnitPoint(x: shimmerPhase + 0.5, y: 0.5)
+            )
+          )
+        Capsule()
           .stroke(
             LinearGradient(
-              colors: [.white.opacity(0.5), .clear],
+              colors: [.white.opacity(0.6), .clear],
               startPoint: .top,
               endPoint: .bottom
             ),
@@ -235,10 +245,14 @@ private struct ExplorerAIBadge: View {
           )
       }
     )
-    .shadow(color: .purple.opacity(glowOpacity), radius: 8, y: 2)
+    .shadow(color: .purple.opacity(glowOpacity), radius: colorScheme == .dark ? 12 : 8, y: 2)
+    .shadow(color: .indigo.opacity(glowOpacity * 0.5), radius: colorScheme == .dark ? 20 : 12, y: 4)
     .onAppear {
       withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-        glowOpacity = 0.7
+        glowOpacity = colorScheme == .dark ? 0.8 : 0.5
+      }
+      withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
+        shimmerPhase = 2
       }
     }
   }
@@ -439,7 +453,6 @@ private struct CompactExplorerTag: View {
 
 // MARK: - Explorer Hero Header
 
-/// 探索者风格的 Hero 头部 - 用于页面顶部的大型展示区域
 struct ExplorerHeroHeader: View {
   let title: String
   let subtitle: String?
@@ -456,9 +469,7 @@ struct ExplorerHeroHeader: View {
 
   var body: some View {
     ZStack {
-      // 背景层
       ZStack {
-        // 渐变背景
         LinearGradient(
           colors: [
             accentColor.opacity(colorScheme == .dark ? 0.3 : 0.15),
@@ -469,18 +480,14 @@ struct ExplorerHeroHeader: View {
           endPoint: .bottomTrailing
         )
 
-        // 等高线装饰
         TopographicLinesView(lineCount: 6, lineColor: accentColor.opacity(0.1), animated: true)
 
-        // 指南针装饰
         CompassRoseDecoration(size: 200, color: accentColor, opacity: 0.08)
           .offset(x: 80, y: -20)
 
-        // 噪点纹理
         NoiseTextureOverlay(opacity: 0.02)
       }
 
-      // 内容层
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
         Text(title)
           .font(DesignTokens.Typography.Display.hero)
@@ -506,6 +513,143 @@ struct ExplorerHeroHeader: View {
         isVisible = true
       }
     }
+  }
+}
+
+// MARK: - Explorer Featured Card Carousel
+
+struct ExplorerFeaturedCardCarousel: View {
+  let guides: [BlogPost]
+  let onTap: (BlogPost) -> Void
+
+  @State private var showSwipeHint = true
+
+  init(guides: [BlogPost], onTap: @escaping (BlogPost) -> Void) {
+    self.guides = guides
+    self.onTap = onTap
+  }
+
+  var body: some View {
+    ZStack(alignment: .trailing) {
+      ScrollView(.horizontal, showsIndicators: false) {
+        LazyHStack(spacing: DesignTokens.Spacing.md) {
+          ForEach(Array(guides.enumerated()), id: \.element.id) { index, guide in
+            ExplorerFeaturedCard(guide: guide)
+              .staggeredAnimation(index: index, baseDelay: 0.08)
+              .onTapGesture {
+                onTap(guide)
+              }
+          }
+        }
+        .padding(.horizontal, DesignTokens.Spacing.md)
+        .padding(.vertical, DesignTokens.Spacing.xs)
+      }
+      .scrollDismissesKeyboard(.interactively)
+      .onAppear {
+        // Hide swipe hint after 3 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+          withAnimation(.easeOut(duration: 0.3)) {
+            showSwipeHint = false
+          }
+        }
+      }
+
+      if showSwipeHint && guides.count > 1 {
+        SwipeHintIndicator()
+          .padding(.trailing, DesignTokens.Spacing.xs)
+          .transition(.opacity.combined(with: .move(edge: .trailing)))
+      }
+    }
+  }
+}
+
+private struct SwipeHintIndicator: View {
+  @State private var offset: CGFloat = 0
+
+  var body: some View {
+    HStack(spacing: 2) {
+      ForEach(0..<3, id: \.self) { index in
+        Image(systemName: "chevron.right")
+          .font(.system(size: 10, weight: .bold))
+          .foregroundStyle(.secondary.opacity(0.3 + Double(index) * 0.15))
+      }
+    }
+    .offset(x: offset)
+    .onAppear {
+      withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+        offset = 6
+      }
+    }
+  }
+}
+
+// MARK: - Explorer Featured Card Loading State
+
+struct ExplorerFeaturedCardSkeleton: View {
+  @Environment(\.colorScheme) private var colorScheme
+  @State private var shimmerPhase: CGFloat = 0
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      Rectangle()
+        .fill(shimmerGradient)
+        .frame(width: 300, height: 200)
+
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
+          RoundedRectangle(cornerRadius: 4)
+            .fill(shimmerGradient)
+            .frame(width: 50, height: 16)
+          RoundedRectangle(cornerRadius: 4)
+            .fill(shimmerGradient)
+            .frame(width: 50, height: 16)
+        }
+
+        RoundedRectangle(cornerRadius: 4)
+          .fill(shimmerGradient)
+          .frame(height: 20)
+
+        RoundedRectangle(cornerRadius: 4)
+          .fill(shimmerGradient)
+          .frame(width: 200, height: 20)
+
+        HStack {
+          RoundedRectangle(cornerRadius: 4)
+            .fill(shimmerGradient)
+            .frame(width: 80, height: 14)
+          Spacer()
+          HStack(spacing: DesignTokens.Spacing.xs) {
+            RoundedRectangle(cornerRadius: 4)
+              .fill(shimmerGradient)
+              .frame(width: 40, height: 14)
+            RoundedRectangle(cornerRadius: 4)
+              .fill(shimmerGradient)
+              .frame(width: 40, height: 14)
+          }
+        }
+      }
+      .padding(DesignTokens.Spacing.md)
+      .background(DesignTokens.Colors.cardBackground)
+    }
+    .frame(width: 300)
+    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+    .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
+    .onAppear {
+      withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+        shimmerPhase = 1
+      }
+    }
+  }
+
+  private var shimmerGradient: LinearGradient {
+    let baseColor = colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
+    let highlightColor = colorScheme == .dark ? Color.white.opacity(0.15) : Color.black.opacity(0.12)
+
+    return LinearGradient(
+      colors: [baseColor, highlightColor, baseColor],
+      startPoint: UnitPoint(x: shimmerPhase - 1, y: 0.5),
+      endPoint: UnitPoint(x: shimmerPhase, y: 0.5)
+    )
   }
 }
 

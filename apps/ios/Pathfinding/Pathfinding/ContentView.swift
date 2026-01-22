@@ -43,6 +43,7 @@ class AppState {
 struct ContentView: View {
   @State private var appState = AppState()
   @Environment(\.localizationManager) private var localizationManager
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
     TabView(selection: $appState.selectedTab) {
@@ -70,7 +71,9 @@ struct ContentView: View {
           Label(Tab.profile.title, systemImage: appState.selectedTab == .profile ? Tab.profile.selectedIcon : Tab.profile.icon)
         }
     }
-    .tint(.indigo)
+    .tint(ThemeManager.shared.accentColor.color)
+    .animation(DesignTokens.Animation.smooth, value: appState.selectedTab)
+    .sensoryFeedback(.selection, trigger: appState.selectedTab)
     .environment(appState)
     // Force view refresh when language changes
     .id(localizationManager.currentLanguage)

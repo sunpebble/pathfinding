@@ -1,11 +1,10 @@
 import SwiftUI
 
 // MARK: - Enhanced Animation System
-// 增强的动画系统 - 为探索者美学提供丰富的微交互
+// 增强动画系统 - 探索者美学微交互
 
 // MARK: - Staggered Animation Modifier
 
-/// 交错动画修饰符 - 列表项依次出现的优雅效果
 struct StaggeredAnimationModifier: ViewModifier {
   let index: Int
   let baseDelay: Double
@@ -34,7 +33,6 @@ struct StaggeredAnimationModifier: ViewModifier {
 
 // MARK: - Pulse Animation
 
-/// 脉冲动画 - 吸引注意力的呼吸效果
 struct PulseAnimation: ViewModifier {
   let duration: Double
   let minScale: CGFloat
@@ -61,7 +59,6 @@ struct PulseAnimation: ViewModifier {
 
 // MARK: - Shimmer Animation
 
-/// 光泽动画 - 高光扫过的精致效果
 struct ShimmerAnimation: ViewModifier {
   let duration: Double
   let delay: Double
@@ -102,7 +99,6 @@ struct ShimmerAnimation: ViewModifier {
 
 // MARK: - Bounce In Animation
 
-/// 弹入动画 - 元素从远处弹入的活力效果
 struct BounceInAnimation: ViewModifier {
   let direction: Edge
   let distance: CGFloat
@@ -138,9 +134,153 @@ struct BounceInAnimation: ViewModifier {
   }
 }
 
+// MARK: - Slide In Animation (滑入动画)
+
+struct SlideInAnimation: ViewModifier {
+  let edge: Edge
+  let duration: Double
+  let delay: Double
+
+  @State private var isVisible = false
+
+  init(from edge: Edge = .leading, duration: Double = 0.4, delay: Double = 0) {
+    self.edge = edge
+    self.duration = duration
+    self.delay = delay
+  }
+
+  private var offset: CGSize {
+    guard !isVisible else { return .zero }
+    switch edge {
+    case .top: return CGSize(width: 0, height: -100)
+    case .bottom: return CGSize(width: 0, height: 100)
+    case .leading: return CGSize(width: -100, height: 0)
+    case .trailing: return CGSize(width: 100, height: 0)
+    }
+  }
+
+  func body(content: Content) -> some View {
+    content
+      .opacity(isVisible ? 1 : 0)
+      .offset(offset)
+      .onAppear {
+        withAnimation(.easeOut(duration: duration).delay(delay)) {
+          isVisible = true
+        }
+      }
+  }
+}
+
+// MARK: - Reveal Animation (展开动画 - 像展开地图)
+
+struct RevealAnimation: ViewModifier {
+  let anchor: UnitPoint
+  let duration: Double
+  let delay: Double
+
+  @State private var isRevealed = false
+
+  init(anchor: UnitPoint = .top, duration: Double = 0.5, delay: Double = 0) {
+    self.anchor = anchor
+    self.duration = duration
+    self.delay = delay
+  }
+
+  func body(content: Content) -> some View {
+    content
+      .scaleEffect(x: 1, y: isRevealed ? 1 : 0, anchor: anchor)
+      .opacity(isRevealed ? 1 : 0)
+      .onAppear {
+        withAnimation(.spring(response: duration, dampingFraction: 0.8).delay(delay)) {
+          isRevealed = true
+        }
+      }
+  }
+}
+
+// MARK: - Compass Spin Animation (指南针旋转 - 加载状态)
+
+struct CompassSpinAnimation: ViewModifier {
+  let duration: Double
+  let clockwise: Bool
+
+  @State private var rotation: Double = 0
+
+  init(duration: Double = 2.0, clockwise: Bool = true) {
+    self.duration = duration
+    self.clockwise = clockwise
+  }
+
+  func body(content: Content) -> some View {
+    content
+      .rotationEffect(.degrees(rotation))
+      .onAppear {
+        withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
+          rotation = clockwise ? 360 : -360
+        }
+      }
+  }
+}
+
+// MARK: - Path Draw Animation (路径绘制动画)
+
+struct PathDrawAnimation: ViewModifier {
+  let duration: Double
+  let delay: Double
+
+  @State private var trimEnd: CGFloat = 0
+
+  init(duration: Double = 1.0, delay: Double = 0) {
+    self.duration = duration
+    self.delay = delay
+  }
+
+  func body(content: Content) -> some View {
+    content
+      .mask(
+        GeometryReader { geometry in
+          Rectangle()
+            .trim(from: 0, to: trimEnd)
+            .stroke(lineWidth: max(geometry.size.width, geometry.size.height) * 2)
+        }
+      )
+      .onAppear {
+        withAnimation(.easeInOut(duration: duration).delay(delay)) {
+          trimEnd = 1
+        }
+      }
+  }
+}
+
+// MARK: - Scale Reveal Animation (缩放揭示 - POI选中)
+
+struct ScaleRevealAnimation: ViewModifier {
+  let initialScale: CGFloat
+  let duration: Double
+  let delay: Double
+
+  @State private var isRevealed = false
+
+  init(initialScale: CGFloat = 0.5, duration: Double = 0.4, delay: Double = 0) {
+    self.initialScale = initialScale
+    self.duration = duration
+    self.delay = delay
+  }
+
+  func body(content: Content) -> some View {
+    content
+      .scaleEffect(isRevealed ? 1 : initialScale)
+      .opacity(isRevealed ? 1 : 0)
+      .onAppear {
+        withAnimation(.spring(response: duration, dampingFraction: 0.7).delay(delay)) {
+          isRevealed = true
+        }
+      }
+  }
+}
+
 // MARK: - Rotate In Animation
 
-/// 旋转入场动画 - 元素旋转出现的戏剧效果
 struct RotateInAnimation: ViewModifier {
   let angle: Double
   let delay: Double
@@ -167,7 +307,6 @@ struct RotateInAnimation: ViewModifier {
 
 // MARK: - Float Animation
 
-/// 悬浮动画 - 元素轻微上下浮动的悬浮效果
 struct FloatAnimation: ViewModifier {
   let distance: CGFloat
   let duration: Double
@@ -192,7 +331,6 @@ struct FloatAnimation: ViewModifier {
 
 // MARK: - Glow Animation
 
-/// 发光动画 - 元素发光的高亮效果
 struct GlowAnimation: ViewModifier {
   @Environment(\.colorScheme) private var colorScheme
   let color: Color
@@ -215,7 +353,46 @@ struct GlowAnimation: ViewModifier {
         y: 0
       )
       .onAppear {
-        // 只在暗色模式下启用发光动画
+        if colorScheme == .dark {
+          withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
+            isGlowing = true
+          }
+        }
+      }
+  }
+}
+
+// MARK: - Enhanced Glow Animation (增强发光 - 暗色模式优化)
+
+struct EnhancedGlowAnimation: ViewModifier {
+  @Environment(\.colorScheme) private var colorScheme
+  let color: Color
+  let innerRadius: CGFloat
+  let outerRadius: CGFloat
+  let duration: Double
+
+  @State private var isGlowing = false
+
+  init(color: Color = .blue, innerRadius: CGFloat = 8, outerRadius: CGFloat = 20, duration: Double = 2.0) {
+    self.color = color
+    self.innerRadius = innerRadius
+    self.outerRadius = outerRadius
+    self.duration = duration
+  }
+
+  func body(content: Content) -> some View {
+    content
+      .shadow(
+        color: color.opacity(isGlowing ? 0.4 : 0.15),
+        radius: isGlowing ? outerRadius : innerRadius,
+        y: 0
+      )
+      .shadow(
+        color: color.opacity(isGlowing ? 0.6 : 0.3),
+        radius: isGlowing ? innerRadius : innerRadius * 0.5,
+        y: 0
+      )
+      .onAppear {
         if colorScheme == .dark {
           withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
             isGlowing = true
@@ -227,7 +404,6 @@ struct GlowAnimation: ViewModifier {
 
 // MARK: - Shake Animation
 
-/// 抖动动画 - 错误或警告的反馈效果
 struct ShakeAnimation: ViewModifier {
   @Binding var trigger: Bool
   let intensity: CGFloat
@@ -260,6 +436,70 @@ struct ShakeAnimation: ViewModifier {
             }
           }
           DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+            trigger = false
+          }
+        }
+      }
+  }
+}
+
+// MARK: - Breathing Animation (呼吸动画 - 更柔和的脉冲)
+
+struct BreathingAnimation: ViewModifier {
+  let minOpacity: Double
+  let maxOpacity: Double
+  let duration: Double
+
+  @State private var isBreathing = false
+
+  init(minOpacity: Double = 0.6, maxOpacity: Double = 1.0, duration: Double = 2.0) {
+    self.minOpacity = minOpacity
+    self.maxOpacity = maxOpacity
+    self.duration = duration
+  }
+
+  func body(content: Content) -> some View {
+    content
+      .opacity(isBreathing ? maxOpacity : minOpacity)
+      .onAppear {
+        withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
+          isBreathing = true
+        }
+      }
+  }
+}
+
+// MARK: - Ripple Animation (波纹动画 - 点击反馈)
+
+struct RippleAnimation: ViewModifier {
+  @Binding var trigger: Bool
+  let color: Color
+
+  @State private var rippleScale: CGFloat = 0.5
+  @State private var rippleOpacity: Double = 0.5
+
+  init(trigger: Binding<Bool>, color: Color = .white) {
+    self._trigger = trigger
+    self.color = color
+  }
+
+  func body(content: Content) -> some View {
+    content
+      .overlay(
+        Circle()
+          .fill(color.opacity(rippleOpacity))
+          .scaleEffect(rippleScale)
+          .allowsHitTesting(false)
+      )
+      .onChange(of: trigger) { _, newValue in
+        if newValue {
+          rippleScale = 0.5
+          rippleOpacity = 0.5
+          withAnimation(.easeOut(duration: 0.4)) {
+            rippleScale = 2.0
+            rippleOpacity = 0
+          }
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             trigger = false
           }
         }
@@ -386,49 +626,72 @@ struct HeroAnimationWrapper<Content: View>: View {
 // MARK: - View Extensions
 
 extension View {
-  /// 应用交错动画
   func staggeredAnimation(index: Int, baseDelay: Double = 0.05) -> some View {
     modifier(StaggeredAnimationModifier(index: index, baseDelay: baseDelay))
   }
 
-  /// 应用脉冲动画
   func pulseAnimation(duration: Double = 1.5) -> some View {
     modifier(PulseAnimation(duration: duration))
   }
 
-  /// 应用光泽动画
   func shimmerAnimation(duration: Double = 1.5, delay: Double = 0) -> some View {
     modifier(ShimmerAnimation(duration: duration, delay: delay))
   }
 
-  /// 应用弹入动画
   func bounceIn(from direction: Edge = .bottom, distance: CGFloat = 50, delay: Double = 0) -> some View {
     modifier(BounceInAnimation(from: direction, distance: distance, delay: delay))
   }
 
-  /// 应用旋转入场动画
   func rotateIn(angle: Double = 15, delay: Double = 0) -> some View {
     modifier(RotateInAnimation(angle: angle, delay: delay))
   }
 
-  /// 应用悬浮动画
   func floatAnimation(distance: CGFloat = 6, duration: Double = 2) -> some View {
     modifier(FloatAnimation(distance: distance, duration: duration))
   }
 
-  /// 应用发光动画
   func glowAnimation(color: Color = .blue, radius: CGFloat = 12, duration: Double = 1.5) -> some View {
     modifier(GlowAnimation(color: color, radius: radius, duration: duration))
   }
 
-  /// 应用抖动动画
   func shakeAnimation(trigger: Binding<Bool>, intensity: CGFloat = 10) -> some View {
     modifier(ShakeAnimation(trigger: trigger, intensity: intensity))
   }
 
-  /// 应用视差滚动效果
   func parallaxScroll(speed: CGFloat = 0.3, axis: Axis = .vertical) -> some View {
     modifier(ParallaxScrollModifier(speed: speed, axis: axis))
+  }
+
+  func slideIn(from edge: Edge = .leading, duration: Double = 0.4, delay: Double = 0) -> some View {
+    modifier(SlideInAnimation(from: edge, duration: duration, delay: delay))
+  }
+
+  func revealAnimation(anchor: UnitPoint = .top, duration: Double = 0.5, delay: Double = 0) -> some View {
+    modifier(RevealAnimation(anchor: anchor, duration: duration, delay: delay))
+  }
+
+  func compassSpin(duration: Double = 2.0, clockwise: Bool = true) -> some View {
+    modifier(CompassSpinAnimation(duration: duration, clockwise: clockwise))
+  }
+
+  func pathDraw(duration: Double = 1.0, delay: Double = 0) -> some View {
+    modifier(PathDrawAnimation(duration: duration, delay: delay))
+  }
+
+  func scaleReveal(initialScale: CGFloat = 0.5, duration: Double = 0.4, delay: Double = 0) -> some View {
+    modifier(ScaleRevealAnimation(initialScale: initialScale, duration: duration, delay: delay))
+  }
+
+  func enhancedGlow(color: Color = .blue, innerRadius: CGFloat = 8, outerRadius: CGFloat = 20) -> some View {
+    modifier(EnhancedGlowAnimation(color: color, innerRadius: innerRadius, outerRadius: outerRadius))
+  }
+
+  func breathingAnimation(minOpacity: Double = 0.6, maxOpacity: Double = 1.0, duration: Double = 2.0) -> some View {
+    modifier(BreathingAnimation(minOpacity: minOpacity, maxOpacity: maxOpacity, duration: duration))
+  }
+
+  func rippleAnimation(trigger: Binding<Bool>, color: Color = .white) -> some View {
+    modifier(RippleAnimation(trigger: trigger, color: color))
   }
 }
 

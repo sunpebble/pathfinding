@@ -1,6 +1,7 @@
 import SwiftUI
 
 // MARK: - Design Tokens
+// 探索者设计系统 - Explorer Design System for Travel Planning App
 
 enum DesignTokens {
   // MARK: - Spacing
@@ -14,6 +15,8 @@ enum DesignTokens {
     static let xl: CGFloat = 24
     static let xxl: CGFloat = 32
     static let xxxl: CGFloat = 48
+    static let jumbo: CGFloat = 64
+    static let mega: CGFloat = 80
   }
 
   // MARK: - Corner Radius
@@ -26,6 +29,7 @@ enum DesignTokens {
     static let lg: CGFloat = 18
     static let xl: CGFloat = 24
     static let xxl: CGFloat = 32
+    static let xxxl: CGFloat = 40
     static let full: CGFloat = 9999
   }
 
@@ -93,77 +97,57 @@ enum DesignTokens {
   // MARK: - Typography
 
   enum Typography {
-    // MARK: - Apple HIG Standard Text Styles
-
-    /// Large title - 34pt, for prominent headings
     static let largeTitle: Font = .largeTitle
-
-    /// Title - 28pt, for section headers
     static let title: Font = .title
-
-    /// Title 2 - 22pt, for secondary headers
     static let title2: Font = .title2
-
-    /// Title 3 - 20pt, for tertiary headers
     static let title3: Font = .title3
-
-    /// Headline - 17pt semibold, for emphasized body text
     static let headline: Font = .headline
-
-    /// Body - 17pt, for main content
     static let body: Font = .body
-
-    /// Callout - 16pt, for supplementary content
     static let callout: Font = .callout
-
-    /// Subheadline - 15pt, for secondary content
     static let subheadline: Font = .subheadline
-
-    /// Footnote - 13pt, for footnotes and annotations
     static let footnote: Font = .footnote
-
-    /// Caption - 12pt, for small labels
     static let caption: Font = .caption
-
-    /// Caption 2 - 11pt, for very small labels
     static let caption2: Font = .caption2
 
-    // MARK: - Display Fonts (Hero Headers)
+    // MARK: - Display Fonts (探索者英雄字体)
 
     enum Display {
-      /// Hero display - 48pt bold rounded, for main hero headers
       static let hero: Font = .system(size: 48, weight: .bold, design: .rounded)
-
-      /// Jumbo display - 60pt bold rounded, for large decorative text
       static let jumbo: Font = .system(size: 60, weight: .bold, design: .rounded)
-
-      /// Mega display - 72pt bold rounded, for splash screens
       static let mega: Font = .system(size: 72, weight: .bold, design: .rounded)
-
-      /// Small display - 32pt bold rounded, for smaller hero text
       static let small: Font = .system(size: 32, weight: .bold, design: .rounded)
+      static let featured: Font = .system(size: 40, weight: .heavy, design: .rounded)
+      static let compact: Font = .system(size: 28, weight: .bold, design: .rounded)
     }
 
-    // MARK: - Numeric Fonts (Stats, Clocks, Counters)
+    // MARK: - Numeric Fonts (统计数字字体)
 
     enum Numeric {
-      /// Small numeric - 28pt medium rounded, for small stats
       static let small: Font = .system(size: 28, weight: .medium, design: .rounded)
-
-      /// Medium numeric - 36pt light rounded, for medium displays
       static let medium: Font = .system(size: 36, weight: .light, design: .rounded)
-
-      /// Large numeric - 48pt light monospaced, for timers and counters
       static let large: Font = .system(size: 48, weight: .light, design: .monospaced)
-
-      /// Extra large numeric - 56pt light rounded, for prominent numbers
       static let xlarge: Font = .system(size: 56, weight: .light, design: .rounded)
-
-      /// Extra extra large numeric - 64pt thin rounded, for decorative numbers
       static let xxlarge: Font = .system(size: 64, weight: .thin, design: .rounded)
-
-      /// Clock display - 80pt ultralight rounded, for clock faces
       static let clock: Font = .system(size: 80, weight: .ultraLight, design: .rounded)
+    }
+
+    // MARK: - Explorer Card Fonts (探索者卡片字体)
+
+    enum Card {
+      static let title: Font = .system(size: 18, weight: .bold, design: .rounded)
+      static let subtitle: Font = .system(size: 14, weight: .semibold, design: .rounded)
+      static let stats: Font = .system(size: 13, weight: .medium, design: .rounded)
+      static let badge: Font = .system(size: 11, weight: .bold, design: .rounded)
+      static let micro: Font = .system(size: 10, weight: .semibold, design: .rounded)
+    }
+
+    // MARK: - Map Legend Fonts (地图图例字体)
+
+    enum MapLegend {
+      static let poiLabel: Font = .system(size: 12, weight: .semibold, design: .rounded)
+      static let distance: Font = .system(size: 11, weight: .medium, design: .monospaced)
+      static let duration: Font = .system(size: 13, weight: .bold, design: .rounded)
+      static let annotation: Font = .system(size: 10, weight: .regular, design: .default)
     }
   }
 
@@ -330,24 +314,64 @@ enum DesignTokens {
 
     // MARK: - Semantic State Colors
 
-    /// Success state
-    static var success: Color {
-      .green
+    static var success: Color { .green }
+    static var warning: Color { .orange }
+    static var error: Color { .red }
+    static var info: Color { .blue }
+
+    // MARK: - Terrain Colors (地形主题色)
+
+    enum Terrain {
+      static let forest: Color = Color(red: 0.18, green: 0.49, blue: 0.20)
+      static let forestLight: Color = Color(red: 0.56, green: 0.73, blue: 0.56)
+      static let desert: Color = Color(red: 0.82, green: 0.69, blue: 0.47)
+      static let desertLight: Color = Color(red: 0.93, green: 0.87, blue: 0.73)
+      static let ocean: Color = Color(red: 0.15, green: 0.42, blue: 0.67)
+      static let oceanLight: Color = Color(red: 0.53, green: 0.72, blue: 0.87)
+      static let mountain: Color = Color(red: 0.45, green: 0.45, blue: 0.52)
+      static let mountainLight: Color = Color(red: 0.73, green: 0.73, blue: 0.78)
+      static let glacier: Color = Color(red: 0.75, green: 0.88, blue: 0.93)
+      static let volcano: Color = Color(red: 0.70, green: 0.25, blue: 0.18)
+      static let grassland: Color = Color(red: 0.55, green: 0.76, blue: 0.29)
+      static let canyon: Color = Color(red: 0.76, green: 0.42, blue: 0.27)
     }
 
-    /// Warning state
-    static var warning: Color {
-      .orange
+    // MARK: - Travel Status Colors (旅行状态色)
+
+    enum TravelStatus {
+      static let upcoming: Color = .cyan
+      static let upcomingBackground: Color = Color.cyan.opacity(0.15)
+      static let active: Color = .green
+      static let activeBackground: Color = Color.green.opacity(0.15)
+      static let completed: Color = .indigo
+      static let completedBackground: Color = Color.indigo.opacity(0.15)
+      static let cancelled: Color = .gray
+      static let cancelledBackground: Color = Color.gray.opacity(0.15)
+      static let draft: Color = .orange
+      static let draftBackground: Color = Color.orange.opacity(0.15)
     }
 
-    /// Error state
-    static var error: Color {
-      .red
-    }
+    // MARK: - Destination Accent Colors (目的地强调色)
 
-    /// Info state
-    static var info: Color {
-      .blue
+    enum Destination {
+      static func accentColor(for destination: String) -> Color {
+        let hash = abs(destination.hashValue)
+        let colors: [Color] = [
+          .indigo, .teal, .orange, .purple, .pink, .cyan,
+          Terrain.forest, Terrain.ocean, Terrain.mountain, Terrain.desert
+        ]
+        return colors[hash % colors.count]
+      }
+
+      static func gradient(for destination: String, colorScheme: ColorScheme) -> LinearGradient {
+        let primary = accentColor(for: destination)
+        let opacity = colorScheme == .dark ? 0.4 : 0.2
+        return LinearGradient(
+          colors: [primary.opacity(opacity), primary.opacity(opacity * 0.3), .clear],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+      }
     }
 
     // MARK: - Dark Mode Specific Colors
@@ -433,6 +457,104 @@ enum DesignTokens {
             startPoint: .top,
             endPoint: .bottom
           )
+    }
+
+    // MARK: - Explorer Gradient Presets (探索者渐变预设)
+
+    enum ExplorerGradients {
+      static func sunrise(for colorScheme: ColorScheme) -> LinearGradient {
+        let opacity = colorScheme == .dark ? 0.5 : 0.3
+        return LinearGradient(
+          colors: [
+            Color(red: 1.0, green: 0.6, blue: 0.2).opacity(opacity),
+            Color(red: 1.0, green: 0.4, blue: 0.4).opacity(opacity * 0.7),
+            Color(red: 0.6, green: 0.3, blue: 0.6).opacity(opacity * 0.4)
+          ],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+      }
+
+      static func ocean(for colorScheme: ColorScheme) -> LinearGradient {
+        let opacity = colorScheme == .dark ? 0.5 : 0.3
+        return LinearGradient(
+          colors: [
+            Terrain.ocean.opacity(opacity),
+            Terrain.oceanLight.opacity(opacity * 0.6),
+            .cyan.opacity(opacity * 0.3)
+          ],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+      }
+
+      static func forest(for colorScheme: ColorScheme) -> LinearGradient {
+        let opacity = colorScheme == .dark ? 0.5 : 0.3
+        return LinearGradient(
+          colors: [
+            Terrain.forest.opacity(opacity),
+            Terrain.forestLight.opacity(opacity * 0.6),
+            .mint.opacity(opacity * 0.3)
+          ],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+      }
+
+      static func desert(for colorScheme: ColorScheme) -> LinearGradient {
+        let opacity = colorScheme == .dark ? 0.5 : 0.3
+        return LinearGradient(
+          colors: [
+            Terrain.desert.opacity(opacity),
+            Terrain.desertLight.opacity(opacity * 0.6),
+            .orange.opacity(opacity * 0.3)
+          ],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+      }
+
+      static func mountain(for colorScheme: ColorScheme) -> LinearGradient {
+        let opacity = colorScheme == .dark ? 0.5 : 0.3
+        return LinearGradient(
+          colors: [
+            Terrain.mountain.opacity(opacity),
+            Terrain.mountainLight.opacity(opacity * 0.6),
+            .gray.opacity(opacity * 0.3)
+          ],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+      }
+
+      static func northernLights(for colorScheme: ColorScheme) -> LinearGradient {
+        guard colorScheme == .dark else {
+          return LinearGradient(colors: [.clear], startPoint: .top, endPoint: .bottom)
+        }
+        return LinearGradient(
+          colors: [
+            Color(red: 0.2, green: 0.8, blue: 0.6).opacity(0.3),
+            Color(red: 0.4, green: 0.3, blue: 0.8).opacity(0.25),
+            Color(red: 0.6, green: 0.2, blue: 0.6).opacity(0.2),
+            .clear
+          ],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+      }
+
+      static func twilight(for colorScheme: ColorScheme) -> LinearGradient {
+        let opacity = colorScheme == .dark ? 0.6 : 0.35
+        return LinearGradient(
+          colors: [
+            Color(red: 0.15, green: 0.1, blue: 0.35).opacity(opacity),
+            Color(red: 0.35, green: 0.15, blue: 0.45).opacity(opacity * 0.7),
+            Color(red: 0.6, green: 0.25, blue: 0.4).opacity(opacity * 0.4)
+          ],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+      }
     }
 
     // MARK: - Placeholder Colors

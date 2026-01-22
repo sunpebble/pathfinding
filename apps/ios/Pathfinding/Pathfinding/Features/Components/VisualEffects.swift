@@ -5,7 +5,6 @@ import SwiftUI
 
 // MARK: - Noise Texture Overlay
 
-/// 添加微妙的噪点纹理，增加视觉质感和深度
 struct NoiseTextureOverlay: View {
   let opacity: Double
   let blendMode: BlendMode
@@ -17,7 +16,8 @@ struct NoiseTextureOverlay: View {
 
   var body: some View {
     Canvas { context, size in
-      for _ in 0..<Int(size.width * size.height * 0.1) {
+      let density = 0.08
+      for _ in 0..<Int(size.width * size.height * density) {
         let x = CGFloat.random(in: 0..<size.width)
         let y = CGFloat.random(in: 0..<size.height)
         let gray = CGFloat.random(in: 0...1)
@@ -35,19 +35,20 @@ struct NoiseTextureOverlay: View {
 
 // MARK: - Topographic Lines Background
 
-/// 等高线装饰背景 - 地形/探索主题的核心视觉元素
 struct TopographicLinesView: View {
   @Environment(\.colorScheme) private var colorScheme
   let lineCount: Int
   let lineColor: Color?
   let animated: Bool
+  let organic: Bool
 
   @State private var phase: CGFloat = 0
 
-  init(lineCount: Int = 8, lineColor: Color? = nil, animated: Bool = false) {
+  init(lineCount: Int = 8, lineColor: Color? = nil, animated: Bool = false, organic: Bool = true) {
     self.lineCount = lineCount
     self.lineColor = lineColor
     self.animated = animated
+    self.organic = organic
   }
 
   private var effectiveLineColor: Color {
@@ -68,15 +69,16 @@ struct TopographicLinesView: View {
         let baseRadius = CGFloat(i + 1) * (min(size.width, size.height) / CGFloat(lineCount)) * 0.8
         var path = Path()
 
-        // 创建有机的等高线形状
         for angle in stride(from: 0, through: 360, by: 2) {
           let radians = CGFloat(angle) * .pi / 180
-          // 添加有机的波动
-          let noise = sin(radians * 3 + phase) * 15 + cos(radians * 5) * 10
+          var noise: CGFloat = 0
+          if organic {
+            noise = sin(radians * 3 + phase) * 15 + cos(radians * 5) * 10 + sin(radians * 7 + CGFloat(i)) * 5
+          }
           let radius = baseRadius + noise
 
           let x = centerX + cos(radians) * radius
-          let y = centerY + sin(radians) * radius * 0.6 // 椭圆形
+          let y = centerY + sin(radians) * radius * 0.6
 
           if angle == 0 {
             path.move(to: CGPoint(x: x, y: y))
@@ -86,10 +88,11 @@ struct TopographicLinesView: View {
         }
         path.closeSubpath()
 
+        let lineOpacity = 1.0 - (Double(i) / Double(lineCount)) * 0.5
         context.stroke(
           path,
-          with: .color(effectiveLineColor),
-          lineWidth: 1
+          with: .color(effectiveLineColor.opacity(lineOpacity)),
+          lineWidth: organic ? (i % 3 == 0 ? 1.5 : 1) : 1
         )
       }
     }
@@ -101,6 +104,261 @@ struct TopographicLinesView: View {
         }
       }
     }
+  }
+}
+
+// MARK: - Wave Pattern View (海洋/水域目的地)
+
+struct WavePatternView: View {
+  @Environment(\.colorScheme) private var colorScheme
+  let waveCount: Int
+  let color: Color
+  let animated: Bool
+
+  @State private var phase: CGFloat = 0
+
+  init(waveCount: Int = 5, color: Color = .cyan, animated: Bool = true) {
+    self.waveCount = waveCount
+    self.color = color
+    self.animated = animated
+  }
+
+  var body: some View {
+    Canvas { context, size in
+      for i in 0..<waveCount {
+        let yOffset = CGFloat(i) * (size.height / CGFloat(waveCount - 1))
+        let amplitude = 8.0 + CGFloat(i) * 2
+        let frequency = 0.02 + Double(i) * 0.005
+        let wavePhase = phase + CGFloat(i) * 0.5
+
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: yOffset))
+
+        for x in stride(from: 0, to: size.width, by: 2) {
+          let y = yOffset + sin(x * frequency + wavePhase) * amplitude
+          path.addLine(to: CGPoint(x: x, y: y))
+        }
+
+        let opacity = 0.15 - (Double(i) / Double(waveCount)) * 0.1
+        context.stroke(
+          path,
+          with: .color(color.opacity(opacity)),
+          lineWidth: 1.5
+        )
+      }
+    }
+    .allowsHitTesting(false)
+    .onAppear {
+      if animated {
+        withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
+          phase = .pi * 2
+        }
+      }
+    }
+  }
+}
+
+// MARK: - Mountain Silhouette View (山脉目的地)
+
+struct MountainSilhouetteView: View {
+  @Environment(\.colorScheme) private var colorScheme
+  let layerCount: Int
+  let color: Color
+
+  init(layerCount: Int = 3, color: Color? = nil) {
+    self.layerCount = layerCount
+    self.color = color ?? (DesignTokens.Colors.Terrain.mountain)
+  }
+
+  var body: some View {
+    GeometryReader { geometry in
+      ZStack {
+        ForEach(0..<layerCount, id: \.self) { layer in
+          mountainLayer(for: layer, in: geometry.size)
+        }
+      }
+    }
+    .allowsHitTesting(false)
+  }
+
+  private func mountainLayer(for layer: Int, in size: CGSize) -> some View {
+    let opacity = 0.15 - Double(layer) * 0.04
+    let yOffset = size.height * (0.4 + CGFloat(layer) * 0.15)
+    let seed = layer * 1234
+
+    return Canvas { context, canvasSize in
+      var path = Path()
+      path.move(to: CGPoint(x: 0, y: canvasSize.height))
+
+      let peakCount = 5 + layer * 2
+      let segmentWidth = canvasSize.width / CGFloat(peakCount)
+
+      for i in 0...peakCount {
+        let x = CGFloat(i) * segmentWidth
+        let peakHeight = pseudoRandom(seed: seed + i) * canvasSize.height * 0.4
+        let y = yOffset - peakHeight
+
+        if i == 0 {
+          path.addLine(to: CGPoint(x: x, y: yOffset))
+        } else {
+          let controlX = x - segmentWidth * 0.5
+          let controlY = yOffset - peakHeight * 1.2
+          path.addQuadCurve(to: CGPoint(x: x, y: y), control: CGPoint(x: controlX, y: controlY))
+        }
+      }
+
+      path.addLine(to: CGPoint(x: canvasSize.width, y: canvasSize.height))
+      path.closeSubpath()
+
+      context.fill(path, with: .color(color.opacity(opacity)))
+    }
+  }
+
+  private func pseudoRandom(seed: Int) -> CGFloat {
+    let x = sin(Double(seed) * 12.9898 + 78.233) * 43758.5453
+    return CGFloat(x - floor(x))
+  }
+}
+
+// MARK: - Star Field View (夜间/暗色模式)
+
+struct StarFieldView: View {
+  @Environment(\.colorScheme) private var colorScheme
+  let starCount: Int
+  let twinkle: Bool
+
+  @State private var twinklePhase: Double = 0
+
+  init(starCount: Int = 50, twinkle: Bool = true) {
+    self.starCount = starCount
+    self.twinkle = twinkle
+  }
+
+  var body: some View {
+    GeometryReader { geometry in
+      if colorScheme == .dark {
+        TimelineView(.animation(minimumInterval: twinkle ? 1/15 : nil)) { timeline in
+          Canvas { context, size in
+            let time = timeline.date.timeIntervalSinceReferenceDate
+
+            for i in 0..<starCount {
+              let seed = Double(i * 7919)
+              let x = pseudoRandom(seed: seed) * size.width
+              let y = pseudoRandom(seed: seed + 1) * size.height
+              let baseSize = 1 + pseudoRandom(seed: seed + 2) * 2
+
+              var opacity = 0.3 + pseudoRandom(seed: seed + 3) * 0.5
+              if twinkle {
+                let twinkleOffset = pseudoRandom(seed: seed + 4) * 10
+                opacity *= 0.5 + 0.5 * sin(time * 2 + twinkleOffset)
+              }
+
+              context.fill(
+                Path(ellipseIn: CGRect(x: x, y: y, width: baseSize, height: baseSize)),
+                with: .color(.white.opacity(opacity))
+              )
+            }
+          }
+        }
+      }
+    }
+    .allowsHitTesting(false)
+  }
+
+  private func pseudoRandom(seed: Double) -> CGFloat {
+    let x = sin(seed * 12.9898 + 78.233) * 43758.5453
+    return CGFloat(x - floor(x))
+  }
+}
+
+// MARK: - Sunburst View (精选内容高亮)
+
+struct SunburstView: View {
+  let rayCount: Int
+  let color: Color
+  let animated: Bool
+
+  @State private var rotation: Double = 0
+
+  init(rayCount: Int = 12, color: Color = .orange, animated: Bool = true) {
+    self.rayCount = rayCount
+    self.color = color
+    self.animated = animated
+  }
+
+  var body: some View {
+    Canvas { context, size in
+      let center = CGPoint(x: size.width / 2, y: size.height / 2)
+      let maxRadius = max(size.width, size.height)
+
+      for i in 0..<rayCount {
+        let angle = (Double(i) / Double(rayCount)) * .pi * 2 + rotation
+        let rayWidth = (.pi * 2) / Double(rayCount) * 0.4
+
+        var path = Path()
+        path.move(to: center)
+        path.addArc(
+          center: center,
+          radius: maxRadius,
+          startAngle: .radians(angle - rayWidth / 2),
+          endAngle: .radians(angle + rayWidth / 2),
+          clockwise: false
+        )
+        path.closeSubpath()
+
+        let opacity = 0.08 + (Double(i % 2) * 0.04)
+        context.fill(path, with: .color(color.opacity(opacity)))
+      }
+    }
+    .allowsHitTesting(false)
+    .onAppear {
+      if animated {
+        withAnimation(.linear(duration: 60).repeatForever(autoreverses: false)) {
+          rotation = .pi * 2
+        }
+      }
+    }
+  }
+}
+
+// MARK: - Map Grid Overlay (经纬网格)
+
+struct MapGridOverlay: View {
+  @Environment(\.colorScheme) private var colorScheme
+  let gridSize: CGFloat
+  let color: Color?
+
+  init(gridSize: CGFloat = 40, color: Color? = nil) {
+    self.gridSize = gridSize
+    self.color = color
+  }
+
+  private var effectiveColor: Color {
+    if let color = color {
+      return color
+    }
+    return colorScheme == .dark
+      ? Color.white.opacity(0.03)
+      : Color.black.opacity(0.02)
+  }
+
+  var body: some View {
+    Canvas { context, size in
+      for x in stride(from: 0, to: size.width, by: gridSize) {
+        var path = Path()
+        path.move(to: CGPoint(x: x, y: 0))
+        path.addLine(to: CGPoint(x: x, y: size.height))
+        context.stroke(path, with: .color(effectiveColor), lineWidth: 0.5)
+      }
+
+      for y in stride(from: 0, to: size.height, by: gridSize) {
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: y))
+        path.addLine(to: CGPoint(x: size.width, y: y))
+        context.stroke(path, with: .color(effectiveColor), lineWidth: 0.5)
+      }
+    }
+    .allowsHitTesting(false)
   }
 }
 

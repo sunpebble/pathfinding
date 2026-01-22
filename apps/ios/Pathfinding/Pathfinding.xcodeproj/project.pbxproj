@@ -81,6 +81,7 @@
 		5D9418E8D5B22F4AD19C8886 /* PublicItineraryDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1CDD42B47E7001B90F369B /* PublicItineraryDiscoveryView.swift */; };
 		5E2ECEC0214C66B95A0484F2 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5371E3005626A5BBA18C9F9E /* SignupView.swift */; };
 		5E8B83A21046D96829003E64 /* EditBudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A8496B5EDC0C69D2B38A064 /* EditBudgetView.swift */; };
+		6414767280DBD72AA972B625 /* ExplorerComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B759B286F348275629CF6D99 /* ExplorerComponents.swift */; };
 		675EFD15236A4A57C6CDF829 /* ShareImageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0D1598E22F1E1B3257002 /* ShareImageGenerator.swift */; };
 		69011AFD22E8CCEC82561CC1 /* NotificationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAC8E6DEA0D302004887207 /* NotificationListView.swift */; };
 		6909139DA149B033291DE9D6 /* PdfExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3665BDCFD34152FA9BEEF9CE /* PdfExport.swift */; };
@@ -351,6 +352,7 @@
 		AFBC3A2B948D20B88F46B733 /* Comment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comment.swift; sourceTree = "<group>"; };
 		B1A914B625B3AE70C54D8E21 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		B508B564C0B70C1341B1267D /* ExpenseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseListView.swift; sourceTree = "<group>"; };
+		B759B286F348275629CF6D99 /* ExplorerComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorerComponents.swift; sourceTree = "<group>"; };
 		B963540201B19ADC9E6E02E8 /* NavigateToNextPOIIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigateToNextPOIIntent.swift; sourceTree = "<group>"; };
 		B9A19A6859829FD35BAB6FE1 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		BA83A2A926AD19E47B886675 /* DebugMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMenuView.swift; sourceTree = "<group>"; };
@@ -838,6 +840,7 @@
 				150DD530C2F4383B398260A8 /* CachedAsyncImage.swift */,
 				4F941316940938FD8267380E /* DesignSystem.swift */,
 				ADCE5553363AC937CD1E2570 /* ExplorerCards.swift */,
+				B759B286F348275629CF6D99 /* ExplorerComponents.swift */,
 				31EDD45876CADDD73FBDB5ED /* GuideComponents.swift */,
 				F177FCC76E9C41E981C00F74 /* ImageViewer.swift */,
 				420C2AFA83EF512A8AB9DBEB /* OfflineTileOverlay.swift */,
@@ -975,6 +978,7 @@
 				38263948E16017F49C319761 /* EnhancedDiscoverView.swift in Sources */,
 				7E52564C035441D32FB49C14 /* ExpenseListView.swift in Sources */,
 				E7EDEA42A1B8A6DD3238ADF9 /* ExplorerCards.swift in Sources */,
+				6414767280DBD72AA972B625 /* ExplorerComponents.swift in Sources */,
 				907E77B0B3683F606C020435 /* Favorite.swift in Sources */,
 				3AA2DB6138E52C8E89ECA400 /* FavoriteCollectionsView.swift in Sources */,
 				21B2720B76BBEF27A1830493 /* FavoriteStore.swift in Sources */,

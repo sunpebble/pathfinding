@@ -4,6 +4,7 @@ struct ProfileView: View {
   @EnvironmentObject private var authViewModel: AuthViewModel
   @Environment(ThemeManager.self) private var themeManager
   @Environment(\.localizationManager) private var localizationManager
+  @Environment(\.colorScheme) private var colorScheme
   @State private var showAPISettings = false
   @State private var showAbout = false
   @State private var showThemeSettings = false
@@ -13,6 +14,7 @@ struct ProfileView: View {
   @State private var followStore = FollowStore.shared
   @State private var followStats: FollowStats?
   @State private var favoriteStore = FavoriteStore.shared
+  @State private var isVisible = false
 
   // Navigation destinations for stats
   @State private var navigateToFavorites = false
@@ -27,7 +29,7 @@ struct ProfileView: View {
   var body: some View {
     NavigationStack {
       ZStack {
-        // Explorer background
+        // Explorer background with enhanced gradient
         ExplorerPageBackground(style: .list, accentColor: .purple)
 
         List {
@@ -35,122 +37,32 @@ struct ProfileView: View {
         Section {
           if isLoggedIn {
             // Show logged-in user info
-            HStack(spacing: DesignTokens.Spacing.lg) {
-              // Avatar with enhanced styling
-              ZStack {
-                Circle()
-                  .fill(
-                    LinearGradient(
-                      colors: [.indigo.opacity(0.3), .purple.opacity(0.3)],
-                      startPoint: .topLeading,
-                      endPoint: .bottomTrailing
-                    )
-                  )
-                  .frame(width: 80, height: 80)
-                  .blur(radius: 8)
-
-                Circle()
-                  .fill(
-                    LinearGradient(
-                      colors: [.indigo, .purple],
-                      startPoint: .topLeading,
-                      endPoint: .bottomTrailing
-                    )
-                  )
-                  .frame(width: 72, height: 72)
-                  .shadow(color: .indigo.opacity(0.4), radius: 8, y: 4)
-
-                Image(systemName: "person.fill")
-                  .font(.system(size: 32, weight: .medium))
-                  .foregroundStyle(.white)
-              }
-              .frame(width: 80, height: 80)
-
-              VStack(alignment: .leading, spacing: 6) {
-                Text(authViewModel.userEmail ?? "User")
-                  .font(.title2)
-                  .fontWeight(.bold)
-                  .foregroundStyle(.primary)
-
-                Text("profile.logged_in".localized)
-                  .font(.subheadline)
-                  .foregroundStyle(.secondary)
-              }
-
-              Spacer()
-            }
-            .padding(.vertical, DesignTokens.Spacing.sm)
+            ProfileHeaderView(
+              email: authViewModel.userEmail,
+              isLoggedIn: true,
+              colorScheme: colorScheme
+            )
+            .bounceIn(from: .top, distance: 30, delay: 0.1)
           } else {
             // Show guest prompt
             Button {
               showLogin = true
             } label: {
-            HStack(spacing: DesignTokens.Spacing.lg) {
-              // Avatar with enhanced styling
-              ZStack {
-                // Outer glow
-                Circle()
-                  .fill(
-                    LinearGradient(
-                      colors: [.indigo.opacity(0.3), .purple.opacity(0.3)],
-                      startPoint: .topLeading,
-                      endPoint: .bottomTrailing
-                    )
-                  )
-                  .frame(width: 80, height: 80)
-                  .blur(radius: 8)
-
-                // Main avatar circle
-                Circle()
-                  .fill(
-                    LinearGradient(
-                      colors: [.indigo, .purple],
-                      startPoint: .topLeading,
-                      endPoint: .bottomTrailing
-                    )
-                  )
-                  .frame(width: 72, height: 72)
-                  .shadow(color: .indigo.opacity(0.4), radius: 8, y: 4)
-
-                Image(systemName: "person.fill")
-                  .font(.system(size: 32, weight: .medium))
-                  .foregroundStyle(.white)
-              }
-              .frame(width: 80, height: 80)
-
-              VStack(alignment: .leading, spacing: 6) {
-                Text("profile.guest".localized)
-                  .font(.title2)
-                  .fontWeight(.bold)
-                  .foregroundStyle(.primary)
-
-                HStack(spacing: 4) {
-                  Image(systemName: "arrow.right.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.indigo)
-                  Text("profile.login_prompt".localized)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
-              }
-
-              Spacer()
-
-              Image(systemName: "chevron.right")
-                .font(.body)
-                .fontWeight(.semibold)
-                .foregroundStyle(.quaternary)
+              ProfileHeaderView(
+                email: nil,
+                isLoggedIn: false,
+                colorScheme: colorScheme,
+                showChevron: true
+              )
             }
-            .padding(.vertical, DesignTokens.Spacing.sm)
-          }
-          .buttonStyle(.plain)
+            .buttonStyle(.plain)
           } // end else (guest)
         }
 
         // MARK: - Stats Section
         Section {
           VStack(spacing: DesignTokens.Spacing.md) {
-            // Main stats row
+            // Main stats row with staggered animation
             HStack(spacing: 0) {
               Button {
                 navigateToFavorites = true
@@ -159,12 +71,13 @@ struct ProfileView: View {
                   value: "\(favoriteStore.totalFavoritesCount)",
                   label: "profile.favorites".localized,
                   icon: "bookmark.fill",
-                  color: .orange
+                  color: .orange,
+                  index: 0
                 )
               }
               .buttonStyle(.plain)
 
-              EnhancedStatDivider()
+              ExplorerStatDivider()
 
               Button {
                 navigateToLikes = true
@@ -173,22 +86,24 @@ struct ProfileView: View {
                   value: "\(favoriteStore.totalLikesCount)",
                   label: "profile.likes".localized,
                   icon: "heart.fill",
-                  color: .red
+                  color: .red,
+                  index: 1
                 )
               }
               .buttonStyle(.plain)
 
-              EnhancedStatDivider()
+              ExplorerStatDivider()
 
               EnhancedStatItem(
                 value: "0",
                 label: "profile.footprints".localized,
                 icon: "shoeprints.fill",
-                color: .green
+                color: DesignTokens.Colors.Terrain.forest,
+                index: 2
               )
             }
 
-            Divider()
+            ExplorerDivider(style: .topographic, color: .purple.opacity(0.3))
               .padding(.horizontal, DesignTokens.Spacing.md)
 
             // Follow stats row
@@ -200,16 +115,18 @@ struct ProfileView: View {
                   value: "\(followStats?.followersCount ?? 0)",
                   label: "profile.followers".localized,
                   icon: "person.2.fill",
-                  color: .pink
+                  color: .pink,
+                  index: 3
                 )
 
-                EnhancedStatDivider()
+                ExplorerStatDivider()
 
                 EnhancedStatItem(
                   value: "\(followStats?.followingCount ?? 0)",
                   label: "profile.following".localized,
                   icon: "person.wave.2.fill",
-                  color: .purple
+                  color: .purple,
+                  index: 4
                 )
               }
             }
@@ -220,186 +137,239 @@ struct ProfileView: View {
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
 
         // MARK: - Travel Stats Section
-        Section("profile.section.travel_data".localized) {
+        Section {
           NavigationLink {
             StatsView()
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "chart.bar.xaxis",
               title: "profile.travel_stats".localized,
               subtitle: "profile.travel_stats_subtitle".localized,
-              iconColor: .indigo
+              iconColor: .indigo,
+              terrainColor: DesignTokens.Colors.Terrain.ocean
             )
           }
+          .staggeredAnimation(index: 0, baseDelay: 0.03)
 
           NavigationLink {
             PreferencesView()
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "heart.text.square",
               title: "profile.preferences".localized,
               subtitle: "profile.preferences_subtitle".localized,
-              iconColor: .pink
+              iconColor: .pink,
+              terrainColor: DesignTokens.Colors.Terrain.volcano
             )
           }
+          .staggeredAnimation(index: 1, baseDelay: 0.03)
+        } header: {
+          ExplorerSectionHeaderLabel(
+            title: "profile.section.travel_data".localized,
+            icon: "chart.xyaxis.line",
+            color: .indigo
+          )
         }
 
         // MARK: - Likes & Favorites Section
-        Section("profile.section.likes_favorites".localized) {
+        Section {
           NavigationLink {
             MyFavoritesView()
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "bookmark.fill",
               title: "profile.my_favorites".localized,
               subtitle: String(format: "profile.favorites_count".localized, favoriteStore.totalFavoritesCount),
-              iconColor: .orange
+              iconColor: .orange,
+              terrainColor: DesignTokens.Colors.Terrain.desert
             )
           }
+          .staggeredAnimation(index: 2, baseDelay: 0.03)
 
           NavigationLink {
             MyLikesView()
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "heart.fill",
               title: "profile.my_likes".localized,
               subtitle: String(format: "profile.likes_count".localized, favoriteStore.totalLikesCount),
-              iconColor: .red
+              iconColor: .red,
+              terrainColor: DesignTokens.Colors.Terrain.volcano
             )
           }
+          .staggeredAnimation(index: 3, baseDelay: 0.03)
 
           NavigationLink {
             FavoriteCollectionsView()
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "folder.fill",
               title: "profile.collections".localized,
               subtitle: String(format: "profile.collections_count".localized, favoriteStore.collections.count),
-              iconColor: .purple
+              iconColor: .purple,
+              terrainColor: DesignTokens.Colors.Terrain.mountain
             )
           }
+          .staggeredAnimation(index: 4, baseDelay: 0.03)
+        } header: {
+          ExplorerSectionHeaderLabel(
+            title: "profile.section.likes_favorites".localized,
+            icon: "heart.circle.fill",
+            color: .orange
+          )
         }
 
         // MARK: - Travel Services Section
-        Section("profile.section.travel_services".localized) {
+        Section {
           NavigationLink {
             InsuranceListView()
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "shield.checkered",
               title: "profile.insurance".localized,
               subtitle: "profile.insurance_subtitle".localized,
-              iconColor: .indigo
+              iconColor: .indigo,
+              terrainColor: DesignTokens.Colors.Terrain.glacier
             )
           }
+          .staggeredAnimation(index: 5, baseDelay: 0.03)
+        } header: {
+          ExplorerSectionHeaderLabel(
+            title: "profile.section.travel_services".localized,
+            icon: "airplane.circle.fill",
+            color: .indigo
+          )
         }
 
         // MARK: - Appearance Section
-        Section("profile.section.appearance".localized) {
+        Section {
           Button {
             showThemeSettings = true
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: themeManager.currentMode.icon,
               title: "profile.theme".localized,
               subtitle: themeManager.currentMode.displayName,
               iconColor: themeManager.currentMode.iconColor,
+              terrainColor: DesignTokens.Colors.Terrain.mountain,
               showChevron: true
             )
           }
+          .staggeredAnimation(index: 6, baseDelay: 0.03)
 
           Button {
             showLanguageSettings = true
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: localizationManager.currentLanguage.icon,
               title: "profile.language".localized,
               subtitle: localizationManager.currentLanguage.nativeName,
               iconColor: localizationManager.currentLanguage.iconColor,
+              terrainColor: DesignTokens.Colors.Terrain.ocean,
               showChevron: true
             )
           }
+          .staggeredAnimation(index: 7, baseDelay: 0.03)
+        } header: {
+          ExplorerSectionHeaderLabel(
+            title: "profile.section.appearance".localized,
+            icon: "paintpalette.fill",
+            color: .purple
+          )
         }
 
         // MARK: - Settings Section
-        Section("profile.section.settings".localized) {
+        Section {
           Button {
             showCloudSyncSettings = true
           } label: {
             iCloudSyncSettingsRow(showChevron: true)
           }
+          .staggeredAnimation(index: 8, baseDelay: 0.03)
 
           NavigationLink {
             OfflineMapListView()
           } label: {
             OfflineMapSettingsRow()
           }
+          .staggeredAnimation(index: 9, baseDelay: 0.03)
 
           if #available(iOS 17.0, *) {
             NavigationLink {
               SiriShortcutsSettingsView()
             } label: {
-              SettingsRow(
+              ExplorerSettingsRow(
                 icon: "waveform",
                 title: "profile.siri_shortcuts".localized,
                 subtitle: "profile.siri_shortcuts_subtitle".localized,
-                iconColor: .purple
+                iconColor: .purple,
+                terrainColor: DesignTokens.Colors.Terrain.mountain
               )
             }
+            .staggeredAnimation(index: 10, baseDelay: 0.03)
           }
 
           Button {
             showAPISettings = true
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "server.rack",
               title: "profile.api_config".localized,
               subtitle: AppConfig.convexURL,
               iconColor: .blue,
+              terrainColor: DesignTokens.Colors.Terrain.ocean,
               showChevron: true
             )
           }
+          .staggeredAnimation(index: 11, baseDelay: 0.03)
 
           NavigationLink {
             CacheSettingsView()
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "internaldrive",
               title: "profile.cache".localized,
               subtitle: "profile.cache_subtitle".localized,
-              iconColor: .orange
+              iconColor: .orange,
+              terrainColor: DesignTokens.Colors.Terrain.desert
             )
           }
+          .staggeredAnimation(index: 12, baseDelay: 0.03)
 
           Button {
             showAbout = true
           } label: {
-            SettingsRow(
+            ExplorerSettingsRow(
               icon: "info.circle",
               title: "profile.about".localized,
               subtitle: "profile.about_subtitle".localized,
               iconColor: .purple,
+              terrainColor: DesignTokens.Colors.Terrain.mountain,
               showChevron: true
             )
           }
+          .staggeredAnimation(index: 13, baseDelay: 0.03)
+        } header: {
+          ExplorerSectionHeaderLabel(
+            title: "profile.section.settings".localized,
+            icon: "gearshape.fill",
+            color: .gray
+          )
         }
 
         // MARK: - Version Section
         Section {
-          HStack {
-            Text("profile.version".localized)
-            Spacer()
-            Text("\(AppConfig.appVersion) (\(AppConfig.buildNumber))")
-              .foregroundStyle(.secondary)
-          }
+          ExplorerVersionRow(
+            label: "profile.version".localized,
+            value: "\(AppConfig.appVersion) (\(AppConfig.buildNumber))"
+          )
 
           #if DEBUG
-            HStack {
-              Text("profile.environment".localized)
-              Spacer()
-              Text(AppConfig.Environment.current.rawValue.capitalized)
-                .foregroundStyle(.orange)
-            }
+            ExplorerVersionRow(
+              label: "profile.environment".localized,
+              value: AppConfig.Environment.current.rawValue.capitalized,
+              valueColor: .orange
+            )
           #endif
         }
       }
@@ -467,6 +437,116 @@ struct ProfileView: View {
   }
 }
 
+// MARK: - Profile Header View
+
+struct ProfileHeaderView: View {
+  let email: String?
+  let isLoggedIn: Bool
+  let colorScheme: ColorScheme
+  var showChevron: Bool = false
+
+  @State private var isGlowing = false
+  @State private var pulseScale: CGFloat = 1.0
+
+  var body: some View {
+    HStack(spacing: DesignTokens.Spacing.lg) {
+      // Avatar with enhanced styling and dark mode glow
+      ZStack {
+        // Outer animated glow (dark mode only)
+        if colorScheme == .dark {
+          Circle()
+            .fill(
+              RadialGradient(
+                colors: [.purple.opacity(0.4), .indigo.opacity(0.2), .clear],
+                center: .center,
+                startRadius: 30,
+                endRadius: isGlowing ? 55 : 45
+              )
+            )
+            .frame(width: 90, height: 90)
+            .blur(radius: 8)
+        }
+
+        // Gradient blur background
+        Circle()
+          .fill(
+            LinearGradient(
+              colors: [.indigo.opacity(0.3), .purple.opacity(0.3)],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .frame(width: 80, height: 80)
+          .blur(radius: 8)
+
+        // Main avatar circle with pulse animation
+        Circle()
+          .fill(
+            LinearGradient(
+              colors: [.indigo, .purple],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .frame(width: 72, height: 72)
+          .scaleEffect(pulseScale)
+          .shadow(
+            color: colorScheme == .dark ? .purple.opacity(0.5) : .indigo.opacity(0.4),
+            radius: colorScheme == .dark ? 12 : 8,
+            y: 4
+          )
+
+        Image(systemName: "person.fill")
+          .font(.system(size: 32, weight: .medium))
+          .foregroundStyle(.white)
+      }
+      .frame(width: 80, height: 80)
+      .onAppear {
+        if colorScheme == .dark {
+          withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+            isGlowing = true
+          }
+        }
+        withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+          pulseScale = 1.03
+        }
+      }
+
+      VStack(alignment: .leading, spacing: 6) {
+        Text(isLoggedIn ? (email ?? "User") : "profile.guest".localized)
+          .font(.title2)
+          .fontWeight(.bold)
+          .foregroundStyle(.primary)
+
+        if isLoggedIn {
+          Text("profile.logged_in".localized)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        } else {
+          HStack(spacing: 4) {
+            Image(systemName: "arrow.right.circle.fill")
+              .font(.caption)
+              .foregroundStyle(.indigo)
+            Text("profile.login_prompt".localized)
+              .font(.subheadline)
+              .foregroundStyle(.secondary)
+          }
+        }
+      }
+
+      Spacer()
+
+      if showChevron {
+        Image(systemName: "chevron.right")
+          .font(.body)
+          .fontWeight(.semibold)
+          .foregroundStyle(.quaternary)
+      }
+    }
+    .padding(.vertical, DesignTokens.Spacing.sm)
+  }
+}
+
 // MARK: - Enhanced Stat Item
 
 struct EnhancedStatItem: View {
@@ -474,18 +554,42 @@ struct EnhancedStatItem: View {
   let label: String
   let icon: String
   let color: Color
+  var index: Int = 0
+
+  @Environment(\.colorScheme) private var colorScheme
+  @State private var isGlowing = false
 
   var body: some View {
     VStack(spacing: 8) {
       ZStack {
+        // Subtle gradient background
         Circle()
-          .fill(color.opacity(0.12))
-          .frame(width: 44, height: 44)
+          .fill(
+            LinearGradient(
+              colors: [color.opacity(0.15), color.opacity(0.08)],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .frame(width: 48, height: 48)
+
+        // Glow effect in dark mode
+        if colorScheme == .dark {
+          Circle()
+            .fill(color.opacity(isGlowing ? 0.3 : 0.15))
+            .frame(width: 48, height: 48)
+            .blur(radius: 4)
+        }
 
         Image(systemName: icon)
           .font(.system(size: 18, weight: .semibold))
           .foregroundStyle(color)
       }
+      .shadow(
+        color: colorScheme == .dark ? color.opacity(0.3) : .clear,
+        radius: 6,
+        y: 0
+      )
 
       Text(value)
         .font(.title3)
@@ -498,10 +602,157 @@ struct EnhancedStatItem: View {
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, DesignTokens.Spacing.sm)
+    .staggeredAnimation(index: index, baseDelay: 0.04)
+    .onAppear {
+      if colorScheme == .dark {
+        withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+          isGlowing = true
+        }
+      }
+    }
   }
 }
 
-// MARK: - Enhanced Stat Divider
+// MARK: - Explorer Stat Divider
+
+struct ExplorerStatDivider: View {
+  @Environment(\.colorScheme) private var colorScheme
+
+  var body: some View {
+    Rectangle()
+      .fill(
+        LinearGradient(
+          colors: [
+            .clear,
+            colorScheme == .dark ? Color.white.opacity(0.15) : Color.black.opacity(0.1),
+            .clear
+          ],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+      )
+      .frame(width: 1, height: 50)
+  }
+}
+
+// MARK: - Explorer Section Header Label
+
+struct ExplorerSectionHeaderLabel: View {
+  let title: String
+  let icon: String
+  let color: Color
+
+  @Environment(\.colorScheme) private var colorScheme
+
+  var body: some View {
+    HStack(spacing: DesignTokens.Spacing.xs) {
+      Image(systemName: icon)
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(color)
+
+      Text(title)
+        .font(.caption)
+        .fontWeight(.semibold)
+        .foregroundStyle(color)
+    }
+    .textCase(nil)
+  }
+}
+
+// MARK: - Explorer Settings Row
+
+struct ExplorerSettingsRow: View {
+  let icon: String
+  let title: String
+  let subtitle: String
+  let iconColor: Color
+  var terrainColor: Color = .clear
+  var showChevron: Bool = false
+
+  @Environment(\.colorScheme) private var colorScheme
+  @State private var isPressed = false
+
+  var body: some View {
+    HStack(spacing: DesignTokens.Spacing.md) {
+      // Icon with gradient background
+      ZStack {
+        RoundedRectangle(cornerRadius: 8)
+          .fill(
+            LinearGradient(
+              colors: [
+                iconColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
+                iconColor.opacity(colorScheme == .dark ? 0.15 : 0.08)
+              ],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .frame(width: 34, height: 34)
+
+        // Subtle terrain color accent
+        if terrainColor != .clear {
+          RoundedRectangle(cornerRadius: 8)
+            .stroke(terrainColor.opacity(0.2), lineWidth: 0.5)
+            .frame(width: 34, height: 34)
+        }
+
+        Image(systemName: icon)
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(iconColor)
+      }
+      .shadow(
+        color: colorScheme == .dark ? iconColor.opacity(0.2) : .clear,
+        radius: 4,
+        y: 0
+      )
+
+      VStack(alignment: .leading, spacing: 3) {
+        Text(title)
+          .font(.body)
+          .foregroundStyle(.primary)
+
+        Text(subtitle)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+      }
+
+      if showChevron {
+        Spacer()
+
+        Image(systemName: "chevron.right")
+          .font(.system(size: 13, weight: .semibold))
+          .foregroundStyle(.tertiary)
+      }
+    }
+    .padding(.vertical, 3)
+    .scaleEffect(isPressed ? 0.98 : 1)
+    .animation(.spring(response: 0.2), value: isPressed)
+  }
+}
+
+// MARK: - Explorer Version Row
+
+struct ExplorerVersionRow: View {
+  let label: String
+  let value: String
+  var valueColor: Color = .secondary
+
+  var body: some View {
+    HStack {
+      Text(label)
+        .foregroundStyle(.primary)
+      Spacer()
+      Text(value)
+        .foregroundStyle(valueColor)
+        .font(.subheadline)
+        .fontDesign(.monospaced)
+    }
+    .padding(.vertical, 2)
+  }
+}
+
+// MARK: - Enhanced Stat Divider (Legacy - keeping for compatibility)
 
 struct EnhancedStatDivider: View {
   var body: some View {
@@ -793,19 +1044,36 @@ struct AboutRow: View {
 
 struct OfflineMapSettingsRow: View {
   @State private var manager = OfflineMapManager.shared
+  @Environment(\.colorScheme) private var colorScheme
+
+  private let mapColor = DesignTokens.Colors.Terrain.forest
 
   var body: some View {
     HStack(spacing: DesignTokens.Spacing.md) {
-      // Icon with rounded background
+      // Icon with gradient background
       ZStack {
         RoundedRectangle(cornerRadius: 8)
-          .fill(Color.green.opacity(0.12))
-          .frame(width: 32, height: 32)
+          .fill(
+            LinearGradient(
+              colors: [
+                mapColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
+                mapColor.opacity(colorScheme == .dark ? 0.15 : 0.08)
+              ],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .frame(width: 34, height: 34)
 
         Image(systemName: "map.fill")
           .font(.system(size: 14, weight: .semibold))
-          .foregroundStyle(.green)
+          .foregroundStyle(mapColor)
       }
+      .shadow(
+        color: colorScheme == .dark ? mapColor.opacity(0.2) : .clear,
+        radius: 4,
+        y: 0
+      )
 
       VStack(alignment: .leading, spacing: 3) {
         Text("profile.offline_maps".localized)
@@ -828,10 +1096,17 @@ struct OfflineMapSettingsRow: View {
           .foregroundStyle(.white)
           .padding(.horizontal, 8)
           .padding(.vertical, 4)
-          .background(Color.green, in: Capsule())
+          .background(
+            LinearGradient(
+              colors: [mapColor, mapColor.opacity(0.8)],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            ),
+            in: Capsule()
+          )
       }
     }
-    .padding(.vertical, 2)
+    .padding(.vertical, 3)
   }
 
   private var subtitleText: String {
@@ -847,21 +1122,41 @@ struct OfflineMapSettingsRow: View {
 
 struct iCloudSyncSettingsRow: View {
   @State private var syncManager = CloudKitSyncManager.shared
+  @Environment(\.colorScheme) private var colorScheme
   var showChevron: Bool = false
 
   var body: some View {
     HStack(spacing: DesignTokens.Spacing.md) {
-      // Icon with rounded background
+      // Icon with gradient background and breathing animation
       ZStack {
         RoundedRectangle(cornerRadius: 8)
-          .fill(syncStatusColor.opacity(0.12))
-          .frame(width: 32, height: 32)
+          .fill(
+            LinearGradient(
+              colors: [
+                syncStatusColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
+                syncStatusColor.opacity(colorScheme == .dark ? 0.15 : 0.08)
+              ],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+          .frame(width: 34, height: 34)
 
         Image(systemName: syncStatusIcon)
           .font(.system(size: 14, weight: .semibold))
           .foregroundStyle(syncStatusColor)
           .symbolEffect(.pulse, isActive: syncManager.syncStatus == .syncing)
       }
+      .shadow(
+        color: colorScheme == .dark ? syncStatusColor.opacity(0.3) : .clear,
+        radius: 4,
+        y: 0
+      )
+      .breathingAnimation(
+        minOpacity: 0.8,
+        maxOpacity: 1.0,
+        duration: 2.0
+      )
 
       VStack(alignment: .leading, spacing: 3) {
         Text("profile.icloud_sync".localized)
@@ -884,6 +1179,7 @@ struct iCloudSyncSettingsRow: View {
           .padding(.horizontal, 6)
           .padding(.vertical, 2)
           .background(.orange, in: Capsule())
+          .pulseAnimation(duration: 1.5)
       }
 
       if showChevron {
@@ -892,7 +1188,7 @@ struct iCloudSyncSettingsRow: View {
           .foregroundStyle(.tertiary)
       }
     }
-    .padding(.vertical, 2)
+    .padding(.vertical, 3)
   }
 
   private var syncStatusIcon: String {
@@ -912,7 +1208,7 @@ struct iCloudSyncSettingsRow: View {
     case .syncing:
       return .blue
     case .success:
-      return .green
+      return DesignTokens.Colors.Terrain.forest
     case .error:
       return .red
     }
