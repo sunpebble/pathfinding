@@ -23,18 +23,24 @@ Fix the crawler system for Pathfinding travel app to extract complete travel gui
 
 Plans:
 
-- [ ] 01-01-PLAN.md — Create diagnostic infrastructure (capture utilities, failure categorization)
-- [ ] 01-02-PLAN.md — Diagnose Ctrip and Qunar (detail-page navigators)
-- [ ] 01-03-PLAN.md — Diagnose Mafengwo and Tongcheng (list-only extractors)
-- [ ] 01-04-PLAN.md — Diagnose Xiaohongshu (API-based, video, anti-bot)
-- [ ] 01-05-PLAN.md — Consolidate findings into DIAGNOSIS-SUMMARY.md
+- [x] 01-01-PLAN.md — Create diagnostic infrastructure (capture utilities, failure categorization)
+- [x] 01-02-PLAN.md — Diagnose Ctrip and Qunar (detail-page navigators)
+- [x] 01-03-PLAN.md — Diagnose Mafengwo and Tongcheng (list-only extractors)
+- [x] 01-04-PLAN.md — Diagnose Xiaohongshu (API-based, video, anti-bot)
+- [x] 01-05-PLAN.md — Consolidate findings into DIAGNOSIS-SUMMARY.md
 
-**Success Criteria:**
+**Success Criteria:** ✅ ALL MET
 
-1. Root cause documented for each platform (acquisition vs parsing stage)
-2. Anti-bot mechanisms and login requirements documented per platform
-3. Raw HTML/API responses verified for content completeness
-4. Clear action plan for each platform based on diagnosis
+1. ✅ Root cause documented for each platform (acquisition vs parsing stage)
+2. ✅ Anti-bot mechanisms and login requirements documented per platform
+3. ✅ Raw HTML/API responses verified for content completeness
+4. ✅ Clear action plan for each platform based on diagnosis
+
+**Key Findings:**
+
+- Ctrip/Qunar: Parsing issues (need better extraction)
+- Mafengwo/Tongcheng: Architecture issues (need detail page navigation)
+- Xiaohongshu: Bimodal (excellent with API/login, placeholder without)
 
 ---
 
@@ -46,12 +52,20 @@ Plans:
 
 **Requirements:** INFRA-01, INFRA-02, INFRA-03
 
-**Success Criteria:**
+**Plans:** 3 plans in 2 waves
 
-1. Smart wait strategies replace all fixed sleep() delays
-2. User can manually log in and save cookies for reuse
-3. Saved sessions persist across crawler runs
-4. Session validity can be verified before crawl starts
+Plans:
+
+- [x] 02-01-PLAN.md — Create session management module (validators, manager, exports)
+- [x] 02-02-PLAN.md — Replace fixed sleep() with smart waitForContentStable() in all crawlers
+- [x] 02-03-PLAN.md — Integrate session management into Xiaohongshu, Mafengwo, login-helper
+
+**Success Criteria:** ✅ ALL MET
+
+1. ✅ Smart wait strategies replace all fixed sleep() delays
+2. ✅ User can manually log in and save cookies for reuse
+3. ✅ Saved sessions persist across crawler runs
+4. ✅ Session validity can be verified before crawl starts
 
 ---
 
@@ -62,6 +76,14 @@ Plans:
 **Dependencies:** Phase 2 (infrastructure ready)
 
 **Requirements:** CTRIP-01, CTRIP-02, CTRIP-03, CTRIP-04, CTRIP-05, CTRIP-06
+
+**Plans:** 3 plans in 3 waves
+
+Plans:
+
+- [ ] 03-01-PLAN.md — Add core parsing utilities (parseChineseNumber, transformToHighRes, extractPublishDate)
+- [ ] 03-02-PLAN.md — Integrate enhanced extractors into ctrip.ts
+- [ ] 03-03-PLAN.md — Verification test run and data completeness check
 
 **Success Criteria:**
 
@@ -169,8 +191,8 @@ Plans:
 
 | Phase | Name           | Requirements                 | Status            |
 | ----- | -------------- | ---------------------------- | ----------------- |
-| 1     | Diagnosis      | DIAG-01, DIAG-02, DIAG-03    | Planned (5 plans) |
-| 2     | Infrastructure | INFRA-01, INFRA-02, INFRA-03 | Pending           |
+| 1     | Diagnosis      | DIAG-01, DIAG-02, DIAG-03    | ✅ Complete (5/5) |
+| 2     | Infrastructure | INFRA-01, INFRA-02, INFRA-03 | ✅ Complete (3/3) |
 | 3     | Ctrip          | CTRIP-01 to CTRIP-06         | Pending           |
 | 4     | Qunar          | QUNAR-01 to QUNAR-06         | Pending           |
 | 5     | Mafengwo       | MFW-01 to MFW-08             | Pending           |
@@ -180,4 +202,4 @@ Plans:
 
 ---
 
-_Last updated: 2026-01-25 (Phase 1 planned)_
+_Last updated: 2026-01-25 (Phase 2 complete)_
