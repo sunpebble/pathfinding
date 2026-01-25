@@ -50,12 +50,12 @@
 
 ### 去哪儿 (QUNAR)
 
-- [ ] **QUNAR-01**: 提取完整正文内容
-- [ ] **QUNAR-02**: 提取高清图片 URL
-- [ ] **QUNAR-03**: 提取作者信息（昵称 + 尽力提取头像）
-- [ ] **QUNAR-04**: 提取发布时间
-- [ ] **QUNAR-05**: 提取互动数据（点赞、收藏、评论数）
-- [ ] **QUNAR-06**: 验证数据完整性
+- [x] **QUNAR-01**: 提取完整正文内容
+- [x] **QUNAR-02**: 提取高清图片 URL
+- [x] **QUNAR-03**: 提取作者信息（昵称 + 尽力提取头像）
+- [x] **QUNAR-04**: 提取发布时间
+- [x] **QUNAR-05**: 提取互动数据（点赞、收藏、评论数）
+- [x] **QUNAR-06**: 验证数据完整性
 
 ### 同程 (TC)
 
@@ -121,12 +121,12 @@
 | CTRIP-04    | Phase 3 | Complete |
 | CTRIP-05    | Phase 3 | Complete |
 | CTRIP-06    | Phase 3 | Complete |
-| QUNAR-01    | Phase 4 | Pending  |
-| QUNAR-02    | Phase 4 | Pending  |
-| QUNAR-03    | Phase 4 | Pending  |
-| QUNAR-04    | Phase 4 | Pending  |
-| QUNAR-05    | Phase 4 | Pending  |
-| QUNAR-06    | Phase 4 | Pending  |
+| QUNAR-01    | Phase 4 | Complete |
+| QUNAR-02    | Phase 4 | Complete |
+| QUNAR-03    | Phase 4 | Complete |
+| QUNAR-04    | Phase 4 | Complete |
+| QUNAR-05    | Phase 4 | Complete |
+| QUNAR-06    | Phase 4 | Complete |
 | MFW-01      | Phase 5 | Pending  |
 | MFW-02      | Phase 5 | Pending  |
 | MFW-03      | Phase 5 | Pending  |
@@ -164,4 +164,4 @@
 ---
 
 _Requirements defined: 2026-01-25_
-_Last updated: 2026-01-25 Phase 3 requirements marked complete_
+_Last updated: 2026-01-25 Phase 4 requirements marked complete_
