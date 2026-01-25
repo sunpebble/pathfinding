@@ -158,6 +158,14 @@ Plans:
 
 **Requirements:** TC-01, TC-02, TC-03, TC-04, TC-05, TC-06, TC-07
 
+**Plans:** 3 plans in 3 waves
+
+Plans:
+
+- [ ] 06-01-PLAN.md — Add Tongcheng-specific parsing utilities (extractTongchengStats, extractTongchengAuthor, transformToHighResTc)
+- [ ] 06-02-PLAN.md — Restructure crawler to navigate to detail pages and extract full content
+- [ ] 06-03-PLAN.md — Verification test run and data completeness check
+
 **Success Criteria:**
 
 1. Crawler navigates from list page to detail page
