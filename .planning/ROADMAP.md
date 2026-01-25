@@ -217,6 +217,12 @@ Plans:
 
 **Requirements:** VERIFY-01, VERIFY-02, VERIFY-03, VERIFY-04
 
+**Plans:** 1 plan
+
+Plans:
+
+- [ ] 08-01-PLAN.md — Final verification of all 5 platforms with human checkpoints
+
 **Success Criteria:**
 
 1. Each platform successfully crawls 10+ complete records
