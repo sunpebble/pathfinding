@@ -893,6 +893,267 @@ function isValidQunarAuthorName(name: string): boolean {
 }
 
 /**
+ * Extract engagement stats from Mafengwo content
+ * Uses parseChineseNumber internally for all numeric parsing
+ *
+ * Handles patterns:
+ * 1. Inline: "浏览量 2.7千", "2.7千次浏览", "阅读量：1234"
+ * 2. Accessibility tree: StaticText "浏览量" followed by StaticText "2.7千"
+ * 3. Likes: "点赞 123", "顶 45", "123 赞"
+ * 4. Comments: "评论 30", "30条评论"
+ * 5. Saves/Favorites: "收藏 85", "85人收藏"
+ */
+export function extractMafengwoStats(content: string): {
+  views?: number;
+  likes?: number;
+  saves?: number;
+  comments?: number;
+} {
+  const stats: {
+    views?: number;
+    likes?: number;
+    saves?: number;
+    comments?: number;
+  } = {};
+
+  // === Views ===
+  // Pattern 1: Inline - 浏览量2.7千, 阅读量1234, 2.7千次浏览
+  const viewsMatch =
+    content.match(/(?:浏览量?|阅读量?)[：:\s]*([0-9.]+[千万kw]?)/i) ||
+    content.match(/([0-9.]+[千万kw]?)\s*(?:次浏览|阅读)/i);
+  if (viewsMatch) {
+    const num = parseChineseNumber(viewsMatch[1]);
+    if (num > 0) stats.views = num;
+  }
+
+  // Pattern 2: Accessibility tree - "浏览量" followed by number on next StaticText
+  if (!stats.views) {
+    const accessibilityViewsMatch = content.match(
+      /StaticText\s+"(?:浏览量?|阅读量?)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+    );
+    if (accessibilityViewsMatch) {
+      const num = parseChineseNumber(accessibilityViewsMatch[1]);
+      if (num > 0) stats.views = num;
+    }
+  }
+
+  // === Likes ===
+  // Pattern 1: Inline - 点赞123, 顶45, 123赞
+  const likesMatch =
+    content.match(/(?:点赞|顶)[：:\s]*([0-9.]+[千万kw]?)/i) ||
+    content.match(/([0-9.]+[千万kw]?)\s*(?:点赞|个赞|赞)/i);
+  if (likesMatch) {
+    const num = parseChineseNumber(likesMatch[1]);
+    if (num > 0) stats.likes = num;
+  }
+
+  // Pattern 2: Accessibility tree
+  if (!stats.likes) {
+    const accessibilityLikesMatch = content.match(
+      /StaticText\s+"(?:点赞|顶|赞)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+    );
+    if (accessibilityLikesMatch) {
+      const num = parseChineseNumber(accessibilityLikesMatch[1]);
+      if (num > 0) stats.likes = num;
+    }
+  }
+
+  // === Saves ===
+  // Pattern 1: Inline - 收藏85, 85人收藏
+  const savesMatch =
+    content.match(/收藏[：:\s]*([0-9.]+[千万kw]?)/i) ||
+    content.match(/([0-9.]+[千万kw]?)\s*(?:人收藏|收藏)/i);
+  if (savesMatch) {
+    const num = parseChineseNumber(savesMatch[1]);
+    if (num > 0) stats.saves = num;
+  }
+
+  // Pattern 2: Accessibility tree
+  if (!stats.saves) {
+    const accessibilitySavesMatch = content.match(
+      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+    );
+    if (accessibilitySavesMatch) {
+      const num = parseChineseNumber(accessibilitySavesMatch[1]);
+      if (num > 0) stats.saves = num;
+    }
+  }
+
+  // === Comments ===
+  // Pattern 1: Inline - 评论30, 30条评论
+  const commentsMatch =
+    content.match(/评论[：:\s]*([0-9.]+[千万kw]?)/i) ||
+    content.match(/([0-9.]+[千万kw]?)\s*条评论/i);
+  if (commentsMatch) {
+    const num = parseChineseNumber(commentsMatch[1]);
+    if (num > 0) stats.comments = num;
+  }
+
+  // Pattern 2: Accessibility tree
+  if (!stats.comments) {
+    const accessibilityCommentsMatch = content.match(
+      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+    );
+    if (accessibilityCommentsMatch) {
+      const num = parseChineseNumber(accessibilityCommentsMatch[1]);
+      if (num > 0) stats.comments = num;
+    }
+  }
+
+  return stats;
+}
+
+/**
+ * Extract author information with Mafengwo-specific patterns
+ *
+ * Pattern priority:
+ * 1. Mafengwo-specific patterns (profile links on u.mafengwo.cn)
+ * 2. Generic labeled patterns ("作者：", "发布者", "by")
+ * 3. Fallback to extractAuthor()
+ *
+ * Also attempts to extract avatar URL near author name.
+ *
+ * Returns: { name?: string; avatar?: string }
+ */
+export function extractMafengwoAuthor(content: string): {
+  name?: string;
+  avatar?: string;
+} {
+  let name: string | undefined;
+  let avatar: string | undefined;
+
+  // Pattern 1: Labeled author - 作者：name or 发布者：name
+  const labeledMatch = content.match(
+    /(?:作者|发布者|by)[：:\s]+"?([^"\n\]]{2,30})"?/i
+  );
+  if (labeledMatch) {
+    const candidate = labeledMatch[1].trim();
+    if (isValidMafengwoAuthorName(candidate)) {
+      name = candidate;
+    }
+  }
+
+  // Pattern 2: Name near Mafengwo profile link (u.mafengwo.cn/userId)
+  if (!name) {
+    const profileMatch = content.match(
+      /StaticText\s+"([^"]{2,20})"\s*[\s\S]{0,100}?u\.mafengwo\.cn\/\d+/
+    );
+    if (profileMatch) {
+      const candidate = profileMatch[1].trim();
+      if (isValidMafengwoAuthorName(candidate)) {
+        name = candidate;
+      }
+    }
+  }
+
+  // Pattern 3: Fallback to generic extractAuthor
+  if (!name) {
+    name = extractAuthor(content);
+  }
+
+  // Extract avatar (best effort)
+  const avatarPatterns = [
+    // Mafengwo CDN user images (avatar, head, user)
+    /(https?:\/\/[^\s"']*mafengwo[^\s"']*(?:avatar|head|user)[^\s"']*\.(?:jpg|jpeg|png|webp))/i,
+    // Avatar or 头像 followed by image URL
+    /(?:avatar|头像|author)[^"]*?(https?:\/\/[^\s"']+\.(?:jpg|jpeg|png|webp))/i,
+  ];
+
+  for (const pattern of avatarPatterns) {
+    const avatarMatch = content.match(pattern);
+    if (avatarMatch) {
+      const candidateUrl = avatarMatch[1];
+      // Filter out placeholders and icons
+      if (
+        candidateUrl &&
+        !candidateUrl.includes('placeholder') &&
+        !candidateUrl.includes('icon') &&
+        !candidateUrl.includes('default')
+      ) {
+        avatar = candidateUrl;
+        break;
+      }
+    }
+  }
+
+  return { name, avatar };
+}
+
+/**
+ * Validate Mafengwo author name - filter out false positives
+ */
+function isValidMafengwoAuthorName(name: string): boolean {
+  if (!name || name.length < 2 || name.length > 30) {
+    return false;
+  }
+  // Skip if contains http (probably a URL)
+  if (name.includes('http')) {
+    return false;
+  }
+  // Skip common button/action text (more comprehensive for Mafengwo)
+  if (
+    /^(?:分享|收藏|关注|点赞|评论|返回|首页|登录|注册|马蜂窝|攻略)$/.test(name)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Transform Mafengwo CDN URLs to high-resolution versions
+ *
+ * Mafengwo CDN domains:
+ * - n1-q.mafengwo.net, p1-q.mafengwo.net, etc.
+ * - *.mafengwo.cn
+ *
+ * Transformation rules:
+ * 1. Remove thumbnail suffix (e.g., .180.w.jpg, .320.w.jpg)
+ * 2. Remove size query parameters (w=, h=)
+ * 3. Set quality to max if present (q=100)
+ *
+ * If URL doesn't match Mafengwo CDN patterns, returns unchanged.
+ */
+export function transformToHighResMfw(url: string): string {
+  // Check if URL is from Mafengwo CDN domains
+  const isMfwCdn = url.includes('mafengwo.net') || url.includes('mafengwo.cn');
+
+  if (!isMfwCdn) {
+    return url;
+  }
+
+  let transformedUrl = url;
+
+  // Remove thumbnail suffix (e.g., .180.w.jpg, .320.h.jpg)
+  transformedUrl = transformedUrl.replace(
+    /\.\d+\.[wh]\.(?:jpg|jpeg|png|webp)$/i,
+    '.jpg'
+  );
+
+  // Handle query parameters
+  try {
+    const urlObj = new URL(transformedUrl);
+
+    // Remove size-limiting query params
+    if (urlObj.searchParams.has('w')) {
+      urlObj.searchParams.delete('w');
+    }
+    if (urlObj.searchParams.has('h')) {
+      urlObj.searchParams.delete('h');
+    }
+    // Set quality to max if present
+    if (urlObj.searchParams.has('q')) {
+      urlObj.searchParams.set('q', '100');
+    }
+
+    transformedUrl = urlObj.toString();
+  } catch {
+    // If URL parsing fails, return what we have so far
+  }
+
+  return transformedUrl;
+}
+
+/**
  * Full content extraction - returns all parsed data
  */
 export function parseAccessibilityTree(content: string): ExtractedContent {
