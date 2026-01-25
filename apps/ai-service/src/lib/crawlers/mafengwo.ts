@@ -1,19 +1,22 @@
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
-  extractAuthor,
-  extractHeadings,
   extractImageUrls,
-  extractStats,
+  extractMafengwoAuthor,
+  extractMafengwoStats,
+  extractPublishDate,
+  getArticleContent,
+  getBestTitle,
+  transformToHighResMfw,
 } from './accessibility-parser.js';
 import { waitForContentStable } from './diagnostics/index.js';
 import {
   disconnect,
-  initMCP,
   navigateTo,
   scrollToLoadContent,
   sleep,
   takeSnapshot,
 } from './mcp-client.js';
+import { checkSession, initSessionForPlatform } from './session/index.js';
 
 const CITY_IDS: Record<string, string> = {
   北京: '10065',
@@ -33,6 +36,35 @@ const CITY_IDS: Record<string, string> = {
   武汉: '10140',
 };
 
+/**
+ * Detect captcha/verification pages from Mafengwo
+ * Returns true if content appears to be a captcha or blocked page
+ */
+function detectMafengwoCaptcha(content: string): boolean {
+  const indicators = [
+    /验证码/,
+    /captcha/i,
+    /滑动验证/,
+    /请完成验证/,
+    /安全验证/,
+    /频繁访问/,
+    /请求过于频繁/,
+  ];
+
+  for (const pattern of indicators) {
+    if (pattern.test(content)) {
+      return true;
+    }
+  }
+
+  // Also check for very short content (blocked page)
+  if (content.length < 500) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function crawlMafengwo(
   city: string,
   options: CrawlOptions = {}
@@ -49,18 +81,39 @@ export async function crawlMafengwo(
   console.log(`[Mafengwo] Crawling guides for ${city} (${cityId})`);
 
   try {
-    await initMCP({ persistent: false });
-    console.log('[Mafengwo] Using isolated Chrome session');
+    // Use persistent session for better results
+    await initSessionForPlatform('mafengwo');
+    console.log('[Mafengwo] Using persistent Chrome session');
 
+    // Check session status
+    const sessionResult = await checkSession('mafengwo');
+    if (sessionResult.reason) {
+      console.log(`[Mafengwo] Session status: ${sessionResult.reason}`);
+    }
+
+    // Phase 1: Get guide URLs from list page
     const destUrl = `https://www.mafengwo.cn/travel-scenic-spot/mafengwo/${cityId}.html`;
-    console.log(`[Mafengwo] Fetching destination page: ${destUrl}`);
+    console.log(`[Mafengwo] Fetching guide URLs from: ${destUrl}`);
 
-    const guides = await fetchGuidesFromDestPage(destUrl, city, maxGuides);
-    console.log(
-      `[Mafengwo] Found ${guides.length} guides from destination page`
-    );
+    const guideUrls = await fetchGuideUrls(destUrl, maxGuides);
+    console.log(`[Mafengwo] Found ${guideUrls.length} guide URLs to fetch`);
 
-    results.push(...guides);
+    // Phase 2: Visit each detail page (NEW - follows Ctrip/Qunar pattern)
+    for (const url of guideUrls) {
+      try {
+        const guide = await fetchGuideDetail(url, city);
+        if (guide) {
+          results.push(guide);
+          console.log(
+            `[Mafengwo] Extracted guide: ${guide.title} (${guide.content.length} chars)`
+          );
+        }
+        // Rate limiting delay
+        await sleep(1000 / (options.rateLimit || 0.5));
+      } catch (error) {
+        console.error(`[Mafengwo] Error fetching guide: ${url}`, error);
+      }
+    }
 
     if (results.length === 0) {
       console.warn('[Mafengwo] No results found. You may need to login first:');
@@ -78,12 +131,15 @@ export async function crawlMafengwo(
   return results;
 }
 
-async function fetchGuidesFromDestPage(
+/**
+ * Fetch guide URLs from the destination list page
+ * Only extracts URLs, does not parse content (that's done in fetchGuideDetail)
+ */
+async function fetchGuideUrls(
   destUrl: string,
-  city: string,
   maxGuides: number
-): Promise<CrawlResult[]> {
-  const guides: CrawlResult[] = [];
+): Promise<string[]> {
+  const guideUrls: string[] = [];
   const seenIds = new Set<string>();
 
   try {
@@ -96,103 +152,120 @@ async function fetchGuidesFromDestPage(
     const content = snapshot.content;
 
     console.log(`[Mafengwo] Snapshot length: ${content.length} chars`);
-    console.log(`[Mafengwo] Snapshot preview: ${content.substring(0, 800)}`);
 
-    // Check for captcha/verification
-    if (
-      content.includes('验证') ||
-      content.includes('captcha') ||
-      content.includes('verify')
-    ) {
+    // Check for captcha
+    if (detectMafengwoCaptcha(content)) {
       console.warn(
-        '[Mafengwo] Captcha detected - site requires manual verification'
+        '[Mafengwo] Captcha detected on list page - site requires manual verification'
       );
-      return guides;
+      return guideUrls;
     }
 
+    // Extract guide URLs from /i/{id}.html pattern
     const guideMatches = content.matchAll(/\/i\/(\d+)\.html/g);
 
     for (const match of guideMatches) {
-      if (guides.length >= maxGuides) break;
+      if (guideUrls.length >= maxGuides) break;
 
       const guideId = match[1];
       if (seenIds.has(guideId)) continue;
       seenIds.add(guideId);
 
-      const contextStart = Math.max(0, match.index! - 300);
-      const contextEnd = Math.min(content.length, match.index! + 300);
-      const context = content.substring(contextStart, contextEnd);
-
-      // Use accessibility tree parser for title extraction
-      const headings = extractHeadings(context);
-      let title = headings[0];
-
-      if (!title) {
-        // Fallback: look for Chinese text that looks like a title
-        const lines = context.split('\n').filter((l) => l.trim().length > 5);
-        for (const line of lines) {
-          const cleaned = line
-            .replace(/\[[^\]]*\]/g, '')
-            .replace(/_游记$/, '')
-            .replace(/uid=\S+\s*/, '')
-            .replace(/^\s*(StaticText|link|heading)\s*/, '')
-            .replace(/^"/, '')
-            .replace(/"$/, '')
-            .trim();
-          if (
-            cleaned.length >= 5 &&
-            cleaned.length <= 100 &&
-            /[\u4E00-\u9FFF]/.test(cleaned) &&
-            !cleaned.includes('http')
-          ) {
-            title = cleaned;
-            break;
-          }
-        }
-      }
-
-      if (!title || title.length < 3) continue;
-
-      const authorName = extractAuthor(context) || '马蜂窝用户';
-      const stats = extractStats(context);
-      const imageUrls = extractImageUrls(context);
-      const coverImageUrl = imageUrls[0];
-
-      const sourceExternalId = `mafengwo_${guideId}`;
-      const fullUrl = `https://www.mafengwo.cn/i/${guideId}.html`;
-
-      const contentBlocks: ContentBlock[] = [
-        { type: 'text', content: `${title} - ${city}旅游攻略` },
-      ];
-
-      if (coverImageUrl) {
-        contentBlocks.push({ type: 'image', url: coverImageUrl });
-      }
-
-      guides.push({
-        sourceExternalId,
-        sourceUrl: fullUrl,
-        title,
-        content: `${title} - ${city}旅游攻略`,
-        contentBlocks,
-        contentType: 'normal',
-        authorName,
-        coverImageUrl,
-        imageUrls: coverImageUrl ? [coverImageUrl] : [],
-        destinations: [city],
-        tags: extractTags(title, ''),
-        viewsCount: stats.views || 0,
-        likesCount: stats.likes || 0,
-        qualityScore: calculateQualityScore('', 1, stats.views || 0),
-      });
+      guideUrls.push(`https://www.mafengwo.cn/i/${guideId}.html`);
     }
 
-    console.log(`[Mafengwo] Extracted ${guides.length} guides`);
+    console.log(`[Mafengwo] Found ${guideUrls.length} guide URLs`);
   } catch (error) {
-    console.error(`[Mafengwo] Error fetching destination page:`, error);
+    console.error(`[Mafengwo] Error fetching list page:`, error);
   }
 
-  return guides;
+  return guideUrls;
+}
+
+/**
+ * Fetch and parse a single guide detail page
+ * Navigates to the detail page, extracts all 6 core fields
+ */
+async function fetchGuideDetail(
+  url: string,
+  city: string
+): Promise<CrawlResult | null> {
+  try {
+    await navigateTo(url, { timeout: 30000 });
+    await waitForContentStable();
+    await scrollToLoadContent(3);
+    await sleep(1000);
+
+    const snapshot = await takeSnapshot({ verbose: true });
+    const content = snapshot.content;
+
+    console.log(
+      `[Mafengwo] Detail page snapshot for ${url.split('/').pop()}: ${content.length} chars`
+    );
+
+    // Check for captcha/login wall
+    if (detectMafengwoCaptcha(content)) {
+      console.warn(`[Mafengwo] Captcha detected on ${url}, skipping`);
+      return null;
+    }
+
+    // Extract all fields using accessibility-parser utilities
+    const title = getBestTitle(content, `${city}旅游攻略`);
+    const textContent = getArticleContent(content);
+
+    if (!textContent || textContent.length < 100) {
+      console.log(
+        `[Mafengwo] Insufficient content (${textContent?.length || 0} chars): ${url}`
+      );
+      return null;
+    }
+
+    // Mafengwo-specific extractors (from Plan 01)
+    const authorInfo = extractMafengwoAuthor(content);
+    const rawImageUrls = extractImageUrls(content);
+    const imageUrls = rawImageUrls.map(transformToHighResMfw);
+    const publishedAt = extractPublishDate(content);
+    const stats = extractMafengwoStats(content);
+
+    // Build result
+    const urlMatch = url.match(/\/i\/(\d+)\.html/);
+    const sourceExternalId = `mafengwo_${urlMatch?.[1] || Date.now()}`;
+
+    const contentBlocks: ContentBlock[] = [
+      { type: 'text', content: textContent },
+    ];
+    for (const imgUrl of imageUrls) {
+      contentBlocks.push({ type: 'image', url: imgUrl });
+    }
+
+    return {
+      sourceExternalId,
+      sourceUrl: url,
+      title: title || `${city}旅游攻略`,
+      content: textContent.substring(0, 50000),
+      contentBlocks,
+      contentType: 'normal',
+      authorName: authorInfo.name || '马蜂窝用户',
+      authorAvatar: authorInfo.avatar,
+      publishedAt,
+      coverImageUrl: imageUrls[0],
+      imageUrls: imageUrls.slice(0, 20),
+      destinations: [city],
+      tags: extractTags(title || '', textContent),
+      likesCount: stats.likes || 0,
+      savesCount: stats.saves || 0,
+      commentsCount: stats.comments || 0,
+      viewsCount: stats.views || 0,
+      qualityScore: calculateQualityScore(
+        textContent,
+        imageUrls.length,
+        stats.views || 0
+      ),
+    };
+  } catch (error) {
+    console.error(`[Mafengwo] Error parsing guide: ${url}`, error);
+    return null;
+  }
 }
 
 function extractTags(title: string, content: string): string[] {
