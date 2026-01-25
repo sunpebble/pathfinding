@@ -4,28 +4,28 @@
 
 **Core Value:** Each platform's crawler stably extracts complete travel guide content (text, images, videos, author info, publish time, engagement metrics) for user display and AI processing.
 
-**Current Focus:** Phase 6 (Tongcheng) in progress - Plan 1 complete
+**Current Focus:** Phase 6 (Tongcheng) in progress - Plan 2 complete
 
 ## Current Position
 
 **Phase:** 6 of 8 (06-tongcheng)
-**Plan:** 1 of 3 complete
+**Plan:** 2 of 3 complete
 **Status:** In progress
-**Last activity:** 2026-01-25 - Completed 06-01-PLAN.md (Tongcheng parsing utilities)
+**Last activity:** 2026-01-25 - Completed 06-02-PLAN.md (Tongcheng crawler restructure)
 
 ```
 Progress: [█████████░] 95%
-Phase 6/8 in progress | 18/20 plans complete (Phases 1-5 + 06-01)
+Phase 6/8 in progress | 19/20 plans complete (Phases 1-5 + 06-01/02)
 ```
 
 ## Performance Metrics
 
 | Metric            | Value |
 | ----------------- | ----- |
-| Plans completed   | 18    |
+| Plans completed   | 19    |
 | Plans failed      | 0     |
 | Phases completed  | 5     |
-| Requirements done | 26/41 |
+| Requirements done | 27/41 |
 
 ## Accumulated Context
 
@@ -47,6 +47,7 @@ Phase 6/8 in progress | 18/20 plans complete (Phases 1-5 + 06-01)
 | extractMafengwoStats, extractMafengwoAuthor, transformToHighResMfw                  | Mafengwo-specific utilities following established pattern                            | Phase 5 |
 | Mafengwo crawler verified via architecture review; live testing blocked by anti-bot | Code is correct; 0 guides extracted due to captcha is expected behavior              | Phase 5 |
 | extractTongchengStats, extractTongchengAuthor, transformToHighResTc                 | Tongcheng-specific utilities following established pattern                           | Phase 6 |
+| Tongcheng crawler restructure with fetchGuideUrls/fetchGuideDetail                  | Two-phase crawling pattern for detail page navigation                                | Phase 6 |
 
 ### Learnings
 
@@ -127,7 +128,7 @@ Phase 6/8 in progress | 18/20 plans complete (Phases 1-5 + 06-01)
 | Deliverable                   | Status           |
 | ----------------------------- | ---------------- |
 | Tongcheng parsing utilities   | Complete (06-01) |
-| Tongcheng crawler restructure | Pending (06-02)  |
+| Tongcheng crawler restructure | Complete (06-02) |
 | Tongcheng verification        | Pending (06-03)  |
 
 ### TODOs
@@ -146,7 +147,8 @@ Phase 6/8 in progress | 18/20 plans complete (Phases 1-5 + 06-01)
 - [x] ~~Execute Phase 5 plan 03 (Mafengwo verification)~~
 - [x] ~~Begin Phase 6 planning with `/gsd:plan-phase 6`~~
 - [x] ~~Execute Phase 6 plan 01 (Tongcheng parsing utilities)~~
-- [ ] Execute Phase 6 plan 02 (Tongcheng crawler restructure)
+- [x] ~~Execute Phase 6 plan 02 (Tongcheng crawler restructure)~~
+- [ ] Execute Phase 6 plan 03 (Tongcheng verification)
 
 ### Blockers
 
@@ -154,16 +156,17 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-01-25 - Completed 06-01-PLAN.md (Tongcheng parsing utilities)
-**Next action:** Execute Phase 6 plan 02 (Tongcheng crawler restructure)
+**Last session:** 2026-01-25 - Completed 06-02-PLAN.md (Tongcheng crawler restructure)
+**Next action:** Execute Phase 6 plan 03 (Tongcheng verification)
 **Context to preserve:**
 
-- Phase 6 in progress: Tongcheng parsing utilities complete
-- extractTongchengStats, extractTongchengAuthor, transformToHighResTc added
-- Pattern follows Mafengwo/Qunar/Ctrip exactly for consistency
-- Next plan: Crawler restructure to navigate to detail pages
+- Phase 6 in progress: Tongcheng crawler restructure complete
+- fetchGuideUrls() and fetchGuideDetail() functions added
+- Two-phase crawling pattern now consistent across Mafengwo and Tongcheng
+- Dynamic quality score calculation implemented
+- Next plan: Verification testing
 
 ---
 
 _State initialized: 2026-01-25_
-_Last updated: 2026-01-25 (06-01-PLAN.md complete)_
+_Last updated: 2026-01-25 (06-02-PLAN.md complete)_
