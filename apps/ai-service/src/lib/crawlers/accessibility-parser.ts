@@ -469,6 +469,90 @@ export function extractCtripStats(content: string): {
 }
 
 /**
+ * Extract author name and avatar URL with Ctrip-specific patterns
+ *
+ * Attempts multiple extraction patterns with Ctrip-specific patterns first:
+ * 1. Ctrip author pattern: 作者：name
+ * 2. Name before profile link
+ * 3. Fallback to generic extractAuthor()
+ *
+ * Avatar extraction is best-effort (often not available)
+ */
+export function extractAuthorWithAvatar(content: string): {
+  name?: string;
+  avatar?: string;
+} {
+  let name: string | undefined;
+  let avatar: string | undefined;
+
+  // Pattern 1: Ctrip-specific author label - 作者：name or 作者:name
+  const ctripAuthorMatch = content.match(/作者[：:]\s*"?([^"\n\]]{2,30})"?/);
+  if (ctripAuthorMatch) {
+    const candidate = ctripAuthorMatch[1].trim();
+    if (isValidAuthorName(candidate)) {
+      name = candidate;
+    }
+  }
+
+  // Pattern 2: Name before profile link (common in accessibility trees)
+  if (!name) {
+    const profileLinkMatch = content.match(
+      /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"\s+link.*profile/i
+    );
+    if (profileLinkMatch) {
+      const candidate = profileLinkMatch[1].trim();
+      if (isValidAuthorName(candidate)) {
+        name = candidate;
+      }
+    }
+  }
+
+  // Pattern 3: Fallback to generic extractAuthor
+  if (!name) {
+    name = extractAuthor(content);
+  }
+
+  // Extract avatar (best effort)
+  // Pattern: avatar/头像 followed by image URL
+  const avatarMatch =
+    content.match(
+      /(?:avatar|头像).*?(https?:\/\/[^\s"']+\.(?:jpg|jpeg|png|webp))/i
+    ) || content.match(/img.*?(?:avatar|author).*?url="([^"]+)"/i);
+  if (avatarMatch) {
+    const candidateUrl = avatarMatch[1];
+    // Filter out generic icons
+    if (
+      candidateUrl &&
+      !candidateUrl.includes('icon') &&
+      !candidateUrl.includes('default') &&
+      !candidateUrl.includes('placeholder')
+    ) {
+      avatar = candidateUrl;
+    }
+  }
+
+  return { name, avatar };
+}
+
+/**
+ * Validate author name - filter out false positives
+ */
+function isValidAuthorName(name: string): boolean {
+  if (!name || name.length < 2 || name.length > 30) {
+    return false;
+  }
+  // Skip if contains http (probably a URL)
+  if (name.includes('http')) {
+    return false;
+  }
+  // Skip common button/action text
+  if (/^(?:分享|收藏|关注|点赞|评论|返回|首页|登录|注册)$/.test(name)) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Full content extraction - returns all parsed data
  */
 export function parseAccessibilityTree(content: string): ExtractedContent {
