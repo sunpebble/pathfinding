@@ -383,6 +383,92 @@ export function transformToHighRes(url: string): string {
 }
 
 /**
+ * Extract publish date from content
+ * Supports ISO format (2023-05-09), Chinese format (2023年5月9日), and labeled format
+ * Returns date in YYYY-MM-DD format
+ */
+export function extractPublishDate(content: string): string | undefined {
+  // Priority 1: Labeled date (发布时间：2023-05-09)
+  const labeledMatch = content.match(
+    /发布(?:时间)?[：:]\s*(\d{4}-\d{2}-\d{2})/
+  );
+  if (labeledMatch) {
+    return labeledMatch[1];
+  }
+
+  // Priority 2: ISO-like format (2023-05-09)
+  const isoMatch = content.match(/(\d{4}-\d{2}-\d{2})/);
+  if (isoMatch) {
+    return isoMatch[1];
+  }
+
+  // Priority 3: Chinese format (2023年5月9日)
+  const chineseMatch = content.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+  if (chineseMatch) {
+    const year = chineseMatch[1];
+    const month = chineseMatch[2].padStart(2, '0');
+    const day = chineseMatch[3].padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  return undefined;
+}
+
+/**
+ * Extract Ctrip engagement stats from content
+ * Uses parseChineseNumber internally for all numeric parsing
+ */
+export function extractCtripStats(content: string): {
+  views?: number;
+  likes?: number;
+  saves?: number;
+  comments?: number;
+} {
+  const stats: {
+    views?: number;
+    likes?: number;
+    saves?: number;
+    comments?: number;
+  } = {};
+
+  // Views: 阅读量2.7千 or 浏览量1234
+  const viewsMatch = content.match(/(?:阅读|浏览)量?\s*([\d.]+[千万kw]?)/i);
+  if (viewsMatch) {
+    const num = parseChineseNumber(viewsMatch[1]);
+    if (num > 0) stats.views = num;
+  }
+
+  // Likes: 点赞120 or 120个赞 or 赞 85
+  const likesMatch =
+    content.match(/(?:点赞|个赞|赞)\s*([\d.]+[千万kw]?)/i) ||
+    content.match(/([\d.]+[千万kw]?)\s*(?:点赞|个赞)/i);
+  if (likesMatch) {
+    const num = parseChineseNumber(likesMatch[1]);
+    if (num > 0) stats.likes = num;
+  }
+
+  // Saves: 收藏85 or 85收藏
+  const savesMatch =
+    content.match(/收藏\s*([\d.]+[千万kw]?)/i) ||
+    content.match(/([\d.]+[千万kw]?)\s*收藏/i);
+  if (savesMatch) {
+    const num = parseChineseNumber(savesMatch[1]);
+    if (num > 0) stats.saves = num;
+  }
+
+  // Comments: 评论30 or 30条评论
+  const commentsMatch =
+    content.match(/(?:评论|条评论)\s*([\d.]+[千万kw]?)/i) ||
+    content.match(/([\d.]+[千万kw]?)\s*(?:条评论|评论)/i);
+  if (commentsMatch) {
+    const num = parseChineseNumber(commentsMatch[1]);
+    if (num > 0) stats.comments = num;
+  }
+
+  return stats;
+}
+
+/**
  * Full content extraction - returns all parsed data
  */
 export function parseAccessibilityTree(content: string): ExtractedContent {
