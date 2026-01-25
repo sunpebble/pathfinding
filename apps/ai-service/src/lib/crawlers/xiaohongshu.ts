@@ -9,13 +9,16 @@ import { waitForContentStable } from './diagnostics/index.js';
 import {
   disconnect,
   getNetworkRequest,
-  initMCP,
   listNetworkRequests,
   navigateTo,
   scrollToLoadContent,
   sleep,
   takeSnapshot,
 } from './mcp-client.js';
+import {
+  checkSessionWithGuidance,
+  initSessionForPlatform,
+} from './session/index.js';
 
 interface XiaohongshuNote {
   note_id: string;
@@ -70,8 +73,9 @@ export async function crawlXiaohongshu(
   console.log(`[Xiaohongshu] Crawling guides for ${city}`);
 
   try {
-    await initMCP({ persistent: false });
-    console.log('[Xiaohongshu] Using isolated Chrome session');
+    // Use persistent session for login state
+    await initSessionForPlatform('xiaohongshu');
+    console.log('[Xiaohongshu] Using persistent Chrome session');
 
     const exploreUrl = 'https://www.xiaohongshu.com/explore';
     console.log('[Xiaohongshu] Fetching explore page');
@@ -92,9 +96,7 @@ export async function crawlXiaohongshu(
     }
 
     if (results.length === 0) {
-      console.warn(
-        '[Xiaohongshu] No results found. You may need to login first:'
-      );
+      console.warn('[Xiaohongshu] No results found. Session may need refresh.');
       console.warn(
         '  Run: pnpm --filter ai-service exec tsx src/login-helper.ts xiaohongshu'
       );
@@ -120,15 +122,11 @@ async function fetchNotesFromExplore(
     await navigateTo(exploreUrl, { timeout: 30000 });
     await waitForContentStable();
 
-    // Check for login wall or captcha
-    const initialSnapshot = await takeSnapshot();
-    if (
-      initialSnapshot.content.includes('登录') &&
-      initialSnapshot.content.includes('验证')
-    ) {
-      console.warn(
-        '[Xiaohongshu] Login/verification required - limited data available'
-      );
+    // Check session validity using session module
+    const sessionCheck = await checkSessionWithGuidance('xiaohongshu');
+    if (!sessionCheck.canCrawl) {
+      console.warn(`[Xiaohongshu] ${sessionCheck.message}`);
+      return notes; // Return empty, let caller handle
     }
 
     await scrollToLoadContent(3);
