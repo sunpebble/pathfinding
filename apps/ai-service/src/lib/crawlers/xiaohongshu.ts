@@ -455,6 +455,93 @@ function extractTags(title: string, content: string): string[] {
   return tags.slice(0, 5);
 }
 
+/**
+ * Detects if content appears to be a login-wall placeholder.
+ * Returns true if content is generic placeholder that needs re-crawl with valid session.
+ *
+ * Detection criteria (from RESEARCH.md):
+ * - Content length < 300 characters AND
+ * - Contains generic phrases like "旅游笔记", "旅游攻略", or title matches "${city}旅游笔记" pattern
+ */
+export function detectPlaceholderContent(
+  content: string,
+  title: string
+): boolean {
+  // Short content is suspicious
+  if (content.length >= 300) {
+    return false;
+  }
+
+  // Check for generic placeholder phrases
+  const genericPhrases = ['旅游笔记', '旅游攻略', '旅游指南', '旅行攻略'];
+  const hasGenericPhrase = genericPhrases.some(
+    (phrase) => content.includes(phrase) || title.includes(phrase)
+  );
+
+  // Check if title matches "${city}旅游笔记" pattern (very generic)
+  const cityNotePattern = /^.{2,10}(?:旅游笔记|旅游攻略|旅行攻略)$/;
+  const hasCityNotePattern = cityNotePattern.test(title);
+
+  if (hasGenericPhrase || hasCityNotePattern) {
+    console.log(
+      `[Xiaohongshu] Detected placeholder content for note: "${title.substring(0, 30)}..." (${content.length} chars)`
+    );
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks if content meets minimum quality threshold.
+ * Per CONTEXT.md: minimum 100+ characters for a note to be worth extracting.
+ */
+export function isContentQualityAcceptable(content: string): {
+  acceptable: boolean;
+  reason?: string;
+} {
+  if (content.length < 100) {
+    return {
+      acceptable: false,
+      reason: `Content too short (${content.length} chars, minimum 100)`,
+    };
+  }
+  return { acceptable: true };
+}
+
+/**
+ * Enhanced quality scoring with placeholder detection and re-crawl flagging.
+ * Returns both score and whether the note needs re-crawling.
+ */
+export function calculateXhsQualityScore(
+  content: string,
+  imageCount: number,
+  likesCount: number,
+  isPlaceholder?: boolean
+): { score: number; needsRecrawl: boolean } {
+  let score = 50;
+
+  // If placeholder content, cap score at 20 (low score for re-crawl prioritization)
+  if (isPlaceholder) {
+    return { score: 20, needsRecrawl: true };
+  }
+
+  if (content.length > 500) score += 10;
+  if (content.length > 1000) score += 10;
+  if (content.length > 2000) score += 5;
+
+  score += Math.min(imageCount * 2, 15);
+
+  if (likesCount > 100) score += 5;
+  if (likesCount > 1000) score += 5;
+  if (likesCount > 10000) score += 5;
+
+  return { score: Math.min(score, 100), needsRecrawl: false };
+}
+
+/**
+ * Original quality score function for backward compatibility.
+ */
 function calculateQualityScore(
   content: string,
   imageCount: number,
