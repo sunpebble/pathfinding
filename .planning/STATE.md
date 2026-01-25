@@ -9,20 +9,20 @@
 ## Current Position
 
 **Phase:** 7 of 8 (07-xiaohongshu) - IN PROGRESS
-**Plan:** 1 of 3 complete
+**Plan:** 2 of 3 complete
 **Status:** In progress
-**Last activity:** 2026-01-25 - Completed 07-01-PLAN.md (Content quality utilities)
+**Last activity:** 2026-01-25 - Completed 07-02-PLAN.md (Crawler enhancement)
 
 ```
 Progress: [██████████░]
-Phase 7/8 in progress | 21/23 plans complete
+Phase 7/8 in progress | 22/23 plans complete
 ```
 
 ## Performance Metrics
 
 | Metric            | Value |
 | ----------------- | ----- |
-| Plans completed   | 21    |
+| Plans completed   | 22    |
 | Plans failed      | 0     |
 | Phases completed  | 6     |
 | Requirements done | 29/41 |
@@ -51,6 +51,8 @@ Phase 7/8 in progress | 21/23 plans complete
 | Tongcheng crawler verified via architecture review                                  | MCP unavailable; code review confirms correct pattern                                | Phase 6 |
 | detectPlaceholderContent, isContentQualityAcceptable, calculateXhsQualityScore      | Xiaohongshu content quality utilities for placeholder detection and filtering        | Phase 7 |
 | handleSessionRefresh with placeholder shift detection                               | Auto-refresh session when >3 consecutive placeholders after good content             | Phase 7 |
+| fetchNoteDetail for video notes with videoUrlCapturedAt                             | Video CDN URLs expire in ~30 seconds; detail page navigation gets fresh URLs         | Phase 7 |
+| Quality filtering in convertNoteToResult with needs-recrawl tagging                 | Early rejection of low-quality content; placeholder tagging for re-crawl             | Phase 7 |
 
 ### Learnings
 
@@ -139,7 +141,7 @@ Phase 7/8 in progress | 21/23 plans complete
 | Deliverable               | Status           |
 | ------------------------- | ---------------- |
 | Content quality utilities | Complete (07-01) |
-| Crawler enhancement       | Pending (07-02)  |
+| Crawler enhancement       | Complete (07-02) |
 | Xiaohongshu verification  | Pending (07-03)  |
 
 ### TODOs
@@ -162,7 +164,7 @@ Phase 7/8 in progress | 21/23 plans complete
 - [x] ~~Execute Phase 6 plan 03 (Tongcheng verification)~~
 - [x] ~~Begin Phase 7 planning (Xiaohongshu)~~
 - [x] ~~Execute 07-01-PLAN.md (Content quality utilities)~~
-- [ ] Execute 07-02-PLAN.md (Crawler enhancement)
+- [x] ~~Execute 07-02-PLAN.md (Crawler enhancement)~~
 - [ ] Execute 07-03-PLAN.md (Xiaohongshu verification)
 
 ### Blockers
@@ -171,17 +173,19 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-01-25 - Completed 07-01-PLAN.md (Content quality utilities)
-**Next action:** Execute 07-02-PLAN.md (Crawler enhancement)
+**Last session:** 2026-01-25 - Completed 07-02-PLAN.md (Crawler enhancement)
+**Next action:** Execute 07-03-PLAN.md (Xiaohongshu verification)
 **Context to preserve:**
 
-- Phase 7 in progress: Xiaohongshu content quality utilities complete
-- Added: detectPlaceholderContent, isContentQualityAcceptable, calculateXhsQualityScore
-- Added: handleSessionRefresh for mid-crawl session recovery
-- Added: Extraction statistics tracking in fetchNotesFromExplore
-- Next: 07-02 will integrate these utilities into the main crawling flow
+- Phase 7 in progress: Content quality utilities (07-01) and crawler enhancement (07-02) complete
+- Added: fetchNoteDetail() for video note detail page navigation
+- Added: videoUrlCapturedAt field to CrawlResult interface for CDN URL freshness
+- Enhanced: convertNoteToResult() with early quality filtering and needs-recrawl tagging
+- Enhanced: fetchNotesFromExplore() wires fetchNoteDetail() for video notes
+- Enhanced: Stats tracking now includes videoDetailFetches count
+- Next: 07-03 will verify the integrated crawler behavior
 
 ---
 
 _State initialized: 2026-01-25_
-_Last updated: 2026-01-25 (07-01-PLAN.md complete)_
+_Last updated: 2026-01-25 (07-02-PLAN.md complete)_
