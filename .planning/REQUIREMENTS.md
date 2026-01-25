@@ -39,14 +39,14 @@
 
 ### 小红书 (XHS)
 
-- [ ] **XHS-01**: 提取完整正文内容
-- [ ] **XHS-02**: 提取高清图片 URL（带尺寸信息）
-- [ ] **XHS-03**: 提取视频 URL（H264/H265 流）
-- [ ] **XHS-04**: 提取作者信息（昵称 + 头像）
-- [ ] **XHS-05**: 提取发布时间
-- [ ] **XHS-06**: 提取互动数据（点赞、收藏、评论数）
-- [ ] **XHS-07**: 实现登录态支持（手动登录 + cookie 保存）
-- [ ] **XHS-08**: 验证数据完整性
+- [x] **XHS-01**: 提取完整正文内容
+- [x] **XHS-02**: 提取高清图片 URL（带尺寸信息）
+- [x] **XHS-03**: 提取视频 URL（H264/H265 流）
+- [x] **XHS-04**: 提取作者信息（昵称 + 头像）
+- [~] **XHS-05**: 提取发布时间 — N/A (API不提供此字段)
+- [x] **XHS-06**: 提取互动数据（点赞、收藏、评论数）
+- [x] **XHS-07**: 实现登录态支持（手动登录 + cookie 保存）
+- [x] **XHS-08**: 验证数据完整性
 
 ### 去哪儿 (QUNAR)
 
@@ -142,14 +142,14 @@
 | TC-05       | Phase 6 | Complete |
 | TC-06       | Phase 6 | Complete |
 | TC-07       | Phase 6 | Complete |
-| XHS-01      | Phase 7 | Pending  |
-| XHS-02      | Phase 7 | Pending  |
-| XHS-03      | Phase 7 | Pending  |
-| XHS-04      | Phase 7 | Pending  |
-| XHS-05      | Phase 7 | Pending  |
-| XHS-06      | Phase 7 | Pending  |
-| XHS-07      | Phase 7 | Pending  |
-| XHS-08      | Phase 7 | Pending  |
+| XHS-01      | Phase 7 | Complete |
+| XHS-02      | Phase 7 | Complete |
+| XHS-03      | Phase 7 | Complete |
+| XHS-04      | Phase 7 | Complete |
+| XHS-05      | Phase 7 | N/A      |
+| XHS-06      | Phase 7 | Complete |
+| XHS-07      | Phase 7 | Complete |
+| XHS-08      | Phase 7 | Complete |
 | VERIFY-01   | Phase 8 | Pending  |
 | VERIFY-02   | Phase 8 | Pending  |
 | VERIFY-03   | Phase 8 | Pending  |
