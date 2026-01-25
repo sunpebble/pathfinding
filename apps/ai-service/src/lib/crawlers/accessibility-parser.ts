@@ -1268,6 +1268,179 @@ export function extractTongchengStats(content: string): {
 }
 
 /**
+ * Extract author information with Tongcheng-specific patterns
+ *
+ * Tongcheng (ly.com) uses similar author patterns to other platforms.
+ *
+ * Pattern priority:
+ * 1. Labeled author - 作者：name or 发布者：name or by name
+ * 2. Name near ly.com/user profile links
+ * 3. Fallback to generic extractAuthor()
+ *
+ * Also attempts to extract avatar URL near author name from:
+ * - Tongcheng CDN patterns: ly.com, tcimg containing avatar/head/user
+ * - Generic avatar patterns
+ *
+ * @param content - The accessibility tree or page content as a string
+ * @returns Object with optional name and avatar fields
+ */
+export function extractTongchengAuthor(content: string): {
+  name?: string;
+  avatar?: string;
+} {
+  let name: string | undefined;
+  let avatar: string | undefined;
+
+  // Pattern 1: Labeled author - 作者：name or 发布者：name or by name
+  const labeledMatch = content.match(
+    /(?:作者|发布者|by)[：:\s]+"?([^"\n\]]{2,30})"?/i
+  );
+  if (labeledMatch) {
+    const candidate = labeledMatch[1].trim();
+    if (isValidTongchengAuthor(candidate)) {
+      name = candidate;
+    }
+  }
+
+  // Pattern 2: Name near ly.com/user profile link
+  if (!name) {
+    const profileMatch = content.match(
+      /StaticText\s+"([^"]{2,20})"\s*[\s\S]{0,100}?ly\.com\/user/
+    );
+    if (profileMatch) {
+      const candidate = profileMatch[1].trim();
+      if (isValidTongchengAuthor(candidate)) {
+        name = candidate;
+      }
+    }
+  }
+
+  // Pattern 3: Fallback to generic extractAuthor
+  if (!name) {
+    name = extractAuthor(content);
+  }
+
+  // Extract avatar (best effort)
+  const avatarPatterns = [
+    // Tongcheng CDN user images (avatar, head, user)
+    /(https?:\/\/[^\s"']*(?:ly\.com|tcimg|tongcheng)[^\s"']*(?:avatar|head|user)[^\s"']*\.(?:jpg|jpeg|png|webp))/i,
+    // Avatar or 头像 followed by image URL
+    /(?:avatar|头像|author)[^"]*?(https?:\/\/[^\s"']+\.(?:jpg|jpeg|png|webp))/i,
+  ];
+
+  for (const pattern of avatarPatterns) {
+    const avatarMatch = content.match(pattern);
+    if (avatarMatch) {
+      const candidateUrl = avatarMatch[1];
+      // Filter out placeholders and icons
+      if (
+        candidateUrl &&
+        !candidateUrl.includes('placeholder') &&
+        !candidateUrl.includes('icon') &&
+        !candidateUrl.includes('default')
+      ) {
+        avatar = candidateUrl;
+        break;
+      }
+    }
+  }
+
+  return { name, avatar };
+}
+
+/**
+ * Validate Tongcheng author name - filter out false positives
+ *
+ * Filters names that are:
+ * - Too short (< 2 chars) or too long (> 30 chars)
+ * - URLs (contains http)
+ * - Common UI text: 分享, 收藏, 关注, 点赞, 评论, 返回, 首页, 登录, 注册, 同程, 攻略, 旅游
+ */
+function isValidTongchengAuthor(name: string): boolean {
+  if (!name || name.length < 2 || name.length > 30) {
+    return false;
+  }
+  // Skip if contains http (probably a URL)
+  if (name.includes('http')) {
+    return false;
+  }
+  // Skip common button/action text (more comprehensive for Tongcheng)
+  if (
+    /^(?:分享|收藏|关注|点赞|评论|返回|首页|登录|注册|同程|攻略|旅游)$/.test(
+      name
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Transform Tongcheng CDN URLs to high-resolution versions
+ *
+ * Tongcheng CDN domains:
+ * - *.ly.com (main CDN domain)
+ * - tcimg (Tongcheng image CDN)
+ * - tongcheng (alternate CDN)
+ *
+ * Transformation rules:
+ * 1. Remove thumbnail suffixes: _small, _thumb, _s (before file extension)
+ * 2. Remove size constraints in path: /180x180/, /320x240/ etc.
+ * 3. Remove or modify query parameters: delete w, h; set q=100
+ *
+ * If URL doesn't match Tongcheng CDN patterns, returns unchanged.
+ * If URL parsing fails, returns best effort transformation.
+ *
+ * @param url - The CDN URL to transform
+ * @returns Transformed URL for high-resolution or original if not Tongcheng CDN
+ */
+export function transformToHighResTc(url: string): string {
+  // Check if URL is from Tongcheng CDN domains
+  const isTongchengCdn =
+    url.includes('ly.com') ||
+    url.includes('tcimg') ||
+    url.includes('tongcheng');
+
+  if (!isTongchengCdn) {
+    return url;
+  }
+
+  let transformedUrl = url;
+
+  // Remove thumbnail suffixes: _small, _thumb, _s (before file extension)
+  transformedUrl = transformedUrl.replace(
+    /(_small|_thumb|_s)(\.(jpg|jpeg|png|webp|gif))/gi,
+    '$2'
+  );
+
+  // Remove size constraints in path: /180x180/, /320x240/
+  transformedUrl = transformedUrl.replace(/\/\d+x\d+\//g, '/');
+
+  // Handle query parameters
+  try {
+    const urlObj = new URL(transformedUrl);
+
+    // Remove size-limiting query params
+    if (urlObj.searchParams.has('w')) {
+      urlObj.searchParams.delete('w');
+    }
+    if (urlObj.searchParams.has('h')) {
+      urlObj.searchParams.delete('h');
+    }
+    // Set quality to max if present
+    if (urlObj.searchParams.has('q')) {
+      urlObj.searchParams.set('q', '100');
+    }
+
+    transformedUrl = urlObj.toString();
+  } catch {
+    // If URL parsing fails, return what we have so far
+  }
+
+  return transformedUrl;
+}
+
+/**
  * Full content extraction - returns all parsed data
  */
 export function parseAccessibilityTree(content: string): ExtractedContent {
