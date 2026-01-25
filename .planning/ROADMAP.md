@@ -129,6 +129,14 @@ Plans:
 
 **Requirements:** MFW-01, MFW-02, MFW-03, MFW-04, MFW-05, MFW-06, MFW-07, MFW-08
 
+**Plans:** 3 plans in 3 waves
+
+Plans:
+
+- [ ] 05-01-PLAN.md — Add Mafengwo-specific parsing utilities (extractMafengwoStats, extractMafengwoAuthor, transformToHighResMfw)
+- [ ] 05-02-PLAN.md — Restructure crawler to navigate to detail pages and extract full content
+- [ ] 05-03-PLAN.md — Verification test run and data completeness check
+
 **Success Criteria:**
 
 1. Crawler navigates from list page to detail page (not list-only)
