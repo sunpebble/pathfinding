@@ -716,6 +716,68 @@ export function extractQunarStats(content: string): {
 }
 
 /**
+ * Transform Qunar CDN URLs to high-resolution versions
+ *
+ * Qunar uses different CDN patterns:
+ * - qnimg.qunar.com - Qunar's image CDN
+ * - p0.meituan.net, p1.meituan.net - Sometimes uses Meituan CDN
+ * - dimg.qunarzz.com - Another Qunar CDN domain
+ *
+ * Transformation rules:
+ * 1. Remove size constraints like _r_ or _w_ parameters
+ * 2. Remove thumbnail suffixes: _small, _thumb, _s
+ * 3. Remove or modify w=, h=, q= query params limiting size
+ *
+ * If URL doesn't match Qunar CDN patterns, returns unchanged.
+ */
+export function transformToHighResQunar(url: string): string {
+  // Check if URL is from Qunar CDN domains
+  const isQunarCdn =
+    url.includes('qunar.com') ||
+    url.includes('qunarzz.com') ||
+    url.includes('p0.meituan.net') ||
+    url.includes('p1.meituan.net');
+
+  if (!isQunarCdn) {
+    return url;
+  }
+
+  let transformedUrl = url;
+
+  // Remove size constraint patterns like _r_200_200 or _w_640
+  transformedUrl = transformedUrl.replace(/_[rw]_\d+(?:_\d+)?/gi, '');
+
+  // Remove thumbnail suffixes: _small, _thumb, _s (before file extension)
+  transformedUrl = transformedUrl.replace(
+    /(_small|_thumb|_s)(\.(?:jpg|jpeg|png|webp|gif))/gi,
+    '$2'
+  );
+
+  // Handle query parameters
+  try {
+    const urlObj = new URL(transformedUrl);
+
+    // Remove or maximize size-limiting query params
+    if (urlObj.searchParams.has('w')) {
+      urlObj.searchParams.delete('w');
+    }
+    if (urlObj.searchParams.has('h')) {
+      urlObj.searchParams.delete('h');
+    }
+    // Set quality to max if present
+    if (urlObj.searchParams.has('q')) {
+      urlObj.searchParams.set('q', '100');
+    }
+
+    transformedUrl = urlObj.toString();
+  } catch {
+    // If URL parsing fails, return what we have so far
+  }
+
+  return transformedUrl;
+}
+
+/**
  * Full content extraction - returns all parsed data
  */
 export function parseAccessibilityTree(content: string): ExtractedContent {
