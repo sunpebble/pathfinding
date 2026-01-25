@@ -186,6 +186,14 @@ Plans:
 
 **Requirements:** XHS-01, XHS-02, XHS-03, XHS-04, XHS-05, XHS-06, XHS-07, XHS-08
 
+**Plans:** 3 plans in 3 waves
+
+Plans:
+
+- [ ] 07-01-PLAN.md — Add quality utilities and session auto-refresh logic
+- [ ] 07-02-PLAN.md — Add detail page navigation and integrate quality filtering
+- [ ] 07-03-PLAN.md — Verification test run and data completeness check
+
 **Success Criteria:**
 
 1. Full note text extracted
@@ -230,4 +238,4 @@ Plans:
 
 ---
 
-_Last updated: 2026-01-25 (Phase 6 complete)_
+_Last updated: 2026-01-25 (Phase 7 planned)_
