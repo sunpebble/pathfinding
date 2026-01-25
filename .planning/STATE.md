@@ -9,23 +9,23 @@
 ## Current Position
 
 **Phase:** 2 of 8 (02-infrastructure)
-**Plan:** 1 of 3 complete
+**Plan:** 2 of 3 complete
 **Status:** In progress
-**Last activity:** 2026-01-25 - Completed 02-01-PLAN.md (Session Management)
+**Last activity:** 2026-01-25 - Completed 02-02-PLAN.md (Smart Wait Integration)
 
 ```
-Progress: [██......] 18.75%
-Phase 2/8 | Plans 1/3
+Progress: [██......] 25%
+Phase 2/8 | Plans 2/3
 ```
 
 ## Performance Metrics
 
 | Metric            | Value |
 | ----------------- | ----- |
-| Plans completed   | 6     |
+| Plans completed   | 7     |
 | Plans failed      | 0     |
 | Phases completed  | 1     |
-| Requirements done | 4/41  |
+| Requirements done | 5/41  |
 
 ## Accumulated Context
 
@@ -36,10 +36,11 @@ Phase 2/8 | Plans 1/3
 | 8-phase structure                             | Matches natural requirement groupings (diagnosis, infra, per-platform, verification) | Roadmap |
 | Diagnosis first                               | Must understand root causes before fixing                                            | Roadmap |
 | Ctrip before others                           | Currently most complete, serves as reference pattern                                 | Roadmap |
-| Mafengwo/Tongcheng need detail navigation     | **CONFIRMED by diagnosis** — list-only extraction produces placeholder content       | Phase 1 |
+| Mafengwo/Tongcheng need detail navigation     | **CONFIRMED by diagnosis** - list-only extraction produces placeholder content       | Phase 1 |
 | Xiaohongshu last before verification          | Most complex (video, strong anti-bot), benefits from infra patterns                  | Roadmap |
 | Smart wait replaces fixed sleep()             | All 5 platforms use fixed delays; new diagnostic utility available                   | Phase 1 |
 | xiaohongshu/mafengwo need persistent sessions | These platforms require login; ctrip/qunar/tongcheng don't                           | Phase 2 |
+| waitForContentStable() for all crawlers       | Dynamic content detection beats arbitrary sleep() delays                             | Phase 2 |
 
 ### Learnings
 
@@ -53,11 +54,16 @@ Phase 2/8 | Plans 1/3
 
 **From Phase 1 Diagnosis:**
 
-- **Ctrip/Qunar:** Parsing issues — need better extraction, not architecture change
-- **Mafengwo/Tongcheng:** Architecture issues — return placeholder content `"${title} - ${city}旅游攻略"`
-- **Xiaohongshu:** Bimodal — excellent with API (needs login), placeholder without
+- **Ctrip/Qunar:** Parsing issues - need better extraction, not architecture change
+- **Mafengwo/Tongcheng:** Architecture issues - return placeholder content `"${title} - ${city}旅游攻略"`
+- **Xiaohongshu:** Bimodal - excellent with API (needs login), placeholder without
 - Diagnostic infrastructure created at `crawlers/diagnostics/`
 - `waitForContentStable()` ready to replace all fixed `sleep()` calls
+
+**From Phase 2 Infrastructure:**
+
+- Session module at `crawlers/session/` provides platform-specific session detection
+- All 5 crawlers now use `waitForContentStable()` after navigation
 
 ### Technical Notes
 
@@ -67,22 +73,31 @@ Phase 2/8 | Plans 1/3
 - Research recommends rebrowser-playwright migration (v2 scope)
 - **NEW:** Diagnostic utilities at `crawlers/diagnostics/` (capture, report, index)
 - **NEW:** Session module at `crawlers/session/` (validators, manager, index)
+- **NEW:** All crawlers import and use waitForContentStable() from diagnostics
 
 ### Phase 1 Deliverables
 
-| Deliverable                       | Status        |
-| --------------------------------- | ------------- |
-| Diagnostic infrastructure         | ✅ Created    |
-| 5 platform diagnosis reports      | ✅ Complete   |
-| Consolidated DIAGNOSIS-SUMMARY.md | ✅ Complete   |
-| Action plans for all platforms    | ✅ Documented |
+| Deliverable                       | Status     |
+| --------------------------------- | ---------- |
+| Diagnostic infrastructure         | Complete   |
+| 5 platform diagnosis reports      | Complete   |
+| Consolidated DIAGNOSIS-SUMMARY.md | Complete   |
+| Action plans for all platforms    | Documented |
+
+### Phase 2 Deliverables
+
+| Deliverable               | Status           |
+| ------------------------- | ---------------- |
+| Session management module | Complete (02-01) |
+| Smart wait integration    | Complete (02-02) |
+| Integration test plan     | Pending (02-03)  |
 
 ### TODOs
 
 - [x] ~~Begin Phase 1 planning with `/gsd:plan-phase 1`~~
 - [x] ~~Complete Phase 1 execution~~
 - [x] ~~Begin Phase 2 planning with `/gsd:plan-phase 2`~~
-- [ ] Execute Phase 2 with `/gsd:execute-phase 2`
+- [ ] Execute 02-03-PLAN.md (Integration Test)
 
 ### Blockers
 
@@ -90,16 +105,15 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-01-25 - Completed 02-01-PLAN.md (Session Management)
-**Next action:** Execute 02-02-PLAN.md (Smart Wait) and 02-03-PLAN.md (Integration)
+**Last session:** 2026-01-25 - Completed 02-02-PLAN.md (Smart Wait Integration)
+**Next action:** Execute 02-03-PLAN.md (Integration Test Plan)
 **Context to preserve:**
 
 - Session module complete at `crawlers/session/`
-- needsPersistentSession() returns true for xiaohongshu, mafengwo
-- Wave 1: 02-02 (smart wait) still pending
+- Smart wait integrated into all 5 crawlers
 - Wave 2: 02-03 (integration) - depends on 02-01 (now complete)
 
 ---
 
 _State initialized: 2026-01-25_
-_Last updated: 2026-01-25 (02-01 complete)_
+_Last updated: 2026-01-25 (02-02 complete)_
