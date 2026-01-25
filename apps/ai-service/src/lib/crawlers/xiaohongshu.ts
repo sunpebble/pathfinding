@@ -127,6 +127,57 @@ export async function handleSessionRefresh(): Promise<boolean> {
   }
 }
 
+/**
+ * Fetches fresh video URLs from a note's detail page.
+ * Video CDN URLs expire in ~30 seconds, so we need to navigate to detail page
+ * to capture fresh URLs for video notes.
+ *
+ * @param noteId - The Xiaohongshu note ID
+ * @param city - City name for result conversion
+ * @returns CrawlResult with fresh video URLs, or null if failed
+ */
+async function fetchNoteDetail(
+  noteId: string,
+  city: string
+): Promise<CrawlResult | null> {
+  const detailUrl = `https://www.xiaohongshu.com/explore/${noteId}`;
+
+  try {
+    console.log(`[Xiaohongshu] Fetching detail page for note ${noteId}`);
+    await navigateTo(detailUrl, { timeout: 30000 });
+    await waitForContentStable();
+
+    // Add rate limiting between detail page navigations
+    await sleep(1500); // 1.5 second delay per RESEARCH.md recommendation
+
+    // Try API interception on detail page for fresh video URLs
+    const apiNotes = await extractNotesFromApi();
+    const note = apiNotes.find((n) => n.note_id === noteId);
+
+    if (note) {
+      const result = convertNoteToResult(note, city);
+      if (result) {
+        // Add video URL capture timestamp for expiry awareness
+        // Video CDN URLs expire in ~30 seconds. videoUrlCapturedAt helps consumers know URL freshness.
+        if (result.videoUrls && result.videoUrls.length > 0) {
+          result.videoUrlCapturedAt = Date.now();
+        }
+        return result;
+      }
+    }
+
+    // Fallback: the note may have been loaded in a different API response
+    // Return null and let caller handle
+    console.log(
+      `[Xiaohongshu] Note ${noteId} not found in detail page API response`
+    );
+    return null;
+  } catch (error) {
+    console.error(`[Xiaohongshu] Error fetching note detail: ${noteId}`, error);
+    return null;
+  }
+}
+
 async function fetchNotesFromExplore(
   exploreUrl: string,
   city: string,
@@ -138,6 +189,7 @@ async function fetchNotesFromExplore(
   const stats = {
     fullContent: 0,
     placeholders: 0,
+    videoDetailFetches: 0,
     sessionRefreshAttempted: false,
   };
 
@@ -163,51 +215,51 @@ async function fetchNotesFromExplore(
       );
 
       for (const note of apiNotes.slice(0, maxNotes)) {
+        // convertNoteToResult now handles quality filtering internally
         const result = convertNoteToResult(note, city);
-        if (result) {
-          // Check for placeholder content
-          const isPlaceholder = detectPlaceholderContent(
-            result.content,
-            result.title || ''
-          );
+        if (!result) continue; // Skip filtered notes
 
-          if (isPlaceholder) {
-            stats.placeholders++;
+        // Track placeholder vs full content for session expiry detection
+        const hasNeedsRecrawlTag = result.tags?.includes('needs-recrawl');
+        if (hasNeedsRecrawlTag) {
+          stats.placeholders++;
 
-            // Detect sudden session expiry: we had good content, now only placeholders
-            if (
-              stats.fullContent > 0 &&
-              stats.placeholders >= 3 &&
-              !stats.sessionRefreshAttempted
-            ) {
-              console.warn(
-                `[Xiaohongshu] Detected session expiry pattern: ${stats.fullContent} full, ${stats.placeholders} placeholders`
-              );
-              stats.sessionRefreshAttempted = true;
-              const refreshed = await handleSessionRefresh();
-              if (refreshed) {
-                // Navigate back and try again with refreshed session
-                await navigateTo(exploreUrl, { timeout: 30000 });
-                await waitForContentStable();
-              }
-            }
-
-            // Update quality score for placeholder notes
-            result.qualityScore = 20;
-          } else {
-            stats.fullContent++;
-          }
-
-          // Only include notes with acceptable content length
-          const qualityCheck = isContentQualityAcceptable(result.content);
-          if (qualityCheck.acceptable) {
-            notes.push(result);
-          } else {
-            console.log(
-              `[Xiaohongshu] Skipping note (${qualityCheck.reason}): "${(result.title || '').substring(0, 30)}..."`
+          // Detect sudden session expiry: we had good content, now only placeholders
+          if (
+            stats.fullContent > 0 &&
+            stats.placeholders >= 3 &&
+            !stats.sessionRefreshAttempted
+          ) {
+            console.warn(
+              `[Xiaohongshu] Detected session expiry pattern: ${stats.fullContent} full, ${stats.placeholders} placeholders`
             );
+            stats.sessionRefreshAttempted = true;
+            const refreshed = await handleSessionRefresh();
+            if (refreshed) {
+              // Navigate back and try again with refreshed session
+              await navigateTo(exploreUrl, { timeout: 30000 });
+              await waitForContentStable();
+            }
           }
+        } else {
+          stats.fullContent++;
         }
+
+        // For video notes, fetch detail page for fresh video URLs
+        // Video CDN URLs expire in ~30 seconds, so we need fresh URLs from detail page
+        if (note.type === 'video') {
+          const detailResult = await fetchNoteDetail(note.note_id, city);
+          if (detailResult?.videoUrls && detailResult.videoUrls.length > 0) {
+            // Merge fresh video URLs into result
+            result.videoUrls = detailResult.videoUrls;
+            result.videoUrlCapturedAt = detailResult.videoUrlCapturedAt;
+            stats.videoDetailFetches++;
+          }
+          // Add rate limiting between fetchNoteDetail calls
+          await sleep(1500);
+        }
+
+        notes.push(result);
       }
     }
 
@@ -227,6 +279,11 @@ async function fetchNotesFromExplore(
           if (isPlaceholder) {
             stats.placeholders++;
             note.qualityScore = 20;
+            // Add needs-recrawl tag for placeholder notes
+            if (!note.tags) note.tags = [];
+            if (!note.tags.includes('needs-recrawl')) {
+              note.tags.push('needs-recrawl');
+            }
           } else {
             stats.fullContent++;
           }
@@ -245,7 +302,7 @@ async function fetchNotesFromExplore(
 
   // Log extraction statistics
   console.log(
-    `[Xiaohongshu] Extraction stats: ${stats.fullContent} full content, ${stats.placeholders} placeholders`
+    `[Xiaohongshu] Extraction stats: ${stats.fullContent} full content, ${stats.placeholders} placeholders, ${stats.videoDetailFetches} video details fetched`
   );
   if (stats.sessionRefreshAttempted) {
     console.log(
@@ -434,6 +491,20 @@ function convertNoteToResult(
   const title = note.title || note.desc?.substring(0, 50) || '';
   if (!title || title.length < 2) return null;
 
+  const content = note.desc || title;
+
+  // Early quality check - skip notes that don't meet minimum quality threshold
+  const qualityCheck = isContentQualityAcceptable(content);
+  if (!qualityCheck.acceptable) {
+    console.warn(
+      `[Xiaohongshu] Skipping note ${note.note_id}: ${qualityCheck.reason}`
+    );
+    return null;
+  }
+
+  // Check for placeholder content
+  const isPlaceholder = detectPlaceholderContent(content, title);
+
   const contentBlocks: ContentBlock[] = [];
   const imageUrls: string[] = [];
   const videoUrls: string[] = [];
@@ -481,11 +552,24 @@ function convertNoteToResult(
   tags.push(...extractTags(title, note.desc || ''));
   const uniqueTags = [...new Set(tags)].slice(0, 10);
 
+  // Calculate quality score with placeholder detection
+  const { score, needsRecrawl } = calculateXhsQualityScore(
+    content,
+    imageUrls.length,
+    likesCount,
+    isPlaceholder
+  );
+
+  // Add 'needs-recrawl' tag if flagged for re-crawling
+  if (needsRecrawl) {
+    uniqueTags.push('needs-recrawl');
+  }
+
   return {
     sourceExternalId: `xiaohongshu_${note.note_id}`,
     sourceUrl: `https://www.xiaohongshu.com/explore/${note.note_id}`,
     title: title.substring(0, 200),
-    content: note.desc || title,
+    content,
     contentBlocks,
     contentType: note.type === 'video' ? 'video' : 'normal',
     authorName: note.user?.nickname || '小红书用户',
@@ -498,11 +582,7 @@ function convertNoteToResult(
     likesCount,
     savesCount,
     commentsCount,
-    qualityScore: calculateQualityScore(
-      note.desc || '',
-      imageUrls.length,
-      likesCount
-    ),
+    qualityScore: score,
   };
 }
 
@@ -630,27 +710,4 @@ export function calculateXhsQualityScore(
   if (likesCount > 10000) score += 5;
 
   return { score: Math.min(score, 100), needsRecrawl: false };
-}
-
-/**
- * Original quality score function for backward compatibility.
- */
-function calculateQualityScore(
-  content: string,
-  imageCount: number,
-  likesCount: number
-): number {
-  let score = 50;
-
-  if (content.length > 500) score += 10;
-  if (content.length > 1000) score += 10;
-  if (content.length > 2000) score += 5;
-
-  score += Math.min(imageCount * 2, 15);
-
-  if (likesCount > 100) score += 5;
-  if (likesCount > 1000) score += 5;
-  if (likesCount > 10000) score += 5;
-
-  return Math.min(score, 100);
 }
