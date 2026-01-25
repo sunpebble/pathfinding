@@ -103,6 +103,14 @@ Plans:
 
 **Requirements:** QUNAR-01, QUNAR-02, QUNAR-03, QUNAR-04, QUNAR-05, QUNAR-06
 
+**Plans:** 3 plans in 3 waves
+
+Plans:
+
+- [ ] 04-01-PLAN.md — Add Qunar-specific parsing utilities (extractQunarStats, transformToHighResQunar, extractQunarAuthor)
+- [ ] 04-02-PLAN.md — Integrate enhanced extractors into qunar.ts
+- [ ] 04-03-PLAN.md — Verification test run and data completeness check
+
 **Success Criteria:**
 
 1. Full article text extracted (not truncated)
