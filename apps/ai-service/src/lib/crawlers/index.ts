@@ -60,6 +60,11 @@ export interface CrawlResult {
   qualityScore?: number;
   /** Content type: 'normal' for text+images, 'video' for video posts */
   contentType?: 'normal' | 'video';
+  /**
+   * Timestamp when video URLs were captured.
+   * Video CDN URLs expire in ~30 seconds. This helps consumers know URL freshness.
+   */
+  videoUrlCapturedAt?: number;
 }
 
 export interface CrawlOptions {
