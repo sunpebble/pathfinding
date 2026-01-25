@@ -111,12 +111,35 @@ export async function crawlXiaohongshu(
   return results;
 }
 
+/**
+ * Attempts to refresh the session when it expires mid-crawl.
+ * Returns true if refresh was successful, false otherwise.
+ */
+export async function handleSessionRefresh(): Promise<boolean> {
+  try {
+    console.warn('[Xiaohongshu] Session expired, attempting refresh...');
+    await initSessionForPlatform('xiaohongshu');
+    console.log('[Xiaohongshu] Session refresh successful');
+    return true;
+  } catch (error) {
+    console.error('[Xiaohongshu] Session refresh failed:', error);
+    return false;
+  }
+}
+
 async function fetchNotesFromExplore(
   exploreUrl: string,
   city: string,
   maxNotes: number
 ): Promise<CrawlResult[]> {
   const notes: CrawlResult[] = [];
+
+  // Statistics tracking for content quality
+  const stats = {
+    fullContent: 0,
+    placeholders: 0,
+    sessionRefreshAttempted: false,
+  };
 
   try {
     await navigateTo(exploreUrl, { timeout: 30000 });
@@ -138,9 +161,53 @@ async function fetchNotesFromExplore(
       console.log(
         `[Xiaohongshu] Extracted ${apiNotes.length} notes from explore API`
       );
+
       for (const note of apiNotes.slice(0, maxNotes)) {
         const result = convertNoteToResult(note, city);
-        if (result) notes.push(result);
+        if (result) {
+          // Check for placeholder content
+          const isPlaceholder = detectPlaceholderContent(
+            result.content,
+            result.title || ''
+          );
+
+          if (isPlaceholder) {
+            stats.placeholders++;
+
+            // Detect sudden session expiry: we had good content, now only placeholders
+            if (
+              stats.fullContent > 0 &&
+              stats.placeholders >= 3 &&
+              !stats.sessionRefreshAttempted
+            ) {
+              console.warn(
+                `[Xiaohongshu] Detected session expiry pattern: ${stats.fullContent} full, ${stats.placeholders} placeholders`
+              );
+              stats.sessionRefreshAttempted = true;
+              const refreshed = await handleSessionRefresh();
+              if (refreshed) {
+                // Navigate back and try again with refreshed session
+                await navigateTo(exploreUrl, { timeout: 30000 });
+                await waitForContentStable();
+              }
+            }
+
+            // Update quality score for placeholder notes
+            result.qualityScore = 20;
+          } else {
+            stats.fullContent++;
+          }
+
+          // Only include notes with acceptable content length
+          const qualityCheck = isContentQualityAcceptable(result.content);
+          if (qualityCheck.acceptable) {
+            notes.push(result);
+          } else {
+            console.log(
+              `[Xiaohongshu] Skipping note (${qualityCheck.reason}): "${(result.title || '').substring(0, 30)}..."`
+            );
+          }
+        }
       }
     }
 
@@ -152,12 +219,38 @@ async function fetchNotesFromExplore(
       );
       for (const note of snapshotNotes) {
         if (!notes.some((n) => n.sourceExternalId === note.sourceExternalId)) {
-          notes.push(note);
+          // Check placeholder for snapshot-extracted notes too
+          const isPlaceholder = detectPlaceholderContent(
+            note.content,
+            note.title || ''
+          );
+          if (isPlaceholder) {
+            stats.placeholders++;
+            note.qualityScore = 20;
+          } else {
+            stats.fullContent++;
+          }
+
+          // Only include notes with acceptable content length
+          const qualityCheck = isContentQualityAcceptable(note.content);
+          if (qualityCheck.acceptable) {
+            notes.push(note);
+          }
         }
       }
     }
   } catch (error) {
     console.error('[Xiaohongshu] Error fetching explore page:', error);
+  }
+
+  // Log extraction statistics
+  console.log(
+    `[Xiaohongshu] Extraction stats: ${stats.fullContent} full content, ${stats.placeholders} placeholders`
+  );
+  if (stats.sessionRefreshAttempted) {
+    console.log(
+      '[Xiaohongshu] Session refresh was attempted during extraction'
+    );
   }
 
   return notes;
