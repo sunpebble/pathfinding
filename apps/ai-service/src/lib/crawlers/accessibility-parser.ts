@@ -778,6 +778,121 @@ export function transformToHighResQunar(url: string): string {
 }
 
 /**
+ * Extract author information with Qunar-specific patterns
+ *
+ * Pattern priority:
+ * 1. Qunar-specific patterns (profile links on travel.qunar.com)
+ * 2. Generic labeled patterns ("作者：", "by")
+ * 3. Fallback to extractAuthor()
+ *
+ * Also attempts to extract avatar URL near author name.
+ *
+ * Returns: { name?: string; avatar?: string }
+ */
+export function extractQunarAuthor(content: string): {
+  name?: string;
+  avatar?: string;
+} {
+  let name: string | undefined;
+  let avatar: string | undefined;
+
+  // Pattern 1: Qunar profile section - look for author near 个人主页
+  const profileMatch = content.match(
+    /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"\s*[\s\S]{0,50}?(?:个人主页|travel\.qunar\.com\/user)/i
+  );
+  if (profileMatch) {
+    const candidate = profileMatch[1].trim();
+    if (isValidQunarAuthorName(candidate)) {
+      name = candidate;
+    }
+  }
+
+  // Pattern 2: Look for author before qunar profile link
+  if (!name) {
+    const profileLinkMatch = content.match(
+      /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"[\s\S]{0,100}?link[^"]*"[^"]*"[\s\S]{0,50}?travel\.qunar\.com/i
+    );
+    if (profileLinkMatch) {
+      const candidate = profileLinkMatch[1].trim();
+      if (isValidQunarAuthorName(candidate)) {
+        name = candidate;
+      }
+    }
+  }
+
+  // Pattern 3: Generic labeled patterns - 作者：name or by name
+  if (!name) {
+    const labeledMatch =
+      content.match(/作者[：:]\s*"?([\u4E00-\u9FFF\w]{2,20})"?/) ||
+      content.match(/by\s+"?([\u4E00-\u9FFF\w]{2,20})"?/i);
+    if (labeledMatch) {
+      const candidate = labeledMatch[1].trim();
+      if (isValidQunarAuthorName(candidate)) {
+        name = candidate;
+      }
+    }
+  }
+
+  // Pattern 4: Fallback to generic extractAuthor
+  if (!name) {
+    name = extractAuthor(content);
+  }
+
+  // Extract avatar (best effort)
+  // Look for avatar/头像 URLs near author or profile context
+  const avatarPatterns = [
+    // Avatar near author name
+    /(?:avatar|头像|author|用户)[^"]*?(https?:\/\/[^\s"']+\.(?:jpg|jpeg|png|webp))/i,
+    // Image near profile link
+    /img[^>]*(?:avatar|author|user)[^"]*url="([^"]+)"/i,
+    // Qunar CDN user images
+    /(https?:\/\/[^\s"']*qunar[^\s"']*(?:avatar|user|head)[^\s"']*\.(?:jpg|jpeg|png|webp))/i,
+  ];
+
+  for (const pattern of avatarPatterns) {
+    const avatarMatch = content.match(pattern);
+    if (avatarMatch) {
+      const candidateUrl = avatarMatch[1];
+      // Filter out generic icons and placeholders
+      if (
+        candidateUrl &&
+        !candidateUrl.includes('icon') &&
+        !candidateUrl.includes('default') &&
+        !candidateUrl.includes('placeholder') &&
+        !candidateUrl.includes('emoji')
+      ) {
+        avatar = candidateUrl;
+        break;
+      }
+    }
+  }
+
+  return { name, avatar };
+}
+
+/**
+ * Validate Qunar author name - filter out false positives
+ */
+function isValidQunarAuthorName(name: string): boolean {
+  if (!name || name.length < 2 || name.length > 30) {
+    return false;
+  }
+  // Skip if contains http (probably a URL)
+  if (name.includes('http')) {
+    return false;
+  }
+  // Skip common button/action text (more comprehensive for Qunar)
+  if (
+    /^(?:分享|收藏|关注|点赞|评论|返回|首页|登录|注册|查看|更多|去哪儿|旅行)$/.test(
+      name
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Full content extraction - returns all parsed data
  */
 export function parseAccessibilityTree(content: string): ExtractedContent {
