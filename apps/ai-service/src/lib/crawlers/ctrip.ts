@@ -1,10 +1,12 @@
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
-  extractAuthor,
+  extractAuthorWithAvatar,
+  extractCtripStats,
   extractImageUrls,
-  extractStats,
+  extractPublishDate,
   getArticleContent,
   getBestTitle,
+  transformToHighRes,
 } from './accessibility-parser.js';
 import { waitForContentStable } from './diagnostics/index.js';
 import {
@@ -135,10 +137,21 @@ async function fetchGuideDetail(
       return null;
     }
 
-    const authorName = extractAuthor(content) || '携程用户';
-    const imageUrls = extractImageUrls(content);
+    // Enhanced extraction using Ctrip-specific utilities
+    const authorInfo = extractAuthorWithAvatar(content);
+    const authorName = authorInfo.name || '携程用户';
+    const authorAvatar = authorInfo.avatar;
+
+    // Transform image URLs to high-resolution versions
+    const rawImageUrls = extractImageUrls(content);
+    const imageUrls = rawImageUrls.map(transformToHighRes);
     const coverImageUrl = imageUrls[0];
-    const stats = extractStats(content);
+
+    // Extract publish date
+    const publishedAt = extractPublishDate(content);
+
+    // Extract Ctrip-specific engagement stats with Chinese number parsing
+    const stats = extractCtripStats(content);
 
     const urlMatch = url.match(/\/(\d+)\.html/);
     const sourceExternalId = `ctrip_${urlMatch?.[1] || Date.now()}`;
@@ -158,11 +171,15 @@ async function fetchGuideDetail(
       contentBlocks,
       contentType: 'normal',
       authorName,
+      authorAvatar,
+      publishedAt,
       coverImageUrl,
       imageUrls: imageUrls.slice(0, 20),
       destinations: [city],
       tags: extractTags(title || '', textContent),
       likesCount: stats.likes || 0,
+      savesCount: stats.saves || 0,
+      commentsCount: stats.comments || 0,
       viewsCount: stats.views || 0,
       qualityScore: calculateQualityScore(
         textContent,
