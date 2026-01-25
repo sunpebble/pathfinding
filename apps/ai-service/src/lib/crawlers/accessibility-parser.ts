@@ -417,6 +417,10 @@ export function extractPublishDate(content: string): string | undefined {
 /**
  * Extract Ctrip engagement stats from content
  * Uses parseChineseNumber internally for all numeric parsing
+ *
+ * Handles two formats:
+ * 1. Inline: "阅读量2.7千" (label and number in same string)
+ * 2. Accessibility tree: StaticText "阅读量" followed by StaticText "5.7万" (separate nodes)
  */
 export function extractCtripStats(content: string): {
   views?: number;
@@ -431,23 +435,48 @@ export function extractCtripStats(content: string): {
     comments?: number;
   } = {};
 
-  // Views: 阅读量2.7千 or 浏览量1234
-  const viewsMatch = content.match(/(?:阅读|浏览)量?\s*([\d.]+[千万kw]?)/i);
+  // === Views ===
+  // Format 1: Inline - 阅读量2.7千 or 浏览量1234
+  const viewsMatch = content.match(/(?:阅读|浏览)量\s*([\d.]+[千万kw]?)/i);
   if (viewsMatch) {
     const num = parseChineseNumber(viewsMatch[1]);
     if (num > 0) stats.views = num;
   }
 
-  // Likes: 点赞120 or 120个赞 or 赞 85
+  // Format 2: Accessibility tree - "阅读量" followed by number on next StaticText
+  if (!stats.views) {
+    const accessibilityViewsMatch = content.match(
+      /StaticText\s+"(?:阅读量|浏览量)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+    );
+    if (accessibilityViewsMatch) {
+      const num = parseChineseNumber(accessibilityViewsMatch[1]);
+      if (num > 0) stats.views = num;
+    }
+  }
+
+  // === Likes ===
+  // Format 1: Inline - 点赞120 or 120个赞 or 赞 85 or 有用123
   const likesMatch =
-    content.match(/(?:点赞|个赞|赞)\s*([\d.]+[千万kw]?)/i) ||
+    content.match(/(?:点赞|有用)\s*([\d.]+[千万kw]?)/i) ||
     content.match(/([\d.]+[千万kw]?)\s*(?:点赞|个赞)/i);
   if (likesMatch) {
     const num = parseChineseNumber(likesMatch[1]);
     if (num > 0) stats.likes = num;
   }
 
-  // Saves: 收藏85 or 85收藏
+  // Format 2: Accessibility tree
+  if (!stats.likes) {
+    const accessibilityLikesMatch = content.match(
+      /StaticText\s+"(?:点赞|有用|赞)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+    );
+    if (accessibilityLikesMatch) {
+      const num = parseChineseNumber(accessibilityLikesMatch[1]);
+      if (num > 0) stats.likes = num;
+    }
+  }
+
+  // === Saves ===
+  // Format 1: Inline - 收藏85 or 85收藏
   const savesMatch =
     content.match(/收藏\s*([\d.]+[千万kw]?)/i) ||
     content.match(/([\d.]+[千万kw]?)\s*收藏/i);
@@ -456,13 +485,36 @@ export function extractCtripStats(content: string): {
     if (num > 0) stats.saves = num;
   }
 
-  // Comments: 评论30 or 30条评论
+  // Format 2: Accessibility tree
+  if (!stats.saves) {
+    const accessibilitySavesMatch = content.match(
+      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+    );
+    if (accessibilitySavesMatch) {
+      const num = parseChineseNumber(accessibilitySavesMatch[1]);
+      if (num > 0) stats.saves = num;
+    }
+  }
+
+  // === Comments ===
+  // Format 1: Inline - 评论30 or 30条评论
   const commentsMatch =
     content.match(/(?:评论|条评论)\s*([\d.]+[千万kw]?)/i) ||
     content.match(/([\d.]+[千万kw]?)\s*(?:条评论|评论)/i);
   if (commentsMatch) {
     const num = parseChineseNumber(commentsMatch[1]);
     if (num > 0) stats.comments = num;
+  }
+
+  // Format 2: Accessibility tree
+  if (!stats.comments) {
+    const accessibilityCommentsMatch = content.match(
+      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+    );
+    if (accessibilityCommentsMatch) {
+      const num = parseChineseNumber(accessibilityCommentsMatch[1]);
+      if (num > 0) stats.comments = num;
+    }
   }
 
   return stats;
