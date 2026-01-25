@@ -19,6 +19,16 @@ Fix the crawler system for Pathfinding travel app to extract complete travel gui
 
 **Requirements:** DIAG-01, DIAG-02, DIAG-03
 
+**Plans:** 5 plans
+
+Plans:
+
+- [ ] 01-01-PLAN.md — Create diagnostic infrastructure (capture utilities, failure categorization)
+- [ ] 01-02-PLAN.md — Diagnose Ctrip and Qunar (detail-page navigators)
+- [ ] 01-03-PLAN.md — Diagnose Mafengwo and Tongcheng (list-only extractors)
+- [ ] 01-04-PLAN.md — Diagnose Xiaohongshu (API-based, video, anti-bot)
+- [ ] 01-05-PLAN.md — Consolidate findings into DIAGNOSIS-SUMMARY.md
+
 **Success Criteria:**
 
 1. Root cause documented for each platform (acquisition vs parsing stage)
@@ -157,17 +167,17 @@ Fix the crawler system for Pathfinding travel app to extract complete travel gui
 
 ## Progress
 
-| Phase | Name           | Requirements                 | Status  |
-| ----- | -------------- | ---------------------------- | ------- |
-| 1     | Diagnosis      | DIAG-01, DIAG-02, DIAG-03    | Pending |
-| 2     | Infrastructure | INFRA-01, INFRA-02, INFRA-03 | Pending |
-| 3     | Ctrip          | CTRIP-01 to CTRIP-06         | Pending |
-| 4     | Qunar          | QUNAR-01 to QUNAR-06         | Pending |
-| 5     | Mafengwo       | MFW-01 to MFW-08             | Pending |
-| 6     | Tongcheng      | TC-01 to TC-07               | Pending |
-| 7     | Xiaohongshu    | XHS-01 to XHS-08             | Pending |
-| 8     | Verification   | VERIFY-01 to VERIFY-04       | Pending |
+| Phase | Name           | Requirements                 | Status            |
+| ----- | -------------- | ---------------------------- | ----------------- |
+| 1     | Diagnosis      | DIAG-01, DIAG-02, DIAG-03    | Planned (5 plans) |
+| 2     | Infrastructure | INFRA-01, INFRA-02, INFRA-03 | Pending           |
+| 3     | Ctrip          | CTRIP-01 to CTRIP-06         | Pending           |
+| 4     | Qunar          | QUNAR-01 to QUNAR-06         | Pending           |
+| 5     | Mafengwo       | MFW-01 to MFW-08             | Pending           |
+| 6     | Tongcheng      | TC-01 to TC-07               | Pending           |
+| 7     | Xiaohongshu    | XHS-01 to XHS-08             | Pending           |
+| 8     | Verification   | VERIFY-01 to VERIFY-04       | Pending           |
 
 ---
 
-_Last updated: 2026-01-25_
+_Last updated: 2026-01-25 (Phase 1 planned)_
