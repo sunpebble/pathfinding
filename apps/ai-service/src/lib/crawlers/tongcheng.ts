@@ -1,9 +1,12 @@
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
-  extractAuthor,
-  extractHeadings,
   extractImageUrls,
-  extractStats,
+  extractPublishDate,
+  extractTongchengAuthor,
+  extractTongchengStats,
+  getArticleContent,
+  getBestTitle,
+  transformToHighResTc,
 } from './accessibility-parser.js';
 import { waitForContentStable } from './diagnostics/index.js';
 import {
@@ -48,13 +51,33 @@ export async function crawlTongcheng(
   console.log(`[Tongcheng] Crawling guides for ${city} (${citySlug})`);
 
   try {
+    // Phase 1: Get guide URLs from list page
     const listUrl = 'https://www.ly.com/travels/';
-    console.log(`[Tongcheng] Fetching travels list: ${listUrl}`);
+    console.log(`[Tongcheng] Fetching guide URLs from: ${listUrl}`);
 
-    const guides = await fetchGuidesFromTravelsList(listUrl, city, maxGuides);
-    console.log(`[Tongcheng] Found ${guides.length} guides from travels list`);
+    const guideUrls = await fetchGuideUrls(listUrl, city, maxGuides);
+    console.log(`[Tongcheng] Found ${guideUrls.length} guide URLs to fetch`);
 
-    results.push(...guides);
+    // Phase 2: Visit each detail page (follows Mafengwo/Ctrip pattern)
+    for (const { url, guideId } of guideUrls) {
+      try {
+        const guide = await fetchGuideDetail(url, guideId, city);
+        if (guide) {
+          results.push(guide);
+          console.log(
+            `[Tongcheng] Extracted guide: ${guide.title} (${guide.content.length} chars)`
+          );
+        }
+        // Rate limiting delay (1-2 seconds)
+        await sleep(1000 + Math.random() * 1000);
+      } catch (error) {
+        console.error(`[Tongcheng] Error fetching guide: ${url}`, error);
+      }
+    }
+
+    if (results.length === 0) {
+      console.warn('[Tongcheng] No results found from detail pages');
+    }
   } catch (error) {
     console.error(`[Tongcheng] Error crawling travels list:`, error);
   } finally {
@@ -65,12 +88,16 @@ export async function crawlTongcheng(
   return results;
 }
 
-async function fetchGuidesFromTravelsList(
+/**
+ * Fetch guide URLs from the travels list page
+ * Only extracts URLs, does not parse content (that's done in fetchGuideDetail)
+ */
+async function fetchGuideUrls(
   listUrl: string,
   city: string,
   maxGuides: number
-): Promise<CrawlResult[]> {
-  const guides: CrawlResult[] = [];
+): Promise<Array<{ url: string; guideId: string }>> {
+  const guideUrls: Array<{ url: string; guideId: string }> = [];
   const seenIds = new Set<string>();
 
   try {
@@ -82,88 +109,158 @@ async function fetchGuidesFromTravelsList(
     const snapshot = await takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
+    console.log(`[Tongcheng] List page snapshot: ${content.length} chars`);
+
+    // Extract guide URLs from /travels/{id}.html pattern
     const guideMatches = content.matchAll(/\/travels\/(\d+)\.html/g);
 
     for (const match of guideMatches) {
-      if (guides.length >= maxGuides) break;
+      if (guideUrls.length >= maxGuides) break;
 
       const guideId = match[1];
       if (seenIds.has(guideId)) continue;
       seenIds.add(guideId);
 
-      const contextStart = Math.max(0, match.index! - 300);
-      const contextEnd = Math.min(content.length, match.index! + 300);
+      // Optional: Check context for city relevance
+      const contextStart = Math.max(0, match.index! - 200);
+      const contextEnd = Math.min(content.length, match.index! + 200);
       const context = content.substring(contextStart, contextEnd);
 
-      // Use accessibility tree parser for title extraction
-      const headings = extractHeadings(context);
-      let title = headings[0];
-
-      if (!title) {
-        // Fallback: look for Chinese text that looks like a title
-        const lines = context.split('\n').filter((l) => l.trim().length > 5);
-        for (const line of lines) {
-          const cleaned = line
-            .replace(/\[[^\]]*\]/g, '')
-            .replace(/uid=\S+\s*/, '')
-            .replace(/^\s*(StaticText|link|heading)\s*/, '')
-            .replace(/^"/, '')
-            .replace(/"$/, '')
-            .trim();
-          if (
-            cleaned.length >= 5 &&
-            cleaned.length <= 100 &&
-            /[\u4E00-\u9FFF]/.test(cleaned) &&
-            !cleaned.includes('http')
-          ) {
-            title = cleaned;
-            break;
-          }
-        }
+      // Filter by city relevance (if city is mentioned nearby)
+      if (city && !context.includes(city)) {
+        // Skip if city not mentioned in context (but still allow some generic guides)
+        if (guideUrls.length > maxGuides / 2) continue;
       }
 
-      if (!title || title.length < 5) continue;
-
-      const authorName = extractAuthor(context) || '同程用户';
-      const imageUrls = extractImageUrls(context);
-      const coverImageUrl = imageUrls[0];
-      const stats = extractStats(context);
-
-      const sourceExternalId = `tongcheng_${guideId}`;
-      const fullUrl = `https://www.ly.com/travels/${guideId}.html`;
-
-      const contentBlocks: ContentBlock[] = [
-        { type: 'text', content: `${title} - ${city}旅游攻略` },
-      ];
-
-      if (coverImageUrl) {
-        contentBlocks.push({ type: 'image', url: coverImageUrl });
-      }
-
-      guides.push({
-        sourceExternalId,
-        sourceUrl: fullUrl,
-        title,
-        content: `${title} - ${city}旅游攻略`,
-        contentBlocks,
-        contentType: 'normal',
-        authorName,
-        coverImageUrl,
-        imageUrls: coverImageUrl ? [coverImageUrl] : [],
-        destinations: [city],
-        tags: extractTags(title, ''),
-        viewsCount: stats.views || 0,
-        likesCount: stats.likes || 0,
-        qualityScore: 50,
+      guideUrls.push({
+        url: `https://www.ly.com/travels/${guideId}.html`,
+        guideId,
       });
     }
 
-    console.log(`[Tongcheng] Extracted ${guides.length} guides from list`);
+    console.log(`[Tongcheng] Found ${guideUrls.length} guide URLs`);
   } catch (error) {
-    console.error(`[Tongcheng] Error fetching travels list:`, error);
+    console.error(`[Tongcheng] Error fetching list page:`, error);
   }
 
-  return guides;
+  return guideUrls;
+}
+
+/**
+ * Fetch and parse a single guide detail page
+ * Navigates to the detail page, extracts all 6 core fields
+ */
+async function fetchGuideDetail(
+  url: string,
+  guideId: string,
+  city: string
+): Promise<CrawlResult | null> {
+  try {
+    console.log(`[Tongcheng] Entering detail page: ${url}`);
+
+    await navigateTo(url, { timeout: 30000 });
+    await waitForContentStable();
+    await scrollToLoadContent(3);
+    await sleep(1000);
+
+    const snapshot = await takeSnapshot({ verbose: true });
+    const content = snapshot.content;
+
+    console.log(
+      `[Tongcheng] Detail page snapshot for ${guideId}: ${content.length} chars`
+    );
+
+    // Extract all fields using accessibility-parser utilities
+    const title = getBestTitle(content, `${city}旅游攻略`);
+    const textContent = getArticleContent(content);
+
+    console.log(
+      `[Tongcheng] Extracted content length: ${textContent?.length || 0} chars`
+    );
+
+    if (!textContent || textContent.length < 100) {
+      console.log(
+        `[Tongcheng] Insufficient content (${textContent?.length || 0} chars): ${url}`
+      );
+      return null;
+    }
+
+    // Tongcheng-specific extractors (from Plan 06-01)
+    const authorInfo = extractTongchengAuthor(content);
+    const rawImageUrls = extractImageUrls(content);
+    const imageUrls = rawImageUrls.map(transformToHighResTc);
+    const publishedAt = extractPublishDate(content);
+    const stats = extractTongchengStats(content);
+
+    console.log(`[Tongcheng] Found ${imageUrls.length} images`);
+
+    // Build content blocks
+    const contentBlocks: ContentBlock[] = [
+      { type: 'text', content: textContent },
+    ];
+    for (const imgUrl of imageUrls) {
+      contentBlocks.push({ type: 'image', url: imgUrl });
+    }
+
+    // Build and return complete CrawlResult
+    return {
+      sourceExternalId: `tongcheng_${guideId}`,
+      sourceUrl: url,
+      title: title || `${city}旅游攻略`,
+      content: textContent.substring(0, 50000),
+      contentBlocks,
+      contentType: 'normal',
+      authorName: authorInfo.name || '同程用户',
+      authorAvatar: authorInfo.avatar,
+      publishedAt,
+      coverImageUrl: imageUrls[0],
+      imageUrls: imageUrls.slice(0, 20),
+      destinations: [city],
+      tags: extractTags(title || '', textContent),
+      likesCount: stats.likes || 0,
+      savesCount: stats.saves || 0,
+      commentsCount: stats.comments || 0,
+      viewsCount: stats.views || 0,
+      qualityScore: calculateQualityScore(
+        textContent,
+        imageUrls.length,
+        stats.views || 0
+      ),
+    };
+  } catch (error) {
+    console.error(`[Tongcheng] Error parsing guide: ${url}`, error);
+    return null;
+  }
+}
+
+/**
+ * Calculate quality score based on content metrics
+ */
+function calculateQualityScore(
+  textContent: string,
+  imageCount: number,
+  viewsCount: number
+): number {
+  let score = 30; // Base score
+
+  // Content length score (up to +30)
+  if (textContent.length >= 2000) score += 30;
+  else if (textContent.length >= 1000) score += 20;
+  else if (textContent.length >= 500) score += 10;
+
+  // Image count score (up to +20)
+  if (imageCount >= 10) score += 20;
+  else if (imageCount >= 5) score += 15;
+  else if (imageCount >= 2) score += 10;
+  else if (imageCount >= 1) score += 5;
+
+  // Views score (up to +20)
+  if (viewsCount >= 10000) score += 20;
+  else if (viewsCount >= 1000) score += 15;
+  else if (viewsCount >= 100) score += 10;
+  else if (viewsCount > 0) score += 5;
+
+  return Math.min(score, 100);
 }
 
 function extractTags(title: string, content: string): string[] {
