@@ -1,10 +1,12 @@
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
-  extractAuthor,
   extractImageUrls,
-  extractStats,
+  extractPublishDate,
+  extractQunarAuthor,
+  extractQunarStats,
   getArticleContent,
   getBestTitle,
+  transformToHighResQunar,
 } from './accessibility-parser.js';
 import { waitForContentStable } from './diagnostics/index.js';
 import {
@@ -139,10 +141,21 @@ async function fetchQunarGuide(
       return null;
     }
 
-    const authorName = extractAuthor(content) || '去哪儿用户';
-    const imageUrls = extractImageUrls(content);
+    // Enhanced extraction using Qunar-specific utilities
+    const authorInfo = extractQunarAuthor(content);
+    const authorName = authorInfo.name || '去哪儿用户';
+    const authorAvatar = authorInfo.avatar;
+
+    // Transform image URLs to high-resolution versions
+    const rawImageUrls = extractImageUrls(content);
+    const imageUrls = rawImageUrls.map(transformToHighResQunar);
     const coverImageUrl = imageUrls[0];
-    const stats = extractStats(content);
+
+    // Extract publish date
+    const publishedAt = extractPublishDate(content);
+
+    // Extract Qunar-specific engagement stats with Chinese number parsing
+    const stats = extractQunarStats(content);
 
     const urlMatch = url.match(/\/youji\/(\d+)/);
     const sourceExternalId = `qunar_${urlMatch?.[1] || Date.now()}`;
@@ -162,11 +175,15 @@ async function fetchQunarGuide(
       contentBlocks,
       contentType: 'normal',
       authorName,
+      authorAvatar,
+      publishedAt,
       coverImageUrl,
       imageUrls: imageUrls.slice(0, 20),
       destinations: [city],
       tags: extractTags(title || '', textContent),
       likesCount: stats.likes || 0,
+      savesCount: stats.saves || 0,
+      commentsCount: stats.comments || 0,
       viewsCount: stats.views || 0,
       qualityScore: calculateQualityScore(
         textContent,
