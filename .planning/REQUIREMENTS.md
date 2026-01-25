@@ -7,24 +7,24 @@
 
 ### 诊断 (DIAG)
 
-- [ ] **DIAG-01**: 诊断每个平台数据缺失的根本原因（获取阶段 vs 解析阶段）
-- [ ] **DIAG-02**: 记录每个平台的反爬机制和登录要求
-- [ ] **DIAG-03**: 验证当前爬虫的 HTML/API 响应内容是否完整
+- [x] **DIAG-01**: 诊断每个平台数据缺失的根本原因（获取阶段 vs 解析阶段）
+- [x] **DIAG-02**: 记录每个平台的反爬机制和登录要求
+- [x] **DIAG-03**: 验证当前爬虫的 HTML/API 响应内容是否完整
 
 ### 基础设施 (INFRA)
 
-- [ ] **INFRA-01**: 实现智能等待策略替代固定 sleep() 延迟
-- [ ] **INFRA-02**: 实现登录态管理 — 支持手动登录后保存 cookie
-- [ ] **INFRA-03**: 实现会话持久化 — 跨运行保持登录状态
+- [x] **INFRA-01**: 实现智能等待策略替代固定 sleep() 延迟
+- [x] **INFRA-02**: 实现登录态管理 — 支持手动登录后保存 cookie
+- [x] **INFRA-03**: 实现会话持久化 — 跨运行保持登录状态
 
 ### 携程 (CTRIP)
 
-- [ ] **CTRIP-01**: 提取完整正文内容
-- [ ] **CTRIP-02**: 提取高清图片 URL（原图而非缩略图）
-- [ ] **CTRIP-03**: 提取作者信息（昵称 + 尽力提取头像）
-- [ ] **CTRIP-04**: 提取发布时间
-- [ ] **CTRIP-05**: 提取互动数据（点赞、收藏、评论数）
-- [ ] **CTRIP-06**: 验证数据完整性
+- [x] **CTRIP-01**: 提取完整正文内容
+- [x] **CTRIP-02**: 提取高清图片 URL（原图而非缩略图）
+- [x] **CTRIP-03**: 提取作者信息（昵称 + 尽力提取头像）
+- [x] **CTRIP-04**: 提取发布时间
+- [x] **CTRIP-05**: 提取互动数据（点赞、收藏、评论数）
+- [x] **CTRIP-06**: 验证数据完整性
 
 ### 马蜂窝 (MFW)
 
@@ -107,53 +107,53 @@
 
 ## Traceability
 
-| Requirement | Phase   | Status  |
-| ----------- | ------- | ------- |
-| DIAG-01     | Phase 1 | Pending |
-| DIAG-02     | Phase 1 | Pending |
-| DIAG-03     | Phase 1 | Pending |
-| INFRA-01    | Phase 2 | Pending |
-| INFRA-02    | Phase 2 | Pending |
-| INFRA-03    | Phase 2 | Pending |
-| CTRIP-01    | Phase 3 | Pending |
-| CTRIP-02    | Phase 3 | Pending |
-| CTRIP-03    | Phase 3 | Pending |
-| CTRIP-04    | Phase 3 | Pending |
-| CTRIP-05    | Phase 3 | Pending |
-| CTRIP-06    | Phase 3 | Pending |
-| QUNAR-01    | Phase 4 | Pending |
-| QUNAR-02    | Phase 4 | Pending |
-| QUNAR-03    | Phase 4 | Pending |
-| QUNAR-04    | Phase 4 | Pending |
-| QUNAR-05    | Phase 4 | Pending |
-| QUNAR-06    | Phase 4 | Pending |
-| MFW-01      | Phase 5 | Pending |
-| MFW-02      | Phase 5 | Pending |
-| MFW-03      | Phase 5 | Pending |
-| MFW-04      | Phase 5 | Pending |
-| MFW-05      | Phase 5 | Pending |
-| MFW-06      | Phase 5 | Pending |
-| MFW-07      | Phase 5 | Pending |
-| MFW-08      | Phase 5 | Pending |
-| TC-01       | Phase 6 | Pending |
-| TC-02       | Phase 6 | Pending |
-| TC-03       | Phase 6 | Pending |
-| TC-04       | Phase 6 | Pending |
-| TC-05       | Phase 6 | Pending |
-| TC-06       | Phase 6 | Pending |
-| TC-07       | Phase 6 | Pending |
-| XHS-01      | Phase 7 | Pending |
-| XHS-02      | Phase 7 | Pending |
-| XHS-03      | Phase 7 | Pending |
-| XHS-04      | Phase 7 | Pending |
-| XHS-05      | Phase 7 | Pending |
-| XHS-06      | Phase 7 | Pending |
-| XHS-07      | Phase 7 | Pending |
-| XHS-08      | Phase 7 | Pending |
-| VERIFY-01   | Phase 8 | Pending |
-| VERIFY-02   | Phase 8 | Pending |
-| VERIFY-03   | Phase 8 | Pending |
-| VERIFY-04   | Phase 8 | Pending |
+| Requirement | Phase   | Status   |
+| ----------- | ------- | -------- |
+| DIAG-01     | Phase 1 | Complete |
+| DIAG-02     | Phase 1 | Complete |
+| DIAG-03     | Phase 1 | Complete |
+| INFRA-01    | Phase 2 | Complete |
+| INFRA-02    | Phase 2 | Complete |
+| INFRA-03    | Phase 2 | Complete |
+| CTRIP-01    | Phase 3 | Complete |
+| CTRIP-02    | Phase 3 | Complete |
+| CTRIP-03    | Phase 3 | Complete |
+| CTRIP-04    | Phase 3 | Complete |
+| CTRIP-05    | Phase 3 | Complete |
+| CTRIP-06    | Phase 3 | Complete |
+| QUNAR-01    | Phase 4 | Pending  |
+| QUNAR-02    | Phase 4 | Pending  |
+| QUNAR-03    | Phase 4 | Pending  |
+| QUNAR-04    | Phase 4 | Pending  |
+| QUNAR-05    | Phase 4 | Pending  |
+| QUNAR-06    | Phase 4 | Pending  |
+| MFW-01      | Phase 5 | Pending  |
+| MFW-02      | Phase 5 | Pending  |
+| MFW-03      | Phase 5 | Pending  |
+| MFW-04      | Phase 5 | Pending  |
+| MFW-05      | Phase 5 | Pending  |
+| MFW-06      | Phase 5 | Pending  |
+| MFW-07      | Phase 5 | Pending  |
+| MFW-08      | Phase 5 | Pending  |
+| TC-01       | Phase 6 | Pending  |
+| TC-02       | Phase 6 | Pending  |
+| TC-03       | Phase 6 | Pending  |
+| TC-04       | Phase 6 | Pending  |
+| TC-05       | Phase 6 | Pending  |
+| TC-06       | Phase 6 | Pending  |
+| TC-07       | Phase 6 | Pending  |
+| XHS-01      | Phase 7 | Pending  |
+| XHS-02      | Phase 7 | Pending  |
+| XHS-03      | Phase 7 | Pending  |
+| XHS-04      | Phase 7 | Pending  |
+| XHS-05      | Phase 7 | Pending  |
+| XHS-06      | Phase 7 | Pending  |
+| XHS-07      | Phase 7 | Pending  |
+| XHS-08      | Phase 7 | Pending  |
+| VERIFY-01   | Phase 8 | Pending  |
+| VERIFY-02   | Phase 8 | Pending  |
+| VERIFY-03   | Phase 8 | Pending  |
+| VERIFY-04   | Phase 8 | Pending  |
 
 **Coverage:**
 
@@ -164,4 +164,4 @@
 ---
 
 _Requirements defined: 2026-01-25_
-_Last updated: 2026-01-25 after initial definition_
+_Last updated: 2026-01-25 Phase 3 requirements marked complete_
