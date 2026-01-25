@@ -28,14 +28,14 @@
 
 ### 马蜂窝 (MFW)
 
-- [ ] **MFW-01**: 添加详情页导航（当前仅列表页）
-- [ ] **MFW-02**: 提取完整正文内容
-- [ ] **MFW-03**: 提取高清图片 URL
-- [ ] **MFW-04**: 提取作者信息（昵称 + 尽力提取头像）
-- [ ] **MFW-05**: 提取发布时间
-- [ ] **MFW-06**: 提取互动数据（点赞、收藏、评论数）
-- [ ] **MFW-07**: 处理验证码/登录墙
-- [ ] **MFW-08**: 验证数据完整性
+- [x] **MFW-01**: 添加详情页导航（当前仅列表页）
+- [x] **MFW-02**: 提取完整正文内容
+- [x] **MFW-03**: 提取高清图片 URL
+- [x] **MFW-04**: 提取作者信息（昵称 + 尽力提取头像）
+- [x] **MFW-05**: 提取发布时间
+- [x] **MFW-06**: 提取互动数据（点赞、收藏、评论数）
+- [x] **MFW-07**: 处理验证码/登录墙
+- [x] **MFW-08**: 验证数据完整性
 
 ### 小红书 (XHS)
 
@@ -59,13 +59,13 @@
 
 ### 同程 (TC)
 
-- [ ] **TC-01**: 添加详情页导航（当前仅列表页）
-- [ ] **TC-02**: 提取完整正文内容
-- [ ] **TC-03**: 提取高清图片 URL
-- [ ] **TC-04**: 提取作者信息（昵称 + 尽力提取头像）
-- [ ] **TC-05**: 提取发布时间
-- [ ] **TC-06**: 提取互动数据（点赞、收藏、评论数）
-- [ ] **TC-07**: 验证数据完整性
+- [x] **TC-01**: 添加详情页导航（当前仅列表页）
+- [x] **TC-02**: 提取完整正文内容
+- [x] **TC-03**: 提取高清图片 URL
+- [x] **TC-04**: 提取作者信息（昵称 + 尽力提取头像）
+- [x] **TC-05**: 提取发布时间
+- [x] **TC-06**: 提取互动数据（点赞、收藏、评论数）
+- [x] **TC-07**: 验证数据完整性
 
 ### 验证 (VERIFY)
 
@@ -127,21 +127,21 @@
 | QUNAR-04    | Phase 4 | Complete |
 | QUNAR-05    | Phase 4 | Complete |
 | QUNAR-06    | Phase 4 | Complete |
-| MFW-01      | Phase 5 | Pending  |
-| MFW-02      | Phase 5 | Pending  |
-| MFW-03      | Phase 5 | Pending  |
-| MFW-04      | Phase 5 | Pending  |
-| MFW-05      | Phase 5 | Pending  |
-| MFW-06      | Phase 5 | Pending  |
-| MFW-07      | Phase 5 | Pending  |
-| MFW-08      | Phase 5 | Pending  |
-| TC-01       | Phase 6 | Pending  |
-| TC-02       | Phase 6 | Pending  |
-| TC-03       | Phase 6 | Pending  |
-| TC-04       | Phase 6 | Pending  |
-| TC-05       | Phase 6 | Pending  |
-| TC-06       | Phase 6 | Pending  |
-| TC-07       | Phase 6 | Pending  |
+| MFW-01      | Phase 5 | Complete |
+| MFW-02      | Phase 5 | Complete |
+| MFW-03      | Phase 5 | Complete |
+| MFW-04      | Phase 5 | Complete |
+| MFW-05      | Phase 5 | Complete |
+| MFW-06      | Phase 5 | Complete |
+| MFW-07      | Phase 5 | Complete |
+| MFW-08      | Phase 5 | Complete |
+| TC-01       | Phase 6 | Complete |
+| TC-02       | Phase 6 | Complete |
+| TC-03       | Phase 6 | Complete |
+| TC-04       | Phase 6 | Complete |
+| TC-05       | Phase 6 | Complete |
+| TC-06       | Phase 6 | Complete |
+| TC-07       | Phase 6 | Complete |
 | XHS-01      | Phase 7 | Pending  |
 | XHS-02      | Phase 7 | Pending  |
 | XHS-03      | Phase 7 | Pending  |
@@ -164,4 +164,4 @@
 ---
 
 _Requirements defined: 2026-01-25_
-_Last updated: 2026-01-25 Phase 4 requirements marked complete_
+_Last updated: 2026-01-25 Phase 6 requirements marked complete_
