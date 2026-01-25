@@ -6,6 +6,7 @@ import {
   getArticleContent,
   getBestTitle,
 } from './accessibility-parser.js';
+import { waitForContentStable } from './diagnostics/index.js';
 import {
   disconnect,
   navigateTo,
@@ -13,7 +14,6 @@ import {
   sleep,
   takeSnapshot,
 } from './mcp-client.js';
-import { waitForContentStable } from './diagnostics/index.js';
 
 const CITY_IDS: Record<string, string> = {
   北京: 'Beijing1',
