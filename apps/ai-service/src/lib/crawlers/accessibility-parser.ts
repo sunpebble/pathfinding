@@ -605,6 +605,117 @@ function isValidAuthorName(name: string): boolean {
 }
 
 /**
+ * Extract engagement stats from Qunar content
+ * Uses parseChineseNumber internally for all numeric parsing
+ *
+ * Handles patterns:
+ * 1. Inline: "阅读 5.7万", "5.7万阅读", "浏览量：1234"
+ * 2. Accessibility tree: StaticText "浏览量" followed by StaticText "5.7万"
+ * 3. Likes: "点赞 123", "123 赞", "有用 45"
+ * 4. Comments: "评论 30", "30条评论"
+ * 5. Saves/Favorites: "收藏 85", "85人收藏"
+ */
+export function extractQunarStats(content: string): {
+  views?: number;
+  likes?: number;
+  saves?: number;
+  comments?: number;
+} {
+  const stats: {
+    views?: number;
+    likes?: number;
+    saves?: number;
+    comments?: number;
+  } = {};
+
+  // === Views ===
+  // Pattern 1: Inline - 阅读5.7万, 浏览量1234, 5.7万阅读
+  const viewsMatch =
+    content.match(/(?:阅读|浏览量?)[：:\s]*([\d.]+[千万kw]?)/i) ||
+    content.match(/([\d.]+[千万kw]?)\s*(?:阅读|次浏览)/i);
+  if (viewsMatch) {
+    const num = parseChineseNumber(viewsMatch[1]);
+    if (num > 0) stats.views = num;
+  }
+
+  // Pattern 2: Accessibility tree - "浏览量" followed by number on next StaticText
+  if (!stats.views) {
+    const accessibilityViewsMatch = content.match(
+      /StaticText\s+"(?:阅读|浏览量?)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+    );
+    if (accessibilityViewsMatch) {
+      const num = parseChineseNumber(accessibilityViewsMatch[1]);
+      if (num > 0) stats.views = num;
+    }
+  }
+
+  // === Likes ===
+  // Pattern 1: Inline - 点赞123, 有用45, 123赞
+  const likesMatch =
+    content.match(/(?:点赞|有用|赞)[：:\s]*([\d.]+[千万kw]?)/i) ||
+    content.match(/([\d.]+[千万kw]?)\s*(?:点赞|个赞|赞)/i);
+  if (likesMatch) {
+    const num = parseChineseNumber(likesMatch[1]);
+    if (num > 0) stats.likes = num;
+  }
+
+  // Pattern 2: Accessibility tree
+  if (!stats.likes) {
+    const accessibilityLikesMatch = content.match(
+      /StaticText\s+"(?:点赞|有用|赞)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+    );
+    if (accessibilityLikesMatch) {
+      const num = parseChineseNumber(accessibilityLikesMatch[1]);
+      if (num > 0) stats.likes = num;
+    }
+  }
+
+  // === Saves ===
+  // Pattern 1: Inline - 收藏85, 85人收藏
+  const savesMatch =
+    content.match(/收藏[：:\s]*([\d.]+[千万kw]?)/i) ||
+    content.match(/([\d.]+[千万kw]?)\s*(?:人收藏|收藏)/i);
+  if (savesMatch) {
+    const num = parseChineseNumber(savesMatch[1]);
+    if (num > 0) stats.saves = num;
+  }
+
+  // Pattern 2: Accessibility tree
+  if (!stats.saves) {
+    const accessibilitySavesMatch = content.match(
+      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+    );
+    if (accessibilitySavesMatch) {
+      const num = parseChineseNumber(accessibilitySavesMatch[1]);
+      if (num > 0) stats.saves = num;
+    }
+  }
+
+  // === Comments ===
+  // Pattern 1: Inline - 评论30, 30条评论
+  const commentsMatch =
+    content.match(/评论[：:\s]*([\d.]+[千万kw]?)/i) ||
+    content.match(/([\d.]+[千万kw]?)\s*(?:条评论|评论)/i);
+  if (commentsMatch) {
+    const num = parseChineseNumber(commentsMatch[1]);
+    if (num > 0) stats.comments = num;
+  }
+
+  // Pattern 2: Accessibility tree
+  if (!stats.comments) {
+    const accessibilityCommentsMatch = content.match(
+      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+    );
+    if (accessibilityCommentsMatch) {
+      const num = parseChineseNumber(accessibilityCommentsMatch[1]);
+      if (num > 0) stats.comments = num;
+    }
+  }
+
+  return stats;
+}
+
+/**
  * Full content extraction - returns all parsed data
  */
 export function parseAccessibilityTree(content: string): ExtractedContent {
