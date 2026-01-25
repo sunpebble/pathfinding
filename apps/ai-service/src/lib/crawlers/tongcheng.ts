@@ -1,19 +1,19 @@
-/**
- * Tongcheng (同程旅行/LY.com) Crawler
- * Crawls travel guides from Tongcheng Travel using Playwright headless browser
- */
-
-import type { CrawlOptions, CrawlResult } from './index.js';
-import * as cheerio from 'cheerio';
+import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
-  createContext,
-  createPage,
+  extractAuthor,
+  extractHeadings,
+  extractImageUrls,
+  extractStats,
+} from './accessibility-parser.js';
+import { waitForContentStable } from './diagnostics/index.js';
+import {
+  disconnect,
+  navigateTo,
   scrollToLoadContent,
   sleep,
-} from './browser.js';
+  takeSnapshot,
+} from './mcp-client.js';
 
-// City ID/slug mapping for Tongcheng
-// Tongcheng uses city pinyin or IDs in URLs
 const CITY_SLUGS: Record<string, string> = {
   北京: 'beijing',
   上海: 'shanghai',
@@ -37,150 +37,135 @@ const CITY_SLUGS: Record<string, string> = {
   张家界: 'zhangjiajie',
 };
 
-/**
- * Crawl Tongcheng travel guides for a city
- * Uses the new travels list page at www.ly.com/travels/
- */
 export async function crawlTongcheng(
   city: string,
   options: CrawlOptions = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
-  const maxGuides = (options.maxPages || 5) * 10; // Convert pages to guide count
+  const maxGuides = (options.maxPages || 5) * 10;
   const citySlug = CITY_SLUGS[city] || city.toLowerCase();
 
   console.log(`[Tongcheng] Crawling guides for ${city} (${citySlug})`);
 
-  // Create a browser context for this crawl session
-  const context = await createContext();
-
   try {
-    // Use the main travels list page and extract guides
     const listUrl = 'https://www.ly.com/travels/';
     console.log(`[Tongcheng] Fetching travels list: ${listUrl}`);
 
-    const guides = await fetchGuidesFromTravelsList(context, listUrl, city, maxGuides);
+    const guides = await fetchGuidesFromTravelsList(listUrl, city, maxGuides);
     console.log(`[Tongcheng] Found ${guides.length} guides from travels list`);
 
     results.push(...guides);
   } catch (error) {
     console.error(`[Tongcheng] Error crawling travels list:`, error);
   } finally {
-    // Always close the context (but not the shared browser)
-    await context.close();
-    console.log('[Tongcheng] Browser context closed');
+    await disconnect();
+    console.log('[Tongcheng] MCP client disconnected');
   }
 
   return results;
 }
 
-/**
- * Fetch guides directly from the travels list page
- * The page uses JavaScript to load content, so we need to wait for it
- */
 async function fetchGuidesFromTravelsList(
-  context: Awaited<ReturnType<typeof createContext>>,
   listUrl: string,
   city: string,
   maxGuides: number
 ): Promise<CrawlResult[]> {
-  const page = await createPage(context);
   const guides: CrawlResult[] = [];
   const seenIds = new Set<string>();
 
   try {
-    // Navigate to the travels list page
-    await page.goto(listUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-
-    // Wait for the guide list to load
-    try {
-      await page.waitForSelector('a[href*="/travels/"]', { timeout: 15000 });
-      console.log('[Tongcheng] Found travel links');
-    } catch {
-      console.log('[Tongcheng] Travel links not found immediately, waiting...');
-    }
-
-    // Wait for network to settle
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-
-    // Scroll to load more content
-    await scrollToLoadContent(page);
-
-    // Additional wait for dynamic content
+    await navigateTo(listUrl, { timeout: 30000 });
+    await waitForContentStable();
+    await scrollToLoadContent(3);
     await sleep(2000);
 
-    // Get the rendered HTML
-    const html = await page.content();
-    const $ = cheerio.load(html);
+    const snapshot = await takeSnapshot({ verbose: true });
+    const content = snapshot.content;
 
-    // Extract guide items from the list
-    // Based on the page structure: links with /travels/{id}.html format
-    $('a[href*="/travels/"]').each((_, el) => {
-      if (guides.length >= maxGuides) return false;
+    const guideMatches = content.matchAll(/\/travels\/(\d+)\.html/g);
 
-      const href = $(el).attr('href');
-      if (!href || !href.match(/\/travels\/\d+\.html/)) return;
+    for (const match of guideMatches) {
+      if (guides.length >= maxGuides) break;
 
-      // Extract guide ID
-      const urlMatch = href.match(/\/travels\/(\d+)\.html/);
-      const guideId = urlMatch?.[1];
-      if (!guideId || seenIds.has(guideId)) return;
+      const guideId = match[1];
+      if (seenIds.has(guideId)) continue;
       seenIds.add(guideId);
 
-      // Try to extract title from the link or nearby elements
-      const $el = $(el);
-      let title = $el.text().trim();
+      const contextStart = Math.max(0, match.index! - 300);
+      const contextEnd = Math.min(content.length, match.index! + 300);
+      const context = content.substring(contextStart, contextEnd);
 
-      // If this is an image link, look for title in parent or sibling
-      if (!title || title.length < 5) {
-        const $parent = $el.closest('li, .item, [class*="item"]');
-        title = $parent.find('p a, h1 a, h2 a, h3 a, .title').text().trim() ||
-                $parent.find('p, h1, h2, h3').first().text().trim();
+      // Use accessibility tree parser for title extraction
+      const headings = extractHeadings(context);
+      let title = headings[0];
+
+      if (!title) {
+        // Fallback: look for Chinese text that looks like a title
+        const lines = context.split('\n').filter((l) => l.trim().length > 5);
+        for (const line of lines) {
+          const cleaned = line
+            .replace(/\[[^\]]*\]/g, '')
+            .replace(/uid=\S+\s*/, '')
+            .replace(/^\s*(StaticText|link|heading)\s*/, '')
+            .replace(/^"/, '')
+            .replace(/"$/, '')
+            .trim();
+          if (
+            cleaned.length >= 5 &&
+            cleaned.length <= 100 &&
+            /[\u4E00-\u9FFF]/.test(cleaned) &&
+            !cleaned.includes('http')
+          ) {
+            title = cleaned;
+            break;
+          }
+        }
       }
 
-      // Skip if still no title
-      if (!title || title.length < 5) return;
+      if (!title || title.length < 5) continue;
 
-      // Try to get cover image
-      const $img = $el.find('img').first();
-      const coverImageUrl = $img.attr('src') || $img.attr('data-src') || $img.attr('data-original');
-
-      // Try to get author
-      const $parent = $el.closest('li, .item, [class*="item"]');
-      const authorName = $parent.find('[class*="author"], [class*="user"], [class*="name"]').text().trim() || '同程用户';
+      const authorName = extractAuthor(context) || '同程用户';
+      const imageUrls = extractImageUrls(context);
+      const coverImageUrl = imageUrls[0];
+      const stats = extractStats(context);
 
       const sourceExternalId = `tongcheng_${guideId}`;
-      const fullUrl = href.startsWith('http') ? href : `https://www.ly.com${href}`;
+      const fullUrl = `https://www.ly.com/travels/${guideId}.html`;
+
+      const contentBlocks: ContentBlock[] = [
+        { type: 'text', content: `${title} - ${city}旅游攻略` },
+      ];
+
+      if (coverImageUrl) {
+        contentBlocks.push({ type: 'image', url: coverImageUrl });
+      }
 
       guides.push({
         sourceExternalId,
         sourceUrl: fullUrl,
         title,
-        content: `${title} - ${city}旅游攻略`, // Will be enriched with full content if needed
+        content: `${title} - ${city}旅游攻略`,
+        contentBlocks,
+        contentType: 'normal',
         authorName,
-        coverImageUrl: coverImageUrl?.startsWith('http') ? coverImageUrl : (coverImageUrl ? `https:${coverImageUrl}` : undefined),
-        imageUrls: [],
+        coverImageUrl,
+        imageUrls: coverImageUrl ? [coverImageUrl] : [],
         destinations: [city],
         tags: extractTags(title, ''),
-        viewsCount: 0,
+        viewsCount: stats.views || 0,
+        likesCount: stats.likes || 0,
         qualityScore: 50,
       });
-    });
+    }
 
     console.log(`[Tongcheng] Extracted ${guides.length} guides from list`);
   } catch (error) {
     console.error(`[Tongcheng] Error fetching travels list:`, error);
-  } finally {
-    await page.close();
   }
 
   return guides;
 }
 
-
-/**
- * Extract tags from title and content
- */
 function extractTags(title: string, content: string): string[] {
   const tags: string[] = [];
   const text = `${title} ${content}`.toLowerCase();
@@ -207,29 +192,4 @@ function extractTags(title: string, content: string): string[] {
   }
 
   return tags.slice(0, 5);
-}
-
-/**
- * Calculate quality score based on content metrics
- */
-function calculateQualityScore(
-  content: string,
-  imageCount: number,
-  viewsCount: number
-): number {
-  let score = 50;
-
-  // Content length bonus
-  if (content.length > 1000) score += 10;
-  if (content.length > 3000) score += 10;
-  if (content.length > 5000) score += 5;
-
-  // Image bonus
-  score += Math.min(imageCount * 2, 15);
-
-  // Views bonus
-  if (viewsCount > 1000) score += 5;
-  if (viewsCount > 10000) score += 5;
-
-  return Math.min(score, 100);
 }

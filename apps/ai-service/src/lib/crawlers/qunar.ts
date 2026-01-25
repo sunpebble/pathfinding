@@ -1,19 +1,20 @@
-/**
- * Qunar (去哪儿) Crawler
- * Crawls travel guides from Qunar using Playwright
- */
-
-import type { CrawlOptions, CrawlResult } from './index.js';
-import * as cheerio from 'cheerio';
+import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
-  createContext,
-  createPage,
+  extractAuthor,
+  extractImageUrls,
+  extractStats,
+  getArticleContent,
+  getBestTitle,
+} from './accessibility-parser.js';
+import { waitForContentStable } from './diagnostics/index.js';
+import {
+  disconnect,
+  navigateTo,
   scrollToLoadContent,
   sleep,
-  waitForContent,
-} from './browser.js';
+  takeSnapshot,
+} from './mcp-client.js';
 
-// City ID mapping for Qunar destination pages
 const CITY_IDS: Record<string, string> = {
   北京: '300028-beijing',
   上海: '300286-shanghai',
@@ -37,9 +38,6 @@ const CITY_IDS: Record<string, string> = {
   香格里拉: '300476-xianggelila',
 };
 
-/**
- * Crawl Qunar travel guides for a city
- */
 export async function crawlQunar(
   city: string,
   options: CrawlOptions = {}
@@ -55,28 +53,23 @@ export async function crawlQunar(
 
   console.log(`[Qunar] Crawling guides for ${city} (${cityId})`);
 
-  const context = await createContext();
-
   try {
     for (let page = 1; page <= maxPages; page++) {
       try {
-        // Qunar travel notes list URL
         const listUrl = `https://travel.qunar.com/p-cs${cityId}/youji?page=${page}`;
         console.log(`[Qunar] Fetching page ${page}: ${listUrl}`);
 
-        const guideLinks = await fetchListPage(context, listUrl);
+        const guideLinks = await fetchListPage(listUrl);
         console.log(
           `[Qunar] Found ${guideLinks.length} guides on page ${page}`
         );
 
-        // Fetch each guide detail
         for (const guideUrl of guideLinks.slice(0, 10)) {
           try {
-            const guide = await fetchQunarGuide(context, guideUrl, city);
+            const guide = await fetchQunarGuide(guideUrl, city);
             if (guide) {
               results.push(guide);
             }
-            // Rate limiting
             await sleep(1000 / (options.rateLimit || 0.5));
           } catch (error) {
             console.error(`[Qunar] Error fetching guide: ${guideUrl}`, error);
@@ -87,162 +80,106 @@ export async function crawlQunar(
       }
     }
   } finally {
-    await context.close();
+    await disconnect();
+    console.log('[Qunar] MCP client disconnected');
   }
 
   return results;
 }
 
-/**
- * Fetch list page using Playwright
- */
-async function fetchListPage(
-  context: Awaited<ReturnType<typeof createContext>>,
-  url: string
-): Promise<string[]> {
-  const page = await createPage(context);
+async function fetchListPage(url: string): Promise<string[]> {
+  const guideLinks: string[] = [];
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await waitForContent(
-      page,
-      '.b_strategy_list, .list_item, a[href*="/youji/"]'
-    );
-    await scrollToLoadContent(page);
+    await navigateTo(url, { timeout: 30000 });
+    await waitForContentStable();
+    await scrollToLoadContent(2);
+    await sleep(1000);
 
-    const html = await page.content();
-    const $ = cheerio.load(html);
+    const snapshot = await takeSnapshot();
+    const content = snapshot.content;
 
-    const guideLinks: string[] = [];
+    const linkMatches = content.matchAll(/\/youji\/(\d+)/g);
+    const seenIds = new Set<string>();
 
-    // Try multiple selectors for guide links
-    $('a[href*="/youji/"]').each((_, el) => {
-      const href = $(el).attr('href');
-      if (href && href.match(/\/youji\/\d+/)) {
-        const fullUrl = href.startsWith('http')
-          ? href
-          : `https://travel.qunar.com${href}`;
-        if (!guideLinks.includes(fullUrl)) {
-          guideLinks.push(fullUrl);
-        }
-      }
-    });
+    for (const match of linkMatches) {
+      const guideId = match[1];
+      if (seenIds.has(guideId)) continue;
+      seenIds.add(guideId);
 
-    return guideLinks;
+      const fullUrl = `https://travel.qunar.com/youji/${guideId}`;
+      guideLinks.push(fullUrl);
+    }
   } catch (error) {
     console.error(`[Qunar] Error fetching list page: ${url}`, error);
-    return [];
-  } finally {
-    await page.close();
   }
+
+  return guideLinks;
 }
 
-/**
- * Fetch Qunar guide detail page using Playwright
- */
 async function fetchQunarGuide(
-  context: Awaited<ReturnType<typeof createContext>>,
   url: string,
   city: string
 ): Promise<CrawlResult | null> {
-  const page = await createPage(context);
-
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await waitForContent(page, '.b_foreword, .e_main_con, .b_panel_schedule');
-    await scrollToLoadContent(page);
+    await navigateTo(url, { timeout: 30000 });
+    await waitForContentStable();
+    await scrollToLoadContent(3);
+    await sleep(1000);
 
-    const html = await page.content();
-    const $ = cheerio.load(html);
+    const snapshot = await takeSnapshot({ verbose: true });
+    const content = snapshot.content;
 
-    // Extract content
-    const title =
-      $('h1.b_crumb_cont, .e_title h1, .youji-title').first().text().trim() ||
-      $('title').text().split('-')[0].trim() ||
-      $('h1').first().text().trim();
+    // Use accessibility tree parser for extraction
+    const title = getBestTitle(content, `${city}旅游攻略`);
+    const textContent = getArticleContent(content);
 
-    const content =
-      $('.b_foreword, .e_main_con, .b_panel_schedule').text().trim() ||
-      $('article').text().trim() ||
-      $('.content').text().trim() ||
-      $('.b_main').text().trim();
+    if (!textContent || textContent.length < 100) {
+      console.log(`[Qunar] Skipping guide with insufficient content: ${url}`);
+      return null;
+    }
 
-    const authorName =
-      $('.e_author_name, .headpic_txt a').first().text().trim() || '去哪儿用户';
-
-    // Extract images
-    const imageUrls: string[] = [];
-    $(
-      '.b_foreword img, .e_main_con img, .b_panel_schedule img, .b_main img'
-    ).each((_, el) => {
-      const src =
-        $(el).attr('src') ||
-        $(el).attr('data-src') ||
-        $(el).attr('data-original');
-      if (
-        src &&
-        !src.includes('avatar') &&
-        !src.includes('icon') &&
-        !src.includes('logo')
-      ) {
-        let fullSrc = src;
-        if (src.startsWith('//')) {
-          fullSrc = `https:${src}`;
-        } else if (!src.startsWith('http')) {
-          fullSrc = `https://travel.qunar.com${src}`;
-        }
-        if (!imageUrls.includes(fullSrc)) {
-          imageUrls.push(fullSrc);
-        }
-      }
-    });
-
+    const authorName = extractAuthor(content) || '去哪儿用户';
+    const imageUrls = extractImageUrls(content);
     const coverImageUrl = imageUrls[0];
+    const stats = extractStats(content);
 
-    // Extract stats
-    const viewsText = $('.e_view em, .view_count').text();
-    const likesText = $('.e_ding em, .like_count').text();
-    const viewsCount = Number.parseInt(viewsText.match(/\d+/)?.[0] || '0', 10);
-    const likesCount = Number.parseInt(likesText.match(/\d+/)?.[0] || '0', 10);
-
-    // Generate external ID
     const urlMatch = url.match(/\/youji\/(\d+)/);
     const sourceExternalId = `qunar_${urlMatch?.[1] || Date.now()}`;
 
-    if (!content || content.length < 100) {
-      console.log(`[Qunar] Skipping guide with insufficient content: ${url}`);
-      return null;
+    const contentBlocks: ContentBlock[] = [
+      { type: 'text', content: textContent },
+    ];
+    for (const imgUrl of imageUrls) {
+      contentBlocks.push({ type: 'image', url: imgUrl });
     }
 
     return {
       sourceExternalId,
       sourceUrl: url,
       title: title || `${city}旅游攻略`,
-      content: content.substring(0, 50000),
+      content: textContent.substring(0, 50000),
+      contentBlocks,
+      contentType: 'normal',
       authorName,
       coverImageUrl,
       imageUrls: imageUrls.slice(0, 20),
       destinations: [city],
-      tags: extractTags(title, content),
-      likesCount,
-      viewsCount,
+      tags: extractTags(title || '', textContent),
+      likesCount: stats.likes || 0,
+      viewsCount: stats.views || 0,
       qualityScore: calculateQualityScore(
-        content,
+        textContent,
         imageUrls.length,
-        viewsCount
+        stats.views || 0
       ),
     };
   } catch (error) {
     console.error(`[Qunar] Error parsing guide:`, error);
     return null;
-  } finally {
-    await page.close();
   }
 }
 
-/**
- * Extract tags from content
- */
 function extractTags(title: string, content: string): string[] {
   const tags: string[] = [];
   const text = `${title} ${content}`.toLowerCase();
@@ -271,9 +208,6 @@ function extractTags(title: string, content: string): string[] {
   return tags.slice(0, 5);
 }
 
-/**
- * Calculate quality score
- */
 function calculateQualityScore(
   content: string,
   imageCount: number,

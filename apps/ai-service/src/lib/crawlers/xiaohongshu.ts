@@ -1,319 +1,432 @@
-/**
- * Xiaohongshu (小红书) Crawler
- * Crawls travel guides from Xiaohongshu using Playwright headless browser
- *
- * Note: Xiaohongshu has strong anti-bot protections. This crawler uses
- * the explore/search pages which are publicly accessible.
- */
-
-import type { CrawlOptions, CrawlResult } from './index.js';
-import * as cheerio from 'cheerio';
+import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
-  createContext,
-  createPage,
+  extractAuthor,
+  extractHeadings,
+  extractImageUrls,
+  extractStaticText,
+} from './accessibility-parser.js';
+import { waitForContentStable } from './diagnostics/index.js';
+import {
+  disconnect,
+  getNetworkRequest,
+  initMCP,
+  listNetworkRequests,
+  navigateTo,
   scrollToLoadContent,
   sleep,
-} from './browser.js';
+  takeSnapshot,
+} from './mcp-client.js';
 
-// City/destination keywords for search
-const CITY_KEYWORDS: Record<string, string[]> = {
-  北京: ['北京旅游攻略', '北京打卡', '北京必去'],
-  上海: ['上海旅游攻略', '上海打卡', '上海必去'],
-  杭州: ['杭州旅游攻略', '杭州西湖', '杭州打卡'],
-  成都: ['成都旅游攻略', '成都打卡', '成都美食'],
-  西安: ['西安旅游攻略', '西安打卡', '西安美食'],
-  三亚: ['三亚旅游攻略', '三亚打卡', '三亚海滩'],
-  厦门: ['厦门旅游攻略', '厦门鼓浪屿', '厦门打卡'],
-  大理: ['大理旅游攻略', '大理洱海', '大理打卡'],
-  广州: ['广州旅游攻略', '广州打卡', '广州美食'],
-  深圳: ['深圳旅游攻略', '深圳打卡', '深圳周末'],
-  南京: ['南京旅游攻略', '南京打卡', '南京美食'],
-  苏州: ['苏州旅游攻略', '苏州园林', '苏州打卡'],
-  丽江: ['丽江旅游攻略', '丽江古城', '丽江打卡'],
-  重庆: ['重庆旅游攻略', '重庆打卡', '重庆夜景'],
-  武汉: ['武汉旅游攻略', '武汉打卡', '武汉美食'],
-  青岛: ['青岛旅游攻略', '青岛打卡', '青岛海滩'],
-  桂林: ['桂林旅游攻略', '桂林山水', '桂林打卡'],
-  昆明: ['昆明旅游攻略', '昆明打卡', '昆明美食'],
-  西双版纳: ['西双版纳旅游', '版纳攻略', '西双版纳打卡'],
-  张家界: ['张家界旅游攻略', '张家界打卡', '张家界玻璃桥'],
-};
+interface XiaohongshuNote {
+  note_id: string;
+  title?: string;
+  desc?: string;
+  type?: string;
+  user?: {
+    user_id?: string;
+    nickname?: string;
+    avatar?: string;
+  };
+  interact_info?: {
+    liked_count?: string;
+    collected_count?: string;
+    comment_count?: string;
+  };
+  image_list?: Array<{
+    url_default?: string;
+    url?: string;
+    width?: number;
+    height?: number;
+  }>;
+  video?: {
+    media?: {
+      stream?: {
+        h264?: Array<{ master_url?: string }>;
+        h265?: Array<{ master_url?: string }>;
+      };
+    };
+    image?: {
+      first_frame_fileid?: string;
+    };
+  };
+  tag_list?: Array<{ name?: string }>;
+}
 
-/**
- * Crawl Xiaohongshu travel guides for a city
- * Uses the explore page which shows trending notes
- */
+interface FeedResponse {
+  data?: {
+    items?: Array<{
+      note_card?: XiaohongshuNote;
+    }>;
+  };
+}
+
 export async function crawlXiaohongshu(
   city: string,
   options: CrawlOptions = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxGuides = (options.maxPages || 5) * 10;
-  const keywords = CITY_KEYWORDS[city] || [`${city}旅游攻略`];
 
   console.log(`[Xiaohongshu] Crawling guides for ${city}`);
 
-  const context = await createContext();
-
   try {
-    // Search for each keyword
-    for (const keyword of keywords.slice(0, 2)) {
-      if (results.length >= maxGuides) break;
+    await initMCP({ persistent: false });
+    console.log('[Xiaohongshu] Using isolated Chrome session');
 
-      try {
-        const searchUrl = `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(keyword)}&source=web_explore_feed`;
-        console.log(`[Xiaohongshu] Searching: ${keyword}`);
+    const exploreUrl = 'https://www.xiaohongshu.com/explore';
+    console.log('[Xiaohongshu] Fetching explore page');
 
-        const guides = await fetchNotesFromSearch(context, searchUrl, city, maxGuides - results.length);
-        console.log(`[Xiaohongshu] Found ${guides.length} notes for "${keyword}"`);
+    const exploreGuides = await fetchNotesFromExplore(
+      exploreUrl,
+      city,
+      maxGuides
+    );
+    console.log(
+      `[Xiaohongshu] Found ${exploreGuides.length} notes from explore`
+    );
 
-        // Add unique results
-        for (const guide of guides) {
-          if (!results.some(r => r.sourceExternalId === guide.sourceExternalId)) {
-            results.push(guide);
-          }
-        }
-      } catch (error) {
-        console.error(`[Xiaohongshu] Error searching "${keyword}":`, error);
+    for (const guide of exploreGuides) {
+      if (!results.some((r) => r.sourceExternalId === guide.sourceExternalId)) {
+        results.push(guide);
       }
-
-      // Rate limiting between searches
-      await sleep(2000);
     }
 
-    // Also try the explore page for travel content
-    try {
-      const exploreUrl = 'https://www.xiaohongshu.com/explore?channel_id=homefeed.travel_v3';
-      console.log('[Xiaohongshu] Fetching travel explore page');
-
-      const exploreGuides = await fetchNotesFromExplore(context, exploreUrl, city, maxGuides - results.length);
-      console.log(`[Xiaohongshu] Found ${exploreGuides.length} notes from explore`);
-
-      for (const guide of exploreGuides) {
-        if (!results.some(r => r.sourceExternalId === guide.sourceExternalId)) {
-          results.push(guide);
-        }
-      }
-    } catch (error) {
-      console.error('[Xiaohongshu] Error fetching explore page:', error);
+    if (results.length === 0) {
+      console.warn(
+        '[Xiaohongshu] No results found. You may need to login first:'
+      );
+      console.warn(
+        '  Run: pnpm --filter ai-service exec tsx src/login-helper.ts xiaohongshu'
+      );
     }
+  } catch (error) {
+    console.error('[Xiaohongshu] Error fetching explore page:', error);
   } finally {
-    await context.close();
-    console.log('[Xiaohongshu] Browser context closed');
+    await disconnect();
+    console.log('[Xiaohongshu] MCP client disconnected');
   }
 
   return results;
 }
 
-/**
- * Fetch notes from search results page
- */
-async function fetchNotesFromSearch(
-  context: Awaited<ReturnType<typeof createContext>>,
-  searchUrl: string,
-  city: string,
-  maxNotes: number
-): Promise<CrawlResult[]> {
-  const page = await createPage(context);
-  const notes: CrawlResult[] = [];
-  const seenIds = new Set<string>();
-
-  try {
-    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-
-    // Wait for notes to load
-    try {
-      await page.waitForSelector('[class*="note-item"], [class*="search-result"]', { timeout: 15000 });
-    } catch {
-      console.log('[Xiaohongshu] Waiting for content...');
-    }
-
-    // Wait for network to settle
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-
-    // Scroll to load more content
-    await scrollToLoadContent(page);
-    await sleep(2000);
-
-    const html = await page.content();
-    const $ = cheerio.load(html);
-
-    // Debug: save HTML for analysis
-    const fs = await import('fs/promises');
-    await fs.writeFile('/tmp/xiaohongshu-search-debug.html', html);
-    console.log('[Xiaohongshu] Saved search HTML to /tmp/xiaohongshu-search-debug.html');
-
-    // Find note cards - Xiaohongshu uses various class patterns
-    const noteSelectors = [
-      'a[href*="/explore/"]',
-      'a[href*="/search_result/"]',
-      '[class*="note-item"] a',
-      '[class*="feeds-container"] a[href*="/"]',
-    ];
-
-    for (const selector of noteSelectors) {
-      if (notes.length >= maxNotes) break;
-
-      $(selector).each((_, el) => {
-        if (notes.length >= maxNotes) return false;
-
-        const $el = $(el);
-        const href = $el.attr('href');
-        if (!href) return;
-
-        // Match note URLs like /explore/xxx or /search_result/xxx
-        const noteMatch = href.match(/\/(explore|search_result|discover)\/([a-f0-9]+)/i);
-        if (!noteMatch) return;
-
-        const noteId = noteMatch[2];
-        if (seenIds.has(noteId)) return;
-        seenIds.add(noteId);
-
-        // Try to extract info from the card
-        const $card = $el.closest('[class*="note-item"], [class*="card"], section, article');
-
-        // Get title - try multiple patterns
-        let title = $card.find('[class*="title"], h3, h2').first().text().trim();
-        if (!title) {
-          title = $el.find('[class*="title"]').text().trim();
-        }
-        if (!title || title.length < 3) {
-          title = $el.text().trim().substring(0, 100);
-        }
-        if (!title || title.length < 3) return;
-
-        // Get author
-        const authorName = $card.find('[class*="author"], [class*="user"], [class*="nickname"]').first().text().trim() || '小红书用户';
-
-        // Get cover image
-        const $img = $card.find('img').first();
-        const coverImageUrl = $img.attr('src') || $img.attr('data-src');
-
-        // Get likes count
-        const likesText = $card.find('[class*="like"], [class*="count"]').text();
-        const likesMatch = likesText.match(/(\d+(?:\.\d+)?)(万|k)?/i);
-        let likesCount = 0;
-        if (likesMatch) {
-          likesCount = parseFloat(likesMatch[1]);
-          if (likesMatch[2] === '万' || likesMatch[2]?.toLowerCase() === 'k') {
-            likesCount *= (likesMatch[2] === '万' ? 10000 : 1000);
-          }
-        }
-
-        const sourceExternalId = `xiaohongshu_${noteId}`;
-        const fullUrl = `https://www.xiaohongshu.com/explore/${noteId}`;
-
-        notes.push({
-          sourceExternalId,
-          sourceUrl: fullUrl,
-          title: title.substring(0, 200),
-          content: `${title} - ${city}旅游攻略`,
-          authorName,
-          coverImageUrl: coverImageUrl?.startsWith('http') ? coverImageUrl : (coverImageUrl ? `https:${coverImageUrl}` : undefined),
-          imageUrls: [],
-          destinations: [city],
-          tags: extractTags(title, ''),
-          likesCount: Math.floor(likesCount),
-          qualityScore: calculateQualityScore('', 1, Math.floor(likesCount)),
-        });
-      });
-    }
-
-    console.log(`[Xiaohongshu] Extracted ${notes.length} notes from search`);
-  } catch (error) {
-    console.error('[Xiaohongshu] Error fetching search page:', error);
-  } finally {
-    await page.close();
-  }
-
-  return notes;
-}
-
-/**
- * Fetch notes from explore page
- */
 async function fetchNotesFromExplore(
-  context: Awaited<ReturnType<typeof createContext>>,
   exploreUrl: string,
   city: string,
   maxNotes: number
 ): Promise<CrawlResult[]> {
-  const page = await createPage(context);
   const notes: CrawlResult[] = [];
-  const seenIds = new Set<string>();
 
   try {
-    await page.goto(exploreUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await navigateTo(exploreUrl, { timeout: 30000 });
+    await waitForContentStable();
 
-    // Wait for content
-    try {
-      await page.waitForSelector('[class*="note"], [class*="feed"]', { timeout: 15000 });
-    } catch {
-      console.log('[Xiaohongshu] Explore page content not found');
+    // Check for login wall or captcha
+    const initialSnapshot = await takeSnapshot();
+    if (
+      initialSnapshot.content.includes('登录') &&
+      initialSnapshot.content.includes('验证')
+    ) {
+      console.warn(
+        '[Xiaohongshu] Login/verification required - limited data available'
+      );
     }
 
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-    await scrollToLoadContent(page);
+    await scrollToLoadContent(3);
     await sleep(2000);
 
-    const html = await page.content();
-    const $ = cheerio.load(html);
-
-    // Find note links
-    $('a[href*="/explore/"]').each((_, el) => {
-      if (notes.length >= maxNotes) return false;
-
-      const href = $(el).attr('href');
-      const noteMatch = href?.match(/\/explore\/([a-f0-9]+)/i);
-      if (!noteMatch) return;
-
-      const noteId = noteMatch[1];
-      if (seenIds.has(noteId)) return;
-      seenIds.add(noteId);
-
-      const $card = $(el).closest('section, article, [class*="note"], [class*="feed-item"]');
-
-      let title = $card.find('[class*="title"], h3').first().text().trim();
-      if (!title || title.length < 3) {
-        title = $(el).text().trim().substring(0, 100);
+    // Try to extract from API responses first (most reliable)
+    const apiNotes = await extractNotesFromApi();
+    if (apiNotes.length > 0) {
+      console.log(
+        `[Xiaohongshu] Extracted ${apiNotes.length} notes from explore API`
+      );
+      for (const note of apiNotes.slice(0, maxNotes)) {
+        const result = convertNoteToResult(note, city);
+        if (result) notes.push(result);
       }
-      if (!title || title.length < 3) return;
+    }
 
-      const authorName = $card.find('[class*="author"], [class*="name"]').first().text().trim() || '小红书用户';
-      const $img = $card.find('img').first();
-      const coverImageUrl = $img.attr('src') || $img.attr('data-src');
-
-      const sourceExternalId = `xiaohongshu_${noteId}`;
-      const fullUrl = `https://www.xiaohongshu.com/explore/${noteId}`;
-
-      notes.push({
-        sourceExternalId,
-        sourceUrl: fullUrl,
-        title: title.substring(0, 200),
-        content: `${title} - 旅游攻略`,
-        authorName,
-        coverImageUrl: coverImageUrl?.startsWith('http') ? coverImageUrl : (coverImageUrl ? `https:${coverImageUrl}` : undefined),
-        imageUrls: [],
-        destinations: [city],
-        tags: extractTags(title, ''),
-        likesCount: 0,
-        qualityScore: 50,
-      });
-    });
-
-    console.log(`[Xiaohongshu] Extracted ${notes.length} notes from explore`);
+    // Fall back to snapshot extraction if API didn't work
+    if (notes.length < maxNotes) {
+      const snapshotNotes = await extractNotesFromSnapshot(
+        city,
+        maxNotes - notes.length
+      );
+      for (const note of snapshotNotes) {
+        if (!notes.some((n) => n.sourceExternalId === note.sourceExternalId)) {
+          notes.push(note);
+        }
+      }
+    }
   } catch (error) {
     console.error('[Xiaohongshu] Error fetching explore page:', error);
-  } finally {
-    await page.close();
   }
 
   return notes;
 }
 
-/**
- * Extract tags from title and content
- */
+async function extractNotesFromApi(): Promise<XiaohongshuNote[]> {
+  const notes: XiaohongshuNote[] = [];
+
+  try {
+    const requests = await listNetworkRequests(['xhr', 'fetch']);
+    console.log(`[Xiaohongshu] Found ${requests.length} network requests`);
+
+    const feedRequests = requests.filter(
+      (r) =>
+        r.url.includes('/api/sns/web/v1/feed') ||
+        r.url.includes('/api/sns/web/v1/search') ||
+        r.url.includes('/api/sns/web/v1/homefeed')
+    );
+    console.log(
+      `[Xiaohongshu] Found ${feedRequests.length} feed/search requests`
+    );
+
+    for (const req of feedRequests.slice(-5)) {
+      try {
+        console.log(
+          `[Xiaohongshu] Fetching request ${req.reqid}: ${req.url.substring(0, 80)}...`
+        );
+        const detail = await getNetworkRequest(req.reqid);
+        if (detail?.responseBody) {
+          const data: FeedResponse = JSON.parse(detail.responseBody);
+          if (data.data?.items) {
+            console.log(
+              `[Xiaohongshu] Found ${data.data.items.length} items in response`
+            );
+            for (const item of data.data.items) {
+              if (item.note_card?.note_id) {
+                notes.push(item.note_card);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.log(`[Xiaohongshu] Failed to parse request ${req.reqid}:`, e);
+      }
+    }
+  } catch (error) {
+    console.error('[Xiaohongshu] Error extracting from API:', error);
+  }
+
+  return notes;
+}
+
+async function extractNotesFromSnapshot(
+  city: string,
+  maxNotes: number
+): Promise<CrawlResult[]> {
+  const notes: CrawlResult[] = [];
+  const seenIds = new Set<string>();
+
+  try {
+    const snapshot = await takeSnapshot({ verbose: true });
+    const content = snapshot.content;
+
+    console.log(`[Xiaohongshu] Snapshot length: ${content.length} chars`);
+    console.log(`[Xiaohongshu] Snapshot preview: ${content.substring(0, 500)}`);
+
+    // Extract note IDs from snapshot
+    const noteIdMatches = content.matchAll(/\/explore\/([a-f0-9]{24})/gi);
+    const noteIds: string[] = [];
+    for (const match of noteIdMatches) {
+      if (!seenIds.has(match[1])) {
+        seenIds.add(match[1]);
+        noteIds.push(match[1]);
+      }
+    }
+
+    console.log(
+      `[Xiaohongshu] Found ${noteIds.length} unique note IDs in snapshot`
+    );
+
+    // Use accessibility parser for better title extraction
+    const headings = extractHeadings(content);
+    const staticTexts = extractStaticText(content);
+    const imageUrls = extractImageUrls(content);
+
+    for (let i = 0; i < noteIds.slice(0, maxNotes).length; i++) {
+      const noteId = noteIds[i];
+
+      // Try to find context around this note ID
+      const notePattern = new RegExp(
+        `([^\\n]{0,300})\\/explore\\/${noteId}([^\\n]{0,300})`,
+        'i'
+      );
+      const contextMatch = content.match(notePattern);
+
+      let title = '';
+      let authorName = '小红书用户';
+
+      if (contextMatch) {
+        const beforeText = contextMatch[1];
+        const afterText = contextMatch[2];
+        const localContext = beforeText + afterText;
+
+        // Use accessibility parser to extract title from context
+        const localHeadings = extractHeadings(localContext);
+        if (localHeadings.length > 0) {
+          title = localHeadings[0];
+        }
+
+        // Try to extract from StaticText if no heading found
+        if (!title) {
+          const localTexts = extractStaticText(localContext);
+          const meaningfulText = localTexts.find(
+            (t) =>
+              t.length >= 5 &&
+              t.length <= 100 &&
+              /[\u4E00-\u9FFF]/.test(t) &&
+              !t.includes('http')
+          );
+          if (meaningfulText) {
+            title = meaningfulText;
+          }
+        }
+
+        // Try to get author
+        const localAuthor = extractAuthor(localContext);
+        if (localAuthor) {
+          authorName = localAuthor;
+        }
+      }
+
+      // Fallback: use global headings/texts if local extraction failed
+      if (!title && headings[i]) {
+        title = headings[i];
+      }
+      if (!title && staticTexts[i]) {
+        title = staticTexts[i].substring(0, 100);
+      }
+      if (!title) {
+        title = `${city}旅游笔记`;
+      }
+
+      // Get cover image if available
+      const coverImageUrl = imageUrls[i];
+
+      const contentBlocks: ContentBlock[] = [
+        { type: 'text', content: `${title} - ${city}旅游攻略` },
+      ];
+      if (coverImageUrl) {
+        contentBlocks.push({ type: 'image', url: coverImageUrl });
+      }
+
+      notes.push({
+        sourceExternalId: `xiaohongshu_${noteId}`,
+        sourceUrl: `https://www.xiaohongshu.com/explore/${noteId}`,
+        title: title.substring(0, 200),
+        content: `${title} - ${city}旅游攻略`,
+        contentBlocks,
+        contentType: 'normal',
+        authorName,
+        coverImageUrl,
+        imageUrls: coverImageUrl ? [coverImageUrl] : [],
+        destinations: [city],
+        tags: extractTags(title, ''),
+        qualityScore: 50,
+      });
+    }
+  } catch (error) {
+    console.error('[Xiaohongshu] Error extracting from snapshot:', error);
+  }
+
+  return notes;
+}
+
+function convertNoteToResult(
+  note: XiaohongshuNote,
+  city: string
+): CrawlResult | null {
+  if (!note.note_id) return null;
+
+  const title = note.title || note.desc?.substring(0, 50) || '';
+  if (!title || title.length < 2) return null;
+
+  const contentBlocks: ContentBlock[] = [];
+  const imageUrls: string[] = [];
+  const videoUrls: string[] = [];
+
+  if (note.desc) {
+    contentBlocks.push({ type: 'text', content: note.desc });
+  }
+
+  if (note.image_list) {
+    for (const img of note.image_list) {
+      const url = img.url_default || img.url;
+      if (url) {
+        imageUrls.push(url);
+        contentBlocks.push({
+          type: 'image',
+          url,
+          width: img.width,
+          height: img.height,
+        });
+      }
+    }
+  }
+
+  if (note.type === 'video' && note.video?.media?.stream) {
+    const streams = note.video.media.stream;
+    const videoStream = streams.h264?.[0] || streams.h265?.[0];
+    if (videoStream?.master_url) {
+      videoUrls.push(videoStream.master_url);
+      contentBlocks.push({
+        type: 'video',
+        url: videoStream.master_url,
+        thumbnailUrl: note.video.image?.first_frame_fileid
+          ? `https://sns-img-qc.xhscdn.com/${note.video.image.first_frame_fileid}`
+          : undefined,
+      });
+    }
+  }
+
+  const likesCount = parseCount(note.interact_info?.liked_count);
+  const savesCount = parseCount(note.interact_info?.collected_count);
+  const commentsCount = parseCount(note.interact_info?.comment_count);
+
+  const tags =
+    (note.tag_list?.map((t) => t.name).filter(Boolean) as string[]) || [];
+  tags.push(...extractTags(title, note.desc || ''));
+  const uniqueTags = [...new Set(tags)].slice(0, 10);
+
+  return {
+    sourceExternalId: `xiaohongshu_${note.note_id}`,
+    sourceUrl: `https://www.xiaohongshu.com/explore/${note.note_id}`,
+    title: title.substring(0, 200),
+    content: note.desc || title,
+    contentBlocks,
+    contentType: note.type === 'video' ? 'video' : 'normal',
+    authorName: note.user?.nickname || '小红书用户',
+    authorAvatar: note.user?.avatar,
+    coverImageUrl: imageUrls[0],
+    imageUrls,
+    videoUrls: videoUrls.length > 0 ? videoUrls : undefined,
+    destinations: [city],
+    tags: uniqueTags,
+    likesCount,
+    savesCount,
+    commentsCount,
+    qualityScore: calculateQualityScore(
+      note.desc || '',
+      imageUrls.length,
+      likesCount
+    ),
+  };
+}
+
+function parseCount(value?: string): number {
+  if (!value) return 0;
+  const num = Number.parseFloat(value);
+  if (value.includes('万') || value.toLowerCase().includes('w')) {
+    return Math.floor(num * 10000);
+  }
+  if (value.toLowerCase().includes('k')) {
+    return Math.floor(num * 1000);
+  }
+  return Math.floor(num) || 0;
+}
+
 function extractTags(title: string, content: string): string[] {
   const tags: string[] = [];
   const text = `${title} ${content}`.toLowerCase();
@@ -344,9 +457,6 @@ function extractTags(title: string, content: string): string[] {
   return tags.slice(0, 5);
 }
 
-/**
- * Calculate quality score based on content metrics
- */
 function calculateQualityScore(
   content: string,
   imageCount: number,
@@ -354,15 +464,12 @@ function calculateQualityScore(
 ): number {
   let score = 50;
 
-  // Content length bonus
   if (content.length > 500) score += 10;
   if (content.length > 1000) score += 10;
   if (content.length > 2000) score += 5;
 
-  // Image bonus
   score += Math.min(imageCount * 2, 15);
 
-  // Likes bonus (xiaohongshu tends to have higher engagement)
   if (likesCount > 100) score += 5;
   if (likesCount > 1000) score += 5;
   if (likesCount > 10000) score += 5;
