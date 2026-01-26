@@ -9,6 +9,7 @@ export declare const getPoiWithBusinessHours: import("convex/server").Registered
     poi: {
         _id: import("convex/values").GenericId<"pois">;
         _creationTime: number;
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         priceLevel?: number | undefined;
@@ -54,7 +55,6 @@ export declare const getPoiWithBusinessHours: import("convex/server").Registered
             peakHours?: string[] | undefined;
             seasonalNotes?: string | undefined;
         } | undefined;
-        imageUrls?: string[] | undefined;
         isHiddenGem?: boolean | undefined;
         hiddenGemScore?: number | undefined;
         hiddenGemRating?: number | undefined;
@@ -133,9 +133,9 @@ export declare const getHolidayHours: import("convex/server").RegisteredQuery<"p
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -158,9 +158,9 @@ export declare const getUpcomingHolidays: import("convex/server").RegisteredQuer
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -207,6 +207,7 @@ export declare const updateBusinessHours: import("convex/server").RegisteredMuta
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -252,7 +253,6 @@ export declare const updateBusinessHours: import("convex/server").RegisteredMuta
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -293,6 +293,7 @@ export declare const updateBestVisitTime: import("convex/server").RegisteredMuta
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -338,7 +339,6 @@ export declare const updateBestVisitTime: import("convex/server").RegisteredMuta
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -406,9 +406,9 @@ export declare const updateHolidayHours: import("convex/server").RegisteredMutat
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -449,8 +449,8 @@ export declare const getUserReminders: import("convex/server").RegisteredQuery<"
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;
@@ -467,8 +467,8 @@ export declare const getPendingReminders: import("convex/server").RegisteredQuer
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;

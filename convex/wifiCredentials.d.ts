@@ -14,9 +14,9 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -35,9 +35,9 @@ export declare const getBySpot: import("convex/server").RegisteredQuery<"public"
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -55,9 +55,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -77,9 +77,9 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -119,9 +119,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -139,9 +139,9 @@ export declare const markUsed: import("convex/server").RegisteredMutation<"publi
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -163,9 +163,9 @@ export declare const getSharedBySpot: import("convex/server").RegisteredQuery<"p
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;

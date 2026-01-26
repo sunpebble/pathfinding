@@ -3,8 +3,8 @@
  * Combines activities from followed users and recommended/trending content
  */
 export declare const getFollowingFeed: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     cursor?: number | undefined;
+    limit?: number | undefined;
     userId: string;
 }, Promise<{
     activities: {
@@ -18,12 +18,12 @@ export declare const getFollowingFeed: import("convex/server").RegisteredQuery<"
         targetCityName?: string | undefined;
         updatedAt?: number | undefined;
         createdAt: number;
+        likesCount: number;
+        commentsCount: number;
         actorId: string;
         activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
         targetType: "user" | "itinerary";
         targetId: string;
-        likesCount: number;
-        commentsCount: number;
         visibility: "public" | "followers";
     }[];
     hasMore: boolean;
@@ -34,9 +34,9 @@ export declare const getFollowingFeed: import("convex/server").RegisteredQuery<"
  * Returns popular and recent public activities
  */
 export declare const getPublicFeed: import("convex/server").RegisteredQuery<"public", {
+    cursor?: number | undefined;
     limit?: number | undefined;
     activityType?: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user" | undefined;
-    cursor?: number | undefined;
 }, Promise<{
     activities: {
         _id: import("convex/values").GenericId<"activityFeed">;
@@ -49,12 +49,12 @@ export declare const getPublicFeed: import("convex/server").RegisteredQuery<"pub
         targetCityName?: string | undefined;
         updatedAt?: number | undefined;
         createdAt: number;
+        likesCount: number;
+        commentsCount: number;
         actorId: string;
         activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
         targetType: "user" | "itinerary";
         targetId: string;
-        likesCount: number;
-        commentsCount: number;
         visibility: "public" | "followers";
     }[];
     hasMore: boolean;
@@ -80,12 +80,12 @@ export declare const getTrendingFeed: import("convex/server").RegisteredQuery<"p
         targetCityName?: string | undefined;
         updatedAt?: number | undefined;
         createdAt: number;
+        likesCount: number;
+        commentsCount: number;
         actorId: string;
         activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
         targetType: "user" | "itinerary";
         targetId: string;
-        likesCount: number;
-        commentsCount: number;
         visibility: "public" | "followers";
     }[];
 }>>;
@@ -93,9 +93,9 @@ export declare const getTrendingFeed: import("convex/server").RegisteredQuery<"p
  * Get activities for a specific user's profile
  */
 export declare const getUserActivities: import("convex/server").RegisteredQuery<"public", {
+    cursor?: number | undefined;
     limit?: number | undefined;
     activityType?: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user" | undefined;
-    cursor?: number | undefined;
     userId: string;
 }, Promise<{
     activities: {
@@ -109,12 +109,12 @@ export declare const getUserActivities: import("convex/server").RegisteredQuery<
         targetCityName?: string | undefined;
         updatedAt?: number | undefined;
         createdAt: number;
+        likesCount: number;
+        commentsCount: number;
         actorId: string;
         activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
         targetType: "user" | "itinerary";
         targetId: string;
-        likesCount: number;
-        commentsCount: number;
         visibility: "public" | "followers";
     }[];
     hasMore: boolean;
@@ -193,8 +193,8 @@ export declare const isFollowing: import("convex/server").RegisteredQuery<"publi
  * Get followers for a user
  */
 export declare const getFollowers: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     cursor?: number | undefined;
+    limit?: number | undefined;
     userId: string;
 }, Promise<{
     followers: {
@@ -205,9 +205,9 @@ export declare const getFollowers: import("convex/server").RegisteredQuery<"publ
         } | null;
         _id: import("convex/values").GenericId<"userFollows">;
         _creationTime: number;
+        createdAt: number;
         followerId: string;
         followingId: string;
-        createdAt: number;
     }[];
     hasMore: boolean;
     nextCursor: number | null;
@@ -216,8 +216,8 @@ export declare const getFollowers: import("convex/server").RegisteredQuery<"publ
  * Get users that a user is following
  */
 export declare const getFollowing: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     cursor?: number | undefined;
+    limit?: number | undefined;
     userId: string;
 }, Promise<{
     following: {
@@ -228,9 +228,9 @@ export declare const getFollowing: import("convex/server").RegisteredQuery<"publ
         } | null;
         _id: import("convex/values").GenericId<"userFollows">;
         _creationTime: number;
+        createdAt: number;
         followerId: string;
         followingId: string;
-        createdAt: number;
     }[];
     hasMore: boolean;
     nextCursor: number | null;

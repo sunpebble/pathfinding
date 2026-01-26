@@ -36,9 +36,9 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
         airlineContactEmail?: string | undefined;
         reminderEnabled?: boolean | undefined;
         status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+        createdAt: number;
         description: string;
         userId: string;
-        createdAt: number;
         updatedAt: number;
     }[];
     total: number;
@@ -65,9 +65,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         baggageAllowance?: string | undefined;
         frequentFlyerNumber?: string | undefined;
         importedFrom?: string | undefined;
-        status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-        userId: string;
+        status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
         createdAt: number;
+        userId: string;
         updatedAt: number;
         flightId: import("convex/values").GenericId<"flights">;
         confirmationCode: string;
@@ -102,9 +102,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -140,9 +140,9 @@ export declare const getByTagNumber: import("convex/server").RegisteredQuery<"pu
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -178,9 +178,9 @@ export declare const getByFlightBooking: import("convex/server").RegisteredQuery
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 }[]>>;
 /**
@@ -216,9 +216,9 @@ export declare const getByItinerary: import("convex/server").RegisteredQuery<"pu
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 }[]>>;
 /**
@@ -254,9 +254,9 @@ export declare const getActive: import("convex/server").RegisteredQuery<"public"
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 }[]>>;
 /**
@@ -355,9 +355,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -395,9 +395,9 @@ export declare const updateStatus: import("convex/server").RegisteredMutation<"p
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -435,9 +435,9 @@ export declare const fileLossReport: import("convex/server").RegisteredMutation<
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -474,9 +474,9 @@ export declare const markAsFound: import("convex/server").RegisteredMutation<"pu
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -512,9 +512,9 @@ export declare const markAsClaimed: import("convex/server").RegisteredMutation<"
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -551,9 +551,9 @@ export declare const linkToFlightBooking: import("convex/server").RegisteredMuta
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -589,9 +589,9 @@ export declare const unlinkFromFlightBooking: import("convex/server").Registered
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -628,9 +628,9 @@ export declare const linkToItinerary: import("convex/server").RegisteredMutation
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -666,9 +666,9 @@ export declare const unlinkFromItinerary: import("convex/server").RegisteredMuta
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -712,9 +712,9 @@ export declare const addPhotos: import("convex/server").RegisteredMutation<"publ
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**
@@ -751,9 +751,9 @@ export declare const setTagPhoto: import("convex/server").RegisteredMutation<"pu
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | null>>;
 /**

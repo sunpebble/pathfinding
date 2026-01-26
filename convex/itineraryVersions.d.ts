@@ -76,8 +76,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     versionNumber: number;
 } | null>>;
@@ -146,10 +146,7 @@ export declare const updateNote: import("convex/server").RegisteredMutation<"pub
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
-    itineraryId: import("convex/values").GenericId<"itineraries">;
-    versionNumber: number;
     snapshot: {
         coverImageUrl?: string | undefined;
         title: string;
@@ -170,6 +167,9 @@ export declare const updateNote: import("convex/server").RegisteredMutation<"pub
         visibility: "public" | "private" | "team";
         cityId: import("convex/values").GenericId<"cities">;
     };
+    userId: string;
+    itineraryId: import("convex/values").GenericId<"itineraries">;
+    versionNumber: number;
 } | null>>;
 /**
  * Restore itinerary to a specific version

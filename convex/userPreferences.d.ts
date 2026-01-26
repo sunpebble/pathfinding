@@ -86,9 +86,9 @@ export declare const getRecentBehaviors: import("convex/server").RegisteredQuery
 }, Promise<{
     _id: import("convex/values").GenericId<"userBehaviorEvents">;
     _creationTime: number;
+    createdAt: number;
     metadata: any;
     userId: string;
-    createdAt: number;
     targetType: "city" | "itinerary" | "poi" | "search" | "guide";
     targetId: string;
     categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];

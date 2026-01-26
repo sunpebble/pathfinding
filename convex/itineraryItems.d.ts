@@ -27,6 +27,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     poi: {
         _id: import("convex/values").GenericId<"pois">;
         _creationTime: number;
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         priceLevel?: number | undefined;
@@ -72,7 +73,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
             peakHours?: string[] | undefined;
             seasonalNotes?: string | undefined;
         } | undefined;
-        imageUrls?: string[] | undefined;
         isHiddenGem?: boolean | undefined;
         hiddenGemScore?: number | undefined;
         hiddenGemRating?: number | undefined;

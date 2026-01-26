@@ -12,12 +12,12 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 }[]>>;
 export declare const getById: import("convex/server").RegisteredQuery<"public", {
@@ -30,12 +30,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;
 export declare const getActiveAlerts: import("convex/server").RegisteredQuery<"public", {
@@ -48,12 +48,12 @@ export declare const getActiveAlerts: import("convex/server").RegisteredQuery<"p
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 }[]>>;
 export declare const create: import("convex/server").RegisteredMutation<"public", {
@@ -63,7 +63,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
     latitude: number;
     longitude: number;
     userId: string;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
 }, Promise<{
     _id: import("convex/values").GenericId<"sosAlerts">;
     _creationTime: number;
@@ -72,16 +72,16 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;
 export declare const updateStatus: import("convex/server").RegisteredMutation<"public", {
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
     id: import("convex/values").GenericId<"sosAlerts">;
 }, Promise<{
     _id: import("convex/values").GenericId<"sosAlerts">;
@@ -91,12 +91,12 @@ export declare const updateStatus: import("convex/server").RegisteredMutation<"p
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;
 export declare const resolve: import("convex/server").RegisteredMutation<"public", {
@@ -110,12 +110,12 @@ export declare const resolve: import("convex/server").RegisteredMutation<"public
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;
 export declare const cancel: import("convex/server").RegisteredMutation<"public", {
@@ -128,12 +128,12 @@ export declare const cancel: import("convex/server").RegisteredMutation<"public"
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;
 export declare const getWithContacts: import("convex/server").RegisteredQuery<"public", {
@@ -152,12 +152,12 @@ export declare const getWithContacts: import("convex/server").RegisteredQuery<"p
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;
 export declare const getWithEmergencyInfo: import("convex/server").RegisteredQuery<"public", {
@@ -204,12 +204,12 @@ export declare const getWithEmergencyInfo: import("convex/server").RegisteredQue
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;
 export declare const updateLocation: import("convex/server").RegisteredMutation<"public", {
@@ -226,16 +226,16 @@ export declare const updateLocation: import("convex/server").RegisteredMutation<
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;
 export declare const getRecentAlerts: import("convex/server").RegisteredQuery<"public", {
-    status?: "received" | "cancelled" | "resolved" | "sent" | undefined;
+    status?: "cancelled" | "received" | "resolved" | "sent" | undefined;
     limit?: number | undefined;
 }, Promise<{
     _id: import("convex/values").GenericId<"sosAlerts">;
@@ -245,17 +245,17 @@ export declare const getRecentAlerts: import("convex/server").RegisteredQuery<"p
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 }[]>>;
 export declare const addMessage: import("convex/server").RegisteredMutation<"public", {
-    message: string;
     id: import("convex/values").GenericId<"sosAlerts">;
+    message: string;
 }, Promise<{
     _id: import("convex/values").GenericId<"sosAlerts">;
     _creationTime: number;
@@ -264,11 +264,11 @@ export declare const addMessage: import("convex/server").RegisteredMutation<"pub
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | null>>;

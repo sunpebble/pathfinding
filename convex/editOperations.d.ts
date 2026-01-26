@@ -13,14 +13,14 @@ export declare const getRecentOperations: import("convex/server").RegisteredQuer
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 }[]>>;
 /**
  * Get pending operations for conflict resolution
@@ -36,14 +36,14 @@ export declare const getPendingOperations: import("convex/server").RegisteredQue
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 }[]>>;
 /**
  * Get conflicted operations that need resolution
@@ -59,14 +59,14 @@ export declare const getConflictedOperations: import("convex/server").Registered
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 }[]>>;
 /**
  * Get operations by user
@@ -84,14 +84,14 @@ export declare const getOperationsByUser: import("convex/server").RegisteredQuer
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 }[]>>;
 /**
  * Record a new edit operation
@@ -102,7 +102,7 @@ export declare const recordOperation: import("convex/server").RegisteredMutation
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
 }, Promise<{
     operationId: import("convex/values").GenericId<"editOperations">;

@@ -7,8 +7,8 @@
  */
 export declare const create: import("convex/server").RegisteredMutation<"public", {
     parentId?: string | undefined;
-    guideId: string;
     content: string;
+    guideId: string;
     userId: string;
 }, Promise<string>>;
 /**
@@ -77,19 +77,19 @@ export declare const toggleLike: import("convex/server").RegisteredMutation<"pub
  * Update a comment
  */
 export declare const update: import("convex/server").RegisteredMutation<"public", {
-    id: import("convex/values").GenericId<"guideComments">;
     content: string;
+    id: import("convex/values").GenericId<"guideComments">;
     userId: string;
 }, Promise<{
     _id: import("convex/values").GenericId<"guideComments">;
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: string | undefined;
-    guideId: string;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    guideId: string;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;

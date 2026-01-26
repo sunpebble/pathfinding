@@ -17,9 +17,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -46,9 +46,9 @@ export declare const listByNote: import("convex/server").RegisteredQuery<"public
             updatedAt?: number | undefined;
             parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
             content: string;
-            userId: string;
             createdAt: number;
             likesCount: number;
+            userId: string;
             repliesCount: number;
             isEdited: boolean;
             isDeleted: boolean;
@@ -59,9 +59,9 @@ export declare const listByNote: import("convex/server").RegisteredQuery<"public
         updatedAt?: number | undefined;
         parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
         content: string;
-        userId: string;
         createdAt: number;
         likesCount: number;
+        userId: string;
         repliesCount: number;
         isEdited: boolean;
         isDeleted: boolean;
@@ -82,9 +82,9 @@ export declare const listReplies: import("convex/server").RegisteredQuery<"publi
         updatedAt?: number | undefined;
         parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
         content: string;
-        userId: string;
         createdAt: number;
         likesCount: number;
+        userId: string;
         repliesCount: number;
         isEdited: boolean;
         isDeleted: boolean;
@@ -120,9 +120,9 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
         updatedAt?: number | undefined;
         parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
         content: string;
-        userId: string;
         createdAt: number;
         likesCount: number;
+        userId: string;
         repliesCount: number;
         isEdited: boolean;
         isDeleted: boolean;

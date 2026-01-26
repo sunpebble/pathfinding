@@ -75,9 +75,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     collaborators: {
         _id: import("convex/values").GenericId<"itineraryCollaborators">;
         _creationTime: number;
+        role: "owner" | "editor" | "viewer";
         userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
-        role: "owner" | "editor" | "viewer";
     }[];
     _id: import("convex/values").GenericId<"itineraries">;
     _creationTime: number;
@@ -91,8 +91,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     cityId: import("convex/values").GenericId<"cities">;
 } | null>>;
 export declare const create: import("convex/server").RegisteredMutation<"public", {
-    visibility?: "public" | "private" | "team" | undefined;
     coverImageUrl?: string | undefined;
+    visibility?: "public" | "private" | "team" | undefined;
     title: string;
     userId: string;
     startDate: string;
@@ -101,11 +101,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
 }, Promise<import("convex/values").GenericId<"itineraries">>>;
 export declare const update: import("convex/server").RegisteredMutation<"public", {
     title?: string | undefined;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     id: import("convex/values").GenericId<"itineraries">;
     userId: string;
 }, Promise<{
@@ -157,8 +157,8 @@ export declare const getCopyHistory: import("convex/server").RegisteredQuery<"pu
         _id: import("convex/values").GenericId<"itineraryCopyHistory">;
         _creationTime: number;
         selectedDays?: number[] | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         originalItineraryId: import("convex/values").GenericId<"itineraries">;
         copiedItineraryId: import("convex/values").GenericId<"itineraries">;
         copyType: "partial" | "full";

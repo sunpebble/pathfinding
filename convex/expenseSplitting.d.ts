@@ -6,8 +6,8 @@ export declare const listMembers: import("convex/server").RegisteredQuery<"publi
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 }[]>>;
@@ -26,8 +26,8 @@ export declare const addOwnerAsMember: import("convex/server").RegisteredMutatio
     itineraryId: import("convex/values").GenericId<"itineraries">;
 }, Promise<import("convex/values").GenericId<"tripMembers">>>;
 export declare const updateMember: import("convex/server").RegisteredMutation<"public", {
-    email?: string | undefined;
     name?: string | undefined;
+    email?: string | undefined;
     avatarUrl?: string | undefined;
     userId: string;
     memberId: import("convex/values").GenericId<"tripMembers">;
@@ -37,8 +37,8 @@ export declare const updateMember: import("convex/server").RegisteredMutation<"p
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 } | null>>;
@@ -64,9 +64,9 @@ export declare const listExpenses: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -92,9 +92,9 @@ export declare const getExpense: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -106,8 +106,8 @@ export declare const getExpense: import("convex/server").RegisteredQuery<"public
 export declare const addExpense: import("convex/server").RegisteredMutation<"public", {
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
     description: string;
+    date: string;
     userId: string;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -121,8 +121,8 @@ export declare const addExpense: import("convex/server").RegisteredMutation<"pub
     }[];
 }, Promise<import("convex/values").GenericId<"sharedExpenses">>>;
 export declare const updateExpense: import("convex/server").RegisteredMutation<"public", {
-    date?: string | undefined;
     description?: string | undefined;
+    date?: string | undefined;
     category?: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets" | undefined;
     currency?: string | undefined;
     notes?: string | undefined;
@@ -141,9 +141,9 @@ export declare const updateExpense: import("convex/server").RegisteredMutation<"
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;

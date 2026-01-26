@@ -3,12 +3,12 @@ export declare const listCategories: import("convex/server").RegisteredQuery<"pu
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 }[]>>;
 export declare const getCategoryById: import("convex/server").RegisteredQuery<"public", {
     id: import("convex/values").GenericId<"templateCategories">;
@@ -17,39 +17,39 @@ export declare const getCategoryById: import("convex/server").RegisteredQuery<"p
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | null>>;
 export declare const createCategory: import("convex/server").RegisteredMutation<"public", {
     description?: string | undefined;
     nameEn?: string | undefined;
     name: string;
-    sortOrder: number;
     icon: string;
+    sortOrder: number;
 }, Promise<import("convex/values").GenericId<"templateCategories">>>;
 export declare const updateCategory: import("convex/server").RegisteredMutation<"public", {
     name?: string | undefined;
     description?: string | undefined;
+    icon?: string | undefined;
     nameEn?: string | undefined;
     sortOrder?: number | undefined;
     isActive?: boolean | undefined;
-    icon?: string | undefined;
     id: import("convex/values").GenericId<"templateCategories">;
 }, Promise<{
     _id: import("convex/values").GenericId<"templateCategories">;
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | null>>;
 export declare const listPublicTemplates: import("convex/server").RegisteredQuery<"public", {
     categoryId?: import("convex/values").GenericId<"templateCategories"> | undefined;
@@ -62,11 +62,11 @@ export declare const listPublicTemplates: import("convex/server").RegisteredQuer
         categoryIcon: string | undefined;
         _id: import("convex/values").GenericId<"itineraryTemplates">;
         _creationTime: number;
-        tags?: string[] | undefined;
         description?: string | undefined;
-        destinations?: string[] | undefined;
-        coverImageUrl?: string | undefined;
         publishedAt?: number | undefined;
+        coverImageUrl?: string | undefined;
+        destinations?: string[] | undefined;
+        tags?: string[] | undefined;
         creatorId?: string | undefined;
         creatorName?: string | undefined;
         estimatedBudget?: {
@@ -76,6 +76,7 @@ export declare const listPublicTemplates: import("convex/server").RegisteredQuer
         } | undefined;
         suitableFor?: string[] | undefined;
         bestSeasons?: string[] | undefined;
+        createdAt: number;
         title: string;
         days: {
             theme?: string | undefined;
@@ -87,12 +88,11 @@ export declare const listPublicTemplates: import("convex/server").RegisteredQuer
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }[];
             dayNumber: number;
         }[];
-        createdAt: number;
         visibility: "public" | "private" | "unlisted";
         updatedAt: number;
         viewCount: number;
@@ -116,11 +116,11 @@ export declare const listUserTemplates: import("convex/server").RegisteredQuery<
         categoryIcon: string | undefined;
         _id: import("convex/values").GenericId<"itineraryTemplates">;
         _creationTime: number;
-        tags?: string[] | undefined;
         description?: string | undefined;
-        destinations?: string[] | undefined;
-        coverImageUrl?: string | undefined;
         publishedAt?: number | undefined;
+        coverImageUrl?: string | undefined;
+        destinations?: string[] | undefined;
+        tags?: string[] | undefined;
         creatorId?: string | undefined;
         creatorName?: string | undefined;
         estimatedBudget?: {
@@ -130,6 +130,7 @@ export declare const listUserTemplates: import("convex/server").RegisteredQuery<
         } | undefined;
         suitableFor?: string[] | undefined;
         bestSeasons?: string[] | undefined;
+        createdAt: number;
         title: string;
         days: {
             theme?: string | undefined;
@@ -141,12 +142,11 @@ export declare const listUserTemplates: import("convex/server").RegisteredQuery<
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }[];
             dayNumber: number;
         }[];
-        createdAt: number;
         visibility: "public" | "private" | "unlisted";
         updatedAt: number;
         viewCount: number;
@@ -167,11 +167,11 @@ export declare const getTemplateById: import("convex/server").RegisteredQuery<"p
     categoryIcon: string | undefined;
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -181,6 +181,7 @@ export declare const getTemplateById: import("convex/server").RegisteredQuery<"p
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -192,12 +193,11 @@ export declare const getTemplateById: import("convex/server").RegisteredQuery<"p
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -219,11 +219,11 @@ export declare const getTemplateWithUserStatus: import("convex/server").Register
     isSaved: boolean;
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -233,6 +233,7 @@ export declare const getTemplateWithUserStatus: import("convex/server").Register
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -244,12 +245,11 @@ export declare const getTemplateWithUserStatus: import("convex/server").Register
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -272,11 +272,11 @@ export declare const listSavedTemplates: import("convex/server").RegisteredQuery
         savedAt: number;
         _id: import("convex/values").GenericId<"itineraryTemplates">;
         _creationTime: number;
-        tags?: string[] | undefined;
         description?: string | undefined;
-        destinations?: string[] | undefined;
-        coverImageUrl?: string | undefined;
         publishedAt?: number | undefined;
+        coverImageUrl?: string | undefined;
+        destinations?: string[] | undefined;
+        tags?: string[] | undefined;
         creatorId?: string | undefined;
         creatorName?: string | undefined;
         estimatedBudget?: {
@@ -286,6 +286,7 @@ export declare const listSavedTemplates: import("convex/server").RegisteredQuery
         } | undefined;
         suitableFor?: string[] | undefined;
         bestSeasons?: string[] | undefined;
+        createdAt: number;
         title: string;
         days: {
             theme?: string | undefined;
@@ -297,12 +298,11 @@ export declare const listSavedTemplates: import("convex/server").RegisteredQuery
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }[];
             dayNumber: number;
         }[];
-        createdAt: number;
         visibility: "public" | "private" | "unlisted";
         updatedAt: number;
         viewCount: number;
@@ -326,11 +326,11 @@ export declare const searchTemplates: import("convex/server").RegisteredQuery<"p
         categoryIcon: string | undefined;
         _id: import("convex/values").GenericId<"itineraryTemplates">;
         _creationTime: number;
-        tags?: string[] | undefined;
         description?: string | undefined;
-        destinations?: string[] | undefined;
-        coverImageUrl?: string | undefined;
         publishedAt?: number | undefined;
+        coverImageUrl?: string | undefined;
+        destinations?: string[] | undefined;
+        tags?: string[] | undefined;
         creatorId?: string | undefined;
         creatorName?: string | undefined;
         estimatedBudget?: {
@@ -340,6 +340,7 @@ export declare const searchTemplates: import("convex/server").RegisteredQuery<"p
         } | undefined;
         suitableFor?: string[] | undefined;
         bestSeasons?: string[] | undefined;
+        createdAt: number;
         title: string;
         days: {
             theme?: string | undefined;
@@ -351,12 +352,11 @@ export declare const searchTemplates: import("convex/server").RegisteredQuery<"p
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }[];
             dayNumber: number;
         }[];
-        createdAt: number;
         visibility: "public" | "private" | "unlisted";
         updatedAt: number;
         viewCount: number;
@@ -377,11 +377,11 @@ export declare const getRecommendedTemplates: import("convex/server").Registered
     categoryIcon: string | undefined;
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -391,6 +391,7 @@ export declare const getRecommendedTemplates: import("convex/server").Registered
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -402,12 +403,11 @@ export declare const getRecommendedTemplates: import("convex/server").Registered
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -420,11 +420,11 @@ export declare const getRecommendedTemplates: import("convex/server").Registered
     useCount: number;
 }[]>>;
 export declare const createTemplate: import("convex/server").RegisteredMutation<"public", {
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    visibility?: "public" | "private" | "unlisted" | undefined;
     coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
+    visibility?: "public" | "private" | "unlisted" | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -445,8 +445,8 @@ export declare const createTemplate: import("convex/server").RegisteredMutation<
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
@@ -455,10 +455,11 @@ export declare const createTemplate: import("convex/server").RegisteredMutation<
     templateType: "user" | "preset";
 }, Promise<import("convex/values").GenericId<"itineraryTemplates">>>;
 export declare const updateTemplate: import("convex/server").RegisteredMutation<"public", {
-    tags?: string[] | undefined;
-    title?: string | undefined;
     description?: string | undefined;
+    title?: string | undefined;
+    coverImageUrl?: string | undefined;
     destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     days?: {
         theme?: string | undefined;
         pois: {
@@ -469,13 +470,12 @@ export declare const updateTemplate: import("convex/server").RegisteredMutation<
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[] | undefined;
     visibility?: "public" | "private" | "unlisted" | undefined;
-    coverImageUrl?: string | undefined;
     categoryId?: import("convex/values").GenericId<"templateCategories"> | undefined;
     daysCount?: number | undefined;
     estimatedBudget?: {
@@ -490,11 +490,11 @@ export declare const updateTemplate: import("convex/server").RegisteredMutation<
 }, Promise<{
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -504,6 +504,7 @@ export declare const updateTemplate: import("convex/server").RegisteredMutation<
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -515,12 +516,11 @@ export declare const updateTemplate: import("convex/server").RegisteredMutation<
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -563,8 +563,8 @@ export declare const createItineraryFromTemplate: import("convex/server").Regist
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 }, Promise<import("convex/values").GenericId<"itineraries">>>;
 export declare const saveItineraryAsTemplate: import("convex/server").RegisteredMutation<"public", {
-    tags?: string[] | undefined;
     description?: string | undefined;
+    tags?: string[] | undefined;
     visibility?: "public" | "private" | "unlisted" | undefined;
     title: string;
     userId: string;

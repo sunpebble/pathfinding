@@ -257,10 +257,10 @@ export declare const getComprehensiveEmergencyInfo: import("convex/server").Regi
         policyDocumentUrl?: string | undefined;
         insuranceCardUrl?: string | undefined;
         coveredRegions?: string[] | undefined;
+        createdAt: number;
         userId: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         isActive: boolean;
         policyNumber: string;

@@ -11,13 +11,11 @@ export declare const get: import("convex/server").RegisteredQuery<"public", {
 }, Promise<{
     _id: import("convex/values").GenericId<"weatherCache">;
     _creationTime: number;
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -44,8 +42,8 @@ export declare const get: import("convex/server").RegisteredQuery<"public", {
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -76,19 +74,19 @@ export declare const get: import("convex/server").RegisteredQuery<"public", {
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 } | null>>;
 /**
  * Upsert weather data for a location
  */
 export declare const upsert: import("convex/server").RegisteredMutation<"public", {
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -115,8 +113,8 @@ export declare const upsert: import("convex/server").RegisteredMutation<"public"
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -147,6 +145,8 @@ export declare const upsert: import("convex/server").RegisteredMutation<"public"
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 }, Promise<import("convex/values").GenericId<"weatherCache">>>;
 /**

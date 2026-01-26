@@ -13,6 +13,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     data: {
         _id: import("convex/values").GenericId<"localEvents">;
         _creationTime: number;
+        sourceUrl?: string | undefined;
+        coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         tags?: string[] | undefined;
         latitude?: number | undefined;
         longitude?: number | undefined;
@@ -23,12 +26,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         externalId?: string | undefined;
         rating?: number | undefined;
         ratingCount?: number | undefined;
-        imageUrls?: string[] | undefined;
         source?: string | undefined;
-        coverImageUrl?: string | undefined;
         startTime?: string | undefined;
         endTime?: string | undefined;
-        sourceUrl?: string | undefined;
         highlights?: string[] | undefined;
         officialWebsite?: string | undefined;
         isFeatured?: boolean | undefined;
@@ -52,11 +52,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         organizerPhone?: string | undefined;
         organizerEmail?: string | undefined;
         status: "cancelled" | "upcoming" | "ongoing" | "ended";
+        createdAt: number;
         name: string;
         description: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         viewCount: number;
@@ -78,6 +78,9 @@ export declare const listUpcoming: import("convex/server").RegisteredQuery<"publ
 }, Promise<{
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -88,12 +91,9 @@ export declare const listUpcoming: import("convex/server").RegisteredQuery<"publ
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -117,11 +117,11 @@ export declare const listUpcoming: import("convex/server").RegisteredQuery<"publ
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -141,6 +141,9 @@ export declare const listOngoing: import("convex/server").RegisteredQuery<"publi
 }, Promise<{
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -151,12 +154,9 @@ export declare const listOngoing: import("convex/server").RegisteredQuery<"publi
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -180,11 +180,11 @@ export declare const listOngoing: import("convex/server").RegisteredQuery<"publi
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -204,6 +204,9 @@ export declare const listFeatured: import("convex/server").RegisteredQuery<"publ
 }, Promise<{
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -214,12 +217,9 @@ export declare const listFeatured: import("convex/server").RegisteredQuery<"publ
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -243,11 +243,11 @@ export declare const listFeatured: import("convex/server").RegisteredQuery<"publ
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -268,6 +268,9 @@ export declare const listByDateRange: import("convex/server").RegisteredQuery<"p
 }, Promise<{
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -278,12 +281,9 @@ export declare const listByDateRange: import("convex/server").RegisteredQuery<"p
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -307,11 +307,11 @@ export declare const listByDateRange: import("convex/server").RegisteredQuery<"p
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -343,6 +343,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     } | null;
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -353,12 +356,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -382,11 +382,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -407,6 +407,9 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
 }, Promise<{
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -417,12 +420,9 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -446,11 +446,11 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -470,6 +470,9 @@ export declare const listRecurring: import("convex/server").RegisteredQuery<"pub
 }, Promise<{
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -480,12 +483,9 @@ export declare const listRecurring: import("convex/server").RegisteredQuery<"pub
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -509,11 +509,11 @@ export declare const listRecurring: import("convex/server").RegisteredQuery<"pub
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -528,6 +528,9 @@ export declare const listRecurring: import("convex/server").RegisteredQuery<"pub
  * Create a new event
  */
 export declare const create: import("convex/server").RegisteredMutation<"public", {
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -536,12 +539,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
     descriptionEn?: string | undefined;
     currency?: string | undefined;
     externalId?: string | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     venue?: string | undefined;
@@ -568,10 +568,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
  * Update an event
  */
 export declare const update: import("convex/server").RegisteredMutation<"public", {
-    tags?: string[] | undefined;
     status?: "cancelled" | "upcoming" | "ongoing" | "ended" | undefined;
     name?: string | undefined;
     description?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     startDate?: string | undefined;
@@ -580,9 +582,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     nameEn?: string | undefined;
     descriptionEn?: string | undefined;
     currency?: string | undefined;
-    imageUrls?: string[] | undefined;
     isRecurring?: boolean | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
     highlights?: string[] | undefined;
@@ -606,6 +606,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 }, Promise<{
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -616,12 +619,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -645,11 +645,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -711,6 +711,9 @@ export declare const listFavorites: import("convex/server").RegisteredQuery<"pub
         favoritedAt: number;
         _id: import("convex/values").GenericId<"localEvents">;
         _creationTime: number;
+        sourceUrl?: string | undefined;
+        coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         tags?: string[] | undefined;
         latitude?: number | undefined;
         longitude?: number | undefined;
@@ -721,12 +724,9 @@ export declare const listFavorites: import("convex/server").RegisteredQuery<"pub
         externalId?: string | undefined;
         rating?: number | undefined;
         ratingCount?: number | undefined;
-        imageUrls?: string[] | undefined;
         source?: string | undefined;
-        coverImageUrl?: string | undefined;
         startTime?: string | undefined;
         endTime?: string | undefined;
-        sourceUrl?: string | undefined;
         highlights?: string[] | undefined;
         officialWebsite?: string | undefined;
         isFeatured?: boolean | undefined;
@@ -750,11 +750,11 @@ export declare const listFavorites: import("convex/server").RegisteredQuery<"pub
         organizerPhone?: string | undefined;
         organizerEmail?: string | undefined;
         status: "cancelled" | "upcoming" | "ongoing" | "ended";
+        createdAt: number;
         name: string;
         description: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         viewCount: number;
@@ -794,6 +794,9 @@ export declare const listReminders: import("convex/server").RegisteredQuery<"pub
     event: {
         _id: import("convex/values").GenericId<"localEvents">;
         _creationTime: number;
+        sourceUrl?: string | undefined;
+        coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         tags?: string[] | undefined;
         latitude?: number | undefined;
         longitude?: number | undefined;
@@ -804,12 +807,9 @@ export declare const listReminders: import("convex/server").RegisteredQuery<"pub
         externalId?: string | undefined;
         rating?: number | undefined;
         ratingCount?: number | undefined;
-        imageUrls?: string[] | undefined;
         source?: string | undefined;
-        coverImageUrl?: string | undefined;
         startTime?: string | undefined;
         endTime?: string | undefined;
-        sourceUrl?: string | undefined;
         highlights?: string[] | undefined;
         officialWebsite?: string | undefined;
         isFeatured?: boolean | undefined;
@@ -833,11 +833,11 @@ export declare const listReminders: import("convex/server").RegisteredQuery<"pub
         organizerPhone?: string | undefined;
         organizerEmail?: string | undefined;
         status: "cancelled" | "upcoming" | "ongoing" | "ended";
+        createdAt: number;
         name: string;
         description: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         viewCount: number;
@@ -854,8 +854,8 @@ export declare const listReminders: import("convex/server").RegisteredQuery<"pub
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;
@@ -870,6 +870,9 @@ export declare const getPendingReminders: import("convex/server").RegisteredQuer
     event: {
         _id: import("convex/values").GenericId<"localEvents">;
         _creationTime: number;
+        sourceUrl?: string | undefined;
+        coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         tags?: string[] | undefined;
         latitude?: number | undefined;
         longitude?: number | undefined;
@@ -880,12 +883,9 @@ export declare const getPendingReminders: import("convex/server").RegisteredQuer
         externalId?: string | undefined;
         rating?: number | undefined;
         ratingCount?: number | undefined;
-        imageUrls?: string[] | undefined;
         source?: string | undefined;
-        coverImageUrl?: string | undefined;
         startTime?: string | undefined;
         endTime?: string | undefined;
-        sourceUrl?: string | undefined;
         highlights?: string[] | undefined;
         officialWebsite?: string | undefined;
         isFeatured?: boolean | undefined;
@@ -909,11 +909,11 @@ export declare const getPendingReminders: import("convex/server").RegisteredQuer
         organizerPhone?: string | undefined;
         organizerEmail?: string | undefined;
         status: "cancelled" | "upcoming" | "ongoing" | "ended";
+        createdAt: number;
         name: string;
         description: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         viewCount: number;
@@ -930,8 +930,8 @@ export declare const getPendingReminders: import("convex/server").RegisteredQuer
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;

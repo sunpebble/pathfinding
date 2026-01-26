@@ -6,6 +6,7 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -51,7 +52,6 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -82,6 +82,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -127,7 +128,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -162,6 +162,7 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -207,7 +208,6 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -243,6 +243,7 @@ export declare const getNearby: import("convex/server").RegisteredQuery<"public"
     distance: number;
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -288,7 +289,6 @@ export declare const getNearby: import("convex/server").RegisteredQuery<"public"
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -321,6 +321,7 @@ export declare const getRecommendations: import("convex/server").RegisteredQuery
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -366,7 +367,6 @@ export declare const getRecommendations: import("convex/server").RegisteredQuery
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -393,6 +393,7 @@ export declare const getRecommendations: import("convex/server").RegisteredQuery
     source: string;
 }[]>>;
 export declare const create: import("convex/server").RegisteredMutation<"public", {
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -401,7 +402,6 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     name: string;
     latitude: number;
     longitude: number;
@@ -411,6 +411,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
 }, Promise<import("convex/values").GenericId<"pois">>>;
 export declare const update: import("convex/server").RegisteredMutation<"public", {
     name?: string | undefined;
+    imageUrls?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     phone?: string | undefined;
@@ -421,11 +422,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     id: import("convex/values").GenericId<"pois">;
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -471,7 +472,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -502,6 +502,7 @@ export declare const remove: import("convex/server").RegisteredMutation<"public"
 }, Promise<void>>;
 export declare const bulkInsert: import("convex/server").RegisteredMutation<"public", {
     pois: {
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         priceLevel?: number | undefined;
@@ -510,7 +511,6 @@ export declare const bulkInsert: import("convex/server").RegisteredMutation<"pub
         rating?: number | undefined;
         ratingCount?: number | undefined;
         businessHours?: any;
-        imageUrls?: string[] | undefined;
         name: string;
         latitude: number;
         longitude: number;

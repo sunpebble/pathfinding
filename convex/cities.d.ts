@@ -198,17 +198,17 @@ export declare const getEncyclopedia: import("convex/server").RegisteredQuery<"p
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | null>>;
 export declare const getCityWithEncyclopedia: import("convex/server").RegisteredQuery<"public", {
     cityId: import("convex/values").GenericId<"cities">;
@@ -270,17 +270,17 @@ export declare const getCityWithEncyclopedia: import("convex/server").Registered
         } | undefined;
         sources?: string[] | undefined;
         createdAt: number;
+        lastUpdatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         customs: {
             descriptionEn?: string | undefined;
             titleEn?: string | undefined;
-            title: string;
             description: string;
+            title: string;
             category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
             isTaboo: boolean;
             importance: "low" | "medium" | "high";
         }[];
-        lastUpdatedAt: number;
     } | null;
     _id: import("convex/values").GenericId<"cities">;
     _creationTime: number;
@@ -352,8 +352,8 @@ export declare const createEncyclopedia: import("convex/server").RegisteredMutat
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
@@ -395,8 +395,8 @@ export declare const updateEncyclopedia: import("convex/server").RegisteredMutat
     customs?: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
@@ -480,17 +480,17 @@ export declare const updateEncyclopedia: import("convex/server").RegisteredMutat
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | null>>;
 export declare const removeEncyclopedia: import("convex/server").RegisteredMutation<"public", {
     id: import("convex/values").GenericId<"cityEncyclopedia">;
@@ -556,17 +556,17 @@ export declare const listWithEncyclopedia: import("convex/server").RegisteredQue
         } | undefined;
         sources?: string[] | undefined;
         createdAt: number;
+        lastUpdatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         customs: {
             descriptionEn?: string | undefined;
             titleEn?: string | undefined;
-            title: string;
             description: string;
+            title: string;
             category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
             isTaboo: boolean;
             importance: "low" | "medium" | "high";
         }[];
-        lastUpdatedAt: number;
     } | null;
     hasEncyclopedia: boolean;
     _id: import("convex/values").GenericId<"cities">;

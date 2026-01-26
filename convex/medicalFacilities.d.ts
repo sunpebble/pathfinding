@@ -8,10 +8,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 } | {
     _id: import("convex/values").GenericId<"messages">;
@@ -27,6 +27,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -72,7 +73,6 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -111,9 +111,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"userFollows">;
     _creationTime: number;
+    createdAt: number;
     followerId: string;
     followingId: string;
-    createdAt: number;
 } | {
     _id: import("convex/values").GenericId<"activityFeed">;
     _creationTime: number;
@@ -125,12 +125,12 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     targetCityName?: string | undefined;
     updatedAt?: number | undefined;
     createdAt: number;
+    likesCount: number;
+    commentsCount: number;
     actorId: string;
     activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
     targetType: "user" | "itinerary";
     targetId: string;
-    likesCount: number;
-    commentsCount: number;
     visibility: "public" | "followers";
 } | {
     _id: import("convex/values").GenericId<"cities">;
@@ -201,23 +201,23 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"userTimezoneSettings">;
     _creationTime: number;
     homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     homeTimezone: string;
     displayFormat: "24h" | "12h";
@@ -231,11 +231,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -246,12 +246,12 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -260,8 +260,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPoiVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"userSubmittedPois">;
     voteType: "up" | "down";
 } | {
@@ -270,8 +270,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;
@@ -284,9 +284,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -307,8 +307,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;
@@ -328,9 +328,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 } | {
     _id: import("convex/values").GenericId<"itineraryDays">;
     _creationTime: number;
@@ -366,20 +366,20 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryCopyHistory">;
     _creationTime: number;
     selectedDays?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     originalItineraryId: import("convex/values").GenericId<"itineraries">;
     copiedItineraryId: import("convex/values").GenericId<"itineraries">;
     copyType: "partial" | "full";
@@ -410,14 +410,14 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | {
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
@@ -425,12 +425,13 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"poiSourceMappings">;
     _creationTime: number;
     rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+    sourceExternalId: string;
     normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"normalizedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -438,7 +439,6 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
     name: string;
     latitude: number;
@@ -490,8 +490,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -501,10 +501,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"poiReviews">;
     _creationTime: number;
+    authorName?: string | undefined;
     rating?: number | undefined;
     visitDate?: string | undefined;
     sourceId?: string | undefined;
-    authorName?: string | undefined;
     sentiment?: string | undefined;
     content: string;
     poiId: import("convex/values").GenericId<"pois">;
@@ -532,12 +532,12 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -551,8 +551,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -570,8 +570,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -591,27 +591,27 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | {
     _id: import("convex/values").GenericId<"itineraryComments">;
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -622,25 +622,25 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: string | undefined;
-    guideId: string;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    guideId: string;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
 } | {
     _id: import("convex/values").GenericId<"guideCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"guideComments">;
 } | {
     _id: import("convex/values").GenericId<"commentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"commentReports">;
@@ -649,25 +649,25 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"notifications">;
     _creationTime: number;
-    priority?: "low" | "high" | "normal" | undefined;
     title?: string | undefined;
+    priority?: "normal" | "low" | "high" | undefined;
     data?: any;
     actorId?: string | undefined;
     readAt?: number | undefined;
     body?: string | undefined;
     isPushSent?: boolean | undefined;
     pushSentAt?: number | undefined;
-    message: string;
-    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-    userId: string;
     createdAt: number;
+    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+    message: string;
+    userId: string;
     isRead: boolean;
     referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
     referenceId: string;
@@ -678,11 +678,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     deviceName?: string | undefined;
     appVersion?: string | undefined;
     osVersion?: string | undefined;
+    createdAt: number;
+    platform: "ios" | "android";
     userId: string;
     token: string;
-    createdAt: number;
     updatedAt: number;
-    platform: "ios" | "android";
     isActive: boolean;
     lastUsedAt: number;
 } | {
@@ -693,8 +693,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     quietHoursEnabled?: boolean | undefined;
     quietHoursStart?: string | undefined;
     quietHoursEnd?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     pushEnabled: boolean;
     inAppEnabled: boolean;
@@ -722,33 +722,33 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"scheduledNotifications">;
     _creationTime: number;
-    errorMessage?: string | undefined;
     data?: any;
+    errorMessage?: string | undefined;
     retryCount?: number | undefined;
     referenceType?: string | undefined;
     referenceId?: string | undefined;
     sentAt?: number | undefined;
+    status: "failed" | "cancelled" | "pending" | "sent";
+    createdAt: number;
     type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-    status: "cancelled" | "failed" | "pending" | "sent";
     title: string;
     userId: string;
-    createdAt: number;
     body: string;
     scheduledFor: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"favoriteCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -757,8 +757,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"conversations">;
@@ -777,7 +777,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -808,8 +808,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -827,10 +827,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -847,8 +847,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     syncError?: string | undefined;
     reminderMinutesBefore?: number | undefined;
     syncedDayNumbers?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     calendarProvider: "apple" | "google";
     syncStatus: "failed" | "pending" | "synced" | "deleted";
@@ -955,9 +955,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"insuranceProducts">;
@@ -968,11 +968,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     exclusions?: string[] | undefined;
     contactPhone?: string | undefined;
     contactEmail?: string | undefined;
-    provider: string;
+    createdAt: number;
+    name: string;
     type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
     priority: number;
-    name: string;
-    createdAt: number;
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -1006,11 +1006,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         claimAmount: number;
     }[] | undefined;
     status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+    createdAt: number;
+    destinations: string[];
     userId: string;
     startDate: string;
     endDate: string;
-    destinations: string[];
-    createdAt: number;
     updatedAt: number;
     totalPrice: number;
     productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -1047,17 +1047,17 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         question: string;
         answer: string;
     }[] | undefined;
-    priority: number;
-    title: string;
     content: string;
+    createdAt: number;
+    title: string;
+    priority: number;
     steps: {
         tips?: string | undefined;
         requiredDocuments?: string[] | undefined;
-        title: string;
         description: string;
+        title: string;
         stepNumber: number;
     }[];
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
@@ -1065,12 +1065,12 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -1085,8 +1085,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -1097,14 +1097,14 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
-    sessionId: import("convex/values").GenericId<"chatSessions">;
     createdAt: number;
-    role: "user" | "system" | "assistant";
+    sessionId: import("convex/values").GenericId<"chatSessions">;
 } | {
     _id: import("convex/values").GenericId<"tippingGuides">;
     _creationTime: number;
@@ -1115,7 +1115,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -1132,19 +1132,19 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
     publishedAt?: number | undefined;
-    title: string;
     content: string;
+    title: string;
+    sourceExternalId: string;
     crawledAt: number;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"emergencyContacts">;
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -1189,10 +1189,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     policyDocumentUrl?: string | undefined;
     insuranceCardUrl?: string | undefined;
     coveredRegions?: string[] | undefined;
+    createdAt: number;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     policyNumber: string;
@@ -1207,18 +1207,18 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | {
     _id: import("convex/values").GenericId<"safetyRatings">;
     _creationTime: number;
-    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     sourceUrl?: string | undefined;
+    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     verifiedBy?: string | undefined;
     destinationNameEn?: string | undefined;
     womenSafetyRating?: number | undefined;
@@ -1230,8 +1230,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         ambulance?: string | undefined;
         fire?: string | undefined;
     } | undefined;
-    summary: string;
     createdAt: number;
+    summary: string;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -1246,26 +1246,26 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"safetyAlerts">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
     endDate?: number | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     descriptionEn?: string | undefined;
     titleEn?: string | undefined;
-    sourceUrl?: string | undefined;
     affectedAreas?: string[] | undefined;
     avoidAreas?: string[] | undefined;
     officialAdvisoryLevel?: string | undefined;
     createdBy?: string | undefined;
-    title: string;
-    description: string;
-    startDate: number;
     createdAt: number;
+    description: string;
+    title: string;
+    startDate: number;
     updatedAt: number;
     countryCode: string;
     source: string;
     isActive: boolean;
     alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
     destinationName: string;
-    severity: "low" | "medium" | "high" | "info" | "critical";
+    severity: "info" | "critical" | "low" | "medium" | "high";
     recommendations: string[];
 } | {
     _id: import("convex/values").GenericId<"dangerZones">;
@@ -1286,10 +1286,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         allDay: boolean;
     } | undefined;
     lastReportedAt?: number | undefined;
+    createdAt: number;
     description: string;
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -1305,20 +1305,20 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"wifiSpots">;
     _creationTime: number;
     description?: string | undefined;
+    imageUrls?: string[] | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
-    imageUrls?: string[] | undefined;
     poiId?: import("convex/values").GenericId<"pois"> | undefined;
     openingHours?: string | undefined;
     verifiedAt?: number | undefined;
     verifiedBy?: string | undefined;
     ssid?: string | undefined;
     speedMbps?: number | undefined;
-    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+    createdAt: number;
     name: string;
+    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     ratingCount: number;
@@ -1337,9 +1337,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -1352,8 +1352,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -1364,8 +1364,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"wifiReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"wifiReviews">;
 } | {
     _id: import("convex/values").GenericId<"safetyIncidentReports">;
@@ -1381,15 +1381,15 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     wasResolved?: boolean | undefined;
     resolutionNotes?: string | undefined;
     status: "rejected" | "pending" | "resolved" | "verified";
-    title: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    title: string;
+    userId: string;
     updatedAt: number;
     countryCode: string;
     reportCount: number;
     destinationName: string;
-    severity: "moderate" | "critical" | "minor" | "severe";
+    severity: "critical" | "moderate" | "minor" | "severe";
     helpfulCount: number;
     isAnonymous: boolean;
     incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
@@ -1397,6 +1397,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -1404,8 +1406,6 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -1445,10 +1445,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"chargingStationReviews">;
     _creationTime: number;
-    userId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    visitDate?: string | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    userId?: string | undefined;
+    visitDate?: string | undefined;
     chargerType?: string | undefined;
     chargingDuration?: number | undefined;
     energyCharged?: number | undefined;
@@ -1465,8 +1465,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"favoriteChargingStations">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     stationId: import("convex/values").GenericId<"chargingStations">;
 } | {
     _id: import("convex/values").GenericId<"simCards">;
@@ -1502,11 +1502,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     affiliateUrl?: string | undefined;
     salesCount?: number | undefined;
     isPromoted?: boolean | undefined;
-    provider: string;
-    priority: number;
-    name: string;
-    destinations: string[];
     createdAt: number;
+    name: string;
+    priority: number;
+    destinations: string[];
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -1534,11 +1534,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"simCardReviews">;
     _creationTime: number;
     title?: string | undefined;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     destination?: string | undefined;
     userId?: string | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     speedRating?: number | undefined;
     speedTestResult?: string | undefined;
     pros?: string[] | undefined;
@@ -1553,8 +1553,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
     purchaseVerified?: boolean | undefined;
     reviewDate?: number | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -1565,16 +1565,16 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"simCardReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"simCardReviews">;
 } | {
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 } | {
     _id: import("convex/values").GenericId<"travelNotes">;
@@ -1582,23 +1582,23 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | {
     _id: import("convex/values").GenericId<"noteImages">;
     _creationTime: number;
     caption?: string | undefined;
-    url: string;
     createdAt: number;
+    url: string;
     orderIndex: number;
     noteId: import("convex/values").GenericId<"travelNotes">;
     isCover: boolean;
@@ -1606,8 +1606,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"noteTags">;
     _creationTime: number;
     createdAt: number;
-    noteId: import("convex/values").GenericId<"travelNotes">;
     tag: string;
+    noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"notePois">;
     _creationTime: number;
@@ -1618,8 +1618,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"noteLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"noteComments">;
@@ -1627,9 +1627,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -1637,15 +1637,15 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"noteCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"noteComments">;
 } | {
     _id: import("convex/values").GenericId<"noteSaves">;
     _creationTime: number;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"userTravelStats">;
@@ -1664,8 +1664,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         days: number;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     } | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalPois: number;
     totalCities: number;
@@ -1740,12 +1740,12 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -1779,14 +1779,15 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -1800,16 +1801,15 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -1843,10 +1843,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -1856,13 +1856,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"weatherCache">;
     _creationTime: number;
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -1889,8 +1887,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -1921,6 +1919,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 } | {
     _id: import("convex/values").GenericId<"packingTemplates">;
@@ -1932,6 +1932,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -1947,7 +1948,6 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -1970,9 +1970,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | {
@@ -1982,8 +1982,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
     packedAt?: number | undefined;
     packedBy?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     updatedAt: number;
     category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
     orderIndex: number;
@@ -1997,8 +1997,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 } | {
@@ -2006,9 +2006,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -2040,20 +2040,20 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | {
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -2063,6 +2063,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -2074,12 +2075,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -2093,18 +2093,19 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"templateLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"templateSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -2128,7 +2129,6 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -2149,14 +2149,14 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     interests?: string[] | undefined;
     smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
     accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -2166,13 +2166,13 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -2192,9 +2192,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     } | undefined;
     responseMessage?: string | undefined;
     respondedAt?: number | undefined;
-    message: string;
     status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
     createdAt: number;
+    message: string;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     applicantId: string;
@@ -2215,11 +2215,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         rating: number;
         wouldTravelAgain: boolean;
     } | undefined;
-    status: "cancelled" | "completed" | "active";
+    status: "completed" | "cancelled" | "active";
+    createdAt: number;
     destination: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     requestOwnerId: string;
@@ -2241,8 +2241,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     referenceNote?: string | undefined;
     adminNotes?: string | undefined;
     status: "rejected" | "pending" | "expired" | "verified";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
 } | {
@@ -2250,8 +2250,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     averageRating?: number | undefined;
     badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalTrips: number;
     lastCalculatedAt: number;
@@ -2266,23 +2266,23 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"partnerRequestSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswers">;
     _creationTime: number;
-    updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
+    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorAvatarUrl?: string | undefined;
     isBestAnswer?: boolean | undefined;
     authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     commentsCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -2295,10 +2295,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"poiQuestions">;
     _creationTime: number;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     isDeleted?: boolean | undefined;
     acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -2306,15 +2306,15 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     upvotesCount?: number | undefined;
     downvotesCount?: number | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "answered" | "closed";
-    title: string;
     content: string;
+    status: "open" | "resolved" | "answered" | "closed";
+    createdAt: number;
+    title: string;
+    viewsCount: number;
     userId: string;
     followersCount: number;
-    createdAt: number;
     category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
     poiId: import("convex/values").GenericId<"pois">;
-    viewsCount: number;
     isEdited: boolean;
     reportCount: number;
     answersCount: number;
@@ -2324,8 +2324,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"answerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -2334,17 +2334,17 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
     _id: import("convex/values").GenericId<"questionFollowers">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"questionReports">;
@@ -2353,8 +2353,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
@@ -2364,8 +2364,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -2376,7 +2376,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -2393,9 +2393,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -2406,12 +2406,12 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"offlineTranslationPacks">;
     _creationTime: number;
+    createdAt: number;
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    createdAt: number;
     updatedAt: number;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -2448,18 +2448,18 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | {
     _id: import("convex/values").GenericId<"poiPhotoLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     photoId: import("convex/values").GenericId<"poiPhotos">;
 } | {
     _id: import("convex/values").GenericId<"flights">;
@@ -2507,9 +2507,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -2573,14 +2573,14 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"userVisaReminders">;
@@ -2595,8 +2595,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -2622,9 +2622,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -2655,10 +2655,10 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     targetCountryNameEn?: string | undefined;
     addressEn?: string | undefined;
     appointmentUrl?: string | undefined;
-    type: "embassy" | "consulate" | "visa_center" | "agency";
-    name: string;
-    city: string;
     createdAt: number;
+    name: string;
+    type: "embassy" | "consulate" | "visa_center" | "agency";
+    city: string;
     updatedAt: number;
     countryCode: string;
     address: string;
@@ -2674,9 +2674,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -2698,7 +2698,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"shareEventLogs">;
     _creationTime: number;
@@ -2710,7 +2710,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"luggageLossReportTemplates">;
     _creationTime: number;
@@ -2733,6 +2733,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -2743,12 +2746,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -2772,11 +2772,11 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -2790,8 +2790,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"eventFavorites">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     eventId: import("convex/values").GenericId<"localEvents">;
 } | {
     _id: import("convex/values").GenericId<"eventReminders">;
@@ -2800,8 +2800,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;
@@ -2811,18 +2811,18 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"eventReviews">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
     pros?: string[] | undefined;
     cons?: string[] | undefined;
     valueRating?: number | undefined;
     atmosphereRating?: number | undefined;
     organizationRating?: number | undefined;
     attendDate?: string | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
-    userId: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
+    userId: string;
     rating: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -2832,8 +2832,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"eventReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"eventReviews">;
 } | {
@@ -2854,9 +2854,9 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"userBehaviorEvents">;
     _creationTime: number;
+    createdAt: number;
     metadata: any;
     userId: string;
-    createdAt: number;
     targetType: "city" | "itinerary" | "poi" | "search" | "guide";
     targetId: string;
     categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
@@ -2873,10 +2873,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
-    itineraryId: import("convex/values").GenericId<"itineraries">;
-    versionNumber: number;
     snapshot: {
         coverImageUrl?: string | undefined;
         title: string;
@@ -2897,21 +2894,24 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         visibility: "public" | "private" | "team";
         cityId: import("convex/values").GenericId<"cities">;
     };
+    userId: string;
+    itineraryId: import("convex/values").GenericId<"itineraries">;
+    versionNumber: number;
 } | {
     _id: import("convex/values").GenericId<"poiQuestionsExtended">;
     _creationTime: number;
+    authorName?: string | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    authorName?: string | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "closed";
-    title: string;
     content: string;
-    userId: string;
+    status: "open" | "resolved" | "closed";
     createdAt: number;
-    poiId: import("convex/values").GenericId<"pois">;
+    title: string;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -2924,12 +2924,12 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"poiAnswersExtended">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     authorName?: string | undefined;
+    updatedAt?: number | undefined;
     authorAvatarUrl?: string | undefined;
     content: string;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
@@ -2942,15 +2942,15 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"poiQuestionVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -2961,8 +2961,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     reviewedAt?: number | undefined;
     actionTaken?: string | undefined;
     status: "pending" | "reviewed" | "dismissed" | "actioned";
-    userId: string;
     createdAt: number;
+    userId: string;
     targetType: "question" | "answer";
     targetId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
@@ -2970,8 +2970,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;
@@ -2988,23 +2988,23 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"rateLimits">;
     _creationTime: number;
+    key: string;
     count: number;
     expiresAt: number;
-    key: string;
 } | {
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -3012,17 +3012,17 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"foodReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"foodReviews">;
 } | {
     _id: import("convex/values").GenericId<"foodCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
     itemCount: number;
@@ -3031,8 +3031,8 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     restaurantId: import("convex/values").GenericId<"pois">;
 } | {
     _id: import("convex/values").GenericId<"currencyRates">;
@@ -3043,7 +3043,6 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"currencyHistory">;
     _creationTime: number;
-    days: number;
     data: {
         base: string;
         rates: {
@@ -3054,6 +3053,7 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;
@@ -3066,15 +3066,15 @@ export declare const listByCity: import("convex/server").RegisteredQuery<"public
     currentNode?: string | undefined;
     interruptData?: any;
     status: "completed" | "active" | "expired" | "paused";
+    createdAt: number;
     messages: {
         toolCalls?: any;
         toolName?: string | undefined;
+        role: "ai" | "human" | "tool" | "system";
         content: string;
         timestamp: number;
-        role: "ai" | "human" | "tool" | "system";
     }[];
     sessionId: string;
-    createdAt: number;
     updatedAt: number;
     sessionType: "chat" | "travel_plan" | "enrichment";
 } | {
@@ -3150,10 +3150,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 } | {
     _id: import("convex/values").GenericId<"messages">;
@@ -3169,6 +3169,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -3214,7 +3215,6 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -3253,9 +3253,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"userFollows">;
     _creationTime: number;
+    createdAt: number;
     followerId: string;
     followingId: string;
-    createdAt: number;
 } | {
     _id: import("convex/values").GenericId<"activityFeed">;
     _creationTime: number;
@@ -3267,12 +3267,12 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     targetCityName?: string | undefined;
     updatedAt?: number | undefined;
     createdAt: number;
+    likesCount: number;
+    commentsCount: number;
     actorId: string;
     activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
     targetType: "user" | "itinerary";
     targetId: string;
-    likesCount: number;
-    commentsCount: number;
     visibility: "public" | "followers";
 } | {
     _id: import("convex/values").GenericId<"cities">;
@@ -3343,23 +3343,23 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"userTimezoneSettings">;
     _creationTime: number;
     homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     homeTimezone: string;
     displayFormat: "24h" | "12h";
@@ -3373,11 +3373,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -3388,12 +3388,12 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -3402,8 +3402,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPoiVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"userSubmittedPois">;
     voteType: "up" | "down";
 } | {
@@ -3412,8 +3412,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;
@@ -3426,9 +3426,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -3449,8 +3449,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;
@@ -3470,9 +3470,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 } | {
     _id: import("convex/values").GenericId<"itineraryDays">;
     _creationTime: number;
@@ -3508,20 +3508,20 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryCopyHistory">;
     _creationTime: number;
     selectedDays?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     originalItineraryId: import("convex/values").GenericId<"itineraries">;
     copiedItineraryId: import("convex/values").GenericId<"itineraries">;
     copyType: "partial" | "full";
@@ -3552,14 +3552,14 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | {
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
@@ -3567,12 +3567,13 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"poiSourceMappings">;
     _creationTime: number;
     rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+    sourceExternalId: string;
     normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"normalizedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -3580,7 +3581,6 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
     name: string;
     latitude: number;
@@ -3632,8 +3632,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -3643,10 +3643,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"poiReviews">;
     _creationTime: number;
+    authorName?: string | undefined;
     rating?: number | undefined;
     visitDate?: string | undefined;
     sourceId?: string | undefined;
-    authorName?: string | undefined;
     sentiment?: string | undefined;
     content: string;
     poiId: import("convex/values").GenericId<"pois">;
@@ -3674,12 +3674,12 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -3693,8 +3693,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -3712,8 +3712,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -3733,27 +3733,27 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | {
     _id: import("convex/values").GenericId<"itineraryComments">;
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -3764,25 +3764,25 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: string | undefined;
-    guideId: string;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    guideId: string;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
 } | {
     _id: import("convex/values").GenericId<"guideCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"guideComments">;
 } | {
     _id: import("convex/values").GenericId<"commentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"commentReports">;
@@ -3791,25 +3791,25 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"notifications">;
     _creationTime: number;
-    priority?: "low" | "high" | "normal" | undefined;
     title?: string | undefined;
+    priority?: "normal" | "low" | "high" | undefined;
     data?: any;
     actorId?: string | undefined;
     readAt?: number | undefined;
     body?: string | undefined;
     isPushSent?: boolean | undefined;
     pushSentAt?: number | undefined;
-    message: string;
-    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-    userId: string;
     createdAt: number;
+    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+    message: string;
+    userId: string;
     isRead: boolean;
     referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
     referenceId: string;
@@ -3820,11 +3820,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     deviceName?: string | undefined;
     appVersion?: string | undefined;
     osVersion?: string | undefined;
+    createdAt: number;
+    platform: "ios" | "android";
     userId: string;
     token: string;
-    createdAt: number;
     updatedAt: number;
-    platform: "ios" | "android";
     isActive: boolean;
     lastUsedAt: number;
 } | {
@@ -3835,8 +3835,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     quietHoursEnabled?: boolean | undefined;
     quietHoursStart?: string | undefined;
     quietHoursEnd?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     pushEnabled: boolean;
     inAppEnabled: boolean;
@@ -3864,33 +3864,33 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"scheduledNotifications">;
     _creationTime: number;
-    errorMessage?: string | undefined;
     data?: any;
+    errorMessage?: string | undefined;
     retryCount?: number | undefined;
     referenceType?: string | undefined;
     referenceId?: string | undefined;
     sentAt?: number | undefined;
+    status: "failed" | "cancelled" | "pending" | "sent";
+    createdAt: number;
     type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-    status: "cancelled" | "failed" | "pending" | "sent";
     title: string;
     userId: string;
-    createdAt: number;
     body: string;
     scheduledFor: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"favoriteCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -3899,8 +3899,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"conversations">;
@@ -3919,7 +3919,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -3950,8 +3950,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -3969,10 +3969,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -3989,8 +3989,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     syncError?: string | undefined;
     reminderMinutesBefore?: number | undefined;
     syncedDayNumbers?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     calendarProvider: "apple" | "google";
     syncStatus: "failed" | "pending" | "synced" | "deleted";
@@ -4097,9 +4097,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"insuranceProducts">;
@@ -4110,11 +4110,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     exclusions?: string[] | undefined;
     contactPhone?: string | undefined;
     contactEmail?: string | undefined;
-    provider: string;
+    createdAt: number;
+    name: string;
     type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
     priority: number;
-    name: string;
-    createdAt: number;
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -4148,11 +4148,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         claimAmount: number;
     }[] | undefined;
     status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+    createdAt: number;
+    destinations: string[];
     userId: string;
     startDate: string;
     endDate: string;
-    destinations: string[];
-    createdAt: number;
     updatedAt: number;
     totalPrice: number;
     productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -4189,17 +4189,17 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         question: string;
         answer: string;
     }[] | undefined;
-    priority: number;
-    title: string;
     content: string;
+    createdAt: number;
+    title: string;
+    priority: number;
     steps: {
         tips?: string | undefined;
         requiredDocuments?: string[] | undefined;
-        title: string;
         description: string;
+        title: string;
         stepNumber: number;
     }[];
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
@@ -4207,12 +4207,12 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -4227,8 +4227,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -4239,14 +4239,14 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
-    sessionId: import("convex/values").GenericId<"chatSessions">;
     createdAt: number;
-    role: "user" | "system" | "assistant";
+    sessionId: import("convex/values").GenericId<"chatSessions">;
 } | {
     _id: import("convex/values").GenericId<"tippingGuides">;
     _creationTime: number;
@@ -4257,7 +4257,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -4274,19 +4274,19 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
     publishedAt?: number | undefined;
-    title: string;
     content: string;
+    title: string;
+    sourceExternalId: string;
     crawledAt: number;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"emergencyContacts">;
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -4331,10 +4331,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     policyDocumentUrl?: string | undefined;
     insuranceCardUrl?: string | undefined;
     coveredRegions?: string[] | undefined;
+    createdAt: number;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     policyNumber: string;
@@ -4349,18 +4349,18 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | {
     _id: import("convex/values").GenericId<"safetyRatings">;
     _creationTime: number;
-    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     sourceUrl?: string | undefined;
+    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     verifiedBy?: string | undefined;
     destinationNameEn?: string | undefined;
     womenSafetyRating?: number | undefined;
@@ -4372,8 +4372,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         ambulance?: string | undefined;
         fire?: string | undefined;
     } | undefined;
-    summary: string;
     createdAt: number;
+    summary: string;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -4388,26 +4388,26 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"safetyAlerts">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
     endDate?: number | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     descriptionEn?: string | undefined;
     titleEn?: string | undefined;
-    sourceUrl?: string | undefined;
     affectedAreas?: string[] | undefined;
     avoidAreas?: string[] | undefined;
     officialAdvisoryLevel?: string | undefined;
     createdBy?: string | undefined;
-    title: string;
-    description: string;
-    startDate: number;
     createdAt: number;
+    description: string;
+    title: string;
+    startDate: number;
     updatedAt: number;
     countryCode: string;
     source: string;
     isActive: boolean;
     alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
     destinationName: string;
-    severity: "low" | "medium" | "high" | "info" | "critical";
+    severity: "info" | "critical" | "low" | "medium" | "high";
     recommendations: string[];
 } | {
     _id: import("convex/values").GenericId<"dangerZones">;
@@ -4428,10 +4428,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         allDay: boolean;
     } | undefined;
     lastReportedAt?: number | undefined;
+    createdAt: number;
     description: string;
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -4447,20 +4447,20 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"wifiSpots">;
     _creationTime: number;
     description?: string | undefined;
+    imageUrls?: string[] | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
-    imageUrls?: string[] | undefined;
     poiId?: import("convex/values").GenericId<"pois"> | undefined;
     openingHours?: string | undefined;
     verifiedAt?: number | undefined;
     verifiedBy?: string | undefined;
     ssid?: string | undefined;
     speedMbps?: number | undefined;
-    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+    createdAt: number;
     name: string;
+    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     ratingCount: number;
@@ -4479,9 +4479,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -4494,8 +4494,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -4506,8 +4506,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"wifiReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"wifiReviews">;
 } | {
     _id: import("convex/values").GenericId<"safetyIncidentReports">;
@@ -4523,15 +4523,15 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     wasResolved?: boolean | undefined;
     resolutionNotes?: string | undefined;
     status: "rejected" | "pending" | "resolved" | "verified";
-    title: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    title: string;
+    userId: string;
     updatedAt: number;
     countryCode: string;
     reportCount: number;
     destinationName: string;
-    severity: "moderate" | "critical" | "minor" | "severe";
+    severity: "critical" | "moderate" | "minor" | "severe";
     helpfulCount: number;
     isAnonymous: boolean;
     incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
@@ -4539,6 +4539,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -4546,8 +4548,6 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -4587,10 +4587,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"chargingStationReviews">;
     _creationTime: number;
-    userId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    visitDate?: string | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    userId?: string | undefined;
+    visitDate?: string | undefined;
     chargerType?: string | undefined;
     chargingDuration?: number | undefined;
     energyCharged?: number | undefined;
@@ -4607,8 +4607,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"favoriteChargingStations">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     stationId: import("convex/values").GenericId<"chargingStations">;
 } | {
     _id: import("convex/values").GenericId<"simCards">;
@@ -4644,11 +4644,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     affiliateUrl?: string | undefined;
     salesCount?: number | undefined;
     isPromoted?: boolean | undefined;
-    provider: string;
-    priority: number;
-    name: string;
-    destinations: string[];
     createdAt: number;
+    name: string;
+    priority: number;
+    destinations: string[];
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -4676,11 +4676,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"simCardReviews">;
     _creationTime: number;
     title?: string | undefined;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     destination?: string | undefined;
     userId?: string | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     speedRating?: number | undefined;
     speedTestResult?: string | undefined;
     pros?: string[] | undefined;
@@ -4695,8 +4695,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
     purchaseVerified?: boolean | undefined;
     reviewDate?: number | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -4707,16 +4707,16 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"simCardReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"simCardReviews">;
 } | {
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 } | {
     _id: import("convex/values").GenericId<"travelNotes">;
@@ -4724,23 +4724,23 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | {
     _id: import("convex/values").GenericId<"noteImages">;
     _creationTime: number;
     caption?: string | undefined;
-    url: string;
     createdAt: number;
+    url: string;
     orderIndex: number;
     noteId: import("convex/values").GenericId<"travelNotes">;
     isCover: boolean;
@@ -4748,8 +4748,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"noteTags">;
     _creationTime: number;
     createdAt: number;
-    noteId: import("convex/values").GenericId<"travelNotes">;
     tag: string;
+    noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"notePois">;
     _creationTime: number;
@@ -4760,8 +4760,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"noteLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"noteComments">;
@@ -4769,9 +4769,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -4779,15 +4779,15 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"noteCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"noteComments">;
 } | {
     _id: import("convex/values").GenericId<"noteSaves">;
     _creationTime: number;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"userTravelStats">;
@@ -4806,8 +4806,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         days: number;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     } | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalPois: number;
     totalCities: number;
@@ -4882,12 +4882,12 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -4921,14 +4921,15 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -4942,16 +4943,15 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -4985,10 +4985,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -4998,13 +4998,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"weatherCache">;
     _creationTime: number;
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -5031,8 +5029,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -5063,6 +5061,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 } | {
     _id: import("convex/values").GenericId<"packingTemplates">;
@@ -5074,6 +5074,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -5089,7 +5090,6 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -5112,9 +5112,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | {
@@ -5124,8 +5124,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
     packedAt?: number | undefined;
     packedBy?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     updatedAt: number;
     category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
     orderIndex: number;
@@ -5139,8 +5139,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 } | {
@@ -5148,9 +5148,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -5182,20 +5182,20 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | {
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -5205,6 +5205,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -5216,12 +5217,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -5235,18 +5235,19 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"templateLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"templateSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -5270,7 +5271,6 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -5291,14 +5291,14 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     interests?: string[] | undefined;
     smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
     accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -5308,13 +5308,13 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -5334,9 +5334,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     } | undefined;
     responseMessage?: string | undefined;
     respondedAt?: number | undefined;
-    message: string;
     status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
     createdAt: number;
+    message: string;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     applicantId: string;
@@ -5357,11 +5357,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         rating: number;
         wouldTravelAgain: boolean;
     } | undefined;
-    status: "cancelled" | "completed" | "active";
+    status: "completed" | "cancelled" | "active";
+    createdAt: number;
     destination: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     requestOwnerId: string;
@@ -5383,8 +5383,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     referenceNote?: string | undefined;
     adminNotes?: string | undefined;
     status: "rejected" | "pending" | "expired" | "verified";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
 } | {
@@ -5392,8 +5392,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _creationTime: number;
     averageRating?: number | undefined;
     badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalTrips: number;
     lastCalculatedAt: number;
@@ -5408,23 +5408,23 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"partnerRequestSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswers">;
     _creationTime: number;
-    updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
+    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorAvatarUrl?: string | undefined;
     isBestAnswer?: boolean | undefined;
     authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     commentsCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -5437,10 +5437,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"poiQuestions">;
     _creationTime: number;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     isDeleted?: boolean | undefined;
     acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -5448,15 +5448,15 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     upvotesCount?: number | undefined;
     downvotesCount?: number | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "answered" | "closed";
-    title: string;
     content: string;
+    status: "open" | "resolved" | "answered" | "closed";
+    createdAt: number;
+    title: string;
+    viewsCount: number;
     userId: string;
     followersCount: number;
-    createdAt: number;
     category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
     poiId: import("convex/values").GenericId<"pois">;
-    viewsCount: number;
     isEdited: boolean;
     reportCount: number;
     answersCount: number;
@@ -5466,8 +5466,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"answerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -5476,17 +5476,17 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
     _id: import("convex/values").GenericId<"questionFollowers">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"questionReports">;
@@ -5495,8 +5495,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
@@ -5506,8 +5506,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -5518,7 +5518,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -5535,9 +5535,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -5548,12 +5548,12 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"offlineTranslationPacks">;
     _creationTime: number;
+    createdAt: number;
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    createdAt: number;
     updatedAt: number;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -5590,18 +5590,18 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | {
     _id: import("convex/values").GenericId<"poiPhotoLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     photoId: import("convex/values").GenericId<"poiPhotos">;
 } | {
     _id: import("convex/values").GenericId<"flights">;
@@ -5649,9 +5649,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -5715,14 +5715,14 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"userVisaReminders">;
@@ -5737,8 +5737,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -5764,9 +5764,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -5797,10 +5797,10 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     targetCountryNameEn?: string | undefined;
     addressEn?: string | undefined;
     appointmentUrl?: string | undefined;
-    type: "embassy" | "consulate" | "visa_center" | "agency";
-    name: string;
-    city: string;
     createdAt: number;
+    name: string;
+    type: "embassy" | "consulate" | "visa_center" | "agency";
+    city: string;
     updatedAt: number;
     countryCode: string;
     address: string;
@@ -5816,9 +5816,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -5840,7 +5840,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"shareEventLogs">;
     _creationTime: number;
@@ -5852,7 +5852,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"luggageLossReportTemplates">;
     _creationTime: number;
@@ -5875,6 +5875,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -5885,12 +5888,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -5914,11 +5914,11 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -5932,8 +5932,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"eventFavorites">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     eventId: import("convex/values").GenericId<"localEvents">;
 } | {
     _id: import("convex/values").GenericId<"eventReminders">;
@@ -5942,8 +5942,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;
@@ -5953,18 +5953,18 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"eventReviews">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
     pros?: string[] | undefined;
     cons?: string[] | undefined;
     valueRating?: number | undefined;
     atmosphereRating?: number | undefined;
     organizationRating?: number | undefined;
     attendDate?: string | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
-    userId: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
+    userId: string;
     rating: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -5974,8 +5974,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"eventReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"eventReviews">;
 } | {
@@ -5996,9 +5996,9 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"userBehaviorEvents">;
     _creationTime: number;
+    createdAt: number;
     metadata: any;
     userId: string;
-    createdAt: number;
     targetType: "city" | "itinerary" | "poi" | "search" | "guide";
     targetId: string;
     categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
@@ -6015,10 +6015,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
-    itineraryId: import("convex/values").GenericId<"itineraries">;
-    versionNumber: number;
     snapshot: {
         coverImageUrl?: string | undefined;
         title: string;
@@ -6039,21 +6036,24 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         visibility: "public" | "private" | "team";
         cityId: import("convex/values").GenericId<"cities">;
     };
+    userId: string;
+    itineraryId: import("convex/values").GenericId<"itineraries">;
+    versionNumber: number;
 } | {
     _id: import("convex/values").GenericId<"poiQuestionsExtended">;
     _creationTime: number;
+    authorName?: string | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    authorName?: string | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "closed";
-    title: string;
     content: string;
-    userId: string;
+    status: "open" | "resolved" | "closed";
     createdAt: number;
-    poiId: import("convex/values").GenericId<"pois">;
+    title: string;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -6066,12 +6066,12 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"poiAnswersExtended">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     authorName?: string | undefined;
+    updatedAt?: number | undefined;
     authorAvatarUrl?: string | undefined;
     content: string;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
@@ -6084,15 +6084,15 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"poiQuestionVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -6103,8 +6103,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     reviewedAt?: number | undefined;
     actionTaken?: string | undefined;
     status: "pending" | "reviewed" | "dismissed" | "actioned";
-    userId: string;
     createdAt: number;
+    userId: string;
     targetType: "question" | "answer";
     targetId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
@@ -6112,8 +6112,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;
@@ -6130,23 +6130,23 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"rateLimits">;
     _creationTime: number;
+    key: string;
     count: number;
     expiresAt: number;
-    key: string;
 } | {
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -6154,17 +6154,17 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"foodReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"foodReviews">;
 } | {
     _id: import("convex/values").GenericId<"foodCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
     itemCount: number;
@@ -6173,8 +6173,8 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     restaurantId: import("convex/values").GenericId<"pois">;
 } | {
     _id: import("convex/values").GenericId<"currencyRates">;
@@ -6185,7 +6185,6 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"currencyHistory">;
     _creationTime: number;
-    days: number;
     data: {
         base: string;
         rates: {
@@ -6196,6 +6195,7 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;
@@ -6208,15 +6208,15 @@ export declare const listByCityAndType: import("convex/server").RegisteredQuery<
     currentNode?: string | undefined;
     interruptData?: any;
     status: "completed" | "active" | "expired" | "paused";
+    createdAt: number;
     messages: {
         toolCalls?: any;
         toolName?: string | undefined;
+        role: "ai" | "human" | "tool" | "system";
         content: string;
         timestamp: number;
-        role: "ai" | "human" | "tool" | "system";
     }[];
     sessionId: string;
-    createdAt: number;
     updatedAt: number;
     sessionType: "chat" | "travel_plan" | "enrichment";
 } | {
@@ -6291,10 +6291,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 } | {
     _id: import("convex/values").GenericId<"messages">;
@@ -6310,6 +6310,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -6355,7 +6356,6 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -6394,9 +6394,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"userFollows">;
     _creationTime: number;
+    createdAt: number;
     followerId: string;
     followingId: string;
-    createdAt: number;
 } | {
     _id: import("convex/values").GenericId<"activityFeed">;
     _creationTime: number;
@@ -6408,12 +6408,12 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     targetCityName?: string | undefined;
     updatedAt?: number | undefined;
     createdAt: number;
+    likesCount: number;
+    commentsCount: number;
     actorId: string;
     activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
     targetType: "user" | "itinerary";
     targetId: string;
-    likesCount: number;
-    commentsCount: number;
     visibility: "public" | "followers";
 } | {
     _id: import("convex/values").GenericId<"cities">;
@@ -6484,23 +6484,23 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"userTimezoneSettings">;
     _creationTime: number;
     homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     homeTimezone: string;
     displayFormat: "24h" | "12h";
@@ -6514,11 +6514,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -6529,12 +6529,12 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -6543,8 +6543,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPoiVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"userSubmittedPois">;
     voteType: "up" | "down";
 } | {
@@ -6553,8 +6553,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;
@@ -6567,9 +6567,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -6590,8 +6590,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;
@@ -6611,9 +6611,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 } | {
     _id: import("convex/values").GenericId<"itineraryDays">;
     _creationTime: number;
@@ -6649,20 +6649,20 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryCopyHistory">;
     _creationTime: number;
     selectedDays?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     originalItineraryId: import("convex/values").GenericId<"itineraries">;
     copiedItineraryId: import("convex/values").GenericId<"itineraries">;
     copyType: "partial" | "full";
@@ -6693,14 +6693,14 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | {
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
@@ -6708,12 +6708,13 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"poiSourceMappings">;
     _creationTime: number;
     rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+    sourceExternalId: string;
     normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"normalizedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -6721,7 +6722,6 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
     name: string;
     latitude: number;
@@ -6773,8 +6773,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -6784,10 +6784,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"poiReviews">;
     _creationTime: number;
+    authorName?: string | undefined;
     rating?: number | undefined;
     visitDate?: string | undefined;
     sourceId?: string | undefined;
-    authorName?: string | undefined;
     sentiment?: string | undefined;
     content: string;
     poiId: import("convex/values").GenericId<"pois">;
@@ -6815,12 +6815,12 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -6834,8 +6834,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -6853,8 +6853,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -6874,27 +6874,27 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | {
     _id: import("convex/values").GenericId<"itineraryComments">;
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -6905,25 +6905,25 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: string | undefined;
-    guideId: string;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    guideId: string;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
 } | {
     _id: import("convex/values").GenericId<"guideCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"guideComments">;
 } | {
     _id: import("convex/values").GenericId<"commentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"commentReports">;
@@ -6932,25 +6932,25 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"notifications">;
     _creationTime: number;
-    priority?: "low" | "high" | "normal" | undefined;
     title?: string | undefined;
+    priority?: "normal" | "low" | "high" | undefined;
     data?: any;
     actorId?: string | undefined;
     readAt?: number | undefined;
     body?: string | undefined;
     isPushSent?: boolean | undefined;
     pushSentAt?: number | undefined;
-    message: string;
-    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-    userId: string;
     createdAt: number;
+    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+    message: string;
+    userId: string;
     isRead: boolean;
     referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
     referenceId: string;
@@ -6961,11 +6961,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     deviceName?: string | undefined;
     appVersion?: string | undefined;
     osVersion?: string | undefined;
+    createdAt: number;
+    platform: "ios" | "android";
     userId: string;
     token: string;
-    createdAt: number;
     updatedAt: number;
-    platform: "ios" | "android";
     isActive: boolean;
     lastUsedAt: number;
 } | {
@@ -6976,8 +6976,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     quietHoursEnabled?: boolean | undefined;
     quietHoursStart?: string | undefined;
     quietHoursEnd?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     pushEnabled: boolean;
     inAppEnabled: boolean;
@@ -7005,33 +7005,33 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"scheduledNotifications">;
     _creationTime: number;
-    errorMessage?: string | undefined;
     data?: any;
+    errorMessage?: string | undefined;
     retryCount?: number | undefined;
     referenceType?: string | undefined;
     referenceId?: string | undefined;
     sentAt?: number | undefined;
+    status: "failed" | "cancelled" | "pending" | "sent";
+    createdAt: number;
     type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-    status: "cancelled" | "failed" | "pending" | "sent";
     title: string;
     userId: string;
-    createdAt: number;
     body: string;
     scheduledFor: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"favoriteCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -7040,8 +7040,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"conversations">;
@@ -7060,7 +7060,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -7091,8 +7091,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -7110,10 +7110,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -7130,8 +7130,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     syncError?: string | undefined;
     reminderMinutesBefore?: number | undefined;
     syncedDayNumbers?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     calendarProvider: "apple" | "google";
     syncStatus: "failed" | "pending" | "synced" | "deleted";
@@ -7238,9 +7238,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"insuranceProducts">;
@@ -7251,11 +7251,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     exclusions?: string[] | undefined;
     contactPhone?: string | undefined;
     contactEmail?: string | undefined;
-    provider: string;
+    createdAt: number;
+    name: string;
     type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
     priority: number;
-    name: string;
-    createdAt: number;
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -7289,11 +7289,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         claimAmount: number;
     }[] | undefined;
     status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+    createdAt: number;
+    destinations: string[];
     userId: string;
     startDate: string;
     endDate: string;
-    destinations: string[];
-    createdAt: number;
     updatedAt: number;
     totalPrice: number;
     productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -7330,17 +7330,17 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         question: string;
         answer: string;
     }[] | undefined;
-    priority: number;
-    title: string;
     content: string;
+    createdAt: number;
+    title: string;
+    priority: number;
     steps: {
         tips?: string | undefined;
         requiredDocuments?: string[] | undefined;
-        title: string;
         description: string;
+        title: string;
         stepNumber: number;
     }[];
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
@@ -7348,12 +7348,12 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -7368,8 +7368,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -7380,14 +7380,14 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
-    sessionId: import("convex/values").GenericId<"chatSessions">;
     createdAt: number;
-    role: "user" | "system" | "assistant";
+    sessionId: import("convex/values").GenericId<"chatSessions">;
 } | {
     _id: import("convex/values").GenericId<"tippingGuides">;
     _creationTime: number;
@@ -7398,7 +7398,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -7415,19 +7415,19 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
     publishedAt?: number | undefined;
-    title: string;
     content: string;
+    title: string;
+    sourceExternalId: string;
     crawledAt: number;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"emergencyContacts">;
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -7472,10 +7472,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     policyDocumentUrl?: string | undefined;
     insuranceCardUrl?: string | undefined;
     coveredRegions?: string[] | undefined;
+    createdAt: number;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     policyNumber: string;
@@ -7490,18 +7490,18 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | {
     _id: import("convex/values").GenericId<"safetyRatings">;
     _creationTime: number;
-    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     sourceUrl?: string | undefined;
+    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     verifiedBy?: string | undefined;
     destinationNameEn?: string | undefined;
     womenSafetyRating?: number | undefined;
@@ -7513,8 +7513,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         ambulance?: string | undefined;
         fire?: string | undefined;
     } | undefined;
-    summary: string;
     createdAt: number;
+    summary: string;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -7529,26 +7529,26 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"safetyAlerts">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
     endDate?: number | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     descriptionEn?: string | undefined;
     titleEn?: string | undefined;
-    sourceUrl?: string | undefined;
     affectedAreas?: string[] | undefined;
     avoidAreas?: string[] | undefined;
     officialAdvisoryLevel?: string | undefined;
     createdBy?: string | undefined;
-    title: string;
-    description: string;
-    startDate: number;
     createdAt: number;
+    description: string;
+    title: string;
+    startDate: number;
     updatedAt: number;
     countryCode: string;
     source: string;
     isActive: boolean;
     alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
     destinationName: string;
-    severity: "low" | "medium" | "high" | "info" | "critical";
+    severity: "info" | "critical" | "low" | "medium" | "high";
     recommendations: string[];
 } | {
     _id: import("convex/values").GenericId<"dangerZones">;
@@ -7569,10 +7569,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         allDay: boolean;
     } | undefined;
     lastReportedAt?: number | undefined;
+    createdAt: number;
     description: string;
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -7588,20 +7588,20 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"wifiSpots">;
     _creationTime: number;
     description?: string | undefined;
+    imageUrls?: string[] | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
-    imageUrls?: string[] | undefined;
     poiId?: import("convex/values").GenericId<"pois"> | undefined;
     openingHours?: string | undefined;
     verifiedAt?: number | undefined;
     verifiedBy?: string | undefined;
     ssid?: string | undefined;
     speedMbps?: number | undefined;
-    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+    createdAt: number;
     name: string;
+    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     ratingCount: number;
@@ -7620,9 +7620,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -7635,8 +7635,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -7647,8 +7647,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"wifiReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"wifiReviews">;
 } | {
     _id: import("convex/values").GenericId<"safetyIncidentReports">;
@@ -7664,15 +7664,15 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     wasResolved?: boolean | undefined;
     resolutionNotes?: string | undefined;
     status: "rejected" | "pending" | "resolved" | "verified";
-    title: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    title: string;
+    userId: string;
     updatedAt: number;
     countryCode: string;
     reportCount: number;
     destinationName: string;
-    severity: "moderate" | "critical" | "minor" | "severe";
+    severity: "critical" | "moderate" | "minor" | "severe";
     helpfulCount: number;
     isAnonymous: boolean;
     incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
@@ -7680,6 +7680,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -7687,8 +7689,6 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -7728,10 +7728,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"chargingStationReviews">;
     _creationTime: number;
-    userId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    visitDate?: string | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    userId?: string | undefined;
+    visitDate?: string | undefined;
     chargerType?: string | undefined;
     chargingDuration?: number | undefined;
     energyCharged?: number | undefined;
@@ -7748,8 +7748,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"favoriteChargingStations">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     stationId: import("convex/values").GenericId<"chargingStations">;
 } | {
     _id: import("convex/values").GenericId<"simCards">;
@@ -7785,11 +7785,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     affiliateUrl?: string | undefined;
     salesCount?: number | undefined;
     isPromoted?: boolean | undefined;
-    provider: string;
-    priority: number;
-    name: string;
-    destinations: string[];
     createdAt: number;
+    name: string;
+    priority: number;
+    destinations: string[];
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -7817,11 +7817,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"simCardReviews">;
     _creationTime: number;
     title?: string | undefined;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     destination?: string | undefined;
     userId?: string | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     speedRating?: number | undefined;
     speedTestResult?: string | undefined;
     pros?: string[] | undefined;
@@ -7836,8 +7836,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
     purchaseVerified?: boolean | undefined;
     reviewDate?: number | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -7848,16 +7848,16 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"simCardReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"simCardReviews">;
 } | {
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 } | {
     _id: import("convex/values").GenericId<"travelNotes">;
@@ -7865,23 +7865,23 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | {
     _id: import("convex/values").GenericId<"noteImages">;
     _creationTime: number;
     caption?: string | undefined;
-    url: string;
     createdAt: number;
+    url: string;
     orderIndex: number;
     noteId: import("convex/values").GenericId<"travelNotes">;
     isCover: boolean;
@@ -7889,8 +7889,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"noteTags">;
     _creationTime: number;
     createdAt: number;
-    noteId: import("convex/values").GenericId<"travelNotes">;
     tag: string;
+    noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"notePois">;
     _creationTime: number;
@@ -7901,8 +7901,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"noteLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"noteComments">;
@@ -7910,9 +7910,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -7920,15 +7920,15 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"noteCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"noteComments">;
 } | {
     _id: import("convex/values").GenericId<"noteSaves">;
     _creationTime: number;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"userTravelStats">;
@@ -7947,8 +7947,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         days: number;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     } | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalPois: number;
     totalCities: number;
@@ -8023,12 +8023,12 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -8062,14 +8062,15 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -8083,16 +8084,15 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -8126,10 +8126,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -8139,13 +8139,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"weatherCache">;
     _creationTime: number;
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -8172,8 +8170,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -8204,6 +8202,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 } | {
     _id: import("convex/values").GenericId<"packingTemplates">;
@@ -8215,6 +8215,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -8230,7 +8231,6 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -8253,9 +8253,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | {
@@ -8265,8 +8265,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
     packedAt?: number | undefined;
     packedBy?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     updatedAt: number;
     category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
     orderIndex: number;
@@ -8280,8 +8280,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 } | {
@@ -8289,9 +8289,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -8323,20 +8323,20 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | {
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -8346,6 +8346,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -8357,12 +8358,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -8376,18 +8376,19 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"templateLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"templateSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -8411,7 +8412,6 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -8432,14 +8432,14 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     interests?: string[] | undefined;
     smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
     accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -8449,13 +8449,13 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -8475,9 +8475,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     } | undefined;
     responseMessage?: string | undefined;
     respondedAt?: number | undefined;
-    message: string;
     status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
     createdAt: number;
+    message: string;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     applicantId: string;
@@ -8498,11 +8498,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         rating: number;
         wouldTravelAgain: boolean;
     } | undefined;
-    status: "cancelled" | "completed" | "active";
+    status: "completed" | "cancelled" | "active";
+    createdAt: number;
     destination: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     requestOwnerId: string;
@@ -8524,8 +8524,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     referenceNote?: string | undefined;
     adminNotes?: string | undefined;
     status: "rejected" | "pending" | "expired" | "verified";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
 } | {
@@ -8533,8 +8533,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     averageRating?: number | undefined;
     badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalTrips: number;
     lastCalculatedAt: number;
@@ -8549,23 +8549,23 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"partnerRequestSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswers">;
     _creationTime: number;
-    updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
+    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorAvatarUrl?: string | undefined;
     isBestAnswer?: boolean | undefined;
     authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     commentsCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -8578,10 +8578,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"poiQuestions">;
     _creationTime: number;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     isDeleted?: boolean | undefined;
     acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -8589,15 +8589,15 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     upvotesCount?: number | undefined;
     downvotesCount?: number | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "answered" | "closed";
-    title: string;
     content: string;
+    status: "open" | "resolved" | "answered" | "closed";
+    createdAt: number;
+    title: string;
+    viewsCount: number;
     userId: string;
     followersCount: number;
-    createdAt: number;
     category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
     poiId: import("convex/values").GenericId<"pois">;
-    viewsCount: number;
     isEdited: boolean;
     reportCount: number;
     answersCount: number;
@@ -8607,8 +8607,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"answerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -8617,17 +8617,17 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
     _id: import("convex/values").GenericId<"questionFollowers">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"questionReports">;
@@ -8636,8 +8636,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
@@ -8647,8 +8647,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -8659,7 +8659,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -8676,9 +8676,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -8689,12 +8689,12 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"offlineTranslationPacks">;
     _creationTime: number;
+    createdAt: number;
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    createdAt: number;
     updatedAt: number;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -8731,18 +8731,18 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | {
     _id: import("convex/values").GenericId<"poiPhotoLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     photoId: import("convex/values").GenericId<"poiPhotos">;
 } | {
     _id: import("convex/values").GenericId<"flights">;
@@ -8790,9 +8790,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -8856,14 +8856,14 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"userVisaReminders">;
@@ -8878,8 +8878,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -8905,9 +8905,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -8938,10 +8938,10 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     targetCountryNameEn?: string | undefined;
     addressEn?: string | undefined;
     appointmentUrl?: string | undefined;
-    type: "embassy" | "consulate" | "visa_center" | "agency";
-    name: string;
-    city: string;
     createdAt: number;
+    name: string;
+    type: "embassy" | "consulate" | "visa_center" | "agency";
+    city: string;
     updatedAt: number;
     countryCode: string;
     address: string;
@@ -8957,9 +8957,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -8981,7 +8981,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"shareEventLogs">;
     _creationTime: number;
@@ -8993,7 +8993,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"luggageLossReportTemplates">;
     _creationTime: number;
@@ -9016,6 +9016,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -9026,12 +9029,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -9055,11 +9055,11 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -9073,8 +9073,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"eventFavorites">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     eventId: import("convex/values").GenericId<"localEvents">;
 } | {
     _id: import("convex/values").GenericId<"eventReminders">;
@@ -9083,8 +9083,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;
@@ -9094,18 +9094,18 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"eventReviews">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
     pros?: string[] | undefined;
     cons?: string[] | undefined;
     valueRating?: number | undefined;
     atmosphereRating?: number | undefined;
     organizationRating?: number | undefined;
     attendDate?: string | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
-    userId: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
+    userId: string;
     rating: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -9115,8 +9115,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"eventReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"eventReviews">;
 } | {
@@ -9137,9 +9137,9 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"userBehaviorEvents">;
     _creationTime: number;
+    createdAt: number;
     metadata: any;
     userId: string;
-    createdAt: number;
     targetType: "city" | "itinerary" | "poi" | "search" | "guide";
     targetId: string;
     categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
@@ -9156,10 +9156,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
-    itineraryId: import("convex/values").GenericId<"itineraries">;
-    versionNumber: number;
     snapshot: {
         coverImageUrl?: string | undefined;
         title: string;
@@ -9180,21 +9177,24 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         visibility: "public" | "private" | "team";
         cityId: import("convex/values").GenericId<"cities">;
     };
+    userId: string;
+    itineraryId: import("convex/values").GenericId<"itineraries">;
+    versionNumber: number;
 } | {
     _id: import("convex/values").GenericId<"poiQuestionsExtended">;
     _creationTime: number;
+    authorName?: string | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    authorName?: string | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "closed";
-    title: string;
     content: string;
-    userId: string;
+    status: "open" | "resolved" | "closed";
     createdAt: number;
-    poiId: import("convex/values").GenericId<"pois">;
+    title: string;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -9207,12 +9207,12 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"poiAnswersExtended">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     authorName?: string | undefined;
+    updatedAt?: number | undefined;
     authorAvatarUrl?: string | undefined;
     content: string;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
@@ -9225,15 +9225,15 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"poiQuestionVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -9244,8 +9244,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     reviewedAt?: number | undefined;
     actionTaken?: string | undefined;
     status: "pending" | "reviewed" | "dismissed" | "actioned";
-    userId: string;
     createdAt: number;
+    userId: string;
     targetType: "question" | "answer";
     targetId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
@@ -9253,8 +9253,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;
@@ -9271,23 +9271,23 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"rateLimits">;
     _creationTime: number;
+    key: string;
     count: number;
     expiresAt: number;
-    key: string;
 } | {
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -9295,17 +9295,17 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"foodReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"foodReviews">;
 } | {
     _id: import("convex/values").GenericId<"foodCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
     itemCount: number;
@@ -9314,8 +9314,8 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     restaurantId: import("convex/values").GenericId<"pois">;
 } | {
     _id: import("convex/values").GenericId<"currencyRates">;
@@ -9326,7 +9326,6 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
 } | {
     _id: import("convex/values").GenericId<"currencyHistory">;
     _creationTime: number;
-    days: number;
     data: {
         base: string;
         rates: {
@@ -9337,6 +9336,7 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;
@@ -9349,15 +9349,15 @@ export declare const list24Hour: import("convex/server").RegisteredQuery<"public
     currentNode?: string | undefined;
     interruptData?: any;
     status: "completed" | "active" | "expired" | "paused";
+    createdAt: number;
     messages: {
         toolCalls?: any;
         toolName?: string | undefined;
+        role: "ai" | "human" | "tool" | "system";
         content: string;
         timestamp: number;
-        role: "ai" | "human" | "tool" | "system";
     }[];
     sessionId: string;
-    createdAt: number;
     updatedAt: number;
     sessionType: "chat" | "travel_plan" | "enrichment";
 } | {
@@ -9432,10 +9432,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 } | {
     _id: import("convex/values").GenericId<"messages">;
@@ -9451,6 +9451,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -9496,7 +9497,6 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -9535,9 +9535,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"userFollows">;
     _creationTime: number;
+    createdAt: number;
     followerId: string;
     followingId: string;
-    createdAt: number;
 } | {
     _id: import("convex/values").GenericId<"activityFeed">;
     _creationTime: number;
@@ -9549,12 +9549,12 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     targetCityName?: string | undefined;
     updatedAt?: number | undefined;
     createdAt: number;
+    likesCount: number;
+    commentsCount: number;
     actorId: string;
     activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
     targetType: "user" | "itinerary";
     targetId: string;
-    likesCount: number;
-    commentsCount: number;
     visibility: "public" | "followers";
 } | {
     _id: import("convex/values").GenericId<"cities">;
@@ -9625,23 +9625,23 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"userTimezoneSettings">;
     _creationTime: number;
     homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     homeTimezone: string;
     displayFormat: "24h" | "12h";
@@ -9655,11 +9655,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -9670,12 +9670,12 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -9684,8 +9684,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPoiVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"userSubmittedPois">;
     voteType: "up" | "down";
 } | {
@@ -9694,8 +9694,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;
@@ -9708,9 +9708,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -9731,8 +9731,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;
@@ -9752,9 +9752,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 } | {
     _id: import("convex/values").GenericId<"itineraryDays">;
     _creationTime: number;
@@ -9790,20 +9790,20 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryCopyHistory">;
     _creationTime: number;
     selectedDays?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     originalItineraryId: import("convex/values").GenericId<"itineraries">;
     copiedItineraryId: import("convex/values").GenericId<"itineraries">;
     copyType: "partial" | "full";
@@ -9834,14 +9834,14 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | {
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
@@ -9849,12 +9849,13 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"poiSourceMappings">;
     _creationTime: number;
     rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+    sourceExternalId: string;
     normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"normalizedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -9862,7 +9863,6 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
     name: string;
     latitude: number;
@@ -9914,8 +9914,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -9925,10 +9925,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"poiReviews">;
     _creationTime: number;
+    authorName?: string | undefined;
     rating?: number | undefined;
     visitDate?: string | undefined;
     sourceId?: string | undefined;
-    authorName?: string | undefined;
     sentiment?: string | undefined;
     content: string;
     poiId: import("convex/values").GenericId<"pois">;
@@ -9956,12 +9956,12 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -9975,8 +9975,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -9994,8 +9994,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -10015,27 +10015,27 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | {
     _id: import("convex/values").GenericId<"itineraryComments">;
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -10046,25 +10046,25 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: string | undefined;
-    guideId: string;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    guideId: string;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
 } | {
     _id: import("convex/values").GenericId<"guideCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"guideComments">;
 } | {
     _id: import("convex/values").GenericId<"commentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"commentReports">;
@@ -10073,25 +10073,25 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"notifications">;
     _creationTime: number;
-    priority?: "low" | "high" | "normal" | undefined;
     title?: string | undefined;
+    priority?: "normal" | "low" | "high" | undefined;
     data?: any;
     actorId?: string | undefined;
     readAt?: number | undefined;
     body?: string | undefined;
     isPushSent?: boolean | undefined;
     pushSentAt?: number | undefined;
-    message: string;
-    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-    userId: string;
     createdAt: number;
+    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+    message: string;
+    userId: string;
     isRead: boolean;
     referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
     referenceId: string;
@@ -10102,11 +10102,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     deviceName?: string | undefined;
     appVersion?: string | undefined;
     osVersion?: string | undefined;
+    createdAt: number;
+    platform: "ios" | "android";
     userId: string;
     token: string;
-    createdAt: number;
     updatedAt: number;
-    platform: "ios" | "android";
     isActive: boolean;
     lastUsedAt: number;
 } | {
@@ -10117,8 +10117,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     quietHoursEnabled?: boolean | undefined;
     quietHoursStart?: string | undefined;
     quietHoursEnd?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     pushEnabled: boolean;
     inAppEnabled: boolean;
@@ -10146,33 +10146,33 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"scheduledNotifications">;
     _creationTime: number;
-    errorMessage?: string | undefined;
     data?: any;
+    errorMessage?: string | undefined;
     retryCount?: number | undefined;
     referenceType?: string | undefined;
     referenceId?: string | undefined;
     sentAt?: number | undefined;
+    status: "failed" | "cancelled" | "pending" | "sent";
+    createdAt: number;
     type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-    status: "cancelled" | "failed" | "pending" | "sent";
     title: string;
     userId: string;
-    createdAt: number;
     body: string;
     scheduledFor: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"favoriteCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -10181,8 +10181,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"conversations">;
@@ -10201,7 +10201,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -10232,8 +10232,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -10251,10 +10251,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -10271,8 +10271,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     syncError?: string | undefined;
     reminderMinutesBefore?: number | undefined;
     syncedDayNumbers?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     calendarProvider: "apple" | "google";
     syncStatus: "failed" | "pending" | "synced" | "deleted";
@@ -10379,9 +10379,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"insuranceProducts">;
@@ -10392,11 +10392,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     exclusions?: string[] | undefined;
     contactPhone?: string | undefined;
     contactEmail?: string | undefined;
-    provider: string;
+    createdAt: number;
+    name: string;
     type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
     priority: number;
-    name: string;
-    createdAt: number;
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -10430,11 +10430,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         claimAmount: number;
     }[] | undefined;
     status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+    createdAt: number;
+    destinations: string[];
     userId: string;
     startDate: string;
     endDate: string;
-    destinations: string[];
-    createdAt: number;
     updatedAt: number;
     totalPrice: number;
     productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -10471,17 +10471,17 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         question: string;
         answer: string;
     }[] | undefined;
-    priority: number;
-    title: string;
     content: string;
+    createdAt: number;
+    title: string;
+    priority: number;
     steps: {
         tips?: string | undefined;
         requiredDocuments?: string[] | undefined;
-        title: string;
         description: string;
+        title: string;
         stepNumber: number;
     }[];
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
@@ -10489,12 +10489,12 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -10509,8 +10509,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -10521,14 +10521,14 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
-    sessionId: import("convex/values").GenericId<"chatSessions">;
     createdAt: number;
-    role: "user" | "system" | "assistant";
+    sessionId: import("convex/values").GenericId<"chatSessions">;
 } | {
     _id: import("convex/values").GenericId<"tippingGuides">;
     _creationTime: number;
@@ -10539,7 +10539,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -10556,19 +10556,19 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
     publishedAt?: number | undefined;
-    title: string;
     content: string;
+    title: string;
+    sourceExternalId: string;
     crawledAt: number;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"emergencyContacts">;
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -10613,10 +10613,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     policyDocumentUrl?: string | undefined;
     insuranceCardUrl?: string | undefined;
     coveredRegions?: string[] | undefined;
+    createdAt: number;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     policyNumber: string;
@@ -10631,18 +10631,18 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | {
     _id: import("convex/values").GenericId<"safetyRatings">;
     _creationTime: number;
-    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     sourceUrl?: string | undefined;
+    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     verifiedBy?: string | undefined;
     destinationNameEn?: string | undefined;
     womenSafetyRating?: number | undefined;
@@ -10654,8 +10654,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         ambulance?: string | undefined;
         fire?: string | undefined;
     } | undefined;
-    summary: string;
     createdAt: number;
+    summary: string;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -10670,26 +10670,26 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"safetyAlerts">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
     endDate?: number | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     descriptionEn?: string | undefined;
     titleEn?: string | undefined;
-    sourceUrl?: string | undefined;
     affectedAreas?: string[] | undefined;
     avoidAreas?: string[] | undefined;
     officialAdvisoryLevel?: string | undefined;
     createdBy?: string | undefined;
-    title: string;
-    description: string;
-    startDate: number;
     createdAt: number;
+    description: string;
+    title: string;
+    startDate: number;
     updatedAt: number;
     countryCode: string;
     source: string;
     isActive: boolean;
     alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
     destinationName: string;
-    severity: "low" | "medium" | "high" | "info" | "critical";
+    severity: "info" | "critical" | "low" | "medium" | "high";
     recommendations: string[];
 } | {
     _id: import("convex/values").GenericId<"dangerZones">;
@@ -10710,10 +10710,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         allDay: boolean;
     } | undefined;
     lastReportedAt?: number | undefined;
+    createdAt: number;
     description: string;
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -10729,20 +10729,20 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"wifiSpots">;
     _creationTime: number;
     description?: string | undefined;
+    imageUrls?: string[] | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
-    imageUrls?: string[] | undefined;
     poiId?: import("convex/values").GenericId<"pois"> | undefined;
     openingHours?: string | undefined;
     verifiedAt?: number | undefined;
     verifiedBy?: string | undefined;
     ssid?: string | undefined;
     speedMbps?: number | undefined;
-    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+    createdAt: number;
     name: string;
+    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     ratingCount: number;
@@ -10761,9 +10761,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -10776,8 +10776,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -10788,8 +10788,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"wifiReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"wifiReviews">;
 } | {
     _id: import("convex/values").GenericId<"safetyIncidentReports">;
@@ -10805,15 +10805,15 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     wasResolved?: boolean | undefined;
     resolutionNotes?: string | undefined;
     status: "rejected" | "pending" | "resolved" | "verified";
-    title: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    title: string;
+    userId: string;
     updatedAt: number;
     countryCode: string;
     reportCount: number;
     destinationName: string;
-    severity: "moderate" | "critical" | "minor" | "severe";
+    severity: "critical" | "moderate" | "minor" | "severe";
     helpfulCount: number;
     isAnonymous: boolean;
     incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
@@ -10821,6 +10821,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -10828,8 +10830,6 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -10869,10 +10869,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"chargingStationReviews">;
     _creationTime: number;
-    userId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    visitDate?: string | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    userId?: string | undefined;
+    visitDate?: string | undefined;
     chargerType?: string | undefined;
     chargingDuration?: number | undefined;
     energyCharged?: number | undefined;
@@ -10889,8 +10889,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"favoriteChargingStations">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     stationId: import("convex/values").GenericId<"chargingStations">;
 } | {
     _id: import("convex/values").GenericId<"simCards">;
@@ -10926,11 +10926,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     affiliateUrl?: string | undefined;
     salesCount?: number | undefined;
     isPromoted?: boolean | undefined;
-    provider: string;
-    priority: number;
-    name: string;
-    destinations: string[];
     createdAt: number;
+    name: string;
+    priority: number;
+    destinations: string[];
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -10958,11 +10958,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"simCardReviews">;
     _creationTime: number;
     title?: string | undefined;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     destination?: string | undefined;
     userId?: string | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     speedRating?: number | undefined;
     speedTestResult?: string | undefined;
     pros?: string[] | undefined;
@@ -10977,8 +10977,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
     purchaseVerified?: boolean | undefined;
     reviewDate?: number | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -10989,16 +10989,16 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"simCardReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"simCardReviews">;
 } | {
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 } | {
     _id: import("convex/values").GenericId<"travelNotes">;
@@ -11006,23 +11006,23 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | {
     _id: import("convex/values").GenericId<"noteImages">;
     _creationTime: number;
     caption?: string | undefined;
-    url: string;
     createdAt: number;
+    url: string;
     orderIndex: number;
     noteId: import("convex/values").GenericId<"travelNotes">;
     isCover: boolean;
@@ -11030,8 +11030,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"noteTags">;
     _creationTime: number;
     createdAt: number;
-    noteId: import("convex/values").GenericId<"travelNotes">;
     tag: string;
+    noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"notePois">;
     _creationTime: number;
@@ -11042,8 +11042,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"noteLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"noteComments">;
@@ -11051,9 +11051,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -11061,15 +11061,15 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"noteCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"noteComments">;
 } | {
     _id: import("convex/values").GenericId<"noteSaves">;
     _creationTime: number;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"userTravelStats">;
@@ -11088,8 +11088,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         days: number;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     } | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalPois: number;
     totalCities: number;
@@ -11164,12 +11164,12 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -11203,14 +11203,15 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -11224,16 +11225,15 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -11267,10 +11267,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -11280,13 +11280,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"weatherCache">;
     _creationTime: number;
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -11313,8 +11311,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -11345,6 +11343,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 } | {
     _id: import("convex/values").GenericId<"packingTemplates">;
@@ -11356,6 +11356,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -11371,7 +11372,6 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -11394,9 +11394,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | {
@@ -11406,8 +11406,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
     packedAt?: number | undefined;
     packedBy?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     updatedAt: number;
     category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
     orderIndex: number;
@@ -11421,8 +11421,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 } | {
@@ -11430,9 +11430,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -11464,20 +11464,20 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | {
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -11487,6 +11487,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -11498,12 +11499,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -11517,18 +11517,19 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"templateLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"templateSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -11552,7 +11553,6 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -11573,14 +11573,14 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     interests?: string[] | undefined;
     smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
     accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -11590,13 +11590,13 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -11616,9 +11616,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     } | undefined;
     responseMessage?: string | undefined;
     respondedAt?: number | undefined;
-    message: string;
     status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
     createdAt: number;
+    message: string;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     applicantId: string;
@@ -11639,11 +11639,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         rating: number;
         wouldTravelAgain: boolean;
     } | undefined;
-    status: "cancelled" | "completed" | "active";
+    status: "completed" | "cancelled" | "active";
+    createdAt: number;
     destination: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     requestOwnerId: string;
@@ -11665,8 +11665,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     referenceNote?: string | undefined;
     adminNotes?: string | undefined;
     status: "rejected" | "pending" | "expired" | "verified";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
 } | {
@@ -11674,8 +11674,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _creationTime: number;
     averageRating?: number | undefined;
     badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalTrips: number;
     lastCalculatedAt: number;
@@ -11690,23 +11690,23 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"partnerRequestSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswers">;
     _creationTime: number;
-    updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
+    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorAvatarUrl?: string | undefined;
     isBestAnswer?: boolean | undefined;
     authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     commentsCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -11719,10 +11719,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"poiQuestions">;
     _creationTime: number;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     isDeleted?: boolean | undefined;
     acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -11730,15 +11730,15 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     upvotesCount?: number | undefined;
     downvotesCount?: number | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "answered" | "closed";
-    title: string;
     content: string;
+    status: "open" | "resolved" | "answered" | "closed";
+    createdAt: number;
+    title: string;
+    viewsCount: number;
     userId: string;
     followersCount: number;
-    createdAt: number;
     category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
     poiId: import("convex/values").GenericId<"pois">;
-    viewsCount: number;
     isEdited: boolean;
     reportCount: number;
     answersCount: number;
@@ -11748,8 +11748,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"answerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -11758,17 +11758,17 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
     _id: import("convex/values").GenericId<"questionFollowers">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"questionReports">;
@@ -11777,8 +11777,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
@@ -11788,8 +11788,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -11800,7 +11800,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -11817,9 +11817,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -11830,12 +11830,12 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"offlineTranslationPacks">;
     _creationTime: number;
+    createdAt: number;
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    createdAt: number;
     updatedAt: number;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -11872,18 +11872,18 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | {
     _id: import("convex/values").GenericId<"poiPhotoLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     photoId: import("convex/values").GenericId<"poiPhotos">;
 } | {
     _id: import("convex/values").GenericId<"flights">;
@@ -11931,9 +11931,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -11997,14 +11997,14 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"userVisaReminders">;
@@ -12019,8 +12019,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -12046,9 +12046,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -12079,10 +12079,10 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     targetCountryNameEn?: string | undefined;
     addressEn?: string | undefined;
     appointmentUrl?: string | undefined;
-    type: "embassy" | "consulate" | "visa_center" | "agency";
-    name: string;
-    city: string;
     createdAt: number;
+    name: string;
+    type: "embassy" | "consulate" | "visa_center" | "agency";
+    city: string;
     updatedAt: number;
     countryCode: string;
     address: string;
@@ -12098,9 +12098,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -12122,7 +12122,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"shareEventLogs">;
     _creationTime: number;
@@ -12134,7 +12134,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"luggageLossReportTemplates">;
     _creationTime: number;
@@ -12157,6 +12157,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -12167,12 +12170,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -12196,11 +12196,11 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -12214,8 +12214,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"eventFavorites">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     eventId: import("convex/values").GenericId<"localEvents">;
 } | {
     _id: import("convex/values").GenericId<"eventReminders">;
@@ -12224,8 +12224,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;
@@ -12235,18 +12235,18 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"eventReviews">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
     pros?: string[] | undefined;
     cons?: string[] | undefined;
     valueRating?: number | undefined;
     atmosphereRating?: number | undefined;
     organizationRating?: number | undefined;
     attendDate?: string | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
-    userId: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
+    userId: string;
     rating: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -12256,8 +12256,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"eventReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"eventReviews">;
 } | {
@@ -12278,9 +12278,9 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"userBehaviorEvents">;
     _creationTime: number;
+    createdAt: number;
     metadata: any;
     userId: string;
-    createdAt: number;
     targetType: "city" | "itinerary" | "poi" | "search" | "guide";
     targetId: string;
     categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
@@ -12297,10 +12297,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
-    itineraryId: import("convex/values").GenericId<"itineraries">;
-    versionNumber: number;
     snapshot: {
         coverImageUrl?: string | undefined;
         title: string;
@@ -12321,21 +12318,24 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         visibility: "public" | "private" | "team";
         cityId: import("convex/values").GenericId<"cities">;
     };
+    userId: string;
+    itineraryId: import("convex/values").GenericId<"itineraries">;
+    versionNumber: number;
 } | {
     _id: import("convex/values").GenericId<"poiQuestionsExtended">;
     _creationTime: number;
+    authorName?: string | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    authorName?: string | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "closed";
-    title: string;
     content: string;
-    userId: string;
+    status: "open" | "resolved" | "closed";
     createdAt: number;
-    poiId: import("convex/values").GenericId<"pois">;
+    title: string;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -12348,12 +12348,12 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"poiAnswersExtended">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     authorName?: string | undefined;
+    updatedAt?: number | undefined;
     authorAvatarUrl?: string | undefined;
     content: string;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
@@ -12366,15 +12366,15 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"poiQuestionVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -12385,8 +12385,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     reviewedAt?: number | undefined;
     actionTaken?: string | undefined;
     status: "pending" | "reviewed" | "dismissed" | "actioned";
-    userId: string;
     createdAt: number;
+    userId: string;
     targetType: "question" | "answer";
     targetId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
@@ -12394,8 +12394,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;
@@ -12412,23 +12412,23 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"rateLimits">;
     _creationTime: number;
+    key: string;
     count: number;
     expiresAt: number;
-    key: string;
 } | {
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -12436,17 +12436,17 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"foodReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"foodReviews">;
 } | {
     _id: import("convex/values").GenericId<"foodCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
     itemCount: number;
@@ -12455,8 +12455,8 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     restaurantId: import("convex/values").GenericId<"pois">;
 } | {
     _id: import("convex/values").GenericId<"currencyRates">;
@@ -12467,7 +12467,6 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
 } | {
     _id: import("convex/values").GenericId<"currencyHistory">;
     _creationTime: number;
-    days: number;
     data: {
         base: string;
         rates: {
@@ -12478,6 +12477,7 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;
@@ -12490,15 +12490,15 @@ export declare const listWithEmergency: import("convex/server").RegisteredQuery<
     currentNode?: string | undefined;
     interruptData?: any;
     status: "completed" | "active" | "expired" | "paused";
+    createdAt: number;
     messages: {
         toolCalls?: any;
         toolName?: string | undefined;
+        role: "ai" | "human" | "tool" | "system";
         content: string;
         timestamp: number;
-        role: "ai" | "human" | "tool" | "system";
     }[];
     sessionId: string;
-    createdAt: number;
     updatedAt: number;
     sessionType: "chat" | "travel_plan" | "enrichment";
 } | {
@@ -12573,10 +12573,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 } | {
     _id: import("convex/values").GenericId<"messages">;
@@ -12592,6 +12592,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -12637,7 +12638,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -12676,9 +12676,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"userFollows">;
     _creationTime: number;
+    createdAt: number;
     followerId: string;
     followingId: string;
-    createdAt: number;
 } | {
     _id: import("convex/values").GenericId<"activityFeed">;
     _creationTime: number;
@@ -12690,12 +12690,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     targetCityName?: string | undefined;
     updatedAt?: number | undefined;
     createdAt: number;
+    likesCount: number;
+    commentsCount: number;
     actorId: string;
     activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
     targetType: "user" | "itinerary";
     targetId: string;
-    likesCount: number;
-    commentsCount: number;
     visibility: "public" | "followers";
 } | {
     _id: import("convex/values").GenericId<"cities">;
@@ -12766,23 +12766,23 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"userTimezoneSettings">;
     _creationTime: number;
     homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     homeTimezone: string;
     displayFormat: "24h" | "12h";
@@ -12796,11 +12796,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -12811,12 +12811,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -12825,8 +12825,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPoiVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"userSubmittedPois">;
     voteType: "up" | "down";
 } | {
@@ -12835,8 +12835,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;
@@ -12849,9 +12849,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -12872,8 +12872,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;
@@ -12893,9 +12893,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 } | {
     _id: import("convex/values").GenericId<"itineraryDays">;
     _creationTime: number;
@@ -12931,20 +12931,20 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryCopyHistory">;
     _creationTime: number;
     selectedDays?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     originalItineraryId: import("convex/values").GenericId<"itineraries">;
     copiedItineraryId: import("convex/values").GenericId<"itineraries">;
     copyType: "partial" | "full";
@@ -12975,14 +12975,14 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | {
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
@@ -12990,12 +12990,13 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"poiSourceMappings">;
     _creationTime: number;
     rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+    sourceExternalId: string;
     normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"normalizedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -13003,7 +13004,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
     name: string;
     latitude: number;
@@ -13055,8 +13055,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -13066,10 +13066,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"poiReviews">;
     _creationTime: number;
+    authorName?: string | undefined;
     rating?: number | undefined;
     visitDate?: string | undefined;
     sourceId?: string | undefined;
-    authorName?: string | undefined;
     sentiment?: string | undefined;
     content: string;
     poiId: import("convex/values").GenericId<"pois">;
@@ -13097,12 +13097,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -13116,8 +13116,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -13135,8 +13135,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -13156,27 +13156,27 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | {
     _id: import("convex/values").GenericId<"itineraryComments">;
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -13187,25 +13187,25 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: string | undefined;
-    guideId: string;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    guideId: string;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
 } | {
     _id: import("convex/values").GenericId<"guideCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"guideComments">;
 } | {
     _id: import("convex/values").GenericId<"commentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"commentReports">;
@@ -13214,25 +13214,25 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"notifications">;
     _creationTime: number;
-    priority?: "low" | "high" | "normal" | undefined;
     title?: string | undefined;
+    priority?: "normal" | "low" | "high" | undefined;
     data?: any;
     actorId?: string | undefined;
     readAt?: number | undefined;
     body?: string | undefined;
     isPushSent?: boolean | undefined;
     pushSentAt?: number | undefined;
-    message: string;
-    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-    userId: string;
     createdAt: number;
+    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+    message: string;
+    userId: string;
     isRead: boolean;
     referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
     referenceId: string;
@@ -13243,11 +13243,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     deviceName?: string | undefined;
     appVersion?: string | undefined;
     osVersion?: string | undefined;
+    createdAt: number;
+    platform: "ios" | "android";
     userId: string;
     token: string;
-    createdAt: number;
     updatedAt: number;
-    platform: "ios" | "android";
     isActive: boolean;
     lastUsedAt: number;
 } | {
@@ -13258,8 +13258,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     quietHoursEnabled?: boolean | undefined;
     quietHoursStart?: string | undefined;
     quietHoursEnd?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     pushEnabled: boolean;
     inAppEnabled: boolean;
@@ -13287,33 +13287,33 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"scheduledNotifications">;
     _creationTime: number;
-    errorMessage?: string | undefined;
     data?: any;
+    errorMessage?: string | undefined;
     retryCount?: number | undefined;
     referenceType?: string | undefined;
     referenceId?: string | undefined;
     sentAt?: number | undefined;
+    status: "failed" | "cancelled" | "pending" | "sent";
+    createdAt: number;
     type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-    status: "cancelled" | "failed" | "pending" | "sent";
     title: string;
     userId: string;
-    createdAt: number;
     body: string;
     scheduledFor: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"favoriteCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -13322,8 +13322,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"conversations">;
@@ -13342,7 +13342,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -13373,8 +13373,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -13392,10 +13392,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -13412,8 +13412,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     syncError?: string | undefined;
     reminderMinutesBefore?: number | undefined;
     syncedDayNumbers?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     calendarProvider: "apple" | "google";
     syncStatus: "failed" | "pending" | "synced" | "deleted";
@@ -13520,9 +13520,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"insuranceProducts">;
@@ -13533,11 +13533,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     exclusions?: string[] | undefined;
     contactPhone?: string | undefined;
     contactEmail?: string | undefined;
-    provider: string;
+    createdAt: number;
+    name: string;
     type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
     priority: number;
-    name: string;
-    createdAt: number;
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -13571,11 +13571,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         claimAmount: number;
     }[] | undefined;
     status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+    createdAt: number;
+    destinations: string[];
     userId: string;
     startDate: string;
     endDate: string;
-    destinations: string[];
-    createdAt: number;
     updatedAt: number;
     totalPrice: number;
     productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -13612,17 +13612,17 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         question: string;
         answer: string;
     }[] | undefined;
-    priority: number;
-    title: string;
     content: string;
+    createdAt: number;
+    title: string;
+    priority: number;
     steps: {
         tips?: string | undefined;
         requiredDocuments?: string[] | undefined;
-        title: string;
         description: string;
+        title: string;
         stepNumber: number;
     }[];
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
@@ -13630,12 +13630,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -13650,8 +13650,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -13662,14 +13662,14 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
-    sessionId: import("convex/values").GenericId<"chatSessions">;
     createdAt: number;
-    role: "user" | "system" | "assistant";
+    sessionId: import("convex/values").GenericId<"chatSessions">;
 } | {
     _id: import("convex/values").GenericId<"tippingGuides">;
     _creationTime: number;
@@ -13680,7 +13680,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -13697,19 +13697,19 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
     publishedAt?: number | undefined;
-    title: string;
     content: string;
+    title: string;
+    sourceExternalId: string;
     crawledAt: number;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"emergencyContacts">;
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -13754,10 +13754,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     policyDocumentUrl?: string | undefined;
     insuranceCardUrl?: string | undefined;
     coveredRegions?: string[] | undefined;
+    createdAt: number;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     policyNumber: string;
@@ -13772,18 +13772,18 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | {
     _id: import("convex/values").GenericId<"safetyRatings">;
     _creationTime: number;
-    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     sourceUrl?: string | undefined;
+    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     verifiedBy?: string | undefined;
     destinationNameEn?: string | undefined;
     womenSafetyRating?: number | undefined;
@@ -13795,8 +13795,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         ambulance?: string | undefined;
         fire?: string | undefined;
     } | undefined;
-    summary: string;
     createdAt: number;
+    summary: string;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -13811,26 +13811,26 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"safetyAlerts">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
     endDate?: number | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     descriptionEn?: string | undefined;
     titleEn?: string | undefined;
-    sourceUrl?: string | undefined;
     affectedAreas?: string[] | undefined;
     avoidAreas?: string[] | undefined;
     officialAdvisoryLevel?: string | undefined;
     createdBy?: string | undefined;
-    title: string;
-    description: string;
-    startDate: number;
     createdAt: number;
+    description: string;
+    title: string;
+    startDate: number;
     updatedAt: number;
     countryCode: string;
     source: string;
     isActive: boolean;
     alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
     destinationName: string;
-    severity: "low" | "medium" | "high" | "info" | "critical";
+    severity: "info" | "critical" | "low" | "medium" | "high";
     recommendations: string[];
 } | {
     _id: import("convex/values").GenericId<"dangerZones">;
@@ -13851,10 +13851,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         allDay: boolean;
     } | undefined;
     lastReportedAt?: number | undefined;
+    createdAt: number;
     description: string;
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -13870,20 +13870,20 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"wifiSpots">;
     _creationTime: number;
     description?: string | undefined;
+    imageUrls?: string[] | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
-    imageUrls?: string[] | undefined;
     poiId?: import("convex/values").GenericId<"pois"> | undefined;
     openingHours?: string | undefined;
     verifiedAt?: number | undefined;
     verifiedBy?: string | undefined;
     ssid?: string | undefined;
     speedMbps?: number | undefined;
-    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+    createdAt: number;
     name: string;
+    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     ratingCount: number;
@@ -13902,9 +13902,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -13917,8 +13917,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -13929,8 +13929,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"wifiReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"wifiReviews">;
 } | {
     _id: import("convex/values").GenericId<"safetyIncidentReports">;
@@ -13946,15 +13946,15 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     wasResolved?: boolean | undefined;
     resolutionNotes?: string | undefined;
     status: "rejected" | "pending" | "resolved" | "verified";
-    title: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    title: string;
+    userId: string;
     updatedAt: number;
     countryCode: string;
     reportCount: number;
     destinationName: string;
-    severity: "moderate" | "critical" | "minor" | "severe";
+    severity: "critical" | "moderate" | "minor" | "severe";
     helpfulCount: number;
     isAnonymous: boolean;
     incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
@@ -13962,6 +13962,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -13969,8 +13971,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -14010,10 +14010,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"chargingStationReviews">;
     _creationTime: number;
-    userId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    visitDate?: string | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    userId?: string | undefined;
+    visitDate?: string | undefined;
     chargerType?: string | undefined;
     chargingDuration?: number | undefined;
     energyCharged?: number | undefined;
@@ -14030,8 +14030,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"favoriteChargingStations">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     stationId: import("convex/values").GenericId<"chargingStations">;
 } | {
     _id: import("convex/values").GenericId<"simCards">;
@@ -14067,11 +14067,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     affiliateUrl?: string | undefined;
     salesCount?: number | undefined;
     isPromoted?: boolean | undefined;
-    provider: string;
-    priority: number;
-    name: string;
-    destinations: string[];
     createdAt: number;
+    name: string;
+    priority: number;
+    destinations: string[];
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -14099,11 +14099,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"simCardReviews">;
     _creationTime: number;
     title?: string | undefined;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     destination?: string | undefined;
     userId?: string | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     speedRating?: number | undefined;
     speedTestResult?: string | undefined;
     pros?: string[] | undefined;
@@ -14118,8 +14118,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
     purchaseVerified?: boolean | undefined;
     reviewDate?: number | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -14130,16 +14130,16 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"simCardReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"simCardReviews">;
 } | {
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 } | {
     _id: import("convex/values").GenericId<"travelNotes">;
@@ -14147,23 +14147,23 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | {
     _id: import("convex/values").GenericId<"noteImages">;
     _creationTime: number;
     caption?: string | undefined;
-    url: string;
     createdAt: number;
+    url: string;
     orderIndex: number;
     noteId: import("convex/values").GenericId<"travelNotes">;
     isCover: boolean;
@@ -14171,8 +14171,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"noteTags">;
     _creationTime: number;
     createdAt: number;
-    noteId: import("convex/values").GenericId<"travelNotes">;
     tag: string;
+    noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"notePois">;
     _creationTime: number;
@@ -14183,8 +14183,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"noteLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"noteComments">;
@@ -14192,9 +14192,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -14202,15 +14202,15 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"noteCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"noteComments">;
 } | {
     _id: import("convex/values").GenericId<"noteSaves">;
     _creationTime: number;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"userTravelStats">;
@@ -14229,8 +14229,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         days: number;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     } | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalPois: number;
     totalCities: number;
@@ -14305,12 +14305,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -14344,14 +14344,15 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -14365,16 +14366,15 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -14408,10 +14408,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -14421,13 +14421,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"weatherCache">;
     _creationTime: number;
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -14454,8 +14452,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -14486,6 +14484,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 } | {
     _id: import("convex/values").GenericId<"packingTemplates">;
@@ -14497,6 +14497,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -14512,7 +14513,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -14535,9 +14535,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | {
@@ -14547,8 +14547,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
     packedAt?: number | undefined;
     packedBy?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     updatedAt: number;
     category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
     orderIndex: number;
@@ -14562,8 +14562,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 } | {
@@ -14571,9 +14571,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -14605,20 +14605,20 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | {
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -14628,6 +14628,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -14639,12 +14640,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -14658,18 +14658,19 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"templateLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"templateSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -14693,7 +14694,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -14714,14 +14714,14 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     interests?: string[] | undefined;
     smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
     accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -14731,13 +14731,13 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -14757,9 +14757,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     } | undefined;
     responseMessage?: string | undefined;
     respondedAt?: number | undefined;
-    message: string;
     status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
     createdAt: number;
+    message: string;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     applicantId: string;
@@ -14780,11 +14780,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         rating: number;
         wouldTravelAgain: boolean;
     } | undefined;
-    status: "cancelled" | "completed" | "active";
+    status: "completed" | "cancelled" | "active";
+    createdAt: number;
     destination: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     requestOwnerId: string;
@@ -14806,8 +14806,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     referenceNote?: string | undefined;
     adminNotes?: string | undefined;
     status: "rejected" | "pending" | "expired" | "verified";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
 } | {
@@ -14815,8 +14815,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     averageRating?: number | undefined;
     badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalTrips: number;
     lastCalculatedAt: number;
@@ -14831,23 +14831,23 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"partnerRequestSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswers">;
     _creationTime: number;
-    updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
+    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorAvatarUrl?: string | undefined;
     isBestAnswer?: boolean | undefined;
     authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     commentsCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -14860,10 +14860,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"poiQuestions">;
     _creationTime: number;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     isDeleted?: boolean | undefined;
     acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -14871,15 +14871,15 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     upvotesCount?: number | undefined;
     downvotesCount?: number | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "answered" | "closed";
-    title: string;
     content: string;
+    status: "open" | "resolved" | "answered" | "closed";
+    createdAt: number;
+    title: string;
+    viewsCount: number;
     userId: string;
     followersCount: number;
-    createdAt: number;
     category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
     poiId: import("convex/values").GenericId<"pois">;
-    viewsCount: number;
     isEdited: boolean;
     reportCount: number;
     answersCount: number;
@@ -14889,8 +14889,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"answerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -14899,17 +14899,17 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
     _id: import("convex/values").GenericId<"questionFollowers">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"questionReports">;
@@ -14918,8 +14918,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
@@ -14929,8 +14929,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -14941,7 +14941,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -14958,9 +14958,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -14971,12 +14971,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"offlineTranslationPacks">;
     _creationTime: number;
+    createdAt: number;
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    createdAt: number;
     updatedAt: number;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -15013,18 +15013,18 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | {
     _id: import("convex/values").GenericId<"poiPhotoLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     photoId: import("convex/values").GenericId<"poiPhotos">;
 } | {
     _id: import("convex/values").GenericId<"flights">;
@@ -15072,9 +15072,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -15138,14 +15138,14 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"userVisaReminders">;
@@ -15160,8 +15160,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -15187,9 +15187,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -15220,10 +15220,10 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     targetCountryNameEn?: string | undefined;
     addressEn?: string | undefined;
     appointmentUrl?: string | undefined;
-    type: "embassy" | "consulate" | "visa_center" | "agency";
-    name: string;
-    city: string;
     createdAt: number;
+    name: string;
+    type: "embassy" | "consulate" | "visa_center" | "agency";
+    city: string;
     updatedAt: number;
     countryCode: string;
     address: string;
@@ -15239,9 +15239,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -15263,7 +15263,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"shareEventLogs">;
     _creationTime: number;
@@ -15275,7 +15275,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"luggageLossReportTemplates">;
     _creationTime: number;
@@ -15298,6 +15298,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -15308,12 +15311,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -15337,11 +15337,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -15355,8 +15355,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"eventFavorites">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     eventId: import("convex/values").GenericId<"localEvents">;
 } | {
     _id: import("convex/values").GenericId<"eventReminders">;
@@ -15365,8 +15365,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;
@@ -15376,18 +15376,18 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"eventReviews">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
     pros?: string[] | undefined;
     cons?: string[] | undefined;
     valueRating?: number | undefined;
     atmosphereRating?: number | undefined;
     organizationRating?: number | undefined;
     attendDate?: string | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
-    userId: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
+    userId: string;
     rating: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -15397,8 +15397,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"eventReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"eventReviews">;
 } | {
@@ -15419,9 +15419,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"userBehaviorEvents">;
     _creationTime: number;
+    createdAt: number;
     metadata: any;
     userId: string;
-    createdAt: number;
     targetType: "city" | "itinerary" | "poi" | "search" | "guide";
     targetId: string;
     categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
@@ -15438,10 +15438,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
-    itineraryId: import("convex/values").GenericId<"itineraries">;
-    versionNumber: number;
     snapshot: {
         coverImageUrl?: string | undefined;
         title: string;
@@ -15462,21 +15459,24 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         visibility: "public" | "private" | "team";
         cityId: import("convex/values").GenericId<"cities">;
     };
+    userId: string;
+    itineraryId: import("convex/values").GenericId<"itineraries">;
+    versionNumber: number;
 } | {
     _id: import("convex/values").GenericId<"poiQuestionsExtended">;
     _creationTime: number;
+    authorName?: string | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    authorName?: string | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "closed";
-    title: string;
     content: string;
-    userId: string;
+    status: "open" | "resolved" | "closed";
     createdAt: number;
-    poiId: import("convex/values").GenericId<"pois">;
+    title: string;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -15489,12 +15489,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"poiAnswersExtended">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     authorName?: string | undefined;
+    updatedAt?: number | undefined;
     authorAvatarUrl?: string | undefined;
     content: string;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
@@ -15507,15 +15507,15 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"poiQuestionVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -15526,8 +15526,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     reviewedAt?: number | undefined;
     actionTaken?: string | undefined;
     status: "pending" | "reviewed" | "dismissed" | "actioned";
-    userId: string;
     createdAt: number;
+    userId: string;
     targetType: "question" | "answer";
     targetId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
@@ -15535,8 +15535,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;
@@ -15553,23 +15553,23 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"rateLimits">;
     _creationTime: number;
+    key: string;
     count: number;
     expiresAt: number;
-    key: string;
 } | {
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -15577,17 +15577,17 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"foodReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"foodReviews">;
 } | {
     _id: import("convex/values").GenericId<"foodCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
     itemCount: number;
@@ -15596,8 +15596,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     restaurantId: import("convex/values").GenericId<"pois">;
 } | {
     _id: import("convex/values").GenericId<"currencyRates">;
@@ -15608,7 +15608,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 } | {
     _id: import("convex/values").GenericId<"currencyHistory">;
     _creationTime: number;
-    days: number;
     data: {
         base: string;
         rates: {
@@ -15619,6 +15618,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;
@@ -15631,15 +15631,15 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     currentNode?: string | undefined;
     interruptData?: any;
     status: "completed" | "active" | "expired" | "paused";
+    createdAt: number;
     messages: {
         toolCalls?: any;
         toolName?: string | undefined;
+        role: "ai" | "human" | "tool" | "system";
         content: string;
         timestamp: number;
-        role: "ai" | "human" | "tool" | "system";
     }[];
     sessionId: string;
-    createdAt: number;
     updatedAt: number;
     sessionType: "chat" | "travel_plan" | "enrichment";
 } | {
@@ -15719,10 +15719,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 } | {
     distance: number;
@@ -15740,6 +15740,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -15785,7 +15786,6 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -15826,9 +15826,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"userFollows">;
     _creationTime: number;
+    createdAt: number;
     followerId: string;
     followingId: string;
-    createdAt: number;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"activityFeed">;
@@ -15841,12 +15841,12 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     targetCityName?: string | undefined;
     updatedAt?: number | undefined;
     createdAt: number;
+    likesCount: number;
+    commentsCount: number;
     actorId: string;
     activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
     targetType: "user" | "itinerary";
     targetId: string;
-    likesCount: number;
-    commentsCount: number;
     visibility: "public" | "followers";
 } | {
     distance: number;
@@ -15919,24 +15919,24 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"userTimezoneSettings">;
     _creationTime: number;
     homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     homeTimezone: string;
     displayFormat: "24h" | "12h";
@@ -15951,11 +15951,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -15966,12 +15966,12 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -15981,8 +15981,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"userSubmittedPoiVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"userSubmittedPois">;
     voteType: "up" | "down";
 } | {
@@ -15992,8 +15992,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;
@@ -16007,9 +16007,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -16032,8 +16032,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;
@@ -16055,9 +16055,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"itineraryDays">;
@@ -16096,21 +16096,21 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"itineraryCopyHistory">;
     _creationTime: number;
     selectedDays?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     originalItineraryId: import("convex/values").GenericId<"itineraries">;
     copiedItineraryId: import("convex/values").GenericId<"itineraries">;
     copyType: "partial" | "full";
@@ -16143,15 +16143,15 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
@@ -16160,13 +16160,14 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"poiSourceMappings">;
     _creationTime: number;
     rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+    sourceExternalId: string;
     normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"normalizedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -16174,7 +16175,6 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
     name: string;
     latitude: number;
@@ -16228,8 +16228,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -16240,10 +16240,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"poiReviews">;
     _creationTime: number;
+    authorName?: string | undefined;
     rating?: number | undefined;
     visitDate?: string | undefined;
     sourceId?: string | undefined;
-    authorName?: string | undefined;
     sentiment?: string | undefined;
     content: string;
     poiId: import("convex/values").GenericId<"pois">;
@@ -16274,12 +16274,12 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -16293,8 +16293,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -16312,8 +16312,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -16333,18 +16333,18 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"itineraryComments">;
@@ -16352,9 +16352,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -16366,11 +16366,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: string | undefined;
-    guideId: string;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    guideId: string;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -16378,15 +16378,15 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"guideCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"guideComments">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"commentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     distance: number;
@@ -16396,26 +16396,26 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"notifications">;
     _creationTime: number;
-    priority?: "low" | "high" | "normal" | undefined;
     title?: string | undefined;
+    priority?: "normal" | "low" | "high" | undefined;
     data?: any;
     actorId?: string | undefined;
     readAt?: number | undefined;
     body?: string | undefined;
     isPushSent?: boolean | undefined;
     pushSentAt?: number | undefined;
-    message: string;
-    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-    userId: string;
     createdAt: number;
+    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+    message: string;
+    userId: string;
     isRead: boolean;
     referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
     referenceId: string;
@@ -16427,11 +16427,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     deviceName?: string | undefined;
     appVersion?: string | undefined;
     osVersion?: string | undefined;
+    createdAt: number;
+    platform: "ios" | "android";
     userId: string;
     token: string;
-    createdAt: number;
     updatedAt: number;
-    platform: "ios" | "android";
     isActive: boolean;
     lastUsedAt: number;
 } | {
@@ -16443,8 +16443,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     quietHoursEnabled?: boolean | undefined;
     quietHoursStart?: string | undefined;
     quietHoursEnd?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     pushEnabled: boolean;
     inAppEnabled: boolean;
@@ -16473,25 +16473,25 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"scheduledNotifications">;
     _creationTime: number;
-    errorMessage?: string | undefined;
     data?: any;
+    errorMessage?: string | undefined;
     retryCount?: number | undefined;
     referenceType?: string | undefined;
     referenceId?: string | undefined;
     sentAt?: number | undefined;
+    status: "failed" | "cancelled" | "pending" | "sent";
+    createdAt: number;
     type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-    status: "cancelled" | "failed" | "pending" | "sent";
     title: string;
     userId: string;
-    createdAt: number;
     body: string;
     scheduledFor: number;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"itineraryLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     distance: number;
@@ -16499,9 +16499,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -16511,8 +16511,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     distance: number;
@@ -16534,7 +16534,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -16566,8 +16566,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -16586,10 +16586,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -16607,8 +16607,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     syncError?: string | undefined;
     reminderMinutesBefore?: number | undefined;
     syncedDayNumbers?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     calendarProvider: "apple" | "google";
     syncStatus: "failed" | "pending" | "synced" | "deleted";
@@ -16720,9 +16720,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | {
     distance: number;
@@ -16734,11 +16734,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     exclusions?: string[] | undefined;
     contactPhone?: string | undefined;
     contactEmail?: string | undefined;
-    provider: string;
+    createdAt: number;
+    name: string;
     type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
     priority: number;
-    name: string;
-    createdAt: number;
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -16773,11 +16773,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         claimAmount: number;
     }[] | undefined;
     status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+    createdAt: number;
+    destinations: string[];
     userId: string;
     startDate: string;
     endDate: string;
-    destinations: string[];
-    createdAt: number;
     updatedAt: number;
     totalPrice: number;
     productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -16816,17 +16816,17 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         question: string;
         answer: string;
     }[] | undefined;
-    priority: number;
-    title: string;
     content: string;
+    createdAt: number;
+    title: string;
+    priority: number;
     steps: {
         tips?: string | undefined;
         requiredDocuments?: string[] | undefined;
-        title: string;
         description: string;
+        title: string;
         stepNumber: number;
     }[];
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
@@ -16835,12 +16835,12 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -16856,8 +16856,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -16868,14 +16868,14 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
-    sessionId: import("convex/values").GenericId<"chatSessions">;
     createdAt: number;
-    role: "user" | "system" | "assistant";
+    sessionId: import("convex/values").GenericId<"chatSessions">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"tippingGuides">;
@@ -16887,7 +16887,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -16905,20 +16905,20 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
     publishedAt?: number | undefined;
-    title: string;
     content: string;
+    title: string;
+    sourceExternalId: string;
     crawledAt: number;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"emergencyContacts">;
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -16965,10 +16965,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     policyDocumentUrl?: string | undefined;
     insuranceCardUrl?: string | undefined;
     coveredRegions?: string[] | undefined;
+    createdAt: number;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     policyNumber: string;
@@ -16984,19 +16984,19 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"safetyRatings">;
     _creationTime: number;
-    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     sourceUrl?: string | undefined;
+    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     verifiedBy?: string | undefined;
     destinationNameEn?: string | undefined;
     womenSafetyRating?: number | undefined;
@@ -17008,8 +17008,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         ambulance?: string | undefined;
         fire?: string | undefined;
     } | undefined;
-    summary: string;
     createdAt: number;
+    summary: string;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -17025,26 +17025,26 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"safetyAlerts">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
     endDate?: number | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     descriptionEn?: string | undefined;
     titleEn?: string | undefined;
-    sourceUrl?: string | undefined;
     affectedAreas?: string[] | undefined;
     avoidAreas?: string[] | undefined;
     officialAdvisoryLevel?: string | undefined;
     createdBy?: string | undefined;
-    title: string;
-    description: string;
-    startDate: number;
     createdAt: number;
+    description: string;
+    title: string;
+    startDate: number;
     updatedAt: number;
     countryCode: string;
     source: string;
     isActive: boolean;
     alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
     destinationName: string;
-    severity: "low" | "medium" | "high" | "info" | "critical";
+    severity: "info" | "critical" | "low" | "medium" | "high";
     recommendations: string[];
 } | {
     distance: number;
@@ -17066,10 +17066,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         allDay: boolean;
     } | undefined;
     lastReportedAt?: number | undefined;
+    createdAt: number;
     description: string;
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -17086,20 +17086,20 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"wifiSpots">;
     _creationTime: number;
     description?: string | undefined;
+    imageUrls?: string[] | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
-    imageUrls?: string[] | undefined;
     poiId?: import("convex/values").GenericId<"pois"> | undefined;
     openingHours?: string | undefined;
     verifiedAt?: number | undefined;
     verifiedBy?: string | undefined;
     ssid?: string | undefined;
     speedMbps?: number | undefined;
-    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+    createdAt: number;
     name: string;
+    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     ratingCount: number;
@@ -17119,9 +17119,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -17135,8 +17135,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -17148,8 +17148,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"wifiReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"wifiReviews">;
 } | {
     distance: number;
@@ -17166,15 +17166,15 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     wasResolved?: boolean | undefined;
     resolutionNotes?: string | undefined;
     status: "rejected" | "pending" | "resolved" | "verified";
-    title: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    title: string;
+    userId: string;
     updatedAt: number;
     countryCode: string;
     reportCount: number;
     destinationName: string;
-    severity: "moderate" | "critical" | "minor" | "severe";
+    severity: "critical" | "moderate" | "minor" | "severe";
     helpfulCount: number;
     isAnonymous: boolean;
     incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
@@ -17183,6 +17183,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -17190,8 +17192,6 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -17232,10 +17232,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"chargingStationReviews">;
     _creationTime: number;
-    userId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    visitDate?: string | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    userId?: string | undefined;
+    visitDate?: string | undefined;
     chargerType?: string | undefined;
     chargingDuration?: number | undefined;
     energyCharged?: number | undefined;
@@ -17253,8 +17253,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"favoriteChargingStations">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     stationId: import("convex/values").GenericId<"chargingStations">;
 } | {
     distance: number;
@@ -17291,11 +17291,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     affiliateUrl?: string | undefined;
     salesCount?: number | undefined;
     isPromoted?: boolean | undefined;
-    provider: string;
-    priority: number;
-    name: string;
-    destinations: string[];
     createdAt: number;
+    name: string;
+    priority: number;
+    destinations: string[];
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -17324,11 +17324,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"simCardReviews">;
     _creationTime: number;
     title?: string | undefined;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     destination?: string | undefined;
     userId?: string | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     speedRating?: number | undefined;
     speedTestResult?: string | undefined;
     pros?: string[] | undefined;
@@ -17343,8 +17343,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
     purchaseVerified?: boolean | undefined;
     reviewDate?: number | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -17356,8 +17356,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"simCardReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"simCardReviews">;
 } | {
@@ -17365,8 +17365,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 } | {
     distance: number;
@@ -17375,24 +17375,24 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"noteImages">;
     _creationTime: number;
     caption?: string | undefined;
-    url: string;
     createdAt: number;
+    url: string;
     orderIndex: number;
     noteId: import("convex/values").GenericId<"travelNotes">;
     isCover: boolean;
@@ -17401,8 +17401,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"noteTags">;
     _creationTime: number;
     createdAt: number;
-    noteId: import("convex/values").GenericId<"travelNotes">;
     tag: string;
+    noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"notePois">;
@@ -17415,8 +17415,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"noteLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     distance: number;
@@ -17425,9 +17425,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -17436,16 +17436,16 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"noteCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"noteComments">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"noteSaves">;
     _creationTime: number;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     distance: number;
@@ -17465,8 +17465,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         days: number;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     } | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalPois: number;
     totalCities: number;
@@ -17542,12 +17542,12 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -17581,15 +17581,16 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -17603,16 +17604,15 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -17647,10 +17647,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -17661,13 +17661,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"weatherCache">;
     _creationTime: number;
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -17694,8 +17692,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -17726,6 +17724,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 } | {
     distance: number;
@@ -17738,6 +17738,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -17753,7 +17754,6 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -17777,9 +17777,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | {
@@ -17790,8 +17790,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
     packedAt?: number | undefined;
     packedBy?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     updatedAt: number;
     category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
     orderIndex: number;
@@ -17806,8 +17806,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 } | {
@@ -17816,9 +17816,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -17853,21 +17853,21 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -17877,6 +17877,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -17888,12 +17889,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -17908,20 +17908,21 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"templateLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"templateSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -17945,7 +17946,6 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -17967,15 +17967,15 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     interests?: string[] | undefined;
     smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
     accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -17985,13 +17985,13 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -18012,9 +18012,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     } | undefined;
     responseMessage?: string | undefined;
     respondedAt?: number | undefined;
-    message: string;
     status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
     createdAt: number;
+    message: string;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     applicantId: string;
@@ -18036,11 +18036,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         rating: number;
         wouldTravelAgain: boolean;
     } | undefined;
-    status: "cancelled" | "completed" | "active";
+    status: "completed" | "cancelled" | "active";
+    createdAt: number;
     destination: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     requestOwnerId: string;
@@ -18063,8 +18063,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     referenceNote?: string | undefined;
     adminNotes?: string | undefined;
     status: "rejected" | "pending" | "expired" | "verified";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
 } | {
@@ -18073,8 +18073,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     averageRating?: number | undefined;
     badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalTrips: number;
     lastCalculatedAt: number;
@@ -18090,24 +18090,24 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"partnerRequestSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"poiAnswers">;
     _creationTime: number;
-    updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
+    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorAvatarUrl?: string | undefined;
     isBestAnswer?: boolean | undefined;
     authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     commentsCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -18121,10 +18121,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"poiQuestions">;
     _creationTime: number;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     isDeleted?: boolean | undefined;
     acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -18132,15 +18132,15 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     upvotesCount?: number | undefined;
     downvotesCount?: number | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "answered" | "closed";
-    title: string;
     content: string;
+    status: "open" | "resolved" | "answered" | "closed";
+    createdAt: number;
+    title: string;
+    viewsCount: number;
     userId: string;
     followersCount: number;
-    createdAt: number;
     category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
     poiId: import("convex/values").GenericId<"pois">;
-    viewsCount: number;
     isEdited: boolean;
     reportCount: number;
     answersCount: number;
@@ -18151,8 +18151,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"answerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -18162,9 +18162,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     answerId: import("convex/values").GenericId<"poiAnswers">;
@@ -18172,8 +18172,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"questionFollowers">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     distance: number;
@@ -18183,8 +18183,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
@@ -18195,8 +18195,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -18208,7 +18208,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -18226,9 +18226,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -18240,12 +18240,12 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"offlineTranslationPacks">;
     _creationTime: number;
+    createdAt: number;
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    createdAt: number;
     updatedAt: number;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -18284,19 +18284,19 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"poiPhotoLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     photoId: import("convex/values").GenericId<"poiPhotos">;
 } | {
     distance: number;
@@ -18345,9 +18345,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -18412,14 +18412,14 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | {
     distance: number;
@@ -18435,8 +18435,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -18463,9 +18463,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -18497,10 +18497,10 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     targetCountryNameEn?: string | undefined;
     addressEn?: string | undefined;
     appointmentUrl?: string | undefined;
-    type: "embassy" | "consulate" | "visa_center" | "agency";
-    name: string;
-    city: string;
     createdAt: number;
+    name: string;
+    type: "embassy" | "consulate" | "visa_center" | "agency";
+    city: string;
     updatedAt: number;
     countryCode: string;
     address: string;
@@ -18517,9 +18517,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -18542,7 +18542,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"shareEventLogs">;
@@ -18555,7 +18555,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"luggageLossReportTemplates">;
@@ -18580,6 +18580,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -18590,12 +18593,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -18619,11 +18619,11 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -18638,8 +18638,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"eventFavorites">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     eventId: import("convex/values").GenericId<"localEvents">;
 } | {
     distance: number;
@@ -18649,8 +18649,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;
@@ -18661,18 +18661,18 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"eventReviews">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
     pros?: string[] | undefined;
     cons?: string[] | undefined;
     valueRating?: number | undefined;
     atmosphereRating?: number | undefined;
     organizationRating?: number | undefined;
     attendDate?: string | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
-    userId: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
+    userId: string;
     rating: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -18683,8 +18683,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"eventReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"eventReviews">;
 } | {
@@ -18707,9 +18707,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"userBehaviorEvents">;
     _creationTime: number;
+    createdAt: number;
     metadata: any;
     userId: string;
-    createdAt: number;
     targetType: "city" | "itinerary" | "poi" | "search" | "guide";
     targetId: string;
     categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
@@ -18727,10 +18727,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
-    itineraryId: import("convex/values").GenericId<"itineraries">;
-    versionNumber: number;
     snapshot: {
         coverImageUrl?: string | undefined;
         title: string;
@@ -18751,22 +18748,25 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         visibility: "public" | "private" | "team";
         cityId: import("convex/values").GenericId<"cities">;
     };
+    userId: string;
+    itineraryId: import("convex/values").GenericId<"itineraries">;
+    versionNumber: number;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"poiQuestionsExtended">;
     _creationTime: number;
+    authorName?: string | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    authorName?: string | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "closed";
-    title: string;
     content: string;
-    userId: string;
+    status: "open" | "resolved" | "closed";
     createdAt: number;
-    poiId: import("convex/values").GenericId<"pois">;
+    title: string;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -18780,12 +18780,12 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"poiAnswersExtended">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     authorName?: string | undefined;
+    updatedAt?: number | undefined;
     authorAvatarUrl?: string | undefined;
     content: string;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
@@ -18799,16 +18799,16 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"poiQuestionVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"poiAnswerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -18820,8 +18820,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     reviewedAt?: number | undefined;
     actionTaken?: string | undefined;
     status: "pending" | "reviewed" | "dismissed" | "actioned";
-    userId: string;
     createdAt: number;
+    userId: string;
     targetType: "question" | "answer";
     targetId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
@@ -18830,8 +18830,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;
@@ -18850,24 +18850,24 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"rateLimits">;
     _creationTime: number;
+    key: string;
     count: number;
     expiresAt: number;
-    key: string;
 } | {
     distance: number;
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -18876,8 +18876,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"foodReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"foodReviews">;
 } | {
     distance: number;
@@ -18885,9 +18885,9 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
     itemCount: number;
@@ -18897,8 +18897,8 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     restaurantId: import("convex/values").GenericId<"pois">;
 } | {
     distance: number;
@@ -18911,7 +18911,6 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     distance: number;
     _id: import("convex/values").GenericId<"currencyHistory">;
     _creationTime: number;
-    days: number;
     data: {
         base: string;
         rates: {
@@ -18922,6 +18921,7 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;
@@ -18935,15 +18935,15 @@ export declare const searchNearby: import("convex/server").RegisteredQuery<"publ
     currentNode?: string | undefined;
     interruptData?: any;
     status: "completed" | "active" | "expired" | "paused";
+    createdAt: number;
     messages: {
         toolCalls?: any;
         toolName?: string | undefined;
+        role: "ai" | "human" | "tool" | "system";
         content: string;
         timestamp: number;
-        role: "ai" | "human" | "tool" | "system";
     }[];
     sessionId: string;
-    createdAt: number;
     updatedAt: number;
     sessionType: "chat" | "travel_plan" | "enrichment";
 } | {
@@ -19069,6 +19069,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"pois">;
             _creationTime: number;
+            imageUrls?: string[] | undefined;
             phone?: string | undefined;
             nameEn?: string | undefined;
             priceLevel?: number | undefined;
@@ -19114,7 +19115,6 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 peakHours?: string[] | undefined;
                 seasonalNotes?: string | undefined;
             } | undefined;
-            imageUrls?: string[] | undefined;
             isHiddenGem?: boolean | undefined;
             hiddenGemScore?: number | undefined;
             hiddenGemRating?: number | undefined;
@@ -19140,7 +19140,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             ratingCount: number;
             source: string;
         };
-        fieldPaths: ("name" | "latitude" | "longitude" | "phone" | "_creationTime" | "nameEn" | "cityId" | "priceLevel" | "category" | "externalId" | "address" | "rating" | "ratingCount" | "businessHours" | "bestVisitTime" | "imageUrls" | "source" | "isHiddenGem" | "hiddenGemScore" | "hiddenGemRating" | "hiddenGemRatingCount" | "localRecommendation" | "popularityLevel" | "cuisineType" | "isLocalFavorite" | "signatureDishes" | "dietaryOptions" | "averagePrice" | "businessHours.timezone" | "businessHours.monday" | "businessHours.tuesday" | "businessHours.wednesday" | "businessHours.thursday" | "businessHours.friday" | "businessHours.saturday" | "businessHours.sunday" | "businessHours.notes" | "bestVisitTime.recommendedTime" | "bestVisitTime.reason" | "bestVisitTime.avoidTimes" | "bestVisitTime.peakHours" | "bestVisitTime.seasonalNotes" | "localRecommendation.isLocalRecommended" | "localRecommendation.localTips" | "localRecommendation.bestTimeToVisit" | "localRecommendation.localSecrets" | "localRecommendation.recommendedBy") | "_id";
+        fieldPaths: ("name" | "imageUrls" | "latitude" | "longitude" | "phone" | "_creationTime" | "nameEn" | "cityId" | "priceLevel" | "category" | "externalId" | "address" | "rating" | "ratingCount" | "businessHours" | "bestVisitTime" | "source" | "isHiddenGem" | "hiddenGemScore" | "hiddenGemRating" | "hiddenGemRatingCount" | "localRecommendation" | "popularityLevel" | "cuisineType" | "isLocalFavorite" | "signatureDishes" | "dietaryOptions" | "averagePrice" | "businessHours.timezone" | "businessHours.monday" | "businessHours.tuesday" | "businessHours.wednesday" | "businessHours.thursday" | "businessHours.friday" | "businessHours.saturday" | "businessHours.sunday" | "businessHours.notes" | "bestVisitTime.recommendedTime" | "bestVisitTime.reason" | "bestVisitTime.avoidTimes" | "bestVisitTime.peakHours" | "bestVisitTime.seasonalNotes" | "localRecommendation.isLocalRecommended" | "localRecommendation.localTips" | "localRecommendation.bestTimeToVisit" | "localRecommendation.localSecrets" | "localRecommendation.recommendedBy") | "_id";
         indexes: {
             by_city: ["cityId", "_creationTime"];
             by_category: ["category", "_creationTime"];
@@ -19182,11 +19182,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"userFollows">;
             _creationTime: number;
+            createdAt: number;
             followerId: string;
             followingId: string;
-            createdAt: number;
         };
-        fieldPaths: ("_creationTime" | "followerId" | "followingId" | "createdAt") | "_id";
+        fieldPaths: ("createdAt" | "_creationTime" | "followerId" | "followingId") | "_id";
         indexes: {
             by_follower: ["followerId", "_creationTime"];
             by_following: ["followingId", "_creationTime"];
@@ -19209,15 +19209,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             targetCityName?: string | undefined;
             updatedAt?: number | undefined;
             createdAt: number;
+            likesCount: number;
+            commentsCount: number;
             actorId: string;
             activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
             targetType: "user" | "itinerary";
             targetId: string;
-            likesCount: number;
-            commentsCount: number;
             visibility: "public" | "followers";
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "actorId" | "actorName" | "actorAvatarUrl" | "activityType" | "targetType" | "targetId" | "targetTitle" | "targetCoverImageUrl" | "targetUserName" | "targetCityName" | "likesCount" | "commentsCount" | "visibility" | "updatedAt") | "_id";
+        fieldPaths: ("createdAt" | "likesCount" | "commentsCount" | "_creationTime" | "actorId" | "actorName" | "actorAvatarUrl" | "activityType" | "targetType" | "targetId" | "targetTitle" | "targetCoverImageUrl" | "targetUserName" | "targetCityName" | "visibility" | "updatedAt") | "_id";
         indexes: {
             by_actor: ["actorId", "_creationTime"];
             by_target: ["targetType", "targetId", "_creationTime"];
@@ -19315,19 +19315,19 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             } | undefined;
             sources?: string[] | undefined;
             createdAt: number;
+            lastUpdatedAt: number;
             cityId: import("convex/values").GenericId<"cities">;
             customs: {
                 descriptionEn?: string | undefined;
                 titleEn?: string | undefined;
-                title: string;
                 description: string;
+                title: string;
                 category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
                 isTaboo: boolean;
                 importance: "low" | "medium" | "high";
             }[];
-            lastUpdatedAt: number;
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "cityId" | "basicInfo" | "history" | "bestTravelTime" | "customs" | "practicalInfo" | "sources" | "lastUpdatedAt" | "basicInfo.population" | "basicInfo.populationYear" | "basicInfo.area" | "basicInfo.elevation" | "basicInfo.climate" | "basicInfo.climateEn" | "basicInfo.motto" | "basicInfo.mottoEn" | "basicInfo.nicknames" | "basicInfo.nicknamesEn" | "history.foundedYear" | "history.historicalNames" | "history.briefHistory" | "history.briefHistoryEn" | "history.culturalHighlights" | "history.culturalHighlightsEn" | "history.famousFor" | "history.famousForEn" | "history.worldHeritageSites" | "bestTravelTime.description" | "bestTravelTime.seasons" | "bestTravelTime.months" | "bestTravelTime.descriptionEn" | "bestTravelTime.weatherNotes" | "bestTravelTime.crowdLevel" | "bestTravelTime.priceLevel" | "practicalInfo.voltage" | "practicalInfo.plugType" | "practicalInfo.currency" | "practicalInfo.currencySymbol" | "practicalInfo.currencyNameLocal" | "practicalInfo.currencyNameEn" | "practicalInfo.tippingCustom" | "practicalInfo.tippingCustomEn" | "practicalInfo.waterSafety" | "practicalInfo.waterSafetyNote" | "practicalInfo.visaRequired" | "practicalInfo.visaNote" | "practicalInfo.languageOfficial" | "practicalInfo.languageCommon" | "practicalInfo.emergencyNumber" | "practicalInfo.ambulanceNumber" | "practicalInfo.fireNumber" | "practicalInfo.touristHotline") | "_id";
+        fieldPaths: ("createdAt" | "lastUpdatedAt" | "_creationTime" | "cityId" | "basicInfo" | "history" | "bestTravelTime" | "customs" | "practicalInfo" | "sources" | "basicInfo.population" | "basicInfo.populationYear" | "basicInfo.area" | "basicInfo.elevation" | "basicInfo.climate" | "basicInfo.climateEn" | "basicInfo.motto" | "basicInfo.mottoEn" | "basicInfo.nicknames" | "basicInfo.nicknamesEn" | "history.foundedYear" | "history.historicalNames" | "history.briefHistory" | "history.briefHistoryEn" | "history.culturalHighlights" | "history.culturalHighlightsEn" | "history.famousFor" | "history.famousForEn" | "history.worldHeritageSites" | "bestTravelTime.description" | "bestTravelTime.seasons" | "bestTravelTime.months" | "bestTravelTime.descriptionEn" | "bestTravelTime.weatherNotes" | "bestTravelTime.crowdLevel" | "bestTravelTime.priceLevel" | "practicalInfo.voltage" | "practicalInfo.plugType" | "practicalInfo.currency" | "practicalInfo.currencySymbol" | "practicalInfo.currencyNameLocal" | "practicalInfo.currencyNameEn" | "practicalInfo.tippingCustom" | "practicalInfo.tippingCustomEn" | "practicalInfo.waterSafety" | "practicalInfo.waterSafetyNote" | "practicalInfo.visaRequired" | "practicalInfo.visaNote" | "practicalInfo.languageOfficial" | "practicalInfo.languageCommon" | "practicalInfo.emergencyNumber" | "practicalInfo.ambulanceNumber" | "practicalInfo.fireNumber" | "practicalInfo.touristHotline") | "_id";
         indexes: {
             by_city: ["cityId", "_creationTime"];
             by_id: ["_id"];
@@ -19341,8 +19341,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"userTimezoneSettings">;
             _creationTime: number;
             homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             homeTimezone: string;
             displayFormat: "24h" | "12h";
@@ -19354,7 +19354,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 sortOrder: number;
             }[];
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "homeTimezone" | "homeCityId" | "displayFormat" | "showSeconds" | "autoDetect" | "savedClocks") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "homeTimezone" | "homeCityId" | "displayFormat" | "showSeconds" | "autoDetect" | "savedClocks") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_id: ["_id"];
@@ -19367,11 +19367,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"userSubmittedPois">;
             _creationTime: number;
+            imageUrls?: string[] | undefined;
             updatedAt?: number | undefined;
             nameEn?: string | undefined;
             address?: string | undefined;
             avoidTimes?: string | undefined;
-            imageUrls?: string[] | undefined;
             localTips?: string | undefined;
             bestTimeToVisit?: string | undefined;
             localSecrets?: string[] | undefined;
@@ -19382,19 +19382,19 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             reviewedAt?: number | undefined;
             mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
             status: "approved" | "rejected" | "pending" | "merged";
+            createdAt: number;
             name: string;
             description: string;
             latitude: number;
             longitude: number;
             userId: string;
-            createdAt: number;
             cityId: import("convex/values").GenericId<"cities">;
             category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
             upvotes: number;
             downvotes: number;
             viewCount: number;
         };
-        fieldPaths: ("status" | "name" | "description" | "latitude" | "longitude" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "nameEn" | "cityId" | "category" | "address" | "avoidTimes" | "imageUrls" | "localTips" | "bestTimeToVisit" | "localSecrets" | "priceRange" | "howDiscovered" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "mergedPoiId" | "upvotes" | "downvotes" | "viewCount") | "_id";
+        fieldPaths: ("status" | "createdAt" | "name" | "description" | "imageUrls" | "latitude" | "longitude" | "userId" | "_creationTime" | "updatedAt" | "nameEn" | "cityId" | "category" | "address" | "avoidTimes" | "localTips" | "bestTimeToVisit" | "localSecrets" | "priceRange" | "howDiscovered" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "mergedPoiId" | "upvotes" | "downvotes" | "viewCount") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_city: ["cityId", "_creationTime"];
@@ -19412,12 +19412,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"userSubmittedPoiVotes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             poiId: import("convex/values").GenericId<"userSubmittedPois">;
             voteType: "up" | "down";
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "poiId" | "voteType") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "poiId" | "voteType") | "_id";
         indexes: {
             by_poi: ["poiId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -19435,13 +19435,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             updatedAt?: number | undefined;
             review?: string | undefined;
             visitDate?: string | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             rating: number;
             poiId: import("convex/values").GenericId<"pois">;
             wouldRecommend: boolean;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "rating" | "poiId" | "review" | "visitDate" | "wouldRecommend") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "rating" | "poiId" | "review" | "visitDate" | "wouldRecommend") | "_id";
         indexes: {
             by_poi: ["poiId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -19463,16 +19463,16 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 open: string;
                 close: string;
             }[] | undefined;
+            createdAt: number;
             startDate: string;
             endDate: string;
-            createdAt: number;
             updatedAt: number;
             poiId: import("convex/values").GenericId<"pois">;
             holidayName: string;
             isClosed: boolean;
             isRecurring: boolean;
         };
-        fieldPaths: ("startDate" | "endDate" | "_creationTime" | "createdAt" | "updatedAt" | "notes" | "poiId" | "holidayName" | "holidayNameEn" | "isClosed" | "hours" | "isRecurring") | "_id";
+        fieldPaths: ("createdAt" | "startDate" | "endDate" | "_creationTime" | "updatedAt" | "notes" | "poiId" | "holidayName" | "holidayNameEn" | "isClosed" | "hours" | "isRecurring") | "_id";
         indexes: {
             by_poi: ["poiId", "_creationTime"];
             by_poi_dates: ["poiId", "startDate", "endDate", "_creationTime"];
@@ -19510,15 +19510,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
             triggeredAt?: number | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             poiId: import("convex/values").GenericId<"pois">;
             reminderType: "opening" | "closing" | "best_time";
             minutesBefore: number;
             scheduledTime: number;
             isTriggered: boolean;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "poiId" | "itineraryItemId" | "reminderType" | "minutesBefore" | "scheduledTime" | "isTriggered" | "triggeredAt") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "poiId" | "itineraryItemId" | "reminderType" | "minutesBefore" | "scheduledTime" | "isTriggered" | "triggeredAt") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_poi: ["poiId", "_creationTime"];
@@ -19544,7 +19544,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             visibility: "public" | "private" | "team";
             cityId: import("convex/values").GenericId<"cities">;
         };
-        fieldPaths: ("title" | "userId" | "startDate" | "endDate" | "_creationTime" | "visibility" | "cityId" | "coverImageUrl" | "copiedFromId") | "_id";
+        fieldPaths: ("title" | "coverImageUrl" | "userId" | "startDate" | "endDate" | "_creationTime" | "visibility" | "cityId" | "copiedFromId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_visibility: ["visibility", "_creationTime"];
@@ -19561,11 +19561,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"itineraryCollaborators">;
             _creationTime: number;
+            role: "owner" | "editor" | "viewer";
             userId: string;
             itineraryId: import("convex/values").GenericId<"itineraries">;
-            role: "owner" | "editor" | "viewer";
         };
-        fieldPaths: ("userId" | "_creationTime" | "itineraryId" | "role") | "_id";
+        fieldPaths: ("role" | "userId" | "_creationTime" | "itineraryId") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -19637,16 +19637,16 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 resolution: "accept_mine" | "accept_theirs" | "merge";
             } | undefined;
             status: "rejected" | "pending" | "applied" | "conflicted";
-            userId: string;
+            version: number;
             timestamp: number;
+            userId: string;
             targetType: "itinerary" | "day" | "item";
             targetId: string;
             itineraryId: import("convex/values").GenericId<"itineraries">;
-            operationType: "update" | "create" | "delete" | "reorder";
+            operationType: "create" | "update" | "delete" | "reorder";
             changes: any;
-            version: number;
         };
-        fieldPaths: ("status" | "userId" | "timestamp" | "_creationTime" | "targetType" | "targetId" | "itineraryId" | "operationType" | "changes" | "version" | "conflictResolution" | `changes.${string}` | "conflictResolution.resolvedBy" | "conflictResolution.resolvedAt" | "conflictResolution.resolution") | "_id";
+        fieldPaths: ("status" | "version" | "timestamp" | "userId" | "_creationTime" | "targetType" | "targetId" | "itineraryId" | "operationType" | "changes" | "conflictResolution" | `changes.${string}` | "conflictResolution.resolvedBy" | "conflictResolution.resolvedAt" | "conflictResolution.resolution") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_itinerary_timestamp: ["itineraryId", "timestamp", "_creationTime"];
@@ -19662,8 +19662,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"itineraryCopyHistory">;
             _creationTime: number;
             selectedDays?: number[] | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             originalItineraryId: import("convex/values").GenericId<"itineraries">;
             copiedItineraryId: import("convex/values").GenericId<"itineraries">;
             copyType: "partial" | "full";
@@ -19671,7 +19671,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             newStartDate: string;
             dateOffset: number;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "originalItineraryId" | "copiedItineraryId" | "copyType" | "selectedDays" | "originalStartDate" | "newStartDate" | "dateOffset") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "originalItineraryId" | "copiedItineraryId" | "copyType" | "selectedDays" | "originalStartDate" | "newStartDate" | "dateOffset") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_original: ["originalItineraryId", "_creationTime"];
@@ -19721,11 +19721,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             lastFailureReason?: string | undefined;
             status: string;
             name: string;
-            config: any;
             platform: string;
+            config: any;
             jobType: string;
         };
-        fieldPaths: ("status" | "name" | "errorMessage" | "config" | "_creationTime" | "platform" | "jobType" | "scheduleCron" | "nextRunAt" | "startedAt" | "completedAt" | "statistics" | "retryCount" | "lastFailureAt" | "lastFailureReason" | `config.${string}` | `statistics.${string}`) | "_id";
+        fieldPaths: ("status" | "name" | "platform" | "errorMessage" | "config" | "_creationTime" | "jobType" | "scheduleCron" | "nextRunAt" | "startedAt" | "completedAt" | "statistics" | "retryCount" | "lastFailureAt" | "lastFailureReason" | `config.${string}` | `statistics.${string}`) | "_id";
         indexes: {
             by_status: ["status", "_creationTime"];
             by_platform: ["platform", "_creationTime"];
@@ -19739,13 +19739,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"rawCrawlRecords">;
             _creationTime: number;
-            jobId: import("convex/values").GenericId<"crawlJobs">;
             sourceUrl: string;
+            jobId: import("convex/values").GenericId<"crawlJobs">;
             rawData: any;
             crawledAt: number;
             processingStatus: string;
         };
-        fieldPaths: ("_creationTime" | "jobId" | "sourceUrl" | "rawData" | "crawledAt" | "processingStatus" | `rawData.${string}`) | "_id";
+        fieldPaths: ("sourceUrl" | "_creationTime" | "jobId" | "rawData" | "crawledAt" | "processingStatus" | `rawData.${string}`) | "_id";
         indexes: {
             by_job: ["jobId", "_creationTime"];
             by_job_status: ["jobId", "processingStatus", "_creationTime"];
@@ -19761,11 +19761,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"poiSourceMappings">;
             _creationTime: number;
             rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+            sourceExternalId: string;
             normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
             sourcePlatform: string;
-            sourceExternalId: string;
         };
-        fieldPaths: ("_creationTime" | "normalizedPoiId" | "sourcePlatform" | "sourceExternalId" | "rawRecordId") | "_id";
+        fieldPaths: ("sourceExternalId" | "_creationTime" | "normalizedPoiId" | "sourcePlatform" | "rawRecordId") | "_id";
         indexes: {
             by_normalized_poi: ["normalizedPoiId", "_creationTime"];
             by_source: ["sourcePlatform", "sourceExternalId", "_creationTime"];
@@ -19779,6 +19779,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"normalizedPois">;
             _creationTime: number;
+            imageUrls?: string[] | undefined;
             phone?: string | undefined;
             nameEn?: string | undefined;
             priceLevel?: number | undefined;
@@ -19786,7 +19787,6 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             rating?: number | undefined;
             ratingCount?: number | undefined;
             businessHours?: any;
-            imageUrls?: string[] | undefined;
             sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
             name: string;
             latitude: number;
@@ -19795,7 +19795,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             normalizedAt: number;
             confidence: number;
         };
-        fieldPaths: ("name" | "latitude" | "longitude" | "phone" | "_creationTime" | "nameEn" | "priceLevel" | "category" | "address" | "rating" | "ratingCount" | "businessHours" | "imageUrls" | "normalizedAt" | "confidence" | "sourceMappingId" | `businessHours.${string}`) | "_id";
+        fieldPaths: ("name" | "imageUrls" | "latitude" | "longitude" | "phone" | "_creationTime" | "nameEn" | "priceLevel" | "category" | "address" | "rating" | "ratingCount" | "businessHours" | "normalizedAt" | "confidence" | "sourceMappingId" | `businessHours.${string}`) | "_id";
         indexes: {
             by_category: ["category", "_creationTime"];
             by_confidence: ["confidence", "_creationTime"];
@@ -19844,7 +19844,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             requiresReservation: boolean;
             isActive: boolean;
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "updatedAt" | "currency" | "sortOrder" | "source" | "poiId" | "ticketName" | "ticketType" | "price" | "originalPrice" | "discountInfo" | "discountPercentage" | "eligibilityRequirements" | "ageRange" | "validFrom" | "validUntil" | "validDays" | "purchaseUrl" | "purchasePlatform" | "requiresReservation" | "reservationUrl" | "reservationTips" | "advanceBookingDays" | "usageInstructions" | "includedServices" | "excludedServices" | "isActive" | "stockStatus" | "isRecommended" | "lastSyncedAt" | "ageRange.minAge" | "ageRange.maxAge") | "_id";
+        fieldPaths: ("createdAt" | "_creationTime" | "updatedAt" | "currency" | "sortOrder" | "source" | "poiId" | "ticketName" | "ticketType" | "price" | "originalPrice" | "discountInfo" | "discountPercentage" | "eligibilityRequirements" | "ageRange" | "validFrom" | "validUntil" | "validDays" | "purchaseUrl" | "purchasePlatform" | "requiresReservation" | "reservationUrl" | "reservationTips" | "advanceBookingDays" | "usageInstructions" | "includedServices" | "excludedServices" | "isActive" | "stockStatus" | "isRecommended" | "lastSyncedAt" | "ageRange.minAge" | "ageRange.maxAge") | "_id";
         indexes: {
             by_poi: ["poiId", "_creationTime"];
             by_poi_type: ["poiId", "ticketType", "_creationTime"];
@@ -19865,8 +19865,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
             ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
             readAt?: number | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             poiId: import("convex/values").GenericId<"pois">;
             reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -19874,7 +19874,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             reminderTime: number;
             isRead: boolean;
         };
-        fieldPaths: ("message" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "poiId" | "reminderType" | "isTriggered" | "triggeredAt" | "itineraryId" | "reminderTime" | "ticketId" | "isRead" | "readAt") | "_id";
+        fieldPaths: ("createdAt" | "message" | "userId" | "_creationTime" | "updatedAt" | "poiId" | "reminderType" | "isTriggered" | "triggeredAt" | "itineraryId" | "reminderTime" | "ticketId" | "isRead" | "readAt") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_poi: ["poiId", "_creationTime"];
@@ -19891,16 +19891,16 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"poiReviews">;
             _creationTime: number;
+            authorName?: string | undefined;
             rating?: number | undefined;
             visitDate?: string | undefined;
             sourceId?: string | undefined;
-            authorName?: string | undefined;
             sentiment?: string | undefined;
             content: string;
             poiId: import("convex/values").GenericId<"pois">;
             crawledAt: number;
         };
-        fieldPaths: ("content" | "_creationTime" | "rating" | "poiId" | "visitDate" | "crawledAt" | "sourceId" | "authorName" | "sentiment") | "_id";
+        fieldPaths: ("content" | "authorName" | "_creationTime" | "rating" | "poiId" | "visitDate" | "crawledAt" | "sourceId" | "sentiment") | "_id";
         indexes: {
             by_poi: ["poiId", "_creationTime"];
             by_rating: ["rating", "_creationTime"];
@@ -19923,7 +19923,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             outputFormats: string[];
             storagePaths: any;
         };
-        fieldPaths: ("status" | "name" | "_creationTime" | "version" | "statistics" | `statistics.${string}` | "generationParams" | "outputFormats" | "storagePaths" | "generatedAt" | `generationParams.${string}` | `storagePaths.${string}`) | "_id";
+        fieldPaths: ("status" | "name" | "version" | "_creationTime" | "statistics" | `statistics.${string}` | "generationParams" | "outputFormats" | "storagePaths" | "generatedAt" | `generationParams.${string}` | `storagePaths.${string}`) | "_id";
         indexes: {
             by_name: ["name", "_creationTime"];
             by_version: ["version", "_creationTime"];
@@ -19958,12 +19958,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"travelGuides">;
             _creationTime: number;
             title?: string | undefined;
-            coverImageUrl?: string | undefined;
             sourceUrl?: string | undefined;
             authorName?: string | undefined;
+            publishedAt?: number | undefined;
+            coverImageUrl?: string | undefined;
             contentHtml?: string | undefined;
             authorId?: string | undefined;
-            publishedAt?: number | undefined;
             contentHash?: string | undefined;
             enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
             enrichmentError?: string | undefined;
@@ -19977,8 +19977,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             aiDays?: {
                 theme?: string | undefined;
                 pois: {
-                    duration?: string | undefined;
                     description?: string | undefined;
+                    duration?: string | undefined;
                     tips?: string | undefined;
                     address?: string | undefined;
                     rating?: number | undefined;
@@ -19996,8 +19996,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                     isManuallyVerified?: boolean | undefined;
                     verifiedAt?: number | undefined;
                     verifiedBy?: string | undefined;
-                    type: string;
                     name: string;
+                    type: string;
                     latitude: number;
                     longitude: number;
                 }[];
@@ -20017,20 +20017,20 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 lowConfidenceCount: number;
                 manuallyVerifiedCount: number;
             } | undefined;
-            tags: string[];
             content: string;
-            destinations: string[];
-            likesCount: number;
-            commentsCount: number;
-            imageUrls: string[];
-            crawledAt: number;
-            sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
             sourceExternalId: string;
+            imageUrls: string[];
+            destinations: string[];
+            tags: string[];
+            likesCount: number;
             savesCount: number;
+            commentsCount: number;
             viewsCount: number;
             qualityScore: number;
+            crawledAt: number;
+            sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
         };
-        fieldPaths: ("tags" | "title" | "content" | "destinations" | "_creationTime" | "likesCount" | "commentsCount" | "imageUrls" | "coverImageUrl" | "sourceUrl" | "crawledAt" | "sourcePlatform" | "sourceExternalId" | "authorName" | "contentHtml" | "authorId" | "savesCount" | "viewsCount" | "publishedAt" | "qualityScore" | "contentHash" | "enrichmentStatus" | "enrichmentError" | "enrichmentStartedAt" | "aiProcessedAt" | "aiSummary" | "aiTips" | "aiBestTime" | "aiDuration" | "aiBudget" | "aiDays" | "geocodingMetrics" | "geocodingMetrics.totalPois" | "geocodingMetrics.averageConfidence" | "geocodingMetrics.lowConfidenceCount" | "geocodingMetrics.manuallyVerifiedCount" | "geocodingMetrics.sourceDistribution" | "geocodingMetrics.lastUpdated" | "geocodingMetrics.sourceDistribution.nominatim" | "geocodingMetrics.sourceDistribution.amap" | "geocodingMetrics.sourceDistribution.overpass" | "geocodingMetrics.sourceDistribution.consensus" | "geocodingMetrics.sourceDistribution.manual") | "_id";
+        fieldPaths: ("content" | "title" | "sourceExternalId" | "sourceUrl" | "authorName" | "publishedAt" | "coverImageUrl" | "imageUrls" | "destinations" | "tags" | "likesCount" | "savesCount" | "commentsCount" | "viewsCount" | "qualityScore" | "_creationTime" | "crawledAt" | "sourcePlatform" | "contentHtml" | "authorId" | "contentHash" | "enrichmentStatus" | "enrichmentError" | "enrichmentStartedAt" | "aiProcessedAt" | "aiSummary" | "aiTips" | "aiBestTime" | "aiDuration" | "aiBudget" | "aiDays" | "geocodingMetrics" | "geocodingMetrics.totalPois" | "geocodingMetrics.averageConfidence" | "geocodingMetrics.lowConfidenceCount" | "geocodingMetrics.manuallyVerifiedCount" | "geocodingMetrics.sourceDistribution" | "geocodingMetrics.lastUpdated" | "geocodingMetrics.sourceDistribution.nominatim" | "geocodingMetrics.sourceDistribution.amap" | "geocodingMetrics.sourceDistribution.overpass" | "geocodingMetrics.sourceDistribution.consensus" | "geocodingMetrics.sourceDistribution.manual") | "_id";
         indexes: {
             by_platform: ["sourcePlatform", "_creationTime"];
             by_platform_external: ["sourcePlatform", "sourceExternalId", "_creationTime"];
@@ -20058,16 +20058,16 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             updatedAt?: number | undefined;
             parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
             content: string;
-            userId: string;
             createdAt: number;
             likesCount: number;
+            userId: string;
             itineraryId: import("convex/values").GenericId<"itineraries">;
             repliesCount: number;
             isEdited: boolean;
             isDeleted: boolean;
             reportCount: number;
         };
-        fieldPaths: ("content" | "userId" | "_creationTime" | "createdAt" | "likesCount" | "updatedAt" | "itineraryId" | "parentId" | "repliesCount" | "isEdited" | "isDeleted" | "reportCount") | "_id";
+        fieldPaths: ("content" | "createdAt" | "likesCount" | "userId" | "_creationTime" | "updatedAt" | "itineraryId" | "parentId" | "repliesCount" | "isEdited" | "isDeleted" | "reportCount") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -20085,16 +20085,16 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             updatedAt?: number | undefined;
             parentId?: string | undefined;
-            guideId: string;
             content: string;
-            userId: string;
             createdAt: number;
             likesCount: number;
+            guideId: string;
+            userId: string;
             repliesCount: number;
             isEdited: boolean;
             isDeleted: boolean;
         };
-        fieldPaths: ("guideId" | "content" | "userId" | "_creationTime" | "createdAt" | "likesCount" | "updatedAt" | "parentId" | "repliesCount" | "isEdited" | "isDeleted") | "_id";
+        fieldPaths: ("content" | "createdAt" | "likesCount" | "guideId" | "userId" | "_creationTime" | "updatedAt" | "parentId" | "repliesCount" | "isEdited" | "isDeleted") | "_id";
         indexes: {
             by_guide: ["guideId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -20110,11 +20110,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"guideCommentLikes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             commentId: import("convex/values").GenericId<"guideComments">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "commentId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "commentId") | "_id";
         indexes: {
             by_comment: ["commentId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -20129,11 +20129,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"commentLikes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             commentId: import("convex/values").GenericId<"itineraryComments">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "commentId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "commentId") | "_id";
         indexes: {
             by_comment: ["commentId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -20152,12 +20152,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             reviewedBy?: string | undefined;
             reviewedAt?: number | undefined;
             status: "pending" | "reviewed" | "resolved" | "dismissed";
-            userId: string;
             createdAt: number;
+            userId: string;
             reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
             commentId: import("convex/values").GenericId<"itineraryComments">;
         };
-        fieldPaths: ("status" | "description" | "userId" | "_creationTime" | "createdAt" | "reason" | "reviewedBy" | "reviewedAt" | "commentId") | "_id";
+        fieldPaths: ("status" | "createdAt" | "description" | "userId" | "_creationTime" | "reason" | "reviewedBy" | "reviewedAt" | "commentId") | "_id";
         indexes: {
             by_comment: ["commentId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -20173,23 +20173,23 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"notifications">;
             _creationTime: number;
-            priority?: "low" | "high" | "normal" | undefined;
             title?: string | undefined;
+            priority?: "normal" | "low" | "high" | undefined;
             data?: any;
             actorId?: string | undefined;
             readAt?: number | undefined;
             body?: string | undefined;
             isPushSent?: boolean | undefined;
             pushSentAt?: number | undefined;
-            message: string;
-            type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-            userId: string;
             createdAt: number;
+            type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+            message: string;
+            userId: string;
             isRead: boolean;
             referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
             referenceId: string;
         };
-        fieldPaths: ("message" | "type" | "priority" | "title" | "userId" | "data" | "_creationTime" | "createdAt" | "actorId" | "isRead" | "readAt" | "referenceType" | "referenceId" | "body" | "isPushSent" | "pushSentAt" | `data.${string}`) | "_id";
+        fieldPaths: ("createdAt" | "type" | "title" | "priority" | "data" | "message" | "userId" | "_creationTime" | "actorId" | "isRead" | "readAt" | "referenceType" | "referenceId" | "body" | "isPushSent" | "pushSentAt" | `data.${string}`) | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_read: ["userId", "isRead", "_creationTime"];
@@ -20210,15 +20210,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             deviceName?: string | undefined;
             appVersion?: string | undefined;
             osVersion?: string | undefined;
+            createdAt: number;
+            platform: "ios" | "android";
             userId: string;
             token: string;
-            createdAt: number;
             updatedAt: number;
-            platform: "ios" | "android";
             isActive: boolean;
             lastUsedAt: number;
         };
-        fieldPaths: ("userId" | "token" | "_creationTime" | "createdAt" | "updatedAt" | "platform" | "isActive" | "deviceId" | "deviceName" | "appVersion" | "osVersion" | "lastUsedAt") | "_id";
+        fieldPaths: ("createdAt" | "platform" | "userId" | "token" | "_creationTime" | "updatedAt" | "isActive" | "deviceId" | "deviceName" | "appVersion" | "osVersion" | "lastUsedAt") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_token: ["token", "_creationTime"];
@@ -20238,8 +20238,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             quietHoursEnabled?: boolean | undefined;
             quietHoursStart?: string | undefined;
             quietHoursEnd?: string | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             pushEnabled: boolean;
             inAppEnabled: boolean;
@@ -20265,7 +20265,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 mentions: boolean;
             };
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "timezone" | "pushEnabled" | "emailEnabled" | "inAppEnabled" | "quietHoursEnabled" | "quietHoursStart" | "quietHoursEnd" | "itineraryReminders" | "flightAlerts" | "weatherAlerts" | "socialNotifications" | "itineraryReminders.enabled" | "itineraryReminders.advanceHours" | "flightAlerts.enabled" | "flightAlerts.statusChanges" | "flightAlerts.checkInReminders" | "flightAlerts.boardingReminders" | "weatherAlerts.enabled" | "weatherAlerts.severeOnly" | "socialNotifications.enabled" | "socialNotifications.comments" | "socialNotifications.likes" | "socialNotifications.follows" | "socialNotifications.mentions") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "timezone" | "pushEnabled" | "emailEnabled" | "inAppEnabled" | "quietHoursEnabled" | "quietHoursStart" | "quietHoursEnd" | "itineraryReminders" | "flightAlerts" | "weatherAlerts" | "socialNotifications" | "itineraryReminders.enabled" | "itineraryReminders.advanceHours" | "flightAlerts.enabled" | "flightAlerts.statusChanges" | "flightAlerts.checkInReminders" | "flightAlerts.boardingReminders" | "weatherAlerts.enabled" | "weatherAlerts.severeOnly" | "socialNotifications.enabled" | "socialNotifications.comments" | "socialNotifications.likes" | "socialNotifications.follows" | "socialNotifications.mentions") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_id: ["_id"];
@@ -20278,21 +20278,21 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"scheduledNotifications">;
             _creationTime: number;
-            errorMessage?: string | undefined;
             data?: any;
+            errorMessage?: string | undefined;
             retryCount?: number | undefined;
             referenceType?: string | undefined;
             referenceId?: string | undefined;
             sentAt?: number | undefined;
+            status: "failed" | "cancelled" | "pending" | "sent";
+            createdAt: number;
             type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-            status: "cancelled" | "failed" | "pending" | "sent";
             title: string;
             userId: string;
-            createdAt: number;
             body: string;
             scheduledFor: number;
         };
-        fieldPaths: ("type" | "status" | "errorMessage" | "title" | "userId" | "data" | "_creationTime" | "createdAt" | "retryCount" | "referenceType" | "referenceId" | "body" | `data.${string}` | "scheduledFor" | "sentAt") | "_id";
+        fieldPaths: ("status" | "createdAt" | "type" | "title" | "data" | "errorMessage" | "userId" | "_creationTime" | "retryCount" | "referenceType" | "referenceId" | "body" | `data.${string}` | "scheduledFor" | "sentAt") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_status: ["status", "_creationTime"];
@@ -20308,11 +20308,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"itineraryLikes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             itineraryId: import("convex/values").GenericId<"itineraries">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "itineraryId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "itineraryId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_itinerary: ["itineraryId", "_creationTime"];
@@ -20329,14 +20329,14 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             description?: string | undefined;
             coverImageUrl?: string | undefined;
+            createdAt: number;
             name: string;
             userId: string;
-            createdAt: number;
             updatedAt: number;
             sortOrder: number;
             isDefault: boolean;
         };
-        fieldPaths: ("name" | "description" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "sortOrder" | "coverImageUrl" | "isDefault") | "_id";
+        fieldPaths: ("createdAt" | "name" | "description" | "coverImageUrl" | "userId" | "_creationTime" | "updatedAt" | "sortOrder" | "isDefault") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_default: ["userId", "isDefault", "_creationTime"];
@@ -20353,11 +20353,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             notes?: string | undefined;
             collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             itineraryId: import("convex/values").GenericId<"itineraries">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "notes" | "itineraryId" | "collectionId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "notes" | "itineraryId" | "collectionId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_itinerary: ["itineraryId", "_creationTime"];
@@ -20411,7 +20411,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"hotelBookings">;
             _creationTime: number;
-            status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+            status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
             latitude?: number | undefined;
             longitude?: number | undefined;
             currency?: string | undefined;
@@ -20456,13 +20456,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"expenseCategories">;
             _creationTime: number;
             name: string;
+            icon: string;
             nameEn: string;
             sortOrder: number;
             color: string;
-            icon: string;
             isSystem: boolean;
         };
-        fieldPaths: ("name" | "_creationTime" | "nameEn" | "sortOrder" | "color" | "icon" | "isSystem") | "_id";
+        fieldPaths: ("name" | "icon" | "_creationTime" | "nameEn" | "sortOrder" | "color" | "isSystem") | "_id";
         indexes: {
             by_sort_order: ["sortOrder", "_creationTime"];
             by_id: ["_id"];
@@ -20476,8 +20476,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"itineraryBudgets">;
             _creationTime: number;
             notes?: string | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             currency: string;
             itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -20487,7 +20487,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 amount: number;
             }[];
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "currency" | "notes" | "itineraryId" | "totalBudget" | "categoryBudgets") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "currency" | "notes" | "itineraryId" | "totalBudget" | "categoryBudgets") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -20507,17 +20507,17 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             dayNumber?: number | undefined;
             paymentMethod?: string | undefined;
             receiptImageUrl?: string | undefined;
-            date: string;
-            description: string;
-            userId: string;
             createdAt: number;
+            description: string;
+            date: string;
+            userId: string;
             updatedAt: number;
             currency: string;
             itineraryId: import("convex/values").GenericId<"itineraries">;
             categoryId: import("convex/values").GenericId<"expenseCategories">;
             amount: number;
         };
-        fieldPaths: ("date" | "time" | "description" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "currency" | "notes" | "poiId" | "itineraryId" | "dayNumber" | "categoryId" | "amount" | "paymentMethod" | "receiptImageUrl") | "_id";
+        fieldPaths: ("createdAt" | "description" | "date" | "time" | "userId" | "_creationTime" | "updatedAt" | "currency" | "notes" | "poiId" | "itineraryId" | "dayNumber" | "categoryId" | "amount" | "paymentMethod" | "receiptImageUrl") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -20542,15 +20542,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             syncError?: string | undefined;
             reminderMinutesBefore?: number | undefined;
             syncedDayNumbers?: number[] | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             calendarProvider: "apple" | "google";
             syncStatus: "failed" | "pending" | "synced" | "deleted";
             enableReminders: boolean;
             syncAllDays: boolean;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "itineraryId" | "lastSyncedAt" | "savedItineraryLocalId" | "calendarProvider" | "calendarId" | "calendarEventIds" | "syncStatus" | "syncError" | "enableReminders" | "reminderMinutesBefore" | "syncAllDays" | "syncedDayNumbers") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "itineraryId" | "lastSyncedAt" | "savedItineraryLocalId" | "calendarProvider" | "calendarId" | "calendarEventIds" | "syncStatus" | "syncError" | "enableReminders" | "reminderMinutesBefore" | "syncAllDays" | "syncedDayNumbers") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_itinerary: ["itineraryId", "_creationTime"];
@@ -20608,7 +20608,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             countryName: string;
             visitedAt: number;
         };
-        fieldPaths: ("latitude" | "longitude" | "userId" | "_creationTime" | "createdAt" | "countryCode" | "rating" | "notes" | "itineraryId" | "cityName" | "cityNameEn" | "countryName" | "countryNameEn" | "visitedAt" | "firstVisitedAt" | "lastVisitedAt" | "visitCount" | "photos" | "travelGuideId") | "_id";
+        fieldPaths: ("createdAt" | "latitude" | "longitude" | "userId" | "_creationTime" | "countryCode" | "rating" | "notes" | "itineraryId" | "cityName" | "cityNameEn" | "countryName" | "countryNameEn" | "visitedAt" | "firstVisitedAt" | "lastVisitedAt" | "visitCount" | "photos" | "travelGuideId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_city: ["userId", "cityName", "_creationTime"];
@@ -20633,7 +20633,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             lastVisitedAt: number;
             citiesCount: number;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "countryCode" | "countryName" | "countryNameEn" | "firstVisitedAt" | "lastVisitedAt" | "citiesCount") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "countryCode" | "countryName" | "countryNameEn" | "firstVisitedAt" | "lastVisitedAt" | "citiesCount") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_country: ["userId", "countryCode", "_creationTime"];
@@ -20680,7 +20680,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             totalTrips: number;
             totalDistance: number;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "totalCities" | "totalCountries" | "totalTrips" | "totalDistance" | "totalDays" | "totalExpenses" | "mostVisitedCity" | "mostVisitedCountry" | "firstTripDate" | "lastTripDate" | "goalCities" | "goalCountries" | "nextGoalCity" | "yearlyStats" | "mostVisitedCity.name" | "mostVisitedCity.count" | "mostVisitedCountry.name" | "mostVisitedCountry.count" | "nextGoalCity.latitude" | "nextGoalCity.longitude" | "nextGoalCity.countryCode" | "nextGoalCity.notes" | "nextGoalCity.cityName" | "nextGoalCity.countryName" | "nextGoalCity.plannedDate" | `yearlyStats.${string}`) | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "totalCities" | "totalCountries" | "totalTrips" | "totalDistance" | "totalDays" | "totalExpenses" | "mostVisitedCity" | "mostVisitedCountry" | "firstTripDate" | "lastTripDate" | "goalCities" | "goalCountries" | "nextGoalCity" | "yearlyStats" | "mostVisitedCity.name" | "mostVisitedCity.count" | "mostVisitedCountry.name" | "mostVisitedCountry.count" | "nextGoalCity.latitude" | "nextGoalCity.longitude" | "nextGoalCity.countryCode" | "nextGoalCity.notes" | "nextGoalCity.cityName" | "nextGoalCity.countryName" | "nextGoalCity.plannedDate" | `yearlyStats.${string}`) | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_id: ["_id"];
@@ -20717,12 +20717,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             airlineContactEmail?: string | undefined;
             reminderEnabled?: boolean | undefined;
             status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+            createdAt: number;
             description: string;
             userId: string;
-            createdAt: number;
             updatedAt: number;
         };
-        fieldPaths: ("status" | "description" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "itineraryId" | "color" | "reminderTime" | "features" | "airlineCode" | "flightBookingId" | "tagNumber" | "brand" | "size" | "weight" | "dimensions" | "tagPhotoUrl" | "luggagePhotoUrls" | "lastKnownLocation" | "lossReportFiled" | "lossReportNumber" | "lossReportDate" | "lossReportNotes" | "airlineName" | "airlineTrackingUrl" | "airlineContactPhone" | "airlineContactEmail" | "reminderEnabled") | "_id";
+        fieldPaths: ("status" | "createdAt" | "description" | "userId" | "_creationTime" | "updatedAt" | "itineraryId" | "color" | "reminderTime" | "features" | "airlineCode" | "flightBookingId" | "tagNumber" | "brand" | "size" | "weight" | "dimensions" | "tagPhotoUrl" | "luggagePhotoUrls" | "lastKnownLocation" | "lossReportFiled" | "lossReportNumber" | "lossReportDate" | "lossReportNotes" | "airlineName" | "airlineTrackingUrl" | "airlineContactPhone" | "airlineContactEmail" | "reminderEnabled") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_status: ["userId", "status", "_creationTime"];
@@ -20746,11 +20746,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             exclusions?: string[] | undefined;
             contactPhone?: string | undefined;
             contactEmail?: string | undefined;
-            provider: string;
+            createdAt: number;
+            name: string;
             type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
             priority: number;
-            name: string;
-            createdAt: number;
+            provider: string;
             updatedAt: number;
             purchaseUrl: string;
             isActive: boolean;
@@ -20769,7 +20769,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             features: string[];
             reviewCount: number;
         };
-        fieldPaths: ("provider" | "type" | "priority" | "name" | "_creationTime" | "createdAt" | "updatedAt" | "nameEn" | "rating" | "purchaseUrl" | "isActive" | "providerLogo" | "coverageAmount" | "coverageDetails" | "pricePerDay" | "minDays" | "maxDays" | "applicableRegions" | "domesticOnly" | "riskLevelCoverage" | "features" | "exclusions" | "reviewCount" | "contactPhone" | "contactEmail") | "_id";
+        fieldPaths: ("createdAt" | "name" | "type" | "priority" | "provider" | "_creationTime" | "updatedAt" | "nameEn" | "rating" | "purchaseUrl" | "isActive" | "providerLogo" | "coverageAmount" | "coverageDetails" | "pricePerDay" | "minDays" | "maxDays" | "applicableRegions" | "domesticOnly" | "riskLevelCoverage" | "features" | "exclusions" | "reviewCount" | "contactPhone" | "contactEmail") | "_id";
         indexes: {
             by_type: ["type", "_creationTime"];
             by_provider: ["provider", "_creationTime"];
@@ -20799,11 +20799,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 claimAmount: number;
             }[] | undefined;
             status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+            createdAt: number;
+            destinations: string[];
             userId: string;
             startDate: string;
             endDate: string;
-            destinations: string[];
-            createdAt: number;
             updatedAt: number;
             totalPrice: number;
             productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -20818,7 +20818,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             paymentStatus: "failed" | "pending" | "paid" | "refunded";
             purchasedAt: number;
         };
-        fieldPaths: ("status" | "userId" | "startDate" | "endDate" | "destinations" | "_creationTime" | "createdAt" | "updatedAt" | "notes" | "itineraryId" | "totalPrice" | "productId" | "coverageDays" | "insuredPersons" | "orderNumber" | "policyNumber" | "paymentStatus" | "claimHistory" | "purchasedAt") | "_id";
+        fieldPaths: ("status" | "createdAt" | "destinations" | "userId" | "startDate" | "endDate" | "_creationTime" | "updatedAt" | "notes" | "itineraryId" | "totalPrice" | "productId" | "coverageDays" | "insuredPersons" | "orderNumber" | "policyNumber" | "paymentStatus" | "claimHistory" | "purchasedAt") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_product: ["productId", "_creationTime"];
@@ -20868,23 +20868,23 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 question: string;
                 answer: string;
             }[] | undefined;
-            priority: number;
-            title: string;
             content: string;
+            createdAt: number;
+            title: string;
+            priority: number;
             steps: {
                 tips?: string | undefined;
                 requiredDocuments?: string[] | undefined;
-                title: string;
                 description: string;
+                title: string;
                 stepNumber: number;
             }[];
-            createdAt: number;
             updatedAt: number;
             isActive: boolean;
             claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
             requiredDocuments: string[];
         };
-        fieldPaths: ("priority" | "title" | "content" | "steps" | "_creationTime" | "createdAt" | "updatedAt" | "isActive" | "claimType" | "requiredDocuments" | "timeLimit" | "contactInfo" | "faqs" | "contactInfo.email" | "contactInfo.phone" | "contactInfo.website") | "_id";
+        fieldPaths: ("content" | "createdAt" | "title" | "priority" | "steps" | "_creationTime" | "updatedAt" | "isActive" | "claimType" | "requiredDocuments" | "timeLimit" | "contactInfo" | "faqs" | "contactInfo.email" | "contactInfo.phone" | "contactInfo.website") | "_id";
         indexes: {
             by_claim_type: ["claimType", "_creationTime"];
             by_active: ["isActive", "_creationTime"];
@@ -20899,17 +20899,17 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"chatSessions">;
             _creationTime: number;
-            guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
             context?: string | undefined;
+            guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+            createdAt: number;
             title: string;
             userId: string;
-            createdAt: number;
             lastMessageAt: number;
             messageCount: number;
             isArchived: boolean;
         };
-        fieldPaths: ("title" | "guideId" | "userId" | "context" | "_creationTime" | "createdAt" | "itineraryId" | "lastMessageAt" | "messageCount" | "isArchived") | "_id";
+        fieldPaths: ("createdAt" | "title" | "context" | "guideId" | "userId" | "_creationTime" | "itineraryId" | "lastMessageAt" | "messageCount" | "isArchived") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_archived: ["userId", "isArchived", "_creationTime"];
@@ -20933,8 +20933,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                     address?: string | undefined;
                     rating?: number | undefined;
                     priceInfo?: string | undefined;
-                    type: string;
                     name: string;
+                    type: string;
                 }[] | undefined;
                 sources?: string[] | undefined;
                 itineraryChanges?: {
@@ -20945,16 +20945,16 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 }[] | undefined;
                 quickActions?: {
                     payload?: string | undefined;
-                    label: string;
                     action: string;
+                    label: string;
                 }[] | undefined;
             } | undefined;
+            role: "user" | "assistant" | "system";
             content: string;
-            sessionId: import("convex/values").GenericId<"chatSessions">;
             createdAt: number;
-            role: "user" | "system" | "assistant";
+            sessionId: import("convex/values").GenericId<"chatSessions">;
         };
-        fieldPaths: ("metadata" | "content" | "sessionId" | "_creationTime" | "createdAt" | "role" | "metadata.pois" | "metadata.sources" | "metadata.itineraryChanges" | "metadata.quickActions") | "_id";
+        fieldPaths: ("role" | "content" | "createdAt" | "metadata" | "sessionId" | "_creationTime" | "metadata.pois" | "metadata.sources" | "metadata.itineraryChanges" | "metadata.quickActions") | "_id";
         indexes: {
             by_session: ["sessionId", "_creationTime"];
             by_session_created: ["sessionId", "createdAt", "_creationTime"];
@@ -20975,7 +20975,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             currencySymbol: string;
             lastUpdated: number;
             countryName: string;
-            tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+            tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
             cultureSummary: string;
             scenarios: {
                 notes?: string | undefined;
@@ -21004,13 +21004,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             sourceUrl?: string | undefined;
             authorName?: string | undefined;
             publishedAt?: number | undefined;
-            title: string;
             content: string;
+            title: string;
+            sourceExternalId: string;
             crawledAt: number;
             sourcePlatform: string;
-            sourceExternalId: string;
         };
-        fieldPaths: ("title" | "content" | "_creationTime" | "sourceUrl" | "crawledAt" | "sourcePlatform" | "sourceExternalId" | "authorName" | "publishedAt") | "_id";
+        fieldPaths: ("content" | "title" | "sourceExternalId" | "sourceUrl" | "authorName" | "publishedAt" | "_creationTime" | "crawledAt" | "sourcePlatform") | "_id";
         indexes: {
             by_platform: ["sourcePlatform", "_creationTime"];
             by_platform_external: ["sourcePlatform", "sourceExternalId", "_creationTime"];
@@ -21026,16 +21026,16 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             email?: string | undefined;
             notes?: string | undefined;
+            createdAt: number;
             name: string;
             userId: string;
-            createdAt: number;
             updatedAt: number;
             relationship: string;
             phoneNumber: string;
             isPrimary: boolean;
             notifyOnSos: boolean;
         };
-        fieldPaths: ("email" | "name" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "notes" | "relationship" | "phoneNumber" | "isPrimary" | "notifyOnSos") | "_id";
+        fieldPaths: ("createdAt" | "name" | "email" | "userId" | "_creationTime" | "updatedAt" | "notes" | "relationship" | "phoneNumber" | "isPrimary" | "notifyOnSos") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_primary: ["userId", "isPrimary", "_creationTime"];
@@ -21097,10 +21097,10 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             policyDocumentUrl?: string | undefined;
             insuranceCardUrl?: string | undefined;
             coveredRegions?: string[] | undefined;
+            createdAt: number;
             userId: string;
             startDate: string;
             endDate: string;
-            createdAt: number;
             updatedAt: number;
             isActive: boolean;
             policyNumber: string;
@@ -21108,7 +21108,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             emergencyHotline: string;
             coverageType: string;
         };
-        fieldPaths: ("email" | "userId" | "startDate" | "endDate" | "_creationTime" | "createdAt" | "updatedAt" | "notes" | "isActive" | "coverageAmount" | "exclusions" | "policyNumber" | "website" | "providerName" | "emergencyHotline" | "claimsPhone" | "coverageType" | "medicalCoverage" | "evacuationCoverage" | "policyDocumentUrl" | "insuranceCardUrl" | "coveredRegions") | "_id";
+        fieldPaths: ("createdAt" | "email" | "userId" | "startDate" | "endDate" | "_creationTime" | "updatedAt" | "notes" | "isActive" | "coverageAmount" | "exclusions" | "policyNumber" | "website" | "providerName" | "emergencyHotline" | "claimsPhone" | "coverageType" | "medicalCoverage" | "evacuationCoverage" | "policyDocumentUrl" | "insuranceCardUrl" | "coveredRegions") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_active: ["userId", "isActive", "_creationTime"];
@@ -21127,15 +21127,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             resolvedAt?: number | undefined;
             locationName?: string | undefined;
             accuracy?: number | undefined;
-            status: "received" | "cancelled" | "resolved" | "sent";
+            status: "cancelled" | "received" | "resolved" | "sent";
+            createdAt: number;
             latitude: number;
             longitude: number;
             userId: string;
-            createdAt: number;
-            alertType: "other" | "medical" | "emergency" | "safety";
+            alertType: "emergency" | "other" | "medical" | "safety";
             notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
         };
-        fieldPaths: ("message" | "status" | "latitude" | "longitude" | "userId" | "_creationTime" | "createdAt" | "resolvedBy" | "resolvedAt" | "locationName" | "accuracy" | "alertType" | "notifiedContacts") | "_id";
+        fieldPaths: ("status" | "createdAt" | "message" | "latitude" | "longitude" | "userId" | "_creationTime" | "resolvedBy" | "resolvedAt" | "locationName" | "accuracy" | "alertType" | "notifiedContacts") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_status: ["userId", "status", "_creationTime"];
@@ -21150,8 +21150,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"safetyRatings">;
             _creationTime: number;
-            cityId?: import("convex/values").GenericId<"cities"> | undefined;
             sourceUrl?: string | undefined;
+            cityId?: import("convex/values").GenericId<"cities"> | undefined;
             verifiedBy?: string | undefined;
             destinationNameEn?: string | undefined;
             womenSafetyRating?: number | undefined;
@@ -21163,8 +21163,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 ambulance?: string | undefined;
                 fire?: string | undefined;
             } | undefined;
-            summary: string;
             createdAt: number;
+            summary: string;
             updatedAt: number;
             countryCode: string;
             source: string;
@@ -21177,7 +21177,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             generalTips: string[];
             lastVerifiedAt: number;
         };
-        fieldPaths: ("summary" | "_creationTime" | "createdAt" | "updatedAt" | "countryCode" | "cityId" | "source" | "sourceUrl" | "verifiedBy" | "destinationName" | "destinationNameEn" | "overallRating" | "crimeRating" | "healthRating" | "naturalDisasterRating" | "transportRating" | "womenSafetyRating" | "lgbtqSafetyRating" | "summaryEn" | "generalTips" | "emergencyNumbers" | "lastVerifiedAt" | "emergencyNumbers.touristHotline" | "emergencyNumbers.police" | "emergencyNumbers.ambulance" | "emergencyNumbers.fire") | "_id";
+        fieldPaths: ("createdAt" | "sourceUrl" | "summary" | "_creationTime" | "updatedAt" | "countryCode" | "cityId" | "source" | "verifiedBy" | "destinationName" | "destinationNameEn" | "overallRating" | "crimeRating" | "healthRating" | "naturalDisasterRating" | "transportRating" | "womenSafetyRating" | "lgbtqSafetyRating" | "summaryEn" | "generalTips" | "emergencyNumbers" | "lastVerifiedAt" | "emergencyNumbers.touristHotline" | "emergencyNumbers.police" | "emergencyNumbers.ambulance" | "emergencyNumbers.fire") | "_id";
         indexes: {
             by_destination: ["destinationName", "_creationTime"];
             by_country: ["countryCode", "_creationTime"];
@@ -21193,29 +21193,29 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"safetyAlerts">;
             _creationTime: number;
+            sourceUrl?: string | undefined;
             endDate?: number | undefined;
             cityId?: import("convex/values").GenericId<"cities"> | undefined;
             descriptionEn?: string | undefined;
             titleEn?: string | undefined;
-            sourceUrl?: string | undefined;
             affectedAreas?: string[] | undefined;
             avoidAreas?: string[] | undefined;
             officialAdvisoryLevel?: string | undefined;
             createdBy?: string | undefined;
-            title: string;
-            description: string;
-            startDate: number;
             createdAt: number;
+            description: string;
+            title: string;
+            startDate: number;
             updatedAt: number;
             countryCode: string;
             source: string;
             isActive: boolean;
             alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
             destinationName: string;
-            severity: "low" | "medium" | "high" | "info" | "critical";
+            severity: "info" | "critical" | "low" | "medium" | "high";
             recommendations: string[];
         };
-        fieldPaths: ("title" | "description" | "startDate" | "endDate" | "_creationTime" | "createdAt" | "updatedAt" | "countryCode" | "cityId" | "descriptionEn" | "titleEn" | "source" | "sourceUrl" | "isActive" | "alertType" | "destinationName" | "affectedAreas" | "severity" | "recommendations" | "avoidAreas" | "officialAdvisoryLevel" | "createdBy") | "_id";
+        fieldPaths: ("createdAt" | "description" | "title" | "sourceUrl" | "startDate" | "endDate" | "_creationTime" | "updatedAt" | "countryCode" | "cityId" | "descriptionEn" | "titleEn" | "source" | "isActive" | "alertType" | "destinationName" | "affectedAreas" | "severity" | "recommendations" | "avoidAreas" | "officialAdvisoryLevel" | "createdBy") | "_id";
         indexes: {
             by_destination: ["destinationName", "_creationTime"];
             by_country: ["countryCode", "_creationTime"];
@@ -21250,10 +21250,10 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 allDay: boolean;
             } | undefined;
             lastReportedAt?: number | undefined;
+            createdAt: number;
             description: string;
             latitude: number;
             longitude: number;
-            createdAt: number;
             updatedAt: number;
             countryCode: string;
             source: string;
@@ -21266,7 +21266,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             precautions: string[];
             isVerified: boolean;
         };
-        fieldPaths: ("description" | "latitude" | "longitude" | "_creationTime" | "createdAt" | "updatedAt" | "countryCode" | "cityId" | "descriptionEn" | "source" | "isActive" | "verifiedBy" | "reportCount" | "destinationName" | "zoneName" | "zoneNameEn" | "radiusMeters" | "polygon" | "dangerLevel" | "dangerTypes" | "precautions" | "dangerousTimes" | "lastReportedAt" | "isVerified" | "dangerousTimes.allDay" | "dangerousTimes.nightOnly" | "dangerousTimes.specificHours" | "dangerousTimes.specificDays") | "_id";
+        fieldPaths: ("createdAt" | "description" | "latitude" | "longitude" | "_creationTime" | "updatedAt" | "countryCode" | "cityId" | "descriptionEn" | "source" | "isActive" | "verifiedBy" | "reportCount" | "destinationName" | "zoneName" | "zoneNameEn" | "radiusMeters" | "polygon" | "dangerLevel" | "dangerTypes" | "precautions" | "dangerousTimes" | "lastReportedAt" | "isVerified" | "dangerousTimes.allDay" | "dangerousTimes.nightOnly" | "dangerousTimes.specificHours" | "dangerousTimes.specificDays") | "_id";
         indexes: {
             by_destination: ["destinationName", "_creationTime"];
             by_country: ["countryCode", "_creationTime"];
@@ -21285,20 +21285,20 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"wifiSpots">;
             _creationTime: number;
             description?: string | undefined;
+            imageUrls?: string[] | undefined;
             nameEn?: string | undefined;
             address?: string | undefined;
-            imageUrls?: string[] | undefined;
             poiId?: import("convex/values").GenericId<"pois"> | undefined;
             openingHours?: string | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
             ssid?: string | undefined;
             speedMbps?: number | undefined;
-            type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+            createdAt: number;
             name: string;
+            type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
             latitude: number;
             longitude: number;
-            createdAt: number;
             updatedAt: number;
             cityId: import("convex/values").GenericId<"cities">;
             ratingCount: number;
@@ -21308,7 +21308,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             averageRating: number;
             submittedBy: string;
         };
-        fieldPaths: ("type" | "name" | "description" | "latitude" | "longitude" | "_creationTime" | "createdAt" | "updatedAt" | "nameEn" | "cityId" | "address" | "ratingCount" | "imageUrls" | "poiId" | "openingHours" | "verifiedAt" | "verifiedBy" | "isVerified" | "ssid" | "requiresPassword" | "isFree" | "speedMbps" | "averageRating" | "submittedBy") | "_id";
+        fieldPaths: ("createdAt" | "name" | "type" | "description" | "imageUrls" | "latitude" | "longitude" | "_creationTime" | "updatedAt" | "nameEn" | "cityId" | "address" | "ratingCount" | "poiId" | "openingHours" | "verifiedAt" | "verifiedBy" | "isVerified" | "ssid" | "requiresPassword" | "isFree" | "speedMbps" | "averageRating" | "submittedBy") | "_id";
         indexes: {
             by_city: ["cityId", "_creationTime"];
             by_type: ["type", "_creationTime"];
@@ -21333,15 +21333,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             locationName?: string | undefined;
             wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
             securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+            createdAt: number;
             name: string;
             userId: string;
-            createdAt: number;
             updatedAt: number;
             ssid: string;
             password: string;
             isShared: boolean;
         };
-        fieldPaths: ("name" | "latitude" | "longitude" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "notes" | "lastUsedAt" | "locationName" | "ssid" | "wifiSpotId" | "password" | "securityType" | "isShared") | "_id";
+        fieldPaths: ("createdAt" | "name" | "latitude" | "longitude" | "userId" | "_creationTime" | "updatedAt" | "notes" | "lastUsedAt" | "locationName" | "ssid" | "wifiSpotId" | "password" | "securityType" | "isShared") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_spot: ["userId", "wifiSpotId", "_creationTime"];
@@ -21361,8 +21361,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             speedTestResult?: number | undefined;
             connectionTime?: string | undefined;
             deviceType?: string | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             overallRating: number;
             wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -21371,7 +21371,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             easeOfAccessRating: number;
             helpfulCount: number;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "visitDate" | "comment" | "overallRating" | "wifiSpotId" | "speedRating" | "stabilityRating" | "easeOfAccessRating" | "speedTestResult" | "connectionTime" | "deviceType" | "helpfulCount") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "visitDate" | "comment" | "overallRating" | "wifiSpotId" | "speedRating" | "stabilityRating" | "easeOfAccessRating" | "speedTestResult" | "connectionTime" | "deviceType" | "helpfulCount") | "_id";
         indexes: {
             by_spot: ["wifiSpotId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -21387,11 +21387,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"wifiReviewHelpful">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             reviewId: import("convex/values").GenericId<"wifiReviews">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "reviewId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "reviewId") | "_id";
         indexes: {
             by_review: ["reviewId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -21417,21 +21417,21 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             wasResolved?: boolean | undefined;
             resolutionNotes?: string | undefined;
             status: "rejected" | "pending" | "resolved" | "verified";
-            title: string;
-            description: string;
-            userId: string;
             createdAt: number;
+            description: string;
+            title: string;
+            userId: string;
             updatedAt: number;
             countryCode: string;
             reportCount: number;
             destinationName: string;
-            severity: "moderate" | "critical" | "minor" | "severe";
+            severity: "critical" | "moderate" | "minor" | "severe";
             helpfulCount: number;
             isAnonymous: boolean;
             incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
             incidentDate: number;
         };
-        fieldPaths: ("status" | "title" | "description" | "latitude" | "longitude" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "countryCode" | "cityId" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "reportCount" | "destinationName" | "severity" | "helpfulCount" | "isAnonymous" | "specificLocation" | "incidentType" | "incidentDate" | "wasPoliceInvolved" | "wasResolved" | "resolutionNotes") | "_id";
+        fieldPaths: ("status" | "createdAt" | "description" | "title" | "latitude" | "longitude" | "userId" | "_creationTime" | "updatedAt" | "countryCode" | "cityId" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "reportCount" | "destinationName" | "severity" | "helpfulCount" | "isAnonymous" | "specificLocation" | "incidentType" | "incidentDate" | "wasPoliceInvolved" | "wasResolved" | "resolutionNotes") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_destination: ["destinationName", "_creationTime"];
@@ -21450,6 +21450,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"chargingStations">;
             _creationTime: number;
+            sourceUrl?: string | undefined;
+            imageUrls?: string[] | undefined;
             phone?: string | undefined;
             updatedAt?: number | undefined;
             nameEn?: string | undefined;
@@ -21457,8 +21459,6 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             externalId?: string | undefined;
             rating?: number | undefined;
             ratingCount?: number | undefined;
-            imageUrls?: string[] | undefined;
-            sourceUrl?: string | undefined;
             amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
             reviewCount?: number | undefined;
             website?: string | undefined;
@@ -21496,7 +21496,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             }[];
             is24Hours: boolean;
         };
-        fieldPaths: ("status" | "name" | "latitude" | "longitude" | "phone" | "_creationTime" | "updatedAt" | "nameEn" | "cityId" | "externalId" | "address" | "rating" | "ratingCount" | "imageUrls" | "source" | "sourceUrl" | "crawledAt" | "amenities" | "reviewCount" | "website" | "operatorName" | "operatorId" | "stationType" | "totalPorts" | "availablePorts" | "chargerTypes" | "pricingInfo" | "operatingHours" | "is24Hours" | "lastStatusUpdate" | "paymentMethods" | "supportedBrands" | "pricingInfo.electricityPrice" | "pricingInfo.serviceFee" | "pricingInfo.parkingFee" | "pricingInfo.peakPrice" | "pricingInfo.valleyPrice" | "pricingInfo.flatPrice" | "pricingInfo.pricingNotes") | "_id";
+        fieldPaths: ("status" | "name" | "sourceUrl" | "imageUrls" | "latitude" | "longitude" | "phone" | "_creationTime" | "updatedAt" | "nameEn" | "cityId" | "externalId" | "address" | "rating" | "ratingCount" | "source" | "crawledAt" | "amenities" | "reviewCount" | "website" | "operatorName" | "operatorId" | "stationType" | "totalPorts" | "availablePorts" | "chargerTypes" | "pricingInfo" | "operatingHours" | "is24Hours" | "lastStatusUpdate" | "paymentMethods" | "supportedBrands" | "pricingInfo.electricityPrice" | "pricingInfo.serviceFee" | "pricingInfo.parkingFee" | "pricingInfo.peakPrice" | "pricingInfo.valleyPrice" | "pricingInfo.flatPrice" | "pricingInfo.pricingNotes") | "_id";
         indexes: {
             by_city: ["cityId", "_creationTime"];
             by_status: ["status", "_creationTime"];
@@ -21515,10 +21515,10 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"chargingStationReviews">;
             _creationTime: number;
-            userId?: string | undefined;
-            imageUrls?: string[] | undefined;
-            visitDate?: string | undefined;
             authorName?: string | undefined;
+            imageUrls?: string[] | undefined;
+            userId?: string | undefined;
+            visitDate?: string | undefined;
             chargerType?: string | undefined;
             chargingDuration?: number | undefined;
             energyCharged?: number | undefined;
@@ -21532,7 +21532,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             isVerified: boolean;
             stationId: import("convex/values").GenericId<"chargingStations">;
         };
-        fieldPaths: ("content" | "userId" | "_creationTime" | "createdAt" | "rating" | "imageUrls" | "visitDate" | "authorName" | "isVerified" | "stationId" | "chargerType" | "chargingDuration" | "energyCharged" | "totalCost" | "vehicleModel" | "pros" | "cons") | "_id";
+        fieldPaths: ("content" | "createdAt" | "authorName" | "imageUrls" | "userId" | "_creationTime" | "rating" | "visitDate" | "isVerified" | "stationId" | "chargerType" | "chargingDuration" | "energyCharged" | "totalCost" | "vehicleModel" | "pros" | "cons") | "_id";
         indexes: {
             by_station: ["stationId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -21549,11 +21549,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"favoriteChargingStations">;
             _creationTime: number;
             notes?: string | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             stationId: import("convex/values").GenericId<"chargingStations">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "notes" | "stationId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "notes" | "stationId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_station: ["stationId", "_creationTime"];
@@ -21599,11 +21599,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             affiliateUrl?: string | undefined;
             salesCount?: number | undefined;
             isPromoted?: boolean | undefined;
-            provider: string;
-            priority: number;
-            name: string;
-            destinations: string[];
             createdAt: number;
+            name: string;
+            priority: number;
+            destinations: string[];
+            provider: string;
             updatedAt: number;
             purchaseUrl: string;
             isActive: boolean;
@@ -21628,7 +21628,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             includesSms: boolean;
             hotspotSupported: boolean;
         };
-        fieldPaths: ("provider" | "priority" | "name" | "destinations" | "_creationTime" | "createdAt" | "updatedAt" | "nameEn" | "rating" | "purchaseUrl" | "isActive" | "providerLogo" | "features" | "reviewCount" | "coverageType" | "cardType" | "destinationNames" | "regionName" | "dataPlans" | "networkType" | "supportedCarriers" | "esimInfo" | "physicalSimInfo" | "includesVoice" | "voiceMinutes" | "includesSms" | "smsCount" | "localNumber" | "hotspotSupported" | "maxDevices" | "purchasePlatforms" | "affiliateUrl" | "salesCount" | "isPromoted" | "esimInfo.supportsQrActivation" | "esimInfo.supportsAppActivation" | "esimInfo.activationInstructions" | "esimInfo.compatibleDevices" | "esimInfo.requiresUnlockedPhone" | "physicalSimInfo.simSize" | "physicalSimInfo.deliveryOptions" | "physicalSimInfo.pickupLocations") | "_id";
+        fieldPaths: ("createdAt" | "name" | "priority" | "destinations" | "provider" | "_creationTime" | "updatedAt" | "nameEn" | "rating" | "purchaseUrl" | "isActive" | "providerLogo" | "features" | "reviewCount" | "coverageType" | "cardType" | "destinationNames" | "regionName" | "dataPlans" | "networkType" | "supportedCarriers" | "esimInfo" | "physicalSimInfo" | "includesVoice" | "voiceMinutes" | "includesSms" | "smsCount" | "localNumber" | "hotspotSupported" | "maxDevices" | "purchasePlatforms" | "affiliateUrl" | "salesCount" | "isPromoted" | "esimInfo.supportsQrActivation" | "esimInfo.supportsAppActivation" | "esimInfo.activationInstructions" | "esimInfo.compatibleDevices" | "esimInfo.requiresUnlockedPhone" | "physicalSimInfo.simSize" | "physicalSimInfo.deliveryOptions" | "physicalSimInfo.pickupLocations") | "_id";
         indexes: {
             by_card_type: ["cardType", "_creationTime"];
             by_provider: ["provider", "_creationTime"];
@@ -21648,11 +21648,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"simCardReviews">;
             _creationTime: number;
             title?: string | undefined;
+            authorName?: string | undefined;
+            imageUrls?: string[] | undefined;
             destination?: string | undefined;
             userId?: string | undefined;
             updatedAt?: number | undefined;
-            imageUrls?: string[] | undefined;
-            authorName?: string | undefined;
             speedRating?: number | undefined;
             speedTestResult?: string | undefined;
             pros?: string[] | undefined;
@@ -21667,8 +21667,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
             purchaseVerified?: boolean | undefined;
             reviewDate?: number | undefined;
-            status: "approved" | "rejected" | "pending";
             content: string;
+            status: "approved" | "rejected" | "pending";
             createdAt: number;
             wouldRecommend: boolean;
             reportCount: number;
@@ -21677,7 +21677,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             helpfulCount: number;
             simCardId: import("convex/values").GenericId<"simCards">;
         };
-        fieldPaths: ("status" | "title" | "destination" | "content" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "imageUrls" | "wouldRecommend" | "authorName" | "reportCount" | "overallRating" | "isVerified" | "speedRating" | "speedTestResult" | "helpfulCount" | "pros" | "cons" | "simCardId" | "signalRating" | "valueRating" | "serviceRating" | "usageDuration" | "actualDataUsed" | "deviceUsed" | "activationExperience" | "signalQuality" | "purchaseVerified" | "reviewDate") | "_id";
+        fieldPaths: ("content" | "status" | "createdAt" | "title" | "authorName" | "imageUrls" | "destination" | "userId" | "_creationTime" | "updatedAt" | "wouldRecommend" | "reportCount" | "overallRating" | "isVerified" | "speedRating" | "speedTestResult" | "helpfulCount" | "pros" | "cons" | "simCardId" | "signalRating" | "valueRating" | "serviceRating" | "usageDuration" | "actualDataUsed" | "deviceUsed" | "activationExperience" | "signalQuality" | "purchaseVerified" | "reviewDate") | "_id";
         indexes: {
             by_sim_card: ["simCardId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -21696,12 +21696,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"simCardReviewVotes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             voteType: "helpful" | "not_helpful";
             reviewId: import("convex/values").GenericId<"simCardReviews">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "voteType" | "reviewId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "voteType" | "reviewId") | "_id";
         indexes: {
             by_review: ["reviewId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -21717,11 +21717,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"favoriteSimCards">;
             _creationTime: number;
             notes?: string | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             simCardId: import("convex/values").GenericId<"simCards">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "notes" | "simCardId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "notes" | "simCardId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_sim_card: ["simCardId", "_creationTime"];
@@ -21739,19 +21739,19 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
             location?: string | undefined;
             travelDate?: string | undefined;
-            title: string;
             content: string;
             createdAt: number;
+            title: string;
             likesCount: number;
+            savesCount: number;
             commentsCount: number;
+            viewsCount: number;
             visibility: "public" | "followers" | "private";
             updatedAt: number;
             authorId: string;
-            savesCount: number;
-            viewsCount: number;
             isEdited: boolean;
         };
-        fieldPaths: ("title" | "content" | "_creationTime" | "createdAt" | "likesCount" | "commentsCount" | "visibility" | "updatedAt" | "itineraryId" | "authorId" | "savesCount" | "viewsCount" | "isEdited" | "location" | "travelDate") | "_id";
+        fieldPaths: ("content" | "createdAt" | "title" | "likesCount" | "savesCount" | "commentsCount" | "viewsCount" | "_creationTime" | "visibility" | "updatedAt" | "itineraryId" | "authorId" | "isEdited" | "location" | "travelDate") | "_id";
         indexes: {
             by_author: ["authorId", "_creationTime"];
             by_visibility: ["visibility", "_creationTime"];
@@ -21769,13 +21769,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"noteImages">;
             _creationTime: number;
             caption?: string | undefined;
-            url: string;
             createdAt: number;
+            url: string;
             orderIndex: number;
             noteId: import("convex/values").GenericId<"travelNotes">;
             isCover: boolean;
         };
-        fieldPaths: ("url" | "_creationTime" | "createdAt" | "orderIndex" | "noteId" | "caption" | "isCover") | "_id";
+        fieldPaths: ("createdAt" | "url" | "_creationTime" | "orderIndex" | "noteId" | "caption" | "isCover") | "_id";
         indexes: {
             by_note: ["noteId", "_creationTime"];
             by_note_order: ["noteId", "orderIndex", "_creationTime"];
@@ -21790,10 +21790,10 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"noteTags">;
             _creationTime: number;
             createdAt: number;
-            noteId: import("convex/values").GenericId<"travelNotes">;
             tag: string;
+            noteId: import("convex/values").GenericId<"travelNotes">;
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "noteId" | "tag") | "_id";
+        fieldPaths: ("createdAt" | "tag" | "_creationTime" | "noteId") | "_id";
         indexes: {
             by_note: ["noteId", "_creationTime"];
             by_tag: ["tag", "_creationTime"];
@@ -21812,7 +21812,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             poiId: import("convex/values").GenericId<"pois">;
             noteId: import("convex/values").GenericId<"travelNotes">;
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "poiId" | "noteId" | "mentionIndex") | "_id";
+        fieldPaths: ("createdAt" | "_creationTime" | "poiId" | "noteId" | "mentionIndex") | "_id";
         indexes: {
             by_note: ["noteId", "_creationTime"];
             by_poi: ["poiId", "_creationTime"];
@@ -21826,11 +21826,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"noteLikes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             noteId: import("convex/values").GenericId<"travelNotes">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "noteId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "noteId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_note: ["noteId", "_creationTime"];
@@ -21848,15 +21848,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             updatedAt?: number | undefined;
             parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
             content: string;
-            userId: string;
             createdAt: number;
             likesCount: number;
+            userId: string;
             repliesCount: number;
             isEdited: boolean;
             isDeleted: boolean;
             noteId: import("convex/values").GenericId<"travelNotes">;
         };
-        fieldPaths: ("content" | "userId" | "_creationTime" | "createdAt" | "likesCount" | "updatedAt" | "parentId" | "repliesCount" | "isEdited" | "isDeleted" | "noteId") | "_id";
+        fieldPaths: ("content" | "createdAt" | "likesCount" | "userId" | "_creationTime" | "updatedAt" | "parentId" | "repliesCount" | "isEdited" | "isDeleted" | "noteId") | "_id";
         indexes: {
             by_note: ["noteId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -21872,11 +21872,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"noteCommentLikes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             commentId: import("convex/values").GenericId<"noteComments">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "commentId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "commentId") | "_id";
         indexes: {
             by_comment: ["commentId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -21892,11 +21892,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"noteSaves">;
             _creationTime: number;
             collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             noteId: import("convex/values").GenericId<"travelNotes">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "collectionId" | "noteId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "collectionId" | "noteId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_note: ["noteId", "_creationTime"];
@@ -21926,8 +21926,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 days: number;
                 itineraryId: import("convex/values").GenericId<"itineraries">;
             } | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             totalPois: number;
             totalCities: number;
@@ -21966,7 +21966,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             }[];
             lastCalculatedAt: number;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "totalPois" | "totalCities" | "totalCountries" | "totalTrips" | "totalDistance" | "totalDays" | "totalExpenses" | "longestTrip" | "shortestTrip" | "expensesByCategory" | "averageExpensePerDay" | "averageExpensePerTrip" | "topDestinations" | "preferredTransportModes" | "preferredPoiCategories" | "monthlyTripCounts" | "lastCalculatedAt" | "longestTrip.title" | "longestTrip.startDate" | "longestTrip.endDate" | "longestTrip.days" | "longestTrip.itineraryId" | "shortestTrip.title" | "shortestTrip.startDate" | "shortestTrip.endDate" | "shortestTrip.days" | "shortestTrip.itineraryId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "totalPois" | "totalCities" | "totalCountries" | "totalTrips" | "totalDistance" | "totalDays" | "totalExpenses" | "longestTrip" | "shortestTrip" | "expensesByCategory" | "averageExpensePerDay" | "averageExpensePerTrip" | "topDestinations" | "preferredTransportModes" | "preferredPoiCategories" | "monthlyTripCounts" | "lastCalculatedAt" | "longestTrip.title" | "longestTrip.startDate" | "longestTrip.endDate" | "longestTrip.days" | "longestTrip.itineraryId" | "shortestTrip.title" | "shortestTrip.startDate" | "shortestTrip.endDate" | "shortestTrip.days" | "shortestTrip.itineraryId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_total_trips: ["totalTrips", "_creationTime"];
@@ -22015,12 +22015,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             memories?: {
                 itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
                 imageUrl?: string | undefined;
-                text: string;
                 createdAt: number;
+                text: string;
             }[] | undefined;
             status: "error" | "generating" | "ready";
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             citiesCount: number;
             totalDistance: number;
@@ -22054,13 +22054,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             }[];
             achievements: {
                 earnedAt?: number | undefined;
-                id: string;
-                title: string;
                 description: string;
+                title: string;
+                id: string;
                 icon: string;
             }[];
         };
-        fieldPaths: ("status" | "error" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "generatedAt" | "citiesCount" | "totalDistance" | "totalExpenses" | "longestTrip" | "longestTrip.title" | "longestTrip.days" | "longestTrip.itineraryId" | "year" | "tripsCount" | "daysCount" | "countriesCount" | "poisCount" | "expenseBreakdown" | "averagePerTrip" | "averagePerDay" | "mostExpensiveTrip" | "firstTripOfYear" | "lastTripOfYear" | "topCities" | "monthlyActivity" | "achievements" | "yearOverYear" | "memories" | "longestTrip.cityName" | "mostExpensiveTrip.title" | "mostExpensiveTrip.itineraryId" | "mostExpensiveTrip.amount" | "firstTripOfYear.title" | "firstTripOfYear.startDate" | "firstTripOfYear.itineraryId" | "firstTripOfYear.cityName" | "lastTripOfYear.title" | "lastTripOfYear.startDate" | "lastTripOfYear.itineraryId" | "lastTripOfYear.cityName" | "yearOverYear.tripsChange" | "yearOverYear.expensesChange" | "yearOverYear.distanceChange" | "yearOverYear.citiesChange") | "_id";
+        fieldPaths: ("status" | "createdAt" | "error" | "userId" | "_creationTime" | "updatedAt" | "generatedAt" | "citiesCount" | "totalDistance" | "totalExpenses" | "longestTrip" | "longestTrip.title" | "longestTrip.days" | "longestTrip.itineraryId" | "year" | "tripsCount" | "daysCount" | "countriesCount" | "poisCount" | "expenseBreakdown" | "averagePerTrip" | "averagePerDay" | "mostExpensiveTrip" | "firstTripOfYear" | "lastTripOfYear" | "topCities" | "monthlyActivity" | "achievements" | "yearOverYear" | "memories" | "longestTrip.cityName" | "mostExpensiveTrip.title" | "mostExpensiveTrip.itineraryId" | "mostExpensiveTrip.amount" | "firstTripOfYear.title" | "firstTripOfYear.startDate" | "firstTripOfYear.itineraryId" | "firstTripOfYear.cityName" | "lastTripOfYear.title" | "lastTripOfYear.startDate" | "lastTripOfYear.itineraryId" | "lastTripOfYear.cityName" | "yearOverYear.tripsChange" | "yearOverYear.expensesChange" | "yearOverYear.distanceChange" | "yearOverYear.citiesChange") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_year: ["year", "_creationTime"];
@@ -22076,6 +22076,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"verificationBadges">;
             _creationTime: number;
+            description?: string | undefined;
             metadata?: {
                 travelExpertLevel?: number | undefined;
                 specialties?: string[] | undefined;
@@ -22089,22 +22090,21 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 organizationType?: string | undefined;
                 officialWebsite?: string | undefined;
             } | undefined;
-            description?: string | undefined;
             color?: string | undefined;
             verifiedBy?: string | undefined;
             iconUrl?: string | undefined;
             expiresAt?: number | undefined;
             revokedAt?: number | undefined;
             revokedReason?: string | undefined;
+            createdAt: number;
             userId: string;
             displayName: string;
-            createdAt: number;
             updatedAt: number;
             isActive: boolean;
             verifiedAt: number;
             badgeType: "travel_expert" | "local_guide" | "official_account";
         };
-        fieldPaths: ("metadata" | "description" | "userId" | "displayName" | "_creationTime" | "createdAt" | "updatedAt" | "color" | "isActive" | "verifiedAt" | "verifiedBy" | "badgeType" | "iconUrl" | "expiresAt" | "revokedAt" | "revokedReason" | "metadata.travelExpertLevel" | "metadata.specialties" | "metadata.totalGuides" | "metadata.totalLikes" | "metadata.localCity" | "metadata.localCityId" | "metadata.yearsOfResidence" | "metadata.languages" | "metadata.organizationName" | "metadata.organizationType" | "metadata.officialWebsite") | "_id";
+        fieldPaths: ("createdAt" | "description" | "metadata" | "userId" | "displayName" | "_creationTime" | "updatedAt" | "color" | "isActive" | "verifiedAt" | "verifiedBy" | "badgeType" | "iconUrl" | "expiresAt" | "revokedAt" | "revokedReason" | "metadata.travelExpertLevel" | "metadata.specialties" | "metadata.totalGuides" | "metadata.totalLikes" | "metadata.localCity" | "metadata.localCityId" | "metadata.yearsOfResidence" | "metadata.languages" | "metadata.organizationName" | "metadata.organizationType" | "metadata.officialWebsite") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_type: ["userId", "badgeType", "_creationTime"];
@@ -22147,10 +22147,10 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             reviewNotes?: string | undefined;
             rejectionReason?: string | undefined;
             badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-            status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+            status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+            createdAt: number;
             userId: string;
             phone: string;
-            createdAt: number;
             updatedAt: number;
             idType: "id_card" | "passport" | "business_license";
             idNumber: string;
@@ -22158,7 +22158,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             realName: string;
             applicationReason: string;
         };
-        fieldPaths: ("email" | "status" | "userId" | "phone" | "_creationTime" | "createdAt" | "updatedAt" | "reviewedBy" | "reviewedAt" | "idType" | "idNumber" | "badgeType" | "realName" | "applicationReason" | "supportingMaterials" | "applicationData" | "reviewNotes" | "rejectionReason" | "badgeId" | "applicationData.localCity" | "applicationData.yearsOfResidence" | "applicationData.languages" | "applicationData.organizationName" | "applicationData.organizationType" | "applicationData.officialWebsite" | "applicationData.travelExperience" | "applicationData.socialMediaLinks" | "applicationData.publishedGuideIds" | "applicationData.residenceProof" | "applicationData.localKnowledge" | "applicationData.businessLicenseUrl" | "applicationData.authorizationLetterUrl") | "_id";
+        fieldPaths: ("status" | "createdAt" | "email" | "userId" | "phone" | "_creationTime" | "updatedAt" | "reviewedBy" | "reviewedAt" | "idType" | "idNumber" | "badgeType" | "realName" | "applicationReason" | "supportingMaterials" | "applicationData" | "reviewNotes" | "rejectionReason" | "badgeId" | "applicationData.localCity" | "applicationData.yearsOfResidence" | "applicationData.languages" | "applicationData.organizationName" | "applicationData.organizationType" | "applicationData.officialWebsite" | "applicationData.travelExperience" | "applicationData.socialMediaLinks" | "applicationData.publishedGuideIds" | "applicationData.residenceProof" | "applicationData.localKnowledge" | "applicationData.businessLicenseUrl" | "applicationData.authorizationLetterUrl") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_status: ["status", "_creationTime"];
@@ -22176,13 +22176,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"weatherCache">;
             _creationTime: number;
-            latitude: number;
-            longitude: number;
             data: {
                 current?: {
                     date: string;
-                    timestamp: number;
                     icon: string;
+                    timestamp: number;
                     condition: string;
                     conditionDescription: string;
                     tempMin: number;
@@ -22209,8 +22207,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 timezoneOffset: number;
                 daily: {
                     date: string;
-                    timestamp: number;
                     icon: string;
+                    timestamp: number;
                     condition: string;
                     conditionDescription: string;
                     tempMin: number;
@@ -22241,9 +22239,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 }[];
                 fetchedAt: number;
             };
+            latitude: number;
+            longitude: number;
             fetchedAt: number;
         };
-        fieldPaths: ("latitude" | "longitude" | "data" | "_creationTime" | "fetchedAt" | "data.latitude" | "data.longitude" | "data.current" | "data.timezone" | "data.timezoneOffset" | "data.daily" | "data.alerts" | "data.fetchedAt" | "data.current.date" | "data.current.timestamp" | "data.current.icon" | "data.current.condition" | "data.current.conditionDescription" | "data.current.tempMin" | "data.current.tempMax" | "data.current.tempMorning" | "data.current.tempDay" | "data.current.tempEvening" | "data.current.tempNight" | "data.current.feelsLikeDay" | "data.current.humidity" | "data.current.windSpeed" | "data.current.windDirection" | "data.current.precipitation" | "data.current.precipitationProbability" | "data.current.uvIndex" | "data.current.sunrise" | "data.current.sunset" | "data.current.cloudiness" | "data.current.pressure") | "_id";
+        fieldPaths: ("data" | "latitude" | "longitude" | "_creationTime" | "fetchedAt" | "data.latitude" | "data.longitude" | "data.current" | "data.timezone" | "data.timezoneOffset" | "data.daily" | "data.alerts" | "data.fetchedAt" | "data.current.date" | "data.current.icon" | "data.current.timestamp" | "data.current.condition" | "data.current.conditionDescription" | "data.current.tempMin" | "data.current.tempMax" | "data.current.tempMorning" | "data.current.tempDay" | "data.current.tempEvening" | "data.current.tempNight" | "data.current.feelsLikeDay" | "data.current.humidity" | "data.current.windSpeed" | "data.current.windDirection" | "data.current.precipitation" | "data.current.precipitationProbability" | "data.current.uvIndex" | "data.current.sunrise" | "data.current.sunset" | "data.current.cloudiness" | "data.current.pressure") | "_id";
         indexes: {
             by_location: ["latitude", "longitude", "_creationTime"];
             by_fetched_at: ["fetchedAt", "_creationTime"];
@@ -22264,6 +22264,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             ratingCount?: number | undefined;
             createdBy?: string | undefined;
             durationDays?: number | undefined;
+            createdAt: number;
             name: string;
             items: {
                 conditions?: {
@@ -22279,14 +22280,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 quantity: number;
                 isEssential: boolean;
             }[];
-            createdAt: number;
             updatedAt: number;
             isSystem: boolean;
             tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
             isPublic: boolean;
             usageCount: number;
         };
-        fieldPaths: ("name" | "description" | "items" | "_creationTime" | "createdAt" | "updatedAt" | "nameEn" | "climate" | "rating" | "ratingCount" | "isSystem" | "createdBy" | "tripType" | "isPublic" | "durationDays" | "usageCount") | "_id";
+        fieldPaths: ("createdAt" | "name" | "description" | "items" | "_creationTime" | "updatedAt" | "nameEn" | "climate" | "rating" | "ratingCount" | "isSystem" | "createdBy" | "tripType" | "isPublic" | "durationDays" | "usageCount") | "_id";
         indexes: {
             by_trip_type: ["tripType", "_creationTime"];
             by_climate: ["climate", "_creationTime"];
@@ -22318,13 +22318,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             shareCode?: string | undefined;
             sharedWith?: string[] | undefined;
             templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+            createdAt: number;
             title: string;
             userId: string;
-            createdAt: number;
             updatedAt: number;
             isPublic: boolean;
         };
-        fieldPaths: ("title" | "destination" | "userId" | "startDate" | "endDate" | "weatherInfo" | "_creationTime" | "createdAt" | "updatedAt" | "itineraryId" | "tripType" | "shareCode" | "sharedWith" | "isPublic" | "templateId" | "weatherInfo.condition" | "weatherInfo.humidity" | "weatherInfo.fetchedAt" | "weatherInfo.avgTemp") | "_id";
+        fieldPaths: ("createdAt" | "title" | "destination" | "userId" | "startDate" | "endDate" | "weatherInfo" | "_creationTime" | "updatedAt" | "itineraryId" | "tripType" | "shareCode" | "sharedWith" | "isPublic" | "templateId" | "weatherInfo.condition" | "weatherInfo.humidity" | "weatherInfo.fetchedAt" | "weatherInfo.avgTemp") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_itinerary: ["itineraryId", "_creationTime"];
@@ -22345,8 +22345,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
             packedAt?: number | undefined;
             packedBy?: string | undefined;
-            name: string;
             createdAt: number;
+            name: string;
             updatedAt: number;
             category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
             orderIndex: number;
@@ -22355,7 +22355,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             isPacked: boolean;
             isEssential: boolean;
         };
-        fieldPaths: ("name" | "_creationTime" | "createdAt" | "updatedAt" | "category" | "notes" | "orderIndex" | "packingListId" | "quantity" | "isPacked" | "isEssential" | "suggestedBy" | "packedAt" | "packedBy") | "_id";
+        fieldPaths: ("createdAt" | "name" | "_creationTime" | "updatedAt" | "category" | "notes" | "orderIndex" | "packingListId" | "quantity" | "isPacked" | "isEssential" | "suggestedBy" | "packedAt" | "packedBy") | "_id";
         indexes: {
             by_list: ["packingListId", "_creationTime"];
             by_list_category: ["packingListId", "category", "_creationTime"];
@@ -22374,12 +22374,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             email?: string | undefined;
             userId?: string | undefined;
             avatarUrl?: string | undefined;
-            name: string;
             createdAt: number;
+            name: string;
             itineraryId: import("convex/values").GenericId<"itineraries">;
             isOwner: boolean;
         };
-        fieldPaths: ("email" | "name" | "userId" | "avatarUrl" | "_creationTime" | "createdAt" | "itineraryId" | "isOwner") | "_id";
+        fieldPaths: ("createdAt" | "name" | "email" | "userId" | "avatarUrl" | "_creationTime" | "itineraryId" | "isOwner") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_itinerary_user: ["itineraryId", "userId", "_creationTime"];
@@ -22396,9 +22396,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             notes?: string | undefined;
             receiptImageUrl?: string | undefined;
-            date: string;
-            description: string;
             createdAt: number;
+            description: string;
+            date: string;
             updatedAt: number;
             category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
             currency: string;
@@ -22407,7 +22407,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             paidById: import("convex/values").GenericId<"tripMembers">;
             splitType: "exact" | "percentage" | "equal" | "shares";
         };
-        fieldPaths: ("date" | "description" | "_creationTime" | "createdAt" | "updatedAt" | "category" | "currency" | "notes" | "itineraryId" | "amount" | "receiptImageUrl" | "paidById" | "splitType") | "_id";
+        fieldPaths: ("createdAt" | "description" | "date" | "_creationTime" | "updatedAt" | "category" | "currency" | "notes" | "itineraryId" | "amount" | "receiptImageUrl" | "paidById" | "splitType") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_itinerary_date: ["itineraryId", "date", "_creationTime"];
@@ -22453,7 +22453,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             toMemberId: import("convex/values").GenericId<"tripMembers">;
             isSettled: boolean;
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "currency" | "notes" | "itineraryId" | "amount" | "fromMemberId" | "toMemberId" | "isSettled" | "settledAt") | "_id";
+        fieldPaths: ("createdAt" | "_creationTime" | "currency" | "notes" | "itineraryId" | "amount" | "fromMemberId" | "toMemberId" | "isSettled" | "settledAt") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_from_member: ["fromMemberId", "_creationTime"];
@@ -22471,14 +22471,14 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             description?: string | undefined;
             nameEn?: string | undefined;
-            name: string;
             createdAt: number;
+            name: string;
+            icon: string;
             updatedAt: number;
             sortOrder: number;
             isActive: boolean;
-            icon: string;
         };
-        fieldPaths: ("name" | "description" | "_creationTime" | "createdAt" | "updatedAt" | "nameEn" | "sortOrder" | "isActive" | "icon") | "_id";
+        fieldPaths: ("createdAt" | "name" | "description" | "icon" | "_creationTime" | "updatedAt" | "nameEn" | "sortOrder" | "isActive") | "_id";
         indexes: {
             by_sort_order: ["sortOrder", "_creationTime"];
             by_active: ["isActive", "_creationTime"];
@@ -22492,11 +22492,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"itineraryTemplates">;
             _creationTime: number;
-            tags?: string[] | undefined;
             description?: string | undefined;
-            destinations?: string[] | undefined;
-            coverImageUrl?: string | undefined;
             publishedAt?: number | undefined;
+            coverImageUrl?: string | undefined;
+            destinations?: string[] | undefined;
+            tags?: string[] | undefined;
             creatorId?: string | undefined;
             creatorName?: string | undefined;
             estimatedBudget?: {
@@ -22506,6 +22506,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             } | undefined;
             suitableFor?: string[] | undefined;
             bestSeasons?: string[] | undefined;
+            createdAt: number;
             title: string;
             days: {
                 theme?: string | undefined;
@@ -22517,12 +22518,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                     notes?: string | undefined;
                     suggestedDuration?: number | undefined;
                     suggestedTime?: string | undefined;
-                    type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                     name: string;
+                    type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 }[];
                 dayNumber: number;
             }[];
-            createdAt: number;
             visibility: "public" | "private" | "unlisted";
             updatedAt: number;
             viewCount: number;
@@ -22534,7 +22534,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             saveCount: number;
             useCount: number;
         };
-        fieldPaths: ("tags" | "title" | "description" | "destinations" | "days" | "_creationTime" | "createdAt" | "visibility" | "updatedAt" | "viewCount" | "coverImageUrl" | "publishedAt" | "categoryId" | "daysCount" | "templateType" | "creatorId" | "creatorName" | "estimatedBudget" | "suitableFor" | "bestSeasons" | "isPublished" | "likeCount" | "saveCount" | "useCount" | "estimatedBudget.currency" | "estimatedBudget.min" | "estimatedBudget.max") | "_id";
+        fieldPaths: ("createdAt" | "description" | "title" | "publishedAt" | "coverImageUrl" | "destinations" | "tags" | "days" | "_creationTime" | "visibility" | "updatedAt" | "viewCount" | "categoryId" | "daysCount" | "templateType" | "creatorId" | "creatorName" | "estimatedBudget" | "suitableFor" | "bestSeasons" | "isPublished" | "likeCount" | "saveCount" | "useCount" | "estimatedBudget.currency" | "estimatedBudget.min" | "estimatedBudget.max") | "_id";
         indexes: {
             by_category: ["categoryId", "_creationTime"];
             by_type: ["templateType", "_creationTime"];
@@ -22554,11 +22554,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"templateLikes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             templateId: import("convex/values").GenericId<"itineraryTemplates">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "templateId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "templateId") | "_id";
         indexes: {
             by_template: ["templateId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -22573,11 +22573,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"templateSaves">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             templateId: import("convex/values").GenericId<"itineraryTemplates">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "templateId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "templateId") | "_id";
         indexes: {
             by_template: ["templateId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -22592,6 +22592,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"itineraryDrafts">;
             _creationTime: number;
+            coverImageUrl?: string | undefined;
             startDate?: string | undefined;
             endDate?: string | undefined;
             days?: {
@@ -22615,7 +22616,6 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             }[] | undefined;
             visibility?: "public" | "private" | "team" | undefined;
             cityId?: import("convex/values").GenericId<"cities"> | undefined;
-            coverImageUrl?: string | undefined;
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
             deviceId?: string | undefined;
             title: string;
@@ -22624,7 +22624,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             lastModifiedAt: number;
             syncVersion: number;
         };
-        fieldPaths: ("title" | "userId" | "startDate" | "endDate" | "days" | "_creationTime" | "visibility" | "cityId" | "coverImageUrl" | "itineraryId" | "deviceId" | "expiresAt" | "lastModifiedAt" | "syncVersion") | "_id";
+        fieldPaths: ("title" | "coverImageUrl" | "userId" | "startDate" | "endDate" | "days" | "_creationTime" | "visibility" | "cityId" | "itineraryId" | "deviceId" | "expiresAt" | "lastModifiedAt" | "syncVersion") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_itinerary: ["userId", "itineraryId", "_creationTime"];
@@ -22650,11 +22650,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             interests?: string[] | undefined;
             smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
             accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
         };
-        fieldPaths: ("userId" | "bio" | "_creationTime" | "createdAt" | "updatedAt" | "ageRange" | "languages" | "travelStyles" | "preferredPace" | "gender" | "preferredPartnerGender" | "interests" | "smokingPreference" | "accommodationPreference") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "bio" | "_creationTime" | "updatedAt" | "ageRange" | "languages" | "travelStyles" | "preferredPace" | "gender" | "preferredPartnerGender" | "interests" | "smokingPreference" | "accommodationPreference") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_age_range: ["ageRange", "_creationTime"];
@@ -22669,8 +22669,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"travelPartnerRequests">;
             _creationTime: number;
-            imageUrls?: string[] | undefined;
             coverImageUrl?: string | undefined;
+            imageUrls?: string[] | undefined;
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
             expiresAt?: number | undefined;
             estimatedBudget?: number | undefined;
@@ -22680,13 +22680,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
             budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
             status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-            title: string;
+            createdAt: number;
             description: string;
+            title: string;
             destination: string;
             userId: string;
             startDate: string;
             endDate: string;
-            createdAt: number;
             updatedAt: number;
             viewCount: number;
             isFlexibleDates: boolean;
@@ -22694,7 +22694,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             maxGroupSize: number;
             applicationCount: number;
         };
-        fieldPaths: ("status" | "title" | "description" | "destination" | "userId" | "startDate" | "endDate" | "_creationTime" | "createdAt" | "updatedAt" | "imageUrls" | "viewCount" | "coverImageUrl" | "itineraryId" | "expiresAt" | "estimatedBudget" | "travelStyles" | "destinationCityId" | "isFlexibleDates" | "currentGroupSize" | "maxGroupSize" | "preferredGender" | "preferredAgeRange" | "budgetRange" | "applicationCount") | "_id";
+        fieldPaths: ("status" | "createdAt" | "description" | "title" | "coverImageUrl" | "imageUrls" | "destination" | "userId" | "startDate" | "endDate" | "_creationTime" | "updatedAt" | "viewCount" | "itineraryId" | "expiresAt" | "estimatedBudget" | "travelStyles" | "destinationCityId" | "isFlexibleDates" | "currentGroupSize" | "maxGroupSize" | "preferredGender" | "preferredAgeRange" | "budgetRange" | "applicationCount") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_status: ["status", "_creationTime"];
@@ -22723,15 +22723,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             } | undefined;
             responseMessage?: string | undefined;
             respondedAt?: number | undefined;
-            message: string;
             status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
             createdAt: number;
+            message: string;
             updatedAt: number;
             requestId: import("convex/values").GenericId<"travelPartnerRequests">;
             applicantId: string;
             requestOwnerId: string;
         };
-        fieldPaths: ("message" | "status" | "_creationTime" | "createdAt" | "updatedAt" | "requestId" | "applicantId" | "requestOwnerId" | "matchScore" | "matchFactors" | "responseMessage" | "respondedAt" | "matchFactors.styleMatch" | "matchFactors.ageMatch" | "matchFactors.budgetMatch" | "matchFactors.languageMatch" | "matchFactors.interestMatch") | "_id";
+        fieldPaths: ("status" | "createdAt" | "message" | "_creationTime" | "updatedAt" | "requestId" | "applicantId" | "requestOwnerId" | "matchScore" | "matchFactors" | "responseMessage" | "respondedAt" | "matchFactors.styleMatch" | "matchFactors.ageMatch" | "matchFactors.budgetMatch" | "matchFactors.languageMatch" | "matchFactors.interestMatch") | "_id";
         indexes: {
             by_request: ["requestId", "_creationTime"];
             by_applicant: ["applicantId", "_creationTime"];
@@ -22763,11 +22763,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 rating: number;
                 wouldTravelAgain: boolean;
             } | undefined;
-            status: "cancelled" | "completed" | "active";
+            status: "completed" | "cancelled" | "active";
+            createdAt: number;
             destination: string;
             startDate: string;
             endDate: string;
-            createdAt: number;
             updatedAt: number;
             requestId: import("convex/values").GenericId<"travelPartnerRequests">;
             requestOwnerId: string;
@@ -22776,7 +22776,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             partnerId: string;
             matchedAt: number;
         };
-        fieldPaths: ("status" | "destination" | "startDate" | "endDate" | "_creationTime" | "createdAt" | "updatedAt" | "conversationId" | "requestId" | "requestOwnerId" | "matchScore" | "applicationId" | "partnerId" | "matchedAt" | "ownerFeedback" | "partnerFeedback" | "ownerFeedback.createdAt" | "ownerFeedback.rating" | "ownerFeedback.review" | "ownerFeedback.wouldTravelAgain" | "partnerFeedback.createdAt" | "partnerFeedback.rating" | "partnerFeedback.review" | "partnerFeedback.wouldTravelAgain") | "_id";
+        fieldPaths: ("status" | "createdAt" | "destination" | "startDate" | "endDate" | "_creationTime" | "updatedAt" | "conversationId" | "requestId" | "requestOwnerId" | "matchScore" | "applicationId" | "partnerId" | "matchedAt" | "ownerFeedback" | "partnerFeedback" | "ownerFeedback.createdAt" | "ownerFeedback.rating" | "ownerFeedback.review" | "ownerFeedback.wouldTravelAgain" | "partnerFeedback.createdAt" | "partnerFeedback.rating" | "partnerFeedback.review" | "partnerFeedback.wouldTravelAgain") | "_id";
         indexes: {
             by_request: ["requestId", "_creationTime"];
             by_owner: ["requestOwnerId", "_creationTime"];
@@ -22805,12 +22805,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             referenceNote?: string | undefined;
             adminNotes?: string | undefined;
             status: "rejected" | "pending" | "expired" | "verified";
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
         };
-        fieldPaths: ("status" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "reviewedBy" | "verifiedAt" | "expiresAt" | "verificationType" | "verificationData" | "verificationMethod" | "socialPlatform" | "socialId" | "referenceUserId" | "referenceNote" | "adminNotes") | "_id";
+        fieldPaths: ("status" | "createdAt" | "userId" | "_creationTime" | "updatedAt" | "reviewedBy" | "verifiedAt" | "expiresAt" | "verificationType" | "verificationData" | "verificationMethod" | "socialPlatform" | "socialId" | "referenceUserId" | "referenceNote" | "adminNotes") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_type: ["userId", "verificationType", "_creationTime"];
@@ -22828,8 +22828,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             averageRating?: number | undefined;
             badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             totalTrips: number;
             lastCalculatedAt: number;
@@ -22842,7 +22842,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             cancelledMatches: number;
             totalRatings: number;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "updatedAt" | "totalTrips" | "averageRating" | "lastCalculatedAt" | "overallScore" | "verificationScore" | "activityScore" | "feedbackScore" | "responseScore" | "successfulMatches" | "cancelledMatches" | "totalRatings" | "badges") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "updatedAt" | "totalTrips" | "averageRating" | "lastCalculatedAt" | "overallScore" | "verificationScore" | "activityScore" | "feedbackScore" | "responseScore" | "successfulMatches" | "cancelledMatches" | "totalRatings" | "badges") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_overall_score: ["overallScore", "_creationTime"];
@@ -22856,11 +22856,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"partnerRequestSaves">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             requestId: import("convex/values").GenericId<"travelPartnerRequests">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "requestId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "requestId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_request: ["requestId", "_creationTime"];
@@ -22875,17 +22875,17 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"poiAnswers">;
             _creationTime: number;
-            updatedAt?: number | undefined;
-            imageUrls?: string[] | undefined;
-            poiId?: import("convex/values").GenericId<"pois"> | undefined;
             authorName?: string | undefined;
+            imageUrls?: string[] | undefined;
+            updatedAt?: number | undefined;
+            poiId?: import("convex/values").GenericId<"pois"> | undefined;
             authorAvatarUrl?: string | undefined;
             isBestAnswer?: boolean | undefined;
             authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
             content: string;
-            userId: string;
             createdAt: number;
             commentsCount: number;
+            userId: string;
             isEdited: boolean;
             isDeleted: boolean;
             reportCount: number;
@@ -22896,7 +22896,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             isAccepted: boolean;
             isVerifiedAuthor: boolean;
         };
-        fieldPaths: ("content" | "userId" | "_creationTime" | "createdAt" | "commentsCount" | "updatedAt" | "imageUrls" | "poiId" | "authorName" | "isEdited" | "isDeleted" | "reportCount" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "questionId" | "isAccepted" | "isBestAnswer" | "isVerifiedAuthor" | "authorBadgeType") | "_id";
+        fieldPaths: ("content" | "createdAt" | "authorName" | "imageUrls" | "commentsCount" | "userId" | "_creationTime" | "updatedAt" | "poiId" | "isEdited" | "isDeleted" | "reportCount" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "questionId" | "isAccepted" | "isBestAnswer" | "isVerifiedAuthor" | "authorBadgeType") | "_id";
         indexes: {
             by_question: ["questionId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -22913,10 +22913,10 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"poiQuestions">;
             _creationTime: number;
+            authorName?: string | undefined;
+            imageUrls?: string[] | undefined;
             tags?: string[] | undefined;
             updatedAt?: number | undefined;
-            imageUrls?: string[] | undefined;
-            authorName?: string | undefined;
             isDeleted?: boolean | undefined;
             acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
             bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -22924,15 +22924,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             upvotesCount?: number | undefined;
             downvotesCount?: number | undefined;
             authorAvatarUrl?: string | undefined;
-            status: "open" | "resolved" | "answered" | "closed";
-            title: string;
             content: string;
+            status: "open" | "resolved" | "answered" | "closed";
+            createdAt: number;
+            title: string;
+            viewsCount: number;
             userId: string;
             followersCount: number;
-            createdAt: number;
             category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
             poiId: import("convex/values").GenericId<"pois">;
-            viewsCount: number;
             isEdited: boolean;
             reportCount: number;
             answersCount: number;
@@ -22940,7 +22940,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             isHidden: boolean;
             lastActivityAt: number;
         };
-        fieldPaths: ("tags" | "status" | "title" | "content" | "userId" | "followersCount" | "_creationTime" | "createdAt" | "updatedAt" | "category" | "imageUrls" | "poiId" | "authorName" | "viewsCount" | "isEdited" | "isDeleted" | "reportCount" | "answersCount" | "acceptedAnswerId" | "bestAnswerId" | "hasBestAnswer" | "isPinned" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "lastActivityAt") | "_id";
+        fieldPaths: ("content" | "status" | "createdAt" | "title" | "authorName" | "imageUrls" | "tags" | "viewsCount" | "userId" | "followersCount" | "_creationTime" | "updatedAt" | "category" | "poiId" | "isEdited" | "isDeleted" | "reportCount" | "answersCount" | "acceptedAnswerId" | "bestAnswerId" | "hasBestAnswer" | "isPinned" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "lastActivityAt") | "_id";
         indexes: {
             by_poi: ["poiId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -22966,12 +22966,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"answerVotes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             voteType: "up" | "down";
             answerId: import("convex/values").GenericId<"poiAnswers">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "voteType" | "answerId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "voteType" | "answerId") | "_id";
         indexes: {
             by_answer: ["answerId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -22989,14 +22989,14 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             updatedAt?: number | undefined;
             parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
             content: string;
-            userId: string;
             createdAt: number;
             likesCount: number;
+            userId: string;
             isEdited: boolean;
             isDeleted: boolean;
             answerId: import("convex/values").GenericId<"poiAnswers">;
         };
-        fieldPaths: ("content" | "userId" | "_creationTime" | "createdAt" | "likesCount" | "updatedAt" | "parentId" | "isEdited" | "isDeleted" | "answerId") | "_id";
+        fieldPaths: ("content" | "createdAt" | "likesCount" | "userId" | "_creationTime" | "updatedAt" | "parentId" | "isEdited" | "isDeleted" | "answerId") | "_id";
         indexes: {
             by_answer: ["answerId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -23012,11 +23012,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"questionFollowers">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             questionId: import("convex/values").GenericId<"poiQuestions">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "questionId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "questionId") | "_id";
         indexes: {
             by_question: ["questionId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -23035,12 +23035,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             reviewedBy?: string | undefined;
             reviewedAt?: number | undefined;
             status: "pending" | "reviewed" | "resolved" | "dismissed";
-            userId: string;
             createdAt: number;
+            userId: string;
             reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
             questionId: import("convex/values").GenericId<"poiQuestions">;
         };
-        fieldPaths: ("status" | "description" | "userId" | "_creationTime" | "createdAt" | "reason" | "reviewedBy" | "reviewedAt" | "questionId") | "_id";
+        fieldPaths: ("status" | "createdAt" | "description" | "userId" | "_creationTime" | "reason" | "reviewedBy" | "reviewedAt" | "questionId") | "_id";
         indexes: {
             by_question: ["questionId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -23060,12 +23060,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             reviewedBy?: string | undefined;
             reviewedAt?: number | undefined;
             status: "pending" | "reviewed" | "resolved" | "dismissed";
-            userId: string;
             createdAt: number;
+            userId: string;
             reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
             answerId: import("convex/values").GenericId<"poiAnswers">;
         };
-        fieldPaths: ("status" | "description" | "userId" | "_creationTime" | "createdAt" | "reason" | "reviewedBy" | "reviewedAt" | "answerId") | "_id";
+        fieldPaths: ("status" | "createdAt" | "description" | "userId" | "_creationTime" | "reason" | "reviewedBy" | "reviewedAt" | "answerId") | "_id";
         indexes: {
             by_answer: ["answerId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -23086,7 +23086,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 lang: string;
             }[] | undefined;
             usageContext?: string | undefined;
-            category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+            category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
             sortOrder: number;
             sourceText: string;
             sourceLang: string;
@@ -23121,9 +23121,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             notes?: string | undefined;
             imageUrl?: string | undefined;
             audioUrl?: string | undefined;
+            createdAt: number;
             targetLang: string;
             userId: string;
-            createdAt: number;
             lastUsedAt: number;
             usageCount: number;
             sourceText: string;
@@ -23132,7 +23132,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             translationType: "text" | "photo" | "voice";
             isFavorite: boolean;
         };
-        fieldPaths: ("targetLang" | "userId" | "_creationTime" | "createdAt" | "notes" | "lastUsedAt" | "imageUrl" | "usageCount" | "sourceText" | "sourceLang" | "targetText" | "translationType" | "audioUrl" | "isFavorite") | "_id";
+        fieldPaths: ("createdAt" | "targetLang" | "userId" | "_creationTime" | "notes" | "lastUsedAt" | "imageUrl" | "usageCount" | "sourceText" | "sourceLang" | "targetText" | "translationType" | "audioUrl" | "isFavorite") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_type: ["userId", "translationType", "_creationTime"];
@@ -23153,12 +23153,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"offlineTranslationPacks">;
             _creationTime: number;
+            createdAt: number;
             name: string;
+            version: string;
             description: string;
             targetLang: string;
-            createdAt: number;
             updatedAt: number;
-            version: string;
             isActive: boolean;
             sourceLang: string;
             phraseCount: number;
@@ -23166,7 +23166,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             downloadUrl: string;
             categories: string[];
         };
-        fieldPaths: ("name" | "description" | "targetLang" | "_creationTime" | "createdAt" | "updatedAt" | "version" | "isActive" | "sourceLang" | "phraseCount" | "downloadSize" | "downloadUrl" | "categories") | "_id";
+        fieldPaths: ("createdAt" | "name" | "version" | "description" | "targetLang" | "_creationTime" | "updatedAt" | "isActive" | "sourceLang" | "phraseCount" | "downloadSize" | "downloadUrl" | "categories") | "_id";
         indexes: {
             by_source_lang: ["sourceLang", "_creationTime"];
             by_target_lang: ["targetLang", "_creationTime"];
@@ -23222,15 +23222,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             featuredAt?: number | undefined;
             featuredBy?: string | undefined;
             status: "approved" | "rejected" | "hidden" | "pending";
-            userId: string;
             createdAt: number;
             likesCount: number;
-            poiId: import("convex/values").GenericId<"pois">;
             viewsCount: number;
+            userId: string;
+            poiId: import("convex/values").GenericId<"pois">;
             imageUrl: string;
             isFeatured: boolean;
         };
-        fieldPaths: ("status" | "userId" | "_creationTime" | "createdAt" | "likesCount" | "updatedAt" | "category" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "poiId" | "viewsCount" | "location" | "caption" | "imageUrl" | "userName" | "userAvatarUrl" | "thumbnailUrl" | "width" | "height" | "takenAt" | "isFeatured" | "featuredAt" | "featuredBy" | "location.latitude" | "location.longitude") | "_id";
+        fieldPaths: ("status" | "createdAt" | "likesCount" | "viewsCount" | "userId" | "_creationTime" | "updatedAt" | "category" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "poiId" | "location" | "caption" | "imageUrl" | "userName" | "userAvatarUrl" | "thumbnailUrl" | "width" | "height" | "takenAt" | "isFeatured" | "featuredAt" | "featuredBy" | "location.latitude" | "location.longitude") | "_id";
         indexes: {
             by_poi: ["poiId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -23252,11 +23252,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"poiPhotoLikes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             photoId: import("convex/values").GenericId<"poiPhotos">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "photoId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "photoId") | "_id";
         indexes: {
             by_photo: ["photoId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -23299,7 +23299,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             scheduledDeparture: number;
             scheduledArrival: number;
         };
-        fieldPaths: ("duration" | "status" | "distance" | "_creationTime" | "lastUpdated" | "flightNumber" | "airline" | "airlineCode" | "departureAirport" | "departureAirportName" | "departureCity" | "departureTerminal" | "departureGate" | "arrivalAirport" | "arrivalAirportName" | "arrivalCity" | "arrivalTerminal" | "arrivalGate" | "departureDate" | "scheduledDeparture" | "scheduledArrival" | "estimatedDeparture" | "estimatedArrival" | "actualDeparture" | "actualArrival" | "aircraftType" | "codeshares" | "delayReason") | "_id";
+        fieldPaths: ("status" | "duration" | "distance" | "_creationTime" | "lastUpdated" | "flightNumber" | "airline" | "airlineCode" | "departureAirport" | "departureAirportName" | "departureCity" | "departureTerminal" | "departureGate" | "arrivalAirport" | "arrivalAirportName" | "arrivalCity" | "arrivalTerminal" | "arrivalGate" | "departureDate" | "scheduledDeparture" | "scheduledArrival" | "estimatedDeparture" | "estimatedArrival" | "actualDeparture" | "actualArrival" | "aircraftType" | "codeshares" | "delayReason") | "_id";
         indexes: {
             by_flight_number: ["flightNumber", "_creationTime"];
             by_flight_number_date: ["flightNumber", "departureDate", "_creationTime"];
@@ -23329,9 +23329,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             baggageAllowance?: string | undefined;
             frequentFlyerNumber?: string | undefined;
             importedFrom?: string | undefined;
-            status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-            userId: string;
+            status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
             createdAt: number;
+            userId: string;
             updatedAt: number;
             flightId: import("convex/values").GenericId<"flights">;
             confirmationCode: string;
@@ -23340,7 +23340,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             departureTime: number;
             arrivalTime: number;
         };
-        fieldPaths: ("status" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "notes" | "itineraryId" | "checkInTime" | "rawEmailContent" | "flightId" | "confirmationCode" | "passengerName" | "passengerEmail" | "passengerPhone" | "seatNumber" | "cabinClass" | "departureTime" | "arrivalTime" | "ticketNumber" | "mealPreference" | "specialRequests" | "baggageAllowance" | "frequentFlyerNumber" | "importedFrom") | "_id";
+        fieldPaths: ("status" | "createdAt" | "userId" | "_creationTime" | "updatedAt" | "notes" | "itineraryId" | "checkInTime" | "rawEmailContent" | "flightId" | "confirmationCode" | "passengerName" | "passengerEmail" | "passengerPhone" | "seatNumber" | "cabinClass" | "departureTime" | "arrivalTime" | "ticketNumber" | "mealPreference" | "specialRequests" | "baggageAllowance" | "frequentFlyerNumber" | "importedFrom") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_departure: ["userId", "departureTime", "_creationTime"];
@@ -23411,17 +23411,17 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             visaTypeName: string;
             difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
             applicationMethods: {
-                email?: string | undefined;
                 url?: string | undefined;
+                email?: string | undefined;
                 phone?: string | undefined;
                 nameEn?: string | undefined;
                 address?: string | undefined;
                 notes?: string | undefined;
-                name: string;
                 method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+                name: string;
             }[];
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "updatedAt" | "source" | "sourceUrl" | "verifiedBy" | "requiredDocuments" | "lastVerifiedAt" | "serviceFee" | "originCountryCode" | "originCountryName" | "originCountryNameEn" | "destinationCountryCode" | "destinationCountryName" | "destinationCountryNameEn" | "visaType" | "visaTypeName" | "visaTypeNameEn" | "difficultyLevel" | "maxStayDays" | "validityPeriod" | "entryType" | "processingTime" | "processingTimeMin" | "processingTimeMax" | "expressFee" | "expressProcessingTime" | "visaFee" | "visaFeeCurrency" | "applicationMethods" | "entryRequirements" | "specialNotes" | "warnings" | "eVisaUrl" | "eVisaProcessingDays" | "voaPorts" | "voaFee" | "voaFeeCurrency" | "entryRequirements.travelInsurance" | "entryRequirements.passportValidity" | "entryRequirements.blankPages" | "entryRequirements.onwardTicket" | "entryRequirements.hotelBooking" | "entryRequirements.financialProof" | "entryRequirements.invitationLetter" | "entryRequirements.returnTicket" | "entryRequirements.additionalRequirements") | "_id";
+        fieldPaths: ("createdAt" | "sourceUrl" | "_creationTime" | "updatedAt" | "source" | "verifiedBy" | "requiredDocuments" | "lastVerifiedAt" | "serviceFee" | "originCountryCode" | "originCountryName" | "originCountryNameEn" | "destinationCountryCode" | "destinationCountryName" | "destinationCountryNameEn" | "visaType" | "visaTypeName" | "visaTypeNameEn" | "difficultyLevel" | "maxStayDays" | "validityPeriod" | "entryType" | "processingTime" | "processingTimeMin" | "processingTimeMax" | "expressFee" | "expressProcessingTime" | "visaFee" | "visaFeeCurrency" | "applicationMethods" | "entryRequirements" | "specialNotes" | "warnings" | "eVisaUrl" | "eVisaProcessingDays" | "voaPorts" | "voaFee" | "voaFeeCurrency" | "entryRequirements.travelInsurance" | "entryRequirements.passportValidity" | "entryRequirements.blankPages" | "entryRequirements.onwardTicket" | "entryRequirements.hotelBooking" | "entryRequirements.financialProof" | "entryRequirements.invitationLetter" | "entryRequirements.returnTicket" | "entryRequirements.additionalRequirements") | "_id";
         indexes: {
             by_origin: ["originCountryCode", "_creationTime"];
             by_destination: ["destinationCountryCode", "_creationTime"];
@@ -23448,8 +23448,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 isCompleted: boolean;
             }[] | undefined;
             status: "completed" | "pending" | "dismissed" | "sent";
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             travelDate: number;
             destinationCountryCode: string;
@@ -23457,7 +23457,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             visaType: "visa_free" | "visa_on_arrival" | "e_visa" | "standard_visa" | "transit_visa" | "work_visa" | "student_visa" | "business_visa";
             reminderDate: number;
         };
-        fieldPaths: ("status" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "notes" | "itineraryId" | "sentAt" | "travelDate" | "destinationCountryCode" | "destinationCountryName" | "visaType" | "visaRequirementId" | "reminderDate" | "checklist") | "_id";
+        fieldPaths: ("status" | "createdAt" | "userId" | "_creationTime" | "updatedAt" | "notes" | "itineraryId" | "sentAt" | "travelDate" | "destinationCountryCode" | "destinationCountryName" | "visaType" | "visaRequirementId" | "reminderDate" | "checklist") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_itinerary: ["itineraryId", "_creationTime"];
@@ -23490,9 +23490,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             resultDate?: number | undefined;
             applicationNumber?: string | undefined;
             visaNumber?: string | undefined;
-            status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-            userId: string;
+            status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
             createdAt: number;
+            userId: string;
             updatedAt: number;
             destinationCountryCode: string;
             destinationCountryName: string;
@@ -23500,7 +23500,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             applicationMethod: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
             plannedTravelDate: number;
         };
-        fieldPaths: ("status" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "notes" | "itineraryId" | "validFrom" | "validUntil" | "rejectionReason" | "documents" | "destinationCountryCode" | "destinationCountryName" | "visaType" | "visaRequirementId" | "applicationMethod" | "plannedTravelDate" | "applicationDate" | "expectedResultDate" | "resultDate" | "applicationNumber" | "visaNumber") | "_id";
+        fieldPaths: ("status" | "createdAt" | "userId" | "_creationTime" | "updatedAt" | "notes" | "itineraryId" | "validFrom" | "validUntil" | "rejectionReason" | "documents" | "destinationCountryCode" | "destinationCountryName" | "visaType" | "visaRequirementId" | "applicationMethod" | "plannedTravelDate" | "applicationDate" | "expectedResultDate" | "resultDate" | "applicationNumber" | "visaNumber") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_itinerary: ["itineraryId", "_creationTime"];
@@ -23538,10 +23538,10 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             targetCountryNameEn?: string | undefined;
             addressEn?: string | undefined;
             appointmentUrl?: string | undefined;
-            type: "embassy" | "consulate" | "visa_center" | "agency";
-            name: string;
-            city: string;
             createdAt: number;
+            name: string;
+            type: "embassy" | "consulate" | "visa_center" | "agency";
+            city: string;
             updatedAt: number;
             countryCode: string;
             address: string;
@@ -23550,7 +23550,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             targetCountryName: string;
             appointmentRequired: boolean;
         };
-        fieldPaths: ("email" | "type" | "name" | "city" | "latitude" | "longitude" | "services" | "phone" | "_creationTime" | "createdAt" | "updatedAt" | "nameEn" | "countryCode" | "address" | "businessHours" | "businessHours.monday" | "businessHours.tuesday" | "businessHours.wednesday" | "businessHours.thursday" | "businessHours.friday" | "businessHours.saturday" | "businessHours.sunday" | "businessHours.notes" | "isActive" | "website" | "cityEn" | "targetCountryCode" | "targetCountryName" | "targetCountryNameEn" | "addressEn" | "appointmentRequired" | "appointmentUrl") | "_id";
+        fieldPaths: ("createdAt" | "name" | "type" | "email" | "city" | "latitude" | "longitude" | "services" | "phone" | "_creationTime" | "updatedAt" | "nameEn" | "countryCode" | "address" | "businessHours" | "businessHours.monday" | "businessHours.tuesday" | "businessHours.wednesday" | "businessHours.thursday" | "businessHours.friday" | "businessHours.saturday" | "businessHours.sunday" | "businessHours.notes" | "isActive" | "website" | "cityEn" | "targetCountryCode" | "targetCountryName" | "targetCountryNameEn" | "addressEn" | "appointmentRequired" | "appointmentUrl") | "_id";
         indexes: {
             by_country: ["countryCode", "_creationTime"];
             by_target_country: ["targetCountryCode", "_creationTime"];
@@ -23573,9 +23573,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             maxViews?: number | undefined;
             lastAccessedAt?: number | undefined;
             createdAt: number;
+            platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
             updatedAt: number;
             viewCount: number;
-            platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
             isActive: boolean;
             shareCode: string;
             saveCount: number;
@@ -23588,7 +23588,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             allowCopy: boolean;
             clickCount: number;
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "updatedAt" | "viewCount" | "platform" | "isActive" | "password" | "expiresAt" | "shareCode" | "saveCount" | "resourceType" | "resourceId" | "ownerId" | "shareUrl" | "permission" | "maxViews" | "allowDownload" | "allowCopy" | "clickCount" | "lastAccessedAt") | "_id";
+        fieldPaths: ("createdAt" | "platform" | "_creationTime" | "updatedAt" | "viewCount" | "isActive" | "password" | "expiresAt" | "shareCode" | "saveCount" | "resourceType" | "resourceId" | "ownerId" | "shareUrl" | "permission" | "maxViews" | "allowDownload" | "allowCopy" | "clickCount" | "lastAccessedAt") | "_id";
         indexes: {
             by_share_code: ["shareCode", "_creationTime"];
             by_resource: ["resourceType", "resourceId", "_creationTime"];
@@ -23613,9 +23613,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
             resourceType: "itinerary" | "travelGuide" | "travelNote";
             resourceId: string;
-            eventType: "share" | "click" | "view" | "save";
+            eventType: "click" | "share" | "view" | "save";
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "platform" | "resourceType" | "resourceId" | "shareUrl" | "sharerId" | "shareLinkId" | "eventType") | "_id";
+        fieldPaths: ("createdAt" | "platform" | "_creationTime" | "resourceType" | "resourceId" | "shareUrl" | "sharerId" | "shareLinkId" | "eventType") | "_id";
         indexes: {
             by_resource: ["resourceType", "resourceId", "_creationTime"];
             by_sharer: ["sharerId", "_creationTime"];
@@ -23641,9 +23641,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
             resourceType: "itinerary" | "travelGuide" | "travelNote";
             resourceId: string;
-            eventType: "share" | "click" | "view" | "save";
+            eventType: "click" | "share" | "view" | "save";
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "platform" | "resourceType" | "resourceId" | "shareLinkId" | "eventType" | "referrer" | "userAgent" | "ipHash") | "_id";
+        fieldPaths: ("createdAt" | "platform" | "_creationTime" | "resourceType" | "resourceId" | "shareLinkId" | "eventType" | "referrer" | "userAgent" | "ipHash") | "_id";
         indexes: {
             by_share_link: ["shareLinkId", "_creationTime"];
             by_resource: ["resourceType", "resourceId", "_creationTime"];
@@ -23676,7 +23676,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             airlineCode: string;
             airlineName: string;
         };
-        fieldPaths: ("_creationTime" | "createdAt" | "updatedAt" | "requiredDocuments" | "airlineCode" | "airlineName" | "airlineNameEn" | "baggageServicePhone" | "baggageServiceEmail" | "baggageServiceUrl" | "trackingUrl" | "reportInstructions" | "reportInstructionsEn" | "compensationPolicy" | "compensationPolicyEn" | "maxCompensationAmount" | "claimDeadlineDays") | "_id";
+        fieldPaths: ("createdAt" | "_creationTime" | "updatedAt" | "requiredDocuments" | "airlineCode" | "airlineName" | "airlineNameEn" | "baggageServicePhone" | "baggageServiceEmail" | "baggageServiceUrl" | "trackingUrl" | "reportInstructions" | "reportInstructionsEn" | "compensationPolicy" | "compensationPolicyEn" | "maxCompensationAmount" | "claimDeadlineDays") | "_id";
         indexes: {
             by_airline_code: ["airlineCode", "_creationTime"];
             by_id: ["_id"];
@@ -23689,6 +23689,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"localEvents">;
             _creationTime: number;
+            sourceUrl?: string | undefined;
+            coverImageUrl?: string | undefined;
+            imageUrls?: string[] | undefined;
             tags?: string[] | undefined;
             latitude?: number | undefined;
             longitude?: number | undefined;
@@ -23699,12 +23702,9 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             externalId?: string | undefined;
             rating?: number | undefined;
             ratingCount?: number | undefined;
-            imageUrls?: string[] | undefined;
             source?: string | undefined;
-            coverImageUrl?: string | undefined;
             startTime?: string | undefined;
             endTime?: string | undefined;
-            sourceUrl?: string | undefined;
             highlights?: string[] | undefined;
             officialWebsite?: string | undefined;
             isFeatured?: boolean | undefined;
@@ -23728,11 +23728,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             organizerPhone?: string | undefined;
             organizerEmail?: string | undefined;
             status: "cancelled" | "upcoming" | "ongoing" | "ended";
+            createdAt: number;
             name: string;
             description: string;
             startDate: string;
             endDate: string;
-            createdAt: number;
             updatedAt: number;
             cityId: import("convex/values").GenericId<"cities">;
             viewCount: number;
@@ -23743,7 +23743,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             eventType: "other" | "food" | "festival" | "concert" | "exhibition" | "sports" | "cultural" | "market" | "performance" | "religious" | "seasonal" | "local_custom";
             isAllDay: boolean;
         };
-        fieldPaths: ("tags" | "status" | "name" | "description" | "latitude" | "longitude" | "startDate" | "endDate" | "tips" | "_creationTime" | "createdAt" | "updatedAt" | "nameEn" | "cityId" | "descriptionEn" | "currency" | "externalId" | "rating" | "ratingCount" | "imageUrls" | "source" | "viewCount" | "isRecurring" | "coverImageUrl" | "startTime" | "endTime" | "sourceUrl" | "highlights" | "isVerified" | "isFree" | "officialWebsite" | "saveCount" | "isFeatured" | "eventType" | "venue" | "venueAddress" | "isAllDay" | "recurrencePattern" | "ticketPrice" | "ticketPriceMax" | "ticketUrl" | "requiresBooking" | "organizerName" | "organizerPhone" | "organizerEmail" | "recurrencePattern.type" | "recurrencePattern.day" | "recurrencePattern.month" | "recurrencePattern.isLunarCalendar" | "recurrencePattern.lunarMonth" | "recurrencePattern.lunarDay" | "recurrencePattern.weekOfMonth" | "recurrencePattern.dayOfWeek") | "_id";
+        fieldPaths: ("status" | "createdAt" | "name" | "description" | "sourceUrl" | "coverImageUrl" | "imageUrls" | "tags" | "latitude" | "longitude" | "startDate" | "endDate" | "tips" | "_creationTime" | "updatedAt" | "nameEn" | "cityId" | "descriptionEn" | "currency" | "externalId" | "rating" | "ratingCount" | "source" | "viewCount" | "isRecurring" | "startTime" | "endTime" | "highlights" | "isVerified" | "isFree" | "officialWebsite" | "saveCount" | "isFeatured" | "eventType" | "venue" | "venueAddress" | "isAllDay" | "recurrencePattern" | "ticketPrice" | "ticketPriceMax" | "ticketUrl" | "requiresBooking" | "organizerName" | "organizerPhone" | "organizerEmail" | "recurrencePattern.type" | "recurrencePattern.day" | "recurrencePattern.month" | "recurrencePattern.isLunarCalendar" | "recurrencePattern.lunarMonth" | "recurrencePattern.lunarDay" | "recurrencePattern.weekOfMonth" | "recurrencePattern.dayOfWeek") | "_id";
         indexes: {
             by_city: ["cityId", "_creationTime"];
             by_city_type: ["cityId", "eventType", "_creationTime"];
@@ -23765,11 +23765,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"eventFavorites">;
             _creationTime: number;
             notes?: string | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             eventId: import("convex/values").GenericId<"localEvents">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "notes" | "eventId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "notes" | "eventId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_event: ["eventId", "_creationTime"];
@@ -23789,8 +23789,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             minutesBefore?: number | undefined;
             triggeredAt?: number | undefined;
             readAt?: number | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             reminderType: "custom" | "event_start" | "booking_open";
             isTriggered: boolean;
@@ -23798,7 +23798,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             isRead: boolean;
             eventId: import("convex/values").GenericId<"localEvents">;
         };
-        fieldPaths: ("message" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "reminderType" | "minutesBefore" | "isTriggered" | "triggeredAt" | "reminderTime" | "isRead" | "readAt" | "eventId") | "_id";
+        fieldPaths: ("createdAt" | "message" | "userId" | "_creationTime" | "updatedAt" | "reminderType" | "minutesBefore" | "isTriggered" | "triggeredAt" | "reminderTime" | "isRead" | "readAt" | "eventId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_event: ["eventId", "_creationTime"];
@@ -23816,18 +23816,18 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"eventReviews">;
             _creationTime: number;
-            updatedAt?: number | undefined;
             imageUrls?: string[] | undefined;
+            updatedAt?: number | undefined;
             pros?: string[] | undefined;
             cons?: string[] | undefined;
             valueRating?: number | undefined;
             atmosphereRating?: number | undefined;
             organizationRating?: number | undefined;
             attendDate?: string | undefined;
-            status: "approved" | "rejected" | "pending";
             content: string;
-            userId: string;
+            status: "approved" | "rejected" | "pending";
             createdAt: number;
+            userId: string;
             rating: number;
             wouldRecommend: boolean;
             reportCount: number;
@@ -23835,7 +23835,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             helpfulCount: number;
             eventId: import("convex/values").GenericId<"localEvents">;
         };
-        fieldPaths: ("status" | "content" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "rating" | "imageUrls" | "wouldRecommend" | "reportCount" | "isVerified" | "helpfulCount" | "pros" | "cons" | "valueRating" | "eventId" | "atmosphereRating" | "organizationRating" | "attendDate") | "_id";
+        fieldPaths: ("content" | "status" | "createdAt" | "imageUrls" | "userId" | "_creationTime" | "updatedAt" | "rating" | "wouldRecommend" | "reportCount" | "isVerified" | "helpfulCount" | "pros" | "cons" | "valueRating" | "eventId" | "atmosphereRating" | "organizationRating" | "attendDate") | "_id";
         indexes: {
             by_event: ["eventId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -23853,12 +23853,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"eventReviewVotes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             voteType: "helpful" | "not_helpful";
             reviewId: import("convex/values").GenericId<"eventReviews">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "voteType" | "reviewId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "voteType" | "reviewId") | "_id";
         indexes: {
             by_review: ["reviewId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -23886,7 +23886,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             accessibilityNeeds: boolean;
             totalInteractions: number;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "lastUpdated" | "categoryScores" | "explicitPreferences" | "travelStyle" | "budgetLevel" | "pacePreference" | "preferLocalFood" | "preferOffBeatPlaces" | "accessibilityNeeds" | "totalInteractions" | `categoryScores.${string}`) | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "lastUpdated" | "categoryScores" | "explicitPreferences" | "travelStyle" | "budgetLevel" | "pacePreference" | "preferLocalFood" | "preferOffBeatPlaces" | "accessibilityNeeds" | "totalInteractions" | `categoryScores.${string}`) | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_id: ["_id"];
@@ -23899,15 +23899,15 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"userBehaviorEvents">;
             _creationTime: number;
+            createdAt: number;
             metadata: any;
             userId: string;
-            createdAt: number;
             targetType: "city" | "itinerary" | "poi" | "search" | "guide";
             targetId: string;
             categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
             behaviorType: "like" | "share" | "view" | "save" | "unsave" | "copy" | "unlike" | "search" | "poi_click" | "poi_add";
         };
-        fieldPaths: ("metadata" | "userId" | "_creationTime" | "createdAt" | "targetType" | "targetId" | "categories" | "behaviorType" | `metadata.${string}`) | "_id";
+        fieldPaths: ("createdAt" | "metadata" | "userId" | "_creationTime" | "targetType" | "targetId" | "categories" | "behaviorType" | `metadata.${string}`) | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_type: ["userId", "behaviorType", "_creationTime"];
@@ -23932,10 +23932,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 itemsRemoved: number;
                 itemsModified: number;
             } | undefined;
-            userId: string;
             createdAt: number;
-            itineraryId: import("convex/values").GenericId<"itineraries">;
-            versionNumber: number;
             snapshot: {
                 coverImageUrl?: string | undefined;
                 title: string;
@@ -23956,8 +23953,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 visibility: "public" | "private" | "team";
                 cityId: import("convex/values").GenericId<"cities">;
             };
+            userId: string;
+            itineraryId: import("convex/values").GenericId<"itineraries">;
+            versionNumber: number;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "itineraryId" | "versionNumber" | "versionNote" | "snapshot" | "changesSummary" | "changesCount" | "snapshot.title" | "snapshot.startDate" | "snapshot.endDate" | "snapshot.days" | "snapshot.visibility" | "snapshot.cityId" | "snapshot.coverImageUrl" | "changesCount.daysAdded" | "changesCount.daysRemoved" | "changesCount.itemsAdded" | "changesCount.itemsRemoved" | "changesCount.itemsModified") | "_id";
+        fieldPaths: ("createdAt" | "snapshot" | "userId" | "_creationTime" | "itineraryId" | "versionNumber" | "versionNote" | "changesSummary" | "changesCount" | "snapshot.title" | "snapshot.coverImageUrl" | "snapshot.startDate" | "snapshot.endDate" | "snapshot.days" | "snapshot.visibility" | "snapshot.cityId" | "changesCount.daysAdded" | "changesCount.daysRemoved" | "changesCount.itemsAdded" | "changesCount.itemsRemoved" | "changesCount.itemsModified") | "_id";
         indexes: {
             by_itinerary: ["itineraryId", "_creationTime"];
             by_itinerary_version: ["itineraryId", "versionNumber", "_creationTime"];
@@ -23973,18 +23973,18 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"poiQuestionsExtended">;
             _creationTime: number;
+            authorName?: string | undefined;
             tags?: string[] | undefined;
             updatedAt?: number | undefined;
-            authorName?: string | undefined;
             bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
             authorAvatarUrl?: string | undefined;
-            status: "open" | "resolved" | "closed";
-            title: string;
             content: string;
-            userId: string;
+            status: "open" | "resolved" | "closed";
             createdAt: number;
-            poiId: import("convex/values").GenericId<"pois">;
+            title: string;
             viewsCount: number;
+            userId: string;
+            poiId: import("convex/values").GenericId<"pois">;
             isEdited: boolean;
             isDeleted: boolean;
             reportCount: number;
@@ -23995,7 +23995,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             downvotesCount: number;
             lastActivityAt: number;
         };
-        fieldPaths: ("tags" | "status" | "title" | "content" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "poiId" | "authorName" | "viewsCount" | "isEdited" | "isDeleted" | "reportCount" | "answersCount" | "bestAnswerId" | "hasBestAnswer" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "lastActivityAt") | "_id";
+        fieldPaths: ("content" | "status" | "createdAt" | "title" | "authorName" | "tags" | "viewsCount" | "userId" | "_creationTime" | "updatedAt" | "poiId" | "isEdited" | "isDeleted" | "reportCount" | "answersCount" | "bestAnswerId" | "hasBestAnswer" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "lastActivityAt") | "_id";
         indexes: {
             by_poi: ["poiId", "_creationTime"];
             by_poi_status: ["poiId", "status", "_creationTime"];
@@ -24019,12 +24019,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"poiAnswersExtended">;
             _creationTime: number;
-            updatedAt?: number | undefined;
             authorName?: string | undefined;
+            updatedAt?: number | undefined;
             authorAvatarUrl?: string | undefined;
             content: string;
-            userId: string;
             createdAt: number;
+            userId: string;
             poiId: import("convex/values").GenericId<"pois">;
             isEdited: boolean;
             isDeleted: boolean;
@@ -24035,7 +24035,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             questionId: import("convex/values").GenericId<"poiQuestions">;
             isBestAnswer: boolean;
         };
-        fieldPaths: ("content" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "poiId" | "authorName" | "isEdited" | "isDeleted" | "reportCount" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "questionId" | "isBestAnswer") | "_id";
+        fieldPaths: ("content" | "createdAt" | "authorName" | "userId" | "_creationTime" | "updatedAt" | "poiId" | "isEdited" | "isDeleted" | "reportCount" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "questionId" | "isBestAnswer") | "_id";
         indexes: {
             by_question: ["questionId", "_creationTime"];
             by_question_best: ["questionId", "isBestAnswer", "_creationTime"];
@@ -24053,12 +24053,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"poiQuestionVotes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             voteType: "up" | "down";
             questionId: import("convex/values").GenericId<"poiQuestions">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "voteType" | "questionId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "voteType" | "questionId") | "_id";
         indexes: {
             by_question: ["questionId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -24073,12 +24073,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"poiAnswerVotes">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             voteType: "up" | "down";
             answerId: import("convex/values").GenericId<"poiAnswers">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "voteType" | "answerId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "voteType" | "answerId") | "_id";
         indexes: {
             by_answer: ["answerId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -24098,13 +24098,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             reviewedAt?: number | undefined;
             actionTaken?: string | undefined;
             status: "pending" | "reviewed" | "dismissed" | "actioned";
-            userId: string;
             createdAt: number;
+            userId: string;
             targetType: "question" | "answer";
             targetId: string;
             reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
         };
-        fieldPaths: ("status" | "description" | "userId" | "_creationTime" | "createdAt" | "targetType" | "targetId" | "reason" | "reviewedBy" | "reviewedAt" | "actionTaken") | "_id";
+        fieldPaths: ("status" | "createdAt" | "description" | "userId" | "_creationTime" | "targetType" | "targetId" | "reason" | "reviewedBy" | "reviewedAt" | "actionTaken") | "_id";
         indexes: {
             by_target: ["targetType", "targetId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -24121,8 +24121,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _id: import("convex/values").GenericId<"contentTranslations">;
             _creationTime: number;
             translatedBy?: string | undefined;
-            value: string;
             createdAt: number;
+            value: string;
             updatedAt: number;
             field: string;
             entityType: string;
@@ -24130,7 +24130,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             language: string;
             isAutoTranslated: boolean;
         };
-        fieldPaths: ("value" | "_creationTime" | "createdAt" | "updatedAt" | "field" | "entityType" | "entityId" | "language" | "isAutoTranslated" | "translatedBy") | "_id";
+        fieldPaths: ("createdAt" | "value" | "_creationTime" | "updatedAt" | "field" | "entityType" | "entityId" | "language" | "isAutoTranslated" | "translatedBy") | "_id";
         indexes: {
             by_entity: ["entityType", "entityId", "_creationTime"];
             by_entity_field_language: ["entityType", "entityId", "field", "language", "_creationTime"];
@@ -24163,11 +24163,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"rateLimits">;
             _creationTime: number;
+            key: string;
             count: number;
             expiresAt: number;
-            key: string;
         };
-        fieldPaths: ("count" | "_creationTime" | "expiresAt" | "key") | "_id";
+        fieldPaths: ("key" | "count" | "_creationTime" | "expiresAt") | "_id";
         indexes: {
             by_key: ["key", "_creationTime"];
             by_id: ["_id"];
@@ -24180,23 +24180,23 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"foodReviews">;
             _creationTime: number;
-            tags?: string[] | undefined;
-            title?: string | undefined;
             content?: string | undefined;
+            title?: string | undefined;
             imageUrls?: string[] | undefined;
+            tags?: string[] | undefined;
             visitDate?: string | undefined;
             helpfulCount?: number | undefined;
             dishesOrdered?: string[] | undefined;
             recommendedDishes?: string[] | undefined;
             pricePerPerson?: number | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             rating: number;
             wouldRecommend: boolean;
             restaurantId: import("convex/values").GenericId<"pois">;
         };
-        fieldPaths: ("tags" | "title" | "content" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "rating" | "imageUrls" | "visitDate" | "wouldRecommend" | "helpfulCount" | "restaurantId" | "dishesOrdered" | "recommendedDishes" | "pricePerPerson") | "_id";
+        fieldPaths: ("content" | "createdAt" | "title" | "imageUrls" | "tags" | "userId" | "_creationTime" | "updatedAt" | "rating" | "visitDate" | "wouldRecommend" | "helpfulCount" | "restaurantId" | "dishesOrdered" | "recommendedDishes" | "pricePerPerson") | "_id";
         indexes: {
             by_restaurant: ["restaurantId", "_creationTime"];
             by_restaurant_user: ["restaurantId", "userId", "_creationTime"];
@@ -24211,11 +24211,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"foodReviewHelpful">;
             _creationTime: number;
-            userId: string;
             createdAt: number;
+            userId: string;
             reviewId: import("convex/values").GenericId<"foodReviews">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "reviewId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "reviewId") | "_id";
         indexes: {
             by_review: ["reviewId", "_creationTime"];
             by_review_user: ["reviewId", "userId", "_creationTime"];
@@ -24232,14 +24232,14 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             description?: string | undefined;
             coverImageUrl?: string | undefined;
+            createdAt: number;
             name: string;
             userId: string;
-            createdAt: number;
             updatedAt: number;
             isPublic: boolean;
             itemCount: number;
         };
-        fieldPaths: ("name" | "description" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "coverImageUrl" | "isPublic" | "itemCount") | "_id";
+        fieldPaths: ("createdAt" | "name" | "description" | "coverImageUrl" | "userId" | "_creationTime" | "updatedAt" | "isPublic" | "itemCount") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_public: ["isPublic", "_creationTime"];
@@ -24255,11 +24255,11 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             _creationTime: number;
             notes?: string | undefined;
             collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-            userId: string;
             createdAt: number;
+            userId: string;
             restaurantId: import("convex/values").GenericId<"pois">;
         };
-        fieldPaths: ("userId" | "_creationTime" | "createdAt" | "notes" | "collectionId" | "restaurantId") | "_id";
+        fieldPaths: ("createdAt" | "userId" | "_creationTime" | "notes" | "collectionId" | "restaurantId") | "_id";
         indexes: {
             by_user: ["userId", "_creationTime"];
             by_user_restaurant: ["userId", "restaurantId", "_creationTime"];
@@ -24292,7 +24292,6 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
         document: {
             _id: import("convex/values").GenericId<"currencyHistory">;
             _creationTime: number;
-            days: number;
             data: {
                 base: string;
                 rates: {
@@ -24303,11 +24302,12 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
                 change: number;
                 trend: "up" | "down" | "stable";
             };
+            days: number;
             fetchedAt: number;
             base: string;
             target: string;
         };
-        fieldPaths: ("days" | "data" | "_creationTime" | "fetchedAt" | "base" | "target" | "data.base" | "data.rates" | "data.target" | "data.change" | "data.trend") | "_id";
+        fieldPaths: ("data" | "days" | "_creationTime" | "fetchedAt" | "base" | "target" | "data.base" | "data.rates" | "data.target" | "data.change" | "data.trend") | "_id";
         indexes: {
             by_pair: ["base", "target", "_creationTime"];
             by_pair_days: ["base", "target", "days", "_creationTime"];
@@ -24328,19 +24328,19 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             currentNode?: string | undefined;
             interruptData?: any;
             status: "completed" | "active" | "expired" | "paused";
+            createdAt: number;
             messages: {
                 toolCalls?: any;
                 toolName?: string | undefined;
+                role: "ai" | "human" | "tool" | "system";
                 content: string;
                 timestamp: number;
-                role: "ai" | "human" | "tool" | "system";
             }[];
             sessionId: string;
-            createdAt: number;
             updatedAt: number;
             sessionType: "chat" | "travel_plan" | "enrichment";
         };
-        fieldPaths: ("metadata" | "status" | "messages" | "sessionId" | "userId" | "_creationTime" | "createdAt" | "updatedAt" | "expiresAt" | `metadata.${string}` | "sessionType" | "currentNode" | "interruptData" | `interruptData.${string}`) | "_id";
+        fieldPaths: ("status" | "createdAt" | "metadata" | "messages" | "sessionId" | "userId" | "_creationTime" | "updatedAt" | "expiresAt" | `metadata.${string}` | "sessionType" | "currentNode" | "interruptData" | `interruptData.${string}`) | "_id";
         indexes: {
             by_session: ["sessionId", "_creationTime"];
             by_user: ["userId", "_creationTime"];
@@ -24368,7 +24368,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             channelVersions: any;
             versionsSeen: any;
         };
-        fieldPaths: ("metadata" | "_creationTime" | "createdAt" | `metadata.${string}` | "threadId" | "checkpointNs" | "checkpointId" | "parentCheckpointId" | "channelValues" | "channelVersions" | "versionsSeen" | "pendingSends" | `channelValues.${string}` | `channelVersions.${string}` | `versionsSeen.${string}`) | "_id";
+        fieldPaths: ("createdAt" | "metadata" | "_creationTime" | `metadata.${string}` | "threadId" | "checkpointNs" | "checkpointId" | "parentCheckpointId" | "channelValues" | "channelVersions" | "versionsSeen" | "pendingSends" | `channelValues.${string}` | `channelVersions.${string}` | `versionsSeen.${string}`) | "_id";
         indexes: {
             by_thread: ["threadId", "_creationTime"];
             by_thread_ns: ["threadId", "checkpointNs", "_creationTime"];
@@ -24392,7 +24392,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
             phoneVerificationTime?: number | undefined | undefined;
             isAnonymous?: boolean | undefined | undefined;
         };
-        fieldPaths: "_id" | ("email" | "name" | "phone" | "_creationTime" | "image" | "isAnonymous" | "emailVerificationTime" | "phoneVerificationTime");
+        fieldPaths: "_id" | ("name" | "email" | "image" | "phone" | "_creationTime" | "isAnonymous" | "emailVerificationTime" | "phoneVerificationTime");
         indexes: {
             email: ["email", "_creationTime"];
             phone: ["phone", "_creationTime"];
@@ -24539,10 +24539,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 } | {
     _id: import("convex/values").GenericId<"messages">;
@@ -24558,6 +24558,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -24603,7 +24604,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -24642,9 +24642,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"userFollows">;
     _creationTime: number;
+    createdAt: number;
     followerId: string;
     followingId: string;
-    createdAt: number;
 } | {
     _id: import("convex/values").GenericId<"activityFeed">;
     _creationTime: number;
@@ -24656,12 +24656,12 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     targetCityName?: string | undefined;
     updatedAt?: number | undefined;
     createdAt: number;
+    likesCount: number;
+    commentsCount: number;
     actorId: string;
     activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
     targetType: "user" | "itinerary";
     targetId: string;
-    likesCount: number;
-    commentsCount: number;
     visibility: "public" | "followers";
 } | {
     _id: import("convex/values").GenericId<"cities">;
@@ -24732,23 +24732,23 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     } | undefined;
     sources?: string[] | undefined;
     createdAt: number;
+    lastUpdatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     customs: {
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        title: string;
         description: string;
+        title: string;
         category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
         isTaboo: boolean;
         importance: "low" | "medium" | "high";
     }[];
-    lastUpdatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"userTimezoneSettings">;
     _creationTime: number;
     homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     homeTimezone: string;
     displayFormat: "24h" | "12h";
@@ -24762,11 +24762,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -24777,12 +24777,12 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -24791,8 +24791,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"userSubmittedPoiVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"userSubmittedPois">;
     voteType: "up" | "down";
 } | {
@@ -24801,8 +24801,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;
@@ -24815,9 +24815,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         open: string;
         close: string;
     }[] | undefined;
+    createdAt: number;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     holidayName: string;
@@ -24838,8 +24838,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
     triggeredAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "opening" | "closing" | "best_time";
     minutesBefore: number;
@@ -24859,9 +24859,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 } | {
     _id: import("convex/values").GenericId<"itineraryDays">;
     _creationTime: number;
@@ -24897,20 +24897,20 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         resolution: "accept_mine" | "accept_theirs" | "merge";
     } | undefined;
     status: "rejected" | "pending" | "applied" | "conflicted";
-    userId: string;
+    version: number;
     timestamp: number;
+    userId: string;
     targetType: "itinerary" | "day" | "item";
     targetId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    operationType: "update" | "create" | "delete" | "reorder";
+    operationType: "create" | "update" | "delete" | "reorder";
     changes: any;
-    version: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryCopyHistory">;
     _creationTime: number;
     selectedDays?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     originalItineraryId: import("convex/values").GenericId<"itineraries">;
     copiedItineraryId: import("convex/values").GenericId<"itineraries">;
     copyType: "partial" | "full";
@@ -24941,14 +24941,14 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | {
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
@@ -24956,12 +24956,13 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"poiSourceMappings">;
     _creationTime: number;
     rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+    sourceExternalId: string;
     normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"normalizedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -24969,7 +24970,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     rating?: number | undefined;
     ratingCount?: number | undefined;
     businessHours?: any;
-    imageUrls?: string[] | undefined;
     sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
     name: string;
     latitude: number;
@@ -25021,8 +25021,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -25032,10 +25032,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"poiReviews">;
     _creationTime: number;
+    authorName?: string | undefined;
     rating?: number | undefined;
     visitDate?: string | undefined;
     sourceId?: string | undefined;
-    authorName?: string | undefined;
     sentiment?: string | undefined;
     content: string;
     poiId: import("convex/values").GenericId<"pois">;
@@ -25063,12 +25063,12 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -25082,8 +25082,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -25101,8 +25101,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -25122,27 +25122,27 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | {
     _id: import("convex/values").GenericId<"itineraryComments">;
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -25153,25 +25153,25 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     updatedAt?: number | undefined;
     parentId?: string | undefined;
-    guideId: string;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    guideId: string;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
 } | {
     _id: import("convex/values").GenericId<"guideCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"guideComments">;
 } | {
     _id: import("convex/values").GenericId<"commentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"commentReports">;
@@ -25180,25 +25180,25 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
     commentId: import("convex/values").GenericId<"itineraryComments">;
 } | {
     _id: import("convex/values").GenericId<"notifications">;
     _creationTime: number;
-    priority?: "low" | "high" | "normal" | undefined;
     title?: string | undefined;
+    priority?: "normal" | "low" | "high" | undefined;
     data?: any;
     actorId?: string | undefined;
     readAt?: number | undefined;
     body?: string | undefined;
     isPushSent?: boolean | undefined;
     pushSentAt?: number | undefined;
-    message: string;
-    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-    userId: string;
     createdAt: number;
+    type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+    message: string;
+    userId: string;
     isRead: boolean;
     referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
     referenceId: string;
@@ -25209,11 +25209,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     deviceName?: string | undefined;
     appVersion?: string | undefined;
     osVersion?: string | undefined;
+    createdAt: number;
+    platform: "ios" | "android";
     userId: string;
     token: string;
-    createdAt: number;
     updatedAt: number;
-    platform: "ios" | "android";
     isActive: boolean;
     lastUsedAt: number;
 } | {
@@ -25224,8 +25224,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     quietHoursEnabled?: boolean | undefined;
     quietHoursStart?: string | undefined;
     quietHoursEnd?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     pushEnabled: boolean;
     inAppEnabled: boolean;
@@ -25253,33 +25253,33 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"scheduledNotifications">;
     _creationTime: number;
-    errorMessage?: string | undefined;
     data?: any;
+    errorMessage?: string | undefined;
     retryCount?: number | undefined;
     referenceType?: string | undefined;
     referenceId?: string | undefined;
     sentAt?: number | undefined;
+    status: "failed" | "cancelled" | "pending" | "sent";
+    createdAt: number;
     type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-    status: "cancelled" | "failed" | "pending" | "sent";
     title: string;
     userId: string;
-    createdAt: number;
     body: string;
     scheduledFor: number;
 } | {
     _id: import("convex/values").GenericId<"itineraryLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"favoriteCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -25288,8 +25288,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | {
     _id: import("convex/values").GenericId<"conversations">;
@@ -25308,7 +25308,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -25339,8 +25339,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -25358,10 +25358,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -25378,8 +25378,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     syncError?: string | undefined;
     reminderMinutesBefore?: number | undefined;
     syncedDayNumbers?: number[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     calendarProvider: "apple" | "google";
     syncStatus: "failed" | "pending" | "synced" | "deleted";
@@ -25486,9 +25486,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     airlineContactEmail?: string | undefined;
     reminderEnabled?: boolean | undefined;
     status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+    createdAt: number;
     description: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"insuranceProducts">;
@@ -25499,11 +25499,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     exclusions?: string[] | undefined;
     contactPhone?: string | undefined;
     contactEmail?: string | undefined;
-    provider: string;
+    createdAt: number;
+    name: string;
     type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
     priority: number;
-    name: string;
-    createdAt: number;
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -25537,11 +25537,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         claimAmount: number;
     }[] | undefined;
     status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+    createdAt: number;
+    destinations: string[];
     userId: string;
     startDate: string;
     endDate: string;
-    destinations: string[];
-    createdAt: number;
     updatedAt: number;
     totalPrice: number;
     productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -25578,17 +25578,17 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         question: string;
         answer: string;
     }[] | undefined;
-    priority: number;
-    title: string;
     content: string;
+    createdAt: number;
+    title: string;
+    priority: number;
     steps: {
         tips?: string | undefined;
         requiredDocuments?: string[] | undefined;
-        title: string;
         description: string;
+        title: string;
         stepNumber: number;
     }[];
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
@@ -25596,12 +25596,12 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -25616,8 +25616,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -25628,14 +25628,14 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
-    sessionId: import("convex/values").GenericId<"chatSessions">;
     createdAt: number;
-    role: "user" | "system" | "assistant";
+    sessionId: import("convex/values").GenericId<"chatSessions">;
 } | {
     _id: import("convex/values").GenericId<"tippingGuides">;
     _creationTime: number;
@@ -25646,7 +25646,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -25663,19 +25663,19 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
     publishedAt?: number | undefined;
-    title: string;
     content: string;
+    title: string;
+    sourceExternalId: string;
     crawledAt: number;
     sourcePlatform: string;
-    sourceExternalId: string;
 } | {
     _id: import("convex/values").GenericId<"emergencyContacts">;
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -25720,10 +25720,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     policyDocumentUrl?: string | undefined;
     insuranceCardUrl?: string | undefined;
     coveredRegions?: string[] | undefined;
+    createdAt: number;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     policyNumber: string;
@@ -25738,18 +25738,18 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     resolvedAt?: number | undefined;
     locationName?: string | undefined;
     accuracy?: number | undefined;
-    status: "received" | "cancelled" | "resolved" | "sent";
+    status: "cancelled" | "received" | "resolved" | "sent";
+    createdAt: number;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
-    alertType: "other" | "medical" | "emergency" | "safety";
+    alertType: "emergency" | "other" | "medical" | "safety";
     notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
 } | {
     _id: import("convex/values").GenericId<"safetyRatings">;
     _creationTime: number;
-    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     sourceUrl?: string | undefined;
+    cityId?: import("convex/values").GenericId<"cities"> | undefined;
     verifiedBy?: string | undefined;
     destinationNameEn?: string | undefined;
     womenSafetyRating?: number | undefined;
@@ -25761,8 +25761,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         ambulance?: string | undefined;
         fire?: string | undefined;
     } | undefined;
-    summary: string;
     createdAt: number;
+    summary: string;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -25777,26 +25777,26 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"safetyAlerts">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
     endDate?: number | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     descriptionEn?: string | undefined;
     titleEn?: string | undefined;
-    sourceUrl?: string | undefined;
     affectedAreas?: string[] | undefined;
     avoidAreas?: string[] | undefined;
     officialAdvisoryLevel?: string | undefined;
     createdBy?: string | undefined;
-    title: string;
-    description: string;
-    startDate: number;
     createdAt: number;
+    description: string;
+    title: string;
+    startDate: number;
     updatedAt: number;
     countryCode: string;
     source: string;
     isActive: boolean;
     alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
     destinationName: string;
-    severity: "low" | "medium" | "high" | "info" | "critical";
+    severity: "info" | "critical" | "low" | "medium" | "high";
     recommendations: string[];
 } | {
     _id: import("convex/values").GenericId<"dangerZones">;
@@ -25817,10 +25817,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         allDay: boolean;
     } | undefined;
     lastReportedAt?: number | undefined;
+    createdAt: number;
     description: string;
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     countryCode: string;
     source: string;
@@ -25836,20 +25836,20 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"wifiSpots">;
     _creationTime: number;
     description?: string | undefined;
+    imageUrls?: string[] | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
-    imageUrls?: string[] | undefined;
     poiId?: import("convex/values").GenericId<"pois"> | undefined;
     openingHours?: string | undefined;
     verifiedAt?: number | undefined;
     verifiedBy?: string | undefined;
     ssid?: string | undefined;
     speedMbps?: number | undefined;
-    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+    createdAt: number;
     name: string;
+    type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
     latitude: number;
     longitude: number;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     ratingCount: number;
@@ -25868,9 +25868,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     locationName?: string | undefined;
     wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
     securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     ssid: string;
     password: string;
@@ -25883,8 +25883,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -25895,8 +25895,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"wifiReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"wifiReviews">;
 } | {
     _id: import("convex/values").GenericId<"safetyIncidentReports">;
@@ -25912,15 +25912,15 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     wasResolved?: boolean | undefined;
     resolutionNotes?: string | undefined;
     status: "rejected" | "pending" | "resolved" | "verified";
-    title: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    title: string;
+    userId: string;
     updatedAt: number;
     countryCode: string;
     reportCount: number;
     destinationName: string;
-    severity: "moderate" | "critical" | "minor" | "severe";
+    severity: "critical" | "moderate" | "minor" | "severe";
     helpfulCount: number;
     isAnonymous: boolean;
     incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
@@ -25928,6 +25928,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -25935,8 +25937,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -25976,10 +25976,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"chargingStationReviews">;
     _creationTime: number;
-    userId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    visitDate?: string | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    userId?: string | undefined;
+    visitDate?: string | undefined;
     chargerType?: string | undefined;
     chargingDuration?: number | undefined;
     energyCharged?: number | undefined;
@@ -25996,8 +25996,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"favoriteChargingStations">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     stationId: import("convex/values").GenericId<"chargingStations">;
 } | {
     _id: import("convex/values").GenericId<"simCards">;
@@ -26033,11 +26033,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     affiliateUrl?: string | undefined;
     salesCount?: number | undefined;
     isPromoted?: boolean | undefined;
-    provider: string;
-    priority: number;
-    name: string;
-    destinations: string[];
     createdAt: number;
+    name: string;
+    priority: number;
+    destinations: string[];
+    provider: string;
     updatedAt: number;
     purchaseUrl: string;
     isActive: boolean;
@@ -26065,11 +26065,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"simCardReviews">;
     _creationTime: number;
     title?: string | undefined;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     destination?: string | undefined;
     userId?: string | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     speedRating?: number | undefined;
     speedTestResult?: string | undefined;
     pros?: string[] | undefined;
@@ -26084,8 +26084,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
     purchaseVerified?: boolean | undefined;
     reviewDate?: number | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -26096,16 +26096,16 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"simCardReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"simCardReviews">;
 } | {
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 } | {
     _id: import("convex/values").GenericId<"travelNotes">;
@@ -26113,23 +26113,23 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | {
     _id: import("convex/values").GenericId<"noteImages">;
     _creationTime: number;
     caption?: string | undefined;
-    url: string;
     createdAt: number;
+    url: string;
     orderIndex: number;
     noteId: import("convex/values").GenericId<"travelNotes">;
     isCover: boolean;
@@ -26137,8 +26137,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"noteTags">;
     _creationTime: number;
     createdAt: number;
-    noteId: import("convex/values").GenericId<"travelNotes">;
     tag: string;
+    noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"notePois">;
     _creationTime: number;
@@ -26149,8 +26149,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"noteLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"noteComments">;
@@ -26158,9 +26158,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     repliesCount: number;
     isEdited: boolean;
     isDeleted: boolean;
@@ -26168,15 +26168,15 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"noteCommentLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     commentId: import("convex/values").GenericId<"noteComments">;
 } | {
     _id: import("convex/values").GenericId<"noteSaves">;
     _creationTime: number;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
 } | {
     _id: import("convex/values").GenericId<"userTravelStats">;
@@ -26195,8 +26195,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         days: number;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     } | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalPois: number;
     totalCities: number;
@@ -26271,12 +26271,12 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -26310,14 +26310,15 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -26331,16 +26332,15 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -26374,10 +26374,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -26387,13 +26387,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"weatherCache">;
     _creationTime: number;
-    latitude: number;
-    longitude: number;
     data: {
         current?: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -26420,8 +26418,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         timezoneOffset: number;
         daily: {
             date: string;
-            timestamp: number;
             icon: string;
+            timestamp: number;
             condition: string;
             conditionDescription: string;
             tempMin: number;
@@ -26452,6 +26450,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         }[];
         fetchedAt: number;
     };
+    latitude: number;
+    longitude: number;
     fetchedAt: number;
 } | {
     _id: import("convex/values").GenericId<"packingTemplates">;
@@ -26463,6 +26463,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -26478,7 +26479,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -26501,9 +26501,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | {
@@ -26513,8 +26513,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
     packedAt?: number | undefined;
     packedBy?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     updatedAt: number;
     category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
     orderIndex: number;
@@ -26528,8 +26528,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     email?: string | undefined;
     userId?: string | undefined;
     avatarUrl?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     isOwner: boolean;
 } | {
@@ -26537,9 +26537,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     notes?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
     createdAt: number;
+    description: string;
+    date: string;
     updatedAt: number;
     category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
     currency: string;
@@ -26571,20 +26571,20 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     description?: string | undefined;
     nameEn?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
+    icon: string;
     updatedAt: number;
     sortOrder: number;
     isActive: boolean;
-    icon: string;
 } | {
     _id: import("convex/values").GenericId<"itineraryTemplates">;
     _creationTime: number;
-    tags?: string[] | undefined;
     description?: string | undefined;
-    destinations?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    destinations?: string[] | undefined;
+    tags?: string[] | undefined;
     creatorId?: string | undefined;
     creatorName?: string | undefined;
     estimatedBudget?: {
@@ -26594,6 +26594,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     } | undefined;
     suitableFor?: string[] | undefined;
     bestSeasons?: string[] | undefined;
+    createdAt: number;
     title: string;
     days: {
         theme?: string | undefined;
@@ -26605,12 +26606,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
             notes?: string | undefined;
             suggestedDuration?: number | undefined;
             suggestedTime?: string | undefined;
-            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             name: string;
+            type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
         }[];
         dayNumber: number;
     }[];
-    createdAt: number;
     visibility: "public" | "private" | "unlisted";
     updatedAt: number;
     viewCount: number;
@@ -26624,18 +26624,19 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"templateLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"templateSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     templateId: import("convex/values").GenericId<"itineraryTemplates">;
 } | {
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -26659,7 +26660,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -26680,14 +26680,14 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     interests?: string[] | undefined;
     smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
     accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
 } | {
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -26697,13 +26697,13 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -26723,9 +26723,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     } | undefined;
     responseMessage?: string | undefined;
     respondedAt?: number | undefined;
-    message: string;
     status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
     createdAt: number;
+    message: string;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     applicantId: string;
@@ -26746,11 +26746,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         rating: number;
         wouldTravelAgain: boolean;
     } | undefined;
-    status: "cancelled" | "completed" | "active";
+    status: "completed" | "cancelled" | "active";
+    createdAt: number;
     destination: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     requestOwnerId: string;
@@ -26772,8 +26772,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     referenceNote?: string | undefined;
     adminNotes?: string | undefined;
     status: "rejected" | "pending" | "expired" | "verified";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
 } | {
@@ -26781,8 +26781,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     averageRating?: number | undefined;
     badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalTrips: number;
     lastCalculatedAt: number;
@@ -26797,23 +26797,23 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"partnerRequestSaves">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     requestId: import("convex/values").GenericId<"travelPartnerRequests">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswers">;
     _creationTime: number;
-    updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
+    poiId?: import("convex/values").GenericId<"pois"> | undefined;
     authorAvatarUrl?: string | undefined;
     isBestAnswer?: boolean | undefined;
     authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     commentsCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -26826,10 +26826,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"poiQuestions">;
     _creationTime: number;
+    authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    imageUrls?: string[] | undefined;
-    authorName?: string | undefined;
     isDeleted?: boolean | undefined;
     acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -26837,15 +26837,15 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     upvotesCount?: number | undefined;
     downvotesCount?: number | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "answered" | "closed";
-    title: string;
     content: string;
+    status: "open" | "resolved" | "answered" | "closed";
+    createdAt: number;
+    title: string;
+    viewsCount: number;
     userId: string;
     followersCount: number;
-    createdAt: number;
     category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
     poiId: import("convex/values").GenericId<"pois">;
-    viewsCount: number;
     isEdited: boolean;
     reportCount: number;
     answersCount: number;
@@ -26855,8 +26855,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"answerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -26865,17 +26865,17 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     isEdited: boolean;
     isDeleted: boolean;
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
     _id: import("convex/values").GenericId<"questionFollowers">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"questionReports">;
@@ -26884,8 +26884,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
@@ -26895,8 +26895,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     reviewedBy?: string | undefined;
     reviewedAt?: number | undefined;
     status: "pending" | "reviewed" | "resolved" | "dismissed";
-    userId: string;
     createdAt: number;
+    userId: string;
     reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -26907,7 +26907,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -26924,9 +26924,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -26937,12 +26937,12 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"offlineTranslationPacks">;
     _creationTime: number;
+    createdAt: number;
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    createdAt: number;
     updatedAt: number;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -26979,18 +26979,18 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | {
     _id: import("convex/values").GenericId<"poiPhotoLikes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     photoId: import("convex/values").GenericId<"poiPhotos">;
 } | {
     _id: import("convex/values").GenericId<"flights">;
@@ -27038,9 +27038,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -27104,14 +27104,14 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | {
     _id: import("convex/values").GenericId<"userVisaReminders">;
@@ -27126,8 +27126,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -27153,9 +27153,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -27186,10 +27186,10 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     targetCountryNameEn?: string | undefined;
     addressEn?: string | undefined;
     appointmentUrl?: string | undefined;
-    type: "embassy" | "consulate" | "visa_center" | "agency";
-    name: string;
-    city: string;
     createdAt: number;
+    name: string;
+    type: "embassy" | "consulate" | "visa_center" | "agency";
+    city: string;
     updatedAt: number;
     countryCode: string;
     address: string;
@@ -27205,9 +27205,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -27229,7 +27229,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"shareEventLogs">;
     _creationTime: number;
@@ -27241,7 +27241,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     resourceType: "itinerary" | "travelGuide" | "travelNote";
     resourceId: string;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 } | {
     _id: import("convex/values").GenericId<"luggageLossReportTemplates">;
     _creationTime: number;
@@ -27264,6 +27264,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"localEvents">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     tags?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
@@ -27274,12 +27277,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     source?: string | undefined;
-    coverImageUrl?: string | undefined;
     startTime?: string | undefined;
     endTime?: string | undefined;
-    sourceUrl?: string | undefined;
     highlights?: string[] | undefined;
     officialWebsite?: string | undefined;
     isFeatured?: boolean | undefined;
@@ -27303,11 +27303,11 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     organizerPhone?: string | undefined;
     organizerEmail?: string | undefined;
     status: "cancelled" | "upcoming" | "ongoing" | "ended";
+    createdAt: number;
     name: string;
     description: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     viewCount: number;
@@ -27321,8 +27321,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"eventFavorites">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     eventId: import("convex/values").GenericId<"localEvents">;
 } | {
     _id: import("convex/values").GenericId<"eventReminders">;
@@ -27331,8 +27331,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     minutesBefore?: number | undefined;
     triggeredAt?: number | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     reminderType: "custom" | "event_start" | "booking_open";
     isTriggered: boolean;
@@ -27342,18 +27342,18 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"eventReviews">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     imageUrls?: string[] | undefined;
+    updatedAt?: number | undefined;
     pros?: string[] | undefined;
     cons?: string[] | undefined;
     valueRating?: number | undefined;
     atmosphereRating?: number | undefined;
     organizationRating?: number | undefined;
     attendDate?: string | undefined;
-    status: "approved" | "rejected" | "pending";
     content: string;
-    userId: string;
+    status: "approved" | "rejected" | "pending";
     createdAt: number;
+    userId: string;
     rating: number;
     wouldRecommend: boolean;
     reportCount: number;
@@ -27363,8 +27363,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"eventReviewVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "helpful" | "not_helpful";
     reviewId: import("convex/values").GenericId<"eventReviews">;
 } | {
@@ -27385,9 +27385,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"userBehaviorEvents">;
     _creationTime: number;
+    createdAt: number;
     metadata: any;
     userId: string;
-    createdAt: number;
     targetType: "city" | "itinerary" | "poi" | "search" | "guide";
     targetId: string;
     categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
@@ -27404,10 +27404,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         itemsRemoved: number;
         itemsModified: number;
     } | undefined;
-    userId: string;
     createdAt: number;
-    itineraryId: import("convex/values").GenericId<"itineraries">;
-    versionNumber: number;
     snapshot: {
         coverImageUrl?: string | undefined;
         title: string;
@@ -27428,21 +27425,24 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         visibility: "public" | "private" | "team";
         cityId: import("convex/values").GenericId<"cities">;
     };
+    userId: string;
+    itineraryId: import("convex/values").GenericId<"itineraries">;
+    versionNumber: number;
 } | {
     _id: import("convex/values").GenericId<"poiQuestionsExtended">;
     _creationTime: number;
+    authorName?: string | undefined;
     tags?: string[] | undefined;
     updatedAt?: number | undefined;
-    authorName?: string | undefined;
     bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
     authorAvatarUrl?: string | undefined;
-    status: "open" | "resolved" | "closed";
-    title: string;
     content: string;
-    userId: string;
+    status: "open" | "resolved" | "closed";
     createdAt: number;
-    poiId: import("convex/values").GenericId<"pois">;
+    title: string;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
     reportCount: number;
@@ -27455,12 +27455,12 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"poiAnswersExtended">;
     _creationTime: number;
-    updatedAt?: number | undefined;
     authorName?: string | undefined;
+    updatedAt?: number | undefined;
     authorAvatarUrl?: string | undefined;
     content: string;
-    userId: string;
     createdAt: number;
+    userId: string;
     poiId: import("convex/values").GenericId<"pois">;
     isEdited: boolean;
     isDeleted: boolean;
@@ -27473,15 +27473,15 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"poiQuestionVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     questionId: import("convex/values").GenericId<"poiQuestions">;
 } | {
     _id: import("convex/values").GenericId<"poiAnswerVotes">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     voteType: "up" | "down";
     answerId: import("convex/values").GenericId<"poiAnswers">;
 } | {
@@ -27492,8 +27492,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     reviewedAt?: number | undefined;
     actionTaken?: string | undefined;
     status: "pending" | "reviewed" | "dismissed" | "actioned";
-    userId: string;
     createdAt: number;
+    userId: string;
     targetType: "question" | "answer";
     targetId: string;
     reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
@@ -27501,8 +27501,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;
@@ -27519,23 +27519,23 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"rateLimits">;
     _creationTime: number;
+    key: string;
     count: number;
     expiresAt: number;
-    key: string;
 } | {
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -27543,17 +27543,17 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"foodReviewHelpful">;
     _creationTime: number;
-    userId: string;
     createdAt: number;
+    userId: string;
     reviewId: import("convex/values").GenericId<"foodReviews">;
 } | {
     _id: import("convex/values").GenericId<"foodCollections">;
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
     itemCount: number;
@@ -27562,8 +27562,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     restaurantId: import("convex/values").GenericId<"pois">;
 } | {
     _id: import("convex/values").GenericId<"currencyRates">;
@@ -27574,7 +27574,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 } | {
     _id: import("convex/values").GenericId<"currencyHistory">;
     _creationTime: number;
-    days: number;
     data: {
         base: string;
         rates: {
@@ -27585,6 +27584,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;
@@ -27597,15 +27597,15 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     currentNode?: string | undefined;
     interruptData?: any;
     status: "completed" | "active" | "expired" | "paused";
+    createdAt: number;
     messages: {
         toolCalls?: any;
         toolName?: string | undefined;
+        role: "ai" | "human" | "tool" | "system";
         content: string;
         timestamp: number;
-        role: "ai" | "human" | "tool" | "system";
     }[];
     sessionId: string;
-    createdAt: number;
     updatedAt: number;
     sessionType: "chat" | "travel_plan" | "enrichment";
 } | {

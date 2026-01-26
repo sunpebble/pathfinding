@@ -12,6 +12,8 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
     data: {
         _id: import("convex/values").GenericId<"chargingStations">;
         _creationTime: number;
+        sourceUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         updatedAt?: number | undefined;
         nameEn?: string | undefined;
@@ -19,8 +21,6 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
         externalId?: string | undefined;
         rating?: number | undefined;
         ratingCount?: number | undefined;
-        imageUrls?: string[] | undefined;
-        sourceUrl?: string | undefined;
         amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
         reviewCount?: number | undefined;
         website?: string | undefined;
@@ -70,6 +70,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 }, Promise<{
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -77,8 +79,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -132,6 +132,8 @@ export declare const getNearby: import("convex/server").RegisteredQuery<"public"
     distance: number;
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -139,8 +141,6 @@ export declare const getNearby: import("convex/server").RegisteredQuery<"public"
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -190,6 +190,8 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
 }, Promise<{
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -197,8 +199,6 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -245,6 +245,8 @@ export declare const getByOperator: import("convex/server").RegisteredQuery<"pub
 }, Promise<{
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -252,8 +254,6 @@ export declare const getByOperator: import("convex/server").RegisteredQuery<"pub
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -327,12 +327,12 @@ export declare const getStats: import("convex/server").RegisteredQuery<"public",
  * Create a new charging station
  */
 export declare const create: import("convex/server").RegisteredMutation<"public", {
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     externalId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     website?: string | undefined;
     operatorName?: string | undefined;
@@ -373,6 +373,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
 export declare const update: import("convex/server").RegisteredMutation<"public", {
     status?: "operational" | "maintenance" | "offline" | "coming_soon" | undefined;
     name?: string | undefined;
+    imageUrls?: string[] | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     phone?: string | undefined;
@@ -380,7 +381,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     address?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     website?: string | undefined;
     operatorName?: string | undefined;
@@ -411,6 +411,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 }, Promise<{
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -418,8 +420,6 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -474,6 +474,8 @@ export declare const updateAvailability: import("convex/server").RegisteredMutat
 }, Promise<{
     _id: import("convex/values").GenericId<"chargingStations">;
     _creationTime: number;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -481,8 +483,6 @@ export declare const updateAvailability: import("convex/server").RegisteredMutat
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;
@@ -530,13 +530,13 @@ export declare const remove: import("convex/server").RegisteredMutation<"public"
  * Upsert a charging station (for crawler)
  */
 export declare const upsert: import("convex/server").RegisteredMutation<"public", {
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     website?: string | undefined;
     operatorName?: string | undefined;
@@ -577,14 +577,14 @@ export declare const upsert: import("convex/server").RegisteredMutation<"public"
  */
 export declare const bulkInsert: import("convex/server").RegisteredMutation<"public", {
     stations: {
+        sourceUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         cityId?: import("convex/values").GenericId<"cities"> | undefined;
         externalId?: string | undefined;
         rating?: number | undefined;
         ratingCount?: number | undefined;
-        imageUrls?: string[] | undefined;
-        sourceUrl?: string | undefined;
         amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
         website?: string | undefined;
         operatorName?: string | undefined;
@@ -631,10 +631,10 @@ export declare const getReviews: import("convex/server").RegisteredQuery<"public
     data: {
         _id: import("convex/values").GenericId<"chargingStationReviews">;
         _creationTime: number;
-        userId?: string | undefined;
-        imageUrls?: string[] | undefined;
-        visitDate?: string | undefined;
         authorName?: string | undefined;
+        imageUrls?: string[] | undefined;
+        userId?: string | undefined;
+        visitDate?: string | undefined;
         chargerType?: string | undefined;
         chargingDuration?: number | undefined;
         energyCharged?: number | undefined;
@@ -656,10 +656,10 @@ export declare const getReviews: import("convex/server").RegisteredQuery<"public
  * Add a review
  */
 export declare const addReview: import("convex/server").RegisteredMutation<"public", {
-    userId?: string | undefined;
-    imageUrls?: string[] | undefined;
-    visitDate?: string | undefined;
     authorName?: string | undefined;
+    imageUrls?: string[] | undefined;
+    userId?: string | undefined;
+    visitDate?: string | undefined;
     chargerType?: string | undefined;
     chargingDuration?: number | undefined;
     energyCharged?: number | undefined;
@@ -683,6 +683,8 @@ export declare const getUserFavorites: import("convex/server").RegisteredQuery<"
     addedAt: number;
     _id?: import("convex/values").GenericId<"chargingStations"> | undefined;
     _creationTime?: number | undefined;
+    sourceUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
@@ -690,8 +692,6 @@ export declare const getUserFavorites: import("convex/server").RegisteredQuery<"
     externalId?: string | undefined;
     rating?: number | undefined;
     ratingCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    sourceUrl?: string | undefined;
     amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
     reviewCount?: number | undefined;
     website?: string | undefined;

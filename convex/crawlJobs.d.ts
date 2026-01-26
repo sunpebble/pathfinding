@@ -3,8 +3,8 @@
  */
 export declare const list: import("convex/server").RegisteredQuery<"public", {
     status?: string | undefined;
-    limit?: number | undefined;
     platform?: string | undefined;
+    limit?: number | undefined;
 }, Promise<{
     _id: import("convex/values").GenericId<"crawlJobs">;
     _creationTime: number;
@@ -19,8 +19,8 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 }[]>>;
 export declare const getById: import("convex/server").RegisteredQuery<"public", {
@@ -39,8 +39,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | null>>;
 export declare const getDueJobs: import("convex/server").RegisteredQuery<"public", {
@@ -59,8 +59,8 @@ export declare const getDueJobs: import("convex/server").RegisteredQuery<"public
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 }[]>>;
 export declare const getJobsForIncrementalCrawl: import("convex/server").RegisteredQuery<"public", {
@@ -80,16 +80,16 @@ export declare const getJobsForIncrementalCrawl: import("convex/server").Registe
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 }[]>>;
 export declare const create: import("convex/server").RegisteredMutation<"public", {
     jobType?: string | undefined;
     scheduleCron?: string | undefined;
     name: string;
-    config: any;
     platform: string;
+    config: any;
 }, Promise<import("convex/values").GenericId<"crawlJobs">>>;
 export declare const start: import("convex/server").RegisteredMutation<"public", {
     id: import("convex/values").GenericId<"crawlJobs">;
@@ -107,8 +107,8 @@ export declare const start: import("convex/server").RegisteredMutation<"public",
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | null>>;
 export declare const complete: import("convex/server").RegisteredMutation<"public", {
@@ -128,8 +128,8 @@ export declare const complete: import("convex/server").RegisteredMutation<"publi
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | null>>;
 export declare const fail: import("convex/server").RegisteredMutation<"public", {
@@ -150,8 +150,8 @@ export declare const fail: import("convex/server").RegisteredMutation<"public", 
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | null>>;
 export declare const cancel: import("convex/server").RegisteredMutation<"public", {
@@ -170,8 +170,8 @@ export declare const cancel: import("convex/server").RegisteredMutation<"public"
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | null>>;
 export declare const updateStatus: import("convex/server").RegisteredMutation<"public", {
@@ -194,8 +194,8 @@ export declare const updateStatus: import("convex/server").RegisteredMutation<"p
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | null>>;
 export declare const updateStatistics: import("convex/server").RegisteredMutation<"public", {
@@ -219,8 +219,8 @@ export declare const updateNextRunAt: import("convex/server").RegisteredMutation
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | null>>;
 export declare const incrementRetryCount: import("convex/server").RegisteredMutation<"public", {
@@ -239,8 +239,8 @@ export declare const incrementRetryCount: import("convex/server").RegisteredMuta
     lastFailureReason?: string | undefined;
     status: string;
     name: string;
-    config: any;
     platform: string;
+    config: any;
     jobType: string;
 } | null>>;
 export declare const remove: import("convex/server").RegisteredMutation<"public", {

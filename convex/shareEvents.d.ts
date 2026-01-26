@@ -42,7 +42,7 @@ export declare const trackEvent: import("convex/server").RegisteredMutation<"pub
     referrer?: string | undefined;
     userAgent?: string | undefined;
     ipHash?: string | undefined;
-    eventType: "share" | "click" | "view" | "save";
+    eventType: "click" | "share" | "view" | "save";
 }, Promise<{
     success: boolean;
 }>>;
@@ -92,9 +92,9 @@ export declare const getByCode: import("convex/server").RegisteredQuery<"public"
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -140,7 +140,7 @@ export declare const getStats: import("convex/server").RegisteredQuery<"public",
         platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
         resourceType: "itinerary" | "travelGuide" | "travelNote";
         resourceId: string;
-        eventType: "share" | "click" | "view" | "save";
+        eventType: "click" | "share" | "view" | "save";
     }[];
 }>>;
 /**
@@ -158,9 +158,9 @@ export declare const getShareLinks: import("convex/server").RegisteredQuery<"pub
     maxViews?: number | undefined;
     lastAccessedAt?: number | undefined;
     createdAt: number;
+    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     updatedAt: number;
     viewCount: number;
-    platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
     isActive: boolean;
     shareCode: string;
     saveCount: number;
@@ -177,8 +177,8 @@ export declare const getShareLinks: import("convex/server").RegisteredQuery<"pub
  * Get share history for a user
  */
 export declare const getShareHistory: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     cursor?: string | undefined;
+    limit?: number | undefined;
     userId: string;
 }, Promise<{
     items: {
@@ -191,7 +191,7 @@ export declare const getShareHistory: import("convex/server").RegisteredQuery<"p
         platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
         resourceType: "itinerary" | "travelGuide" | "travelNote";
         resourceId: string;
-        eventType: "share" | "click" | "view" | "save";
+        eventType: "click" | "share" | "view" | "save";
     }[];
     hasMore: boolean;
     nextCursor: import("convex/values").GenericId<"shareEvents"> | undefined;

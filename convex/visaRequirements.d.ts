@@ -57,14 +57,14 @@ export declare const getVisaRequirement: import("convex/server").RegisteredQuery
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | null>>;
 export declare const listByOriginCountry: import("convex/server").RegisteredQuery<"public", {
@@ -127,14 +127,14 @@ export declare const listByOriginCountry: import("convex/server").RegisteredQuer
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 }[]>>;
 export declare const listVisaFreeDestinations: import("convex/server").RegisteredQuery<"public", {
@@ -196,14 +196,14 @@ export declare const listVisaFreeDestinations: import("convex/server").Registere
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 }[]>>;
 export declare const listEVisaDestinations: import("convex/server").RegisteredQuery<"public", {
@@ -265,14 +265,14 @@ export declare const listEVisaDestinations: import("convex/server").RegisteredQu
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 }[]>>;
 export declare const searchByDestination: import("convex/server").RegisteredQuery<"public", {
@@ -335,14 +335,14 @@ export declare const searchByDestination: import("convex/server").RegisteredQuer
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 }[]>>;
 export declare const getById: import("convex/server").RegisteredQuery<"public", {
@@ -403,14 +403,14 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | null>>;
 export declare const upsertVisaRequirement: import("convex/server").RegisteredMutation<"public", {
@@ -464,14 +464,14 @@ export declare const upsertVisaRequirement: import("convex/server").RegisteredMu
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 }, Promise<import("convex/values").GenericId<"visaRequirements">>>;
 export declare const updateVisaRequirement: import("convex/server").RegisteredMutation<"public", {
@@ -550,14 +550,14 @@ export declare const updateVisaRequirement: import("convex/server").RegisteredMu
     visaTypeName: string;
     difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
     applicationMethods: {
-        email?: string | undefined;
         url?: string | undefined;
+        email?: string | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
-        name: string;
         method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+        name: string;
     }[];
 } | null>>;
 export declare const getUserVisaReminders: import("convex/server").RegisteredQuery<"public", {
@@ -577,8 +577,8 @@ export declare const getUserVisaReminders: import("convex/server").RegisteredQue
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -602,8 +602,8 @@ export declare const getUpcomingReminders: import("convex/server").RegisteredQue
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -626,8 +626,8 @@ export declare const getVisaReminderById: import("convex/server").RegisteredQuer
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -650,8 +650,8 @@ export declare const getRemindersForItinerary: import("convex/server").Registere
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -692,8 +692,8 @@ export declare const updateVisaReminderStatus: import("convex/server").Registere
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -721,8 +721,8 @@ export declare const updateVisaReminderChecklist: import("convex/server").Regist
         isCompleted: boolean;
     }[] | undefined;
     status: "completed" | "pending" | "dismissed" | "sent";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     travelDate: number;
     destinationCountryCode: string;
@@ -734,7 +734,7 @@ export declare const deleteVisaReminder: import("convex/server").RegisteredMutat
     id: import("convex/values").GenericId<"userVisaReminders">;
 }, Promise<void>>;
 export declare const getUserVisaApplications: import("convex/server").RegisteredQuery<"public", {
-    status?: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing" | undefined;
+    status?: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing" | undefined;
     limit?: number | undefined;
     userId: string;
 }, Promise<{
@@ -756,9 +756,9 @@ export declare const getUserVisaApplications: import("convex/server").Registered
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -786,7 +786,7 @@ export declare const createVisaApplication: import("convex/server").RegisteredMu
     plannedTravelDate: number;
 }, Promise<import("convex/values").GenericId<"visaApplications">>>;
 export declare const updateVisaApplication: import("convex/server").RegisteredMutation<"public", {
-    status?: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing" | undefined;
+    status?: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing" | undefined;
     notes?: string | undefined;
     validFrom?: number | undefined;
     validUntil?: number | undefined;
@@ -821,9 +821,9 @@ export declare const updateVisaApplication: import("convex/server").RegisteredMu
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;
@@ -855,9 +855,9 @@ export declare const getVisaApplicationById: import("convex/server").RegisteredQ
     resultDate?: number | undefined;
     applicationNumber?: string | undefined;
     visaNumber?: string | undefined;
-    status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-    userId: string;
+    status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     destinationCountryCode: string;
     destinationCountryName: string;

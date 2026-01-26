@@ -24,9 +24,9 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
         shareCode?: string | undefined;
         sharedWith?: string[] | undefined;
         templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+        createdAt: number;
         title: string;
         userId: string;
-        createdAt: number;
         updatedAt: number;
         isPublic: boolean;
     }[];
@@ -43,8 +43,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
         packedAt?: number | undefined;
         packedBy?: string | undefined;
-        name: string;
         createdAt: number;
+        name: string;
         updatedAt: number;
         category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
         orderIndex: number;
@@ -60,8 +60,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
         packedAt?: number | undefined;
         packedBy?: string | undefined;
-        name: string;
         createdAt: number;
+        name: string;
         updatedAt: number;
         category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
         orderIndex: number;
@@ -95,9 +95,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | null>>;
@@ -111,8 +111,8 @@ export declare const getByShareCode: import("convex/server").RegisteredQuery<"pu
         suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
         packedAt?: number | undefined;
         packedBy?: string | undefined;
-        name: string;
         createdAt: number;
+        name: string;
         updatedAt: number;
         category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
         orderIndex: number;
@@ -128,8 +128,8 @@ export declare const getByShareCode: import("convex/server").RegisteredQuery<"pu
         suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
         packedAt?: number | undefined;
         packedBy?: string | undefined;
-        name: string;
         createdAt: number;
+        name: string;
         updatedAt: number;
         category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
         orderIndex: number;
@@ -157,9 +157,9 @@ export declare const getByShareCode: import("convex/server").RegisteredQuery<"pu
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | null>>;
@@ -205,9 +205,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     shareCode?: string | undefined;
     sharedWith?: string[] | undefined;
     templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
 } | null>>;
@@ -254,8 +254,8 @@ export declare const updateItem: import("convex/server").RegisteredMutation<"pub
     suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
     packedAt?: number | undefined;
     packedBy?: string | undefined;
-    name: string;
     createdAt: number;
+    name: string;
     updatedAt: number;
     category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
     orderIndex: number;
@@ -296,6 +296,7 @@ export declare const listSystemTemplates: import("convex/server").RegisteredQuer
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -311,7 +312,6 @@ export declare const listSystemTemplates: import("convex/server").RegisteredQuer
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -333,6 +333,7 @@ export declare const listPublicTemplates: import("convex/server").RegisteredQuer
         ratingCount?: number | undefined;
         createdBy?: string | undefined;
         durationDays?: number | undefined;
+        createdAt: number;
         name: string;
         items: {
             conditions?: {
@@ -348,7 +349,6 @@ export declare const listPublicTemplates: import("convex/server").RegisteredQuer
             quantity: number;
             isEssential: boolean;
         }[];
-        createdAt: number;
         updatedAt: number;
         isSystem: boolean;
         tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -369,6 +369,7 @@ export declare const getTemplateById: import("convex/server").RegisteredQuery<"p
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -384,7 +385,6 @@ export declare const getTemplateById: import("convex/server").RegisteredQuery<"p
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -414,6 +414,7 @@ export declare const updateTemplate: import("convex/server").RegisteredMutation<
     ratingCount?: number | undefined;
     createdBy?: string | undefined;
     durationDays?: number | undefined;
+    createdAt: number;
     name: string;
     items: {
         conditions?: {
@@ -429,7 +430,6 @@ export declare const updateTemplate: import("convex/server").RegisteredMutation<
         quantity: number;
         isEssential: boolean;
     }[];
-    createdAt: number;
     updatedAt: number;
     isSystem: boolean;
     tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";

@@ -56,8 +56,8 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
         _creationTime: number;
         notes?: string | undefined;
         collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     }[];
     total: number;
@@ -71,8 +71,8 @@ export declare const moveToCollection: import("convex/server").RegisteredMutatio
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | null>>;
 export declare const updateNotes: import("convex/server").RegisteredMutation<"public", {
@@ -84,8 +84,8 @@ export declare const updateNotes: import("convex/server").RegisteredMutation<"pu
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
 } | null>>;
 export declare const batchCheckFavorites: import("convex/server").RegisteredQuery<"public", {

@@ -193,7 +193,7 @@ export declare const updateStatus: import("convex/server").RegisteredMutation<"p
  * List bookings for a user
  */
 export declare const listBookings: import("convex/server").RegisteredQuery<"public", {
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded" | undefined;
     upcoming?: boolean | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
@@ -246,9 +246,9 @@ export declare const listBookings: import("convex/server").RegisteredQuery<"publ
         baggageAllowance?: string | undefined;
         frequentFlyerNumber?: string | undefined;
         importedFrom?: string | undefined;
-        status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-        userId: string;
+        status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
         createdAt: number;
+        userId: string;
         updatedAt: number;
         flightId: import("convex/values").GenericId<"flights">;
         confirmationCode: string;
@@ -311,9 +311,9 @@ export declare const getBookingById: import("convex/server").RegisteredQuery<"pu
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -375,9 +375,9 @@ export declare const getBookingByConfirmation: import("convex/server").Registere
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -439,9 +439,9 @@ export declare const getBookingsByItinerary: import("convex/server").RegisteredQ
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -454,7 +454,7 @@ export declare const getBookingsByItinerary: import("convex/server").RegisteredQ
  * Create a new flight booking
  */
 export declare const createBooking: import("convex/server").RegisteredMutation<"public", {
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded" | undefined;
     notes?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     rawEmailContent?: string | undefined;
@@ -479,7 +479,7 @@ export declare const createBooking: import("convex/server").RegisteredMutation<"
  * Update a flight booking
  */
 export declare const updateBooking: import("convex/server").RegisteredMutation<"public", {
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded" | undefined;
     notes?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     seatNumber?: string | undefined;
@@ -505,9 +505,9 @@ export declare const updateBooking: import("convex/server").RegisteredMutation<"
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -539,9 +539,9 @@ export declare const linkToItinerary: import("convex/server").RegisteredMutation
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -572,9 +572,9 @@ export declare const unlinkFromItinerary: import("convex/server").RegisteredMuta
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;
@@ -615,9 +615,9 @@ export declare const checkIn: import("convex/server").RegisteredMutation<"public
     baggageAllowance?: string | undefined;
     frequentFlyerNumber?: string | undefined;
     importedFrom?: string | undefined;
-    status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-    userId: string;
+    status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
     createdAt: number;
+    userId: string;
     updatedAt: number;
     flightId: import("convex/values").GenericId<"flights">;
     confirmationCode: string;

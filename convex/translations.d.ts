@@ -8,7 +8,7 @@
 export declare const listPhrasesByCategory: import("convex/server").RegisteredQuery<"public", {
     limit?: number | undefined;
     sourceLang?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
 }, Promise<{
     _id: import("convex/values").GenericId<"translationPhrases">;
     _creationTime: number;
@@ -17,7 +17,7 @@ export declare const listPhrasesByCategory: import("convex/server").RegisteredQu
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -34,7 +34,7 @@ export declare const listPhrasesByCategory: import("convex/server").RegisteredQu
  */
 export declare const searchPhrases: import("convex/server").RegisteredQuery<"public", {
     limit?: number | undefined;
-    category?: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common" | undefined;
+    category?: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common" | undefined;
     sourceLang?: string | undefined;
     query: string;
 }, Promise<{
@@ -45,7 +45,7 @@ export declare const searchPhrases: import("convex/server").RegisteredQuery<"pub
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -63,7 +63,7 @@ export declare const searchPhrases: import("convex/server").RegisteredQuery<"pub
 export declare const getCategories: import("convex/server").RegisteredQuery<"public", {
     sourceLang?: string | undefined;
 }, Promise<{
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     count: number;
 }[]>>;
 /**
@@ -81,9 +81,9 @@ export declare const listSavedTranslations: import("convex/server").RegisteredQu
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -105,9 +105,9 @@ export declare const searchSavedTranslations: import("convex/server").Registered
     notes?: string | undefined;
     imageUrl?: string | undefined;
     audioUrl?: string | undefined;
+    createdAt: number;
     targetLang: string;
     userId: string;
-    createdAt: number;
     lastUsedAt: number;
     usageCount: number;
     sourceText: string;
@@ -157,12 +157,12 @@ export declare const listOfflinePacks: import("convex/server").RegisteredQuery<"
 }, Promise<{
     _id: import("convex/values").GenericId<"offlineTranslationPacks">;
     _creationTime: number;
+    createdAt: number;
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    createdAt: number;
     updatedAt: number;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -179,12 +179,12 @@ export declare const getUserPacks: import("convex/server").RegisteredQuery<"publ
     pack: {
         _id: import("convex/values").GenericId<"offlineTranslationPacks">;
         _creationTime: number;
+        createdAt: number;
         name: string;
+        version: string;
         description: string;
         targetLang: string;
-        createdAt: number;
         updatedAt: number;
-        version: string;
         isActive: boolean;
         sourceLang: string;
         phraseCount: number;
@@ -223,7 +223,7 @@ export declare const createPhrase: import("convex/server").RegisteredMutation<"p
         lang: string;
     }[] | undefined;
     usageContext?: string | undefined;
-    category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+    category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
     sortOrder: number;
     sourceText: string;
     sourceLang: string;
@@ -245,7 +245,7 @@ export declare const batchCreatePhrases: import("convex/server").RegisteredMutat
             lang: string;
         }[] | undefined;
         usageContext?: string | undefined;
-        category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+        category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
         sortOrder: number;
         sourceText: string;
         sourceLang: string;
@@ -265,9 +265,9 @@ export declare const batchCreatePhrases: import("convex/server").RegisteredMutat
  */
 export declare const createOfflinePack: import("convex/server").RegisteredMutation<"public", {
     name: string;
+    version: string;
     description: string;
     targetLang: string;
-    version: string;
     isActive: boolean;
     sourceLang: string;
     phraseCount: number;
@@ -288,8 +288,8 @@ export declare const getContentTranslations: import("convex/server").RegisteredQ
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;
@@ -309,8 +309,8 @@ export declare const getContentTranslation: import("convex/server").RegisteredQu
     _id: import("convex/values").GenericId<"contentTranslations">;
     _creationTime: number;
     translatedBy?: string | undefined;
-    value: string;
     createdAt: number;
+    value: string;
     updatedAt: number;
     field: string;
     entityType: string;

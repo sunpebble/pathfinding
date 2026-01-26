@@ -18,9 +18,9 @@ export declare const listByItinerary: import("convex/server").RegisteredQuery<"p
         updatedAt?: number | undefined;
         parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
         content: string;
-        userId: string;
         createdAt: number;
         likesCount: number;
+        userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
         repliesCount: number;
         isEdited: boolean;
@@ -45,9 +45,9 @@ export declare const getReplies: import("convex/server").RegisteredQuery<"public
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -68,9 +68,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -96,8 +96,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
  * Update a comment
  */
 export declare const update: import("convex/server").RegisteredMutation<"public", {
-    id: import("convex/values").GenericId<"itineraryComments">;
     content: string;
+    id: import("convex/values").GenericId<"itineraryComments">;
     userId: string;
 }, Promise<{
     _id: import("convex/values").GenericId<"itineraryComments">;
@@ -105,9 +105,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     updatedAt?: number | undefined;
     parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
     content: string;
-    userId: string;
     createdAt: number;
     likesCount: number;
+    userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
     repliesCount: number;
     isEdited: boolean;
@@ -157,18 +157,18 @@ export declare const listNotifications: import("convex/server").RegisteredQuery<
         actorAvatar: string | undefined;
         _id: import("convex/values").GenericId<"notifications">;
         _creationTime: number;
-        priority?: "low" | "high" | "normal" | undefined;
         title?: string | undefined;
+        priority?: "normal" | "low" | "high" | undefined;
         data?: any;
         actorId?: string | undefined;
         readAt?: number | undefined;
         body?: string | undefined;
         isPushSent?: boolean | undefined;
         pushSentAt?: number | undefined;
-        message: string;
-        type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-        userId: string;
         createdAt: number;
+        type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+        message: string;
+        userId: string;
         isRead: boolean;
         referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
         referenceId: string;

@@ -16,8 +16,8 @@ export declare const getTravelPreferences: import("convex/server").RegisteredQue
     interests?: string[] | undefined;
     smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
     accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
 } | null>>;
 /**
@@ -60,8 +60,8 @@ export declare const listRequests: import("convex/server").RegisteredQuery<"publ
         } | null;
         _id: import("convex/values").GenericId<"travelPartnerRequests">;
         _creationTime: number;
-        imageUrls?: string[] | undefined;
         coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         expiresAt?: number | undefined;
         estimatedBudget?: number | undefined;
@@ -71,13 +71,13 @@ export declare const listRequests: import("convex/server").RegisteredQuery<"publ
         preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
         budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
         status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-        title: string;
+        createdAt: number;
         description: string;
+        title: string;
         destination: string;
         userId: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         viewCount: number;
         isFlexibleDates: boolean;
@@ -115,8 +115,8 @@ export declare const getRequestById: import("convex/server").RegisteredQuery<"pu
             referenceNote?: string | undefined;
             adminNotes?: string | undefined;
             status: "rejected" | "pending" | "expired" | "verified";
-            userId: string;
             createdAt: number;
+            userId: string;
             updatedAt: number;
             verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
         }[];
@@ -131,8 +131,8 @@ export declare const getRequestById: import("convex/server").RegisteredQuery<"pu
     } | null;
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -142,13 +142,13 @@ export declare const getRequestById: import("convex/server").RegisteredQuery<"pu
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -171,8 +171,8 @@ export declare const listMyRequests: import("convex/server").RegisteredQuery<"pu
         pendingApplicationsCount: number;
         _id: import("convex/values").GenericId<"travelPartnerRequests">;
         _creationTime: number;
-        imageUrls?: string[] | undefined;
         coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         expiresAt?: number | undefined;
         estimatedBudget?: number | undefined;
@@ -182,13 +182,13 @@ export declare const listMyRequests: import("convex/server").RegisteredQuery<"pu
         preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
         budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
         status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-        title: string;
+        createdAt: number;
         description: string;
+        title: string;
         destination: string;
         userId: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         viewCount: number;
         isFlexibleDates: boolean;
@@ -202,8 +202,8 @@ export declare const listMyRequests: import("convex/server").RegisteredQuery<"pu
  * Create a new partner request
  */
 export declare const createRequest: import("convex/server").RegisteredMutation<"public", {
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     estimatedBudget?: number | undefined;
     travelStyles?: ("budget" | "shopping" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury")[] | undefined;
@@ -213,8 +213,8 @@ export declare const createRequest: import("convex/server").RegisteredMutation<"
     preferredGender?: "any" | "other" | "male" | "female" | undefined;
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
-    title: string;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
@@ -226,13 +226,13 @@ export declare const createRequest: import("convex/server").RegisteredMutation<"
  */
 export declare const updateRequest: import("convex/server").RegisteredMutation<"public", {
     status?: "cancelled" | "active" | "expired" | "paused" | "fulfilled" | undefined;
-    title?: string | undefined;
     description?: string | undefined;
+    title?: string | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     destination?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
-    imageUrls?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     estimatedBudget?: number | undefined;
     travelStyles?: ("budget" | "shopping" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury")[] | undefined;
     destinationCityId?: import("convex/values").GenericId<"cities"> | undefined;
@@ -246,8 +246,8 @@ export declare const updateRequest: import("convex/server").RegisteredMutation<"
 }, Promise<{
     _id: import("convex/values").GenericId<"travelPartnerRequests">;
     _creationTime: number;
-    imageUrls?: string[] | undefined;
     coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     expiresAt?: number | undefined;
     estimatedBudget?: number | undefined;
@@ -257,13 +257,13 @@ export declare const updateRequest: import("convex/server").RegisteredMutation<"
     preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
     budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
     status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-    title: string;
+    createdAt: number;
     description: string;
+    title: string;
     destination: string;
     userId: string;
     startDate: string;
     endDate: string;
-    createdAt: number;
     updatedAt: number;
     viewCount: number;
     isFlexibleDates: boolean;
@@ -324,8 +324,8 @@ export declare const listApplications: import("convex/server").RegisteredQuery<"
                 referenceNote?: string | undefined;
                 adminNotes?: string | undefined;
                 status: "rejected" | "pending" | "expired" | "verified";
-                userId: string;
                 createdAt: number;
+                userId: string;
                 updatedAt: number;
                 verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
             }[];
@@ -342,8 +342,8 @@ export declare const listApplications: import("convex/server").RegisteredQuery<"
                 interests?: string[] | undefined;
                 smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
                 accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-                userId: string;
                 createdAt: number;
+                userId: string;
                 updatedAt: number;
             } | null;
         } | null;
@@ -359,9 +359,9 @@ export declare const listApplications: import("convex/server").RegisteredQuery<"
         } | undefined;
         responseMessage?: string | undefined;
         respondedAt?: number | undefined;
-        message: string;
         status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
         createdAt: number;
+        message: string;
         updatedAt: number;
         requestId: import("convex/values").GenericId<"travelPartnerRequests">;
         applicantId: string;
@@ -400,9 +400,9 @@ export declare const listMyApplications: import("convex/server").RegisteredQuery
         } | undefined;
         responseMessage?: string | undefined;
         respondedAt?: number | undefined;
-        message: string;
         status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
         createdAt: number;
+        message: string;
         updatedAt: number;
         requestId: import("convex/values").GenericId<"travelPartnerRequests">;
         applicantId: string;
@@ -437,7 +437,7 @@ export declare const withdrawApplication: import("convex/server").RegisteredMuta
  * List user's matches (as owner or partner)
  */
 export declare const listMatches: import("convex/server").RegisteredQuery<"public", {
-    status?: "cancelled" | "completed" | "active" | undefined;
+    status?: "completed" | "cancelled" | "active" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     userId: string;
@@ -468,11 +468,11 @@ export declare const listMatches: import("convex/server").RegisteredQuery<"publi
             rating: number;
             wouldTravelAgain: boolean;
         } | undefined;
-        status: "cancelled" | "completed" | "active";
+        status: "completed" | "cancelled" | "active";
+        createdAt: number;
         destination: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         requestId: import("convex/values").GenericId<"travelPartnerRequests">;
         requestOwnerId: string;
@@ -506,11 +506,11 @@ export declare const listMatches: import("convex/server").RegisteredQuery<"publi
             rating: number;
             wouldTravelAgain: boolean;
         } | undefined;
-        status: "cancelled" | "completed" | "active";
+        status: "completed" | "cancelled" | "active";
+        createdAt: number;
         destination: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         requestId: import("convex/values").GenericId<"travelPartnerRequests">;
         requestOwnerId: string;
@@ -557,8 +557,8 @@ export declare const listSavedRequests: import("convex/server").RegisteredQuery<
             } | null;
             _id: import("convex/values").GenericId<"travelPartnerRequests">;
             _creationTime: number;
-            imageUrls?: string[] | undefined;
             coverImageUrl?: string | undefined;
+            imageUrls?: string[] | undefined;
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
             expiresAt?: number | undefined;
             estimatedBudget?: number | undefined;
@@ -568,13 +568,13 @@ export declare const listSavedRequests: import("convex/server").RegisteredQuery<
             preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
             budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
             status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-            title: string;
+            createdAt: number;
             description: string;
+            title: string;
             destination: string;
             userId: string;
             startDate: string;
             endDate: string;
-            createdAt: number;
             updatedAt: number;
             viewCount: number;
             isFlexibleDates: boolean;
@@ -584,8 +584,8 @@ export declare const listSavedRequests: import("convex/server").RegisteredQuery<
         };
         _id: import("convex/values").GenericId<"partnerRequestSaves">;
         _creationTime: number;
-        userId: string;
         createdAt: number;
+        userId: string;
         requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     }[];
     total: number;
@@ -616,8 +616,8 @@ export declare const getUserVerifications: import("convex/server").RegisteredQue
     referenceNote?: string | undefined;
     adminNotes?: string | undefined;
     status: "rejected" | "pending" | "expired" | "verified";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
 }[]>>;
@@ -644,8 +644,8 @@ export declare const getUserTrustScore: import("convex/server").RegisteredQuery<
     _creationTime: number;
     averageRating?: number | undefined;
     badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     totalTrips: number;
     lastCalculatedAt: number;

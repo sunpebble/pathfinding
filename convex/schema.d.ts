@@ -27,14 +27,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_phone: ["phone", "_creationTime"];
     }, {}, {}>;
     userFollows: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        createdAt: number;
         followerId: string;
         followingId: string;
-        createdAt: number;
     }, {
         followerId: import("convex/values").VString<string, "required">;
         followingId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "followerId" | "followingId" | "createdAt">, {
+    }, "required", "createdAt" | "followerId" | "followingId">, {
         by_follower: ["followerId", "_creationTime"];
         by_following: ["followingId", "_creationTime"];
         by_follower_following: ["followerId", "followingId", "_creationTime"];
@@ -48,12 +48,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
         targetCityName?: string | undefined;
         updatedAt?: number | undefined;
         createdAt: number;
+        likesCount: number;
+        commentsCount: number;
         actorId: string;
         activityType: "new_itinerary" | "update_itinerary" | "like_itinerary" | "comment_itinerary" | "copy_itinerary" | "follow_user";
         targetType: "user" | "itinerary";
         targetId: string;
-        likesCount: number;
-        commentsCount: number;
         visibility: "public" | "followers";
     }, {
         actorId: import("convex/values").VString<string, "required">;
@@ -71,7 +71,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         visibility: import("convex/values").VUnion<"public" | "followers", [import("convex/values").VLiteral<"public", "required">, import("convex/values").VLiteral<"followers", "required">], "required", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "createdAt" | "actorId" | "actorName" | "actorAvatarUrl" | "activityType" | "targetType" | "targetId" | "targetTitle" | "targetCoverImageUrl" | "targetUserName" | "targetCityName" | "likesCount" | "commentsCount" | "visibility" | "updatedAt">, {
+    }, "required", "createdAt" | "likesCount" | "commentsCount" | "actorId" | "actorName" | "actorAvatarUrl" | "activityType" | "targetType" | "targetId" | "targetTitle" | "targetCoverImageUrl" | "targetUserName" | "targetCityName" | "visibility" | "updatedAt">, {
         by_actor: ["actorId", "_creationTime"];
         by_target: ["targetType", "targetId", "_creationTime"];
         by_type: ["activityType", "_creationTime"];
@@ -160,17 +160,17 @@ declare const _default: import("convex/server").SchemaDefinition<{
         } | undefined;
         sources?: string[] | undefined;
         createdAt: number;
+        lastUpdatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         customs: {
             descriptionEn?: string | undefined;
             titleEn?: string | undefined;
-            title: string;
             description: string;
+            title: string;
             category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
             isTaboo: boolean;
             importance: "low" | "medium" | "high";
         }[];
-        lastUpdatedAt: number;
     }, {
         cityId: import("convex/values").VId<import("convex/values").GenericId<"cities">, "required">;
         basicInfo: import("convex/values").VObject<{
@@ -237,16 +237,16 @@ declare const _default: import("convex/server").SchemaDefinition<{
         customs: import("convex/values").VArray<{
             descriptionEn?: string | undefined;
             titleEn?: string | undefined;
-            title: string;
             description: string;
+            title: string;
             category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
             isTaboo: boolean;
             importance: "low" | "medium" | "high";
         }[], import("convex/values").VObject<{
             descriptionEn?: string | undefined;
             titleEn?: string | undefined;
-            title: string;
             description: string;
+            title: string;
             category: "etiquette" | "religion" | "dining" | "dress" | "gift" | "gesture" | "general";
             isTaboo: boolean;
             importance: "low" | "medium" | "high";
@@ -258,7 +258,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             descriptionEn: import("convex/values").VString<string | undefined, "optional">;
             isTaboo: import("convex/values").VBoolean<boolean, "required">;
             importance: import("convex/values").VUnion<"low" | "medium" | "high", [import("convex/values").VLiteral<"low", "required">, import("convex/values").VLiteral<"medium", "required">, import("convex/values").VLiteral<"high", "required">], "required", never>;
-        }, "required", "title" | "description" | "descriptionEn" | "category" | "titleEn" | "isTaboo" | "importance">, "required">;
+        }, "required", "description" | "title" | "descriptionEn" | "category" | "titleEn" | "isTaboo" | "importance">, "required">;
         practicalInfo: import("convex/values").VObject<{
             tippingCustomEn?: string | undefined;
             waterSafetyNote?: string | undefined;
@@ -301,13 +301,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
         sources: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         lastUpdatedAt: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "createdAt" | "cityId" | "basicInfo" | "history" | "bestTravelTime" | "customs" | "practicalInfo" | "sources" | "lastUpdatedAt" | "basicInfo.population" | "basicInfo.populationYear" | "basicInfo.area" | "basicInfo.elevation" | "basicInfo.climate" | "basicInfo.climateEn" | "basicInfo.motto" | "basicInfo.mottoEn" | "basicInfo.nicknames" | "basicInfo.nicknamesEn" | "history.foundedYear" | "history.historicalNames" | "history.briefHistory" | "history.briefHistoryEn" | "history.culturalHighlights" | "history.culturalHighlightsEn" | "history.famousFor" | "history.famousForEn" | "history.worldHeritageSites" | "bestTravelTime.description" | "bestTravelTime.seasons" | "bestTravelTime.months" | "bestTravelTime.descriptionEn" | "bestTravelTime.weatherNotes" | "bestTravelTime.crowdLevel" | "bestTravelTime.priceLevel" | "practicalInfo.voltage" | "practicalInfo.plugType" | "practicalInfo.currency" | "practicalInfo.currencySymbol" | "practicalInfo.currencyNameLocal" | "practicalInfo.currencyNameEn" | "practicalInfo.tippingCustom" | "practicalInfo.tippingCustomEn" | "practicalInfo.waterSafety" | "practicalInfo.waterSafetyNote" | "practicalInfo.visaRequired" | "practicalInfo.visaNote" | "practicalInfo.languageOfficial" | "practicalInfo.languageCommon" | "practicalInfo.emergencyNumber" | "practicalInfo.ambulanceNumber" | "practicalInfo.fireNumber" | "practicalInfo.touristHotline">, {
+    }, "required", "createdAt" | "lastUpdatedAt" | "cityId" | "basicInfo" | "history" | "bestTravelTime" | "customs" | "practicalInfo" | "sources" | "basicInfo.population" | "basicInfo.populationYear" | "basicInfo.area" | "basicInfo.elevation" | "basicInfo.climate" | "basicInfo.climateEn" | "basicInfo.motto" | "basicInfo.mottoEn" | "basicInfo.nicknames" | "basicInfo.nicknamesEn" | "history.foundedYear" | "history.historicalNames" | "history.briefHistory" | "history.briefHistoryEn" | "history.culturalHighlights" | "history.culturalHighlightsEn" | "history.famousFor" | "history.famousForEn" | "history.worldHeritageSites" | "bestTravelTime.description" | "bestTravelTime.seasons" | "bestTravelTime.months" | "bestTravelTime.descriptionEn" | "bestTravelTime.weatherNotes" | "bestTravelTime.crowdLevel" | "bestTravelTime.priceLevel" | "practicalInfo.voltage" | "practicalInfo.plugType" | "practicalInfo.currency" | "practicalInfo.currencySymbol" | "practicalInfo.currencyNameLocal" | "practicalInfo.currencyNameEn" | "practicalInfo.tippingCustom" | "practicalInfo.tippingCustomEn" | "practicalInfo.waterSafety" | "practicalInfo.waterSafetyNote" | "practicalInfo.visaRequired" | "practicalInfo.visaNote" | "practicalInfo.languageOfficial" | "practicalInfo.languageCommon" | "practicalInfo.emergencyNumber" | "practicalInfo.ambulanceNumber" | "practicalInfo.fireNumber" | "practicalInfo.touristHotline">, {
         by_city: ["cityId", "_creationTime"];
     }, {}, {}>;
     userTimezoneSettings: import("convex/server").TableDefinition<import("convex/values").VObject<{
         homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         homeTimezone: string;
         displayFormat: "24h" | "12h";
@@ -340,10 +340,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }, "required", "cityId" | "label" | "sortOrder">, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "homeTimezone" | "homeCityId" | "displayFormat" | "showSeconds" | "autoDetect" | "savedClocks">, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "homeTimezone" | "homeCityId" | "displayFormat" | "showSeconds" | "autoDetect" | "savedClocks">, {
         by_user: ["userId", "_creationTime"];
     }, {}, {}>;
     pois: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         priceLevel?: number | undefined;
@@ -389,7 +390,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
             peakHours?: string[] | undefined;
             seasonalNotes?: string | undefined;
         } | undefined;
-        imageUrls?: string[] | undefined;
         isHiddenGem?: boolean | undefined;
         hiddenGemScore?: number | undefined;
         hiddenGemRating?: number | undefined;
@@ -570,7 +570,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         signatureDishes: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         dietaryOptions: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         averagePrice: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "name" | "latitude" | "longitude" | "phone" | "nameEn" | "cityId" | "priceLevel" | "category" | "externalId" | "address" | "rating" | "ratingCount" | "businessHours" | "bestVisitTime" | "imageUrls" | "source" | "isHiddenGem" | "hiddenGemScore" | "hiddenGemRating" | "hiddenGemRatingCount" | "localRecommendation" | "popularityLevel" | "cuisineType" | "isLocalFavorite" | "signatureDishes" | "dietaryOptions" | "averagePrice" | "businessHours.timezone" | "businessHours.monday" | "businessHours.tuesday" | "businessHours.wednesday" | "businessHours.thursday" | "businessHours.friday" | "businessHours.saturday" | "businessHours.sunday" | "businessHours.notes" | "bestVisitTime.recommendedTime" | "bestVisitTime.reason" | "bestVisitTime.avoidTimes" | "bestVisitTime.peakHours" | "bestVisitTime.seasonalNotes" | "localRecommendation.isLocalRecommended" | "localRecommendation.localTips" | "localRecommendation.bestTimeToVisit" | "localRecommendation.localSecrets" | "localRecommendation.recommendedBy">, {
+    }, "required", "name" | "imageUrls" | "latitude" | "longitude" | "phone" | "nameEn" | "cityId" | "priceLevel" | "category" | "externalId" | "address" | "rating" | "ratingCount" | "businessHours" | "bestVisitTime" | "source" | "isHiddenGem" | "hiddenGemScore" | "hiddenGemRating" | "hiddenGemRatingCount" | "localRecommendation" | "popularityLevel" | "cuisineType" | "isLocalFavorite" | "signatureDishes" | "dietaryOptions" | "averagePrice" | "businessHours.timezone" | "businessHours.monday" | "businessHours.tuesday" | "businessHours.wednesday" | "businessHours.thursday" | "businessHours.friday" | "businessHours.saturday" | "businessHours.sunday" | "businessHours.notes" | "bestVisitTime.recommendedTime" | "bestVisitTime.reason" | "bestVisitTime.avoidTimes" | "bestVisitTime.peakHours" | "bestVisitTime.seasonalNotes" | "localRecommendation.isLocalRecommended" | "localRecommendation.localTips" | "localRecommendation.bestTimeToVisit" | "localRecommendation.localSecrets" | "localRecommendation.recommendedBy">, {
         by_city: ["cityId", "_creationTime"];
         by_category: ["category", "_creationTime"];
         by_city_category: ["cityId", "category", "_creationTime"];
@@ -580,11 +580,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_popularity_level: ["popularityLevel", "_creationTime"];
     }, {}, {}>;
     userSubmittedPois: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        imageUrls?: string[] | undefined;
         updatedAt?: number | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
         avoidTimes?: string | undefined;
-        imageUrls?: string[] | undefined;
         localTips?: string | undefined;
         bestTimeToVisit?: string | undefined;
         localSecrets?: string[] | undefined;
@@ -595,12 +595,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewedAt?: number | undefined;
         mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
         status: "approved" | "rejected" | "pending" | "merged";
+        createdAt: number;
         name: string;
         description: string;
         latitude: number;
         longitude: number;
         userId: string;
-        createdAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
         upvotes: number;
@@ -633,7 +633,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         viewCount: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "status" | "name" | "description" | "latitude" | "longitude" | "userId" | "createdAt" | "updatedAt" | "nameEn" | "cityId" | "category" | "address" | "avoidTimes" | "imageUrls" | "localTips" | "bestTimeToVisit" | "localSecrets" | "priceRange" | "howDiscovered" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "mergedPoiId" | "upvotes" | "downvotes" | "viewCount">, {
+    }, "required", "status" | "createdAt" | "name" | "description" | "imageUrls" | "latitude" | "longitude" | "userId" | "updatedAt" | "nameEn" | "cityId" | "category" | "address" | "avoidTimes" | "localTips" | "bestTimeToVisit" | "localSecrets" | "priceRange" | "howDiscovered" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "mergedPoiId" | "upvotes" | "downvotes" | "viewCount">, {
         by_user: ["userId", "_creationTime"];
         by_city: ["cityId", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -642,8 +642,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_created: ["createdAt", "_creationTime"];
     }, {}, {}>;
     userSubmittedPoiVotes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         poiId: import("convex/values").GenericId<"userSubmittedPois">;
         voteType: "up" | "down";
     }, {
@@ -651,7 +651,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         userId: import("convex/values").VString<string, "required">;
         voteType: import("convex/values").VUnion<"up" | "down", [import("convex/values").VLiteral<"up", "required">, import("convex/values").VLiteral<"down", "required">], "required", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "poiId" | "voteType">, {
+    }, "required", "createdAt" | "userId" | "poiId" | "voteType">, {
         by_poi: ["poiId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_poi_user: ["poiId", "userId", "_creationTime"];
@@ -660,8 +660,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         updatedAt?: number | undefined;
         review?: string | undefined;
         visitDate?: string | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         rating: number;
         poiId: import("convex/values").GenericId<"pois">;
         wouldRecommend: boolean;
@@ -674,7 +674,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         wouldRecommend: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "rating" | "poiId" | "review" | "visitDate" | "wouldRecommend">, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "rating" | "poiId" | "review" | "visitDate" | "wouldRecommend">, {
         by_poi: ["poiId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_poi_user: ["poiId", "userId", "_creationTime"];
@@ -687,9 +687,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
             open: string;
             close: string;
         }[] | undefined;
+        createdAt: number;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         poiId: import("convex/values").GenericId<"pois">;
         holidayName: string;
@@ -716,7 +716,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isRecurring: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "startDate" | "endDate" | "createdAt" | "updatedAt" | "notes" | "poiId" | "holidayName" | "holidayNameEn" | "isClosed" | "hours" | "isRecurring">, {
+    }, "required", "createdAt" | "startDate" | "endDate" | "updatedAt" | "notes" | "poiId" | "holidayName" | "holidayNameEn" | "isClosed" | "hours" | "isRecurring">, {
         by_poi: ["poiId", "_creationTime"];
         by_poi_dates: ["poiId", "startDate", "endDate", "_creationTime"];
         by_dates: ["startDate", "endDate", "_creationTime"];
@@ -724,8 +724,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
     poiBusinessHoursReminders: import("convex/server").TableDefinition<import("convex/values").VObject<{
         itineraryItemId?: import("convex/values").GenericId<"itineraryItems"> | undefined;
         triggeredAt?: number | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         poiId: import("convex/values").GenericId<"pois">;
         reminderType: "opening" | "closing" | "best_time";
         minutesBefore: number;
@@ -741,7 +741,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isTriggered: import("convex/values").VBoolean<boolean, "required">;
         triggeredAt: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "poiId" | "itineraryItemId" | "reminderType" | "minutesBefore" | "scheduledTime" | "isTriggered" | "triggeredAt">, {
+    }, "required", "createdAt" | "userId" | "poiId" | "itineraryItemId" | "reminderType" | "minutesBefore" | "scheduledTime" | "isTriggered" | "triggeredAt">, {
         by_user: ["userId", "_creationTime"];
         by_poi: ["poiId", "_creationTime"];
         by_user_poi: ["userId", "poiId", "_creationTime"];
@@ -766,7 +766,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         visibility: import("convex/values").VUnion<"public" | "private" | "team", [import("convex/values").VLiteral<"private", "required">, import("convex/values").VLiteral<"team", "required">, import("convex/values").VLiteral<"public", "required">], "required", never>;
         coverImageUrl: import("convex/values").VString<string | undefined, "optional">;
         copiedFromId: import("convex/values").VId<import("convex/values").GenericId<"itineraries"> | undefined, "optional">;
-    }, "required", "title" | "userId" | "startDate" | "endDate" | "visibility" | "cityId" | "coverImageUrl" | "copiedFromId">, {
+    }, "required", "title" | "coverImageUrl" | "userId" | "startDate" | "endDate" | "visibility" | "cityId" | "copiedFromId">, {
         by_user: ["userId", "_creationTime"];
         by_visibility: ["visibility", "_creationTime"];
         by_city: ["cityId", "_creationTime"];
@@ -774,14 +774,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_user_visibility: ["userId", "visibility", "_creationTime"];
     }, {}, {}>;
     itineraryCollaborators: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        role: "owner" | "editor" | "viewer";
         userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
-        role: "owner" | "editor" | "viewer";
     }, {
         userId: import("convex/values").VString<string, "required">;
         itineraryId: import("convex/values").VId<import("convex/values").GenericId<"itineraries">, "required">;
         role: import("convex/values").VUnion<"owner" | "editor" | "viewer", [import("convex/values").VLiteral<"owner", "required">, import("convex/values").VLiteral<"editor", "required">, import("convex/values").VLiteral<"viewer", "required">], "required", never>;
-    }, "required", "userId" | "itineraryId" | "role">, {
+    }, "required", "role" | "userId" | "itineraryId">, {
         by_itinerary: ["itineraryId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_itinerary_user: ["itineraryId", "userId", "_creationTime"];
@@ -844,18 +844,18 @@ declare const _default: import("convex/server").SchemaDefinition<{
             resolution: "accept_mine" | "accept_theirs" | "merge";
         } | undefined;
         status: "rejected" | "pending" | "applied" | "conflicted";
-        userId: string;
+        version: number;
         timestamp: number;
+        userId: string;
         targetType: "itinerary" | "day" | "item";
         targetId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
-        operationType: "update" | "create" | "delete" | "reorder";
+        operationType: "create" | "update" | "delete" | "reorder";
         changes: any;
-        version: number;
     }, {
         itineraryId: import("convex/values").VId<import("convex/values").GenericId<"itineraries">, "required">;
         userId: import("convex/values").VString<string, "required">;
-        operationType: import("convex/values").VUnion<"update" | "create" | "delete" | "reorder", [import("convex/values").VLiteral<"create", "required">, import("convex/values").VLiteral<"update", "required">, import("convex/values").VLiteral<"delete", "required">, import("convex/values").VLiteral<"reorder", "required">], "required", never>;
+        operationType: import("convex/values").VUnion<"create" | "update" | "delete" | "reorder", [import("convex/values").VLiteral<"create", "required">, import("convex/values").VLiteral<"update", "required">, import("convex/values").VLiteral<"delete", "required">, import("convex/values").VLiteral<"reorder", "required">], "required", never>;
         targetType: import("convex/values").VUnion<"itinerary" | "day" | "item", [import("convex/values").VLiteral<"itinerary", "required">, import("convex/values").VLiteral<"day", "required">, import("convex/values").VLiteral<"item", "required">], "required", never>;
         targetId: import("convex/values").VString<string, "required">;
         changes: import("convex/values").VAny<any, "required", string>;
@@ -871,15 +871,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
             resolvedAt: import("convex/values").VFloat64<number, "required">;
             resolution: import("convex/values").VUnion<"accept_mine" | "accept_theirs" | "merge", [import("convex/values").VLiteral<"accept_mine", "required">, import("convex/values").VLiteral<"accept_theirs", "required">, import("convex/values").VLiteral<"merge", "required">], "required", never>;
         }, "optional", "resolvedBy" | "resolvedAt" | "resolution">;
-    }, "required", "status" | "userId" | "timestamp" | "targetType" | "targetId" | "itineraryId" | "operationType" | "changes" | "version" | "conflictResolution" | `changes.${string}` | "conflictResolution.resolvedBy" | "conflictResolution.resolvedAt" | "conflictResolution.resolution">, {
+    }, "required", "status" | "version" | "timestamp" | "userId" | "targetType" | "targetId" | "itineraryId" | "operationType" | "changes" | "conflictResolution" | `changes.${string}` | "conflictResolution.resolvedBy" | "conflictResolution.resolvedAt" | "conflictResolution.resolution">, {
         by_itinerary: ["itineraryId", "_creationTime"];
         by_itinerary_timestamp: ["itineraryId", "timestamp", "_creationTime"];
         by_itinerary_status: ["itineraryId", "status", "_creationTime"];
     }, {}, {}>;
     itineraryCopyHistory: import("convex/server").TableDefinition<import("convex/values").VObject<{
         selectedDays?: number[] | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         originalItineraryId: import("convex/values").GenericId<"itineraries">;
         copiedItineraryId: import("convex/values").GenericId<"itineraries">;
         copyType: "partial" | "full";
@@ -896,7 +896,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         newStartDate: import("convex/values").VString<string, "required">;
         dateOffset: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "originalItineraryId" | "copiedItineraryId" | "copyType" | "selectedDays" | "originalStartDate" | "newStartDate" | "dateOffset">, {
+    }, "required", "createdAt" | "userId" | "originalItineraryId" | "copiedItineraryId" | "copyType" | "selectedDays" | "originalStartDate" | "newStartDate" | "dateOffset">, {
         by_user: ["userId", "_creationTime"];
         by_original: ["originalItineraryId", "_creationTime"];
         by_copied: ["copiedItineraryId", "_creationTime"];
@@ -965,8 +965,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         lastFailureReason?: string | undefined;
         status: string;
         name: string;
-        config: any;
         platform: string;
+        config: any;
         jobType: string;
     }, {
         name: import("convex/values").VString<string, "required">;
@@ -983,13 +983,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
         retryCount: import("convex/values").VFloat64<number | undefined, "optional">;
         lastFailureAt: import("convex/values").VFloat64<number | undefined, "optional">;
         lastFailureReason: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "status" | "name" | "errorMessage" | "config" | "platform" | "jobType" | "scheduleCron" | "nextRunAt" | "startedAt" | "completedAt" | "statistics" | "retryCount" | "lastFailureAt" | "lastFailureReason" | `config.${string}` | `statistics.${string}`>, {
+    }, "required", "status" | "name" | "platform" | "errorMessage" | "config" | "jobType" | "scheduleCron" | "nextRunAt" | "startedAt" | "completedAt" | "statistics" | "retryCount" | "lastFailureAt" | "lastFailureReason" | `config.${string}` | `statistics.${string}`>, {
         by_status: ["status", "_creationTime"];
         by_platform: ["platform", "_creationTime"];
     }, {}, {}>;
     rawCrawlRecords: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        jobId: import("convex/values").GenericId<"crawlJobs">;
         sourceUrl: string;
+        jobId: import("convex/values").GenericId<"crawlJobs">;
         rawData: any;
         crawledAt: number;
         processingStatus: string;
@@ -999,12 +999,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
         rawData: import("convex/values").VAny<any, "required", string>;
         crawledAt: import("convex/values").VFloat64<number, "required">;
         processingStatus: import("convex/values").VString<string, "required">;
-    }, "required", "jobId" | "sourceUrl" | "rawData" | "crawledAt" | "processingStatus" | `rawData.${string}`>, {
+    }, "required", "sourceUrl" | "jobId" | "rawData" | "crawledAt" | "processingStatus" | `rawData.${string}`>, {
         by_job: ["jobId", "_creationTime"];
         by_job_status: ["jobId", "processingStatus", "_creationTime"];
         by_status: ["processingStatus", "_creationTime"];
     }, {}, {}>;
     normalizedPois: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         priceLevel?: number | undefined;
@@ -1012,7 +1013,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
         rating?: number | undefined;
         ratingCount?: number | undefined;
         businessHours?: any;
-        imageUrls?: string[] | undefined;
         sourceMappingId?: import("convex/values").GenericId<"poiSourceMappings"> | undefined;
         name: string;
         latitude: number;
@@ -1036,7 +1036,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         normalizedAt: import("convex/values").VFloat64<number, "required">;
         confidence: import("convex/values").VFloat64<number, "required">;
         sourceMappingId: import("convex/values").VId<import("convex/values").GenericId<"poiSourceMappings"> | undefined, "optional">;
-    }, "required", "name" | "latitude" | "longitude" | "phone" | "nameEn" | "priceLevel" | "category" | "address" | "rating" | "ratingCount" | "businessHours" | "imageUrls" | "normalizedAt" | "confidence" | "sourceMappingId" | `businessHours.${string}`>, {
+    }, "required", "name" | "imageUrls" | "latitude" | "longitude" | "phone" | "nameEn" | "priceLevel" | "category" | "address" | "rating" | "ratingCount" | "businessHours" | "normalizedAt" | "confidence" | "sourceMappingId" | `businessHours.${string}`>, {
         by_category: ["category", "_creationTime"];
         by_confidence: ["confidence", "_creationTime"];
         by_category_confidence: ["category", "confidence", "_creationTime"];
@@ -1124,8 +1124,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
         readAt?: number | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         poiId: import("convex/values").GenericId<"pois">;
         reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -1146,7 +1146,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         readAt: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "message" | "userId" | "createdAt" | "updatedAt" | "poiId" | "reminderType" | "isTriggered" | "triggeredAt" | "itineraryId" | "reminderTime" | "ticketId" | "isRead" | "readAt">, {
+    }, "required", "createdAt" | "message" | "userId" | "updatedAt" | "poiId" | "reminderType" | "isTriggered" | "triggeredAt" | "itineraryId" | "reminderTime" | "ticketId" | "isRead" | "readAt">, {
         by_user: ["userId", "_creationTime"];
         by_poi: ["poiId", "_creationTime"];
         by_user_poi: ["userId", "poiId", "_creationTime"];
@@ -1155,23 +1155,23 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     poiSourceMappings: import("convex/server").TableDefinition<import("convex/values").VObject<{
         rawRecordId?: import("convex/values").GenericId<"rawCrawlRecords"> | undefined;
+        sourceExternalId: string;
         normalizedPoiId: import("convex/values").GenericId<"normalizedPois">;
         sourcePlatform: string;
-        sourceExternalId: string;
     }, {
         normalizedPoiId: import("convex/values").VId<import("convex/values").GenericId<"normalizedPois">, "required">;
         sourcePlatform: import("convex/values").VString<string, "required">;
         sourceExternalId: import("convex/values").VString<string, "required">;
         rawRecordId: import("convex/values").VId<import("convex/values").GenericId<"rawCrawlRecords"> | undefined, "optional">;
-    }, "required", "normalizedPoiId" | "sourcePlatform" | "sourceExternalId" | "rawRecordId">, {
+    }, "required", "sourceExternalId" | "normalizedPoiId" | "sourcePlatform" | "rawRecordId">, {
         by_normalized_poi: ["normalizedPoiId", "_creationTime"];
         by_source: ["sourcePlatform", "sourceExternalId", "_creationTime"];
     }, {}, {}>;
     poiReviews: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        authorName?: string | undefined;
         rating?: number | undefined;
         visitDate?: string | undefined;
         sourceId?: string | undefined;
-        authorName?: string | undefined;
         sentiment?: string | undefined;
         content: string;
         poiId: import("convex/values").GenericId<"pois">;
@@ -1185,7 +1185,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         visitDate: import("convex/values").VString<string | undefined, "optional">;
         sentiment: import("convex/values").VString<string | undefined, "optional">;
         crawledAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "content" | "rating" | "poiId" | "visitDate" | "crawledAt" | "sourceId" | "authorName" | "sentiment">, {
+    }, "required", "content" | "authorName" | "rating" | "poiId" | "visitDate" | "crawledAt" | "sourceId" | "sentiment">, {
         by_poi: ["poiId", "_creationTime"];
         by_rating: ["rating", "_creationTime"];
     }, {}, {}>;
@@ -1229,12 +1229,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     travelGuides: import("convex/server").TableDefinition<import("convex/values").VObject<{
         title?: string | undefined;
-        coverImageUrl?: string | undefined;
         sourceUrl?: string | undefined;
         authorName?: string | undefined;
+        publishedAt?: number | undefined;
+        coverImageUrl?: string | undefined;
         contentHtml?: string | undefined;
         authorId?: string | undefined;
-        publishedAt?: number | undefined;
         contentHash?: string | undefined;
         enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
         enrichmentError?: string | undefined;
@@ -1248,8 +1248,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         aiDays?: {
             theme?: string | undefined;
             pois: {
-                duration?: string | undefined;
                 description?: string | undefined;
+                duration?: string | undefined;
                 tips?: string | undefined;
                 address?: string | undefined;
                 rating?: number | undefined;
@@ -1267,8 +1267,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 isManuallyVerified?: boolean | undefined;
                 verifiedAt?: number | undefined;
                 verifiedBy?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
                 latitude: number;
                 longitude: number;
             }[];
@@ -1288,20 +1288,20 @@ declare const _default: import("convex/server").SchemaDefinition<{
             lowConfidenceCount: number;
             manuallyVerifiedCount: number;
         } | undefined;
-        tags: string[];
         content: string;
-        destinations: string[];
-        likesCount: number;
-        commentsCount: number;
-        imageUrls: string[];
-        crawledAt: number;
-        sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
         sourceExternalId: string;
+        imageUrls: string[];
+        destinations: string[];
+        tags: string[];
+        likesCount: number;
         savesCount: number;
+        commentsCount: number;
         viewsCount: number;
         qualityScore: number;
+        crawledAt: number;
+        sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
     }, {
-        sourcePlatform: import("convex/values").VUnion<"xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo", [import("convex/values").VLiteral<"xiaohongshu", "required">, import("convex/values").VLiteral<"weibo", "required">, import("convex/values").VLiteral<"ctrip", "required">, import("convex/values").VLiteral<"douyin", "required">, import("convex/values").VLiteral<"tripadvisor", "required">, import("convex/values").VLiteral<"qunar", "required">, import("convex/values").VLiteral<"tongcheng", "required">, import("convex/values").VLiteral<"mafengwo", "required">], "required", never>;
+        sourcePlatform: import("convex/values").VUnion<"tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor", [import("convex/values").VLiteral<"xiaohongshu", "required">, import("convex/values").VLiteral<"weibo", "required">, import("convex/values").VLiteral<"ctrip", "required">, import("convex/values").VLiteral<"douyin", "required">, import("convex/values").VLiteral<"tripadvisor", "required">, import("convex/values").VLiteral<"qunar", "required">, import("convex/values").VLiteral<"tongcheng", "required">, import("convex/values").VLiteral<"mafengwo", "required">], "required", never>;
         sourceExternalId: import("convex/values").VString<string, "required">;
         sourceUrl: import("convex/values").VString<string | undefined, "optional">;
         title: import("convex/values").VString<string | undefined, "optional">;
@@ -1333,8 +1333,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         aiDays: import("convex/values").VArray<{
             theme?: string | undefined;
             pois: {
-                duration?: string | undefined;
                 description?: string | undefined;
+                duration?: string | undefined;
                 tips?: string | undefined;
                 address?: string | undefined;
                 rating?: number | undefined;
@@ -1352,8 +1352,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 isManuallyVerified?: boolean | undefined;
                 verifiedAt?: number | undefined;
                 verifiedBy?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
                 latitude: number;
                 longitude: number;
             }[];
@@ -1361,8 +1361,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }[] | undefined, import("convex/values").VObject<{
             theme?: string | undefined;
             pois: {
-                duration?: string | undefined;
                 description?: string | undefined;
+                duration?: string | undefined;
                 tips?: string | undefined;
                 address?: string | undefined;
                 rating?: number | undefined;
@@ -1380,8 +1380,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 isManuallyVerified?: boolean | undefined;
                 verifiedAt?: number | undefined;
                 verifiedBy?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
                 latitude: number;
                 longitude: number;
             }[];
@@ -1390,8 +1390,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             dayNumber: import("convex/values").VFloat64<number, "required">;
             theme: import("convex/values").VString<string | undefined, "optional">;
             pois: import("convex/values").VArray<{
-                duration?: string | undefined;
                 description?: string | undefined;
+                duration?: string | undefined;
                 tips?: string | undefined;
                 address?: string | undefined;
                 rating?: number | undefined;
@@ -1409,13 +1409,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 isManuallyVerified?: boolean | undefined;
                 verifiedAt?: number | undefined;
                 verifiedBy?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
                 latitude: number;
                 longitude: number;
             }[], import("convex/values").VObject<{
-                duration?: string | undefined;
                 description?: string | undefined;
+                duration?: string | undefined;
                 tips?: string | undefined;
                 address?: string | undefined;
                 rating?: number | undefined;
@@ -1433,8 +1433,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 isManuallyVerified?: boolean | undefined;
                 verifiedAt?: number | undefined;
                 verifiedBy?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
                 latitude: number;
                 longitude: number;
             }, {
@@ -1466,8 +1466,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 isManuallyVerified: import("convex/values").VBoolean<boolean | undefined, "optional">;
                 verifiedAt: import("convex/values").VFloat64<number | undefined, "optional">;
                 verifiedBy: import("convex/values").VString<string | undefined, "optional">;
-            }, "required", "duration" | "type" | "name" | "description" | "latitude" | "longitude" | "tips" | "address" | "rating" | "priceInfo" | "openingHours" | "highlights" | "transportToNext" | "geocodeConfidence" | "geocodeSource" | "isManuallyVerified" | "verifiedAt" | "verifiedBy" | "transportToNext.duration" | "transportToNext.mode" | "transportToNext.distance" | "transportToNext.notes">, "required">;
-        }, "required", "pois" | "dayNumber" | "theme">, "optional">;
+            }, "required", "name" | "type" | "description" | "duration" | "latitude" | "longitude" | "tips" | "address" | "rating" | "priceInfo" | "openingHours" | "highlights" | "transportToNext" | "geocodeConfidence" | "geocodeSource" | "isManuallyVerified" | "verifiedAt" | "verifiedBy" | "transportToNext.duration" | "transportToNext.mode" | "transportToNext.distance" | "transportToNext.notes">, "required">;
+        }, "required", "theme" | "pois" | "dayNumber">, "optional">;
         geocodingMetrics: import("convex/values").VObject<{
             sourceDistribution?: {
                 nominatim?: number | undefined;
@@ -1501,7 +1501,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             }, "optional", "nominatim" | "amap" | "overpass" | "consensus" | "manual">;
             lastUpdated: import("convex/values").VFloat64<number | undefined, "optional">;
         }, "optional", "totalPois" | "averageConfidence" | "lowConfidenceCount" | "manuallyVerifiedCount" | "sourceDistribution" | "lastUpdated" | "sourceDistribution.nominatim" | "sourceDistribution.amap" | "sourceDistribution.overpass" | "sourceDistribution.consensus" | "sourceDistribution.manual">;
-    }, "required", "tags" | "title" | "content" | "destinations" | "likesCount" | "commentsCount" | "imageUrls" | "coverImageUrl" | "sourceUrl" | "crawledAt" | "sourcePlatform" | "sourceExternalId" | "authorName" | "contentHtml" | "authorId" | "savesCount" | "viewsCount" | "publishedAt" | "qualityScore" | "contentHash" | "enrichmentStatus" | "enrichmentError" | "enrichmentStartedAt" | "aiProcessedAt" | "aiSummary" | "aiTips" | "aiBestTime" | "aiDuration" | "aiBudget" | "aiDays" | "geocodingMetrics" | "geocodingMetrics.totalPois" | "geocodingMetrics.averageConfidence" | "geocodingMetrics.lowConfidenceCount" | "geocodingMetrics.manuallyVerifiedCount" | "geocodingMetrics.sourceDistribution" | "geocodingMetrics.lastUpdated" | "geocodingMetrics.sourceDistribution.nominatim" | "geocodingMetrics.sourceDistribution.amap" | "geocodingMetrics.sourceDistribution.overpass" | "geocodingMetrics.sourceDistribution.consensus" | "geocodingMetrics.sourceDistribution.manual">, {
+    }, "required", "content" | "title" | "sourceExternalId" | "sourceUrl" | "authorName" | "publishedAt" | "coverImageUrl" | "imageUrls" | "destinations" | "tags" | "likesCount" | "savesCount" | "commentsCount" | "viewsCount" | "qualityScore" | "crawledAt" | "sourcePlatform" | "contentHtml" | "authorId" | "contentHash" | "enrichmentStatus" | "enrichmentError" | "enrichmentStartedAt" | "aiProcessedAt" | "aiSummary" | "aiTips" | "aiBestTime" | "aiDuration" | "aiBudget" | "aiDays" | "geocodingMetrics" | "geocodingMetrics.totalPois" | "geocodingMetrics.averageConfidence" | "geocodingMetrics.lowConfidenceCount" | "geocodingMetrics.manuallyVerifiedCount" | "geocodingMetrics.sourceDistribution" | "geocodingMetrics.lastUpdated" | "geocodingMetrics.sourceDistribution.nominatim" | "geocodingMetrics.sourceDistribution.amap" | "geocodingMetrics.sourceDistribution.overpass" | "geocodingMetrics.sourceDistribution.consensus" | "geocodingMetrics.sourceDistribution.manual">, {
         by_platform: ["sourcePlatform", "_creationTime"];
         by_platform_external: ["sourcePlatform", "sourceExternalId", "_creationTime"];
         by_quality: ["qualityScore", "_creationTime"];
@@ -1520,9 +1520,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         updatedAt?: number | undefined;
         parentId?: import("convex/values").GenericId<"itineraryComments"> | undefined;
         content: string;
-        userId: string;
         createdAt: number;
         likesCount: number;
+        userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
         repliesCount: number;
         isEdited: boolean;
@@ -1540,7 +1540,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reportCount: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "content" | "userId" | "createdAt" | "likesCount" | "updatedAt" | "itineraryId" | "parentId" | "repliesCount" | "isEdited" | "isDeleted" | "reportCount">, {
+    }, "required", "content" | "createdAt" | "likesCount" | "userId" | "updatedAt" | "itineraryId" | "parentId" | "repliesCount" | "isEdited" | "isDeleted" | "reportCount">, {
         by_itinerary: ["itineraryId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_parent: ["parentId", "_creationTime"];
@@ -1549,11 +1549,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
     guideComments: import("convex/server").TableDefinition<import("convex/values").VObject<{
         updatedAt?: number | undefined;
         parentId?: string | undefined;
-        guideId: string;
         content: string;
-        userId: string;
         createdAt: number;
         likesCount: number;
+        guideId: string;
+        userId: string;
         repliesCount: number;
         isEdited: boolean;
         isDeleted: boolean;
@@ -1568,34 +1568,34 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isDeleted: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "guideId" | "content" | "userId" | "createdAt" | "likesCount" | "updatedAt" | "parentId" | "repliesCount" | "isEdited" | "isDeleted">, {
+    }, "required", "content" | "createdAt" | "likesCount" | "guideId" | "userId" | "updatedAt" | "parentId" | "repliesCount" | "isEdited" | "isDeleted">, {
         by_guide: ["guideId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_parent: ["parentId", "_creationTime"];
         by_guide_created: ["guideId", "createdAt", "_creationTime"];
     }, {}, {}>;
     guideCommentLikes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         commentId: import("convex/values").GenericId<"guideComments">;
     }, {
         commentId: import("convex/values").VId<import("convex/values").GenericId<"guideComments">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "commentId">, {
+    }, "required", "createdAt" | "userId" | "commentId">, {
         by_comment: ["commentId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_comment_user: ["commentId", "userId", "_creationTime"];
     }, {}, {}>;
     commentLikes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         commentId: import("convex/values").GenericId<"itineraryComments">;
     }, {
         commentId: import("convex/values").VId<import("convex/values").GenericId<"itineraryComments">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "commentId">, {
+    }, "required", "createdAt" | "userId" | "commentId">, {
         by_comment: ["commentId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_comment_user: ["commentId", "userId", "_creationTime"];
@@ -1605,8 +1605,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewedBy?: string | undefined;
         reviewedAt?: number | undefined;
         status: "pending" | "reviewed" | "resolved" | "dismissed";
-        userId: string;
         createdAt: number;
+        userId: string;
         reason: "other" | "spam" | "harassment" | "inappropriate" | "misinformation";
         commentId: import("convex/values").GenericId<"itineraryComments">;
     }, {
@@ -1618,25 +1618,25 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdAt: import("convex/values").VFloat64<number, "required">;
         reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         reviewedBy: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "status" | "description" | "userId" | "createdAt" | "reason" | "reviewedBy" | "reviewedAt" | "commentId">, {
+    }, "required", "status" | "createdAt" | "description" | "userId" | "reason" | "reviewedBy" | "reviewedAt" | "commentId">, {
         by_comment: ["commentId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_comment_user: ["commentId", "userId", "_creationTime"];
     }, {}, {}>;
     notifications: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        priority?: "low" | "high" | "normal" | undefined;
         title?: string | undefined;
+        priority?: "normal" | "low" | "high" | undefined;
         data?: any;
         actorId?: string | undefined;
         readAt?: number | undefined;
         body?: string | undefined;
         isPushSent?: boolean | undefined;
         pushSentAt?: number | undefined;
-        message: string;
-        type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
-        userId: string;
         createdAt: number;
+        type: "comment" | "reply" | "like" | "mention" | "new_follower" | "following_itinerary" | "itinerary_reminder" | "flight_status" | "weather_alert" | "social_interaction";
+        message: string;
+        userId: string;
         isRead: boolean;
         referenceType: "user" | "itinerary" | "comment" | "flight" | "weather";
         referenceId: string;
@@ -1653,10 +1653,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isRead: import("convex/values").VBoolean<boolean, "required">;
         isPushSent: import("convex/values").VBoolean<boolean | undefined, "optional">;
         pushSentAt: import("convex/values").VFloat64<number | undefined, "optional">;
-        priority: import("convex/values").VUnion<"low" | "high" | "normal" | undefined, [import("convex/values").VLiteral<"low", "required">, import("convex/values").VLiteral<"normal", "required">, import("convex/values").VLiteral<"high", "required">], "optional", never>;
+        priority: import("convex/values").VUnion<"normal" | "low" | "high" | undefined, [import("convex/values").VLiteral<"low", "required">, import("convex/values").VLiteral<"normal", "required">, import("convex/values").VLiteral<"high", "required">], "optional", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
         readAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "message" | "type" | "priority" | "title" | "userId" | "data" | "createdAt" | "actorId" | "isRead" | "readAt" | "referenceType" | "referenceId" | "body" | "isPushSent" | "pushSentAt" | `data.${string}`>, {
+    }, "required", "createdAt" | "type" | "title" | "priority" | "data" | "message" | "userId" | "actorId" | "isRead" | "readAt" | "referenceType" | "referenceId" | "body" | "isPushSent" | "pushSentAt" | `data.${string}`>, {
         by_user: ["userId", "_creationTime"];
         by_user_read: ["userId", "isRead", "_creationTime"];
         by_user_created: ["userId", "createdAt", "_creationTime"];
@@ -1668,11 +1668,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         deviceName?: string | undefined;
         appVersion?: string | undefined;
         osVersion?: string | undefined;
+        createdAt: number;
+        platform: "ios" | "android";
         userId: string;
         token: string;
-        createdAt: number;
         updatedAt: number;
-        platform: "ios" | "android";
         isActive: boolean;
         lastUsedAt: number;
     }, {
@@ -1687,7 +1687,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         lastUsedAt: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "token" | "createdAt" | "updatedAt" | "platform" | "isActive" | "deviceId" | "deviceName" | "appVersion" | "osVersion" | "lastUsedAt">, {
+    }, "required", "createdAt" | "platform" | "userId" | "token" | "updatedAt" | "isActive" | "deviceId" | "deviceName" | "appVersion" | "osVersion" | "lastUsedAt">, {
         by_user: ["userId", "_creationTime"];
         by_token: ["token", "_creationTime"];
         by_user_active: ["userId", "isActive", "_creationTime"];
@@ -1698,8 +1698,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         quietHoursEnabled?: boolean | undefined;
         quietHoursStart?: string | undefined;
         quietHoursEnd?: string | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         pushEnabled: boolean;
         inAppEnabled: boolean;
@@ -1773,21 +1773,21 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }, "required", "enabled" | "comments" | "likes" | "follows" | "mentions">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "timezone" | "pushEnabled" | "emailEnabled" | "inAppEnabled" | "quietHoursEnabled" | "quietHoursStart" | "quietHoursEnd" | "itineraryReminders" | "flightAlerts" | "weatherAlerts" | "socialNotifications" | "itineraryReminders.enabled" | "itineraryReminders.advanceHours" | "flightAlerts.enabled" | "flightAlerts.statusChanges" | "flightAlerts.checkInReminders" | "flightAlerts.boardingReminders" | "weatherAlerts.enabled" | "weatherAlerts.severeOnly" | "socialNotifications.enabled" | "socialNotifications.comments" | "socialNotifications.likes" | "socialNotifications.follows" | "socialNotifications.mentions">, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "timezone" | "pushEnabled" | "emailEnabled" | "inAppEnabled" | "quietHoursEnabled" | "quietHoursStart" | "quietHoursEnd" | "itineraryReminders" | "flightAlerts" | "weatherAlerts" | "socialNotifications" | "itineraryReminders.enabled" | "itineraryReminders.advanceHours" | "flightAlerts.enabled" | "flightAlerts.statusChanges" | "flightAlerts.checkInReminders" | "flightAlerts.boardingReminders" | "weatherAlerts.enabled" | "weatherAlerts.severeOnly" | "socialNotifications.enabled" | "socialNotifications.comments" | "socialNotifications.likes" | "socialNotifications.follows" | "socialNotifications.mentions">, {
         by_user: ["userId", "_creationTime"];
     }, {}, {}>;
     scheduledNotifications: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        errorMessage?: string | undefined;
         data?: any;
+        errorMessage?: string | undefined;
         retryCount?: number | undefined;
         referenceType?: string | undefined;
         referenceId?: string | undefined;
         sentAt?: number | undefined;
+        status: "failed" | "cancelled" | "pending" | "sent";
+        createdAt: number;
         type: "custom" | "itinerary_reminder" | "flight_checkin" | "flight_boarding" | "weather_check";
-        status: "cancelled" | "failed" | "pending" | "sent";
         title: string;
         userId: string;
-        createdAt: number;
         body: string;
         scheduledFor: number;
     }, {
@@ -1799,26 +1799,26 @@ declare const _default: import("convex/server").SchemaDefinition<{
         title: import("convex/values").VString<string, "required">;
         body: import("convex/values").VString<string, "required">;
         data: import("convex/values").VAny<any, "optional", string>;
-        status: import("convex/values").VUnion<"cancelled" | "failed" | "pending" | "sent", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"sent", "required">, import("convex/values").VLiteral<"cancelled", "required">, import("convex/values").VLiteral<"failed", "required">], "required", never>;
+        status: import("convex/values").VUnion<"failed" | "cancelled" | "pending" | "sent", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"sent", "required">, import("convex/values").VLiteral<"cancelled", "required">, import("convex/values").VLiteral<"failed", "required">], "required", never>;
         sentAt: import("convex/values").VFloat64<number | undefined, "optional">;
         errorMessage: import("convex/values").VString<string | undefined, "optional">;
         retryCount: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "type" | "status" | "errorMessage" | "title" | "userId" | "data" | "createdAt" | "retryCount" | "referenceType" | "referenceId" | "body" | `data.${string}` | "scheduledFor" | "sentAt">, {
+    }, "required", "status" | "createdAt" | "type" | "title" | "data" | "errorMessage" | "userId" | "retryCount" | "referenceType" | "referenceId" | "body" | `data.${string}` | "scheduledFor" | "sentAt">, {
         by_user: ["userId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_scheduled: ["scheduledFor", "_creationTime"];
         by_status_scheduled: ["status", "scheduledFor", "_creationTime"];
     }, {}, {}>;
     itineraryLikes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     }, {
         userId: import("convex/values").VString<string, "required">;
         itineraryId: import("convex/values").VId<import("convex/values").GenericId<"itineraries">, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "itineraryId">, {
+    }, "required", "createdAt" | "userId" | "itineraryId">, {
         by_user: ["userId", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
         by_user_itinerary: ["userId", "itineraryId", "_creationTime"];
@@ -1826,9 +1826,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
     favoriteCollections: import("convex/server").TableDefinition<import("convex/values").VObject<{
         description?: string | undefined;
         coverImageUrl?: string | undefined;
+        createdAt: number;
         name: string;
         userId: string;
-        createdAt: number;
         updatedAt: number;
         sortOrder: number;
         isDefault: boolean;
@@ -1841,7 +1841,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         sortOrder: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "name" | "description" | "userId" | "createdAt" | "updatedAt" | "sortOrder" | "coverImageUrl" | "isDefault">, {
+    }, "required", "createdAt" | "name" | "description" | "coverImageUrl" | "userId" | "updatedAt" | "sortOrder" | "isDefault">, {
         by_user: ["userId", "_creationTime"];
         by_user_default: ["userId", "isDefault", "_creationTime"];
         by_user_sort: ["userId", "sortOrder", "_creationTime"];
@@ -1849,8 +1849,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
     itineraryFavorites: import("convex/server").TableDefinition<import("convex/values").VObject<{
         notes?: string | undefined;
         collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     }, {
         userId: import("convex/values").VString<string, "required">;
@@ -1858,7 +1858,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         collectionId: import("convex/values").VId<import("convex/values").GenericId<"favoriteCollections"> | undefined, "optional">;
         notes: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "notes" | "itineraryId" | "collectionId">, {
+    }, "required", "createdAt" | "userId" | "notes" | "itineraryId" | "collectionId">, {
         by_user: ["userId", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
         by_collection: ["collectionId", "_creationTime"];
@@ -1916,7 +1916,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_user: ["userId", "_creationTime"];
     }, {}, {}>;
     hotelBookings: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+        status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
         latitude?: number | undefined;
         longitude?: number | undefined;
         currency?: string | undefined;
@@ -1970,7 +1970,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         images: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         importSource: import("convex/values").VUnion<"email" | "manual" | "import" | undefined, [import("convex/values").VLiteral<"manual", "required">, import("convex/values").VLiteral<"email", "required">, import("convex/values").VLiteral<"import", "required">], "optional", never>;
         rawEmailContent: import("convex/values").VString<string | undefined, "optional">;
-        status: import("convex/values").VUnion<"cancelled" | "completed" | "pending" | "confirmed" | undefined, [import("convex/values").VLiteral<"confirmed", "required">, import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"cancelled", "required">, import("convex/values").VLiteral<"completed", "required">], "optional", never>;
+        status: import("convex/values").VUnion<"completed" | "cancelled" | "pending" | "confirmed" | undefined, [import("convex/values").VLiteral<"confirmed", "required">, import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"cancelled", "required">, import("convex/values").VLiteral<"completed", "required">], "optional", never>;
     }, "required", "status" | "latitude" | "longitude" | "userId" | "currency" | "address" | "notes" | "itineraryId" | "hotelName" | "checkInDate" | "checkOutDate" | "checkInTime" | "checkOutTime" | "roomType" | "roomCount" | "guestCount" | "totalPrice" | "pricePerNight" | "confirmationNumber" | "bookingPlatform" | "bookingUrl" | "hotelPhone" | "hotelEmail" | "amenities" | "images" | "importSource" | "rawEmailContent">, {
         by_user: ["userId", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
@@ -1979,10 +1979,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     expenseCategories: import("convex/server").TableDefinition<import("convex/values").VObject<{
         name: string;
+        icon: string;
         nameEn: string;
         sortOrder: number;
         color: string;
-        icon: string;
         isSystem: boolean;
     }, {
         name: import("convex/values").VString<string, "required">;
@@ -1991,13 +1991,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
         color: import("convex/values").VString<string, "required">;
         sortOrder: import("convex/values").VFloat64<number, "required">;
         isSystem: import("convex/values").VBoolean<boolean, "required">;
-    }, "required", "name" | "nameEn" | "sortOrder" | "color" | "icon" | "isSystem">, {
+    }, "required", "name" | "icon" | "nameEn" | "sortOrder" | "color" | "isSystem">, {
         by_sort_order: ["sortOrder", "_creationTime"];
     }, {}, {}>;
     itineraryBudgets: import("convex/server").TableDefinition<import("convex/values").VObject<{
         notes?: string | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         currency: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -2024,7 +2024,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         notes: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "currency" | "notes" | "itineraryId" | "totalBudget" | "categoryBudgets">, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "currency" | "notes" | "itineraryId" | "totalBudget" | "categoryBudgets">, {
         by_itinerary: ["itineraryId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
     }, {}, {}>;
@@ -2035,10 +2035,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         dayNumber?: number | undefined;
         paymentMethod?: string | undefined;
         receiptImageUrl?: string | undefined;
-        date: string;
-        description: string;
-        userId: string;
         createdAt: number;
+        description: string;
+        date: string;
+        userId: string;
         updatedAt: number;
         currency: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -2060,7 +2060,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         notes: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "date" | "time" | "description" | "userId" | "createdAt" | "updatedAt" | "currency" | "notes" | "poiId" | "itineraryId" | "dayNumber" | "categoryId" | "amount" | "paymentMethod" | "receiptImageUrl">, {
+    }, "required", "createdAt" | "description" | "date" | "time" | "userId" | "updatedAt" | "currency" | "notes" | "poiId" | "itineraryId" | "dayNumber" | "categoryId" | "amount" | "paymentMethod" | "receiptImageUrl">, {
         by_itinerary: ["itineraryId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_category: ["categoryId", "_creationTime"];
@@ -2076,8 +2076,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         syncError?: string | undefined;
         reminderMinutesBefore?: number | undefined;
         syncedDayNumbers?: number[] | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         calendarProvider: "apple" | "google";
         syncStatus: "failed" | "pending" | "synced" | "deleted";
@@ -2099,7 +2099,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         syncedDayNumbers: import("convex/values").VArray<number[] | undefined, import("convex/values").VFloat64<number, "required">, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "itineraryId" | "lastSyncedAt" | "savedItineraryLocalId" | "calendarProvider" | "calendarId" | "calendarEventIds" | "syncStatus" | "syncError" | "enableReminders" | "reminderMinutesBefore" | "syncAllDays" | "syncedDayNumbers">, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "itineraryId" | "lastSyncedAt" | "savedItineraryLocalId" | "calendarProvider" | "calendarId" | "calendarEventIds" | "syncStatus" | "syncError" | "enableReminders" | "reminderMinutesBefore" | "syncAllDays" | "syncedDayNumbers">, {
         by_user: ["userId", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
         by_local_itinerary: ["savedItineraryLocalId", "_creationTime"];
@@ -2162,7 +2162,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         travelGuideId: import("convex/values").VId<import("convex/values").GenericId<"travelGuides"> | undefined, "optional">;
         itineraryId: import("convex/values").VId<import("convex/values").GenericId<"itineraries"> | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "latitude" | "longitude" | "userId" | "createdAt" | "countryCode" | "rating" | "notes" | "itineraryId" | "cityName" | "cityNameEn" | "countryName" | "countryNameEn" | "visitedAt" | "firstVisitedAt" | "lastVisitedAt" | "visitCount" | "photos" | "travelGuideId">, {
+    }, "required", "createdAt" | "latitude" | "longitude" | "userId" | "countryCode" | "rating" | "notes" | "itineraryId" | "cityName" | "cityNameEn" | "countryName" | "countryNameEn" | "visitedAt" | "firstVisitedAt" | "lastVisitedAt" | "visitCount" | "photos" | "travelGuideId">, {
         by_user: ["userId", "_creationTime"];
         by_user_city: ["userId", "cityName", "_creationTime"];
         by_user_country: ["userId", "countryCode", "_creationTime"];
@@ -2186,7 +2186,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         firstVisitedAt: import("convex/values").VFloat64<number, "required">;
         lastVisitedAt: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "userId" | "createdAt" | "countryCode" | "countryName" | "countryNameEn" | "firstVisitedAt" | "lastVisitedAt" | "citiesCount">, {
+    }, "required", "createdAt" | "userId" | "countryCode" | "countryName" | "countryNameEn" | "firstVisitedAt" | "lastVisitedAt" | "citiesCount">, {
         by_user: ["userId", "_creationTime"];
         by_user_country: ["userId", "countryCode", "_creationTime"];
         by_country: ["countryCode", "_creationTime"];
@@ -2269,7 +2269,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         yearlyStats: import("convex/values").VAny<any, "optional", string>;
         createdAt: import("convex/values").VFloat64<number | undefined, "optional">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "totalCities" | "totalCountries" | "totalTrips" | "totalDistance" | "totalDays" | "totalExpenses" | "mostVisitedCity" | "mostVisitedCountry" | "firstTripDate" | "lastTripDate" | "goalCities" | "goalCountries" | "nextGoalCity" | "yearlyStats" | "mostVisitedCity.name" | "mostVisitedCity.count" | "mostVisitedCountry.name" | "mostVisitedCountry.count" | "nextGoalCity.latitude" | "nextGoalCity.longitude" | "nextGoalCity.countryCode" | "nextGoalCity.notes" | "nextGoalCity.cityName" | "nextGoalCity.countryName" | "nextGoalCity.plannedDate" | `yearlyStats.${string}`>, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "totalCities" | "totalCountries" | "totalTrips" | "totalDistance" | "totalDays" | "totalExpenses" | "mostVisitedCity" | "mostVisitedCountry" | "firstTripDate" | "lastTripDate" | "goalCities" | "goalCountries" | "nextGoalCity" | "yearlyStats" | "mostVisitedCity.name" | "mostVisitedCity.count" | "mostVisitedCountry.name" | "mostVisitedCountry.count" | "nextGoalCity.latitude" | "nextGoalCity.longitude" | "nextGoalCity.countryCode" | "nextGoalCity.notes" | "nextGoalCity.cityName" | "nextGoalCity.countryName" | "nextGoalCity.plannedDate" | `yearlyStats.${string}`>, {
         by_user: ["userId", "_creationTime"];
     }, {}, {}>;
     insuranceProducts: import("convex/server").TableDefinition<import("convex/values").VObject<{
@@ -2279,11 +2279,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         exclusions?: string[] | undefined;
         contactPhone?: string | undefined;
         contactEmail?: string | undefined;
-        provider: string;
+        createdAt: number;
+        name: string;
         type: "comprehensive" | "medical" | "accident" | "flight_delay" | "luggage" | "cancellation" | "emergency_evacuation";
         priority: number;
-        name: string;
-        createdAt: number;
+        provider: string;
         updatedAt: number;
         purchaseUrl: string;
         isActive: boolean;
@@ -2338,7 +2338,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         priority: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "provider" | "type" | "priority" | "name" | "createdAt" | "updatedAt" | "nameEn" | "rating" | "purchaseUrl" | "isActive" | "providerLogo" | "coverageAmount" | "coverageDetails" | "pricePerDay" | "minDays" | "maxDays" | "applicableRegions" | "domesticOnly" | "riskLevelCoverage" | "features" | "exclusions" | "reviewCount" | "contactPhone" | "contactEmail">, {
+    }, "required", "createdAt" | "name" | "type" | "priority" | "provider" | "updatedAt" | "nameEn" | "rating" | "purchaseUrl" | "isActive" | "providerLogo" | "coverageAmount" | "coverageDetails" | "pricePerDay" | "minDays" | "maxDays" | "applicableRegions" | "domesticOnly" | "riskLevelCoverage" | "features" | "exclusions" | "reviewCount" | "contactPhone" | "contactEmail">, {
         by_type: ["type", "_creationTime"];
         by_provider: ["provider", "_creationTime"];
         by_active: ["isActive", "_creationTime"];
@@ -2359,11 +2359,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
             claimAmount: number;
         }[] | undefined;
         status: "cancelled" | "pending" | "active" | "expired" | "claimed";
+        createdAt: number;
+        destinations: string[];
         userId: string;
         startDate: string;
         endDate: string;
-        destinations: string[];
-        createdAt: number;
         updatedAt: number;
         totalPrice: number;
         productId: import("convex/values").GenericId<"insuranceProducts">;
@@ -2435,7 +2435,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         purchasedAt: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "userId" | "startDate" | "endDate" | "destinations" | "createdAt" | "updatedAt" | "notes" | "itineraryId" | "totalPrice" | "productId" | "coverageDays" | "insuredPersons" | "orderNumber" | "policyNumber" | "paymentStatus" | "claimHistory" | "purchasedAt">, {
+    }, "required", "status" | "createdAt" | "destinations" | "userId" | "startDate" | "endDate" | "updatedAt" | "notes" | "itineraryId" | "totalPrice" | "productId" | "coverageDays" | "insuredPersons" | "orderNumber" | "policyNumber" | "paymentStatus" | "claimHistory" | "purchasedAt">, {
         by_user: ["userId", "_creationTime"];
         by_product: ["productId", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
@@ -2474,17 +2474,17 @@ declare const _default: import("convex/server").SchemaDefinition<{
             question: string;
             answer: string;
         }[] | undefined;
-        priority: number;
-        title: string;
         content: string;
+        createdAt: number;
+        title: string;
+        priority: number;
         steps: {
             tips?: string | undefined;
             requiredDocuments?: string[] | undefined;
-            title: string;
             description: string;
+            title: string;
             stepNumber: number;
         }[];
-        createdAt: number;
         updatedAt: number;
         isActive: boolean;
         claimType: "other" | "medical" | "accident" | "flight_delay" | "emergency_evacuation" | "luggage_loss" | "trip_cancellation";
@@ -2496,14 +2496,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
         steps: import("convex/values").VArray<{
             tips?: string | undefined;
             requiredDocuments?: string[] | undefined;
-            title: string;
             description: string;
+            title: string;
             stepNumber: number;
         }[], import("convex/values").VObject<{
             tips?: string | undefined;
             requiredDocuments?: string[] | undefined;
-            title: string;
             description: string;
+            title: string;
             stepNumber: number;
         }, {
             stepNumber: import("convex/values").VFloat64<number, "required">;
@@ -2511,7 +2511,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             description: import("convex/values").VString<string, "required">;
             requiredDocuments: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
             tips: import("convex/values").VString<string | undefined, "optional">;
-        }, "required", "title" | "description" | "tips" | "stepNumber" | "requiredDocuments">, "required">;
+        }, "required", "description" | "title" | "tips" | "stepNumber" | "requiredDocuments">, "required">;
         requiredDocuments: import("convex/values").VArray<string[], import("convex/values").VString<string, "required">, "required">;
         timeLimit: import("convex/values").VString<string | undefined, "optional">;
         contactInfo: import("convex/values").VObject<{
@@ -2537,18 +2537,18 @@ declare const _default: import("convex/server").SchemaDefinition<{
         priority: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "priority" | "title" | "content" | "steps" | "createdAt" | "updatedAt" | "isActive" | "claimType" | "requiredDocuments" | "timeLimit" | "contactInfo" | "faqs" | "contactInfo.email" | "contactInfo.phone" | "contactInfo.website">, {
+    }, "required", "content" | "createdAt" | "title" | "priority" | "steps" | "updatedAt" | "isActive" | "claimType" | "requiredDocuments" | "timeLimit" | "contactInfo" | "faqs" | "contactInfo.email" | "contactInfo.phone" | "contactInfo.website">, {
         by_claim_type: ["claimType", "_creationTime"];
         by_active: ["isActive", "_creationTime"];
         by_priority: ["priority", "_creationTime"];
     }, {}, {}>;
     chatSessions: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
         context?: string | undefined;
+        guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+        createdAt: number;
         title: string;
         userId: string;
-        createdAt: number;
         lastMessageAt: number;
         messageCount: number;
         isArchived: boolean;
@@ -2562,7 +2562,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         lastMessageAt: import("convex/values").VFloat64<number, "required">;
         isArchived: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "title" | "guideId" | "userId" | "context" | "createdAt" | "itineraryId" | "lastMessageAt" | "messageCount" | "isArchived">, {
+    }, "required", "createdAt" | "title" | "context" | "guideId" | "userId" | "itineraryId" | "lastMessageAt" | "messageCount" | "isArchived">, {
         by_user: ["userId", "_creationTime"];
         by_user_archived: ["userId", "isArchived", "_creationTime"];
         by_user_last_message: ["userId", "lastMessageAt", "_creationTime"];
@@ -2577,8 +2577,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 address?: string | undefined;
                 rating?: number | undefined;
                 priceInfo?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
             }[] | undefined;
             sources?: string[] | undefined;
             itineraryChanges?: {
@@ -2589,17 +2589,17 @@ declare const _default: import("convex/server").SchemaDefinition<{
             }[] | undefined;
             quickActions?: {
                 payload?: string | undefined;
-                label: string;
                 action: string;
+                label: string;
             }[] | undefined;
         } | undefined;
+        role: "user" | "assistant" | "system";
         content: string;
-        sessionId: import("convex/values").GenericId<"chatSessions">;
         createdAt: number;
-        role: "user" | "system" | "assistant";
+        sessionId: import("convex/values").GenericId<"chatSessions">;
     }, {
         sessionId: import("convex/values").VId<import("convex/values").GenericId<"chatSessions">, "required">;
-        role: import("convex/values").VUnion<"user" | "system" | "assistant", [import("convex/values").VLiteral<"user", "required">, import("convex/values").VLiteral<"assistant", "required">, import("convex/values").VLiteral<"system", "required">], "required", never>;
+        role: import("convex/values").VUnion<"user" | "assistant" | "system", [import("convex/values").VLiteral<"user", "required">, import("convex/values").VLiteral<"assistant", "required">, import("convex/values").VLiteral<"system", "required">], "required", never>;
         content: import("convex/values").VString<string, "required">;
         metadata: import("convex/values").VObject<{
             pois?: {
@@ -2609,8 +2609,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 address?: string | undefined;
                 rating?: number | undefined;
                 priceInfo?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
             }[] | undefined;
             sources?: string[] | undefined;
             itineraryChanges?: {
@@ -2621,8 +2621,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             }[] | undefined;
             quickActions?: {
                 payload?: string | undefined;
-                label: string;
                 action: string;
+                label: string;
             }[] | undefined;
         } | undefined, {
             pois: import("convex/values").VArray<{
@@ -2632,8 +2632,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 address?: string | undefined;
                 rating?: number | undefined;
                 priceInfo?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
             }[] | undefined, import("convex/values").VObject<{
                 description?: string | undefined;
                 latitude?: number | undefined;
@@ -2641,8 +2641,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 address?: string | undefined;
                 rating?: number | undefined;
                 priceInfo?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
             }, {
                 name: import("convex/values").VString<string, "required">;
                 type: import("convex/values").VString<string, "required">;
@@ -2652,7 +2652,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 address: import("convex/values").VString<string | undefined, "optional">;
                 rating: import("convex/values").VFloat64<number | undefined, "optional">;
                 priceInfo: import("convex/values").VString<string | undefined, "optional">;
-            }, "required", "type" | "name" | "description" | "latitude" | "longitude" | "address" | "rating" | "priceInfo">, "optional">;
+            }, "required", "name" | "type" | "description" | "latitude" | "longitude" | "address" | "rating" | "priceInfo">, "optional">;
             itineraryChanges: import("convex/values").VArray<{
                 dayNumber?: number | undefined;
                 poiName?: string | undefined;
@@ -2668,24 +2668,24 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 dayNumber: import("convex/values").VFloat64<number | undefined, "optional">;
                 poiName: import("convex/values").VString<string | undefined, "optional">;
                 details: import("convex/values").VString<string | undefined, "optional">;
-            }, "required", "dayNumber" | "action" | "poiName" | "details">, "optional">;
+            }, "required", "action" | "dayNumber" | "poiName" | "details">, "optional">;
             quickActions: import("convex/values").VArray<{
                 payload?: string | undefined;
-                label: string;
                 action: string;
+                label: string;
             }[] | undefined, import("convex/values").VObject<{
                 payload?: string | undefined;
-                label: string;
                 action: string;
+                label: string;
             }, {
                 label: import("convex/values").VString<string, "required">;
                 action: import("convex/values").VString<string, "required">;
                 payload: import("convex/values").VString<string | undefined, "optional">;
-            }, "required", "label" | "action" | "payload">, "optional">;
+            }, "required", "action" | "label" | "payload">, "optional">;
             sources: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         }, "optional", "pois" | "sources" | "itineraryChanges" | "quickActions">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "metadata" | "content" | "sessionId" | "createdAt" | "role" | "metadata.pois" | "metadata.sources" | "metadata.itineraryChanges" | "metadata.quickActions">, {
+    }, "required", "role" | "content" | "createdAt" | "metadata" | "sessionId" | "metadata.pois" | "metadata.sources" | "metadata.itineraryChanges" | "metadata.quickActions">, {
         by_session: ["sessionId", "_creationTime"];
         by_session_created: ["sessionId", "createdAt", "_creationTime"];
     }, {}, {}>;
@@ -2697,7 +2697,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         currencySymbol: string;
         lastUpdated: number;
         countryName: string;
-        tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+        tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
         cultureSummary: string;
         scenarios: {
             notes?: string | undefined;
@@ -2714,7 +2714,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         countryNameEn: import("convex/values").VString<string | undefined, "optional">;
         currency: import("convex/values").VString<string, "required">;
         currencySymbol: import("convex/values").VString<string, "required">;
-        tippingCulture: import("convex/values").VUnion<"expected" | "optional" | "appreciated" | "not_expected" | "offensive", [import("convex/values").VLiteral<"expected", "required">, import("convex/values").VLiteral<"appreciated", "required">, import("convex/values").VLiteral<"optional", "required">, import("convex/values").VLiteral<"not_expected", "required">, import("convex/values").VLiteral<"offensive", "required">], "required", never>;
+        tippingCulture: import("convex/values").VUnion<"optional" | "expected" | "appreciated" | "not_expected" | "offensive", [import("convex/values").VLiteral<"expected", "required">, import("convex/values").VLiteral<"appreciated", "required">, import("convex/values").VLiteral<"optional", "required">, import("convex/values").VLiteral<"not_expected", "required">, import("convex/values").VLiteral<"offensive", "required">], "required", never>;
         cultureSummary: import("convex/values").VString<string, "required">;
         scenarios: import("convex/values").VArray<{
             notes?: string | undefined;
@@ -2751,11 +2751,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         sourceUrl?: string | undefined;
         authorName?: string | undefined;
         publishedAt?: number | undefined;
-        title: string;
         content: string;
+        title: string;
+        sourceExternalId: string;
         crawledAt: number;
         sourcePlatform: string;
-        sourceExternalId: string;
     }, {
         sourcePlatform: import("convex/values").VString<string, "required">;
         sourceExternalId: import("convex/values").VString<string, "required">;
@@ -2765,16 +2765,16 @@ declare const _default: import("convex/server").SchemaDefinition<{
         authorName: import("convex/values").VString<string | undefined, "optional">;
         publishedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         crawledAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "title" | "content" | "sourceUrl" | "crawledAt" | "sourcePlatform" | "sourceExternalId" | "authorName" | "publishedAt">, {
+    }, "required", "content" | "title" | "sourceExternalId" | "sourceUrl" | "authorName" | "publishedAt" | "crawledAt" | "sourcePlatform">, {
         by_platform: ["sourcePlatform", "_creationTime"];
         by_platform_external: ["sourcePlatform", "sourceExternalId", "_creationTime"];
     }, {}, {}>;
     emergencyContacts: import("convex/server").TableDefinition<import("convex/values").VObject<{
         email?: string | undefined;
         notes?: string | undefined;
+        createdAt: number;
         name: string;
         userId: string;
-        createdAt: number;
         updatedAt: number;
         relationship: string;
         phoneNumber: string;
@@ -2791,7 +2791,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         notes: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "email" | "name" | "userId" | "createdAt" | "updatedAt" | "notes" | "relationship" | "phoneNumber" | "isPrimary" | "notifyOnSos">, {
+    }, "required", "createdAt" | "name" | "email" | "userId" | "updatedAt" | "notes" | "relationship" | "phoneNumber" | "isPrimary" | "notifyOnSos">, {
         by_user: ["userId", "_creationTime"];
         by_user_primary: ["userId", "isPrimary", "_creationTime"];
     }, {}, {}>;
@@ -2865,10 +2865,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         policyDocumentUrl?: string | undefined;
         insuranceCardUrl?: string | undefined;
         coveredRegions?: string[] | undefined;
+        createdAt: number;
         userId: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         isActive: boolean;
         policyNumber: string;
@@ -2897,7 +2897,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isActive: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "email" | "userId" | "startDate" | "endDate" | "createdAt" | "updatedAt" | "notes" | "isActive" | "coverageAmount" | "exclusions" | "policyNumber" | "website" | "providerName" | "emergencyHotline" | "claimsPhone" | "coverageType" | "medicalCoverage" | "evacuationCoverage" | "policyDocumentUrl" | "insuranceCardUrl" | "coveredRegions">, {
+    }, "required", "createdAt" | "email" | "userId" | "startDate" | "endDate" | "updatedAt" | "notes" | "isActive" | "coverageAmount" | "exclusions" | "policyNumber" | "website" | "providerName" | "emergencyHotline" | "claimsPhone" | "coverageType" | "medicalCoverage" | "evacuationCoverage" | "policyDocumentUrl" | "insuranceCardUrl" | "coveredRegions">, {
         by_user: ["userId", "_creationTime"];
         by_user_active: ["userId", "isActive", "_creationTime"];
     }, {}, {}>;
@@ -2907,12 +2907,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
         resolvedAt?: number | undefined;
         locationName?: string | undefined;
         accuracy?: number | undefined;
-        status: "received" | "cancelled" | "resolved" | "sent";
+        status: "cancelled" | "received" | "resolved" | "sent";
+        createdAt: number;
         latitude: number;
         longitude: number;
         userId: string;
-        createdAt: number;
-        alertType: "other" | "medical" | "emergency" | "safety";
+        alertType: "emergency" | "other" | "medical" | "safety";
         notifiedContacts: import("convex/values").GenericId<"emergencyContacts">[];
     }, {
         userId: import("convex/values").VString<string, "required">;
@@ -2920,21 +2920,21 @@ declare const _default: import("convex/server").SchemaDefinition<{
         longitude: import("convex/values").VFloat64<number, "required">;
         locationName: import("convex/values").VString<string | undefined, "optional">;
         accuracy: import("convex/values").VFloat64<number | undefined, "optional">;
-        alertType: import("convex/values").VUnion<"other" | "medical" | "emergency" | "safety", [import("convex/values").VLiteral<"emergency", "required">, import("convex/values").VLiteral<"medical", "required">, import("convex/values").VLiteral<"safety", "required">, import("convex/values").VLiteral<"other", "required">], "required", never>;
+        alertType: import("convex/values").VUnion<"emergency" | "other" | "medical" | "safety", [import("convex/values").VLiteral<"emergency", "required">, import("convex/values").VLiteral<"medical", "required">, import("convex/values").VLiteral<"safety", "required">, import("convex/values").VLiteral<"other", "required">], "required", never>;
         message: import("convex/values").VString<string | undefined, "optional">;
-        status: import("convex/values").VUnion<"received" | "cancelled" | "resolved" | "sent", [import("convex/values").VLiteral<"sent", "required">, import("convex/values").VLiteral<"received", "required">, import("convex/values").VLiteral<"resolved", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
+        status: import("convex/values").VUnion<"cancelled" | "received" | "resolved" | "sent", [import("convex/values").VLiteral<"sent", "required">, import("convex/values").VLiteral<"received", "required">, import("convex/values").VLiteral<"resolved", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
         notifiedContacts: import("convex/values").VArray<import("convex/values").GenericId<"emergencyContacts">[], import("convex/values").VId<import("convex/values").GenericId<"emergencyContacts">, "required">, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         resolvedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         resolvedBy: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "message" | "status" | "latitude" | "longitude" | "userId" | "createdAt" | "resolvedBy" | "resolvedAt" | "locationName" | "accuracy" | "alertType" | "notifiedContacts">, {
+    }, "required", "status" | "createdAt" | "message" | "latitude" | "longitude" | "userId" | "resolvedBy" | "resolvedAt" | "locationName" | "accuracy" | "alertType" | "notifiedContacts">, {
         by_user: ["userId", "_creationTime"];
         by_user_status: ["userId", "status", "_creationTime"];
         by_status: ["status", "_creationTime"];
     }, {}, {}>;
     safetyRatings: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        cityId?: import("convex/values").GenericId<"cities"> | undefined;
         sourceUrl?: string | undefined;
+        cityId?: import("convex/values").GenericId<"cities"> | undefined;
         verifiedBy?: string | undefined;
         destinationNameEn?: string | undefined;
         womenSafetyRating?: number | undefined;
@@ -2946,8 +2946,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             ambulance?: string | undefined;
             fire?: string | undefined;
         } | undefined;
-        summary: string;
         createdAt: number;
+        summary: string;
         updatedAt: number;
         countryCode: string;
         source: string;
@@ -2991,33 +2991,33 @@ declare const _default: import("convex/server").SchemaDefinition<{
         verifiedBy: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "summary" | "createdAt" | "updatedAt" | "countryCode" | "cityId" | "source" | "sourceUrl" | "verifiedBy" | "destinationName" | "destinationNameEn" | "overallRating" | "crimeRating" | "healthRating" | "naturalDisasterRating" | "transportRating" | "womenSafetyRating" | "lgbtqSafetyRating" | "summaryEn" | "generalTips" | "emergencyNumbers" | "lastVerifiedAt" | "emergencyNumbers.touristHotline" | "emergencyNumbers.police" | "emergencyNumbers.ambulance" | "emergencyNumbers.fire">, {
+    }, "required", "createdAt" | "sourceUrl" | "summary" | "updatedAt" | "countryCode" | "cityId" | "source" | "verifiedBy" | "destinationName" | "destinationNameEn" | "overallRating" | "crimeRating" | "healthRating" | "naturalDisasterRating" | "transportRating" | "womenSafetyRating" | "lgbtqSafetyRating" | "summaryEn" | "generalTips" | "emergencyNumbers" | "lastVerifiedAt" | "emergencyNumbers.touristHotline" | "emergencyNumbers.police" | "emergencyNumbers.ambulance" | "emergencyNumbers.fire">, {
         by_destination: ["destinationName", "_creationTime"];
         by_country: ["countryCode", "_creationTime"];
         by_city: ["cityId", "_creationTime"];
         by_overall_rating: ["overallRating", "_creationTime"];
     }, {}, {}>;
     safetyAlerts: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        sourceUrl?: string | undefined;
         endDate?: number | undefined;
         cityId?: import("convex/values").GenericId<"cities"> | undefined;
         descriptionEn?: string | undefined;
         titleEn?: string | undefined;
-        sourceUrl?: string | undefined;
         affectedAreas?: string[] | undefined;
         avoidAreas?: string[] | undefined;
         officialAdvisoryLevel?: string | undefined;
         createdBy?: string | undefined;
-        title: string;
-        description: string;
-        startDate: number;
         createdAt: number;
+        description: string;
+        title: string;
+        startDate: number;
         updatedAt: number;
         countryCode: string;
         source: string;
         isActive: boolean;
         alertType: "other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning";
         destinationName: string;
-        severity: "low" | "medium" | "high" | "info" | "critical";
+        severity: "info" | "critical" | "low" | "medium" | "high";
         recommendations: string[];
     }, {
         destinationName: import("convex/values").VString<string, "required">;
@@ -3025,7 +3025,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         cityId: import("convex/values").VId<import("convex/values").GenericId<"cities"> | undefined, "optional">;
         affectedAreas: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         alertType: import("convex/values").VUnion<"other" | "travel_advisory" | "health_warning" | "natural_disaster" | "civil_unrest" | "terrorism" | "crime_spike" | "scam_warning", [import("convex/values").VLiteral<"travel_advisory", "required">, import("convex/values").VLiteral<"health_warning", "required">, import("convex/values").VLiteral<"natural_disaster", "required">, import("convex/values").VLiteral<"civil_unrest", "required">, import("convex/values").VLiteral<"terrorism", "required">, import("convex/values").VLiteral<"crime_spike", "required">, import("convex/values").VLiteral<"scam_warning", "required">, import("convex/values").VLiteral<"other", "required">], "required", never>;
-        severity: import("convex/values").VUnion<"low" | "medium" | "high" | "info" | "critical", [import("convex/values").VLiteral<"info", "required">, import("convex/values").VLiteral<"low", "required">, import("convex/values").VLiteral<"medium", "required">, import("convex/values").VLiteral<"high", "required">, import("convex/values").VLiteral<"critical", "required">], "required", never>;
+        severity: import("convex/values").VUnion<"info" | "critical" | "low" | "medium" | "high", [import("convex/values").VLiteral<"info", "required">, import("convex/values").VLiteral<"low", "required">, import("convex/values").VLiteral<"medium", "required">, import("convex/values").VLiteral<"high", "required">, import("convex/values").VLiteral<"critical", "required">], "required", never>;
         title: import("convex/values").VString<string, "required">;
         titleEn: import("convex/values").VString<string | undefined, "optional">;
         description: import("convex/values").VString<string, "required">;
@@ -3041,7 +3041,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
         createdBy: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "title" | "description" | "startDate" | "endDate" | "createdAt" | "updatedAt" | "countryCode" | "cityId" | "descriptionEn" | "titleEn" | "source" | "sourceUrl" | "isActive" | "alertType" | "destinationName" | "affectedAreas" | "severity" | "recommendations" | "avoidAreas" | "officialAdvisoryLevel" | "createdBy">, {
+    }, "required", "createdAt" | "description" | "title" | "sourceUrl" | "startDate" | "endDate" | "updatedAt" | "countryCode" | "cityId" | "descriptionEn" | "titleEn" | "source" | "isActive" | "alertType" | "destinationName" | "affectedAreas" | "severity" | "recommendations" | "avoidAreas" | "officialAdvisoryLevel" | "createdBy">, {
         by_destination: ["destinationName", "_creationTime"];
         by_country: ["countryCode", "_creationTime"];
         by_city: ["cityId", "_creationTime"];
@@ -3067,10 +3067,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
             allDay: boolean;
         } | undefined;
         lastReportedAt?: number | undefined;
+        createdAt: number;
         description: string;
         latitude: number;
         longitude: number;
-        createdAt: number;
         updatedAt: number;
         countryCode: string;
         source: string;
@@ -3125,7 +3125,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isActive: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "description" | "latitude" | "longitude" | "createdAt" | "updatedAt" | "countryCode" | "cityId" | "descriptionEn" | "source" | "isActive" | "verifiedBy" | "reportCount" | "destinationName" | "zoneName" | "zoneNameEn" | "radiusMeters" | "polygon" | "dangerLevel" | "dangerTypes" | "precautions" | "dangerousTimes" | "lastReportedAt" | "isVerified" | "dangerousTimes.allDay" | "dangerousTimes.nightOnly" | "dangerousTimes.specificHours" | "dangerousTimes.specificDays">, {
+    }, "required", "createdAt" | "description" | "latitude" | "longitude" | "updatedAt" | "countryCode" | "cityId" | "descriptionEn" | "source" | "isActive" | "verifiedBy" | "reportCount" | "destinationName" | "zoneName" | "zoneNameEn" | "radiusMeters" | "polygon" | "dangerLevel" | "dangerTypes" | "precautions" | "dangerousTimes" | "lastReportedAt" | "isVerified" | "dangerousTimes.allDay" | "dangerousTimes.nightOnly" | "dangerousTimes.specificHours" | "dangerousTimes.specificDays">, {
         by_destination: ["destinationName", "_creationTime"];
         by_country: ["countryCode", "_creationTime"];
         by_city: ["cityId", "_creationTime"];
@@ -3135,20 +3135,20 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     wifiSpots: import("convex/server").TableDefinition<import("convex/values").VObject<{
         description?: string | undefined;
+        imageUrls?: string[] | undefined;
         nameEn?: string | undefined;
         address?: string | undefined;
-        imageUrls?: string[] | undefined;
         poiId?: import("convex/values").GenericId<"pois"> | undefined;
         openingHours?: string | undefined;
         verifiedAt?: number | undefined;
         verifiedBy?: string | undefined;
         ssid?: string | undefined;
         speedMbps?: number | undefined;
-        type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
+        createdAt: number;
         name: string;
+        type: "public" | "restaurant" | "hotel" | "other" | "cafe" | "airport" | "train_station" | "shopping_mall" | "library" | "coworking";
         latitude: number;
         longitude: number;
-        createdAt: number;
         updatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         ratingCount: number;
@@ -3181,7 +3181,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         submittedBy: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "type" | "name" | "description" | "latitude" | "longitude" | "createdAt" | "updatedAt" | "nameEn" | "cityId" | "address" | "ratingCount" | "imageUrls" | "poiId" | "openingHours" | "verifiedAt" | "verifiedBy" | "isVerified" | "ssid" | "requiresPassword" | "isFree" | "speedMbps" | "averageRating" | "submittedBy">, {
+    }, "required", "createdAt" | "name" | "type" | "description" | "imageUrls" | "latitude" | "longitude" | "updatedAt" | "nameEn" | "cityId" | "address" | "ratingCount" | "poiId" | "openingHours" | "verifiedAt" | "verifiedBy" | "isVerified" | "ssid" | "requiresPassword" | "isFree" | "speedMbps" | "averageRating" | "submittedBy">, {
         by_city: ["cityId", "_creationTime"];
         by_type: ["type", "_creationTime"];
         by_city_type: ["cityId", "type", "_creationTime"];
@@ -3197,9 +3197,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         locationName?: string | undefined;
         wifiSpotId?: import("convex/values").GenericId<"wifiSpots"> | undefined;
         securityType?: "unknown" | "open" | "wep" | "wpa" | "wpa2" | "wpa3" | undefined;
+        createdAt: number;
         name: string;
         userId: string;
-        createdAt: number;
         updatedAt: number;
         ssid: string;
         password: string;
@@ -3219,7 +3219,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         lastUsedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "name" | "latitude" | "longitude" | "userId" | "createdAt" | "updatedAt" | "notes" | "lastUsedAt" | "locationName" | "ssid" | "wifiSpotId" | "password" | "securityType" | "isShared">, {
+    }, "required", "createdAt" | "name" | "latitude" | "longitude" | "userId" | "updatedAt" | "notes" | "lastUsedAt" | "locationName" | "ssid" | "wifiSpotId" | "password" | "securityType" | "isShared">, {
         by_user: ["userId", "_creationTime"];
         by_user_spot: ["userId", "wifiSpotId", "_creationTime"];
         by_spot_shared: ["wifiSpotId", "isShared", "_creationTime"];
@@ -3230,8 +3230,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         speedTestResult?: number | undefined;
         connectionTime?: string | undefined;
         deviceType?: string | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         overallRating: number;
         wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -3254,21 +3254,21 @@ declare const _default: import("convex/server").SchemaDefinition<{
         helpfulCount: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "visitDate" | "comment" | "overallRating" | "wifiSpotId" | "speedRating" | "stabilityRating" | "easeOfAccessRating" | "speedTestResult" | "connectionTime" | "deviceType" | "helpfulCount">, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "visitDate" | "comment" | "overallRating" | "wifiSpotId" | "speedRating" | "stabilityRating" | "easeOfAccessRating" | "speedTestResult" | "connectionTime" | "deviceType" | "helpfulCount">, {
         by_spot: ["wifiSpotId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_user_spot: ["userId", "wifiSpotId", "_creationTime"];
         by_rating: ["overallRating", "_creationTime"];
     }, {}, {}>;
     wifiReviewHelpful: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         reviewId: import("convex/values").GenericId<"wifiReviews">;
     }, {
         reviewId: import("convex/values").VId<import("convex/values").GenericId<"wifiReviews">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "reviewId">, {
+    }, "required", "createdAt" | "userId" | "reviewId">, {
         by_review: ["reviewId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_review_user: ["reviewId", "userId", "_creationTime"];
@@ -3285,15 +3285,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
         wasResolved?: boolean | undefined;
         resolutionNotes?: string | undefined;
         status: "rejected" | "pending" | "resolved" | "verified";
-        title: string;
-        description: string;
-        userId: string;
         createdAt: number;
+        description: string;
+        title: string;
+        userId: string;
         updatedAt: number;
         countryCode: string;
         reportCount: number;
         destinationName: string;
-        severity: "moderate" | "critical" | "minor" | "severe";
+        severity: "critical" | "moderate" | "minor" | "severe";
         helpfulCount: number;
         isAnonymous: boolean;
         incidentType: "other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue";
@@ -3308,7 +3308,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         latitude: import("convex/values").VFloat64<number | undefined, "optional">;
         longitude: import("convex/values").VFloat64<number | undefined, "optional">;
         incidentType: import("convex/values").VUnion<"other" | "harassment" | "natural_disaster" | "scam" | "theft" | "assault" | "traffic_accident" | "health_issue" | "police_issue", [import("convex/values").VLiteral<"theft", "required">, import("convex/values").VLiteral<"assault", "required">, import("convex/values").VLiteral<"scam", "required">, import("convex/values").VLiteral<"harassment", "required">, import("convex/values").VLiteral<"traffic_accident", "required">, import("convex/values").VLiteral<"natural_disaster", "required">, import("convex/values").VLiteral<"health_issue", "required">, import("convex/values").VLiteral<"police_issue", "required">, import("convex/values").VLiteral<"other", "required">], "required", never>;
-        severity: import("convex/values").VUnion<"moderate" | "critical" | "minor" | "severe", [import("convex/values").VLiteral<"minor", "required">, import("convex/values").VLiteral<"moderate", "required">, import("convex/values").VLiteral<"severe", "required">, import("convex/values").VLiteral<"critical", "required">], "required", never>;
+        severity: import("convex/values").VUnion<"critical" | "moderate" | "minor" | "severe", [import("convex/values").VLiteral<"minor", "required">, import("convex/values").VLiteral<"moderate", "required">, import("convex/values").VLiteral<"severe", "required">, import("convex/values").VLiteral<"critical", "required">], "required", never>;
         title: import("convex/values").VString<string, "required">;
         description: import("convex/values").VString<string, "required">;
         incidentDate: import("convex/values").VFloat64<number, "required">;
@@ -3323,7 +3323,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reportCount: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "title" | "description" | "latitude" | "longitude" | "userId" | "createdAt" | "updatedAt" | "countryCode" | "cityId" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "reportCount" | "destinationName" | "severity" | "helpfulCount" | "isAnonymous" | "specificLocation" | "incidentType" | "incidentDate" | "wasPoliceInvolved" | "wasResolved" | "resolutionNotes">, {
+    }, "required", "status" | "createdAt" | "description" | "title" | "latitude" | "longitude" | "userId" | "updatedAt" | "countryCode" | "cityId" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "reportCount" | "destinationName" | "severity" | "helpfulCount" | "isAnonymous" | "specificLocation" | "incidentType" | "incidentDate" | "wasPoliceInvolved" | "wasResolved" | "resolutionNotes">, {
         by_user: ["userId", "_creationTime"];
         by_destination: ["destinationName", "_creationTime"];
         by_country: ["countryCode", "_creationTime"];
@@ -3333,6 +3333,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_date: ["incidentDate", "_creationTime"];
     }, {}, {}>;
     chargingStations: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        sourceUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         updatedAt?: number | undefined;
         nameEn?: string | undefined;
@@ -3340,8 +3342,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
         externalId?: string | undefined;
         rating?: number | undefined;
         ratingCount?: number | undefined;
-        imageUrls?: string[] | undefined;
-        sourceUrl?: string | undefined;
         amenities?: ("restaurant" | "restroom" | "convenience_store" | "wifi" | "lounge" | "car_wash" | "covered" | "lighting" | "security")[] | undefined;
         reviewCount?: number | undefined;
         website?: string | undefined;
@@ -3444,7 +3444,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         paymentMethods: import("convex/values").VArray<("app" | "wechat" | "alipay" | "card" | "membership")[] | undefined, import("convex/values").VUnion<"app" | "wechat" | "alipay" | "card" | "membership", [import("convex/values").VLiteral<"app", "required">, import("convex/values").VLiteral<"wechat", "required">, import("convex/values").VLiteral<"alipay", "required">, import("convex/values").VLiteral<"card", "required">, import("convex/values").VLiteral<"membership", "required">], "required", never>, "optional">;
         supportedBrands: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
-    }, "required", "status" | "name" | "latitude" | "longitude" | "phone" | "updatedAt" | "nameEn" | "cityId" | "externalId" | "address" | "rating" | "ratingCount" | "imageUrls" | "source" | "sourceUrl" | "crawledAt" | "amenities" | "reviewCount" | "website" | "operatorName" | "operatorId" | "stationType" | "totalPorts" | "availablePorts" | "chargerTypes" | "pricingInfo" | "operatingHours" | "is24Hours" | "lastStatusUpdate" | "paymentMethods" | "supportedBrands" | "pricingInfo.electricityPrice" | "pricingInfo.serviceFee" | "pricingInfo.parkingFee" | "pricingInfo.peakPrice" | "pricingInfo.valleyPrice" | "pricingInfo.flatPrice" | "pricingInfo.pricingNotes">, {
+    }, "required", "status" | "name" | "sourceUrl" | "imageUrls" | "latitude" | "longitude" | "phone" | "updatedAt" | "nameEn" | "cityId" | "externalId" | "address" | "rating" | "ratingCount" | "source" | "crawledAt" | "amenities" | "reviewCount" | "website" | "operatorName" | "operatorId" | "stationType" | "totalPorts" | "availablePorts" | "chargerTypes" | "pricingInfo" | "operatingHours" | "is24Hours" | "lastStatusUpdate" | "paymentMethods" | "supportedBrands" | "pricingInfo.electricityPrice" | "pricingInfo.serviceFee" | "pricingInfo.parkingFee" | "pricingInfo.peakPrice" | "pricingInfo.valleyPrice" | "pricingInfo.flatPrice" | "pricingInfo.pricingNotes">, {
         by_city: ["cityId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_operator: ["operatorName", "_creationTime"];
@@ -3454,10 +3454,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_city_status: ["cityId", "status", "_creationTime"];
     }, {}, {}>;
     chargingStationReviews: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId?: string | undefined;
-        imageUrls?: string[] | undefined;
-        visitDate?: string | undefined;
         authorName?: string | undefined;
+        imageUrls?: string[] | undefined;
+        userId?: string | undefined;
+        visitDate?: string | undefined;
         chargerType?: string | undefined;
         chargingDuration?: number | undefined;
         energyCharged?: number | undefined;
@@ -3487,7 +3487,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         imageUrls: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         isVerified: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "content" | "userId" | "createdAt" | "rating" | "imageUrls" | "visitDate" | "authorName" | "isVerified" | "stationId" | "chargerType" | "chargingDuration" | "energyCharged" | "totalCost" | "vehicleModel" | "pros" | "cons">, {
+    }, "required", "content" | "createdAt" | "authorName" | "imageUrls" | "userId" | "rating" | "visitDate" | "isVerified" | "stationId" | "chargerType" | "chargingDuration" | "energyCharged" | "totalCost" | "vehicleModel" | "pros" | "cons">, {
         by_station: ["stationId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_rating: ["rating", "_creationTime"];
@@ -3495,15 +3495,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     favoriteChargingStations: import("convex/server").TableDefinition<import("convex/values").VObject<{
         notes?: string | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         stationId: import("convex/values").GenericId<"chargingStations">;
     }, {
         userId: import("convex/values").VString<string, "required">;
         stationId: import("convex/values").VId<import("convex/values").GenericId<"chargingStations">, "required">;
         notes: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "notes" | "stationId">, {
+    }, "required", "createdAt" | "userId" | "notes" | "stationId">, {
         by_user: ["userId", "_creationTime"];
         by_station: ["stationId", "_creationTime"];
         by_user_station: ["userId", "stationId", "_creationTime"];
@@ -3540,11 +3540,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         affiliateUrl?: string | undefined;
         salesCount?: number | undefined;
         isPromoted?: boolean | undefined;
-        provider: string;
-        priority: number;
-        name: string;
-        destinations: string[];
         createdAt: number;
+        name: string;
+        priority: number;
+        destinations: string[];
+        provider: string;
         updatedAt: number;
         purchaseUrl: string;
         isActive: boolean;
@@ -3653,7 +3653,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 estimatedDays: import("convex/values").VFloat64<number | undefined, "optional">;
                 fee: import("convex/values").VFloat64<number | undefined, "optional">;
                 description: import("convex/values").VString<string | undefined, "optional">;
-            }, "required", "description" | "method" | "estimatedDays" | "fee">, "optional">;
+            }, "required", "method" | "description" | "estimatedDays" | "fee">, "optional">;
             pickupLocations: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         }, "optional", "simSize" | "deliveryOptions" | "pickupLocations">;
         includesVoice: import("convex/values").VBoolean<boolean, "required">;
@@ -3675,7 +3675,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         priority: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "provider" | "priority" | "name" | "destinations" | "createdAt" | "updatedAt" | "nameEn" | "rating" | "purchaseUrl" | "isActive" | "providerLogo" | "features" | "reviewCount" | "coverageType" | "cardType" | "destinationNames" | "regionName" | "dataPlans" | "networkType" | "supportedCarriers" | "esimInfo" | "physicalSimInfo" | "includesVoice" | "voiceMinutes" | "includesSms" | "smsCount" | "localNumber" | "hotspotSupported" | "maxDevices" | "purchasePlatforms" | "affiliateUrl" | "salesCount" | "isPromoted" | "esimInfo.supportsQrActivation" | "esimInfo.supportsAppActivation" | "esimInfo.activationInstructions" | "esimInfo.compatibleDevices" | "esimInfo.requiresUnlockedPhone" | "physicalSimInfo.simSize" | "physicalSimInfo.deliveryOptions" | "physicalSimInfo.pickupLocations">, {
+    }, "required", "createdAt" | "name" | "priority" | "destinations" | "provider" | "updatedAt" | "nameEn" | "rating" | "purchaseUrl" | "isActive" | "providerLogo" | "features" | "reviewCount" | "coverageType" | "cardType" | "destinationNames" | "regionName" | "dataPlans" | "networkType" | "supportedCarriers" | "esimInfo" | "physicalSimInfo" | "includesVoice" | "voiceMinutes" | "includesSms" | "smsCount" | "localNumber" | "hotspotSupported" | "maxDevices" | "purchasePlatforms" | "affiliateUrl" | "salesCount" | "isPromoted" | "esimInfo.supportsQrActivation" | "esimInfo.supportsAppActivation" | "esimInfo.activationInstructions" | "esimInfo.compatibleDevices" | "esimInfo.requiresUnlockedPhone" | "physicalSimInfo.simSize" | "physicalSimInfo.deliveryOptions" | "physicalSimInfo.pickupLocations">, {
         by_card_type: ["cardType", "_creationTime"];
         by_provider: ["provider", "_creationTime"];
         by_active: ["isActive", "_creationTime"];
@@ -3686,11 +3686,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     simCardReviews: import("convex/server").TableDefinition<import("convex/values").VObject<{
         title?: string | undefined;
+        authorName?: string | undefined;
+        imageUrls?: string[] | undefined;
         destination?: string | undefined;
         userId?: string | undefined;
         updatedAt?: number | undefined;
-        imageUrls?: string[] | undefined;
-        authorName?: string | undefined;
         speedRating?: number | undefined;
         speedTestResult?: string | undefined;
         pros?: string[] | undefined;
@@ -3705,8 +3705,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         signalQuality?: "excellent" | "good" | "average" | "poor" | "very_poor" | undefined;
         purchaseVerified?: boolean | undefined;
         reviewDate?: number | undefined;
-        status: "approved" | "rejected" | "pending";
         content: string;
+        status: "approved" | "rejected" | "pending";
         createdAt: number;
         wouldRecommend: boolean;
         reportCount: number;
@@ -3744,7 +3744,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewDate: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "status" | "title" | "destination" | "content" | "userId" | "createdAt" | "updatedAt" | "imageUrls" | "wouldRecommend" | "authorName" | "reportCount" | "overallRating" | "isVerified" | "speedRating" | "speedTestResult" | "helpfulCount" | "pros" | "cons" | "simCardId" | "signalRating" | "valueRating" | "serviceRating" | "usageDuration" | "actualDataUsed" | "deviceUsed" | "activationExperience" | "signalQuality" | "purchaseVerified" | "reviewDate">, {
+    }, "required", "content" | "status" | "createdAt" | "title" | "authorName" | "imageUrls" | "destination" | "userId" | "updatedAt" | "wouldRecommend" | "reportCount" | "overallRating" | "isVerified" | "speedRating" | "speedTestResult" | "helpfulCount" | "pros" | "cons" | "simCardId" | "signalRating" | "valueRating" | "serviceRating" | "usageDuration" | "actualDataUsed" | "deviceUsed" | "activationExperience" | "signalQuality" | "purchaseVerified" | "reviewDate">, {
         by_sim_card: ["simCardId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_overall_rating: ["overallRating", "_creationTime"];
@@ -3754,8 +3754,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_helpful: ["helpfulCount", "_creationTime"];
     }, {}, {}>;
     simCardReviewVotes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         voteType: "helpful" | "not_helpful";
         reviewId: import("convex/values").GenericId<"simCardReviews">;
     }, {
@@ -3763,22 +3763,22 @@ declare const _default: import("convex/server").SchemaDefinition<{
         userId: import("convex/values").VString<string, "required">;
         voteType: import("convex/values").VUnion<"helpful" | "not_helpful", [import("convex/values").VLiteral<"helpful", "required">, import("convex/values").VLiteral<"not_helpful", "required">], "required", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "voteType" | "reviewId">, {
+    }, "required", "createdAt" | "userId" | "voteType" | "reviewId">, {
         by_review: ["reviewId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_review_user: ["reviewId", "userId", "_creationTime"];
     }, {}, {}>;
     favoriteSimCards: import("convex/server").TableDefinition<import("convex/values").VObject<{
         notes?: string | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         simCardId: import("convex/values").GenericId<"simCards">;
     }, {
         userId: import("convex/values").VString<string, "required">;
         simCardId: import("convex/values").VId<import("convex/values").GenericId<"simCards">, "required">;
         notes: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "notes" | "simCardId">, {
+    }, "required", "createdAt" | "userId" | "notes" | "simCardId">, {
         by_user: ["userId", "_creationTime"];
         by_sim_card: ["simCardId", "_creationTime"];
         by_user_sim_card: ["userId", "simCardId", "_creationTime"];
@@ -3787,16 +3787,16 @@ declare const _default: import("convex/server").SchemaDefinition<{
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         location?: string | undefined;
         travelDate?: string | undefined;
-        title: string;
         content: string;
         createdAt: number;
+        title: string;
         likesCount: number;
+        savesCount: number;
         commentsCount: number;
+        viewsCount: number;
         visibility: "public" | "followers" | "private";
         updatedAt: number;
         authorId: string;
-        savesCount: number;
-        viewsCount: number;
         isEdited: boolean;
     }, {
         authorId: import("convex/values").VString<string, "required">;
@@ -3813,7 +3813,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isEdited: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "title" | "content" | "createdAt" | "likesCount" | "commentsCount" | "visibility" | "updatedAt" | "itineraryId" | "authorId" | "savesCount" | "viewsCount" | "isEdited" | "location" | "travelDate">, {
+    }, "required", "content" | "createdAt" | "title" | "likesCount" | "savesCount" | "commentsCount" | "viewsCount" | "visibility" | "updatedAt" | "itineraryId" | "authorId" | "isEdited" | "location" | "travelDate">, {
         by_author: ["authorId", "_creationTime"];
         by_visibility: ["visibility", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
@@ -3822,8 +3822,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     noteImages: import("convex/server").TableDefinition<import("convex/values").VObject<{
         caption?: string | undefined;
-        url: string;
         createdAt: number;
+        url: string;
         orderIndex: number;
         noteId: import("convex/values").GenericId<"travelNotes">;
         isCover: boolean;
@@ -3834,19 +3834,19 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isCover: import("convex/values").VBoolean<boolean, "required">;
         orderIndex: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "url" | "createdAt" | "orderIndex" | "noteId" | "caption" | "isCover">, {
+    }, "required", "createdAt" | "url" | "orderIndex" | "noteId" | "caption" | "isCover">, {
         by_note: ["noteId", "_creationTime"];
         by_note_order: ["noteId", "orderIndex", "_creationTime"];
     }, {}, {}>;
     noteTags: import("convex/server").TableDefinition<import("convex/values").VObject<{
         createdAt: number;
-        noteId: import("convex/values").GenericId<"travelNotes">;
         tag: string;
+        noteId: import("convex/values").GenericId<"travelNotes">;
     }, {
         noteId: import("convex/values").VId<import("convex/values").GenericId<"travelNotes">, "required">;
         tag: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "createdAt" | "noteId" | "tag">, {
+    }, "required", "createdAt" | "tag" | "noteId">, {
         by_note: ["noteId", "_creationTime"];
         by_tag: ["tag", "_creationTime"];
     }, {}, {}>;
@@ -3865,14 +3865,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_poi: ["poiId", "_creationTime"];
     }, {}, {}>;
     noteLikes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         noteId: import("convex/values").GenericId<"travelNotes">;
     }, {
         userId: import("convex/values").VString<string, "required">;
         noteId: import("convex/values").VId<import("convex/values").GenericId<"travelNotes">, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "noteId">, {
+    }, "required", "createdAt" | "userId" | "noteId">, {
         by_user: ["userId", "_creationTime"];
         by_note: ["noteId", "_creationTime"];
         by_user_note: ["userId", "noteId", "_creationTime"];
@@ -3881,9 +3881,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         updatedAt?: number | undefined;
         parentId?: import("convex/values").GenericId<"noteComments"> | undefined;
         content: string;
-        userId: string;
         createdAt: number;
         likesCount: number;
+        userId: string;
         repliesCount: number;
         isEdited: boolean;
         isDeleted: boolean;
@@ -3899,36 +3899,36 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isDeleted: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "content" | "userId" | "createdAt" | "likesCount" | "updatedAt" | "parentId" | "repliesCount" | "isEdited" | "isDeleted" | "noteId">, {
+    }, "required", "content" | "createdAt" | "likesCount" | "userId" | "updatedAt" | "parentId" | "repliesCount" | "isEdited" | "isDeleted" | "noteId">, {
         by_note: ["noteId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_parent: ["parentId", "_creationTime"];
         by_note_created: ["noteId", "createdAt", "_creationTime"];
     }, {}, {}>;
     noteCommentLikes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         commentId: import("convex/values").GenericId<"noteComments">;
     }, {
         commentId: import("convex/values").VId<import("convex/values").GenericId<"noteComments">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "commentId">, {
+    }, "required", "createdAt" | "userId" | "commentId">, {
         by_comment: ["commentId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_comment_user: ["commentId", "userId", "_creationTime"];
     }, {}, {}>;
     noteSaves: import("convex/server").TableDefinition<import("convex/values").VObject<{
         collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         noteId: import("convex/values").GenericId<"travelNotes">;
     }, {
         userId: import("convex/values").VString<string, "required">;
         noteId: import("convex/values").VId<import("convex/values").GenericId<"travelNotes">, "required">;
         collectionId: import("convex/values").VId<import("convex/values").GenericId<"favoriteCollections"> | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "collectionId" | "noteId">, {
+    }, "required", "createdAt" | "userId" | "collectionId" | "noteId">, {
         by_user: ["userId", "_creationTime"];
         by_note: ["noteId", "_creationTime"];
         by_user_note: ["userId", "noteId", "_creationTime"];
@@ -3949,8 +3949,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             days: number;
             itineraryId: import("convex/values").GenericId<"itineraries">;
         } | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         totalPois: number;
         totalCities: number;
@@ -4096,7 +4096,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         lastCalculatedAt: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "totalPois" | "totalCities" | "totalCountries" | "totalTrips" | "totalDistance" | "totalDays" | "totalExpenses" | "longestTrip" | "shortestTrip" | "expensesByCategory" | "averageExpensePerDay" | "averageExpensePerTrip" | "topDestinations" | "preferredTransportModes" | "preferredPoiCategories" | "monthlyTripCounts" | "lastCalculatedAt" | "longestTrip.title" | "longestTrip.startDate" | "longestTrip.endDate" | "longestTrip.days" | "longestTrip.itineraryId" | "shortestTrip.title" | "shortestTrip.startDate" | "shortestTrip.endDate" | "shortestTrip.days" | "shortestTrip.itineraryId">, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "totalPois" | "totalCities" | "totalCountries" | "totalTrips" | "totalDistance" | "totalDays" | "totalExpenses" | "longestTrip" | "shortestTrip" | "expensesByCategory" | "averageExpensePerDay" | "averageExpensePerTrip" | "topDestinations" | "preferredTransportModes" | "preferredPoiCategories" | "monthlyTripCounts" | "lastCalculatedAt" | "longestTrip.title" | "longestTrip.startDate" | "longestTrip.endDate" | "longestTrip.days" | "longestTrip.itineraryId" | "shortestTrip.title" | "shortestTrip.startDate" | "shortestTrip.endDate" | "shortestTrip.days" | "shortestTrip.itineraryId">, {
         by_user: ["userId", "_creationTime"];
         by_total_trips: ["totalTrips", "_creationTime"];
         by_total_distance: ["totalDistance", "_creationTime"];
@@ -4136,12 +4136,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
         memories?: {
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
             imageUrl?: string | undefined;
-            text: string;
             createdAt: number;
+            text: string;
         }[] | undefined;
         status: "error" | "generating" | "ready";
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         citiesCount: number;
         totalDistance: number;
@@ -4175,9 +4175,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }[];
         achievements: {
             earnedAt?: number | undefined;
-            id: string;
-            title: string;
             description: string;
+            title: string;
+            id: string;
             icon: string;
         }[];
     }, {
@@ -4290,15 +4290,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }, "required", "expenses" | "month" | "tripsCount" | "daysCount">, "required">;
         achievements: import("convex/values").VArray<{
             earnedAt?: number | undefined;
-            id: string;
-            title: string;
             description: string;
+            title: string;
+            id: string;
             icon: string;
         }[], import("convex/values").VObject<{
             earnedAt?: number | undefined;
-            id: string;
-            title: string;
             description: string;
+            title: string;
+            id: string;
             icon: string;
         }, {
             id: import("convex/values").VString<string, "required">;
@@ -4306,7 +4306,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             description: import("convex/values").VString<string, "required">;
             icon: import("convex/values").VString<string, "required">;
             earnedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-        }, "required", "id" | "title" | "description" | "icon" | "earnedAt">, "required">;
+        }, "required", "description" | "title" | "id" | "icon" | "earnedAt">, "required">;
         yearOverYear: import("convex/values").VObject<{
             tripsChange: number;
             expensesChange: number;
@@ -4321,31 +4321,32 @@ declare const _default: import("convex/server").SchemaDefinition<{
         memories: import("convex/values").VArray<{
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
             imageUrl?: string | undefined;
-            text: string;
             createdAt: number;
+            text: string;
         }[] | undefined, import("convex/values").VObject<{
             itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
             imageUrl?: string | undefined;
-            text: string;
             createdAt: number;
+            text: string;
         }, {
             text: import("convex/values").VString<string, "required">;
             itineraryId: import("convex/values").VId<import("convex/values").GenericId<"itineraries"> | undefined, "optional">;
             imageUrl: import("convex/values").VString<string | undefined, "optional">;
             createdAt: import("convex/values").VFloat64<number, "required">;
-        }, "required", "text" | "createdAt" | "itineraryId" | "imageUrl">, "optional">;
+        }, "required", "createdAt" | "text" | "itineraryId" | "imageUrl">, "optional">;
         status: import("convex/values").VUnion<"error" | "generating" | "ready", [import("convex/values").VLiteral<"generating", "required">, import("convex/values").VLiteral<"ready", "required">, import("convex/values").VLiteral<"error", "required">], "required", never>;
         generatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         error: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "error" | "userId" | "createdAt" | "updatedAt" | "generatedAt" | "citiesCount" | "totalDistance" | "totalExpenses" | "longestTrip" | "longestTrip.title" | "longestTrip.days" | "longestTrip.itineraryId" | "year" | "tripsCount" | "daysCount" | "countriesCount" | "poisCount" | "expenseBreakdown" | "averagePerTrip" | "averagePerDay" | "mostExpensiveTrip" | "firstTripOfYear" | "lastTripOfYear" | "topCities" | "monthlyActivity" | "achievements" | "yearOverYear" | "memories" | "longestTrip.cityName" | "mostExpensiveTrip.title" | "mostExpensiveTrip.itineraryId" | "mostExpensiveTrip.amount" | "firstTripOfYear.title" | "firstTripOfYear.startDate" | "firstTripOfYear.itineraryId" | "firstTripOfYear.cityName" | "lastTripOfYear.title" | "lastTripOfYear.startDate" | "lastTripOfYear.itineraryId" | "lastTripOfYear.cityName" | "yearOverYear.tripsChange" | "yearOverYear.expensesChange" | "yearOverYear.distanceChange" | "yearOverYear.citiesChange">, {
+    }, "required", "status" | "createdAt" | "error" | "userId" | "updatedAt" | "generatedAt" | "citiesCount" | "totalDistance" | "totalExpenses" | "longestTrip" | "longestTrip.title" | "longestTrip.days" | "longestTrip.itineraryId" | "year" | "tripsCount" | "daysCount" | "countriesCount" | "poisCount" | "expenseBreakdown" | "averagePerTrip" | "averagePerDay" | "mostExpensiveTrip" | "firstTripOfYear" | "lastTripOfYear" | "topCities" | "monthlyActivity" | "achievements" | "yearOverYear" | "memories" | "longestTrip.cityName" | "mostExpensiveTrip.title" | "mostExpensiveTrip.itineraryId" | "mostExpensiveTrip.amount" | "firstTripOfYear.title" | "firstTripOfYear.startDate" | "firstTripOfYear.itineraryId" | "firstTripOfYear.cityName" | "lastTripOfYear.title" | "lastTripOfYear.startDate" | "lastTripOfYear.itineraryId" | "lastTripOfYear.cityName" | "yearOverYear.tripsChange" | "yearOverYear.expensesChange" | "yearOverYear.distanceChange" | "yearOverYear.citiesChange">, {
         by_user: ["userId", "_creationTime"];
         by_year: ["year", "_creationTime"];
         by_user_year: ["userId", "year", "_creationTime"];
         by_status: ["status", "_creationTime"];
     }, {}, {}>;
     verificationBadges: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        description?: string | undefined;
         metadata?: {
             travelExpertLevel?: number | undefined;
             specialties?: string[] | undefined;
@@ -4359,16 +4360,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
             organizationType?: string | undefined;
             officialWebsite?: string | undefined;
         } | undefined;
-        description?: string | undefined;
         color?: string | undefined;
         verifiedBy?: string | undefined;
         iconUrl?: string | undefined;
         expiresAt?: number | undefined;
         revokedAt?: number | undefined;
         revokedReason?: string | undefined;
+        createdAt: number;
         userId: string;
         displayName: string;
-        createdAt: number;
         updatedAt: number;
         isActive: boolean;
         verifiedAt: number;
@@ -4413,7 +4413,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }, "optional", "travelExpertLevel" | "specialties" | "totalGuides" | "totalLikes" | "localCity" | "localCityId" | "yearsOfResidence" | "languages" | "organizationName" | "organizationType" | "officialWebsite">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "metadata" | "description" | "userId" | "displayName" | "createdAt" | "updatedAt" | "color" | "isActive" | "verifiedAt" | "verifiedBy" | "badgeType" | "iconUrl" | "expiresAt" | "revokedAt" | "revokedReason" | "metadata.travelExpertLevel" | "metadata.specialties" | "metadata.totalGuides" | "metadata.totalLikes" | "metadata.localCity" | "metadata.localCityId" | "metadata.yearsOfResidence" | "metadata.languages" | "metadata.organizationName" | "metadata.organizationType" | "metadata.officialWebsite">, {
+    }, "required", "createdAt" | "description" | "metadata" | "userId" | "displayName" | "updatedAt" | "color" | "isActive" | "verifiedAt" | "verifiedBy" | "badgeType" | "iconUrl" | "expiresAt" | "revokedAt" | "revokedReason" | "metadata.travelExpertLevel" | "metadata.specialties" | "metadata.totalGuides" | "metadata.totalLikes" | "metadata.localCity" | "metadata.localCityId" | "metadata.yearsOfResidence" | "metadata.languages" | "metadata.organizationName" | "metadata.organizationType" | "metadata.officialWebsite">, {
         by_user: ["userId", "_creationTime"];
         by_user_type: ["userId", "badgeType", "_creationTime"];
         by_type: ["badgeType", "_creationTime"];
@@ -4447,10 +4447,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewNotes?: string | undefined;
         rejectionReason?: string | undefined;
         badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-        status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+        status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+        createdAt: number;
         userId: string;
         phone: string;
-        createdAt: number;
         updatedAt: number;
         idType: "id_card" | "passport" | "business_license";
         idNumber: string;
@@ -4460,7 +4460,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {
         userId: import("convex/values").VString<string, "required">;
         badgeType: import("convex/values").VUnion<"travel_expert" | "local_guide" | "official_account", [import("convex/values").VLiteral<"travel_expert", "required">, import("convex/values").VLiteral<"local_guide", "required">, import("convex/values").VLiteral<"official_account", "required">], "required", never>;
-        status: import("convex/values").VUnion<"approved" | "rejected" | "cancelled" | "pending" | "under_review", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
+        status: import("convex/values").VUnion<"cancelled" | "approved" | "rejected" | "pending" | "under_review", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
         realName: import("convex/values").VString<string, "required">;
         idType: import("convex/values").VUnion<"id_card" | "passport" | "business_license", [import("convex/values").VLiteral<"id_card", "required">, import("convex/values").VLiteral<"passport", "required">, import("convex/values").VLiteral<"business_license", "required">], "required", never>;
         idNumber: import("convex/values").VString<string, "required">;
@@ -4516,7 +4516,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         badgeId: import("convex/values").VId<import("convex/values").GenericId<"verificationBadges"> | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "email" | "status" | "userId" | "phone" | "createdAt" | "updatedAt" | "reviewedBy" | "reviewedAt" | "idType" | "idNumber" | "badgeType" | "realName" | "applicationReason" | "supportingMaterials" | "applicationData" | "reviewNotes" | "rejectionReason" | "badgeId" | "applicationData.localCity" | "applicationData.yearsOfResidence" | "applicationData.languages" | "applicationData.organizationName" | "applicationData.organizationType" | "applicationData.officialWebsite" | "applicationData.travelExperience" | "applicationData.socialMediaLinks" | "applicationData.publishedGuideIds" | "applicationData.residenceProof" | "applicationData.localKnowledge" | "applicationData.businessLicenseUrl" | "applicationData.authorizationLetterUrl">, {
+    }, "required", "status" | "createdAt" | "email" | "userId" | "phone" | "updatedAt" | "reviewedBy" | "reviewedAt" | "idType" | "idNumber" | "badgeType" | "realName" | "applicationReason" | "supportingMaterials" | "applicationData" | "reviewNotes" | "rejectionReason" | "badgeId" | "applicationData.localCity" | "applicationData.yearsOfResidence" | "applicationData.languages" | "applicationData.organizationName" | "applicationData.organizationType" | "applicationData.officialWebsite" | "applicationData.travelExperience" | "applicationData.socialMediaLinks" | "applicationData.publishedGuideIds" | "applicationData.residenceProof" | "applicationData.localKnowledge" | "applicationData.businessLicenseUrl" | "applicationData.authorizationLetterUrl">, {
         by_user: ["userId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_type: ["badgeType", "_creationTime"];
@@ -4525,13 +4525,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_created: ["createdAt", "_creationTime"];
     }, {}, {}>;
     weatherCache: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        latitude: number;
-        longitude: number;
         data: {
             current?: {
                 date: string;
-                timestamp: number;
                 icon: string;
+                timestamp: number;
                 condition: string;
                 conditionDescription: string;
                 tempMin: number;
@@ -4558,8 +4556,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             timezoneOffset: number;
             daily: {
                 date: string;
-                timestamp: number;
                 icon: string;
+                timestamp: number;
                 condition: string;
                 conditionDescription: string;
                 tempMin: number;
@@ -4590,6 +4588,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             }[];
             fetchedAt: number;
         };
+        latitude: number;
+        longitude: number;
         fetchedAt: number;
     }, {
         latitude: import("convex/values").VFloat64<number, "required">;
@@ -4597,8 +4597,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         data: import("convex/values").VObject<{
             current?: {
                 date: string;
-                timestamp: number;
                 icon: string;
+                timestamp: number;
                 condition: string;
                 conditionDescription: string;
                 tempMin: number;
@@ -4625,8 +4625,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             timezoneOffset: number;
             daily: {
                 date: string;
-                timestamp: number;
                 icon: string;
+                timestamp: number;
                 condition: string;
                 conditionDescription: string;
                 tempMin: number;
@@ -4663,8 +4663,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             timezoneOffset: import("convex/values").VFloat64<number, "required">;
             current: import("convex/values").VObject<{
                 date: string;
-                timestamp: number;
                 icon: string;
+                timestamp: number;
                 condition: string;
                 conditionDescription: string;
                 tempMin: number;
@@ -4707,11 +4707,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 sunset: import("convex/values").VFloat64<number, "required">;
                 cloudiness: import("convex/values").VFloat64<number, "required">;
                 pressure: import("convex/values").VFloat64<number, "required">;
-            }, "optional", "date" | "timestamp" | "icon" | "condition" | "conditionDescription" | "tempMin" | "tempMax" | "tempMorning" | "tempDay" | "tempEvening" | "tempNight" | "feelsLikeDay" | "humidity" | "windSpeed" | "windDirection" | "precipitation" | "precipitationProbability" | "uvIndex" | "sunrise" | "sunset" | "cloudiness" | "pressure">;
+            }, "optional", "date" | "icon" | "timestamp" | "condition" | "conditionDescription" | "tempMin" | "tempMax" | "tempMorning" | "tempDay" | "tempEvening" | "tempNight" | "feelsLikeDay" | "humidity" | "windSpeed" | "windDirection" | "precipitation" | "precipitationProbability" | "uvIndex" | "sunrise" | "sunset" | "cloudiness" | "pressure">;
             daily: import("convex/values").VArray<{
                 date: string;
-                timestamp: number;
                 icon: string;
+                timestamp: number;
                 condition: string;
                 conditionDescription: string;
                 tempMin: number;
@@ -4733,8 +4733,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 pressure: number;
             }[], import("convex/values").VObject<{
                 date: string;
-                timestamp: number;
                 icon: string;
+                timestamp: number;
                 condition: string;
                 conditionDescription: string;
                 tempMin: number;
@@ -4777,7 +4777,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 sunset: import("convex/values").VFloat64<number, "required">;
                 cloudiness: import("convex/values").VFloat64<number, "required">;
                 pressure: import("convex/values").VFloat64<number, "required">;
-            }, "required", "date" | "timestamp" | "icon" | "condition" | "conditionDescription" | "tempMin" | "tempMax" | "tempMorning" | "tempDay" | "tempEvening" | "tempNight" | "feelsLikeDay" | "humidity" | "windSpeed" | "windDirection" | "precipitation" | "precipitationProbability" | "uvIndex" | "sunrise" | "sunset" | "cloudiness" | "pressure">, "required">;
+            }, "required", "date" | "icon" | "timestamp" | "condition" | "conditionDescription" | "tempMin" | "tempMax" | "tempMorning" | "tempDay" | "tempEvening" | "tempNight" | "feelsLikeDay" | "humidity" | "windSpeed" | "windDirection" | "precipitation" | "precipitationProbability" | "uvIndex" | "sunrise" | "sunset" | "cloudiness" | "pressure">, "required">;
             alerts: import("convex/values").VArray<{
                 description: string;
                 severity: string;
@@ -4801,9 +4801,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 severity: import("convex/values").VString<string, "required">;
             }, "required", "description" | "severity" | "event" | "sender" | "start" | "end">, "required">;
             fetchedAt: import("convex/values").VFloat64<number, "required">;
-        }, "required", "latitude" | "longitude" | "current" | "timezone" | "timezoneOffset" | "daily" | "alerts" | "fetchedAt" | "current.date" | "current.timestamp" | "current.icon" | "current.condition" | "current.conditionDescription" | "current.tempMin" | "current.tempMax" | "current.tempMorning" | "current.tempDay" | "current.tempEvening" | "current.tempNight" | "current.feelsLikeDay" | "current.humidity" | "current.windSpeed" | "current.windDirection" | "current.precipitation" | "current.precipitationProbability" | "current.uvIndex" | "current.sunrise" | "current.sunset" | "current.cloudiness" | "current.pressure">;
+        }, "required", "latitude" | "longitude" | "current" | "timezone" | "timezoneOffset" | "daily" | "alerts" | "fetchedAt" | "current.date" | "current.icon" | "current.timestamp" | "current.condition" | "current.conditionDescription" | "current.tempMin" | "current.tempMax" | "current.tempMorning" | "current.tempDay" | "current.tempEvening" | "current.tempNight" | "current.feelsLikeDay" | "current.humidity" | "current.windSpeed" | "current.windDirection" | "current.precipitation" | "current.precipitationProbability" | "current.uvIndex" | "current.sunrise" | "current.sunset" | "current.cloudiness" | "current.pressure">;
         fetchedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "latitude" | "longitude" | "data" | "fetchedAt" | "data.latitude" | "data.longitude" | "data.current" | "data.timezone" | "data.timezoneOffset" | "data.daily" | "data.alerts" | "data.fetchedAt" | "data.current.date" | "data.current.timestamp" | "data.current.icon" | "data.current.condition" | "data.current.conditionDescription" | "data.current.tempMin" | "data.current.tempMax" | "data.current.tempMorning" | "data.current.tempDay" | "data.current.tempEvening" | "data.current.tempNight" | "data.current.feelsLikeDay" | "data.current.humidity" | "data.current.windSpeed" | "data.current.windDirection" | "data.current.precipitation" | "data.current.precipitationProbability" | "data.current.uvIndex" | "data.current.sunrise" | "data.current.sunset" | "data.current.cloudiness" | "data.current.pressure">, {
+    }, "required", "data" | "latitude" | "longitude" | "fetchedAt" | "data.latitude" | "data.longitude" | "data.current" | "data.timezone" | "data.timezoneOffset" | "data.daily" | "data.alerts" | "data.fetchedAt" | "data.current.date" | "data.current.icon" | "data.current.timestamp" | "data.current.condition" | "data.current.conditionDescription" | "data.current.tempMin" | "data.current.tempMax" | "data.current.tempMorning" | "data.current.tempDay" | "data.current.tempEvening" | "data.current.tempNight" | "data.current.feelsLikeDay" | "data.current.humidity" | "data.current.windSpeed" | "data.current.windDirection" | "data.current.precipitation" | "data.current.precipitationProbability" | "data.current.uvIndex" | "data.current.sunrise" | "data.current.sunset" | "data.current.cloudiness" | "data.current.pressure">, {
         by_location: ["latitude", "longitude", "_creationTime"];
         by_fetched_at: ["fetchedAt", "_creationTime"];
     }, {}, {}>;
@@ -4822,9 +4822,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         shareCode?: string | undefined;
         sharedWith?: string[] | undefined;
         templateId?: import("convex/values").GenericId<"packingTemplates"> | undefined;
+        createdAt: number;
         title: string;
         userId: string;
-        createdAt: number;
         updatedAt: number;
         isPublic: boolean;
     }, {
@@ -4852,7 +4852,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         templateId: import("convex/values").VId<import("convex/values").GenericId<"packingTemplates"> | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "title" | "destination" | "userId" | "startDate" | "endDate" | "weatherInfo" | "createdAt" | "updatedAt" | "itineraryId" | "tripType" | "shareCode" | "sharedWith" | "isPublic" | "templateId" | "weatherInfo.condition" | "weatherInfo.humidity" | "weatherInfo.fetchedAt" | "weatherInfo.avgTemp">, {
+    }, "required", "createdAt" | "title" | "destination" | "userId" | "startDate" | "endDate" | "weatherInfo" | "updatedAt" | "itineraryId" | "tripType" | "shareCode" | "sharedWith" | "isPublic" | "templateId" | "weatherInfo.condition" | "weatherInfo.humidity" | "weatherInfo.fetchedAt" | "weatherInfo.avgTemp">, {
         by_user: ["userId", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
         by_share_code: ["shareCode", "_creationTime"];
@@ -4864,8 +4864,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         suggestedBy?: "user" | "ai" | "weather" | "activity" | "template" | undefined;
         packedAt?: number | undefined;
         packedBy?: string | undefined;
-        name: string;
         createdAt: number;
+        name: string;
         updatedAt: number;
         category: "other" | "clothing" | "toiletries" | "electronics" | "documents" | "medicine" | "accessories" | "gear" | "snacks";
         orderIndex: number;
@@ -4887,7 +4887,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         packedBy: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "name" | "createdAt" | "updatedAt" | "category" | "notes" | "orderIndex" | "packingListId" | "quantity" | "isPacked" | "isEssential" | "suggestedBy" | "packedAt" | "packedBy">, {
+    }, "required", "createdAt" | "name" | "updatedAt" | "category" | "notes" | "orderIndex" | "packingListId" | "quantity" | "isPacked" | "isEssential" | "suggestedBy" | "packedAt" | "packedBy">, {
         by_list: ["packingListId", "_creationTime"];
         by_list_category: ["packingListId", "category", "_creationTime"];
         by_list_packed: ["packingListId", "isPacked", "_creationTime"];
@@ -4901,6 +4901,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         ratingCount?: number | undefined;
         createdBy?: string | undefined;
         durationDays?: number | undefined;
+        createdAt: number;
         name: string;
         items: {
             conditions?: {
@@ -4916,7 +4917,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
             quantity: number;
             isEssential: boolean;
         }[];
-        createdAt: number;
         updatedAt: number;
         isSystem: boolean;
         tripType: "city" | "other" | "leisure" | "business" | "adventure" | "beach" | "ski" | "hiking";
@@ -4984,7 +4984,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isPublic: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "name" | "description" | "items" | "createdAt" | "updatedAt" | "nameEn" | "climate" | "rating" | "ratingCount" | "isSystem" | "createdBy" | "tripType" | "isPublic" | "durationDays" | "usageCount">, {
+    }, "required", "createdAt" | "name" | "description" | "items" | "updatedAt" | "nameEn" | "climate" | "rating" | "ratingCount" | "isSystem" | "createdBy" | "tripType" | "isPublic" | "durationDays" | "usageCount">, {
         by_trip_type: ["tripType", "_creationTime"];
         by_climate: ["climate", "_creationTime"];
         by_system: ["isSystem", "_creationTime"];
@@ -4996,8 +4996,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         email?: string | undefined;
         userId?: string | undefined;
         avatarUrl?: string | undefined;
-        name: string;
         createdAt: number;
+        name: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
         isOwner: boolean;
     }, {
@@ -5008,7 +5008,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         userId: import("convex/values").VString<string | undefined, "optional">;
         isOwner: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "email" | "name" | "userId" | "avatarUrl" | "createdAt" | "itineraryId" | "isOwner">, {
+    }, "required", "createdAt" | "name" | "email" | "userId" | "avatarUrl" | "itineraryId" | "isOwner">, {
         by_itinerary: ["itineraryId", "_creationTime"];
         by_itinerary_user: ["itineraryId", "userId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
@@ -5016,9 +5016,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
     sharedExpenses: import("convex/server").TableDefinition<import("convex/values").VObject<{
         notes?: string | undefined;
         receiptImageUrl?: string | undefined;
-        date: string;
-        description: string;
         createdAt: number;
+        description: string;
+        date: string;
         updatedAt: number;
         category: "shopping" | "other" | "food" | "transport" | "accommodation" | "tickets";
         currency: string;
@@ -5039,7 +5039,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         receiptImageUrl: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "date" | "description" | "createdAt" | "updatedAt" | "category" | "currency" | "notes" | "itineraryId" | "amount" | "receiptImageUrl" | "paidById" | "splitType">, {
+    }, "required", "createdAt" | "description" | "date" | "updatedAt" | "category" | "currency" | "notes" | "itineraryId" | "amount" | "receiptImageUrl" | "paidById" | "splitType">, {
         by_itinerary: ["itineraryId", "_creationTime"];
         by_itinerary_date: ["itineraryId", "date", "_creationTime"];
         by_paid_by: ["paidById", "_creationTime"];
@@ -5089,12 +5089,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
     templateCategories: import("convex/server").TableDefinition<import("convex/values").VObject<{
         description?: string | undefined;
         nameEn?: string | undefined;
-        name: string;
         createdAt: number;
+        name: string;
+        icon: string;
         updatedAt: number;
         sortOrder: number;
         isActive: boolean;
-        icon: string;
     }, {
         name: import("convex/values").VString<string, "required">;
         nameEn: import("convex/values").VString<string | undefined, "optional">;
@@ -5104,16 +5104,16 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isActive: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "name" | "description" | "createdAt" | "updatedAt" | "nameEn" | "sortOrder" | "isActive" | "icon">, {
+    }, "required", "createdAt" | "name" | "description" | "icon" | "updatedAt" | "nameEn" | "sortOrder" | "isActive">, {
         by_sort_order: ["sortOrder", "_creationTime"];
         by_active: ["isActive", "_creationTime"];
     }, {}, {}>;
     itineraryTemplates: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        tags?: string[] | undefined;
         description?: string | undefined;
-        destinations?: string[] | undefined;
-        coverImageUrl?: string | undefined;
         publishedAt?: number | undefined;
+        coverImageUrl?: string | undefined;
+        destinations?: string[] | undefined;
+        tags?: string[] | undefined;
         creatorId?: string | undefined;
         creatorName?: string | undefined;
         estimatedBudget?: {
@@ -5123,6 +5123,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         } | undefined;
         suitableFor?: string[] | undefined;
         bestSeasons?: string[] | undefined;
+        createdAt: number;
         title: string;
         days: {
             theme?: string | undefined;
@@ -5134,12 +5135,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }[];
             dayNumber: number;
         }[];
-        createdAt: number;
         visibility: "public" | "private" | "unlisted";
         updatedAt: number;
         viewCount: number;
@@ -5169,8 +5169,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }[];
             dayNumber: number;
         }[], import("convex/values").VObject<{
@@ -5183,8 +5183,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }[];
             dayNumber: number;
         }, {
@@ -5198,8 +5198,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }[], import("convex/values").VObject<{
                 description?: string | undefined;
                 latitude?: number | undefined;
@@ -5208,8 +5208,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 notes?: string | undefined;
                 suggestedDuration?: number | undefined;
                 suggestedTime?: string | undefined;
-                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
                 name: string;
+                type: "attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation";
             }, {
                 name: import("convex/values").VString<string, "required">;
                 type: import("convex/values").VUnion<"attraction" | "restaurant" | "hotel" | "shopping" | "activity" | "transportation", [import("convex/values").VLiteral<"attraction", "required">, import("convex/values").VLiteral<"restaurant", "required">, import("convex/values").VLiteral<"hotel", "required">, import("convex/values").VLiteral<"transportation", "required">, import("convex/values").VLiteral<"activity", "required">, import("convex/values").VLiteral<"shopping", "required">], "required", never>;
@@ -5220,8 +5220,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
                 latitude: import("convex/values").VFloat64<number | undefined, "optional">;
                 longitude: import("convex/values").VFloat64<number | undefined, "optional">;
                 address: import("convex/values").VString<string | undefined, "optional">;
-            }, "required", "type" | "name" | "description" | "latitude" | "longitude" | "address" | "notes" | "suggestedDuration" | "suggestedTime">, "required">;
-        }, "required", "pois" | "dayNumber" | "theme">, "required">;
+            }, "required", "name" | "type" | "description" | "latitude" | "longitude" | "address" | "notes" | "suggestedDuration" | "suggestedTime">, "required">;
+        }, "required", "theme" | "pois" | "dayNumber">, "required">;
         destinations: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         tags: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         estimatedBudget: import("convex/values").VObject<{
@@ -5244,7 +5244,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
         publishedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "tags" | "title" | "description" | "destinations" | "days" | "createdAt" | "visibility" | "updatedAt" | "viewCount" | "coverImageUrl" | "publishedAt" | "categoryId" | "daysCount" | "templateType" | "creatorId" | "creatorName" | "estimatedBudget" | "suitableFor" | "bestSeasons" | "isPublished" | "likeCount" | "saveCount" | "useCount" | "estimatedBudget.currency" | "estimatedBudget.min" | "estimatedBudget.max">, {
+    }, "required", "createdAt" | "description" | "title" | "publishedAt" | "coverImageUrl" | "destinations" | "tags" | "days" | "visibility" | "updatedAt" | "viewCount" | "categoryId" | "daysCount" | "templateType" | "creatorId" | "creatorName" | "estimatedBudget" | "suitableFor" | "bestSeasons" | "isPublished" | "likeCount" | "saveCount" | "useCount" | "estimatedBudget.currency" | "estimatedBudget.min" | "estimatedBudget.max">, {
         by_category: ["categoryId", "_creationTime"];
         by_type: ["templateType", "_creationTime"];
         by_creator: ["creatorId", "_creationTime"];
@@ -5255,32 +5255,33 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_created: ["createdAt", "_creationTime"];
     }, {}, {}>;
     templateLikes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         templateId: import("convex/values").GenericId<"itineraryTemplates">;
     }, {
         templateId: import("convex/values").VId<import("convex/values").GenericId<"itineraryTemplates">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "templateId">, {
+    }, "required", "createdAt" | "userId" | "templateId">, {
         by_template: ["templateId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_template_user: ["templateId", "userId", "_creationTime"];
     }, {}, {}>;
     templateSaves: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         templateId: import("convex/values").GenericId<"itineraryTemplates">;
     }, {
         templateId: import("convex/values").VId<import("convex/values").GenericId<"itineraryTemplates">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "templateId">, {
+    }, "required", "createdAt" | "userId" | "templateId">, {
         by_template: ["templateId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_template_user: ["templateId", "userId", "_creationTime"];
     }, {}, {}>;
     itineraryDrafts: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        coverImageUrl?: string | undefined;
         startDate?: string | undefined;
         endDate?: string | undefined;
         days?: {
@@ -5304,7 +5305,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }[] | undefined;
         visibility?: "public" | "private" | "team" | undefined;
         cityId?: import("convex/values").GenericId<"cities"> | undefined;
-        coverImageUrl?: string | undefined;
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         deviceId?: string | undefined;
         title: string;
@@ -5414,7 +5414,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         expiresAt: import("convex/values").VFloat64<number, "required">;
         deviceId: import("convex/values").VString<string | undefined, "optional">;
         syncVersion: import("convex/values").VFloat64<number, "required">;
-    }, "required", "title" | "userId" | "startDate" | "endDate" | "days" | "visibility" | "cityId" | "coverImageUrl" | "itineraryId" | "deviceId" | "expiresAt" | "lastModifiedAt" | "syncVersion">, {
+    }, "required", "title" | "coverImageUrl" | "userId" | "startDate" | "endDate" | "days" | "visibility" | "cityId" | "itineraryId" | "deviceId" | "expiresAt" | "lastModifiedAt" | "syncVersion">, {
         by_user: ["userId", "_creationTime"];
         by_user_itinerary: ["userId", "itineraryId", "_creationTime"];
         by_expires: ["expiresAt", "_creationTime"];
@@ -5431,8 +5431,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         interests?: string[] | undefined;
         smokingPreference?: "smoker" | "non_smoker" | "no_preference" | undefined;
         accommodationPreference?: "luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
     }, {
         userId: import("convex/values").VString<string, "required">;
@@ -5448,14 +5448,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
         accommodationPreference: import("convex/values").VUnion<"luxury" | "no_preference" | "hostel" | "budget_hotel" | "mid_range" | undefined, [import("convex/values").VLiteral<"hostel", "required">, import("convex/values").VLiteral<"budget_hotel", "required">, import("convex/values").VLiteral<"mid_range", "required">, import("convex/values").VLiteral<"luxury", "required">, import("convex/values").VLiteral<"no_preference", "required">], "optional", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "bio" | "createdAt" | "updatedAt" | "ageRange" | "languages" | "travelStyles" | "preferredPace" | "gender" | "preferredPartnerGender" | "interests" | "smokingPreference" | "accommodationPreference">, {
+    }, "required", "createdAt" | "userId" | "bio" | "updatedAt" | "ageRange" | "languages" | "travelStyles" | "preferredPace" | "gender" | "preferredPartnerGender" | "interests" | "smokingPreference" | "accommodationPreference">, {
         by_user: ["userId", "_creationTime"];
         by_age_range: ["ageRange", "_creationTime"];
         by_gender: ["gender", "_creationTime"];
     }, {}, {}>;
     travelPartnerRequests: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        imageUrls?: string[] | undefined;
         coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         expiresAt?: number | undefined;
         estimatedBudget?: number | undefined;
@@ -5465,13 +5465,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
         preferredAgeRange?: ("18-25" | "26-35" | "36-45" | "46-55" | "55+")[] | undefined;
         budgetRange?: "budget" | "moderate" | "luxury" | "comfortable" | undefined;
         status: "cancelled" | "active" | "expired" | "paused" | "fulfilled";
-        title: string;
+        createdAt: number;
         description: string;
+        title: string;
         destination: string;
         userId: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         viewCount: number;
         isFlexibleDates: boolean;
@@ -5503,7 +5503,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
         expiresAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "status" | "title" | "description" | "destination" | "userId" | "startDate" | "endDate" | "createdAt" | "updatedAt" | "imageUrls" | "viewCount" | "coverImageUrl" | "itineraryId" | "expiresAt" | "estimatedBudget" | "travelStyles" | "destinationCityId" | "isFlexibleDates" | "currentGroupSize" | "maxGroupSize" | "preferredGender" | "preferredAgeRange" | "budgetRange" | "applicationCount">, {
+    }, "required", "status" | "createdAt" | "description" | "title" | "coverImageUrl" | "imageUrls" | "destination" | "userId" | "startDate" | "endDate" | "updatedAt" | "viewCount" | "itineraryId" | "expiresAt" | "estimatedBudget" | "travelStyles" | "destinationCityId" | "isFlexibleDates" | "currentGroupSize" | "maxGroupSize" | "preferredGender" | "preferredAgeRange" | "budgetRange" | "applicationCount">, {
         by_user: ["userId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_destination: ["destination", "_creationTime"];
@@ -5523,9 +5523,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         } | undefined;
         responseMessage?: string | undefined;
         respondedAt?: number | undefined;
-        message: string;
         status: "rejected" | "pending" | "expired" | "accepted" | "withdrawn";
         createdAt: number;
+        message: string;
         updatedAt: number;
         requestId: import("convex/values").GenericId<"travelPartnerRequests">;
         applicantId: string;
@@ -5554,7 +5554,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         respondedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "message" | "status" | "createdAt" | "updatedAt" | "requestId" | "applicantId" | "requestOwnerId" | "matchScore" | "matchFactors" | "responseMessage" | "respondedAt" | "matchFactors.styleMatch" | "matchFactors.ageMatch" | "matchFactors.budgetMatch" | "matchFactors.languageMatch" | "matchFactors.interestMatch">, {
+    }, "required", "status" | "createdAt" | "message" | "updatedAt" | "requestId" | "applicantId" | "requestOwnerId" | "matchScore" | "matchFactors" | "responseMessage" | "respondedAt" | "matchFactors.styleMatch" | "matchFactors.ageMatch" | "matchFactors.budgetMatch" | "matchFactors.languageMatch" | "matchFactors.interestMatch">, {
         by_request: ["requestId", "_creationTime"];
         by_applicant: ["applicantId", "_creationTime"];
         by_owner: ["requestOwnerId", "_creationTime"];
@@ -5577,11 +5577,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
             rating: number;
             wouldTravelAgain: boolean;
         } | undefined;
-        status: "cancelled" | "completed" | "active";
+        status: "completed" | "cancelled" | "active";
+        createdAt: number;
         destination: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         requestId: import("convex/values").GenericId<"travelPartnerRequests">;
         requestOwnerId: string;
@@ -5599,7 +5599,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         destination: import("convex/values").VString<string, "required">;
         startDate: import("convex/values").VString<string, "required">;
         endDate: import("convex/values").VString<string, "required">;
-        status: import("convex/values").VUnion<"cancelled" | "completed" | "active", [import("convex/values").VLiteral<"active", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
+        status: import("convex/values").VUnion<"completed" | "cancelled" | "active", [import("convex/values").VLiteral<"active", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
         conversationId: import("convex/values").VId<import("convex/values").GenericId<"conversations"> | undefined, "optional">;
         ownerFeedback: import("convex/values").VObject<{
             review?: string | undefined;
@@ -5625,7 +5625,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }, "optional", "createdAt" | "rating" | "review" | "wouldTravelAgain">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "destination" | "startDate" | "endDate" | "createdAt" | "updatedAt" | "conversationId" | "requestId" | "requestOwnerId" | "matchScore" | "applicationId" | "partnerId" | "matchedAt" | "ownerFeedback" | "partnerFeedback" | "ownerFeedback.createdAt" | "ownerFeedback.rating" | "ownerFeedback.review" | "ownerFeedback.wouldTravelAgain" | "partnerFeedback.createdAt" | "partnerFeedback.rating" | "partnerFeedback.review" | "partnerFeedback.wouldTravelAgain">, {
+    }, "required", "status" | "createdAt" | "destination" | "startDate" | "endDate" | "updatedAt" | "conversationId" | "requestId" | "requestOwnerId" | "matchScore" | "applicationId" | "partnerId" | "matchedAt" | "ownerFeedback" | "partnerFeedback" | "ownerFeedback.createdAt" | "ownerFeedback.rating" | "ownerFeedback.review" | "ownerFeedback.wouldTravelAgain" | "partnerFeedback.createdAt" | "partnerFeedback.rating" | "partnerFeedback.review" | "partnerFeedback.wouldTravelAgain">, {
         by_request: ["requestId", "_creationTime"];
         by_owner: ["requestOwnerId", "_creationTime"];
         by_partner: ["partnerId", "_creationTime"];
@@ -5645,8 +5645,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         referenceNote?: string | undefined;
         adminNotes?: string | undefined;
         status: "rejected" | "pending" | "expired" | "verified";
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         verificationType: "email" | "phone" | "identity" | "social" | "travel_history" | "reference";
     }, {
@@ -5665,7 +5665,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         expiresAt: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "userId" | "createdAt" | "updatedAt" | "reviewedBy" | "verifiedAt" | "expiresAt" | "verificationType" | "verificationData" | "verificationMethod" | "socialPlatform" | "socialId" | "referenceUserId" | "referenceNote" | "adminNotes">, {
+    }, "required", "status" | "createdAt" | "userId" | "updatedAt" | "reviewedBy" | "verifiedAt" | "expiresAt" | "verificationType" | "verificationData" | "verificationMethod" | "socialPlatform" | "socialId" | "referenceUserId" | "referenceNote" | "adminNotes">, {
         by_user: ["userId", "_creationTime"];
         by_user_type: ["userId", "verificationType", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -5674,8 +5674,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
     userTrustScores: import("convex/server").TableDefinition<import("convex/values").VObject<{
         averageRating?: number | undefined;
         badges?: ("verified_identity" | "trusted_traveler" | "super_host" | "responsive" | "experienced" | "top_rated")[] | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         totalTrips: number;
         lastCalculatedAt: number;
@@ -5703,28 +5703,28 @@ declare const _default: import("convex/server").SchemaDefinition<{
         lastCalculatedAt: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "updatedAt" | "totalTrips" | "averageRating" | "lastCalculatedAt" | "overallScore" | "verificationScore" | "activityScore" | "feedbackScore" | "responseScore" | "successfulMatches" | "cancelledMatches" | "totalRatings" | "badges">, {
+    }, "required", "createdAt" | "userId" | "updatedAt" | "totalTrips" | "averageRating" | "lastCalculatedAt" | "overallScore" | "verificationScore" | "activityScore" | "feedbackScore" | "responseScore" | "successfulMatches" | "cancelledMatches" | "totalRatings" | "badges">, {
         by_user: ["userId", "_creationTime"];
         by_overall_score: ["overallScore", "_creationTime"];
     }, {}, {}>;
     partnerRequestSaves: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         requestId: import("convex/values").GenericId<"travelPartnerRequests">;
     }, {
         userId: import("convex/values").VString<string, "required">;
         requestId: import("convex/values").VId<import("convex/values").GenericId<"travelPartnerRequests">, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "requestId">, {
+    }, "required", "createdAt" | "userId" | "requestId">, {
         by_user: ["userId", "_creationTime"];
         by_request: ["requestId", "_creationTime"];
         by_user_request: ["userId", "requestId", "_creationTime"];
     }, {}, {}>;
     poiQuestions: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        authorName?: string | undefined;
+        imageUrls?: string[] | undefined;
         tags?: string[] | undefined;
         updatedAt?: number | undefined;
-        imageUrls?: string[] | undefined;
-        authorName?: string | undefined;
         isDeleted?: boolean | undefined;
         acceptedAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
         bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
@@ -5732,15 +5732,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
         upvotesCount?: number | undefined;
         downvotesCount?: number | undefined;
         authorAvatarUrl?: string | undefined;
-        status: "open" | "resolved" | "answered" | "closed";
-        title: string;
         content: string;
+        status: "open" | "resolved" | "answered" | "closed";
+        createdAt: number;
+        title: string;
+        viewsCount: number;
         userId: string;
         followersCount: number;
-        createdAt: number;
         category: "tips" | "general" | "other" | "safety" | "food" | "accommodation" | "transportation" | "timing" | "pricing";
         poiId: import("convex/values").GenericId<"pois">;
-        viewsCount: number;
         isEdited: boolean;
         reportCount: number;
         answersCount: number;
@@ -5774,7 +5774,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         lastActivityAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "tags" | "status" | "title" | "content" | "userId" | "followersCount" | "createdAt" | "updatedAt" | "category" | "imageUrls" | "poiId" | "authorName" | "viewsCount" | "isEdited" | "isDeleted" | "reportCount" | "answersCount" | "acceptedAnswerId" | "bestAnswerId" | "hasBestAnswer" | "isPinned" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "lastActivityAt">, {
+    }, "required", "content" | "status" | "createdAt" | "title" | "authorName" | "imageUrls" | "tags" | "viewsCount" | "userId" | "followersCount" | "updatedAt" | "category" | "poiId" | "isEdited" | "isDeleted" | "reportCount" | "answersCount" | "acceptedAnswerId" | "bestAnswerId" | "hasBestAnswer" | "isPinned" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "lastActivityAt">, {
         by_poi: ["poiId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_poi_status: ["poiId", "status", "_creationTime"];
@@ -5791,17 +5791,17 @@ declare const _default: import("convex/server").SchemaDefinition<{
         };
     }, {}>;
     poiAnswers: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        updatedAt?: number | undefined;
-        imageUrls?: string[] | undefined;
-        poiId?: import("convex/values").GenericId<"pois"> | undefined;
         authorName?: string | undefined;
+        imageUrls?: string[] | undefined;
+        updatedAt?: number | undefined;
+        poiId?: import("convex/values").GenericId<"pois"> | undefined;
         authorAvatarUrl?: string | undefined;
         isBestAnswer?: boolean | undefined;
         authorBadgeType?: "travel_expert" | "local_guide" | "official_account" | undefined;
         content: string;
-        userId: string;
         createdAt: number;
         commentsCount: number;
+        userId: string;
         isEdited: boolean;
         isDeleted: boolean;
         reportCount: number;
@@ -5832,7 +5832,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isHidden: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "content" | "userId" | "createdAt" | "commentsCount" | "updatedAt" | "imageUrls" | "poiId" | "authorName" | "isEdited" | "isDeleted" | "reportCount" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "questionId" | "isAccepted" | "isBestAnswer" | "isVerifiedAuthor" | "authorBadgeType">, {
+    }, "required", "content" | "createdAt" | "authorName" | "imageUrls" | "commentsCount" | "userId" | "updatedAt" | "poiId" | "isEdited" | "isDeleted" | "reportCount" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "questionId" | "isAccepted" | "isBestAnswer" | "isVerifiedAuthor" | "authorBadgeType">, {
         by_question: ["questionId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_question_accepted: ["questionId", "isAccepted", "_creationTime"];
@@ -5840,8 +5840,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_created: ["createdAt", "_creationTime"];
     }, {}, {}>;
     answerVotes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         voteType: "up" | "down";
         answerId: import("convex/values").GenericId<"poiAnswers">;
     }, {
@@ -5849,7 +5849,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         userId: import("convex/values").VString<string, "required">;
         voteType: import("convex/values").VUnion<"up" | "down", [import("convex/values").VLiteral<"up", "required">, import("convex/values").VLiteral<"down", "required">], "required", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "voteType" | "answerId">, {
+    }, "required", "createdAt" | "userId" | "voteType" | "answerId">, {
         by_answer: ["answerId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_answer_user: ["answerId", "userId", "_creationTime"];
@@ -5858,9 +5858,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         updatedAt?: number | undefined;
         parentId?: import("convex/values").GenericId<"answerComments"> | undefined;
         content: string;
-        userId: string;
         createdAt: number;
         likesCount: number;
+        userId: string;
         isEdited: boolean;
         isDeleted: boolean;
         answerId: import("convex/values").GenericId<"poiAnswers">;
@@ -5874,21 +5874,21 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isDeleted: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "content" | "userId" | "createdAt" | "likesCount" | "updatedAt" | "parentId" | "isEdited" | "isDeleted" | "answerId">, {
+    }, "required", "content" | "createdAt" | "likesCount" | "userId" | "updatedAt" | "parentId" | "isEdited" | "isDeleted" | "answerId">, {
         by_answer: ["answerId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_parent: ["parentId", "_creationTime"];
         by_answer_created: ["answerId", "createdAt", "_creationTime"];
     }, {}, {}>;
     questionFollowers: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         questionId: import("convex/values").GenericId<"poiQuestions">;
     }, {
         questionId: import("convex/values").VId<import("convex/values").GenericId<"poiQuestions">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "questionId">, {
+    }, "required", "createdAt" | "userId" | "questionId">, {
         by_question: ["questionId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_question_user: ["questionId", "userId", "_creationTime"];
@@ -5898,8 +5898,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewedBy?: string | undefined;
         reviewedAt?: number | undefined;
         status: "pending" | "reviewed" | "resolved" | "dismissed";
-        userId: string;
         createdAt: number;
+        userId: string;
         reason: "other" | "spam" | "inappropriate" | "duplicate" | "off_topic";
         questionId: import("convex/values").GenericId<"poiQuestions">;
     }, {
@@ -5911,7 +5911,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdAt: import("convex/values").VFloat64<number, "required">;
         reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         reviewedBy: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "status" | "description" | "userId" | "createdAt" | "reason" | "reviewedBy" | "reviewedAt" | "questionId">, {
+    }, "required", "status" | "createdAt" | "description" | "userId" | "reason" | "reviewedBy" | "reviewedAt" | "questionId">, {
         by_question: ["questionId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -5922,8 +5922,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewedBy?: string | undefined;
         reviewedAt?: number | undefined;
         status: "pending" | "reviewed" | "resolved" | "dismissed";
-        userId: string;
         createdAt: number;
+        userId: string;
         reason: "other" | "spam" | "inappropriate" | "misleading" | "plagiarism";
         answerId: import("convex/values").GenericId<"poiAnswers">;
     }, {
@@ -5935,7 +5935,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdAt: import("convex/values").VFloat64<number, "required">;
         reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         reviewedBy: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "status" | "description" | "userId" | "createdAt" | "reason" | "reviewedBy" | "reviewedAt" | "answerId">, {
+    }, "required", "status" | "createdAt" | "description" | "userId" | "reason" | "reviewedBy" | "reviewedAt" | "answerId">, {
         by_answer: ["answerId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -5947,7 +5947,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             lang: string;
         }[] | undefined;
         usageContext?: string | undefined;
-        category: "time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
+        category: "time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common";
         sortOrder: number;
         sourceText: string;
         sourceLang: string;
@@ -5959,7 +5959,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         }[];
         isOfflineAvailable: boolean;
     }, {
-        category: import("convex/values").VUnion<"time" | "dining" | "shopping" | "emergency" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common", [import("convex/values").VLiteral<"greeting", "required">, import("convex/values").VLiteral<"transportation", "required">, import("convex/values").VLiteral<"dining", "required">, import("convex/values").VLiteral<"shopping", "required">, import("convex/values").VLiteral<"accommodation", "required">, import("convex/values").VLiteral<"emergency", "required">, import("convex/values").VLiteral<"directions", "required">, import("convex/values").VLiteral<"numbers", "required">, import("convex/values").VLiteral<"time", "required">, import("convex/values").VLiteral<"common", "required">], "required", never>;
+        category: import("convex/values").VUnion<"time" | "emergency" | "dining" | "shopping" | "accommodation" | "transportation" | "greeting" | "directions" | "numbers" | "common", [import("convex/values").VLiteral<"greeting", "required">, import("convex/values").VLiteral<"transportation", "required">, import("convex/values").VLiteral<"dining", "required">, import("convex/values").VLiteral<"shopping", "required">, import("convex/values").VLiteral<"accommodation", "required">, import("convex/values").VLiteral<"emergency", "required">, import("convex/values").VLiteral<"directions", "required">, import("convex/values").VLiteral<"numbers", "required">, import("convex/values").VLiteral<"time", "required">, import("convex/values").VLiteral<"common", "required">], "required", never>;
         sourceText: import("convex/values").VString<string, "required">;
         sourceLang: import("convex/values").VString<string, "required">;
         translations: import("convex/values").VArray<{
@@ -6005,9 +6005,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         notes?: string | undefined;
         imageUrl?: string | undefined;
         audioUrl?: string | undefined;
+        createdAt: number;
         targetLang: string;
         userId: string;
-        createdAt: number;
         lastUsedAt: number;
         usageCount: number;
         sourceText: string;
@@ -6029,7 +6029,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         lastUsedAt: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         notes: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "targetLang" | "userId" | "createdAt" | "notes" | "lastUsedAt" | "imageUrl" | "usageCount" | "sourceText" | "sourceLang" | "targetText" | "translationType" | "audioUrl" | "isFavorite">, {
+    }, "required", "createdAt" | "targetLang" | "userId" | "notes" | "lastUsedAt" | "imageUrl" | "usageCount" | "sourceText" | "sourceLang" | "targetText" | "translationType" | "audioUrl" | "isFavorite">, {
         by_user: ["userId", "_creationTime"];
         by_user_type: ["userId", "translationType", "_creationTime"];
         by_user_favorite: ["userId", "isFavorite", "_creationTime"];
@@ -6041,12 +6041,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
         };
     }, {}>;
     offlineTranslationPacks: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        createdAt: number;
         name: string;
+        version: string;
         description: string;
         targetLang: string;
-        createdAt: number;
         updatedAt: number;
-        version: string;
         isActive: boolean;
         sourceLang: string;
         phraseCount: number;
@@ -6066,7 +6066,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isActive: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "name" | "description" | "targetLang" | "createdAt" | "updatedAt" | "version" | "isActive" | "sourceLang" | "phraseCount" | "downloadSize" | "downloadUrl" | "categories">, {
+    }, "required", "createdAt" | "name" | "version" | "description" | "targetLang" | "updatedAt" | "isActive" | "sourceLang" | "phraseCount" | "downloadSize" | "downloadUrl" | "categories">, {
         by_source_lang: ["sourceLang", "_creationTime"];
         by_target_lang: ["targetLang", "_creationTime"];
         by_lang_pair: ["sourceLang", "targetLang", "_creationTime"];
@@ -6109,11 +6109,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         featuredAt?: number | undefined;
         featuredBy?: string | undefined;
         status: "approved" | "rejected" | "hidden" | "pending";
-        userId: string;
         createdAt: number;
         likesCount: number;
-        poiId: import("convex/values").GenericId<"pois">;
         viewsCount: number;
+        userId: string;
+        poiId: import("convex/values").GenericId<"pois">;
         imageUrl: string;
         isFeatured: boolean;
     }, {
@@ -6146,7 +6146,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "status" | "userId" | "createdAt" | "likesCount" | "updatedAt" | "category" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "poiId" | "viewsCount" | "location" | "caption" | "imageUrl" | "userName" | "userAvatarUrl" | "thumbnailUrl" | "width" | "height" | "takenAt" | "isFeatured" | "featuredAt" | "featuredBy" | "location.latitude" | "location.longitude">, {
+    }, "required", "status" | "createdAt" | "likesCount" | "viewsCount" | "userId" | "updatedAt" | "category" | "moderatorNotes" | "reviewedBy" | "reviewedAt" | "poiId" | "location" | "caption" | "imageUrl" | "userName" | "userAvatarUrl" | "thumbnailUrl" | "width" | "height" | "takenAt" | "isFeatured" | "featuredAt" | "featuredBy" | "location.latitude" | "location.longitude">, {
         by_poi: ["poiId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_poi_status: ["poiId", "status", "_creationTime"];
@@ -6159,14 +6159,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_user_created: ["userId", "createdAt", "_creationTime"];
     }, {}, {}>;
     poiPhotoLikes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         photoId: import("convex/values").GenericId<"poiPhotos">;
     }, {
         photoId: import("convex/values").VId<import("convex/values").GenericId<"poiPhotos">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "photoId">, {
+    }, "required", "createdAt" | "userId" | "photoId">, {
         by_photo: ["photoId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_photo_user: ["photoId", "userId", "_creationTime"];
@@ -6227,7 +6227,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         codeshares: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         delayReason: import("convex/values").VString<string | undefined, "optional">;
         lastUpdated: import("convex/values").VFloat64<number, "required">;
-    }, "required", "duration" | "status" | "distance" | "lastUpdated" | "flightNumber" | "airline" | "airlineCode" | "departureAirport" | "departureAirportName" | "departureCity" | "departureTerminal" | "departureGate" | "arrivalAirport" | "arrivalAirportName" | "arrivalCity" | "arrivalTerminal" | "arrivalGate" | "departureDate" | "scheduledDeparture" | "scheduledArrival" | "estimatedDeparture" | "estimatedArrival" | "actualDeparture" | "actualArrival" | "aircraftType" | "codeshares" | "delayReason">, {
+    }, "required", "status" | "duration" | "distance" | "lastUpdated" | "flightNumber" | "airline" | "airlineCode" | "departureAirport" | "departureAirportName" | "departureCity" | "departureTerminal" | "departureGate" | "arrivalAirport" | "arrivalAirportName" | "arrivalCity" | "arrivalTerminal" | "arrivalGate" | "departureDate" | "scheduledDeparture" | "scheduledArrival" | "estimatedDeparture" | "estimatedArrival" | "actualDeparture" | "actualArrival" | "aircraftType" | "codeshares" | "delayReason">, {
         by_flight_number: ["flightNumber", "_creationTime"];
         by_flight_number_date: ["flightNumber", "departureDate", "_creationTime"];
         by_route: ["departureAirport", "arrivalAirport", "_creationTime"];
@@ -6248,9 +6248,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         baggageAllowance?: string | undefined;
         frequentFlyerNumber?: string | undefined;
         importedFrom?: string | undefined;
-        status: "cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded";
-        userId: string;
+        status: "completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded";
         createdAt: number;
+        userId: string;
         updatedAt: number;
         flightId: import("convex/values").GenericId<"flights">;
         confirmationCode: string;
@@ -6267,7 +6267,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         passengerPhone: import("convex/values").VString<string | undefined, "optional">;
         seatNumber: import("convex/values").VString<string | undefined, "optional">;
         cabinClass: import("convex/values").VUnion<"business" | "economy" | "premium_economy" | "first", [import("convex/values").VLiteral<"economy", "required">, import("convex/values").VLiteral<"premium_economy", "required">, import("convex/values").VLiteral<"business", "required">, import("convex/values").VLiteral<"first", "required">], "required", never>;
-        status: import("convex/values").VUnion<"cancelled" | "completed" | "pending" | "confirmed" | "checked_in" | "boarded", [import("convex/values").VLiteral<"confirmed", "required">, import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"cancelled", "required">, import("convex/values").VLiteral<"checked_in", "required">, import("convex/values").VLiteral<"boarded", "required">, import("convex/values").VLiteral<"completed", "required">], "required", never>;
+        status: import("convex/values").VUnion<"completed" | "cancelled" | "pending" | "confirmed" | "checked_in" | "boarded", [import("convex/values").VLiteral<"confirmed", "required">, import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"cancelled", "required">, import("convex/values").VLiteral<"checked_in", "required">, import("convex/values").VLiteral<"boarded", "required">, import("convex/values").VLiteral<"completed", "required">], "required", never>;
         departureTime: import("convex/values").VFloat64<number, "required">;
         arrivalTime: import("convex/values").VFloat64<number, "required">;
         ticketNumber: import("convex/values").VString<string | undefined, "optional">;
@@ -6282,7 +6282,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         rawEmailContent: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "userId" | "createdAt" | "updatedAt" | "notes" | "itineraryId" | "checkInTime" | "rawEmailContent" | "flightId" | "confirmationCode" | "passengerName" | "passengerEmail" | "passengerPhone" | "seatNumber" | "cabinClass" | "departureTime" | "arrivalTime" | "ticketNumber" | "mealPreference" | "specialRequests" | "baggageAllowance" | "frequentFlyerNumber" | "importedFrom">, {
+    }, "required", "status" | "createdAt" | "userId" | "updatedAt" | "notes" | "itineraryId" | "checkInTime" | "rawEmailContent" | "flightId" | "confirmationCode" | "passengerName" | "passengerEmail" | "passengerPhone" | "seatNumber" | "cabinClass" | "departureTime" | "arrivalTime" | "ticketNumber" | "mealPreference" | "specialRequests" | "baggageAllowance" | "frequentFlyerNumber" | "importedFrom">, {
         by_user: ["userId", "_creationTime"];
         by_user_departure: ["userId", "departureTime", "_creationTime"];
         by_confirmation: ["confirmationCode", "_creationTime"];
@@ -6344,14 +6344,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
         visaTypeName: string;
         difficultyLevel: "moderate" | "very_easy" | "easy" | "difficult" | "very_difficult";
         applicationMethods: {
-            email?: string | undefined;
             url?: string | undefined;
+            email?: string | undefined;
             phone?: string | undefined;
             nameEn?: string | undefined;
             address?: string | undefined;
             notes?: string | undefined;
-            name: string;
             method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+            name: string;
         }[];
     }, {
         originCountryCode: import("convex/values").VString<string, "required">;
@@ -6395,23 +6395,23 @@ declare const _default: import("convex/server").SchemaDefinition<{
             notes: import("convex/values").VString<string | undefined, "optional">;
         }, "required", "name" | "description" | "nameEn" | "notes" | "isRequired">, "required">;
         applicationMethods: import("convex/values").VArray<{
-            email?: string | undefined;
             url?: string | undefined;
+            email?: string | undefined;
             phone?: string | undefined;
             nameEn?: string | undefined;
             address?: string | undefined;
             notes?: string | undefined;
-            name: string;
             method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+            name: string;
         }[], import("convex/values").VObject<{
-            email?: string | undefined;
             url?: string | undefined;
+            email?: string | undefined;
             phone?: string | undefined;
             nameEn?: string | undefined;
             address?: string | undefined;
             notes?: string | undefined;
-            name: string;
             method: "online" | "embassy" | "consulate" | "visa_center" | "on_arrival";
+            name: string;
         }, {
             method: import("convex/values").VUnion<"online" | "embassy" | "consulate" | "visa_center" | "on_arrival", [import("convex/values").VLiteral<"online", "required">, import("convex/values").VLiteral<"embassy", "required">, import("convex/values").VLiteral<"consulate", "required">, import("convex/values").VLiteral<"visa_center", "required">, import("convex/values").VLiteral<"on_arrival", "required">], "required", never>;
             name: import("convex/values").VString<string, "required">;
@@ -6421,7 +6421,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             phone: import("convex/values").VString<string | undefined, "optional">;
             email: import("convex/values").VString<string | undefined, "optional">;
             notes: import("convex/values").VString<string | undefined, "optional">;
-        }, "required", "email" | "url" | "name" | "method" | "phone" | "nameEn" | "address" | "notes">, "required">;
+        }, "required", "method" | "name" | "url" | "email" | "phone" | "nameEn" | "address" | "notes">, "required">;
         entryRequirements: import("convex/values").VObject<{
             travelInsurance?: boolean | undefined;
             passportValidity?: string | undefined;
@@ -6456,7 +6456,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         lastVerifiedAt: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "createdAt" | "updatedAt" | "source" | "sourceUrl" | "verifiedBy" | "requiredDocuments" | "lastVerifiedAt" | "serviceFee" | "originCountryCode" | "originCountryName" | "originCountryNameEn" | "destinationCountryCode" | "destinationCountryName" | "destinationCountryNameEn" | "visaType" | "visaTypeName" | "visaTypeNameEn" | "difficultyLevel" | "maxStayDays" | "validityPeriod" | "entryType" | "processingTime" | "processingTimeMin" | "processingTimeMax" | "expressFee" | "expressProcessingTime" | "visaFee" | "visaFeeCurrency" | "applicationMethods" | "entryRequirements" | "specialNotes" | "warnings" | "eVisaUrl" | "eVisaProcessingDays" | "voaPorts" | "voaFee" | "voaFeeCurrency" | "entryRequirements.travelInsurance" | "entryRequirements.passportValidity" | "entryRequirements.blankPages" | "entryRequirements.onwardTicket" | "entryRequirements.hotelBooking" | "entryRequirements.financialProof" | "entryRequirements.invitationLetter" | "entryRequirements.returnTicket" | "entryRequirements.additionalRequirements">, {
+    }, "required", "createdAt" | "sourceUrl" | "updatedAt" | "source" | "verifiedBy" | "requiredDocuments" | "lastVerifiedAt" | "serviceFee" | "originCountryCode" | "originCountryName" | "originCountryNameEn" | "destinationCountryCode" | "destinationCountryName" | "destinationCountryNameEn" | "visaType" | "visaTypeName" | "visaTypeNameEn" | "difficultyLevel" | "maxStayDays" | "validityPeriod" | "entryType" | "processingTime" | "processingTimeMin" | "processingTimeMax" | "expressFee" | "expressProcessingTime" | "visaFee" | "visaFeeCurrency" | "applicationMethods" | "entryRequirements" | "specialNotes" | "warnings" | "eVisaUrl" | "eVisaProcessingDays" | "voaPorts" | "voaFee" | "voaFeeCurrency" | "entryRequirements.travelInsurance" | "entryRequirements.passportValidity" | "entryRequirements.blankPages" | "entryRequirements.onwardTicket" | "entryRequirements.hotelBooking" | "entryRequirements.financialProof" | "entryRequirements.invitationLetter" | "entryRequirements.returnTicket" | "entryRequirements.additionalRequirements">, {
         by_origin: ["originCountryCode", "_creationTime"];
         by_destination: ["destinationCountryCode", "_creationTime"];
         by_origin_destination: ["originCountryCode", "destinationCountryCode", "_creationTime"];
@@ -6474,8 +6474,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
             isCompleted: boolean;
         }[] | undefined;
         status: "completed" | "pending" | "dismissed" | "sent";
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         travelDate: number;
         destinationCountryCode: string;
@@ -6509,7 +6509,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         sentAt: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "userId" | "createdAt" | "updatedAt" | "notes" | "itineraryId" | "sentAt" | "travelDate" | "destinationCountryCode" | "destinationCountryName" | "visaType" | "visaRequirementId" | "reminderDate" | "checklist">, {
+    }, "required", "status" | "createdAt" | "userId" | "updatedAt" | "notes" | "itineraryId" | "sentAt" | "travelDate" | "destinationCountryCode" | "destinationCountryName" | "visaType" | "visaRequirementId" | "reminderDate" | "checklist">, {
         by_user: ["userId", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -6533,9 +6533,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         resultDate?: number | undefined;
         applicationNumber?: string | undefined;
         visaNumber?: string | undefined;
-        status: "approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing";
-        userId: string;
+        status: "cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing";
         createdAt: number;
+        userId: string;
         updatedAt: number;
         destinationCountryCode: string;
         destinationCountryName: string;
@@ -6558,7 +6558,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         visaNumber: import("convex/values").VString<string | undefined, "optional">;
         validFrom: import("convex/values").VFloat64<number | undefined, "optional">;
         validUntil: import("convex/values").VFloat64<number | undefined, "optional">;
-        status: import("convex/values").VUnion<"approved" | "rejected" | "cancelled" | "processing" | "submitted" | "preparing", [import("convex/values").VLiteral<"preparing", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"processing", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
+        status: import("convex/values").VUnion<"cancelled" | "approved" | "rejected" | "processing" | "submitted" | "preparing", [import("convex/values").VLiteral<"preparing", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"processing", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
         documents: import("convex/values").VArray<{
             notes?: string | undefined;
             status: "completed" | "not_started" | "in_progress";
@@ -6576,7 +6576,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         rejectionReason: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "userId" | "createdAt" | "updatedAt" | "notes" | "itineraryId" | "validFrom" | "validUntil" | "rejectionReason" | "documents" | "destinationCountryCode" | "destinationCountryName" | "visaType" | "visaRequirementId" | "applicationMethod" | "plannedTravelDate" | "applicationDate" | "expectedResultDate" | "resultDate" | "applicationNumber" | "visaNumber">, {
+    }, "required", "status" | "createdAt" | "userId" | "updatedAt" | "notes" | "itineraryId" | "validFrom" | "validUntil" | "rejectionReason" | "documents" | "destinationCountryCode" | "destinationCountryName" | "visaType" | "visaRequirementId" | "applicationMethod" | "plannedTravelDate" | "applicationDate" | "expectedResultDate" | "resultDate" | "applicationNumber" | "visaNumber">, {
         by_user: ["userId", "_creationTime"];
         by_itinerary: ["itineraryId", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -6605,10 +6605,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         targetCountryNameEn?: string | undefined;
         addressEn?: string | undefined;
         appointmentUrl?: string | undefined;
-        type: "embassy" | "consulate" | "visa_center" | "agency";
-        name: string;
-        city: string;
         createdAt: number;
+        name: string;
+        type: "embassy" | "consulate" | "visa_center" | "agency";
+        city: string;
         updatedAt: number;
         countryCode: string;
         address: string;
@@ -6658,7 +6658,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isActive: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "email" | "type" | "name" | "city" | "latitude" | "longitude" | "services" | "phone" | "createdAt" | "updatedAt" | "nameEn" | "countryCode" | "address" | "businessHours" | "businessHours.monday" | "businessHours.tuesday" | "businessHours.wednesday" | "businessHours.thursday" | "businessHours.friday" | "businessHours.saturday" | "businessHours.sunday" | "businessHours.notes" | "isActive" | "website" | "cityEn" | "targetCountryCode" | "targetCountryName" | "targetCountryNameEn" | "addressEn" | "appointmentRequired" | "appointmentUrl">, {
+    }, "required", "createdAt" | "name" | "type" | "email" | "city" | "latitude" | "longitude" | "services" | "phone" | "updatedAt" | "nameEn" | "countryCode" | "address" | "businessHours" | "businessHours.monday" | "businessHours.tuesday" | "businessHours.wednesday" | "businessHours.thursday" | "businessHours.friday" | "businessHours.saturday" | "businessHours.sunday" | "businessHours.notes" | "isActive" | "website" | "cityEn" | "targetCountryCode" | "targetCountryName" | "targetCountryNameEn" | "addressEn" | "appointmentRequired" | "appointmentUrl">, {
         by_country: ["countryCode", "_creationTime"];
         by_target_country: ["targetCountryCode", "_creationTime"];
         by_country_target: ["countryCode", "targetCountryCode", "_creationTime"];
@@ -6672,9 +6672,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         maxViews?: number | undefined;
         lastAccessedAt?: number | undefined;
         createdAt: number;
+        platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
         updatedAt: number;
         viewCount: number;
-        platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
         isActive: boolean;
         shareCode: string;
         saveCount: number;
@@ -6706,7 +6706,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isActive: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "createdAt" | "updatedAt" | "viewCount" | "platform" | "isActive" | "password" | "expiresAt" | "shareCode" | "saveCount" | "resourceType" | "resourceId" | "ownerId" | "shareUrl" | "permission" | "maxViews" | "allowDownload" | "allowCopy" | "clickCount" | "lastAccessedAt">, {
+    }, "required", "createdAt" | "platform" | "updatedAt" | "viewCount" | "isActive" | "password" | "expiresAt" | "shareCode" | "saveCount" | "resourceType" | "resourceId" | "ownerId" | "shareUrl" | "permission" | "maxViews" | "allowDownload" | "allowCopy" | "clickCount" | "lastAccessedAt">, {
         by_share_code: ["shareCode", "_creationTime"];
         by_resource: ["resourceType", "resourceId", "_creationTime"];
         by_owner: ["ownerId", "_creationTime"];
@@ -6722,14 +6722,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
         platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
         resourceType: "itinerary" | "travelGuide" | "travelNote";
         resourceId: string;
-        eventType: "share" | "click" | "view" | "save";
+        eventType: "click" | "share" | "view" | "save";
     }, {
         resourceType: import("convex/values").VUnion<"itinerary" | "travelGuide" | "travelNote", [import("convex/values").VLiteral<"itinerary", "required">, import("convex/values").VLiteral<"travelGuide", "required">, import("convex/values").VLiteral<"travelNote", "required">], "required", never>;
         resourceId: import("convex/values").VString<string, "required">;
         sharerId: import("convex/values").VString<string | undefined, "optional">;
         shareLinkId: import("convex/values").VId<import("convex/values").GenericId<"shareLinks"> | undefined, "optional">;
         platform: import("convex/values").VUnion<"xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic", [import("convex/values").VLiteral<"wechat", "required">, import("convex/values").VLiteral<"weibo", "required">, import("convex/values").VLiteral<"xiaohongshu", "required">, import("convex/values").VLiteral<"qq", "required">, import("convex/values").VLiteral<"douyin", "required">, import("convex/values").VLiteral<"copy_link", "required">, import("convex/values").VLiteral<"system_share", "required">, import("convex/values").VLiteral<"generic", "required">], "required", never>;
-        eventType: import("convex/values").VUnion<"share" | "click" | "view" | "save", [import("convex/values").VLiteral<"share", "required">, import("convex/values").VLiteral<"click", "required">, import("convex/values").VLiteral<"view", "required">, import("convex/values").VLiteral<"save", "required">], "required", never>;
+        eventType: import("convex/values").VUnion<"click" | "share" | "view" | "save", [import("convex/values").VLiteral<"share", "required">, import("convex/values").VLiteral<"click", "required">, import("convex/values").VLiteral<"view", "required">, import("convex/values").VLiteral<"save", "required">], "required", never>;
         shareUrl: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
     }, "required", "createdAt" | "platform" | "resourceType" | "resourceId" | "shareUrl" | "sharerId" | "shareLinkId" | "eventType">, {
@@ -6749,13 +6749,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
         platform: "xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic";
         resourceType: "itinerary" | "travelGuide" | "travelNote";
         resourceId: string;
-        eventType: "share" | "click" | "view" | "save";
+        eventType: "click" | "share" | "view" | "save";
     }, {
         shareLinkId: import("convex/values").VId<import("convex/values").GenericId<"shareLinks"> | undefined, "optional">;
         resourceType: import("convex/values").VUnion<"itinerary" | "travelGuide" | "travelNote", [import("convex/values").VLiteral<"itinerary", "required">, import("convex/values").VLiteral<"travelGuide", "required">, import("convex/values").VLiteral<"travelNote", "required">], "required", never>;
         resourceId: import("convex/values").VString<string, "required">;
         platform: import("convex/values").VUnion<"xiaohongshu" | "weibo" | "douyin" | "wechat" | "qq" | "copy_link" | "system_share" | "generic", [import("convex/values").VLiteral<"wechat", "required">, import("convex/values").VLiteral<"weibo", "required">, import("convex/values").VLiteral<"xiaohongshu", "required">, import("convex/values").VLiteral<"qq", "required">, import("convex/values").VLiteral<"douyin", "required">, import("convex/values").VLiteral<"copy_link", "required">, import("convex/values").VLiteral<"system_share", "required">, import("convex/values").VLiteral<"generic", "required">], "required", never>;
-        eventType: import("convex/values").VUnion<"share" | "click" | "view" | "save", [import("convex/values").VLiteral<"share", "required">, import("convex/values").VLiteral<"click", "required">, import("convex/values").VLiteral<"view", "required">, import("convex/values").VLiteral<"save", "required">], "required", never>;
+        eventType: import("convex/values").VUnion<"click" | "share" | "view" | "save", [import("convex/values").VLiteral<"share", "required">, import("convex/values").VLiteral<"click", "required">, import("convex/values").VLiteral<"view", "required">, import("convex/values").VLiteral<"save", "required">], "required", never>;
         referrer: import("convex/values").VString<string | undefined, "optional">;
         userAgent: import("convex/values").VString<string | undefined, "optional">;
         ipHash: import("convex/values").VString<string | undefined, "optional">;
@@ -6791,9 +6791,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         airlineContactEmail?: string | undefined;
         reminderEnabled?: boolean | undefined;
         status: "claimed" | "delayed" | "arrived" | "checked_in" | "in_transit" | "lost" | "found" | "damaged";
+        createdAt: number;
         description: string;
         userId: string;
-        createdAt: number;
         updatedAt: number;
     }, {
         userId: import("convex/values").VString<string, "required">;
@@ -6824,7 +6824,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reminderTime: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "description" | "userId" | "createdAt" | "updatedAt" | "itineraryId" | "color" | "reminderTime" | "features" | "airlineCode" | "flightBookingId" | "tagNumber" | "brand" | "size" | "weight" | "dimensions" | "tagPhotoUrl" | "luggagePhotoUrls" | "lastKnownLocation" | "lossReportFiled" | "lossReportNumber" | "lossReportDate" | "lossReportNotes" | "airlineName" | "airlineTrackingUrl" | "airlineContactPhone" | "airlineContactEmail" | "reminderEnabled">, {
+    }, "required", "status" | "createdAt" | "description" | "userId" | "updatedAt" | "itineraryId" | "color" | "reminderTime" | "features" | "airlineCode" | "flightBookingId" | "tagNumber" | "brand" | "size" | "weight" | "dimensions" | "tagPhotoUrl" | "luggagePhotoUrls" | "lastKnownLocation" | "lossReportFiled" | "lossReportNumber" | "lossReportDate" | "lossReportNotes" | "airlineName" | "airlineTrackingUrl" | "airlineContactPhone" | "airlineContactEmail" | "reminderEnabled">, {
         by_user: ["userId", "_creationTime"];
         by_user_status: ["userId", "status", "_creationTime"];
         by_flight_booking: ["flightBookingId", "_creationTime"];
@@ -6870,6 +6870,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_airline_code: ["airlineCode", "_creationTime"];
     }, {}, {}>;
     localEvents: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        sourceUrl?: string | undefined;
+        coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
         tags?: string[] | undefined;
         latitude?: number | undefined;
         longitude?: number | undefined;
@@ -6880,12 +6883,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         externalId?: string | undefined;
         rating?: number | undefined;
         ratingCount?: number | undefined;
-        imageUrls?: string[] | undefined;
         source?: string | undefined;
-        coverImageUrl?: string | undefined;
         startTime?: string | undefined;
         endTime?: string | undefined;
-        sourceUrl?: string | undefined;
         highlights?: string[] | undefined;
         officialWebsite?: string | undefined;
         isFeatured?: boolean | undefined;
@@ -6909,11 +6909,11 @@ declare const _default: import("convex/server").SchemaDefinition<{
         organizerPhone?: string | undefined;
         organizerEmail?: string | undefined;
         status: "cancelled" | "upcoming" | "ongoing" | "ended";
+        createdAt: number;
         name: string;
         description: string;
         startDate: string;
         endDate: string;
-        createdAt: number;
         updatedAt: number;
         cityId: import("convex/values").GenericId<"cities">;
         viewCount: number;
@@ -6986,7 +6986,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         externalId: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "tags" | "status" | "name" | "description" | "latitude" | "longitude" | "startDate" | "endDate" | "tips" | "createdAt" | "updatedAt" | "nameEn" | "cityId" | "descriptionEn" | "currency" | "externalId" | "rating" | "ratingCount" | "imageUrls" | "source" | "viewCount" | "isRecurring" | "coverImageUrl" | "startTime" | "endTime" | "sourceUrl" | "highlights" | "isVerified" | "isFree" | "officialWebsite" | "saveCount" | "isFeatured" | "eventType" | "venue" | "venueAddress" | "isAllDay" | "recurrencePattern" | "ticketPrice" | "ticketPriceMax" | "ticketUrl" | "requiresBooking" | "organizerName" | "organizerPhone" | "organizerEmail" | "recurrencePattern.type" | "recurrencePattern.day" | "recurrencePattern.month" | "recurrencePattern.isLunarCalendar" | "recurrencePattern.lunarMonth" | "recurrencePattern.lunarDay" | "recurrencePattern.weekOfMonth" | "recurrencePattern.dayOfWeek">, {
+    }, "required", "status" | "createdAt" | "name" | "description" | "sourceUrl" | "coverImageUrl" | "imageUrls" | "tags" | "latitude" | "longitude" | "startDate" | "endDate" | "tips" | "updatedAt" | "nameEn" | "cityId" | "descriptionEn" | "currency" | "externalId" | "rating" | "ratingCount" | "source" | "viewCount" | "isRecurring" | "startTime" | "endTime" | "highlights" | "isVerified" | "isFree" | "officialWebsite" | "saveCount" | "isFeatured" | "eventType" | "venue" | "venueAddress" | "isAllDay" | "recurrencePattern" | "ticketPrice" | "ticketPriceMax" | "ticketUrl" | "requiresBooking" | "organizerName" | "organizerPhone" | "organizerEmail" | "recurrencePattern.type" | "recurrencePattern.day" | "recurrencePattern.month" | "recurrencePattern.isLunarCalendar" | "recurrencePattern.lunarMonth" | "recurrencePattern.lunarDay" | "recurrencePattern.weekOfMonth" | "recurrencePattern.dayOfWeek">, {
         by_city: ["cityId", "_creationTime"];
         by_city_type: ["cityId", "eventType", "_creationTime"];
         by_city_status: ["cityId", "status", "_creationTime"];
@@ -6999,15 +6999,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     eventFavorites: import("convex/server").TableDefinition<import("convex/values").VObject<{
         notes?: string | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         eventId: import("convex/values").GenericId<"localEvents">;
     }, {
         userId: import("convex/values").VString<string, "required">;
         eventId: import("convex/values").VId<import("convex/values").GenericId<"localEvents">, "required">;
         notes: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "notes" | "eventId">, {
+    }, "required", "createdAt" | "userId" | "notes" | "eventId">, {
         by_user: ["userId", "_creationTime"];
         by_event: ["eventId", "_creationTime"];
         by_user_event: ["userId", "eventId", "_creationTime"];
@@ -7018,8 +7018,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         minutesBefore?: number | undefined;
         triggeredAt?: number | undefined;
         readAt?: number | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         reminderType: "custom" | "event_start" | "booking_open";
         isTriggered: boolean;
@@ -7039,7 +7039,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         readAt: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "message" | "userId" | "createdAt" | "updatedAt" | "reminderType" | "minutesBefore" | "isTriggered" | "triggeredAt" | "reminderTime" | "isRead" | "readAt" | "eventId">, {
+    }, "required", "createdAt" | "message" | "userId" | "updatedAt" | "reminderType" | "minutesBefore" | "isTriggered" | "triggeredAt" | "reminderTime" | "isRead" | "readAt" | "eventId">, {
         by_user: ["userId", "_creationTime"];
         by_event: ["eventId", "_creationTime"];
         by_user_event: ["userId", "eventId", "_creationTime"];
@@ -7048,18 +7048,18 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_user_triggered: ["userId", "isTriggered", "_creationTime"];
     }, {}, {}>;
     eventReviews: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        updatedAt?: number | undefined;
         imageUrls?: string[] | undefined;
+        updatedAt?: number | undefined;
         pros?: string[] | undefined;
         cons?: string[] | undefined;
         valueRating?: number | undefined;
         atmosphereRating?: number | undefined;
         organizationRating?: number | undefined;
         attendDate?: string | undefined;
-        status: "approved" | "rejected" | "pending";
         content: string;
-        userId: string;
+        status: "approved" | "rejected" | "pending";
         createdAt: number;
+        userId: string;
         rating: number;
         wouldRecommend: boolean;
         reportCount: number;
@@ -7085,7 +7085,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         status: import("convex/values").VUnion<"approved" | "rejected" | "pending", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">], "required", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "status" | "content" | "userId" | "createdAt" | "updatedAt" | "rating" | "imageUrls" | "wouldRecommend" | "reportCount" | "isVerified" | "helpfulCount" | "pros" | "cons" | "valueRating" | "eventId" | "atmosphereRating" | "organizationRating" | "attendDate">, {
+    }, "required", "content" | "status" | "createdAt" | "imageUrls" | "userId" | "updatedAt" | "rating" | "wouldRecommend" | "reportCount" | "isVerified" | "helpfulCount" | "pros" | "cons" | "valueRating" | "eventId" | "atmosphereRating" | "organizationRating" | "attendDate">, {
         by_event: ["eventId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_event_user: ["eventId", "userId", "_creationTime"];
@@ -7094,8 +7094,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_status: ["status", "_creationTime"];
     }, {}, {}>;
     eventReviewVotes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         voteType: "helpful" | "not_helpful";
         reviewId: import("convex/values").GenericId<"eventReviews">;
     }, {
@@ -7103,7 +7103,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         userId: import("convex/values").VString<string, "required">;
         voteType: import("convex/values").VUnion<"helpful" | "not_helpful", [import("convex/values").VLiteral<"helpful", "required">, import("convex/values").VLiteral<"not_helpful", "required">], "required", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "voteType" | "reviewId">, {
+    }, "required", "createdAt" | "userId" | "voteType" | "reviewId">, {
         by_review: ["reviewId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_review_user: ["reviewId", "userId", "_creationTime"];
@@ -7134,13 +7134,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
         totalInteractions: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number | undefined, "optional">;
         lastUpdated: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "lastUpdated" | "categoryScores" | "explicitPreferences" | "travelStyle" | "budgetLevel" | "pacePreference" | "preferLocalFood" | "preferOffBeatPlaces" | "accessibilityNeeds" | "totalInteractions" | `categoryScores.${string}`>, {
+    }, "required", "createdAt" | "userId" | "lastUpdated" | "categoryScores" | "explicitPreferences" | "travelStyle" | "budgetLevel" | "pacePreference" | "preferLocalFood" | "preferOffBeatPlaces" | "accessibilityNeeds" | "totalInteractions" | `categoryScores.${string}`>, {
         by_user: ["userId", "_creationTime"];
     }, {}, {}>;
     userBehaviorEvents: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        createdAt: number;
         metadata: any;
         userId: string;
-        createdAt: number;
         targetType: "city" | "itinerary" | "poi" | "search" | "guide";
         targetId: string;
         categories: ("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[];
@@ -7153,7 +7153,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         categories: import("convex/values").VArray<("budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife")[], import("convex/values").VUnion<"budget" | "shopping" | "family" | "adventure" | "food" | "relaxation" | "culture" | "nature" | "photography" | "luxury" | "nightlife", [import("convex/values").VLiteral<"food", "required">, import("convex/values").VLiteral<"culture", "required">, import("convex/values").VLiteral<"nature", "required">, import("convex/values").VLiteral<"shopping", "required">, import("convex/values").VLiteral<"nightlife", "required">, import("convex/values").VLiteral<"adventure", "required">, import("convex/values").VLiteral<"relaxation", "required">, import("convex/values").VLiteral<"photography", "required">, import("convex/values").VLiteral<"family", "required">, import("convex/values").VLiteral<"budget", "required">, import("convex/values").VLiteral<"luxury", "required">], "required", never>, "required">;
         metadata: import("convex/values").VAny<any, "required", string>;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "metadata" | "userId" | "createdAt" | "targetType" | "targetId" | "categories" | "behaviorType" | `metadata.${string}`>, {
+    }, "required", "createdAt" | "metadata" | "userId" | "targetType" | "targetId" | "categories" | "behaviorType" | `metadata.${string}`>, {
         by_user: ["userId", "_creationTime"];
         by_user_type: ["userId", "behaviorType", "_creationTime"];
         by_target: ["targetType", "targetId", "_creationTime"];
@@ -7169,10 +7169,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             itemsRemoved: number;
             itemsModified: number;
         } | undefined;
-        userId: string;
         createdAt: number;
-        itineraryId: import("convex/values").GenericId<"itineraries">;
-        versionNumber: number;
         snapshot: {
             coverImageUrl?: string | undefined;
             title: string;
@@ -7193,6 +7190,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
             visibility: "public" | "private" | "team";
             cityId: import("convex/values").GenericId<"cities">;
         };
+        userId: string;
+        itineraryId: import("convex/values").GenericId<"itineraries">;
+        versionNumber: number;
     }, {
         itineraryId: import("convex/values").VId<import("convex/values").GenericId<"itineraries">, "required">;
         userId: import("convex/values").VString<string, "required">;
@@ -7272,7 +7272,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
                     notes: import("convex/values").VString<string | undefined, "optional">;
                 }, "required", "notes" | "poiId" | "orderIndex" | "startTime" | "endTime" | "transportMode">, "required">;
             }, "required", "date" | "items" | "dayNumber">, "required">;
-        }, "required", "title" | "startDate" | "endDate" | "days" | "visibility" | "cityId" | "coverImageUrl">;
+        }, "required", "title" | "coverImageUrl" | "startDate" | "endDate" | "days" | "visibility" | "cityId">;
         changesSummary: import("convex/values").VString<string | undefined, "optional">;
         changesCount: import("convex/values").VObject<{
             daysAdded: number;
@@ -7288,7 +7288,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             itemsModified: import("convex/values").VFloat64<number, "required">;
         }, "optional", "daysAdded" | "daysRemoved" | "itemsAdded" | "itemsRemoved" | "itemsModified">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "itineraryId" | "versionNumber" | "versionNote" | "snapshot" | "changesSummary" | "changesCount" | "snapshot.title" | "snapshot.startDate" | "snapshot.endDate" | "snapshot.days" | "snapshot.visibility" | "snapshot.cityId" | "snapshot.coverImageUrl" | "changesCount.daysAdded" | "changesCount.daysRemoved" | "changesCount.itemsAdded" | "changesCount.itemsRemoved" | "changesCount.itemsModified">, {
+    }, "required", "createdAt" | "snapshot" | "userId" | "itineraryId" | "versionNumber" | "versionNote" | "changesSummary" | "changesCount" | "snapshot.title" | "snapshot.coverImageUrl" | "snapshot.startDate" | "snapshot.endDate" | "snapshot.days" | "snapshot.visibility" | "snapshot.cityId" | "changesCount.daysAdded" | "changesCount.daysRemoved" | "changesCount.itemsAdded" | "changesCount.itemsRemoved" | "changesCount.itemsModified">, {
         by_itinerary: ["itineraryId", "_creationTime"];
         by_itinerary_version: ["itineraryId", "versionNumber", "_creationTime"];
         by_user: ["userId", "_creationTime"];
@@ -7299,18 +7299,18 @@ declare const _default: import("convex/server").SchemaDefinition<{
      * Users can ask questions about specific points of interest
      */
     poiQuestionsExtended: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        authorName?: string | undefined;
         tags?: string[] | undefined;
         updatedAt?: number | undefined;
-        authorName?: string | undefined;
         bestAnswerId?: import("convex/values").GenericId<"poiAnswers"> | undefined;
         authorAvatarUrl?: string | undefined;
-        status: "open" | "resolved" | "closed";
-        title: string;
         content: string;
-        userId: string;
+        status: "open" | "resolved" | "closed";
         createdAt: number;
-        poiId: import("convex/values").GenericId<"pois">;
+        title: string;
         viewsCount: number;
+        userId: string;
+        poiId: import("convex/values").GenericId<"pois">;
         isEdited: boolean;
         isDeleted: boolean;
         reportCount: number;
@@ -7342,7 +7342,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         lastActivityAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "tags" | "status" | "title" | "content" | "userId" | "createdAt" | "updatedAt" | "poiId" | "authorName" | "viewsCount" | "isEdited" | "isDeleted" | "reportCount" | "answersCount" | "bestAnswerId" | "hasBestAnswer" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "lastActivityAt">, {
+    }, "required", "content" | "status" | "createdAt" | "title" | "authorName" | "tags" | "viewsCount" | "userId" | "updatedAt" | "poiId" | "isEdited" | "isDeleted" | "reportCount" | "answersCount" | "bestAnswerId" | "hasBestAnswer" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "lastActivityAt">, {
         by_poi: ["poiId", "_creationTime"];
         by_poi_status: ["poiId", "status", "_creationTime"];
         by_user: ["userId", "_creationTime"];
@@ -7360,12 +7360,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
      * Answers to POI questions - Extended
      */
     poiAnswersExtended: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        updatedAt?: number | undefined;
         authorName?: string | undefined;
+        updatedAt?: number | undefined;
         authorAvatarUrl?: string | undefined;
         content: string;
-        userId: string;
         createdAt: number;
+        userId: string;
         poiId: import("convex/values").GenericId<"pois">;
         isEdited: boolean;
         isDeleted: boolean;
@@ -7391,7 +7391,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isHidden: import("convex/values").VBoolean<boolean, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "content" | "userId" | "createdAt" | "updatedAt" | "poiId" | "authorName" | "isEdited" | "isDeleted" | "reportCount" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "questionId" | "isBestAnswer">, {
+    }, "required", "content" | "createdAt" | "authorName" | "userId" | "updatedAt" | "poiId" | "isEdited" | "isDeleted" | "reportCount" | "isHidden" | "upvotesCount" | "downvotesCount" | "authorAvatarUrl" | "questionId" | "isBestAnswer">, {
         by_question: ["questionId", "_creationTime"];
         by_question_best: ["questionId", "isBestAnswer", "_creationTime"];
         by_user: ["userId", "_creationTime"];
@@ -7404,8 +7404,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
      * One vote per user per question
      */
     poiQuestionVotes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         voteType: "up" | "down";
         questionId: import("convex/values").GenericId<"poiQuestions">;
     }, {
@@ -7413,7 +7413,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         userId: import("convex/values").VString<string, "required">;
         voteType: import("convex/values").VUnion<"up" | "down", [import("convex/values").VLiteral<"up", "required">, import("convex/values").VLiteral<"down", "required">], "required", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "voteType" | "questionId">, {
+    }, "required", "createdAt" | "userId" | "voteType" | "questionId">, {
         by_question: ["questionId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_question_user: ["questionId", "userId", "_creationTime"];
@@ -7423,8 +7423,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
      * One vote per user per answer
      */
     poiAnswerVotes: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         voteType: "up" | "down";
         answerId: import("convex/values").GenericId<"poiAnswers">;
     }, {
@@ -7432,7 +7432,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         userId: import("convex/values").VString<string, "required">;
         voteType: import("convex/values").VUnion<"up" | "down", [import("convex/values").VLiteral<"up", "required">, import("convex/values").VLiteral<"down", "required">], "required", never>;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "voteType" | "answerId">, {
+    }, "required", "createdAt" | "userId" | "voteType" | "answerId">, {
         by_answer: ["answerId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_answer_user: ["answerId", "userId", "_creationTime"];
@@ -7446,8 +7446,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewedAt?: number | undefined;
         actionTaken?: string | undefined;
         status: "pending" | "reviewed" | "dismissed" | "actioned";
-        userId: string;
         createdAt: number;
+        userId: string;
         targetType: "question" | "answer";
         targetId: string;
         reason: "other" | "spam" | "harassment" | "inappropriate" | "off_topic" | "misleading";
@@ -7462,7 +7462,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         actionTaken: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "status" | "description" | "userId" | "createdAt" | "targetType" | "targetId" | "reason" | "reviewedBy" | "reviewedAt" | "actionTaken">, {
+    }, "required", "status" | "createdAt" | "description" | "userId" | "targetType" | "targetId" | "reason" | "reviewedBy" | "reviewedAt" | "actionTaken">, {
         by_target: ["targetType", "targetId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -7473,8 +7473,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
      */
     contentTranslations: import("convex/server").TableDefinition<import("convex/values").VObject<{
         translatedBy?: string | undefined;
-        value: string;
         createdAt: number;
+        value: string;
         updatedAt: number;
         field: string;
         entityType: string;
@@ -7491,7 +7491,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         translatedBy: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "value" | "createdAt" | "updatedAt" | "field" | "entityType" | "entityId" | "language" | "isAutoTranslated" | "translatedBy">, {
+    }, "required", "createdAt" | "value" | "updatedAt" | "field" | "entityType" | "entityId" | "language" | "isAutoTranslated" | "translatedBy">, {
         by_entity: ["entityType", "entityId", "_creationTime"];
         by_entity_field_language: ["entityType", "entityId", "field", "language", "_creationTime"];
         by_type: ["entityType", "_creationTime"];
@@ -7516,31 +7516,31 @@ declare const _default: import("convex/server").SchemaDefinition<{
      * Rate limiting for OTP and other operations
      */
     rateLimits: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        key: string;
         count: number;
         expiresAt: number;
-        key: string;
     }, {
         key: import("convex/values").VString<string, "required">;
         count: import("convex/values").VFloat64<number, "required">;
         expiresAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "count" | "expiresAt" | "key">, {
+    }, "required", "key" | "count" | "expiresAt">, {
         by_key: ["key", "_creationTime"];
     }, {}, {}>;
     /**
      * Food reviews for restaurants
      */
     foodReviews: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        tags?: string[] | undefined;
-        title?: string | undefined;
         content?: string | undefined;
+        title?: string | undefined;
         imageUrls?: string[] | undefined;
+        tags?: string[] | undefined;
         visitDate?: string | undefined;
         helpfulCount?: number | undefined;
         dishesOrdered?: string[] | undefined;
         recommendedDishes?: string[] | undefined;
         pricePerPerson?: number | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         updatedAt: number;
         rating: number;
         wouldRecommend: boolean;
@@ -7561,7 +7561,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         helpfulCount: import("convex/values").VFloat64<number | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "tags" | "title" | "content" | "userId" | "createdAt" | "updatedAt" | "rating" | "imageUrls" | "visitDate" | "wouldRecommend" | "helpfulCount" | "restaurantId" | "dishesOrdered" | "recommendedDishes" | "pricePerPerson">, {
+    }, "required", "content" | "createdAt" | "title" | "imageUrls" | "tags" | "userId" | "updatedAt" | "rating" | "visitDate" | "wouldRecommend" | "helpfulCount" | "restaurantId" | "dishesOrdered" | "recommendedDishes" | "pricePerPerson">, {
         by_restaurant: ["restaurantId", "_creationTime"];
         by_restaurant_user: ["restaurantId", "userId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
@@ -7570,14 +7570,14 @@ declare const _default: import("convex/server").SchemaDefinition<{
      * Tracks users marking food reviews as helpful
      */
     foodReviewHelpful: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        userId: string;
         createdAt: number;
+        userId: string;
         reviewId: import("convex/values").GenericId<"foodReviews">;
     }, {
         reviewId: import("convex/values").VId<import("convex/values").GenericId<"foodReviews">, "required">;
         userId: import("convex/values").VString<string, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "reviewId">, {
+    }, "required", "createdAt" | "userId" | "reviewId">, {
         by_review: ["reviewId", "_creationTime"];
         by_review_user: ["reviewId", "userId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
@@ -7588,8 +7588,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
     foodFavorites: import("convex/server").TableDefinition<import("convex/values").VObject<{
         notes?: string | undefined;
         collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         restaurantId: import("convex/values").GenericId<"pois">;
     }, {
         userId: import("convex/values").VString<string, "required">;
@@ -7597,7 +7597,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         collectionId: import("convex/values").VId<import("convex/values").GenericId<"foodCollections"> | undefined, "optional">;
         notes: import("convex/values").VString<string | undefined, "optional">;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "userId" | "createdAt" | "notes" | "collectionId" | "restaurantId">, {
+    }, "required", "createdAt" | "userId" | "notes" | "collectionId" | "restaurantId">, {
         by_user: ["userId", "_creationTime"];
         by_user_restaurant: ["userId", "restaurantId", "_creationTime"];
         by_collection: ["collectionId", "_creationTime"];
@@ -7608,9 +7608,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
     foodCollections: import("convex/server").TableDefinition<import("convex/values").VObject<{
         description?: string | undefined;
         coverImageUrl?: string | undefined;
+        createdAt: number;
         name: string;
         userId: string;
-        createdAt: number;
         updatedAt: number;
         isPublic: boolean;
         itemCount: number;
@@ -7623,7 +7623,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         itemCount: import("convex/values").VFloat64<number, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "name" | "description" | "userId" | "createdAt" | "updatedAt" | "coverImageUrl" | "isPublic" | "itemCount">, {
+    }, "required", "createdAt" | "name" | "description" | "coverImageUrl" | "userId" | "updatedAt" | "isPublic" | "itemCount">, {
         by_user: ["userId", "_creationTime"];
         by_public: ["isPublic", "_creationTime"];
     }, {}, {}>;
@@ -7646,7 +7646,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
      * Cached exchange rate history for currency pairs
      */
     currencyHistory: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        days: number;
         data: {
             base: string;
             rates: {
@@ -7657,6 +7656,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             change: number;
             trend: "up" | "down" | "stable";
         };
+        days: number;
         fetchedAt: number;
         base: string;
         target: string;
@@ -7690,7 +7690,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             trend: import("convex/values").VUnion<"up" | "down" | "stable", [import("convex/values").VLiteral<"up", "required">, import("convex/values").VLiteral<"down", "required">, import("convex/values").VLiteral<"stable", "required">], "required", never>;
         }, "required", "base" | "rates" | "target" | "change" | "trend">;
         fetchedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "days" | "data" | "fetchedAt" | "base" | "target" | "data.base" | "data.rates" | "data.target" | "data.change" | "data.trend">, {
+    }, "required", "data" | "days" | "fetchedAt" | "base" | "target" | "data.base" | "data.rates" | "data.target" | "data.change" | "data.trend">, {
         by_pair: ["base", "target", "_creationTime"];
         by_pair_days: ["base", "target", "days", "_creationTime"];
         by_fetched_at: ["fetchedAt", "_creationTime"];
@@ -7702,15 +7702,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
         currentNode?: string | undefined;
         interruptData?: any;
         status: "completed" | "active" | "expired" | "paused";
+        createdAt: number;
         messages: {
             toolCalls?: any;
             toolName?: string | undefined;
+            role: "ai" | "human" | "tool" | "system";
             content: string;
             timestamp: number;
-            role: "ai" | "human" | "tool" | "system";
         }[];
         sessionId: string;
-        createdAt: number;
         updatedAt: number;
         sessionType: "chat" | "travel_plan" | "enrichment";
     }, {
@@ -7721,29 +7721,29 @@ declare const _default: import("convex/server").SchemaDefinition<{
         messages: import("convex/values").VArray<{
             toolCalls?: any;
             toolName?: string | undefined;
+            role: "ai" | "human" | "tool" | "system";
             content: string;
             timestamp: number;
-            role: "ai" | "human" | "tool" | "system";
         }[], import("convex/values").VObject<{
             toolCalls?: any;
             toolName?: string | undefined;
+            role: "ai" | "human" | "tool" | "system";
             content: string;
             timestamp: number;
-            role: "ai" | "human" | "tool" | "system";
         }, {
             role: import("convex/values").VUnion<"ai" | "human" | "tool" | "system", [import("convex/values").VLiteral<"human", "required">, import("convex/values").VLiteral<"ai", "required">, import("convex/values").VLiteral<"system", "required">, import("convex/values").VLiteral<"tool", "required">], "required", never>;
             content: import("convex/values").VString<string, "required">;
             toolCalls: import("convex/values").VAny<any, "optional", string>;
             toolName: import("convex/values").VString<string | undefined, "optional">;
             timestamp: import("convex/values").VFloat64<number, "required">;
-        }, "required", "content" | "toolCalls" | "timestamp" | "role" | "toolName" | `toolCalls.${string}`>, "required">;
+        }, "required", "role" | "content" | "timestamp" | "toolCalls" | "toolName" | `toolCalls.${string}`>, "required">;
         metadata: import("convex/values").VAny<any, "optional", string>;
         currentNode: import("convex/values").VString<string | undefined, "optional">;
         interruptData: import("convex/values").VAny<any, "optional", string>;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
         expiresAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "metadata" | "status" | "messages" | "sessionId" | "userId" | "createdAt" | "updatedAt" | "expiresAt" | `metadata.${string}` | "sessionType" | "currentNode" | "interruptData" | `interruptData.${string}`>, {
+    }, "required", "status" | "createdAt" | "metadata" | "messages" | "sessionId" | "userId" | "updatedAt" | "expiresAt" | `metadata.${string}` | "sessionType" | "currentNode" | "interruptData" | `interruptData.${string}`>, {
         by_session: ["sessionId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
         by_user_type: ["userId", "sessionType", "_creationTime"];
@@ -7772,7 +7772,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         pendingSends: import("convex/values").VArray<any[] | undefined, import("convex/values").VAny<any, "required", string>, "optional">;
         metadata: import("convex/values").VAny<any, "optional", string>;
         createdAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "metadata" | "createdAt" | `metadata.${string}` | "threadId" | "checkpointNs" | "checkpointId" | "parentCheckpointId" | "channelValues" | "channelVersions" | "versionsSeen" | "pendingSends" | `channelValues.${string}` | `channelVersions.${string}` | `versionsSeen.${string}`>, {
+    }, "required", "createdAt" | "metadata" | `metadata.${string}` | "threadId" | "checkpointNs" | "checkpointId" | "parentCheckpointId" | "channelValues" | "channelVersions" | "versionsSeen" | "pendingSends" | `channelValues.${string}` | `channelVersions.${string}` | `versionsSeen.${string}`>, {
         by_thread: ["threadId", "_creationTime"];
         by_thread_ns: ["threadId", "checkpointNs", "_creationTime"];
         by_thread_ns_id: ["threadId", "checkpointNs", "checkpointId", "_creationTime"];

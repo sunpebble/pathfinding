@@ -10,6 +10,7 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
         cityName: string | undefined;
         _id: import("convex/values").GenericId<"itineraryDrafts">;
         _creationTime: number;
+        coverImageUrl?: string | undefined;
         startDate?: string | undefined;
         endDate?: string | undefined;
         days?: {
@@ -33,7 +34,6 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
         }[] | undefined;
         visibility?: "public" | "private" | "team" | undefined;
         cityId?: import("convex/values").GenericId<"cities"> | undefined;
-        coverImageUrl?: string | undefined;
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         deviceId?: string | undefined;
         title: string;
@@ -53,6 +53,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     cityName: string | undefined;
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -76,7 +77,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -95,6 +95,7 @@ export declare const getByItinerary: import("convex/server").RegisteredQuery<"pu
     cityName: string | undefined;
     _id: import("convex/values").GenericId<"itineraryDrafts">;
     _creationTime: number;
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -118,7 +119,6 @@ export declare const getByItinerary: import("convex/server").RegisteredQuery<"pu
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     title: string;
@@ -132,6 +132,7 @@ export declare const getByItinerary: import("convex/server").RegisteredQuery<"pu
  * Uses optimistic locking via syncVersion for multi-device sync
  */
 export declare const save: import("convex/server").RegisteredMutation<"public", {
+    coverImageUrl?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
     days?: {
@@ -155,7 +156,6 @@ export declare const save: import("convex/server").RegisteredMutation<"public", 
     }[] | undefined;
     visibility?: "public" | "private" | "team" | undefined;
     cityId?: import("convex/values").GenericId<"cities"> | undefined;
-    coverImageUrl?: string | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     deviceId?: string | undefined;
     draftId?: import("convex/values").GenericId<"itineraryDrafts"> | undefined;

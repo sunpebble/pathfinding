@@ -9,8 +9,8 @@ export declare const listByJob: import("convex/server").RegisteredQuery<"public"
 }, Promise<{
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
@@ -20,21 +20,21 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 }, Promise<{
     _id: import("convex/values").GenericId<"rawCrawlRecords">;
     _creationTime: number;
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
     crawledAt: number;
     processingStatus: string;
 } | null>>;
 export declare const create: import("convex/server").RegisteredMutation<"public", {
-    jobId: import("convex/values").GenericId<"crawlJobs">;
     sourceUrl: string;
+    jobId: import("convex/values").GenericId<"crawlJobs">;
     rawData: any;
 }, Promise<import("convex/values").GenericId<"rawCrawlRecords">>>;
 export declare const bulkInsert: import("convex/server").RegisteredMutation<"public", {
     records: {
-        jobId: import("convex/values").GenericId<"crawlJobs">;
         sourceUrl: string;
+        jobId: import("convex/values").GenericId<"crawlJobs">;
         rawData: any;
     }[];
 }, Promise<Id<"rawCrawlRecords">[]>>;

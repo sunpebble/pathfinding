@@ -5,12 +5,12 @@ export declare const listSessions: import("convex/server").RegisteredQuery<"publ
 }, Promise<{
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -28,20 +28,20 @@ export declare const getSession: import("convex/server").RegisteredQuery<"public
     } | null;
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
 } | null>>;
 export declare const createSession: import("convex/server").RegisteredMutation<"public", {
     title?: string | undefined;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     userId: string;
 }, Promise<import("convex/values").GenericId<"chatSessions">>>;
@@ -53,12 +53,12 @@ export declare const updateSession: import("convex/server").RegisteredMutation<"
 }, Promise<{
     _id: import("convex/values").GenericId<"chatSessions">;
     _creationTime: number;
-    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     context?: string | undefined;
+    guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+    createdAt: number;
     title: string;
     userId: string;
-    createdAt: number;
     lastMessageAt: number;
     messageCount: number;
     isArchived: boolean;
@@ -67,8 +67,8 @@ export declare const deleteSession: import("convex/server").RegisteredMutation<"
     id: import("convex/values").GenericId<"chatSessions">;
 }, Promise<void>>;
 export declare const listMessages: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     cursor?: string | undefined;
+    limit?: number | undefined;
     sessionId: import("convex/values").GenericId<"chatSessions">;
 }, Promise<{
     messages: {
@@ -82,8 +82,8 @@ export declare const listMessages: import("convex/server").RegisteredQuery<"publ
                 address?: string | undefined;
                 rating?: number | undefined;
                 priceInfo?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
             }[] | undefined;
             sources?: string[] | undefined;
             itineraryChanges?: {
@@ -94,14 +94,14 @@ export declare const listMessages: import("convex/server").RegisteredQuery<"publ
             }[] | undefined;
             quickActions?: {
                 payload?: string | undefined;
-                label: string;
                 action: string;
+                label: string;
             }[] | undefined;
         } | undefined;
+        role: "user" | "assistant" | "system";
         content: string;
-        sessionId: import("convex/values").GenericId<"chatSessions">;
         createdAt: number;
-        role: "user" | "system" | "assistant";
+        sessionId: import("convex/values").GenericId<"chatSessions">;
     }[];
     cursor: string;
     isDone: boolean;
@@ -120,8 +120,8 @@ export declare const getRecentMessages: import("convex/server").RegisteredQuery<
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -132,14 +132,14 @@ export declare const getRecentMessages: import("convex/server").RegisteredQuery<
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
-    sessionId: import("convex/values").GenericId<"chatSessions">;
     createdAt: number;
-    role: "user" | "system" | "assistant";
+    sessionId: import("convex/values").GenericId<"chatSessions">;
 }[]>>;
 export declare const addMessage: import("convex/server").RegisteredMutation<"public", {
     metadata?: {
@@ -150,8 +150,8 @@ export declare const addMessage: import("convex/server").RegisteredMutation<"pub
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -162,13 +162,13 @@ export declare const addMessage: import("convex/server").RegisteredMutation<"pub
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
+    role: "user" | "assistant" | "system";
     content: string;
     sessionId: import("convex/values").GenericId<"chatSessions">;
-    role: "user" | "system" | "assistant";
 }, Promise<import("convex/values").GenericId<"chatMessages">>>;
 export declare const sendMessage: import("convex/server").RegisteredMutation<"public", {
     content: string;
@@ -187,8 +187,8 @@ export declare const sendMessage: import("convex/server").RegisteredMutation<"pu
                 address?: string | undefined;
                 rating?: number | undefined;
                 priceInfo?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
             }[] | undefined;
             sources?: string[] | undefined;
             itineraryChanges?: {
@@ -199,14 +199,14 @@ export declare const sendMessage: import("convex/server").RegisteredMutation<"pu
             }[] | undefined;
             quickActions?: {
                 payload?: string | undefined;
-                label: string;
                 action: string;
+                label: string;
             }[] | undefined;
         } | undefined;
+        role: "user" | "assistant" | "system";
         content: string;
-        sessionId: import("convex/values").GenericId<"chatSessions">;
         createdAt: number;
-        role: "user" | "system" | "assistant";
+        sessionId: import("convex/values").GenericId<"chatSessions">;
     }[];
     itineraryContext: {
         title: string;
@@ -230,8 +230,8 @@ export declare const saveAssistantResponse: import("convex/server").RegisteredMu
             address?: string | undefined;
             rating?: number | undefined;
             priceInfo?: string | undefined;
-            type: string;
             name: string;
+            type: string;
         }[] | undefined;
         sources?: string[] | undefined;
         itineraryChanges?: {
@@ -242,8 +242,8 @@ export declare const saveAssistantResponse: import("convex/server").RegisteredMu
         }[] | undefined;
         quickActions?: {
             payload?: string | undefined;
-            label: string;
             action: string;
+            label: string;
         }[] | undefined;
     } | undefined;
     content: string;
@@ -255,12 +255,12 @@ export declare const getSessionWithContext: import("convex/server").RegisteredQu
     session: {
         _id: import("convex/values").GenericId<"chatSessions">;
         _creationTime: number;
-        guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
         context?: string | undefined;
+        guideId?: import("convex/values").GenericId<"travelGuides"> | undefined;
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
+        createdAt: number;
         title: string;
         userId: string;
-        createdAt: number;
         lastMessageAt: number;
         messageCount: number;
         isArchived: boolean;
@@ -276,8 +276,8 @@ export declare const getSessionWithContext: import("convex/server").RegisteredQu
                 address?: string | undefined;
                 rating?: number | undefined;
                 priceInfo?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
             }[] | undefined;
             sources?: string[] | undefined;
             itineraryChanges?: {
@@ -288,14 +288,14 @@ export declare const getSessionWithContext: import("convex/server").RegisteredQu
             }[] | undefined;
             quickActions?: {
                 payload?: string | undefined;
-                label: string;
                 action: string;
+                label: string;
             }[] | undefined;
         } | undefined;
+        role: "user" | "assistant" | "system";
         content: string;
-        sessionId: import("convex/values").GenericId<"chatSessions">;
         createdAt: number;
-        role: "user" | "system" | "assistant";
+        sessionId: import("convex/values").GenericId<"chatSessions">;
     }[];
     itinerary: {
         id: import("convex/values").GenericId<"itineraries">;
@@ -333,8 +333,8 @@ export declare const getSessionWithContext: import("convex/server").RegisteredQu
         aiDays: {
             theme?: string | undefined;
             pois: {
-                duration?: string | undefined;
                 description?: string | undefined;
+                duration?: string | undefined;
                 tips?: string | undefined;
                 address?: string | undefined;
                 rating?: number | undefined;
@@ -352,8 +352,8 @@ export declare const getSessionWithContext: import("convex/server").RegisteredQu
                 isManuallyVerified?: boolean | undefined;
                 verifiedAt?: number | undefined;
                 verifiedBy?: string | undefined;
-                type: string;
                 name: string;
+                type: string;
                 latitude: number;
                 longitude: number;
             }[];

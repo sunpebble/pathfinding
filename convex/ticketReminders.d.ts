@@ -13,8 +13,8 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -35,8 +35,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -58,8 +58,8 @@ export declare const listByPoi: import("convex/server").RegisteredQuery<"public"
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -81,8 +81,8 @@ export declare const getPendingReminders: import("convex/server").RegisteredQuer
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -110,8 +110,8 @@ export declare const getUpcoming: import("convex/server").RegisteredQuery<"publi
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -147,8 +147,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -169,8 +169,8 @@ export declare const markTriggered: import("convex/server").RegisteredMutation<"
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";
@@ -191,8 +191,8 @@ export declare const markRead: import("convex/server").RegisteredMutation<"publi
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     ticketId?: import("convex/values").GenericId<"poiTickets"> | undefined;
     readAt?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     poiId: import("convex/values").GenericId<"pois">;
     reminderType: "reservation_open" | "booking_reminder" | "visit_reminder" | "price_drop" | "stock_available";

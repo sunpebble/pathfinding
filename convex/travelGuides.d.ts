@@ -1,18 +1,18 @@
 import type { Id } from './_generated/dataModel';
 export declare const list: import("convex/server").RegisteredQuery<"public", {
+    platform?: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor" | undefined;
     limit?: number | undefined;
-    platform?: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo" | undefined;
     minQuality?: number | undefined;
 }, Promise<{
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -26,8 +26,8 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -45,8 +45,8 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -66,27 +66,27 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 }[]>>;
 export declare const listIds: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     cursor?: string | undefined;
+    limit?: number | undefined;
 }, Promise<{
     items: {
         _id: import("convex/values").GenericId<"travelGuides">;
         sourceExternalId: string;
-        sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
+        sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
         title: string | undefined;
         contentLength: number;
         qualityScore: number;
@@ -102,12 +102,12 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -121,8 +121,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -140,8 +140,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -161,34 +161,34 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | null>>;
 export declare const update: import("convex/server").RegisteredMutation<"public", {
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     aiSummary?: string | undefined;
     id: import("convex/values").GenericId<"travelGuides">;
 }, Promise<{
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -202,8 +202,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -221,8 +221,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -242,18 +242,18 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 } | null>>;
 export declare const search: import("convex/server").RegisteredQuery<"public", {
     destination?: string | undefined;
@@ -265,12 +265,12 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -284,8 +284,8 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -303,8 +303,8 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -324,18 +324,18 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 }[]>>;
 export declare const listDestinationsBatch: import("convex/server").RegisteredQuery<"public", {
     cursor?: string | undefined;
@@ -346,8 +346,8 @@ export declare const listDestinationsBatch: import("convex/server").RegisteredQu
     isDone: boolean;
 }>>;
 export declare const getPopularDestinations: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     destinations?: string[] | undefined;
+    limit?: number | undefined;
 }, Promise<{
     name: string;
     count: number;
@@ -359,12 +359,12 @@ export declare const getByDestination: import("convex/server").RegisteredQuery<"
     _id: import("convex/values").GenericId<"travelGuides">;
     _creationTime: number;
     title?: string | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    publishedAt?: number | undefined;
     contentHash?: string | undefined;
     enrichmentStatus?: "completed" | "failed" | "processing" | "pending" | undefined;
     enrichmentError?: string | undefined;
@@ -378,8 +378,8 @@ export declare const getByDestination: import("convex/server").RegisteredQuery<"
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -397,8 +397,8 @@ export declare const getByDestination: import("convex/server").RegisteredQuery<"
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -418,61 +418,61 @@ export declare const getByDestination: import("convex/server").RegisteredQuery<"
         lowConfidenceCount: number;
         manuallyVerifiedCount: number;
     } | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    likesCount: number;
-    commentsCount: number;
-    imageUrls: string[];
-    crawledAt: number;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    imageUrls: string[];
+    destinations: string[];
+    tags: string[];
+    likesCount: number;
     savesCount: number;
+    commentsCount: number;
     viewsCount: number;
     qualityScore: number;
+    crawledAt: number;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 }[]>>;
 export declare const upsert: import("convex/server").RegisteredMutation<"public", {
     title?: string | undefined;
-    likesCount?: number | undefined;
-    commentsCount?: number | undefined;
-    imageUrls?: string[] | undefined;
-    coverImageUrl?: string | undefined;
     sourceUrl?: string | undefined;
     authorName?: string | undefined;
+    publishedAt?: number | undefined;
+    coverImageUrl?: string | undefined;
+    imageUrls?: string[] | undefined;
+    likesCount?: number | undefined;
+    savesCount?: number | undefined;
+    commentsCount?: number | undefined;
+    viewsCount?: number | undefined;
+    qualityScore?: number | undefined;
     contentHtml?: string | undefined;
     authorId?: string | undefined;
-    savesCount?: number | undefined;
-    viewsCount?: number | undefined;
-    publishedAt?: number | undefined;
-    qualityScore?: number | undefined;
     contentHash?: string | undefined;
-    tags: string[];
     content: string;
-    destinations: string[];
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    destinations: string[];
+    tags: string[];
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 }, Promise<import("convex/values").GenericId<"travelGuides">>>;
 export declare const bulkInsert: import("convex/server").RegisteredMutation<"public", {
     guides: {
         title?: string | undefined;
-        likesCount?: number | undefined;
-        commentsCount?: number | undefined;
-        imageUrls?: string[] | undefined;
-        coverImageUrl?: string | undefined;
         sourceUrl?: string | undefined;
         authorName?: string | undefined;
+        publishedAt?: number | undefined;
+        coverImageUrl?: string | undefined;
+        imageUrls?: string[] | undefined;
+        likesCount?: number | undefined;
+        savesCount?: number | undefined;
+        commentsCount?: number | undefined;
+        viewsCount?: number | undefined;
+        qualityScore?: number | undefined;
         contentHtml?: string | undefined;
         authorId?: string | undefined;
-        savesCount?: number | undefined;
-        viewsCount?: number | undefined;
-        publishedAt?: number | undefined;
-        qualityScore?: number | undefined;
         contentHash?: string | undefined;
-        tags: string[];
         content: string;
-        destinations: string[];
-        sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
         sourceExternalId: string;
+        destinations: string[];
+        tags: string[];
+        sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
     }[];
 }, Promise<Id<"travelGuides">[]>>;
 export declare const updateQualityScore: import("convex/server").RegisteredMutation<"public", {
@@ -488,8 +488,8 @@ export declare const updateAiData: import("convex/server").RegisteredMutation<"p
     aiDays?: {
         theme?: string | undefined;
         pois: {
-            duration?: string | undefined;
             description?: string | undefined;
+            duration?: string | undefined;
             tips?: string | undefined;
             address?: string | undefined;
             rating?: number | undefined;
@@ -507,8 +507,8 @@ export declare const updateAiData: import("convex/server").RegisteredMutation<"p
             isManuallyVerified?: boolean | undefined;
             verifiedAt?: number | undefined;
             verifiedBy?: string | undefined;
-            type: string;
             name: string;
+            type: string;
             latitude: number;
             longitude: number;
         }[];
@@ -520,8 +520,8 @@ export declare const remove: import("convex/server").RegisteredMutation<"public"
     id: import("convex/values").GenericId<"travelGuides">;
 }, Promise<void>>;
 export declare const findDuplicatesForExternalId: import("convex/server").RegisteredQuery<"public", {
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
     sourceExternalId: string;
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 }, Promise<{
     idsToDelete: never[];
     kept: import("convex/values").GenericId<"travelGuides">;
@@ -532,14 +532,14 @@ export declare const findDuplicatesForExternalId: import("convex/server").Regist
     total: number;
 }>>;
 export declare const getUniqueExternalIds: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     cursor?: string | undefined;
-    platform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
+    limit?: number | undefined;
+    platform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
 }, Promise<{
     items: {
         id: import("convex/values").GenericId<"travelGuides">;
         externalId: string;
-        platform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
+        platform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
     }[];
     cursor: string;
     isDone: boolean;
@@ -550,7 +550,7 @@ export declare const batchDelete: import("convex/server").RegisteredMutation<"pu
     deletedCount: number;
 }>>;
 export declare const removeDuplicates: import("convex/server").RegisteredMutation<"public", {
-    platform?: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo" | undefined;
+    platform?: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor" | undefined;
 }, Promise<{
     removedCount: number;
     totalBefore: number;
@@ -606,7 +606,7 @@ export declare const getGuidesWithLowConfidence: import("convex/server").Registe
 }, Promise<{
     _id: import("convex/values").GenericId<"travelGuides">;
     title: string | undefined;
-    sourcePlatform: "xiaohongshu" | "weibo" | "ctrip" | "douyin" | "tripadvisor" | "qunar" | "tongcheng" | "mafengwo";
+    sourcePlatform: "tongcheng" | "xiaohongshu" | "mafengwo" | "ctrip" | "qunar" | "weibo" | "douyin" | "tripadvisor";
     sourceExternalId: string;
     totalPois: number;
     lowConfidenceCount: number;

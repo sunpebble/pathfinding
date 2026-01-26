@@ -15,9 +15,9 @@ export declare const getOrCreateDefault: import("convex/server").RegisteredMutat
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -30,9 +30,9 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -60,8 +60,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         _creationTime: number;
         notes?: string | undefined;
         collectionId?: import("convex/values").GenericId<"favoriteCollections"> | undefined;
-        userId: string;
         createdAt: number;
+        userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     }[];
     total: number;
@@ -69,9 +69,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;
@@ -88,9 +88,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     sortOrder: number;
     isDefault: boolean;

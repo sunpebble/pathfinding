@@ -16,16 +16,16 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         location?: string | undefined;
         travelDate?: string | undefined;
-        title: string;
         content: string;
         createdAt: number;
+        title: string;
         likesCount: number;
+        savesCount: number;
         commentsCount: number;
+        viewsCount: number;
         visibility: "public" | "followers" | "private";
         updatedAt: number;
         authorId: string;
-        savesCount: number;
-        viewsCount: number;
         isEdited: boolean;
     }[];
     total: number;
@@ -47,16 +47,16 @@ export declare const listPublic: import("convex/server").RegisteredQuery<"public
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         location?: string | undefined;
         travelDate?: string | undefined;
-        title: string;
         content: string;
         createdAt: number;
+        title: string;
         likesCount: number;
+        savesCount: number;
         commentsCount: number;
+        viewsCount: number;
         visibility: "public" | "followers" | "private";
         updatedAt: number;
         authorId: string;
-        savesCount: number;
-        viewsCount: number;
         isEdited: boolean;
     }[];
     total: number;
@@ -84,6 +84,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
         mentionIndex: number | undefined;
         _id: import("convex/values").GenericId<"pois">;
         _creationTime: number;
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         priceLevel?: number | undefined;
@@ -129,7 +130,6 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
             peakHours?: string[] | undefined;
             seasonalNotes?: string | undefined;
         } | undefined;
-        imageUrls?: string[] | undefined;
         isHiddenGem?: boolean | undefined;
         hiddenGemScore?: number | undefined;
         hiddenGemRating?: number | undefined;
@@ -160,16 +160,16 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | null>>;
 export declare const create: import("convex/server").RegisteredMutation<"public", {
@@ -177,13 +177,13 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
+    title: string;
     authorId: string;
 }, Promise<import("convex/values").GenericId<"travelNotes">>>;
 export declare const update: import("convex/server").RegisteredMutation<"public", {
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     visibility?: "public" | "followers" | "private" | undefined;
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
@@ -196,16 +196,16 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
     location?: string | undefined;
     travelDate?: string | undefined;
-    title: string;
     content: string;
     createdAt: number;
+    title: string;
     likesCount: number;
+    savesCount: number;
     commentsCount: number;
+    viewsCount: number;
     visibility: "public" | "followers" | "private";
     updatedAt: number;
     authorId: string;
-    savesCount: number;
-    viewsCount: number;
     isEdited: boolean;
 } | null>>;
 export declare const remove: import("convex/server").RegisteredMutation<"public", {
@@ -238,14 +238,14 @@ export declare const addImages: import("convex/server").RegisteredMutation<"publ
     noteId: import("convex/values").GenericId<"travelNotes">;
 }, Promise<Id<"noteImages">[]>>;
 export declare const addTag: import("convex/server").RegisteredMutation<"public", {
+    tag: string;
     userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
-    tag: string;
 }, Promise<import("convex/values").GenericId<"noteTags">>>;
 export declare const removeTag: import("convex/server").RegisteredMutation<"public", {
+    tag: string;
     userId: string;
     noteId: import("convex/values").GenericId<"travelNotes">;
-    tag: string;
 }, Promise<void>>;
 export declare const setTags: import("convex/server").RegisteredMutation<"public", {
     tags: string[];
@@ -285,16 +285,16 @@ export declare const search: import("convex/server").RegisteredQuery<"public", {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         location?: string | undefined;
         travelDate?: string | undefined;
-        title: string;
         content: string;
         createdAt: number;
+        title: string;
         likesCount: number;
+        savesCount: number;
         commentsCount: number;
+        viewsCount: number;
         visibility: "public" | "followers" | "private";
         updatedAt: number;
         authorId: string;
-        savesCount: number;
-        viewsCount: number;
         isEdited: boolean;
     }[];
     total: number;

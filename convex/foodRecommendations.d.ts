@@ -15,6 +15,7 @@ export declare const listRestaurants: import("convex/server").RegisteredQuery<"p
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -60,7 +61,6 @@ export declare const listRestaurants: import("convex/server").RegisteredQuery<"p
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -97,6 +97,7 @@ export declare const searchRestaurants: import("convex/server").RegisteredQuery<
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -142,7 +143,6 @@ export declare const searchRestaurants: import("convex/server").RegisteredQuery<
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -176,6 +176,7 @@ export declare const getRestaurantById: import("convex/server").RegisteredQuery<
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -221,7 +222,6 @@ export declare const getRestaurantById: import("convex/server").RegisteredQuery<
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -260,6 +260,7 @@ export declare const getNearbyRestaurants: import("convex/server").RegisteredQue
     distance: number;
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -305,7 +306,6 @@ export declare const getNearbyRestaurants: import("convex/server").RegisteredQue
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -341,6 +341,7 @@ export declare const getLocalFavorites: import("convex/server").RegisteredQuery<
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -386,7 +387,6 @@ export declare const getLocalFavorites: import("convex/server").RegisteredQuery<
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -422,6 +422,7 @@ export declare const getByCuisineType: import("convex/server").RegisteredQuery<"
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -467,7 +468,6 @@ export declare const getByCuisineType: import("convex/server").RegisteredQuery<"
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -502,17 +502,17 @@ export declare const getRestaurantReviews: import("convex/server").RegisteredQue
 }, Promise<{
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -527,17 +527,17 @@ export declare const getUserReview: import("convex/server").RegisteredQuery<"pub
 }, Promise<{
     _id: import("convex/values").GenericId<"foodReviews">;
     _creationTime: number;
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     helpfulCount?: number | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
     pricePerPerson?: number | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     rating: number;
     wouldRecommend: boolean;
@@ -547,10 +547,10 @@ export declare const getUserReview: import("convex/server").RegisteredQuery<"pub
  * Create or update a food review
  */
 export declare const createFoodReview: import("convex/server").RegisteredMutation<"public", {
-    tags?: string[] | undefined;
-    title?: string | undefined;
     content?: string | undefined;
+    title?: string | undefined;
     imageUrls?: string[] | undefined;
+    tags?: string[] | undefined;
     visitDate?: string | undefined;
     dishesOrdered?: string[] | undefined;
     recommendedDishes?: string[] | undefined;
@@ -603,6 +603,7 @@ export declare const getUserFavorites: import("convex/server").RegisteredQuery<"
     restaurant: {
         _id: import("convex/values").GenericId<"pois">;
         _creationTime: number;
+        imageUrls?: string[] | undefined;
         phone?: string | undefined;
         nameEn?: string | undefined;
         priceLevel?: number | undefined;
@@ -648,7 +649,6 @@ export declare const getUserFavorites: import("convex/server").RegisteredQuery<"
             peakHours?: string[] | undefined;
             seasonalNotes?: string | undefined;
         } | undefined;
-        imageUrls?: string[] | undefined;
         isHiddenGem?: boolean | undefined;
         hiddenGemScore?: number | undefined;
         hiddenGemRating?: number | undefined;
@@ -678,8 +678,8 @@ export declare const getUserFavorites: import("convex/server").RegisteredQuery<"
     _creationTime: number;
     notes?: string | undefined;
     collectionId?: import("convex/values").GenericId<"foodCollections"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     restaurantId: import("convex/values").GenericId<"pois">;
 }[]>>;
 /**
@@ -709,9 +709,9 @@ export declare const getUserCollections: import("convex/server").RegisteredQuery
     _creationTime: number;
     description?: string | undefined;
     coverImageUrl?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     isPublic: boolean;
     itemCount: number;

@@ -9,9 +9,9 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -25,9 +25,9 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -41,9 +41,9 @@ export declare const getPrimary: import("convex/server").RegisteredQuery<"public
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -57,9 +57,9 @@ export declare const getSosContacts: import("convex/server").RegisteredQuery<"pu
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -77,8 +77,8 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
     notifyOnSos: boolean;
 }, Promise<import("convex/values").GenericId<"emergencyContacts">>>;
 export declare const update: import("convex/server").RegisteredMutation<"public", {
-    email?: string | undefined;
     name?: string | undefined;
+    email?: string | undefined;
     notes?: string | undefined;
     relationship?: string | undefined;
     phoneNumber?: string | undefined;
@@ -90,9 +90,9 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;
@@ -110,9 +110,9 @@ export declare const setPrimary: import("convex/server").RegisteredMutation<"pub
     _creationTime: number;
     email?: string | undefined;
     notes?: string | undefined;
+    createdAt: number;
     name: string;
     userId: string;
-    createdAt: number;
     updatedAt: number;
     relationship: string;
     phoneNumber: string;

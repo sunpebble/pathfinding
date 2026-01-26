@@ -41,12 +41,12 @@ export declare const getByYear: import("convex/server").RegisteredQuery<"public"
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -80,9 +80,9 @@ export declare const getByYear: import("convex/server").RegisteredQuery<"public"
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 } | null>>;
@@ -125,12 +125,12 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     memories?: {
         itineraryId?: import("convex/values").GenericId<"itineraries"> | undefined;
         imageUrl?: string | undefined;
-        text: string;
         createdAt: number;
+        text: string;
     }[] | undefined;
     status: "error" | "generating" | "ready";
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     citiesCount: number;
     totalDistance: number;
@@ -164,9 +164,9 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     }[];
     achievements: {
         earnedAt?: number | undefined;
-        id: string;
-        title: string;
         description: string;
+        title: string;
+        id: string;
         icon: string;
     }[];
 }[]>>;

@@ -13,8 +13,8 @@ export declare const listBySpot: import("convex/server").RegisteredQuery<"public
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -34,8 +34,8 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -54,8 +54,8 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -75,8 +75,8 @@ export declare const getUserReview: import("convex/server").RegisteredQuery<"pub
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -114,8 +114,8 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;
@@ -138,8 +138,8 @@ export declare const markHelpful: import("convex/server").RegisteredMutation<"pu
     speedTestResult?: number | undefined;
     connectionTime?: string | undefined;
     deviceType?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     overallRating: number;
     wifiSpotId: import("convex/values").GenericId<"wifiSpots">;

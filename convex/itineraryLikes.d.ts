@@ -39,8 +39,8 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
         };
         _id: import("convex/values").GenericId<"itineraryLikes">;
         _creationTime: number;
-        userId: string;
         createdAt: number;
+        userId: string;
         itineraryId: import("convex/values").GenericId<"itineraries">;
     }[];
     total: number;

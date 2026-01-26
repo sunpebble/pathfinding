@@ -32,7 +32,6 @@ export declare const getHistory: import("convex/server").RegisteredQuery<"public
 }, Promise<{
     _id: import("convex/values").GenericId<"currencyHistory">;
     _creationTime: number;
-    days: number;
     data: {
         base: string;
         rates: {
@@ -43,6 +42,7 @@ export declare const getHistory: import("convex/server").RegisteredQuery<"public
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;
@@ -51,7 +51,6 @@ export declare const getHistory: import("convex/server").RegisteredQuery<"public
  * Upsert exchange rate history for a currency pair
  */
 export declare const upsertHistory: import("convex/server").RegisteredMutation<"public", {
-    days: number;
     data: {
         base: string;
         rates: {
@@ -62,6 +61,7 @@ export declare const upsertHistory: import("convex/server").RegisteredMutation<"
         change: number;
         trend: "up" | "down" | "stable";
     };
+    days: number;
     fetchedAt: number;
     base: string;
     target: string;

@@ -7,8 +7,8 @@ export declare const getUserSettings: import("convex/server").RegisteredQuery<"p
     _id: import("convex/values").GenericId<"userTimezoneSettings">;
     _creationTime: number;
     homeCityId?: import("convex/values").GenericId<"cities"> | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     homeTimezone: string;
     displayFormat: "24h" | "12h";

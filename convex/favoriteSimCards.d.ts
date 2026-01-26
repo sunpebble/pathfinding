@@ -40,11 +40,11 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
         affiliateUrl?: string | undefined;
         salesCount?: number | undefined;
         isPromoted?: boolean | undefined;
-        provider: string;
-        priority: number;
-        name: string;
-        destinations: string[];
         createdAt: number;
+        name: string;
+        priority: number;
+        destinations: string[];
+        provider: string;
         updatedAt: number;
         purchaseUrl: string;
         isActive: boolean;
@@ -72,8 +72,8 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 }[]>>;
 export declare const isFavorited: import("convex/server").RegisteredQuery<"public", {
@@ -87,8 +87,8 @@ export declare const getFavorite: import("convex/server").RegisteredQuery<"publi
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 }>>;
 export declare const add: import("convex/server").RegisteredMutation<"public", {
@@ -103,8 +103,8 @@ export declare const updateNotes: import("convex/server").RegisteredMutation<"pu
     _id: import("convex/values").GenericId<"favoriteSimCards">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     simCardId: import("convex/values").GenericId<"simCards">;
 } | null>>;
 export declare const remove: import("convex/server").RegisteredMutation<"public", {

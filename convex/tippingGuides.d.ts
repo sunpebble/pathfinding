@@ -13,7 +13,7 @@ export declare const list: import("convex/server").RegisteredQuery<"public", {},
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -37,7 +37,7 @@ export declare const getByCountryCode: import("convex/server").RegisteredQuery<"
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -50,7 +50,7 @@ export declare const getByCountryCode: import("convex/server").RegisteredQuery<"
     }[];
 } | null>>;
 export declare const getByTippingCulture: import("convex/server").RegisteredQuery<"public", {
-    culture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    culture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
 }, Promise<{
     _id: import("convex/values").GenericId<"tippingGuides">;
     _creationTime: number;
@@ -61,7 +61,7 @@ export declare const getByTippingCulture: import("convex/server").RegisteredQuer
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -85,7 +85,7 @@ export declare const searchByName: import("convex/server").RegisteredQuery<"publ
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -104,7 +104,7 @@ export declare const getScenario: import("convex/server").RegisteredQuery<"publi
     countryName: string;
     currency: string;
     currencySymbol: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     notes?: string | undefined;
     fixedAmount?: number | undefined;
     type: "restaurant" | "hotel" | "other" | "taxi" | "bar" | "spa" | "tour" | "delivery" | "hairdresser";
@@ -120,7 +120,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
     currency: string;
     currencySymbol: string;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;
@@ -139,7 +139,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     currencySymbol?: string | undefined;
     countryName?: string | undefined;
     countryNameEn?: string | undefined;
-    tippingCulture?: "expected" | "optional" | "appreciated" | "not_expected" | "offensive" | undefined;
+    tippingCulture?: "optional" | "expected" | "appreciated" | "not_expected" | "offensive" | undefined;
     cultureSummary?: string | undefined;
     scenarios?: {
         notes?: string | undefined;
@@ -161,7 +161,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
     currencySymbol: string;
     lastUpdated: number;
     countryName: string;
-    tippingCulture: "expected" | "optional" | "appreciated" | "not_expected" | "offensive";
+    tippingCulture: "optional" | "expected" | "appreciated" | "not_expected" | "offensive";
     cultureSummary: string;
     scenarios: {
         notes?: string | undefined;

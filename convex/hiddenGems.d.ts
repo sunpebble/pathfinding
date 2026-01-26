@@ -12,6 +12,7 @@ export declare const listHiddenGems: import("convex/server").RegisteredQuery<"pu
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -57,7 +58,6 @@ export declare const listHiddenGems: import("convex/server").RegisteredQuery<"pu
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -93,6 +93,7 @@ export declare const getByPopularityLevel: import("convex/server").RegisteredQue
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -138,7 +139,6 @@ export declare const getByPopularityLevel: import("convex/server").RegisteredQue
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -174,6 +174,7 @@ export declare const getLocalRecommendations: import("convex/server").Registered
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -219,7 +220,6 @@ export declare const getLocalRecommendations: import("convex/server").Registered
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -256,6 +256,7 @@ export declare const searchHiddenGems: import("convex/server").RegisteredQuery<"
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -301,7 +302,6 @@ export declare const searchHiddenGems: import("convex/server").RegisteredQuery<"
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -344,6 +344,7 @@ export declare const markAsHiddenGem: import("convex/server").RegisteredMutation
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -389,7 +390,6 @@ export declare const markAsHiddenGem: import("convex/server").RegisteredMutation
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -432,6 +432,7 @@ export declare const updateHiddenGemInfo: import("convex/server").RegisteredMuta
 }, Promise<{
     _id: import("convex/values").GenericId<"pois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     phone?: string | undefined;
     nameEn?: string | undefined;
     priceLevel?: number | undefined;
@@ -477,7 +478,6 @@ export declare const updateHiddenGemInfo: import("convex/server").RegisteredMuta
         peakHours?: string[] | undefined;
         seasonalNotes?: string | undefined;
     } | undefined;
-    imageUrls?: string[] | undefined;
     isHiddenGem?: boolean | undefined;
     hiddenGemScore?: number | undefined;
     hiddenGemRating?: number | undefined;
@@ -507,10 +507,10 @@ export declare const updateHiddenGemInfo: import("convex/server").RegisteredMuta
  * Submit a new hidden gem POI
  */
 export declare const submitHiddenGem: import("convex/server").RegisteredMutation<"public", {
+    imageUrls?: string[] | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -536,11 +536,11 @@ export declare const listUserSubmittedPois: import("convex/server").RegisteredQu
 }, Promise<{
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -551,12 +551,12 @@ export declare const listUserSubmittedPois: import("convex/server").RegisteredQu
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -571,11 +571,11 @@ export declare const getUserSubmittedPoiById: import("convex/server").Registered
 }, Promise<{
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -586,12 +586,12 @@ export declare const getUserSubmittedPoiById: import("convex/server").Registered
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -620,11 +620,11 @@ export declare const updateUserSubmittedPoiStatus: import("convex/server").Regis
 }, Promise<{
     _id: import("convex/values").GenericId<"userSubmittedPois">;
     _creationTime: number;
+    imageUrls?: string[] | undefined;
     updatedAt?: number | undefined;
     nameEn?: string | undefined;
     address?: string | undefined;
     avoidTimes?: string | undefined;
-    imageUrls?: string[] | undefined;
     localTips?: string | undefined;
     bestTimeToVisit?: string | undefined;
     localSecrets?: string[] | undefined;
@@ -635,12 +635,12 @@ export declare const updateUserSubmittedPoiStatus: import("convex/server").Regis
     reviewedAt?: number | undefined;
     mergedPoiId?: import("convex/values").GenericId<"pois"> | undefined;
     status: "approved" | "rejected" | "pending" | "merged";
+    createdAt: number;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
     userId: string;
-    createdAt: number;
     cityId: import("convex/values").GenericId<"cities">;
     category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
     upvotes: number;
@@ -676,8 +676,8 @@ export declare const getHiddenGemRatings: import("convex/server").RegisteredQuer
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;
@@ -694,8 +694,8 @@ export declare const getUserRating: import("convex/server").RegisteredQuery<"pub
     updatedAt?: number | undefined;
     review?: string | undefined;
     visitDate?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     rating: number;
     poiId: import("convex/values").GenericId<"pois">;
     wouldRecommend: boolean;

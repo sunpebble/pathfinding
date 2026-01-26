@@ -3,9 +3,9 @@ export declare const listCollaborators: import("convex/server").RegisteredQuery<
 }, Promise<{
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 }[]>>;
 export declare const getCollaborator: import("convex/server").RegisteredQuery<"public", {
     userId: string;
@@ -13,9 +13,9 @@ export declare const getCollaborator: import("convex/server").RegisteredQuery<"p
 }, Promise<{
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 } | null>>;
 export declare const listByUser: import("convex/server").RegisteredQuery<"public", {
     userId: string;
@@ -35,14 +35,14 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     };
     _id: import("convex/values").GenericId<"itineraryCollaborators">;
     _creationTime: number;
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
 }[]>>;
 export declare const inviteCollaborator: import("convex/server").RegisteredMutation<"public", {
+    role: "owner" | "editor" | "viewer";
     userId: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
-    role: "owner" | "editor" | "viewer";
     invitedBy: string;
 }, Promise<import("convex/values").GenericId<"itineraryCollaborators">>>;
 export declare const acceptInvite: import("convex/server").RegisteredMutation<"public", {

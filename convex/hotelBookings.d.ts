@@ -1,5 +1,5 @@
 export declare const listByUser: import("convex/server").RegisteredQuery<"public", {
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     page?: number | undefined;
     pageSize?: number | undefined;
     userId: string;
@@ -7,7 +7,7 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     data: {
         _id: import("convex/values").GenericId<"hotelBookings">;
         _creationTime: number;
-        status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+        status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
         latitude?: number | undefined;
         longitude?: number | undefined;
         currency?: string | undefined;
@@ -42,7 +42,7 @@ export declare const listByItinerary: import("convex/server").RegisteredQuery<"p
 }, Promise<{
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -75,7 +75,7 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
 }, Promise<{
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -109,7 +109,7 @@ export declare const getUpcoming: import("convex/server").RegisteredQuery<"publi
 }, Promise<{
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -138,7 +138,7 @@ export declare const getUpcoming: import("convex/server").RegisteredQuery<"publi
     roomCount: number;
 }[]>>;
 export declare const create: import("convex/server").RegisteredMutation<"public", {
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -167,7 +167,7 @@ export declare const create: import("convex/server").RegisteredMutation<"public"
     roomCount: number;
 }, Promise<import("convex/values").GenericId<"hotelBookings">>>;
 export declare const update: import("convex/server").RegisteredMutation<"public", {
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -196,7 +196,7 @@ export declare const update: import("convex/server").RegisteredMutation<"public"
 }, Promise<{
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -235,7 +235,7 @@ export declare const linkToItinerary: import("convex/server").RegisteredMutation
 }, Promise<{
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -269,7 +269,7 @@ export declare const unlinkFromItinerary: import("convex/server").RegisteredMuta
 }, Promise<{
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;
@@ -298,13 +298,13 @@ export declare const unlinkFromItinerary: import("convex/server").RegisteredMuta
     roomCount: number;
 } | null>>;
 export declare const updateStatus: import("convex/server").RegisteredMutation<"public", {
-    status: "cancelled" | "completed" | "pending" | "confirmed";
+    status: "completed" | "cancelled" | "pending" | "confirmed";
     id: import("convex/values").GenericId<"hotelBookings">;
     userId: string;
 }, Promise<{
     _id: import("convex/values").GenericId<"hotelBookings">;
     _creationTime: number;
-    status?: "cancelled" | "completed" | "pending" | "confirmed" | undefined;
+    status?: "completed" | "cancelled" | "pending" | "confirmed" | undefined;
     latitude?: number | undefined;
     longitude?: number | undefined;
     currency?: string | undefined;

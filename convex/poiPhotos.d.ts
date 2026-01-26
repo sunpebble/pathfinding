@@ -1,8 +1,8 @@
 export declare const listByPoi: import("convex/server").RegisteredQuery<"public", {
+    cursor?: string | undefined;
     status?: "approved" | "rejected" | "hidden" | "pending" | undefined;
     limit?: number | undefined;
     category?: "other" | "activity" | "food" | "interior" | "exterior" | "scenery" | "detail" | undefined;
-    cursor?: string | undefined;
     poiId: import("convex/values").GenericId<"pois">;
 }, Promise<{
     items: {
@@ -27,11 +27,11 @@ export declare const listByPoi: import("convex/server").RegisteredQuery<"public"
         featuredAt?: number | undefined;
         featuredBy?: string | undefined;
         status: "approved" | "rejected" | "hidden" | "pending";
-        userId: string;
         createdAt: number;
         likesCount: number;
-        poiId: import("convex/values").GenericId<"pois">;
         viewsCount: number;
+        userId: string;
+        poiId: import("convex/values").GenericId<"pois">;
         imageUrl: string;
         isFeatured: boolean;
     }[];
@@ -63,11 +63,11 @@ export declare const getFeaturedByPoi: import("convex/server").RegisteredQuery<"
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 }[]>>;
@@ -95,11 +95,11 @@ export declare const getById: import("convex/server").RegisteredQuery<"public", 
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | null>>;
@@ -128,17 +128,17 @@ export declare const listByUser: import("convex/server").RegisteredQuery<"public
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 }[]>>;
 export declare const getTimeline: import("convex/server").RegisteredQuery<"public", {
-    limit?: number | undefined;
     cursor?: string | undefined;
+    limit?: number | undefined;
 }, Promise<{
     items: {
         _id: import("convex/values").GenericId<"poiPhotos">;
@@ -162,11 +162,11 @@ export declare const getTimeline: import("convex/server").RegisteredQuery<"publi
         featuredAt?: number | undefined;
         featuredBy?: string | undefined;
         status: "approved" | "rejected" | "hidden" | "pending";
-        userId: string;
         createdAt: number;
         likesCount: number;
-        poiId: import("convex/values").GenericId<"pois">;
         viewsCount: number;
+        userId: string;
+        poiId: import("convex/values").GenericId<"pois">;
         imageUrl: string;
         isFeatured: boolean;
     }[];
@@ -208,11 +208,11 @@ export declare const getPopularPhotos: import("convex/server").RegisteredQuery<"
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 }[]>>;
@@ -245,11 +245,11 @@ export declare const getUserLikedPhotos: import("convex/server").RegisteredQuery
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | null)[]>>;
@@ -296,11 +296,11 @@ export declare const updateCaption: import("convex/server").RegisteredMutation<"
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | null>>;
@@ -344,11 +344,11 @@ export declare const approve: import("convex/server").RegisteredMutation<"public
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | null>>;
@@ -378,11 +378,11 @@ export declare const reject: import("convex/server").RegisteredMutation<"public"
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | null>>;
@@ -412,11 +412,11 @@ export declare const setFeatured: import("convex/server").RegisteredMutation<"pu
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 } | null>>;
@@ -444,11 +444,11 @@ export declare const getPendingPhotos: import("convex/server").RegisteredQuery<"
     featuredAt?: number | undefined;
     featuredBy?: string | undefined;
     status: "approved" | "rejected" | "hidden" | "pending";
-    userId: string;
     createdAt: number;
     likesCount: number;
-    poiId: import("convex/values").GenericId<"pois">;
     viewsCount: number;
+    userId: string;
+    poiId: import("convex/values").GenericId<"pois">;
     imageUrl: string;
     isFeatured: boolean;
 }[]>>;

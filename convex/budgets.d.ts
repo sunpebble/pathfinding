@@ -9,10 +9,10 @@ export declare const listCategories: import("convex/server").RegisteredQuery<"pu
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 }[]>>;
 /**
@@ -24,10 +24,10 @@ export declare const getCategory: import("convex/server").RegisteredQuery<"publi
     _id: import("convex/values").GenericId<"expenseCategories">;
     _creationTime: number;
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 } | null>>;
 /**
@@ -35,10 +35,10 @@ export declare const getCategory: import("convex/server").RegisteredQuery<"publi
  */
 export declare const createCategory: import("convex/server").RegisteredMutation<"public", {
     name: string;
+    icon: string;
     nameEn: string;
     sortOrder: number;
     color: string;
-    icon: string;
     isSystem: boolean;
 }, Promise<import("convex/values").GenericId<"expenseCategories">>>;
 /**
@@ -60,8 +60,8 @@ export declare const getBudget: import("convex/server").RegisteredQuery<"public"
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -82,10 +82,10 @@ export declare const getBudgetWithCategories: import("convex/server").Registered
             _id: import("convex/values").GenericId<"expenseCategories">;
             _creationTime: number;
             name: string;
+            icon: string;
             nameEn: string;
             sortOrder: number;
             color: string;
-            icon: string;
             isSystem: boolean;
         } | null;
         categoryId: import("convex/values").GenericId<"expenseCategories">;
@@ -94,8 +94,8 @@ export declare const getBudgetWithCategories: import("convex/server").Registered
     _id: import("convex/values").GenericId<"itineraryBudgets">;
     _creationTime: number;
     notes?: string | undefined;
-    userId: string;
     createdAt: number;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -136,10 +136,10 @@ export declare const listExpenses: import("convex/server").RegisteredQuery<"publ
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -156,10 +156,10 @@ export declare const listExpensesWithCategories: import("convex/server").Registe
         _id: import("convex/values").GenericId<"expenseCategories">;
         _creationTime: number;
         name: string;
+        icon: string;
         nameEn: string;
         sortOrder: number;
         color: string;
-        icon: string;
         isSystem: boolean;
     } | null;
     _id: import("convex/values").GenericId<"expenses">;
@@ -170,10 +170,10 @@ export declare const listExpensesWithCategories: import("convex/server").Registe
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -194,10 +194,10 @@ export declare const getExpense: import("convex/server").RegisteredQuery<"public
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
-    description: string;
-    userId: string;
     createdAt: number;
+    description: string;
+    date: string;
+    userId: string;
     updatedAt: number;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -214,8 +214,8 @@ export declare const createExpense: import("convex/server").RegisteredMutation<"
     dayNumber?: number | undefined;
     paymentMethod?: string | undefined;
     receiptImageUrl?: string | undefined;
-    date: string;
     description: string;
+    date: string;
     userId: string;
     currency: string;
     itineraryId: import("convex/values").GenericId<"itineraries">;
@@ -226,9 +226,9 @@ export declare const createExpense: import("convex/server").RegisteredMutation<"
  * Update an expense
  */
 export declare const updateExpense: import("convex/server").RegisteredMutation<"public", {
+    description?: string | undefined;
     date?: string | undefined;
     time?: string | undefined;
-    description?: string | undefined;
     currency?: string | undefined;
     notes?: string | undefined;
     poiId?: import("convex/values").GenericId<"pois"> | undefined;
@@ -266,10 +266,10 @@ export declare const getBudgetSummary: import("convex/server").RegisteredQuery<"
             _id: import("convex/values").GenericId<"expenseCategories">;
             _creationTime: number;
             name: string;
+            icon: string;
             nameEn: string;
             sortOrder: number;
             color: string;
-            icon: string;
             isSystem: boolean;
         };
         budgetAmount: number;
@@ -295,10 +295,10 @@ export declare const getSpendingTrend: import("convex/server").RegisteredQuery<"
         _id: import("convex/values").GenericId<"expenseCategories">;
         _creationTime: number;
         name: string;
+        icon: string;
         nameEn: string;
         sortOrder: number;
         color: string;
-        icon: string;
         isSystem: boolean;
     };
     amount: number;

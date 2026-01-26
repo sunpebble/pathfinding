@@ -3,6 +3,7 @@ export declare const getUserBadges: import("convex/server").RegisteredQuery<"pub
 }, Promise<{
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -16,16 +17,15 @@ export declare const getUserBadges: import("convex/server").RegisteredQuery<"pub
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -36,6 +36,7 @@ export declare const getBadgeById: import("convex/server").RegisteredQuery<"publ
 }, Promise<{
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -49,16 +50,15 @@ export declare const getBadgeById: import("convex/server").RegisteredQuery<"publ
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
@@ -74,6 +74,7 @@ export declare const listBadgesByType: import("convex/server").RegisteredQuery<"
 }, Promise<{
     _id: import("convex/values").GenericId<"verificationBadges">;
     _creationTime: number;
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -87,22 +88,22 @@ export declare const listBadgesByType: import("convex/server").RegisteredQuery<"
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     color?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
     revokedAt?: number | undefined;
     revokedReason?: string | undefined;
+    createdAt: number;
     userId: string;
     displayName: string;
-    createdAt: number;
     updatedAt: number;
     isActive: boolean;
     verifiedAt: number;
     badgeType: "travel_expert" | "local_guide" | "official_account";
 }[]>>;
 export declare const createBadge: import("convex/server").RegisteredMutation<"public", {
+    description?: string | undefined;
     metadata?: {
         travelExpertLevel?: number | undefined;
         specialties?: string[] | undefined;
@@ -116,7 +117,6 @@ export declare const createBadge: import("convex/server").RegisteredMutation<"pu
         organizationType?: string | undefined;
         officialWebsite?: string | undefined;
     } | undefined;
-    description?: string | undefined;
     verifiedBy?: string | undefined;
     iconUrl?: string | undefined;
     expiresAt?: number | undefined;
@@ -149,7 +149,7 @@ export declare const updateBadgeMetadata: import("convex/server").RegisteredMuta
     badgeId: import("convex/values").GenericId<"verificationBadges">;
 }, Promise<void>>;
 export declare const getUserApplications: import("convex/server").RegisteredQuery<"public", {
-    status?: "approved" | "rejected" | "cancelled" | "pending" | "under_review" | undefined;
+    status?: "cancelled" | "approved" | "rejected" | "pending" | "under_review" | undefined;
     userId: string;
 }, Promise<{
     _id: import("convex/values").GenericId<"verificationApplications">;
@@ -180,10 +180,10 @@ export declare const getUserApplications: import("convex/server").RegisteredQuer
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -222,10 +222,10 @@ export declare const getApplicationById: import("convex/server").RegisteredQuery
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
@@ -265,10 +265,10 @@ export declare const listPendingApplications: import("convex/server").Registered
     reviewNotes?: string | undefined;
     rejectionReason?: string | undefined;
     badgeId?: import("convex/values").GenericId<"verificationBadges"> | undefined;
-    status: "approved" | "rejected" | "cancelled" | "pending" | "under_review";
+    status: "cancelled" | "approved" | "rejected" | "pending" | "under_review";
+    createdAt: number;
     userId: string;
     phone: string;
-    createdAt: number;
     updatedAt: number;
     idType: "id_card" | "passport" | "business_license";
     idNumber: string;
