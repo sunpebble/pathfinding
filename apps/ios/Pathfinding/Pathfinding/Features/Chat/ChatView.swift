@@ -598,6 +598,7 @@ private struct PendingMessageBubble: View {
 // MARK: - Typing Indicator
 
 private struct TypingIndicator: View {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var animationPhase = 0
 
   var body: some View {
@@ -620,9 +621,9 @@ private struct TypingIndicator: View {
           Circle()
             .fill(Color.gray)
             .frame(width: 8, height: 8)
-            .scaleEffect(animationPhase == index ? 1.2 : 0.8)
+            .scaleEffect(reduceMotion ? 1.0 : (animationPhase == index ? 1.2 : 0.8))
             .animation(
-              .easeInOut(duration: 0.5)
+              reduceMotion ? nil : .easeInOut(duration: 0.5)
                 .repeatForever()
                 .delay(Double(index) * 0.15),
               value: animationPhase
@@ -637,6 +638,7 @@ private struct TypingIndicator: View {
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .onAppear {
+      guard !reduceMotion else { return }
       animationPhase = 1
     }
   }

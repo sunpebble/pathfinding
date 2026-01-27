@@ -250,7 +250,7 @@ struct LoginView: View {
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
         .padding(.horizontal, DesignTokens.Spacing.xs)
-        .background(Color(.systemGray6))
+        .background(DesignTokens.Colors.fillQuaternary)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
       }
 
@@ -287,7 +287,7 @@ struct LoginView: View {
           .foregroundStyle(countdown > 0 || !isValidPhoneNumber ? .secondary : Color.accentColor)
           .padding(.trailing, DesignTokens.Spacing.sm)
         }
-        .background(Color(.systemGray6))
+        .background(DesignTokens.Colors.fillQuaternary)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
       }
     }

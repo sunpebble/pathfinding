@@ -10,6 +10,7 @@ struct StaggeredAnimationModifier: ViewModifier {
   let baseDelay: Double
   let animation: Animation
 
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isVisible = false
 
   init(index: Int, baseDelay: Double = 0.05, animation: Animation = .spring(response: 0.5, dampingFraction: 0.8)) {
@@ -21,9 +22,13 @@ struct StaggeredAnimationModifier: ViewModifier {
   func body(content: Content) -> some View {
     content
       .opacity(isVisible ? 1 : 0)
-      .offset(y: isVisible ? 0 : 20)
-      .scaleEffect(isVisible ? 1 : 0.95)
+      .offset(y: isVisible ? 0 : (reduceMotion ? 0 : 20))
+      .scaleEffect(isVisible ? 1 : (reduceMotion ? 1 : 0.95))
       .onAppear {
+        guard !reduceMotion else {
+          isVisible = true
+          return
+        }
         withAnimation(animation.delay(Double(index) * baseDelay)) {
           isVisible = true
         }
@@ -38,6 +43,7 @@ struct PulseAnimation: ViewModifier {
   let minScale: CGFloat
   let maxScale: CGFloat
 
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isPulsing = false
 
   init(duration: Double = 1.5, minScale: CGFloat = 0.97, maxScale: CGFloat = 1.03) {
@@ -48,8 +54,9 @@ struct PulseAnimation: ViewModifier {
 
   func body(content: Content) -> some View {
     content
-      .scaleEffect(isPulsing ? maxScale : minScale)
+      .scaleEffect(reduceMotion ? 1.0 : (isPulsing ? maxScale : minScale))
       .onAppear {
+        guard !reduceMotion else { return }
         withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
           isPulsing = true
         }
@@ -63,6 +70,7 @@ struct ShimmerAnimation: ViewModifier {
   let duration: Double
   let delay: Double
 
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var phase: CGFloat = 0
 
   init(duration: Double = 1.5, delay: Double = 0) {
@@ -74,22 +82,25 @@ struct ShimmerAnimation: ViewModifier {
     content
       .overlay(
         GeometryReader { geometry in
-          LinearGradient(
-            colors: [
-              .clear,
-              .white.opacity(0.4),
-              .clear
-            ],
-            startPoint: .leading,
-            endPoint: .trailing
-          )
-          .frame(width: geometry.size.width * 0.5)
-          .offset(x: phase * geometry.size.width * 1.5 - geometry.size.width * 0.25)
-          .blur(radius: 3)
+          if !reduceMotion {
+            LinearGradient(
+              colors: [
+                .clear,
+                .white.opacity(0.4),
+                .clear
+              ],
+              startPoint: .leading,
+              endPoint: .trailing
+            )
+            .frame(width: geometry.size.width * 0.5)
+            .offset(x: phase * geometry.size.width * 1.5 - geometry.size.width * 0.25)
+            .blur(radius: 3)
+          }
         }
         .mask(content)
       )
       .onAppear {
+        guard !reduceMotion else { return }
         withAnimation(.linear(duration: duration).delay(delay).repeatForever(autoreverses: false)) {
           phase = 1
         }
@@ -204,6 +215,7 @@ struct CompassSpinAnimation: ViewModifier {
   let duration: Double
   let clockwise: Bool
 
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var rotation: Double = 0
 
   init(duration: Double = 2.0, clockwise: Bool = true) {
@@ -215,6 +227,7 @@ struct CompassSpinAnimation: ViewModifier {
     content
       .rotationEffect(.degrees(rotation))
       .onAppear {
+        guard !reduceMotion else { return }
         withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
           rotation = clockwise ? 360 : -360
         }
@@ -311,6 +324,7 @@ struct FloatAnimation: ViewModifier {
   let distance: CGFloat
   let duration: Double
 
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isFloating = false
 
   init(distance: CGFloat = 6, duration: Double = 2) {
@@ -320,8 +334,9 @@ struct FloatAnimation: ViewModifier {
 
   func body(content: Content) -> some View {
     content
-      .offset(y: isFloating ? -distance : distance)
+      .offset(y: reduceMotion ? 0 : (isFloating ? -distance : distance))
       .onAppear {
+        guard !reduceMotion else { return }
         withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
           isFloating = true
         }
@@ -333,6 +348,7 @@ struct FloatAnimation: ViewModifier {
 
 struct GlowAnimation: ViewModifier {
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   let color: Color
   let radius: CGFloat
   let duration: Double
@@ -353,10 +369,9 @@ struct GlowAnimation: ViewModifier {
         y: 0
       )
       .onAppear {
-        if colorScheme == .dark {
-          withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
-            isGlowing = true
-          }
+        guard !reduceMotion, colorScheme == .dark else { return }
+        withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
+          isGlowing = true
         }
       }
   }
@@ -366,6 +381,7 @@ struct GlowAnimation: ViewModifier {
 
 struct EnhancedGlowAnimation: ViewModifier {
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   let color: Color
   let innerRadius: CGFloat
   let outerRadius: CGFloat
@@ -393,10 +409,9 @@ struct EnhancedGlowAnimation: ViewModifier {
         y: 0
       )
       .onAppear {
-        if colorScheme == .dark {
-          withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
-            isGlowing = true
-          }
+        guard !reduceMotion, colorScheme == .dark else { return }
+        withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
+          isGlowing = true
         }
       }
   }
@@ -450,6 +465,7 @@ struct BreathingAnimation: ViewModifier {
   let maxOpacity: Double
   let duration: Double
 
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isBreathing = false
 
   init(minOpacity: Double = 0.6, maxOpacity: Double = 1.0, duration: Double = 2.0) {
@@ -460,8 +476,9 @@ struct BreathingAnimation: ViewModifier {
 
   func body(content: Content) -> some View {
     content
-      .opacity(isBreathing ? maxOpacity : minOpacity)
+      .opacity(reduceMotion ? maxOpacity : (isBreathing ? maxOpacity : minOpacity))
       .onAppear {
+        guard !reduceMotion else { return }
         withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
           isBreathing = true
         }
