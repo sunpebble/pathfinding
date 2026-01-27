@@ -1,4 +1,9 @@
-import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
+import type {
+  ContentBlock,
+  CrawlComment,
+  CrawlOptions,
+  CrawlResult,
+} from './index.js';
 import {
   extractAuthor,
   extractHeadings,
@@ -63,6 +68,38 @@ interface FeedResponse {
   };
 }
 
+interface XiaohongshuComment {
+  id: string;
+  content: string;
+  user_info?: {
+    user_id?: string;
+    nickname?: string;
+    image?: string;
+  };
+  like_count?: string;
+  sub_comment_count?: string;
+  create_time?: number;
+  target_comment?: {
+    id?: string;
+  };
+}
+
+interface CommentResponse {
+  data?: {
+    comments?: XiaohongshuComment[];
+    cursor?: string;
+    has_more?: boolean;
+  };
+}
+
+interface UserPostedResponse {
+  data?: {
+    notes?: XiaohongshuNote[];
+    cursor?: string;
+    has_more?: boolean;
+  };
+}
+
 export async function crawlXiaohongshu(
   city: string,
   options: CrawlOptions = {}
@@ -77,21 +114,48 @@ export async function crawlXiaohongshu(
     await initSessionForPlatform('xiaohongshu');
     console.log('[Xiaohongshu] Using persistent Chrome session');
 
-    const exploreUrl = 'https://www.xiaohongshu.com/explore';
-    console.log('[Xiaohongshu] Fetching explore page');
+    // Route to appropriate crawler based on options
+    if (options.userId) {
+      // User profile mode: crawl all notes from a specific user
+      console.log(`[Xiaohongshu] Crawling user profile: ${options.userId}`);
+      const userNotes = await fetchNotesFromUserProfile(
+        options.userId,
+        city,
+        maxGuides,
+        options
+      );
+      results.push(...userNotes);
+    } else if (options.searchQuery) {
+      // Search mode: search for notes by keyword
+      console.log(`[Xiaohongshu] Searching for: ${options.searchQuery}`);
+      const searchNotes = await fetchNotesFromSearch(
+        options.searchQuery,
+        city,
+        maxGuides,
+        options
+      );
+      results.push(...searchNotes);
+    } else {
+      // Default: explore page
+      const exploreUrl = 'https://www.xiaohongshu.com/explore';
+      console.log('[Xiaohongshu] Fetching explore page');
 
-    const exploreGuides = await fetchNotesFromExplore(
-      exploreUrl,
-      city,
-      maxGuides
-    );
-    console.log(
-      `[Xiaohongshu] Found ${exploreGuides.length} notes from explore`
-    );
+      const exploreGuides = await fetchNotesFromExplore(
+        exploreUrl,
+        city,
+        maxGuides,
+        options
+      );
+      console.log(
+        `[Xiaohongshu] Found ${exploreGuides.length} notes from explore`
+      );
 
-    for (const guide of exploreGuides) {
-      if (!results.some((r) => r.sourceExternalId === guide.sourceExternalId)) {
-        results.push(guide);
+      for (const guide of exploreGuides) {
+        if (
+          !results.some((r) => r.sourceExternalId === guide.sourceExternalId)
+        ) {
+          results.push(guide);
+        }
       }
     }
 
@@ -181,7 +245,8 @@ async function fetchNoteDetail(
 async function fetchNotesFromExplore(
   exploreUrl: string,
   city: string,
-  maxNotes: number
+  maxNotes: number,
+  options: CrawlOptions = {}
 ): Promise<CrawlResult[]> {
   const notes: CrawlResult[] = [];
 
@@ -190,6 +255,8 @@ async function fetchNotesFromExplore(
     fullContent: 0,
     placeholders: 0,
     videoDetailFetches: 0,
+    detailPageFetches: 0,
+    commentsFetched: 0,
     sessionRefreshAttempted: false,
   };
 
@@ -247,16 +314,44 @@ async function fetchNotesFromExplore(
 
         // For video notes, fetch detail page for fresh video URLs
         // Video CDN URLs expire in ~30 seconds, so we need fresh URLs from detail page
-        if (note.type === 'video') {
+        // Also fetch detail if fetchDetailContent is enabled for full content
+        const shouldFetchDetail =
+          note.type === 'video' || options.fetchDetailContent;
+
+        if (shouldFetchDetail) {
           const detailResult = await fetchNoteDetail(note.note_id, city);
-          if (detailResult?.videoUrls && detailResult.videoUrls.length > 0) {
-            // Merge fresh video URLs into result
-            result.videoUrls = detailResult.videoUrls;
-            result.videoUrlCapturedAt = detailResult.videoUrlCapturedAt;
-            stats.videoDetailFetches++;
+          if (detailResult) {
+            // Merge full content from detail page
+            if (
+              options.fetchDetailContent &&
+              detailResult.content.length > result.content.length
+            ) {
+              result.content = detailResult.content;
+              result.contentBlocks = detailResult.contentBlocks;
+              stats.detailPageFetches++;
+            }
+            // Merge fresh video URLs
+            if (detailResult.videoUrls && detailResult.videoUrls.length > 0) {
+              result.videoUrls = detailResult.videoUrls;
+              result.videoUrlCapturedAt = detailResult.videoUrlCapturedAt;
+              stats.videoDetailFetches++;
+            }
           }
           // Add rate limiting between fetchNoteDetail calls
           await sleep(1500);
+        }
+
+        // Fetch comments if enabled
+        if (options.fetchComments) {
+          const comments = await fetchNoteComments(
+            note.note_id,
+            options.maxCommentsPerPost || 20
+          );
+          if (comments.length > 0) {
+            result.comments = comments;
+            stats.commentsFetched += comments.length;
+          }
+          await sleep(1000);
         }
 
         notes.push(result);
@@ -302,7 +397,7 @@ async function fetchNotesFromExplore(
 
   // Log extraction statistics
   console.log(
-    `[Xiaohongshu] Extraction stats: ${stats.fullContent} full content, ${stats.placeholders} placeholders, ${stats.videoDetailFetches} video details fetched`
+    `[Xiaohongshu] Extraction stats: ${stats.fullContent} full content, ${stats.placeholders} placeholders, ${stats.videoDetailFetches} video details, ${stats.detailPageFetches} detail pages, ${stats.commentsFetched} comments`
   );
   if (stats.sessionRefreshAttempted) {
     console.log(
@@ -710,4 +805,269 @@ export function calculateXhsQualityScore(
   if (likesCount > 10000) score += 5;
 
   return { score: Math.min(score, 100), needsRecrawl: false };
+}
+
+/**
+ * Fetch comments for a specific note.
+ * Navigates to note detail page and intercepts comment API responses.
+ *
+ * @param noteId - The Xiaohongshu note ID
+ * @param maxComments - Maximum number of comments to fetch
+ * @returns Array of CrawlComment objects
+ */
+async function fetchNoteComments(
+  noteId: string,
+  maxComments: number = 20
+): Promise<CrawlComment[]> {
+  const comments: CrawlComment[] = [];
+
+  try {
+    console.log(`[Xiaohongshu] Fetching comments for note ${noteId}`);
+
+    // Look for comment API requests in network log
+    const requests = await listNetworkRequests(['xhr', 'fetch']);
+    const commentRequests = requests.filter(
+      (r) =>
+        r.url.includes('/api/sns/web/v1/comment/') ||
+        r.url.includes('/api/sns/web/v2/comment/')
+    );
+
+    for (const req of commentRequests.slice(-3)) {
+      try {
+        const detail = await getNetworkRequest(req.reqid);
+        if (detail?.responseBody) {
+          const data: CommentResponse = JSON.parse(detail.responseBody);
+          if (data.data?.comments) {
+            for (const comment of data.data.comments) {
+              if (comments.length >= maxComments) break;
+
+              comments.push({
+                commentId: comment.id,
+                content: comment.content,
+                authorName: comment.user_info?.nickname,
+                authorAvatar: comment.user_info?.image,
+                authorId: comment.user_info?.user_id,
+                likesCount: parseCount(comment.like_count),
+                replyCount: parseCount(comment.sub_comment_count),
+                publishedAt: comment.create_time
+                  ? new Date(comment.create_time * 1000).toISOString()
+                  : undefined,
+                parentCommentId: comment.target_comment?.id,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.log(`[Xiaohongshu] Failed to parse comment request:`, e);
+      }
+    }
+
+    console.log(
+      `[Xiaohongshu] Extracted ${comments.length} comments for note ${noteId}`
+    );
+  } catch (error) {
+    console.error(
+      `[Xiaohongshu] Error fetching comments for ${noteId}:`,
+      error
+    );
+  }
+
+  return comments;
+}
+
+/**
+ * Search for notes by keyword.
+ * Navigates to search page and extracts results from API.
+ *
+ * @param query - Search keyword
+ * @param city - City name for result tagging
+ * @param maxNotes - Maximum number of notes to return
+ * @param options - Crawl options
+ * @returns Array of CrawlResult objects
+ */
+async function fetchNotesFromSearch(
+  query: string,
+  city: string,
+  maxNotes: number,
+  options: CrawlOptions = {}
+): Promise<CrawlResult[]> {
+  const notes: CrawlResult[] = [];
+
+  try {
+    const searchUrl = `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(query)}&type=1`;
+    console.log(`[Xiaohongshu] Navigating to search: ${query}`);
+
+    await navigateTo(searchUrl, { timeout: 30000 });
+    await waitForContentStable();
+
+    // Check session validity
+    const sessionCheck = await checkSessionWithGuidance('xiaohongshu');
+    if (!sessionCheck.canCrawl) {
+      console.warn(`[Xiaohongshu] ${sessionCheck.message}`);
+      return notes;
+    }
+
+    // Scroll to load more results
+    await scrollToLoadContent(3);
+    await sleep(2000);
+
+    // Extract from API (search endpoint should be captured)
+    const apiNotes = await extractNotesFromApi();
+    console.log(`[Xiaohongshu] Found ${apiNotes.length} notes from search API`);
+
+    for (const note of apiNotes.slice(0, maxNotes)) {
+      const result = convertNoteToResult(note, city);
+      if (!result) continue;
+
+      // Fetch detail content if enabled
+      if (options.fetchDetailContent) {
+        const detailResult = await fetchNoteDetail(note.note_id, city);
+        if (
+          detailResult &&
+          detailResult.content.length > result.content.length
+        ) {
+          result.content = detailResult.content;
+          result.contentBlocks = detailResult.contentBlocks;
+        }
+        await sleep(1500);
+      }
+
+      // Fetch comments if enabled
+      if (options.fetchComments) {
+        const comments = await fetchNoteComments(
+          note.note_id,
+          options.maxCommentsPerPost || 20
+        );
+        if (comments.length > 0) {
+          result.comments = comments;
+        }
+        await sleep(1000);
+      }
+
+      notes.push(result);
+    }
+  } catch (error) {
+    console.error('[Xiaohongshu] Error fetching search results:', error);
+  }
+
+  return notes;
+}
+
+/**
+ * Fetch all notes from a user's profile page.
+ *
+ * @param userId - The Xiaohongshu user ID
+ * @param city - City name for result tagging
+ * @param maxNotes - Maximum number of notes to return
+ * @param options - Crawl options
+ * @returns Array of CrawlResult objects
+ */
+async function fetchNotesFromUserProfile(
+  userId: string,
+  city: string,
+  maxNotes: number,
+  options: CrawlOptions = {}
+): Promise<CrawlResult[]> {
+  const notes: CrawlResult[] = [];
+
+  try {
+    const profileUrl = `https://www.xiaohongshu.com/user/profile/${userId}`;
+    console.log(`[Xiaohongshu] Navigating to user profile: ${userId}`);
+
+    await navigateTo(profileUrl, { timeout: 30000 });
+    await waitForContentStable();
+
+    // Check session validity
+    const sessionCheck = await checkSessionWithGuidance('xiaohongshu');
+    if (!sessionCheck.canCrawl) {
+      console.warn(`[Xiaohongshu] ${sessionCheck.message}`);
+      return notes;
+    }
+
+    // Scroll to load more notes
+    await scrollToLoadContent(5);
+    await sleep(2000);
+
+    // Try to extract from user posted API
+    const requests = await listNetworkRequests(['xhr', 'fetch']);
+    const userRequests = requests.filter(
+      (r) =>
+        r.url.includes('/api/sns/web/v1/user_posted') ||
+        r.url.includes('/api/sns/web/v1/user/posted') ||
+        r.url.includes(`/user/profile/${userId}`)
+    );
+
+    console.log(
+      `[Xiaohongshu] Found ${userRequests.length} user profile API requests`
+    );
+
+    for (const req of userRequests.slice(-5)) {
+      try {
+        const detail = await getNetworkRequest(req.reqid);
+        if (detail?.responseBody) {
+          const data: UserPostedResponse = JSON.parse(detail.responseBody);
+          if (data.data?.notes) {
+            console.log(
+              `[Xiaohongshu] Found ${data.data.notes.length} notes from user API`
+            );
+            for (const note of data.data.notes) {
+              if (notes.length >= maxNotes) break;
+              if (!note.note_id) continue;
+
+              const result = convertNoteToResult(note, city);
+              if (!result) continue;
+
+              // Set author ID for user profile notes
+              result.authorId = userId;
+
+              // Fetch detail content if enabled
+              if (options.fetchDetailContent) {
+                const detailResult = await fetchNoteDetail(note.note_id, city);
+                if (
+                  detailResult &&
+                  detailResult.content.length > result.content.length
+                ) {
+                  result.content = detailResult.content;
+                  result.contentBlocks = detailResult.contentBlocks;
+                }
+                await sleep(1500);
+              }
+
+              // Fetch comments if enabled
+              if (options.fetchComments) {
+                const comments = await fetchNoteComments(
+                  note.note_id,
+                  options.maxCommentsPerPost || 20
+                );
+                if (comments.length > 0) {
+                  result.comments = comments;
+                }
+                await sleep(1000);
+              }
+
+              notes.push(result);
+            }
+          }
+        }
+      } catch (e) {
+        console.log(`[Xiaohongshu] Failed to parse user API request:`, e);
+      }
+    }
+
+    // Fallback: extract note IDs from page if API didn't work
+    if (notes.length === 0) {
+      console.log(
+        '[Xiaohongshu] Falling back to snapshot extraction for user profile'
+      );
+      const snapshotNotes = await extractNotesFromSnapshot(city, maxNotes);
+      notes.push(...snapshotNotes);
+    }
+  } catch (error) {
+    console.error('[Xiaohongshu] Error fetching user profile:', error);
+  }
+
+  console.log(
+    `[Xiaohongshu] Extracted ${notes.length} notes from user ${userId}`
+  );
+  return notes;
 }

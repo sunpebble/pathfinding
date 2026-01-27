@@ -13,6 +13,32 @@ import { crawlTongcheng } from './tongcheng.js';
 import { crawlXiaohongshu } from './xiaohongshu.js';
 
 /**
+ * Comment extracted from a post/note
+ */
+export interface CrawlComment {
+  /** Comment unique ID from platform */
+  commentId: string;
+  /** Comment text content */
+  content: string;
+  /** Commenter's display name */
+  authorName?: string;
+  /** Commenter's avatar URL */
+  authorAvatar?: string;
+  /** Commenter's user ID */
+  authorId?: string;
+  /** Like count on this comment */
+  likesCount?: number;
+  /** Reply count on this comment */
+  replyCount?: number;
+  /** Comment publish time in ISO format */
+  publishedAt?: string;
+  /** Parent comment ID for replies */
+  parentCommentId?: string;
+  /** Whether this is from the post author */
+  isAuthorReply?: boolean;
+}
+
+/**
  * Content block representing text, image, or video content
  * Used to preserve the original content structure with rich media
  */
@@ -65,11 +91,25 @@ export interface CrawlResult {
    * Video CDN URLs expire in ~30 seconds. This helps consumers know URL freshness.
    */
   videoUrlCapturedAt?: number;
+  /** Comments on this post (when fetchComments option is enabled) */
+  comments?: CrawlComment[];
+  /** Author's user ID (for user profile crawling) */
+  authorId?: string;
 }
 
 export interface CrawlOptions {
   maxPages?: number;
   rateLimit?: number;
+  /** Fetch full content from detail pages (slower but more complete) */
+  fetchDetailContent?: boolean;
+  /** Fetch comments for each post */
+  fetchComments?: boolean;
+  /** Maximum comments to fetch per post */
+  maxCommentsPerPost?: number;
+  /** Search query (for search mode) */
+  searchQuery?: string;
+  /** User ID to crawl (for user profile mode) */
+  userId?: string;
 }
 
 type CrawlerFunction = (
@@ -102,3 +142,17 @@ export async function crawlPlatform(
 
   return crawler(city, options);
 }
+
+// Re-export platform crawlers for direct access
+export { crawlCtrip } from './ctrip.js';
+
+export { crawlMafengwo } from './mafengwo.js';
+export { crawlQunar } from './qunar.js';
+export { crawlTongcheng } from './tongcheng.js';
+// Re-export Xiaohongshu-specific utilities
+export {
+  calculateXhsQualityScore,
+  crawlXiaohongshu,
+  detectPlaceholderContent,
+  isContentQualityAcceptable,
+} from './xiaohongshu.js';
