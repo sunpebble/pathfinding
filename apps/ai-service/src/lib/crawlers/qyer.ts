@@ -16,6 +16,15 @@ import {
   waitForContent,
 } from './browser.js';
 
+// Destination info structure
+interface DestinationInfo {
+  placeId: string;
+  forumId: string;
+  englishName: string;
+  name: string;
+  type: 'domestic' | 'international';
+}
+
 // City/destination mapping for Qyer
 // Format: Chinese name -> { placeId, forumId }
 // placeId is used for place.qyer.com, forumId for bbs.qyer.com
@@ -86,15 +95,18 @@ export async function crawlQyer(
 
   try {
     // Strategy 1: Fetch from destination page (place.qyer.com)
+    // This is the most reliable source as forum pages may return 503
     try {
       const placeUrl = `https://place.qyer.com/${config.placeId}/`;
       console.log(`[Qyer] Fetching destination page: ${placeUrl}`);
 
+      // Increase max guides per destination page since forum may be unavailable
+      const maxGuidesFromPlace = Math.max(50, maxPages * 10);
       const placeGuides = await fetchGuidesFromPlacePage(
         context,
         placeUrl,
         city,
-        20
+        maxGuidesFromPlace
       );
       console.log(
         `[Qyer] Found ${placeGuides.length} guides from destination page`
@@ -112,6 +124,7 @@ export async function crawlQyer(
     }
 
     // Strategy 2: Fetch from forum (bbs.qyer.com)
+    // Note: Forum pages may return 503 due to anti-crawl measures
     for (let page = 1; page <= maxPages; page++) {
       try {
         const forumUrl = `https://bbs.qyer.com/forum-${config.forumId}-${page}.html`;
@@ -123,6 +136,15 @@ export async function crawlQyer(
           city,
           20
         );
+
+        // If we get 0 results, forum may be blocked - skip remaining pages
+        if (forumGuides.length === 0 && page === 1) {
+          console.log(
+            '[Qyer] Forum appears to be blocked, skipping forum pages'
+          );
+          break;
+        }
+
         console.log(
           `[Qyer] Found ${forumGuides.length} guides from forum page ${page}`
         );
@@ -160,7 +182,7 @@ async function crawlQyerBySearch(
   const context = await createContext();
 
   try {
-    const searchUrl = `https://www.qyer.com/search2/topic?keyword=${encodeURIComponent(`${city  }攻略`)}`;
+    const searchUrl = `https://www.qyer.com/search2/topic?keyword=${encodeURIComponent(`${city}攻略`)}`;
     console.log(`[Qyer] Searching: ${searchUrl}`);
 
     const guides = await fetchGuidesFromSearchPage(
@@ -435,7 +457,9 @@ async function fetchGuidesFromForumPage(
         const viewsCount = viewsMatch ? Number.parseInt(viewsMatch[1], 10) : 0;
 
         // Higher quality if more replies
-        const replyCount = repliesMatch ? Number.parseInt(repliesMatch[1], 10) : 0;
+        const replyCount = repliesMatch
+          ? Number.parseInt(repliesMatch[1], 10)
+          : 0;
 
         const sourceExternalId = `qyer_thread_${threadId}`;
         const fullUrl = href.startsWith('http')
@@ -753,4 +777,433 @@ function calculateQualityScore(
   if (viewsCount > 10000) score += 2;
 
   return Math.min(score, 100);
+}
+
+// ============================================================
+// Full Site Crawling - 全站爬取功能
+// ============================================================
+
+/**
+ * Crawl all destinations from Qyer
+ * This discovers all available destinations and crawls them systematically
+ */
+export async function crawlQyerAllDestinations(
+  options: {
+    maxPagesPerDestination?: number;
+    maxDestinations?: number;
+    onProgress?: (progress: {
+      currentDestination: string;
+      destinationIndex: number;
+      totalDestinations: number;
+      guidesFound: number;
+    }) => void;
+  } = {}
+): Promise<CrawlResult[]> {
+  const {
+    maxPagesPerDestination = 10,
+    maxDestinations = 100,
+    onProgress,
+  } = options;
+
+  const allResults: CrawlResult[] = [];
+  const seenIds = new Set<string>();
+
+  console.log('[Qyer] Starting full site crawl...');
+
+  // Step 1: Discover all destinations
+  const destinations = await discoverAllDestinations();
+  console.log(`[Qyer] Discovered ${destinations.length} destinations`);
+
+  const limitedDestinations = destinations.slice(0, maxDestinations);
+
+  // Step 2: Crawl each destination
+  for (let i = 0; i < limitedDestinations.length; i++) {
+    const dest = limitedDestinations[i];
+    console.log(
+      `[Qyer] Crawling destination ${i + 1}/${limitedDestinations.length}: ${dest.name}`
+    );
+
+    try {
+      const guides = await crawlQyer(dest.name, {
+        maxPages: maxPagesPerDestination,
+      });
+
+      // Deduplicate
+      for (const guide of guides) {
+        if (!seenIds.has(guide.sourceExternalId)) {
+          seenIds.add(guide.sourceExternalId);
+          allResults.push(guide);
+        }
+      }
+
+      onProgress?.({
+        currentDestination: dest.name,
+        destinationIndex: i + 1,
+        totalDestinations: limitedDestinations.length,
+        guidesFound: allResults.length,
+      });
+
+      // Rate limiting between destinations
+      await sleep(3000);
+    } catch (error) {
+      console.error(`[Qyer] Error crawling ${dest.name}:`, error);
+    }
+  }
+
+  console.log(
+    `[Qyer] Full site crawl complete. Total guides: ${allResults.length}`
+  );
+  return allResults;
+}
+
+/**
+ * Discover all destinations from Qyer's destination index
+ * Scrapes place.qyer.com to find all available destinations
+ */
+export async function discoverAllDestinations(): Promise<DestinationInfo[]> {
+  const destinations: DestinationInfo[] = [];
+  const seenPlaceIds = new Set<string>();
+
+  const context = await createContext();
+
+  try {
+    // Strategy 1: Use predefined cities first (they have verified forumIds)
+    for (const [name, config] of Object.entries(CITY_CONFIG)) {
+      if (!seenPlaceIds.has(config.placeId)) {
+        seenPlaceIds.add(config.placeId);
+        destinations.push({
+          ...config,
+          name,
+          type: isInternationalDestination(name) ? 'international' : 'domestic',
+        });
+      }
+    }
+
+    // Strategy 2: Discover more from Qyer's destination directory
+    const discoveryUrls = [
+      'https://place.qyer.com/china/', // 中国目的地
+      'https://place.qyer.com/asia/', // 亚洲目的地
+      'https://place.qyer.com/europe/', // 欧洲目的地
+      'https://place.qyer.com/north-america/', // 北美目的地
+      'https://place.qyer.com/oceania/', // 大洋洲目的地
+    ];
+
+    for (const url of discoveryUrls) {
+      try {
+        console.log(`[Qyer] Discovering destinations from: ${url}`);
+        const discovered = await discoverDestinationsFromIndex(context, url);
+
+        for (const dest of discovered) {
+          if (!seenPlaceIds.has(dest.placeId)) {
+            seenPlaceIds.add(dest.placeId);
+            destinations.push(dest);
+          }
+        }
+
+        await sleep(2000);
+      } catch (error) {
+        console.error(`[Qyer] Error discovering from ${url}:`, error);
+      }
+    }
+
+    // Strategy 3: Discover from BBS forum list
+    try {
+      console.log('[Qyer] Discovering destinations from BBS forum list...');
+      const forumDestinations = await discoverDestinationsFromBBS(context);
+
+      for (const dest of forumDestinations) {
+        if (!seenPlaceIds.has(dest.placeId)) {
+          seenPlaceIds.add(dest.placeId);
+          destinations.push(dest);
+        }
+      }
+    } catch (error) {
+      console.error('[Qyer] Error discovering from BBS:', error);
+    }
+  } finally {
+    await context.close();
+  }
+
+  console.log(`[Qyer] Total destinations discovered: ${destinations.length}`);
+  return destinations;
+}
+
+/**
+ * Discover destinations from a Qyer index page
+ */
+async function discoverDestinationsFromIndex(
+  context: Awaited<ReturnType<typeof createContext>>,
+  url: string
+): Promise<DestinationInfo[]> {
+  const page = await createPage(context);
+  const destinations: DestinationInfo[] = [];
+
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page
+      .waitForLoadState('networkidle', { timeout: 15000 })
+      .catch(() => {});
+    await scrollToLoadContent(page);
+    await sleep(2000);
+
+    const html = await page.content();
+    const $ = cheerio.load(html);
+
+    // Look for destination links
+    // Format: href="/beijing/" or href="https://place.qyer.com/tokyo/"
+    $('a[href*="place.qyer.com/"], a[href^="/"]').each((_, el) => {
+      const $el = $(el);
+      const href = $el.attr('href') || '';
+      const text = $el.text().trim();
+
+      // Extract placeId from URL
+      const placeMatch =
+        href.match(/place\.qyer\.com\/([a-z0-9-]+)\/?$/) ||
+        href.match(/^\/([a-z0-9-]+)\/?$/);
+
+      if (!placeMatch || !text || text.length < 2 || text.length > 20) return;
+
+      const placeId = placeMatch[1];
+
+      // Skip non-destination pages
+      if (['mdd', 'search', 'user', 'bbs', 'guide', 'travel'].includes(placeId))
+        return;
+
+      destinations.push({
+        placeId,
+        forumId: '', // Will be discovered later
+        englishName: placeId,
+        name: text,
+        type: url.includes('china') ? 'domestic' : 'international',
+      });
+    });
+
+    console.log(`[Qyer] Found ${destinations.length} destinations from ${url}`);
+  } catch (error) {
+    console.error(`[Qyer] Error parsing ${url}:`, error);
+  } finally {
+    await page.close();
+  }
+
+  return destinations;
+}
+
+/**
+ * Discover destinations from BBS forum list
+ * This gets destinations with their forumIds directly
+ */
+async function discoverDestinationsFromBBS(
+  context: Awaited<ReturnType<typeof createContext>>
+): Promise<DestinationInfo[]> {
+  const page = await createPage(context);
+  const destinations: DestinationInfo[] = [];
+
+  try {
+    // BBS forum index
+    await page.goto('https://bbs.qyer.com/', {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
+    await page
+      .waitForLoadState('networkidle', { timeout: 15000 })
+      .catch(() => {});
+    await scrollToLoadContent(page);
+    await sleep(2000);
+
+    const html = await page.content();
+    const $ = cheerio.load(html);
+
+    // Look for forum links: /forum-{forumId}-1.html
+    $('a[href*="/forum-"]').each((_, el) => {
+      const $el = $(el);
+      const href = $el.attr('href') || '';
+      const text = $el.text().trim();
+
+      const forumMatch = href.match(/\/forum-(\d+)-/);
+      if (!forumMatch || !text || text.length < 2 || text.length > 20) return;
+
+      // Skip non-destination forums (general discussion, etc.)
+      if (/版务|公告|活动|签证|交通|摄影|装备|自驾/.test(text)) return;
+
+      const forumId = forumMatch[1];
+
+      destinations.push({
+        placeId: text.toLowerCase().replace(/\s+/g, '-'),
+        forumId,
+        englishName: text,
+        name: text,
+        type: isInternationalDestination(text) ? 'international' : 'domestic',
+      });
+    });
+
+    console.log(`[Qyer] Found ${destinations.length} forums from BBS`);
+  } catch (error) {
+    console.error('[Qyer] Error parsing BBS:', error);
+  } finally {
+    await page.close();
+  }
+
+  return destinations;
+}
+
+/**
+ * Check if a destination is international
+ */
+function isInternationalDestination(name: string): boolean {
+  const internationalPatterns = [
+    /东京|大阪|京都|北海道|冲绑|奈良|名古屋/, // 日本
+    /首尔|釜山|济州/, // 韩国
+    /曼谷|清迈|普吉|芭提雅/, // 泰国
+    /新加坡|马来西亚|吉隆坡/, // 东南亚
+    /巴黎|伦敦|罗马|巴塞罗那|阿姆斯特丹/, // 欧洲
+    /纽约|洛杉矶|旧金山|拉斯维加斯/, // 美国
+    /悉尼|墨尔本|奥克兰/, // 澳新
+    /迪拜|土耳其|埃及/, // 中东
+  ];
+
+  return internationalPatterns.some((pattern) => pattern.test(name));
+}
+
+/**
+ * Deep crawl a single destination forum
+ * Crawls all pages until no more content is found
+ */
+export async function crawlQyerDestinationDeep(
+  city: string,
+  options: {
+    maxPages?: number;
+    fetchDetails?: boolean;
+    onPageComplete?: (page: number, guides: number) => void;
+  } = {}
+): Promise<CrawlResult[]> {
+  const { maxPages = 50, fetchDetails = false, onPageComplete } = options;
+  const results: CrawlResult[] = [];
+  const seenIds = new Set<string>();
+
+  const config = CITY_CONFIG[city];
+  if (!config) {
+    console.warn(`[Qyer] City not in config: ${city}, using search`);
+    return crawlQyerBySearch(city, { maxPages: 5 });
+  }
+
+  console.log(
+    `[Qyer] Deep crawling ${city} (${config.englishName}), max ${maxPages} pages`
+  );
+
+  const context = await createContext();
+
+  try {
+    // First, get from destination page
+    try {
+      const placeUrl = `https://place.qyer.com/${config.placeId}/`;
+      const placeGuides = await fetchGuidesFromPlacePage(
+        context,
+        placeUrl,
+        city,
+        50
+      );
+
+      for (const guide of placeGuides) {
+        if (!seenIds.has(guide.sourceExternalId)) {
+          seenIds.add(guide.sourceExternalId);
+          results.push(guide);
+        }
+      }
+    } catch (error) {
+      console.error('[Qyer] Error fetching destination page:', error);
+    }
+
+    // Then crawl forum pages deeply
+    let emptyPages = 0;
+    const maxEmptyPages = 3; // Stop after 3 consecutive empty pages
+
+    for (let page = 1; page <= maxPages; page++) {
+      try {
+        const forumUrl = `https://bbs.qyer.com/forum-${config.forumId}-${page}.html`;
+        console.log(`[Qyer] Fetching forum page ${page}/${maxPages}`);
+
+        const pageGuides = await fetchGuidesFromForumPage(
+          context,
+          forumUrl,
+          city,
+          50
+        );
+
+        let newGuides = 0;
+        for (const guide of pageGuides) {
+          if (!seenIds.has(guide.sourceExternalId)) {
+            seenIds.add(guide.sourceExternalId);
+            results.push(guide);
+            newGuides++;
+          }
+        }
+
+        onPageComplete?.(page, results.length);
+
+        // Check if we're getting empty pages
+        if (newGuides === 0) {
+          emptyPages++;
+          if (emptyPages >= maxEmptyPages) {
+            console.log(
+              `[Qyer] Stopping: ${maxEmptyPages} consecutive empty pages`
+            );
+            break;
+          }
+        } else {
+          emptyPages = 0;
+        }
+
+        // Rate limiting
+        await sleep(1500);
+      } catch (error) {
+        console.error(`[Qyer] Error on page ${page}:`, error);
+        emptyPages++;
+        if (emptyPages >= maxEmptyPages) break;
+      }
+    }
+
+    // Optionally fetch full details for each guide
+    if (fetchDetails && results.length > 0) {
+      console.log(`[Qyer] Fetching details for ${results.length} guides...`);
+
+      for (let i = 0; i < results.length; i++) {
+        const guide = results[i];
+        if (!guide.sourceUrl) continue;
+
+        try {
+          const detail = await fetchQyerGuideDetail(
+            context,
+            guide.sourceUrl,
+            city
+          );
+          if (detail) {
+            // Merge detail into result
+            results[i] = { ...guide, ...detail };
+          }
+
+          // Rate limiting
+          await sleep(2000);
+        } catch (error) {
+          console.error(
+            `[Qyer] Error fetching detail for ${guide.sourceExternalId}:`,
+            error
+          );
+        }
+      }
+    }
+  } finally {
+    await context.close();
+  }
+
+  console.log(
+    `[Qyer] Deep crawl complete for ${city}. Total: ${results.length} guides`
+  );
+  return results;
+}
+
+/**
+ * Get all predefined cities from CITY_CONFIG
+ */
+export function getQyerPredefinedCities(): string[] {
+  return Object.keys(CITY_CONFIG);
 }

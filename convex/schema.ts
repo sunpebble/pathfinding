@@ -907,7 +907,8 @@ export default defineSchema({
       v.literal('tripadvisor'),
       v.literal('qunar'),
       v.literal('tongcheng'),
-      v.literal('mafengwo')
+      v.literal('mafengwo'),
+      v.literal('qyer')
     ),
     sourceExternalId: v.string(),
     sourceUrl: v.optional(v.string()),

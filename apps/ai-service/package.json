@@ -12,19 +12,22 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
-    "@modelcontextprotocol/sdk": "^1.25.3",
     "@langchain/anthropic": "^1.3.10",
     "@langchain/core": "^1.1.15",
     "@langchain/langgraph": "^1.1.0",
     "@langchain/ollama": "^1.2.0",
     "@langchain/openai": "^1.2.2",
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "cheerio": "^1.2.0",
     "convex": "^1.17.4",
     "dotenv": "^16.4.7",
     "hono": "^4.6.14",
     "pdfkit": "^0.16.0",
+    "playwright": "^1.58.0",
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@types/cheerio": "^1.0.0",
     "@types/node": "^22.10.5",
     "@types/pdfkit": "^0.13.8",
     "tsx": "^4.19.2",

@@ -65,6 +65,11 @@ logs/security/
 
 convex/_generated
 
+# Convex compiled JS files (source is TypeScript)
+convex/*.js
+convex/*.d.ts
+!convex/_generated/
+
 # Python virtual environments
 .venv/
 venv/

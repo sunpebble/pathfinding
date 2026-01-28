@@ -14,7 +14,8 @@ const platformValidator = v.union(
   v.literal('tripadvisor'),
   v.literal('tongcheng'),
   v.literal('mafengwo'),
-  v.literal('qunar')
+  v.literal('qunar'),
+  v.literal('qyer')
 );
 
 // List travel guides with filters
@@ -605,6 +606,7 @@ export const removeDuplicates = mutation({
       | 'qunar'
       | 'tongcheng'
       | 'mafengwo'
+      | 'qyer'
     > = args.platform
       ? [args.platform]
       : [
@@ -616,6 +618,7 @@ export const removeDuplicates = mutation({
           'qunar',
           'tongcheng',
           'mafengwo',
+          'qyer',
         ];
 
     for (const platform of platforms) {
