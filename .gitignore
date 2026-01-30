@@ -78,3 +78,5 @@ __pycache__/
 
 # Playwright MCP screenshots
 .playwright-mcp/
+
+.omc

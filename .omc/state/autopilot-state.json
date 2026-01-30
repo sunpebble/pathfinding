@@ -1,7 +1,0 @@
-{
-  "active": true,
-  "started_at": "2026-01-30T08:10:06.379Z",
-  "original_prompt": "/oh-my-claudecode:autopilot 使用 stagehand 完全替换掉 playwright，使用自定义模型，https://new-api.kunish.org，sk-MA9i6azytz7hU0mo0jgSfPDGNcnyvfm1kuhuRS8IakKdin5g",
-  "reinforcement_count": 3,
-  "last_checked_at": "2026-01-30T08:10:06.381Z"
-}
