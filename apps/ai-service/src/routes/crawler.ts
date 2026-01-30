@@ -4,13 +4,15 @@
  * Now includes LLM-based content cleaning before storage
  */
 
+// @ts-expect-error - Convex generated files may not exist during type checking
 import type { Id } from '../../../../convex/_generated/dataModel.js';
 import type { CrawlResult } from '../lib/crawlers/index.js';
 import { Hono } from 'hono';
+// @ts-expect-error - Convex generated files may not exist during type checking
 import { api } from '../../../../convex/_generated/api.js';
+import { cleanContentWithLLM } from '../lib/content-cleaner.js';
 import { convex } from '../lib/convex.js';
 import { crawlPlatform } from '../lib/crawlers/index.js';
-import { cleanContentWithLLM } from '../lib/content-cleaner.js';
 
 export const crawlerRouter = new Hono();
 
@@ -28,7 +30,9 @@ crawlerRouter.post('/clean-all', async (c) => {
 
   try {
     // Get guide IDs using cursor-based pagination
-    console.log(`[CleanAll] Fetching guides (limit=${limit}, cursor=${cursor || 'start'})...`);
+    console.log(
+      `[CleanAll] Fetching guides (limit=${limit}, cursor=${cursor || 'start'})...`
+    );
 
     const listResult = await convex.query(api.travelGuides.listIds, {
       limit,
@@ -52,14 +56,21 @@ crawlerRouter.post('/clean-all', async (c) => {
       cleaned: 0,
       failed: 0,
       skipped: 0,
-      details: [] as Array<{ id: string; title: string; status: string; reduction?: number }>,
+      details: [] as Array<{
+        id: string;
+        title: string;
+        status: string;
+        reduction?: number;
+      }>,
     };
 
     // Process each guide
     for (const guideInfo of listResult.items) {
       try {
         // Fetch full guide content
-        const guide = await convex.query(api.travelGuides.getById, { id: guideInfo._id });
+        const guide = await convex.query(api.travelGuides.getById, {
+          id: guideInfo._id,
+        });
         if (!guide) {
           results.skipped++;
           results.details.push({
@@ -98,7 +109,9 @@ crawlerRouter.post('/clean-all', async (c) => {
           aiSummary: cleaned.summary || guide.aiSummary,
         });
 
-        const reduction = Math.round((1 - cleaned.cleanedLength / cleaned.originalLength) * 100);
+        const reduction = Math.round(
+          (1 - cleaned.cleanedLength / cleaned.originalLength) * 100
+        );
         results.cleaned++;
         results.details.push({
           id: guide._id,
@@ -122,7 +135,9 @@ crawlerRouter.post('/clean-all', async (c) => {
       }
     }
 
-    console.log(`[CleanAll] Batch complete: ${results.cleaned} cleaned, ${results.skipped} skipped, ${results.failed} failed`);
+    console.log(
+      `[CleanAll] Batch complete: ${results.cleaned} cleaned, ${results.skipped} skipped, ${results.failed} failed`
+    );
 
     return c.json({
       success: true,
@@ -132,7 +147,10 @@ crawlerRouter.post('/clean-all', async (c) => {
     });
   } catch (error) {
     console.error('[CleanAll] Error:', error);
-    return c.json({ error: 'Failed to clean guides', details: String(error) }, 500);
+    return c.json(
+      { error: 'Failed to clean guides', details: String(error) },
+      500
+    );
   }
 });
 
@@ -150,7 +168,9 @@ crawlerRouter.post('/clean', async (c) => {
   }
 
   try {
-    console.log(`[Cleaner] Cleaning content from ${platform}: ${title?.substring(0, 50)}...`);
+    console.log(
+      `[Cleaner] Cleaning content from ${platform}: ${title?.substring(0, 50)}...`
+    );
 
     const cleaned = await cleanContentWithLLM({
       title: title || '',
@@ -194,7 +214,9 @@ crawlerRouter.post('/process', async (c) => {
     details: [] as Array<{ id: string; status: string; error?: string }>,
   };
 
-  console.log(`[Processor] Processing ${guides.length} guides from ${platform}/${city}`);
+  console.log(
+    `[Processor] Processing ${guides.length} guides from ${platform}/${city}`
+  );
 
   for (const guide of guides) {
     try {
@@ -212,7 +234,9 @@ crawlerRouter.post('/process', async (c) => {
 
       // Skip if content is too short after cleaning
       if (cleaned.cleanedLength < 100) {
-        console.log(`[Processor] Skipped (too short after cleaning): ${guide.sourceExternalId}`);
+        console.log(
+          `[Processor] Skipped (too short after cleaning): ${guide.sourceExternalId}`
+        );
         results.details.push({
           id: guide.sourceExternalId,
           status: 'skipped',
@@ -261,7 +285,10 @@ crawlerRouter.post('/process', async (c) => {
       // Rate limiting between saves
       await sleep(200);
     } catch (error) {
-      console.error(`[Processor] Error processing ${guide.sourceExternalId}:`, error);
+      console.error(
+        `[Processor] Error processing ${guide.sourceExternalId}:`,
+        error
+      );
       results.failed++;
       results.details.push({
         id: guide.sourceExternalId,
@@ -433,7 +460,9 @@ async function executeJob(jobId: string, job: any) {
     }
 
     // Clean and save guides to database
-    console.log(`[Crawler] Cleaning and saving ${results.length} guides to database`);
+    console.log(
+      `[Crawler] Cleaning and saving ${results.length} guides to database`
+    );
 
     for (const guide of results) {
       try {
@@ -449,7 +478,9 @@ async function executeJob(jobId: string, job: any) {
 
         // Skip if content is too short after cleaning
         if (cleaned.cleanedLength < 100) {
-          console.log(`[Crawler] Skipped (too short): ${guide.sourceExternalId}`);
+          console.log(
+            `[Crawler] Skipped (too short): ${guide.sourceExternalId}`
+          );
           continue;
         }
 

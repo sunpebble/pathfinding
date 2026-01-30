@@ -1,0 +1,365 @@
+import { Stagehand } from '@browserbasehq/stagehand';
+import { z } from 'zod';
+import type { Page } from 'playwright';
+import {
+  BrowserClient,
+  NetworkRequest,
+  PageSnapshot,
+  SessionOptions,
+} from './types';
+
+/**
+ * StagehandBrowserClient - AI-powered browser automation using Stagehand
+ *
+ * This client provides a lightweight wrapper around Stagehand, which uses
+ * Claude for intelligent browser interactions. Unlike SteelClient, this
+ * client manages its own browser instance and is best suited for simpler
+ * automation scenarios that don't require extensive network interception.
+ *
+ * Key features:
+ * - Natural language actions via act()
+ * - Structured data extraction via extract()
+ * - Automatic browser management
+ * - Works with both local and Browserbase environments
+ */
+export class StagehandBrowserClient implements BrowserClient {
+  private stagehand: Stagehand | null = null;
+  private options: SessionOptions = {};
+  private networkRequests: Map<string, NetworkRequest> = new Map();
+  private capturePatterns: string[] = [];
+  private networkCaptureEnabled = false;
+  private requestIdCounter = 0;
+
+  /**
+   * Initialize the browser session with Stagehand
+   */
+  async init(options?: SessionOptions): Promise<void> {
+    this.options = options || {};
+
+    // Determine environment based on STEEL_LOCAL env var
+    const env =
+      process.env.STEEL_LOCAL === 'true' ? 'LOCAL' : 'BROWSERBASE';
+
+    // Initialize Stagehand with Claude Sonnet 4
+    this.stagehand = new Stagehand({
+      env,
+      model: {
+        modelName: 'claude-3-5-sonnet-latest',
+        provider: 'anthropic',
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      },
+      // Apply headless and viewport to local browser launch options
+      ...(env === 'LOCAL' && {
+        localBrowserLaunchOptions: {
+          headless: this.options.headless !== false,
+          ...(this.options.viewport && {
+            viewport: this.options.viewport,
+          }),
+        },
+      }),
+    });
+
+    await this.stagehand.init();
+  }
+
+  /**
+   * Close the browser session and clean up resources
+   */
+  async close(): Promise<void> {
+    if (this.stagehand) {
+      await this.stagehand.close();
+      this.stagehand = null;
+    }
+    this.networkRequests.clear();
+    this.capturePatterns = [];
+    this.networkCaptureEnabled = false;
+  }
+
+  /**
+   * Navigate to a URL
+   */
+  async navigateTo(
+    url: string,
+    options?: { timeout?: number; waitUntil?: 'load' | 'domcontentloaded' | 'networkidle' }
+  ): Promise<void> {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+    await page.goto(url, {
+      timeout: options?.timeout,
+      waitUntil: options?.waitUntil || 'networkidle',
+    });
+  }
+
+  /**
+   * Take a snapshot of the current page
+   */
+  async takeSnapshot(options?: {
+    verbose?: boolean;
+  }): Promise<PageSnapshot> {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+
+    const content = await page.content();
+    const url = page.url();
+
+    if (options?.verbose) {
+      console.log(`📸 Snapshot taken at ${url}`);
+      console.log(`   Content length: ${content.length} bytes`);
+    }
+
+    return {
+      content,
+      url,
+      timestamp: new Date(),
+    };
+  }
+
+  /**
+   * Get the current page content
+   */
+  async getPageContent(): Promise<string> {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+    return await page.content();
+  }
+
+  /**
+   * Enable network request capture with optional URL patterns
+   */
+  async enableNetworkCapture(patterns?: string[]): Promise<void> {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+
+    this.capturePatterns = patterns || ['**/*'];
+    this.networkCaptureEnabled = true;
+
+    // Set up request/response interception
+    page.on('request', (request: any) => {
+      const url = request.url();
+      if (this.shouldCaptureRequest(url)) {
+        const id = `req_${++this.requestIdCounter}`;
+        const partial: Partial<NetworkRequest> = {
+          id,
+          url,
+          method: request.method(),
+          resourceType: request.resourceType(),
+          requestHeaders: request.headers(),
+          status: 0, // Will be updated on response
+          responseHeaders: {},
+          responseBody: null,
+        };
+        this.networkRequests.set(id, partial as NetworkRequest);
+      }
+    });
+
+    page.on('response', async (response: any) => {
+      const url = response.url();
+      if (this.shouldCaptureRequest(url)) {
+        // Find the corresponding request
+        const existingRequest = Array.from(
+          this.networkRequests.values()
+        ).find((req) => req.url === url && req.status === 0);
+
+        if (existingRequest) {
+          existingRequest.status = response.status();
+          existingRequest.responseHeaders = response.headers();
+
+          // Try to capture response body for text-based resources
+          try {
+            const contentType = response.headers()['content-type'] || '';
+            if (
+              contentType.includes('json') ||
+              contentType.includes('text') ||
+              contentType.includes('javascript')
+            ) {
+              existingRequest.responseBody = await response.text();
+            }
+          } catch (error) {
+            // Response body might not be available
+            console.warn(
+              `Failed to capture response body for ${url}:`,
+              error
+            );
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * List captured network requests, optionally filtered by resource types
+   */
+  async listNetworkRequests(types?: string[]): Promise<NetworkRequest[]> {
+    if (!this.networkCaptureEnabled) {
+      throw new Error(
+        'Network capture not enabled. Call enableNetworkCapture() first.'
+      );
+    }
+
+    const requests = Array.from(this.networkRequests.values());
+
+    if (types && types.length > 0) {
+      return requests.filter((req) => types.includes(req.resourceType));
+    }
+
+    return requests;
+  }
+
+  /**
+   * Get a specific network request by ID
+   */
+  async getNetworkRequest(id: string): Promise<NetworkRequest | null> {
+    if (!this.networkCaptureEnabled) {
+      throw new Error(
+        'Network capture not enabled. Call enableNetworkCapture() first.'
+      );
+    }
+
+    return this.networkRequests.get(id) || null;
+  }
+
+  /**
+   * Perform an action using natural language instruction
+   * This is Stagehand's flagship feature - AI-powered browser actions
+   */
+  async act(instruction: string): Promise<void> {
+    this.ensureInitialized();
+    await this.stagehand!.act(instruction);
+  }
+
+  /**
+   * Extract data from the page using natural language instruction and schema
+   * Returns strongly-typed data validated against the Zod schema
+   */
+  async extract<T>(instruction: string, schema: z.ZodSchema<T>): Promise<T> {
+    this.ensureInitialized();
+    const result = await this.stagehand!.extract(instruction, schema);
+    return result as T;
+  }
+
+  /**
+   * Click an element matching the selector
+   */
+  async click(selector: string): Promise<void> {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+    await page.locator(selector).click();
+  }
+
+  /**
+   * Type text into an element matching the selector
+   */
+  async type(selector: string, text: string): Promise<void> {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+    await page.locator(selector).fill(text);
+  }
+
+  /**
+   * Scroll the page
+   */
+  async scroll(direction: 'up' | 'down', amount = 500): Promise<void> {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+    const deltaY = direction === 'down' ? amount : -amount;
+    await page.evaluate((delta: number) => {
+      window.scrollBy(0, delta);
+    }, deltaY);
+  }
+
+  /**
+   * Wait for an element matching the selector to appear
+   */
+  async waitForSelector(selector: string, timeout = 30000): Promise<void> {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+    await page.locator(selector).waitFor({ timeout });
+  }
+
+  /**
+   * Check if current session is persistent
+   * Note: Stagehand doesn't directly support persistent sessions in the same way
+   * as Steel, but we track the option for interface compliance
+   */
+  isPersistentSession(): boolean {
+    return !!this.options.persistent;
+  }
+
+  /**
+   * Get information about the current session
+   */
+  getSessionInfo(): { type: 'isolated' | 'persistent'; path?: string } {
+    if (this.options.persistent) {
+      return {
+        type: 'persistent',
+        path:
+          typeof this.options.persistent === 'string'
+            ? this.options.persistent
+            : undefined,
+      };
+    }
+    return { type: 'isolated' };
+  }
+
+  /**
+   * Get direct access to the underlying Playwright page
+   * Useful for advanced scenarios not covered by the interface
+   */
+  getPage(): Page {
+    this.ensureInitialized();
+    const page = this.stagehand!.context.page();
+    if (!page) {
+      throw new Error('No active page found');
+    }
+    return page as unknown as Page;
+  }
+
+  /**
+   * Ensure the client is initialized before operations
+   */
+  private ensureInitialized(): void {
+    if (!this.stagehand) {
+      throw new Error(
+        'StagehandBrowserClient not initialized. Call init() first.'
+      );
+    }
+  }
+
+  /**
+   * Check if a URL matches the capture patterns
+   */
+  private shouldCaptureRequest(url: string): boolean {
+    if (this.capturePatterns.length === 0) return true;
+
+    return this.capturePatterns.some((pattern) => {
+      const regex = new RegExp(
+        pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*')
+      );
+      return regex.test(url);
+    });
+  }
+}

@@ -1,17 +1,32 @@
 /**
  * Crawler Index
- * Platform-specific crawler implementations using Chrome DevTools MCP
+ * Platform-specific crawler implementations with pluggable browser backends
  *
- * All crawlers use Chrome DevTools MCP for browser automation instead of Playwright.
- * This provides better anti-detection and supports text, image, and video content.
+ * Supports multiple browser automation backends:
+ * - Steel Browser (cloud-based, best anti-detection)
+ * - Stagehand (AI-powered browser automation)
+ * - MCP Client (legacy Chrome DevTools MCP)
+ *
+ * Configure via environment variables:
+ * - USE_STEEL_BROWSER=true for Steel Browser
+ * - USE_STAGEHAND_ONLY=true for Stagehand-only mode
  */
 
+// Browser client exports
 import { crawlCtrip } from './ctrip.js';
 import { crawlMafengwo } from './mafengwo.js';
 import { crawlQunar } from './qunar.js';
 import { crawlQyer } from './qyer.js';
 import { crawlTongcheng } from './tongcheng.js';
 import { crawlXiaohongshu } from './xiaohongshu.js';
+
+export { createBrowserClient } from './clients/index.js';
+export type {
+  BrowserClient,
+  NetworkRequest,
+  PageSnapshot,
+  SessionOptions,
+} from './clients/types.js';
 
 /**
  * Comment extracted from a post/note

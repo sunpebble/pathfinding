@@ -14,18 +14,17 @@
  *   pnpm --filter ai-service exec tsx src/login-helper.ts all
  */
 
+import type { Platform } from './lib/crawlers/session/index.js';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import * as readline from 'node:readline';
-import {
-  DEFAULT_USER_DATA_DIR,
-  disconnect,
-  initMCP,
-  navigateTo,
-  sleep,
-} from './lib/crawlers/mcp-client.js';
-import {
-  checkSession,
-  type Platform,
-} from './lib/crawlers/session/index.js';
+import { createBrowserClient } from './lib/crawlers/clients/index.js';
+import { checkSession } from './lib/crawlers/session/index.js';
+
+/**
+ * Default user data directory for persistent Chrome sessions
+ */
+const DEFAULT_USER_DATA_DIR = join(homedir(), '.pathfinding', 'chrome-profile');
 
 const PLATFORM_URLS: Record<string, { name: string; loginUrl: string }> = {
   xiaohongshu: {
@@ -52,16 +51,16 @@ function waitForEnter(prompt: string): Promise<void> {
   });
 }
 
-async function isLoggedIn(platform: string): Promise<boolean> {
+async function isLoggedIn(client: any, platform: string): Promise<boolean> {
   try {
-    const result = await checkSession(platform as Platform);
+    const result = await checkSession(client, platform as Platform);
     return result.isValid;
   } catch {
     return false;
   }
 }
 
-async function loginToPlatform(platform: string): Promise<void> {
+async function loginToPlatform(client: any, platform: string): Promise<void> {
   const config = PLATFORM_URLS[platform];
   if (!config) {
     console.error(`Unknown platform: ${platform}`);
@@ -74,10 +73,10 @@ async function loginToPlatform(platform: string): Promise<void> {
   console.log(`${'='.repeat(60)}\n`);
 
   console.log(`Opening ${config.name}...`);
-  await navigateTo(config.loginUrl, { timeout: 30000 });
+  await client.navigateTo(config.loginUrl, { timeout: 30000 });
   await sleep(3000);
 
-  const loggedIn = await isLoggedIn(platform);
+  const loggedIn = await isLoggedIn(client, platform);
   if (loggedIn) {
     console.log(`\n✅ Already logged in to ${config.name}!`);
     return;
@@ -94,7 +93,7 @@ async function loginToPlatform(platform: string): Promise<void> {
   await waitForEnter('Press ENTER after you have completed login...');
 
   await sleep(1000);
-  const finalStatus = await isLoggedIn(platform);
+  const finalStatus = await isLoggedIn(client, platform);
   if (finalStatus) {
     console.log(`\n✅ Login successful! Session saved.`);
   } else {
@@ -102,6 +101,10 @@ async function loginToPlatform(platform: string): Promise<void> {
       `\n⚠️  Login may not be complete. Try running the crawler to verify.`
     );
   }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function main(): Promise<void> {
@@ -115,15 +118,17 @@ async function main(): Promise<void> {
   console.log(`Login sessions are saved and reused by crawlers.\n`);
   console.log(`Chrome profile: ${DEFAULT_USER_DATA_DIR}\n`);
 
+  const client = createBrowserClient();
+
   try {
     console.log(`[Starting Chrome with persistent profile...]\n`);
-    await initMCP({ persistent: true });
+    await client.init({ persistent: true });
 
     const platforms =
       platform === 'all' ? Object.keys(PLATFORM_URLS) : [platform];
 
     for (const p of platforms) {
-      await loginToPlatform(p);
+      await loginToPlatform(client, p);
     }
 
     console.log(`\n${'='.repeat(60)}`);
@@ -137,7 +142,7 @@ async function main(): Promise<void> {
       `  pnpm --filter ai-service exec tsx src/test-crawlers.ts 杭州 mafengwo\n`
     );
   } finally {
-    await disconnect();
+    await client.close();
   }
 }
 

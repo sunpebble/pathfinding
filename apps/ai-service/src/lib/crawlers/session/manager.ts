@@ -3,13 +3,9 @@
  * Manages login sessions for crawlers
  */
 
-import type {Platform, ValidationResult} from './validators.js';
-import { initMCP, isPersistentSession, takeSnapshot } from '../mcp-client.js';
-import {
-  getValidator
-  
-  
-} from './validators.js';
+import type { BrowserClient } from '../clients/types.js';
+import type { Platform, ValidationResult } from './validators.js';
+import { getValidator } from './validators.js';
 
 /**
  * Platforms that require or benefit from persistent sessions
@@ -27,33 +23,33 @@ export function needsPersistentSession(platform: Platform): boolean {
  * Check if current session is valid for the given platform
  * Must be called after navigating to the platform's page
  *
+ * @param client - BrowserClient instance
  * @param platform - Platform to check
  * @returns ValidationResult with session status
  */
 export async function checkSession(
+  client: BrowserClient,
   platform: Platform
 ): Promise<ValidationResult> {
-  const snapshot = await takeSnapshot();
+  const snapshot = await client.takeSnapshot();
   const validator = getValidator(platform);
   return validator(snapshot.content);
 }
 
 /**
- * Initialize MCP with appropriate session type for platform
- * Uses persistent session for platforms that need login
+ * Initialize browser client with appropriate session type for platform
+ *
+ * @param client - BrowserClient instance
+ * @param platform - Platform to initialize for
  */
 export async function initSessionForPlatform(
+  client: BrowserClient,
   platform: Platform
 ): Promise<void> {
   const needsPersistent = needsPersistentSession(platform);
 
-  // Only reinitialize if current session type doesn't match
-  if (needsPersistent && !isPersistentSession()) {
-    await initMCP({ persistent: true });
-  } else if (!needsPersistent && isPersistentSession()) {
-    await initMCP({ persistent: false });
-  }
-  // Otherwise, current session is already correct type
+  // Initialize session with appropriate persistence setting
+  await client.init({ persistent: needsPersistent });
 }
 
 /**
@@ -69,11 +65,15 @@ export interface SessionCheckResult {
 
 /**
  * Full session check with guidance
+ *
+ * @param client - BrowserClient instance
+ * @param platform - Platform to check
  */
 export async function checkSessionWithGuidance(
+  client: BrowserClient,
   platform: Platform
 ): Promise<SessionCheckResult> {
-  const validation = await checkSession(platform);
+  const validation = await checkSession(client, platform);
 
   if (!validation.isValid && validation.requiresLogin) {
     return {

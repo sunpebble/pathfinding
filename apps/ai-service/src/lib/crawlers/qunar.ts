@@ -1,3 +1,4 @@
+import type { BrowserClient } from './clients/index.js';
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
   extractImageUrls,
@@ -8,14 +9,13 @@ import {
   getBestTitle,
   transformToHighResQunar,
 } from './accessibility-parser.js';
-import { waitForContentStable } from './diagnostics/index.js';
-import {
-  disconnect,
-  navigateTo,
-  scrollToLoadContent,
-  sleep,
-  takeSnapshot,
-} from './mcp-client.js';
+import { createBrowserClient } from './clients/index.js';
+import { waitForContentStable } from './utils.js';
+
+// Helper function for delay
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const CITY_IDS: Record<string, string> = {
   北京: '300028-beijing',
@@ -42,7 +42,7 @@ const CITY_IDS: Record<string, string> = {
 
 export async function crawlQunar(
   city: string,
-  options: CrawlOptions = {}
+  options: CrawlOptions & { client?: BrowserClient } = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxPages = options.maxPages || 5;
@@ -55,20 +55,25 @@ export async function crawlQunar(
 
   console.log(`[Qunar] Crawling guides for ${city} (${cityId})`);
 
+  const client = options.client ?? createBrowserClient();
+  const shouldCloseClient = !options.client;
+
   try {
+    await client.init();
+
     for (let page = 1; page <= maxPages; page++) {
       try {
         const listUrl = `https://travel.qunar.com/p-cs${cityId}/youji?page=${page}`;
         console.log(`[Qunar] Fetching page ${page}: ${listUrl}`);
 
-        const guideLinks = await fetchListPage(listUrl);
+        const guideLinks = await fetchListPage(listUrl, client);
         console.log(
           `[Qunar] Found ${guideLinks.length} guides on page ${page}`
         );
 
         for (const guideUrl of guideLinks.slice(0, 10)) {
           try {
-            const guide = await fetchQunarGuide(guideUrl, city);
+            const guide = await fetchQunarGuide(guideUrl, city, client);
             if (guide) {
               results.push(guide);
             }
@@ -82,23 +87,28 @@ export async function crawlQunar(
       }
     }
   } finally {
-    await disconnect();
-    console.log('[Qunar] MCP client disconnected');
+    if (shouldCloseClient) {
+      await client.close();
+      console.log('[Qunar] Browser client closed');
+    }
   }
 
   return results;
 }
 
-async function fetchListPage(url: string): Promise<string[]> {
+async function fetchListPage(
+  url: string,
+  client: BrowserClient
+): Promise<string[]> {
   const guideLinks: string[] = [];
 
   try {
-    await navigateTo(url, { timeout: 30000 });
-    await waitForContentStable();
-    await scrollToLoadContent(2);
+    await client.navigateTo(url, { timeout: 30000 });
+    await waitForContentStable(client);
+    await client.scroll('down', 2);
     await sleep(1000);
 
-    const snapshot = await takeSnapshot();
+    const snapshot = await client.takeSnapshot();
     const content = snapshot.content;
 
     const linkMatches = content.matchAll(/\/youji\/(\d+)/g);
@@ -121,15 +131,16 @@ async function fetchListPage(url: string): Promise<string[]> {
 
 async function fetchQunarGuide(
   url: string,
-  city: string
+  city: string,
+  client: BrowserClient
 ): Promise<CrawlResult | null> {
   try {
-    await navigateTo(url, { timeout: 30000 });
-    await waitForContentStable();
-    await scrollToLoadContent(3);
+    await client.navigateTo(url, { timeout: 30000 });
+    await waitForContentStable(client);
+    await client.scroll('down', 3);
     await sleep(1000);
 
-    const snapshot = await takeSnapshot({ verbose: true });
+    const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
     // Use accessibility tree parser for extraction

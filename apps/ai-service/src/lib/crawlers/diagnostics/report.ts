@@ -3,8 +3,23 @@
  * Categorizes failures and generates human-readable reports
  */
 
-import type { DiagnosticCapture } from './capture.js';
 import type { CrawlResult } from '../index.js';
+
+/**
+ * Diagnostic capture data structure
+ */
+export interface DiagnosticCapture {
+  platform: string;
+  url: string;
+  timestamp: number;
+  snapshot: string;
+  parseResult: CrawlResult | null;
+  parseErrors: string[];
+  navigationTime: number;
+  contentLoadTime: number;
+  contentStable: boolean;
+  networkRequests: Array<{ url: string; status: number }>;
+}
 
 /**
  * Failure category union type

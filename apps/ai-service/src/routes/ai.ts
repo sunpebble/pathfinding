@@ -4,8 +4,8 @@
  * Refactored to use LangChain.js with Claude Opus 4.5
  */
 
-import { Hono } from 'hono';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { Hono } from 'hono';
 import { createLLM, getProvidersStatus } from '../lib/llm/index.js';
 
 export const aiRouter = new Hono();

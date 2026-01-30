@@ -1,3 +1,4 @@
+import type { BrowserClient } from './clients/index.js';
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
   extractImageUrls,
@@ -8,14 +9,12 @@ import {
   getBestTitle,
   transformToHighResTc,
 } from './accessibility-parser.js';
-import { waitForContentStable } from './diagnostics/index.js';
-import {
-  disconnect,
-  navigateTo,
-  scrollToLoadContent,
-  sleep,
-  takeSnapshot,
-} from './mcp-client.js';
+import { createBrowserClient } from './clients/index.js';
+import { waitForContentStable } from './utils.js';
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const CITY_SLUGS: Record<string, string> = {
   北京: 'beijing',
@@ -42,26 +41,30 @@ const CITY_SLUGS: Record<string, string> = {
 
 export async function crawlTongcheng(
   city: string,
-  options: CrawlOptions = {}
+  options: CrawlOptions & { client?: BrowserClient } = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxGuides = (options.maxPages || 5) * 10;
   const citySlug = CITY_SLUGS[city] || city.toLowerCase();
+  const client = options.client ?? createBrowserClient();
+  const shouldCleanup = !options.client;
 
   console.log(`[Tongcheng] Crawling guides for ${city} (${citySlug})`);
 
   try {
+    await client.init();
+
     // Phase 1: Get guide URLs from list page
     const listUrl = 'https://www.ly.com/travels/';
     console.log(`[Tongcheng] Fetching guide URLs from: ${listUrl}`);
 
-    const guideUrls = await fetchGuideUrls(listUrl, city, maxGuides);
+    const guideUrls = await fetchGuideUrls(client, listUrl, city, maxGuides);
     console.log(`[Tongcheng] Found ${guideUrls.length} guide URLs to fetch`);
 
     // Phase 2: Visit each detail page (follows Mafengwo/Ctrip pattern)
     for (const { url, guideId } of guideUrls) {
       try {
-        const guide = await fetchGuideDetail(url, guideId, city);
+        const guide = await fetchGuideDetail(client, url, guideId, city);
         if (guide) {
           results.push(guide);
           console.log(
@@ -81,8 +84,10 @@ export async function crawlTongcheng(
   } catch (error) {
     console.error(`[Tongcheng] Error crawling travels list:`, error);
   } finally {
-    await disconnect();
-    console.log('[Tongcheng] MCP client disconnected');
+    if (shouldCleanup) {
+      await client.close();
+      console.log('[Tongcheng] Browser client closed');
+    }
   }
 
   return results;
@@ -93,6 +98,7 @@ export async function crawlTongcheng(
  * Only extracts URLs, does not parse content (that's done in fetchGuideDetail)
  */
 async function fetchGuideUrls(
+  client: BrowserClient,
   listUrl: string,
   city: string,
   maxGuides: number
@@ -101,12 +107,17 @@ async function fetchGuideUrls(
   const seenIds = new Set<string>();
 
   try {
-    await navigateTo(listUrl, { timeout: 30000 });
-    await waitForContentStable();
-    await scrollToLoadContent(3);
+    await client.navigateTo(listUrl, { timeout: 30000 });
+    await waitForContentStable(client);
+
+    // Scroll to load more content
+    for (let i = 0; i < 3; i++) {
+      await client.scroll('down', 500);
+      await sleep(500);
+    }
     await sleep(2000);
 
-    const snapshot = await takeSnapshot({ verbose: true });
+    const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
     console.log(`[Tongcheng] List page snapshot: ${content.length} chars`);
@@ -151,6 +162,7 @@ async function fetchGuideUrls(
  * Navigates to the detail page, extracts all 6 core fields
  */
 async function fetchGuideDetail(
+  client: BrowserClient,
   url: string,
   guideId: string,
   city: string
@@ -158,12 +170,17 @@ async function fetchGuideDetail(
   try {
     console.log(`[Tongcheng] Entering detail page: ${url}`);
 
-    await navigateTo(url, { timeout: 30000 });
-    await waitForContentStable();
-    await scrollToLoadContent(3);
+    await client.navigateTo(url, { timeout: 30000 });
+    await waitForContentStable(client);
+
+    // Scroll to load more content
+    for (let i = 0; i < 3; i++) {
+      await client.scroll('down', 500);
+      await sleep(500);
+    }
     await sleep(1000);
 
-    const snapshot = await takeSnapshot({ verbose: true });
+    const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
     console.log(

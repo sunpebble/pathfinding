@@ -1,20 +1,16 @@
 /**
  * Qyer (穷游网) Crawler
- * Crawls travel guides from Qyer using Playwright headless browser
+ * Crawls travel guides from Qyer using BrowserClient abstraction
  *
  * Qyer is known for high-quality travel guides and detailed trip reports,
  * especially for international destinations.
  */
 
+import type {BrowserClient} from './clients/index.js';
 import type { CrawlOptions, CrawlResult } from './index.js';
 import * as cheerio from 'cheerio';
-import {
-  createContext,
-  createPage,
-  scrollToLoadContent,
-  sleep,
-  waitForContent,
-} from './browser.js';
+import {  createBrowserClient } from './clients/index.js';
+import { sleep, waitForContentStable } from './utils.js';
 
 // Destination info structure
 interface DestinationInfo {
@@ -72,12 +68,22 @@ const CITY_CONFIG: Record<
 };
 
 /**
+ * Scroll to load lazy content
+ */
+async function scrollToLoadContent(client: BrowserClient): Promise<void> {
+  for (let i = 0; i < 3; i++) {
+    await client.scroll('down', 500);
+    await sleep(800);
+  }
+}
+
+/**
  * Crawl Qyer travel guides for a city
  * Uses destination pages and forum threads
  */
 export async function crawlQyer(
   city: string,
-  options: CrawlOptions = {}
+  options: CrawlOptions & { client?: BrowserClient } = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxPages = options.maxPages || 3;
@@ -91,9 +97,12 @@ export async function crawlQyer(
 
   console.log(`[Qyer] Crawling guides for ${city} (${config.englishName})`);
 
-  const context = await createContext();
+  const client = options.client ?? createBrowserClient();
+  const shouldCloseClient = !options.client;
 
   try {
+    await client.init();
+
     // Strategy 1: Fetch from destination page (place.qyer.com)
     // This is the most reliable source as forum pages may return 503
     try {
@@ -103,7 +112,7 @@ export async function crawlQyer(
       // Increase max guides per destination page since forum may be unavailable
       const maxGuidesFromPlace = Math.max(50, maxPages * 10);
       const placeGuides = await fetchGuidesFromPlacePage(
-        context,
+        client,
         placeUrl,
         city,
         maxGuidesFromPlace
@@ -131,7 +140,7 @@ export async function crawlQyer(
         console.log(`[Qyer] Fetching forum page ${page}: ${forumUrl}`);
 
         const forumGuides = await fetchGuidesFromForumPage(
-          context,
+          client,
           forumUrl,
           city,
           20
@@ -164,8 +173,10 @@ export async function crawlQyer(
       }
     }
   } finally {
-    await context.close();
-    console.log('[Qyer] Browser context closed');
+    if (shouldCloseClient) {
+      await client.close();
+      console.log('[Qyer] Browser client closed');
+    }
   }
 
   return results;
@@ -176,26 +187,26 @@ export async function crawlQyer(
  */
 async function crawlQyerBySearch(
   city: string,
-  _options: CrawlOptions = {}
+  options: CrawlOptions & { client?: BrowserClient } = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
-  const context = await createContext();
+  const client = options.client ?? createBrowserClient();
+  const shouldCloseClient = !options.client;
 
   try {
+    await client.init();
+
     const searchUrl = `https://www.qyer.com/search2/topic?keyword=${encodeURIComponent(`${city}攻略`)}`;
     console.log(`[Qyer] Searching: ${searchUrl}`);
 
-    const guides = await fetchGuidesFromSearchPage(
-      context,
-      searchUrl,
-      city,
-      30
-    );
+    const guides = await fetchGuidesFromSearchPage(client, searchUrl, city, 30);
     results.push(...guides);
   } catch (error) {
     console.error('[Qyer] Error searching:', error);
   } finally {
-    await context.close();
+    if (shouldCloseClient) {
+      await client.close();
+    }
   }
 
   return results;
@@ -205,34 +216,26 @@ async function crawlQyerBySearch(
  * Fetch guides from destination page (place.qyer.com)
  */
 async function fetchGuidesFromPlacePage(
-  context: Awaited<ReturnType<typeof createContext>>,
+  client: BrowserClient,
   url: string,
   city: string,
   maxGuides: number
 ): Promise<CrawlResult[]> {
-  const page = await createPage(context);
   const guides: CrawlResult[] = [];
   const seenIds = new Set<string>();
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await client.navigateTo(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
 
     // Wait for content to load
-    try {
-      await page.waitForSelector('.ui_list_item, .place-list-item, article', {
-        timeout: 15000,
-      });
-    } catch {
-      console.log('[Qyer] Waiting for content...');
-    }
-
-    await page
-      .waitForLoadState('networkidle', { timeout: 10000 })
-      .catch(() => {});
-    await scrollToLoadContent(page);
+    await waitForContentStable(client, 15000);
+    await scrollToLoadContent(client);
     await sleep(2000);
 
-    const html = await page.content();
+    const html = await client.getPageContent();
     const $ = cheerio.load(html);
 
     // Strategy 1: Extract from "热门游记" section (ess-diary-list)
@@ -360,8 +363,6 @@ async function fetchGuidesFromPlacePage(
     console.log(`[Qyer] Extracted ${guides.length} guides from place page`);
   } catch (error) {
     console.error('[Qyer] Error fetching place page:', error);
-  } finally {
-    await page.close();
   }
 
   return guides;
@@ -371,35 +372,26 @@ async function fetchGuidesFromPlacePage(
  * Fetch guides from forum page (bbs.qyer.com)
  */
 async function fetchGuidesFromForumPage(
-  context: Awaited<ReturnType<typeof createContext>>,
+  client: BrowserClient,
   url: string,
   city: string,
   maxGuides: number
 ): Promise<CrawlResult[]> {
-  const page = await createPage(context);
   const guides: CrawlResult[] = [];
   const seenIds = new Set<string>();
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await client.navigateTo(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
 
     // Wait for forum thread list
-    try {
-      await page.waitForSelector(
-        '.bbs-item, .thread-item, tbody tr, .post-item',
-        { timeout: 15000 }
-      );
-    } catch {
-      console.log('[Qyer] Waiting for forum content...');
-    }
-
-    await page
-      .waitForLoadState('networkidle', { timeout: 10000 })
-      .catch(() => {});
-    await scrollToLoadContent(page);
+    await waitForContentStable(client, 15000);
+    await scrollToLoadContent(client);
     await sleep(1500);
 
-    const html = await page.content();
+    const html = await client.getPageContent();
     const $ = cheerio.load(html);
 
     // Forum thread selectors
@@ -487,8 +479,6 @@ async function fetchGuidesFromForumPage(
     console.log(`[Qyer] Extracted ${guides.length} guides from forum page`);
   } catch (error) {
     console.error('[Qyer] Error fetching forum page:', error);
-  } finally {
-    await page.close();
   }
 
   return guides;
@@ -498,33 +488,25 @@ async function fetchGuidesFromForumPage(
  * Fetch guides from search page
  */
 async function fetchGuidesFromSearchPage(
-  context: Awaited<ReturnType<typeof createContext>>,
+  client: BrowserClient,
   url: string,
   city: string,
   maxGuides: number
 ): Promise<CrawlResult[]> {
-  const page = await createPage(context);
   const guides: CrawlResult[] = [];
   const seenIds = new Set<string>();
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await client.navigateTo(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
 
-    try {
-      await page.waitForSelector('.search-result, .result-item, article', {
-        timeout: 15000,
-      });
-    } catch {
-      console.log('[Qyer] Waiting for search results...');
-    }
-
-    await page
-      .waitForLoadState('networkidle', { timeout: 10000 })
-      .catch(() => {});
-    await scrollToLoadContent(page);
+    await waitForContentStable(client, 15000);
+    await scrollToLoadContent(client);
     await sleep(2000);
 
-    const html = await page.content();
+    const html = await client.getPageContent();
     const $ = cheerio.load(html);
 
     // Search result selectors
@@ -578,8 +560,6 @@ async function fetchGuidesFromSearchPage(
     console.log(`[Qyer] Extracted ${guides.length} guides from search`);
   } catch (error) {
     console.error('[Qyer] Error fetching search page:', error);
-  } finally {
-    await page.close();
   }
 
   return guides;
@@ -589,21 +569,19 @@ async function fetchGuidesFromSearchPage(
  * Fetch full guide detail (optional, for enrichment)
  */
 export async function fetchQyerGuideDetail(
-  context: Awaited<ReturnType<typeof createContext>>,
+  client: BrowserClient,
   url: string,
   city: string
 ): Promise<CrawlResult | null> {
-  const page = await createPage(context);
-
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await waitForContent(
-      page,
-      'article, .post-content, .travel-content, .thread-content'
-    );
-    await scrollToLoadContent(page);
+    await client.navigateTo(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
+    await waitForContentStable(client, 15000);
+    await scrollToLoadContent(client);
 
-    const html = await page.content();
+    const html = await client.getPageContent();
     const $ = cheerio.load(html);
 
     // Extract title
@@ -677,8 +655,6 @@ export async function fetchQyerGuideDetail(
   } catch (error) {
     console.error('[Qyer] Error fetching guide detail:', error);
     return null;
-  } finally {
-    await page.close();
   }
 }
 
@@ -791,6 +767,7 @@ export async function crawlQyerAllDestinations(
   options: {
     maxPagesPerDestination?: number;
     maxDestinations?: number;
+    client?: BrowserClient;
     onProgress?: (progress: {
       currentDestination: string;
       destinationIndex: number;
@@ -810,43 +787,55 @@ export async function crawlQyerAllDestinations(
 
   console.log('[Qyer] Starting full site crawl...');
 
-  // Step 1: Discover all destinations
-  const destinations = await discoverAllDestinations();
-  console.log(`[Qyer] Discovered ${destinations.length} destinations`);
+  const client = options.client ?? createBrowserClient();
+  const shouldCloseClient = !options.client;
 
-  const limitedDestinations = destinations.slice(0, maxDestinations);
+  try {
+    await client.init();
 
-  // Step 2: Crawl each destination
-  for (let i = 0; i < limitedDestinations.length; i++) {
-    const dest = limitedDestinations[i];
-    console.log(
-      `[Qyer] Crawling destination ${i + 1}/${limitedDestinations.length}: ${dest.name}`
-    );
+    // Step 1: Discover all destinations
+    const destinations = await discoverAllDestinations({ client });
+    console.log(`[Qyer] Discovered ${destinations.length} destinations`);
 
-    try {
-      const guides = await crawlQyer(dest.name, {
-        maxPages: maxPagesPerDestination,
-      });
+    const limitedDestinations = destinations.slice(0, maxDestinations);
 
-      // Deduplicate
-      for (const guide of guides) {
-        if (!seenIds.has(guide.sourceExternalId)) {
-          seenIds.add(guide.sourceExternalId);
-          allResults.push(guide);
+    // Step 2: Crawl each destination
+    for (let i = 0; i < limitedDestinations.length; i++) {
+      const dest = limitedDestinations[i];
+      console.log(
+        `[Qyer] Crawling destination ${i + 1}/${limitedDestinations.length}: ${dest.name}`
+      );
+
+      try {
+        const guides = await crawlQyer(dest.name, {
+          maxPages: maxPagesPerDestination,
+          client,
+        });
+
+        // Deduplicate
+        for (const guide of guides) {
+          if (!seenIds.has(guide.sourceExternalId)) {
+            seenIds.add(guide.sourceExternalId);
+            allResults.push(guide);
+          }
         }
+
+        onProgress?.({
+          currentDestination: dest.name,
+          destinationIndex: i + 1,
+          totalDestinations: limitedDestinations.length,
+          guidesFound: allResults.length,
+        });
+
+        // Rate limiting between destinations
+        await sleep(3000);
+      } catch (error) {
+        console.error(`[Qyer] Error crawling ${dest.name}:`, error);
       }
-
-      onProgress?.({
-        currentDestination: dest.name,
-        destinationIndex: i + 1,
-        totalDestinations: limitedDestinations.length,
-        guidesFound: allResults.length,
-      });
-
-      // Rate limiting between destinations
-      await sleep(3000);
-    } catch (error) {
-      console.error(`[Qyer] Error crawling ${dest.name}:`, error);
+    }
+  } finally {
+    if (shouldCloseClient) {
+      await client.close();
     }
   }
 
@@ -860,13 +849,20 @@ export async function crawlQyerAllDestinations(
  * Discover all destinations from Qyer's destination index
  * Scrapes place.qyer.com to find all available destinations
  */
-export async function discoverAllDestinations(): Promise<DestinationInfo[]> {
+export async function discoverAllDestinations(
+  options: { client?: BrowserClient } = {}
+): Promise<DestinationInfo[]> {
   const destinations: DestinationInfo[] = [];
   const seenPlaceIds = new Set<string>();
 
-  const context = await createContext();
+  const client = options.client ?? createBrowserClient();
+  const shouldCloseClient = !options.client;
 
   try {
+    if (!options.client) {
+      await client.init();
+    }
+
     // Strategy 1: Use predefined cities first (they have verified forumIds)
     for (const [name, config] of Object.entries(CITY_CONFIG)) {
       if (!seenPlaceIds.has(config.placeId)) {
@@ -891,7 +887,7 @@ export async function discoverAllDestinations(): Promise<DestinationInfo[]> {
     for (const url of discoveryUrls) {
       try {
         console.log(`[Qyer] Discovering destinations from: ${url}`);
-        const discovered = await discoverDestinationsFromIndex(context, url);
+        const discovered = await discoverDestinationsFromIndex(client, url);
 
         for (const dest of discovered) {
           if (!seenPlaceIds.has(dest.placeId)) {
@@ -909,7 +905,7 @@ export async function discoverAllDestinations(): Promise<DestinationInfo[]> {
     // Strategy 3: Discover from BBS forum list
     try {
       console.log('[Qyer] Discovering destinations from BBS forum list...');
-      const forumDestinations = await discoverDestinationsFromBBS(context);
+      const forumDestinations = await discoverDestinationsFromBBS(client);
 
       for (const dest of forumDestinations) {
         if (!seenPlaceIds.has(dest.placeId)) {
@@ -921,7 +917,9 @@ export async function discoverAllDestinations(): Promise<DestinationInfo[]> {
       console.error('[Qyer] Error discovering from BBS:', error);
     }
   } finally {
-    await context.close();
+    if (shouldCloseClient) {
+      await client.close();
+    }
   }
 
   console.log(`[Qyer] Total destinations discovered: ${destinations.length}`);
@@ -932,21 +930,21 @@ export async function discoverAllDestinations(): Promise<DestinationInfo[]> {
  * Discover destinations from a Qyer index page
  */
 async function discoverDestinationsFromIndex(
-  context: Awaited<ReturnType<typeof createContext>>,
+  client: BrowserClient,
   url: string
 ): Promise<DestinationInfo[]> {
-  const page = await createPage(context);
   const destinations: DestinationInfo[] = [];
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page
-      .waitForLoadState('networkidle', { timeout: 15000 })
-      .catch(() => {});
-    await scrollToLoadContent(page);
+    await client.navigateTo(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
+    await waitForContentStable(client, 15000);
+    await scrollToLoadContent(client);
     await sleep(2000);
 
-    const html = await page.content();
+    const html = await client.getPageContent();
     const $ = cheerio.load(html);
 
     // Look for destination links
@@ -981,8 +979,6 @@ async function discoverDestinationsFromIndex(
     console.log(`[Qyer] Found ${destinations.length} destinations from ${url}`);
   } catch (error) {
     console.error(`[Qyer] Error parsing ${url}:`, error);
-  } finally {
-    await page.close();
   }
 
   return destinations;
@@ -993,24 +989,21 @@ async function discoverDestinationsFromIndex(
  * This gets destinations with their forumIds directly
  */
 async function discoverDestinationsFromBBS(
-  context: Awaited<ReturnType<typeof createContext>>
+  client: BrowserClient
 ): Promise<DestinationInfo[]> {
-  const page = await createPage(context);
   const destinations: DestinationInfo[] = [];
 
   try {
     // BBS forum index
-    await page.goto('https://bbs.qyer.com/', {
+    await client.navigateTo('https://bbs.qyer.com/', {
       waitUntil: 'domcontentloaded',
       timeout: 30000,
     });
-    await page
-      .waitForLoadState('networkidle', { timeout: 15000 })
-      .catch(() => {});
-    await scrollToLoadContent(page);
+    await waitForContentStable(client, 15000);
+    await scrollToLoadContent(client);
     await sleep(2000);
 
-    const html = await page.content();
+    const html = await client.getPageContent();
     const $ = cheerio.load(html);
 
     // Look for forum links: /forum-{forumId}-1.html
@@ -1039,8 +1032,6 @@ async function discoverDestinationsFromBBS(
     console.log(`[Qyer] Found ${destinations.length} forums from BBS`);
   } catch (error) {
     console.error('[Qyer] Error parsing BBS:', error);
-  } finally {
-    await page.close();
   }
 
   return destinations;
@@ -1073,6 +1064,7 @@ export async function crawlQyerDestinationDeep(
   options: {
     maxPages?: number;
     fetchDetails?: boolean;
+    client?: BrowserClient;
     onPageComplete?: (page: number, guides: number) => void;
   } = {}
 ): Promise<CrawlResult[]> {
@@ -1083,21 +1075,24 @@ export async function crawlQyerDestinationDeep(
   const config = CITY_CONFIG[city];
   if (!config) {
     console.warn(`[Qyer] City not in config: ${city}, using search`);
-    return crawlQyerBySearch(city, { maxPages: 5 });
+    return crawlQyerBySearch(city, { maxPages: 5, client: options.client });
   }
 
   console.log(
     `[Qyer] Deep crawling ${city} (${config.englishName}), max ${maxPages} pages`
   );
 
-  const context = await createContext();
+  const client = options.client ?? createBrowserClient();
+  const shouldCloseClient = !options.client;
 
   try {
+    await client.init();
+
     // First, get from destination page
     try {
       const placeUrl = `https://place.qyer.com/${config.placeId}/`;
       const placeGuides = await fetchGuidesFromPlacePage(
-        context,
+        client,
         placeUrl,
         city,
         50
@@ -1123,7 +1118,7 @@ export async function crawlQyerDestinationDeep(
         console.log(`[Qyer] Fetching forum page ${page}/${maxPages}`);
 
         const pageGuides = await fetchGuidesFromForumPage(
-          context,
+          client,
           forumUrl,
           city,
           50
@@ -1172,7 +1167,7 @@ export async function crawlQyerDestinationDeep(
 
         try {
           const detail = await fetchQyerGuideDetail(
-            context,
+            client,
             guide.sourceUrl,
             city
           );
@@ -1192,7 +1187,9 @@ export async function crawlQyerDestinationDeep(
       }
     }
   } finally {
-    await context.close();
+    if (shouldCloseClient) {
+      await client.close();
+    }
   }
 
   console.log(

@@ -1,0 +1,17 @@
+{
+  "agents": [
+    {
+      "agent_id": "a50ce46",
+      "agent_type": "oh-my-claudecode:explore",
+      "started_at": "2026-01-30T09:25:45.144Z",
+      "parent_mode": "autopilot",
+      "status": "failed",
+      "completed_at": "2026-01-30T09:25:47.290Z",
+      "duration_ms": 2146
+    }
+  ],
+  "total_spawned": 1,
+  "total_completed": 0,
+  "total_failed": 1,
+  "last_updated": "2026-01-30T09:29:21.278Z"
+}

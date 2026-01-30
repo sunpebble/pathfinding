@@ -63,7 +63,7 @@ logs/security/
 *.xcuserstate
 .worktrees
 
-convex/_generated
+convex/_generated/*
 
 # Convex compiled JS files (source is TypeScript)
 convex/*.js

@@ -1,3 +1,4 @@
+import type { BrowserClient } from './clients/index.js';
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
   extractImageUrls,
@@ -8,15 +9,13 @@ import {
   getBestTitle,
   transformToHighResMfw,
 } from './accessibility-parser.js';
-import { waitForContentStable } from './diagnostics/index.js';
-import {
-  disconnect,
-  navigateTo,
-  scrollToLoadContent,
-  sleep,
-  takeSnapshot,
-} from './mcp-client.js';
-import { checkSession, initSessionForPlatform } from './session/index.js';
+import { createBrowserClient } from './clients/index.js';
+import { waitForContentStable } from './utils.js';
+
+// Helper function for delay
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const CITY_IDS: Record<string, string> = {
   北京: '10065',
@@ -67,11 +66,12 @@ function detectMafengwoCaptcha(content: string): boolean {
 
 export async function crawlMafengwo(
   city: string,
-  options: CrawlOptions = {}
+  options: CrawlOptions & { client?: BrowserClient } = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxGuides = (options.maxPages || 5) * 10;
   const cityId = CITY_IDS[city];
+  const client = options.client ?? createBrowserClient();
 
   if (!cityId) {
     console.warn(`[Mafengwo] City not mapped: ${city}`);
@@ -81,27 +81,19 @@ export async function crawlMafengwo(
   console.log(`[Mafengwo] Crawling guides for ${city} (${cityId})`);
 
   try {
-    // Use persistent session for better results
-    await initSessionForPlatform('mafengwo');
-    console.log('[Mafengwo] Using persistent Chrome session');
-
-    // Check session status
-    const sessionResult = await checkSession('mafengwo');
-    if (sessionResult.reason) {
-      console.log(`[Mafengwo] Session status: ${sessionResult.reason}`);
-    }
+    await client.init();
 
     // Phase 1: Get guide URLs from list page
     const destUrl = `https://www.mafengwo.cn/travel-scenic-spot/mafengwo/${cityId}.html`;
     console.log(`[Mafengwo] Fetching guide URLs from: ${destUrl}`);
 
-    const guideUrls = await fetchGuideUrls(destUrl, maxGuides);
+    const guideUrls = await fetchGuideUrls(destUrl, maxGuides, client);
     console.log(`[Mafengwo] Found ${guideUrls.length} guide URLs to fetch`);
 
-    // Phase 2: Visit each detail page (NEW - follows Ctrip/Qunar pattern)
+    // Phase 2: Visit each detail page
     for (const url of guideUrls) {
       try {
-        const guide = await fetchGuideDetail(url, city);
+        const guide = await fetchGuideDetail(url, city, client);
         if (guide) {
           results.push(guide);
           console.log(
@@ -116,16 +108,15 @@ export async function crawlMafengwo(
     }
 
     if (results.length === 0) {
-      console.warn('[Mafengwo] No results found. You may need to login first:');
       console.warn(
-        '  Run: pnpm --filter ai-service exec tsx src/login-helper.ts mafengwo'
+        '[Mafengwo] No results found. Site may require verification.'
       );
     }
   } catch (error) {
     console.error(`[Mafengwo] Error crawling destination page:`, error);
   } finally {
-    await disconnect();
-    console.log('[Mafengwo] MCP client disconnected');
+    await client.close();
+    console.log('[Mafengwo] Browser client closed');
   }
 
   return results;
@@ -137,18 +128,24 @@ export async function crawlMafengwo(
  */
 async function fetchGuideUrls(
   destUrl: string,
-  maxGuides: number
+  maxGuides: number,
+  client: BrowserClient
 ): Promise<string[]> {
   const guideUrls: string[] = [];
   const seenIds = new Set<string>();
 
   try {
-    await navigateTo(destUrl, { timeout: 30000 });
-    await waitForContentStable();
-    await scrollToLoadContent(3);
+    await client.navigateTo(destUrl, { timeout: 30000 });
+    await waitForContentStable(client);
+    // Scroll multiple times to load content
+    await client.scroll('down');
+    await sleep(500);
+    await client.scroll('down');
+    await sleep(500);
+    await client.scroll('down');
     await sleep(2000);
 
-    const snapshot = await takeSnapshot({ verbose: true });
+    const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
     console.log(`[Mafengwo] Snapshot length: ${content.length} chars`);
@@ -188,15 +185,21 @@ async function fetchGuideUrls(
  */
 async function fetchGuideDetail(
   url: string,
-  city: string
+  city: string,
+  client: BrowserClient
 ): Promise<CrawlResult | null> {
   try {
-    await navigateTo(url, { timeout: 30000 });
-    await waitForContentStable();
-    await scrollToLoadContent(3);
+    await client.navigateTo(url, { timeout: 30000 });
+    await waitForContentStable(client);
+    // Scroll multiple times to load content
+    await client.scroll('down');
+    await sleep(500);
+    await client.scroll('down');
+    await sleep(500);
+    await client.scroll('down');
     await sleep(1000);
 
-    const snapshot = await takeSnapshot({ verbose: true });
+    const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
     console.log(

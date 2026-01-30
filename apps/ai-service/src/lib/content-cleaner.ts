@@ -49,7 +49,7 @@ export async function cleanContentWithLLM(
   const maxContentLength = 15000;
   const contentToProcess =
     rawData.content.length > maxContentLength
-      ? rawData.content.substring(0, maxContentLength) + '\n[内容已截断...]'
+      ? `${rawData.content.substring(0, maxContentLength)}\n[内容已截断...]`
       : rawData.content;
 
   const prompt = `你是一个专业的内容清洗助手。请分析以下从旅行网站爬取的原始内容，执行以下任务：

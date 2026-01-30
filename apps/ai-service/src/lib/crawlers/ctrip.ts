@@ -1,3 +1,4 @@
+import type { BrowserClient } from './clients/index.js';
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
 import {
   extractAuthorWithAvatar,
@@ -8,14 +9,13 @@ import {
   getBestTitle,
   transformToHighRes,
 } from './accessibility-parser.js';
-import { waitForContentStable } from './diagnostics/index.js';
-import {
-  disconnect,
-  navigateTo,
-  scrollToLoadContent,
-  sleep,
-  takeSnapshot,
-} from './mcp-client.js';
+import { createBrowserClient } from './clients/index.js';
+import { waitForContentStable } from './utils.js';
+
+// Helper function for delay
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const CITY_IDS: Record<string, string> = {
   北京: 'Beijing1',
@@ -37,28 +37,32 @@ const CITY_IDS: Record<string, string> = {
 
 export async function crawlCtrip(
   city: string,
-  options: CrawlOptions = {}
+  options: CrawlOptions & { client?: BrowserClient } = {}
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxPages = options.maxPages || 5;
   const cityId = CITY_IDS[city] || city;
+  const client = options.client ?? createBrowserClient();
 
   console.log(`[Ctrip] Crawling guides for ${city} (${cityId})`);
 
   try {
+    // Initialize browser client
+    await client.init();
+
     for (let page = 1; page <= maxPages; page++) {
       try {
         const listUrl = `https://you.ctrip.com/travels/${cityId}/t3-p${page}.html`;
         console.log(`[Ctrip] Fetching page ${page}: ${listUrl}`);
 
-        const guideLinks = await fetchListPage(listUrl);
+        const guideLinks = await fetchListPage(listUrl, client);
         console.log(
           `[Ctrip] Found ${guideLinks.length} guides on page ${page}`
         );
 
         for (const guideUrl of guideLinks.slice(0, 10)) {
           try {
-            const guide = await fetchGuideDetail(guideUrl, city);
+            const guide = await fetchGuideDetail(guideUrl, city, client);
             if (guide) {
               results.push(guide);
             }
@@ -72,23 +76,29 @@ export async function crawlCtrip(
       }
     }
   } finally {
-    await disconnect();
-    console.log('[Ctrip] MCP client disconnected');
+    await client.close();
+    console.log('[Ctrip] Browser client closed');
   }
 
   return results;
 }
 
-async function fetchListPage(url: string): Promise<string[]> {
+async function fetchListPage(
+  url: string,
+  client: BrowserClient
+): Promise<string[]> {
   const guideLinks: string[] = [];
 
   try {
-    await navigateTo(url, { timeout: 30000 });
-    await waitForContentStable();
-    await scrollToLoadContent(2);
+    await client.navigateTo(url, { timeout: 30000 });
+    await waitForContentStable(client);
+    // Scroll multiple times to load content
+    await client.scroll('down');
+    await sleep(500);
+    await client.scroll('down');
     await sleep(1000);
 
-    const snapshot = await takeSnapshot();
+    const snapshot = await client.takeSnapshot();
     const content = snapshot.content;
 
     const linkMatches = content.matchAll(
@@ -113,15 +123,21 @@ async function fetchListPage(url: string): Promise<string[]> {
 
 async function fetchGuideDetail(
   url: string,
-  city: string
+  city: string,
+  client: BrowserClient
 ): Promise<CrawlResult | null> {
   try {
-    await navigateTo(url, { timeout: 30000 });
-    await waitForContentStable();
-    await scrollToLoadContent(3);
+    await client.navigateTo(url, { timeout: 30000 });
+    await waitForContentStable(client);
+    // Scroll multiple times to load content
+    await client.scroll('down');
+    await sleep(500);
+    await client.scroll('down');
+    await sleep(500);
+    await client.scroll('down');
     await sleep(1000);
 
-    const snapshot = await takeSnapshot({ verbose: true });
+    const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
     console.log(

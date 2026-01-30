@@ -13,6 +13,7 @@ import type { CrawlResult } from '../lib/crawlers/index.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { ConvexHttpClient } from 'convex/browser';
+// @ts-expect-error - Convex generated files may not exist during type checking
 import { api } from '../../../../convex/_generated/api.js';
 
 // Load environment variables
