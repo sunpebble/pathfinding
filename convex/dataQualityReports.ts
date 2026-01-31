@@ -120,7 +120,7 @@ export const getSummary = query({
  * Deletes reports older than 90 days
  */
 export const cleanupOld = internalMutation({
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ deletedCount: number }> => {
     const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
 
     // Find old reports

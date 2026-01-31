@@ -1,3 +1,5 @@
+import { serve } from '@hono/node-server';
+
 /**
  * AI Service Entry Point
  * Lightweight service for AI/LLM and external API integrations
@@ -13,17 +15,17 @@
  * - Flight information (Flight APIs)
  */
 
-import { serve } from '@hono/node-server';
-
 import { Hono } from 'hono';
+
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { checkConnection } from './lib/convex.js';
 import { agentRouter } from './routes/agent.js';
-
 import { aiRouter } from './routes/ai.js';
+
 import { crawlerRouter } from './routes/crawler.js';
 import { translationsRouter } from './routes/translations.js';
+import { transportRouter } from './routes/transport.js';
 
 import { weatherRouter } from './routes/weather.js';
 // Load environment variables FIRST, before any other imports
@@ -73,6 +75,7 @@ app.get('/', (c) => {
       crawler: '/api/crawler',
       weather: '/api/weather',
       translations: '/api/translations',
+      transport: '/api/transport',
     },
   });
 });
@@ -83,6 +86,7 @@ app.route('/api/agent', agentRouter);
 app.route('/api/crawler', crawlerRouter);
 app.route('/api/weather', weatherRouter);
 app.route('/api/translations', translationsRouter);
+app.route('/api/transport', transportRouter);
 
 // 404 handler
 app.notFound((c) => {

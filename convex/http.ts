@@ -607,8 +607,9 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
     const userId = url.searchParams.get('userId');
-    const page = Number.parseInt(url.searchParams.get('page') ?? '1');
-    const pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '20');
+    // Note: pagination not yet supported by listByUser
+    const _page = Number.parseInt(url.searchParams.get('page') ?? '1');
+    const _pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '20');
 
     if (!userId) {
       return new Response(JSON.stringify({ error: '缺少userId参数' }), {
@@ -620,8 +621,6 @@ http.route({
     try {
       const result = await ctx.runQuery(api.favoriteCollections.listByUser, {
         userId,
-        page,
-        pageSize,
       });
 
       return new Response(JSON.stringify(result), {
@@ -1090,7 +1089,7 @@ http.route({
       });
 
       const session = await ctx.runQuery(api.chat.getSession, {
-        sessionId,
+        id: sessionId,
       });
 
       return jsonResponse({ data: session }, 201);
@@ -1119,7 +1118,7 @@ http.route({
     }
 
     try {
-      const messages = await ctx.runQuery(api.chat.getMessages, {
+      const messages = await ctx.runQuery(api.chat.listMessages, {
         sessionId: sessionId as any,
         limit,
       });
@@ -1339,7 +1338,7 @@ http.route({
     }
 
     try {
-      const stats = await ctx.runQuery(api.userFollows.getStats, {
+      const stats = await ctx.runQuery(api.userFollows.getFollowStats, {
         userId,
       });
 
@@ -1375,7 +1374,7 @@ http.route({
     }
 
     try {
-      const result = await ctx.runQuery(api.poiQA.listQuestions, {
+      const result = await ctx.runQuery(api.poiQA.listQuestionsByPoi, {
         poiId: poiId as any,
         page,
         pageSize,
@@ -1442,7 +1441,7 @@ http.route({
     }
 
     try {
-      const result = await ctx.runQuery(api.poiQA.listAnswers, {
+      const result = await ctx.runQuery(api.poiQA.listAnswersByQuestion, {
         questionId: questionId as any,
         page,
         pageSize,
@@ -1507,12 +1506,17 @@ http.route({
     const visibility = url.searchParams.get('visibility') ?? 'public';
 
     try {
-      const result = await ctx.runQuery(api.travelNotes.list, {
-        userId: userId ?? undefined,
-        page,
-        pageSize,
-        visibility: visibility as any,
-      });
+      const result = userId
+        ? await ctx.runQuery(api.travelNotes.listByUser, {
+            userId,
+            page,
+            pageSize,
+            visibility: visibility as any,
+          })
+        : await ctx.runQuery(api.travelNotes.listPublic, {
+            page,
+            pageSize,
+          });
 
       return jsonResponse(result);
     } catch (error) {
@@ -1533,30 +1537,19 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const {
-        userId,
-        title,
-        content,
-        tags,
-        visibility,
-        coverImageUrl,
-        imageUrls,
-        destination,
-      } = body;
+      const { userId, title, content, visibility, destination } = body;
 
       if (!userId || !title || !content) {
         return errorResponse('缺少必要参数', 400);
       }
 
       const noteId = await ctx.runMutation(api.travelNotes.create, {
-        userId,
+        authorId: userId,
         title,
         content,
-        tags,
         visibility: visibility ?? 'public',
-        coverImageUrl,
-        imageUrls,
-        destination,
+        location: destination,
+        travelDate: undefined,
       });
 
       return jsonResponse({ id: noteId }, 201);
@@ -1588,7 +1581,7 @@ http.route({
     }
 
     try {
-      const budget = await ctx.runQuery(api.budgets.getByItinerary, {
+      const budget = await ctx.runQuery(api.budgets.getBudget, {
         itineraryId: itineraryId as any,
       });
 
@@ -1611,17 +1604,19 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { itineraryId, totalBudget, currency, categories } = body;
+      const { itineraryId, userId, totalBudget, currency, categoryBudgets } =
+        body;
 
-      if (!itineraryId || totalBudget === undefined) {
+      if (!itineraryId || totalBudget === undefined || !userId) {
         return errorResponse('缺少必要参数', 400);
       }
 
-      const budgetId = await ctx.runMutation(api.budgets.upsert, {
+      const budgetId = await ctx.runMutation(api.budgets.upsertBudget, {
         itineraryId: itineraryId as any,
+        userId,
         totalBudget,
         currency: currency ?? 'CNY',
-        categories,
+        categoryBudgets: categoryBudgets ?? [],
       });
 
       return jsonResponse({ id: budgetId }, 201);
@@ -1643,8 +1638,9 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
     const itineraryId = url.searchParams.get('itineraryId');
-    const page = Number.parseInt(url.searchParams.get('page') ?? '1');
-    const pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '50');
+    // Note: pagination not yet supported by listExpenses
+    const _page = Number.parseInt(url.searchParams.get('page') ?? '1');
+    const _pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '50');
 
     if (!itineraryId) {
       return errorResponse('缺少itineraryId参数', 400);
@@ -1653,8 +1649,6 @@ http.route({
     try {
       const result = await ctx.runQuery(api.budgets.listExpenses, {
         itineraryId: itineraryId as any,
-        page,
-        pageSize,
       });
 
       return jsonResponse(result);
@@ -1683,12 +1677,13 @@ http.route({
         return errorResponse('缺少必要参数', 400);
       }
 
-      const expenseId = await ctx.runMutation(api.budgets.addExpense, {
+      const expenseId = await ctx.runMutation(api.budgets.createExpense, {
         itineraryId: itineraryId as any,
+        userId: '',
+        categoryId: category as any,
         amount,
-        category,
-        description,
-        date,
+        description: description ?? '',
+        date: date ?? new Date().toISOString().split('T')[0],
         currency: currency ?? 'CNY',
       });
 
@@ -1724,7 +1719,7 @@ http.route({
     }
 
     try {
-      const result = await ctx.runQuery(api.notifications.list, {
+      const result = await ctx.runQuery(api.notifications.listByUser, {
         userId,
         page,
         pageSize,
@@ -1750,14 +1745,14 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { notificationIds, userId } = body;
+      const { notificationId, userId } = body;
 
-      if (!userId) {
-        return errorResponse('缺少userId参数', 400);
+      if (!userId || !notificationId) {
+        return errorResponse('缺少userId或notificationId参数', 400);
       }
 
-      await ctx.runMutation(api.notifications.markAsRead, {
-        notificationIds,
+      await ctx.runMutation(api.notifications.markRead, {
+        id: notificationId as any,
         userId,
       });
 
@@ -1816,15 +1811,15 @@ http.route({
     const cityId = url.searchParams.get('cityId');
     const category = url.searchParams.get('category');
     const limit = Number.parseInt(url.searchParams.get('limit') ?? '20');
-    const offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
+    // Note: offset not yet supported by pois.search
+    const _offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
 
     try {
       const result = await ctx.runQuery(api.pois.search, {
-        query: query ?? undefined,
+        query: query ?? '',
         cityId: cityId as any,
         category: category as any,
         limit,
-        offset,
       });
 
       return jsonResponse(result);
@@ -1859,7 +1854,7 @@ http.route({
       const result = await ctx.runMutation(api.shareEvents.createShareLink, {
         resourceType,
         resourceId,
-        userId,
+        ownerId: userId ?? '',
         platform,
       });
 
@@ -1882,7 +1877,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { shareCode, eventType, metadata } = body;
+      const { shareCode, eventType } = body;
 
       if (!shareCode || !eventType) {
         return errorResponse('缺少必要参数', 400);
@@ -1891,7 +1886,6 @@ http.route({
       await ctx.runMutation(api.shareEvents.trackEvent, {
         shareCode,
         eventType,
-        metadata,
       });
 
       return jsonResponse({ success: true });
@@ -1914,13 +1908,16 @@ http.route({
     const url = new URL(request.url);
     const resourceId = url.searchParams.get('resourceId');
 
-    if (!resourceId) {
-      return errorResponse('缺少resourceId参数', 400);
+    const resourceType = url.searchParams.get('resourceType');
+
+    if (!resourceId || !resourceType) {
+      return errorResponse('缺少resourceId或resourceType参数', 400);
     }
 
     try {
       const stats = await ctx.runQuery(api.shareEvents.getStats, {
         resourceId,
+        resourceType: resourceType as any,
       });
 
       return jsonResponse(stats);

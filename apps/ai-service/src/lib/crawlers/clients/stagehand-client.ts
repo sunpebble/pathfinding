@@ -56,7 +56,6 @@ export class StagehandBrowserClient implements BrowserClient {
   private networkRequests: Map<string, NetworkRequest> = new Map();
   private capturePatterns: string[] = [];
   private networkCaptureEnabled = false;
-  private requestIdCounter = 0;
 
   /**
    * Initialize the browser session with Stagehand
@@ -73,10 +72,14 @@ export class StagehandBrowserClient implements BrowserClient {
           : 'BROWSERBASE';
 
     // Create custom OpenAI client for Stagehand
+    if (!process.env.STAGEHAND_API_KEY) {
+      throw new Error(
+        'STAGEHAND_API_KEY environment variable is required for Stagehand client'
+      );
+    }
+
     const openaiClient = new OpenAI({
-      apiKey:
-        process.env.STAGEHAND_API_KEY ||
-        'sk-MA9i6azytz7hU0mo0jgSfPDGNcnyvfm1kuhuRS8IakKdin5g',
+      apiKey: process.env.STAGEHAND_API_KEY,
       baseURL:
         process.env.STAGEHAND_BASE_URL || 'https://new-api.kunish.org/v1',
     });
@@ -241,7 +244,8 @@ export class StagehandBrowserClient implements BrowserClient {
    */
   async extract<T>(instruction: string, schema: z.ZodSchema<T>): Promise<T> {
     this.ensureInitialized();
-    const result = await this.stagehand!.extract(instruction, schema);
+    // Use type assertion to handle Zod v3/v4 compatibility with Stagehand
+    const result = await this.stagehand!.extract(instruction, schema as any);
     return result as T;
   }
 
@@ -295,7 +299,7 @@ export class StagehandBrowserClient implements BrowserClient {
     }
     // Stagehand's locator doesn't have waitFor, use a simple delay approach
     // or rely on act() to handle waiting
-    await page.locator(selector);
+    page.locator(selector);
   }
 
   /**
@@ -345,19 +349,5 @@ export class StagehandBrowserClient implements BrowserClient {
         'StagehandBrowserClient not initialized. Call init() first.'
       );
     }
-  }
-
-  /**
-   * Check if a URL matches the capture patterns
-   */
-  private shouldCaptureRequest(url: string): boolean {
-    if (this.capturePatterns.length === 0) return true;
-
-    return this.capturePatterns.some((pattern) => {
-      const regex = new RegExp(
-        pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*')
-      );
-      return regex.test(url);
-    });
   }
 }
