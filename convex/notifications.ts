@@ -1,5 +1,4 @@
-/* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
+import type { Doc } from './_generated/dataModel';
 import { ConvexError, v } from 'convex/values';
 import {
   notificationDataValidator,
@@ -764,13 +763,18 @@ export const sendPendingReminders = internalMutation({
         // Create the actual notification
         await ctx.db.insert('notifications', {
           userId: scheduled.userId,
-          type: scheduled.type as any,
+          type: scheduled.type as Doc<'notifications'>['type'],
           title: scheduled.title,
           body: scheduled.body,
-          referenceType: scheduled.referenceType as any,
-          referenceId: scheduled.referenceId,
+          referenceType: (scheduled.referenceType
+            ?? 'itinerary') as Doc<'notifications'>['referenceType'],
+          referenceId: scheduled.referenceId ?? '',
+          message: scheduled.body,
           isRead: false,
-          priority: scheduled.priority as any,
+          priority: (scheduled.priority ?? 'normal') as
+          | 'low'
+          | 'normal'
+          | 'high',
           createdAt: now,
         });
 

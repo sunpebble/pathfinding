@@ -652,7 +652,13 @@ async function calculateMatchScore(
   // Travel style match
   if (request.travelStyles && applicantPrefs?.travelStyles) {
     const matchingStyles = request.travelStyles.filter(style =>
-      applicantPrefs.travelStyles!.includes(style as any),
+      applicantPrefs.travelStyles!.includes(
+        style as typeof applicantPrefs.travelStyles extends
+        | (infer T)[]
+        | undefined
+          ? T
+          : never,
+      ),
     );
     factors.styleMatch = Math.round(
       (matchingStyles.length
@@ -1206,7 +1212,7 @@ async function updateTrustScore(ctx: MutationCtx, userId: string) {
       cancelledMatches: cancelledMatches.length,
       averageRating: averageRating > 0 ? averageRating : undefined,
       totalRatings: ratings.length,
-      badges: badges as any,
+      badges: badges as ('verified_identity' | 'experienced' | 'top_rated' | 'trusted_traveler')[],
       lastCalculatedAt: now,
       updatedAt: now,
     });
@@ -1224,7 +1230,7 @@ async function updateTrustScore(ctx: MutationCtx, userId: string) {
       cancelledMatches: cancelledMatches.length,
       averageRating: averageRating > 0 ? averageRating : undefined,
       totalRatings: ratings.length,
-      badges: badges as any,
+      badges: badges as ('verified_identity' | 'experienced' | 'top_rated' | 'trusted_traveler')[],
       lastCalculatedAt: now,
       createdAt: now,
       updatedAt: now,

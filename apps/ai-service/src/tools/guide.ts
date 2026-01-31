@@ -8,10 +8,35 @@ import { z } from 'zod';
 
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 
+interface GuideDay {
+  pois?: unknown[];
+}
+
+interface Guide {
+  _id: string;
+  title?: string;
+  destinations?: string[];
+  content?: string;
+  aiSummary?: string;
+  aiTips?: string;
+  aiBestTime?: string;
+  aiDuration?: string;
+  aiBudget?: string;
+  aiDays?: GuideDay[];
+}
+
+interface GuideSearchResult {
+  _id: string;
+  title?: string;
+  destinations?: string[];
+  aiSummary?: string;
+  qualityScore?: number;
+}
+
 /**
  * Fetch guide detail from Convex HTTP API
  */
-async function fetchGuide(guideId: string): Promise<any> {
+async function fetchGuide(guideId: string): Promise<Guide> {
   const url = `${CONVEX_URL}/api/guides/${guideId}`;
 
   const response = await fetch(url, {
@@ -52,7 +77,7 @@ export const guideDetailTool = tool(
           daysCount: guide.aiDays?.length || 0,
           poisCount:
             guide.aiDays?.reduce(
-              (acc: number, day: any) => acc + (day.pois?.length || 0),
+              (acc: number, day: GuideDay) => acc + (day.pois?.length || 0),
               0,
             ) || 0,
         },
@@ -96,7 +121,7 @@ export const searchGuidesTool = tool(
       return JSON.stringify({
         success: true,
         count: guides.length,
-        guides: guides.map((g: any) => ({
+        guides: guides.map((g: GuideSearchResult) => ({
           id: g._id,
           title: g.title,
           destinations: g.destinations,

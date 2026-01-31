@@ -1,4 +1,6 @@
-import type { z } from 'zod';
+import type { Page as StagehandPage } from '@browserbasehq/stagehand';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import type { z, ZodSchema } from 'zod';
 import type {
   BrowserClient,
   NetworkRequest,
@@ -11,11 +13,19 @@ import { createLogger } from '../../logger.js';
 
 const log = createLogger('stagehand-client');
 
+interface OpenAICompatibleClient {
+  createChatCompletion: (params: {
+    messages: Array<{ role: string; content: string }>;
+    temperature?: number;
+    max_tokens?: number;
+  }) => Promise<OpenAI.Chat.Completions.ChatCompletion>;
+}
+
 /**
  * Custom OpenAI-compatible LLM client for Stagehand
  * Supports any OpenAI-compatible API endpoint
  */
-class CustomOpenAIClient {
+class CustomOpenAIClient implements OpenAICompatibleClient {
   private client: OpenAI;
   public modelName: string;
 
@@ -31,7 +41,7 @@ class CustomOpenAIClient {
   }) {
     const response = await this.client.chat.completions.create({
       model: this.modelName,
-      messages: params.messages as any,
+      messages: params.messages as ChatCompletionMessageParam[],
       temperature: params.temperature,
       max_tokens: params.max_tokens,
     });
@@ -93,9 +103,12 @@ export class StagehandBrowserClient implements BrowserClient {
     });
 
     // Initialize Stagehand with custom LLM client
+    // Cast through unknown since CustomOpenAIClient is duck-type compatible but not structurally identical
     this.stagehand = new Stagehand({
       env,
-      llmClient: llmClient as any,
+      llmClient: llmClient as unknown as ConstructorParameters<
+        typeof Stagehand
+      >[0]['llmClient'],
       // Apply headless and viewport to local browser launch options
       ...(env === 'LOCAL' && {
         localBrowserLaunchOptions: {
@@ -160,7 +173,10 @@ export class StagehandBrowserClient implements BrowserClient {
     const url = page.url();
 
     if (options?.verbose) {
-      log.warn({ url, treeLength: snapshot.formattedTree.length }, 'Snapshot taken');
+      log.warn(
+        { url, treeLength: snapshot.formattedTree.length },
+        'Snapshot taken',
+      );
     }
 
     return {
@@ -246,8 +262,11 @@ export class StagehandBrowserClient implements BrowserClient {
    */
   async extract<T>(instruction: string, schema: z.ZodSchema<T>): Promise<T> {
     this.ensureInitialized();
-    // Use type assertion to handle Zod v3/v4 compatibility with Stagehand
-    const result = await this.stagehand!.extract(instruction, schema as any);
+    // Cast through unknown for Zod v3/v4 compatibility with Stagehand's expected schema type
+    const result = await this.stagehand!.extract(
+      instruction,
+      schema as unknown as ZodSchema,
+    );
     return result as T;
   }
 
@@ -333,7 +352,7 @@ export class StagehandBrowserClient implements BrowserClient {
    * Get direct access to the underlying page
    * Useful for advanced scenarios not covered by the interface
    */
-  getPage(): any {
+  getPage(): StagehandPage {
     this.ensureInitialized();
     const page = this.stagehand!.context.activePage();
     if (!page) {

@@ -5,6 +5,7 @@
  */
 
 import type { Id } from '@pathfinding/convex/dataModel';
+import type { FunctionArgs } from 'convex/server';
 import type { CrawlResult } from '../lib/crawlers/index.js';
 import { api } from '@pathfinding/convex/api';
 import { Hono } from 'hono';
@@ -12,6 +13,22 @@ import { cleanContentWithLLM } from '../lib/content-cleaner.js';
 import { convex } from '../lib/convex.js';
 import { crawlPlatform } from '../lib/crawlers/index.js';
 import { loggers } from '../lib/logger.js';
+
+interface CrawlJobConfig {
+  geographic_scope?: {
+    cities?: string[];
+  };
+  max_pages?: number;
+  rate_limit?: {
+    requests_per_second?: number;
+  };
+}
+
+interface CrawlJob {
+  _id: Id<'crawlJobs'>;
+  platform: string;
+  config?: CrawlJobConfig;
+}
 
 export const crawlerRouter = new Hono();
 
@@ -312,7 +329,10 @@ crawlerRouter.post('/process', async (c) => {
         upsertArgs.aiSummary = cleaned.summary;
       }
 
-      await convex.mutation(api.travelGuides.upsert, upsertArgs as any);
+      await convex.mutation(
+        api.travelGuides.upsert,
+        upsertArgs as FunctionArgs<typeof api.travelGuides.upsert>,
+      );
       results.saved++;
       results.details.push({
         id: guide.sourceExternalId,
@@ -438,7 +458,7 @@ crawlerRouter.post('/cancel/:jobId', async (c) => {
  * Execute a crawl job asynchronously
  * Now includes LLM-based content cleaning
  */
-async function executeJob(jobId: string, job: any) {
+async function executeJob(jobId: string, job: CrawlJob) {
   const startTime = Date.now();
   const statistics = {
     requests_total: 0,
@@ -557,7 +577,10 @@ async function executeJob(jobId: string, job: any) {
           upsertArgs.aiSummary = cleaned.summary;
         }
 
-        await convex.mutation(api.travelGuides.upsert, upsertArgs as any);
+        await convex.mutation(
+          api.travelGuides.upsert,
+          upsertArgs as FunctionArgs<typeof api.travelGuides.upsert>,
+        );
       }
       catch (error) {
         loggers.crawler.error({ error }, '[Crawler] Error saving guide');

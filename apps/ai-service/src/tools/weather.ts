@@ -9,11 +9,37 @@ import { z } from 'zod';
 const OPENWEATHERMAP_API_KEY = process.env.OPENWEATHERMAP_API_KEY || '';
 const OPENWEATHERMAP_BASE_URL = 'https://api.openweathermap.org/data/3.0';
 
+interface DailyForecast {
+  dt: number;
+  temp: { min: number; max: number };
+  humidity?: number;
+  wind_speed?: number;
+  weather?: Array<{ description?: string }>;
+  pop?: number;
+}
+
+interface CurrentWeather {
+  temp: number;
+  feels_like?: number;
+  humidity?: number;
+  wind_speed?: number;
+  weather?: Array<{ description?: string }>;
+}
+
+interface WeatherData {
+  current?: CurrentWeather;
+  daily?: DailyForecast[];
+  cached?: boolean;
+}
+
 // In-memory cache (shared with routes)
-const weatherCache = new Map<string, { data: any; timestamp: number }>();
+const weatherCache = new Map<
+  string,
+  { data: WeatherData; timestamp: number }
+>();
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-async function fetchWeather(lat: number, lon: number): Promise<any> {
+async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
   if (!OPENWEATHERMAP_API_KEY) {
     throw new Error('OpenWeatherMap API key not configured');
   }
@@ -52,7 +78,7 @@ export const weatherQueryTool = tool(
       // If date is provided, find the specific day's forecast
       if (date) {
         const targetDate = new Date(date).toDateString();
-        const dailyForecast = forecast.daily?.find((day: any) => {
+        const dailyForecast = forecast.daily?.find((day: DailyForecast) => {
           const dayDate = new Date(day.dt * 1000).toDateString();
           return dayDate === targetDate;
         });
@@ -72,18 +98,25 @@ export const weatherQueryTool = tool(
 
       // Return current weather if no date or date not found
       const current = forecast.current;
+      if (!current) {
+        return JSON.stringify({
+          error: 'Current weather data unavailable',
+        });
+      }
       return JSON.stringify({
         temp: current.temp,
         feels_like: current.feels_like,
         description: current.weather?.[0]?.description || '未知',
         humidity: current.humidity,
         wind_speed: current.wind_speed,
-        daily_forecast: (forecast.daily || []).slice(0, 5).map((day: any) => ({
-          date: new Date(day.dt * 1000).toLocaleDateString('zh-CN'),
-          temp_min: day.temp.min,
-          temp_max: day.temp.max,
-          description: day.weather?.[0]?.description || '未知',
-        })),
+        daily_forecast: (forecast.daily || [])
+          .slice(0, 5)
+          .map((day: DailyForecast) => ({
+            date: new Date(day.dt * 1000).toLocaleDateString('zh-CN'),
+            temp_min: day.temp.min,
+            temp_max: day.temp.max,
+            description: day.weather?.[0]?.description || '未知',
+          })),
       });
     }
     catch (error) {

@@ -52,7 +52,12 @@ function waitForEnter(prompt: string): Promise<void> {
   });
 }
 
-async function isLoggedIn(client: any, platform: string): Promise<boolean> {
+async function isLoggedIn(
+  client: {
+    navigateTo: (url: string, opts?: { timeout: number }) => Promise<void>;
+  },
+  platform: string,
+): Promise<boolean> {
   try {
     const result = await checkSession(client, platform as Platform);
     return result.isValid;
@@ -62,7 +67,12 @@ async function isLoggedIn(client: any, platform: string): Promise<boolean> {
   }
 }
 
-async function loginToPlatform(client: any, platform: string): Promise<void> {
+async function loginToPlatform(
+  client: {
+    navigateTo: (url: string, opts?: { timeout: number }) => Promise<void>;
+  },
+  platform: string,
+): Promise<void> {
   const config = PLATFORM_URLS[platform];
   if (!config) {
     console.error(`Unknown platform: ${platform}`);

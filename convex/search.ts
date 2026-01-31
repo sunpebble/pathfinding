@@ -1,5 +1,4 @@
-/* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
+import type { Doc } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -34,7 +33,12 @@ export const globalSearch = query({
       id: string;
       type: 'poi' | 'itinerary' | 'guide' | 'user';
       score: number;
-      data: any;
+      data:
+        | Doc<'pois'>
+        | Doc<'itineraries'>
+        | Doc<'travelGuides'>
+        | Doc<'profiles'>
+        | Record<string, unknown>;
     }> = [];
 
     // Search POIs

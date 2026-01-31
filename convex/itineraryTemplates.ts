@@ -127,7 +127,11 @@ export const listPublicTemplates = query({
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
     sortBy: v.optional(
-      v.union(v.literal('popular'), v.literal('newest'), v.literal('most_used')),
+      v.union(
+        v.literal('popular'),
+        v.literal('newest'),
+        v.literal('most_used'),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -521,11 +525,11 @@ export const updateTemplate = mutation({
 
     // Handle visibility change
     if (updates.visibility === 'public' && template.visibility !== 'public') {
-      (filteredUpdates as any).isPublished = true;
-      (filteredUpdates as any).publishedAt = Date.now();
+      (filteredUpdates as Record<string, unknown>).isPublished = true;
+      (filteredUpdates as Record<string, unknown>).publishedAt = Date.now();
     }
     else if (updates.visibility !== 'public') {
-      (filteredUpdates as any).isPublished = false;
+      (filteredUpdates as Record<string, unknown>).isPublished = false;
     }
 
     await ctx.db.patch(id, {
@@ -811,7 +815,13 @@ export const saveItineraryAsTemplate = mutation({
             const poi = await ctx.db.get(item.poiId as Id<'pois'>);
             return {
               name: poi?.name ?? 'Unknown',
-              type: (poi?.category as any) ?? 'attraction',
+              type: (poi?.category ?? 'attraction') as
+              | 'attraction'
+              | 'restaurant'
+              | 'hotel'
+              | 'transportation'
+              | 'activity'
+              | 'shopping',
               description: item.notes,
               suggestedDuration:
                 item.startTime && item.endTime

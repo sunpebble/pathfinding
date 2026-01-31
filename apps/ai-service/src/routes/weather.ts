@@ -11,14 +11,46 @@ export const weatherRouter = new Hono();
 const OPENWEATHERMAP_API_KEY = process.env.OPENWEATHERMAP_API_KEY || '';
 const OPENWEATHERMAP_BASE_URL = 'https://api.openweathermap.org/data/3.0';
 
+interface WeatherAlert {
+  severity: string;
+  event?: string;
+  description?: string;
+}
+
+interface DailyForecast {
+  dt: number;
+  temp: { min: number; max: number };
+  humidity?: number;
+  wind_speed?: number;
+  weather?: Array<{ description?: string }>;
+  pop?: number;
+}
+
+interface CurrentWeather {
+  temp: number;
+  humidity?: number;
+  wind_speed?: number;
+  weather?: Array<{ description?: string }>;
+}
+
+interface WeatherData {
+  current?: CurrentWeather;
+  daily?: DailyForecast[];
+  alerts?: WeatherAlert[];
+  cached?: boolean;
+}
+
 // In-memory cache
-const weatherCache = new Map<string, { data: any; timestamp: number }>();
+const weatherCache = new Map<
+  string,
+  { data: WeatherData; timestamp: number }
+>();
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Get weather from OpenWeatherMap
  */
-async function fetchWeather(lat: number, lon: number): Promise<any> {
+async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
   if (!OPENWEATHERMAP_API_KEY) {
     throw new Error('OpenWeatherMap API key not configured');
   }
@@ -125,7 +157,8 @@ weatherRouter.get('/alerts', async (c) => {
         alerts,
         count: alerts.length,
         has_severe: alerts.some(
-          (a: any) => a.severity === 'severe' || a.severity === 'extreme',
+          (a: WeatherAlert) =>
+            a.severity === 'severe' || a.severity === 'extreme',
         ),
       },
     });

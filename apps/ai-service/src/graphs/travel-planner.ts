@@ -5,12 +5,12 @@
  * Flow: parse_intent → gather_info → generate_draft → human_review (interrupt) → refine → add_transport → END
  */
 
-import type { BaseMessage } from '@langchain/core/messages';
+import type { BaseMessage } from "@langchain/core/messages";
 import {
   AIMessage,
   HumanMessage,
   SystemMessage,
-} from '@langchain/core/messages';
+} from "@langchain/core/messages";
 import {
   Annotation,
   Command,
@@ -19,11 +19,53 @@ import {
   MemorySaver,
   START,
   StateGraph,
-} from '@langchain/langgraph';
-import { ToolNode } from '@langchain/langgraph/prebuilt';
-import { createLLM } from '../lib/llm/index.js';
-import { loggers } from '../lib/logger.js';
-import { toolsByUseCase } from '../tools/index.js';
+} from "@langchain/langgraph";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { createLLM } from "../lib/llm/index.js";
+import { loggers } from "../lib/logger.js";
+import { toolsByUseCase } from "../tools/index.js";
+
+// Type definitions for travel planning
+interface WeatherInfo {
+  temperature?: number;
+  description?: string;
+  forecast?: unknown[];
+}
+
+interface TravelGuide {
+  title: string;
+  aiSummary?: string;
+}
+
+interface RecommendedPoi {
+  name: string;
+  type?: string;
+}
+
+interface TravelActivity {
+  time?: string;
+  name: string;
+  type?: string;
+  duration?: string;
+  description?: string;
+  tips?: string;
+  transportToNext?: { mode: string; note: string };
+}
+
+interface TravelDay {
+  dayNumber: number;
+  theme?: string;
+  activities?: TravelActivity[];
+}
+
+interface TravelPlan {
+  title?: string;
+  summary?: string;
+  days?: TravelDay[];
+  estimatedBudget?: string;
+  packingList?: string[];
+  tips?: string[];
+}
 
 // Travel plan state annotation
 const TravelPlanState = Annotation.Root({
@@ -50,29 +92,29 @@ const TravelPlanState = Annotation.Root({
   travelersCount: Annotation<number | undefined>,
 
   // Gathered information
-  weatherInfo: Annotation<any | undefined>,
-  relatedGuides: Annotation<any[]>({
+  weatherInfo: Annotation<WeatherInfo | undefined>,
+  relatedGuides: Annotation<TravelGuide[]>({
     reducer: (_, b) => b,
     default: () => [],
   }),
-  recommendedPois: Annotation<any[]>({
+  recommendedPois: Annotation<RecommendedPoi[]>({
     reducer: (_, b) => b,
     default: () => [],
   }),
 
   // Generated plan
-  draftPlan: Annotation<any | undefined>,
-  refinedPlan: Annotation<any | undefined>,
-  finalPlan: Annotation<any | undefined>,
+  draftPlan: Annotation<TravelPlan | undefined>,
+  refinedPlan: Annotation<TravelPlan | undefined>,
+  finalPlan: Annotation<TravelPlan | undefined>,
 
   // Human feedback
   humanFeedback: Annotation<string | undefined>,
-  feedbackAction: Annotation<'approve' | 'modify' | 'reject' | undefined>,
+  feedbackAction: Annotation<"approve" | "modify" | "reject" | undefined>,
 
   // Status
   currentStep: Annotation<string>({
     reducer: (_, b) => b,
-    default: () => 'init',
+    default: () => "init",
   }),
   error: Annotation<string | undefined>,
 });
@@ -103,9 +145,9 @@ async function parseIntent(
   const llm = createLLM({ temperature: 0.3 });
 
   // Get the initial user message
-  const userMessage = state.messages.find(m => m instanceof HumanMessage);
+  const userMessage = state.messages.find((m) => m instanceof HumanMessage);
   if (!userMessage) {
-    return { error: 'No user message found', currentStep: 'error' };
+    return { error: "No user message found", currentStep: "error" };
   }
 
   const prompt = `分析以下旅行规划请求，提取关键信息，返回JSON格式：
@@ -127,8 +169,8 @@ JSON:`;
 
   try {
     const response = await llm.invoke(prompt);
-    const responseText
-      = typeof response.content === 'string'
+    const responseText =
+      typeof response.content === "string"
         ? response.content
         : JSON.stringify(response.content);
 
@@ -143,16 +185,15 @@ JSON:`;
         budget: parsed.budget,
         preferences: parsed.preferences || [],
         travelersCount: parsed.travelersCount,
-        currentStep: 'intent_parsed',
+        currentStep: "intent_parsed",
       };
     }
 
-    return { currentStep: 'intent_parsed' };
-  }
-  catch (error) {
+    return { currentStep: "intent_parsed" };
+  } catch (error) {
     return {
-      error: `Intent parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      currentStep: 'error',
+      error: `Intent parsing failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      currentStep: "error",
     };
   }
 }
@@ -161,8 +202,8 @@ JSON:`;
  * Check if tool calling is supported
  */
 function isToolCallingSupported(): boolean {
-  const provider = process.env.LLM_PROVIDER || 'ollama';
-  return provider === 'openai' || provider === 'claude';
+  const provider = process.env.LLM_PROVIDER || "ollama";
+  return provider === "openai" || provider === "claude";
 }
 
 /**
@@ -172,20 +213,21 @@ function isToolCallingSupported(): boolean {
 async function gatherInfo(
   state: TravelPlanStateType,
 ): Promise<Partial<TravelPlanStateType>> {
-  const destination = state.destination || '未知目的地';
+  const destination = state.destination || "未知目的地";
 
   // If tool calling is not supported, skip tool-based gathering
   if (!isToolCallingSupported()) {
     loggers.langgraph.info(
-      'Tool calling not supported, skipping gatherInfo tools',
+      "Tool calling not supported, skipping gatherInfo tools",
     );
-    return { currentStep: 'info_gathered' };
+    return { currentStep: "info_gathered" };
   }
 
   const tools = toolsByUseCase.travelPlanning;
   const llm = createLLM({ temperature: 0.5 });
 
-  const llmWithTools: any = (llm as any).bindTools(tools);
+  // eslint-disable-next-line ts/no-explicit-any -- LangChain bindTools returns dynamic Runnable type
+  const llmWithTools = (llm as any).bindTools(tools);
 
   // Create a message to trigger tool calls
   const gatherPrompt = `我需要为用户规划去${destination}的旅行。
@@ -198,7 +240,7 @@ async function gatherInfo(
   try {
     const response = await llmWithTools.invoke([
       new SystemMessage(
-        '你是一个旅行信息收集助手。请使用工具获取旅行相关信息。',
+        "你是一个旅行信息收集助手。请使用工具获取旅行相关信息。",
       ),
       new HumanMessage(gatherPrompt),
     ]);
@@ -211,8 +253,8 @@ async function gatherInfo(
       });
 
       // Parse tool results
-      const guides: any[] = [];
-      const pois: any[] = [];
+      const guides: TravelGuide[] = [];
+      const pois: RecommendedPoi[] = [];
 
       for (const result of toolResults.messages || []) {
         try {
@@ -223,8 +265,7 @@ async function gatherInfo(
           if (data.pois) {
             pois.push(...data.pois);
           }
-        }
-        catch {
+        } catch {
           // Ignore parse errors
         }
       }
@@ -232,15 +273,14 @@ async function gatherInfo(
       return {
         relatedGuides: guides,
         recommendedPois: pois,
-        currentStep: 'info_gathered',
+        currentStep: "info_gathered",
       };
     }
 
-    return { currentStep: 'info_gathered' };
-  }
-  catch (error) {
-    loggers.langgraph.error({ error }, 'Gather info error');
-    return { currentStep: 'info_gathered' }; // Continue even if gathering fails
+    return { currentStep: "info_gathered" };
+  } catch (error) {
+    loggers.langgraph.error({ error }, "Gather info error");
+    return { currentStep: "info_gathered" }; // Continue even if gathering fails
   }
 }
 
@@ -252,23 +292,23 @@ async function generateDraft(
 ): Promise<Partial<TravelPlanStateType>> {
   const llm = createLLM({ temperature: 0.7 });
 
-  const destination = state.destination || '未知目的地';
+  const destination = state.destination || "未知目的地";
   const duration = state.duration || 3;
-  const budget = state.budget || '中等预算';
+  const budget = state.budget || "中等预算";
   const preferences = state.preferences.length
-    ? state.preferences.join('、')
-    : '无特殊偏好';
+    ? state.preferences.join("、")
+    : "无特殊偏好";
 
   // Prepare context from gathered info
   const guidesContext = state.relatedGuides
     .slice(0, 3)
-    .map(g => `- ${g.title}: ${g.aiSummary || ''}`)
-    .join('\n');
+    .map((g) => `- ${g.title}: ${g.aiSummary || ""}`)
+    .join("\n");
 
   const poisContext = state.recommendedPois
     .slice(0, 10)
-    .map(p => `- ${p.name} (${p.type || '景点'})`)
-    .join('\n');
+    .map((p) => `- ${p.name} (${p.type || "景点"})`)
+    .join("\n");
 
   const prompt = `${PLANNING_SYSTEM_PROMPT}
 
@@ -281,10 +321,10 @@ async function generateDraft(
 人数：${state.travelersCount || 2}人
 
 参考攻略：
-${guidesContext || '无'}
+${guidesContext || "无"}
 
 推荐地点：
-${poisContext || '无'}
+${poisContext || "无"}
 
 请生成JSON格式的行程规划：
 {
@@ -315,8 +355,8 @@ JSON:`;
 
   try {
     const response = await llm.invoke(prompt);
-    const responseText
-      = typeof response.content === 'string'
+    const responseText =
+      typeof response.content === "string"
         ? response.content
         : JSON.stringify(response.content);
 
@@ -325,28 +365,27 @@ JSON:`;
       const plan = JSON.parse(jsonMatch[0]);
       return {
         draftPlan: plan,
-        currentStep: 'draft_generated',
+        currentStep: "draft_generated",
         messages: [
           new AIMessage(
-            `我已经为您生成了${destination}${duration}天的行程草案：\n\n`
-            + `**${plan.title}**\n\n${plan.summary}\n\n`
-            + `行程包含${plan.days?.length || 0}天的详细安排。请查看后告诉我：\n`
-            + `- 如果满意，回复"确认"\n`
-            + `- 如果需要修改，请说明具体需求`,
+            `我已经为您生成了${destination}${duration}天的行程草案：\n\n` +
+              `**${plan.title}**\n\n${plan.summary}\n\n` +
+              `行程包含${plan.days?.length || 0}天的详细安排。请查看后告诉我：\n` +
+              `- 如果满意，回复"确认"\n` +
+              `- 如果需要修改，请说明具体需求`,
           ),
         ],
       };
     }
 
     return {
-      error: 'Failed to generate plan',
-      currentStep: 'error',
+      error: "Failed to generate plan",
+      currentStep: "error",
     };
-  }
-  catch (error) {
+  } catch (error) {
     return {
-      error: `Plan generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      currentStep: 'error',
+      error: `Plan generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      currentStep: "error",
     };
   }
 }
@@ -357,50 +396,51 @@ JSON:`;
 function humanReview(state: TravelPlanStateType): Partial<TravelPlanStateType> {
   // Use interrupt to pause and wait for human feedback
   const feedback = interrupt({
-    message: '请查看行程草案并提供反馈',
+    message: "请查看行程草案并提供反馈",
     plan: state.draftPlan,
-    options: ['approve', 'modify', 'reject'],
+    options: ["approve", "modify", "reject"],
   });
 
   // Parse feedback when resumed
-  if (typeof feedback === 'string') {
+  if (typeof feedback === "string") {
     const lowerFeedback = feedback.toLowerCase();
     if (
-      lowerFeedback.includes('确认')
-      || lowerFeedback.includes('approve')
-      || lowerFeedback.includes('好的')
-      || lowerFeedback.includes('可以')
+      lowerFeedback.includes("确认") ||
+      lowerFeedback.includes("approve") ||
+      lowerFeedback.includes("好的") ||
+      lowerFeedback.includes("可以")
     ) {
       return {
-        feedbackAction: 'approve',
+        feedbackAction: "approve",
         humanFeedback: feedback,
-        currentStep: 'approved',
+        currentStep: "approved",
       };
-    }
-    else if (
-      lowerFeedback.includes('取消')
-      || lowerFeedback.includes('reject')
-      || lowerFeedback.includes('不要')
+    } else if (
+      lowerFeedback.includes("取消") ||
+      lowerFeedback.includes("reject") ||
+      lowerFeedback.includes("不要")
     ) {
       return {
-        feedbackAction: 'reject',
+        feedbackAction: "reject",
         humanFeedback: feedback,
-        currentStep: 'rejected',
+        currentStep: "rejected",
       };
-    }
-    else {
+    } else {
       return {
-        feedbackAction: 'modify',
+        feedbackAction: "modify",
         humanFeedback: feedback,
-        currentStep: 'needs_refinement',
+        currentStep: "needs_refinement",
       };
     }
   }
 
+  const feedbackObj = feedback as
+    | { action?: "approve" | "modify" | "reject"; feedback?: string }
+    | undefined;
   return {
-    feedbackAction: (feedback as any)?.action || 'modify',
-    humanFeedback: (feedback as any)?.feedback || '',
-    currentStep: 'feedback_received',
+    feedbackAction: feedbackObj?.action || "modify",
+    humanFeedback: feedbackObj?.feedback || "",
+    currentStep: "feedback_received",
   };
 }
 
@@ -410,19 +450,19 @@ function humanReview(state: TravelPlanStateType): Partial<TravelPlanStateType> {
 async function refinePlan(
   state: TravelPlanStateType,
 ): Promise<Partial<TravelPlanStateType>> {
-  if (state.feedbackAction === 'approve') {
+  if (state.feedbackAction === "approve") {
     // No refinement needed
     return {
       refinedPlan: state.draftPlan,
-      currentStep: 'refined',
+      currentStep: "refined",
     };
   }
 
-  if (state.feedbackAction === 'reject') {
+  if (state.feedbackAction === "reject") {
     return {
-      currentStep: 'cancelled',
+      currentStep: "cancelled",
       messages: [
-        new AIMessage('好的，已取消行程规划。如需重新规划，请告诉我您的需求。'),
+        new AIMessage("好的，已取消行程规划。如需重新规划，请告诉我您的需求。"),
       ],
     };
   }
@@ -441,8 +481,8 @@ ${JSON.stringify(state.draftPlan, null, 2)}
 
   try {
     const response = await llm.invoke(prompt);
-    const responseText
-      = typeof response.content === 'string'
+    const responseText =
+      typeof response.content === "string"
         ? response.content
         : JSON.stringify(response.content);
 
@@ -451,7 +491,7 @@ ${JSON.stringify(state.draftPlan, null, 2)}
       const refined = JSON.parse(jsonMatch[0]);
       return {
         refinedPlan: refined,
-        currentStep: 'refined',
+        currentStep: "refined",
         messages: [
           new AIMessage(
             `我已根据您的反馈修改了行程。主要调整：\n${state.humanFeedback}\n\n请确认是否满意这个版本。`,
@@ -463,13 +503,12 @@ ${JSON.stringify(state.draftPlan, null, 2)}
     // If parsing fails, keep the draft
     return {
       refinedPlan: state.draftPlan,
-      currentStep: 'refined',
+      currentStep: "refined",
     };
-  }
-  catch {
+  } catch {
     return {
       refinedPlan: state.draftPlan,
-      currentStep: 'refined',
+      currentStep: "refined",
     };
   }
 }
@@ -484,7 +523,7 @@ async function addTransport(
   if (!plan || !plan.days) {
     return {
       finalPlan: plan,
-      currentStep: 'completed',
+      currentStep: "completed",
     };
   }
 
@@ -492,13 +531,15 @@ async function addTransport(
   // In production, would call route_planner tool for each pair of POIs
   const planWithTransport = {
     ...plan,
+    // eslint-disable-next-line ts/no-explicit-any -- Dynamic plan structure from LLM
     days: plan.days.map((day: any) => ({
       ...day,
+      // eslint-disable-next-line ts/no-explicit-any -- Dynamic activity structure
       activities: day.activities?.map((activity: any, idx: number) => ({
         ...activity,
         transportToNext:
           idx < (day.activities?.length || 0) - 1
-            ? { mode: 'walking', note: '步行前往下一地点' }
+            ? { mode: "walking", note: "步行前往下一地点" }
             : undefined,
       })),
     })),
@@ -506,11 +547,11 @@ async function addTransport(
 
   return {
     finalPlan: planWithTransport,
-    currentStep: 'completed',
+    currentStep: "completed",
     messages: [
       new AIMessage(
-        `您的${state.destination}${state.duration || 3}天行程已规划完成！\n\n`
-        + `行程包含详细的每日安排和交通建议。祝您旅途愉快！`,
+        `您的${state.destination}${state.duration || 3}天行程已规划完成！\n\n` +
+          `行程包含详细的每日安排和交通建议。祝您旅途愉快！`,
       ),
     ],
   };
@@ -521,14 +562,14 @@ async function addTransport(
  */
 function routeAfterReview(
   state: TravelPlanStateType,
-): 'refine' | 'add_transport' | '__end__' {
-  if (state.feedbackAction === 'reject') {
-    return '__end__';
+): "refine" | "add_transport" | "__end__" {
+  if (state.feedbackAction === "reject") {
+    return "__end__";
   }
-  if (state.feedbackAction === 'approve') {
-    return 'add_transport';
+  if (state.feedbackAction === "approve") {
+    return "add_transport";
   }
-  return 'refine';
+  return "refine";
 }
 
 /**
@@ -536,11 +577,11 @@ function routeAfterReview(
  */
 function routeAfterRefine(
   state: TravelPlanStateType,
-): 'add_transport' | '__end__' {
-  if (state.currentStep === 'cancelled') {
-    return '__end__';
+): "add_transport" | "__end__" {
+  if (state.currentStep === "cancelled") {
+    return "__end__";
   }
-  return 'add_transport';
+  return "add_transport";
 }
 
 /**
@@ -548,27 +589,27 @@ function routeAfterRefine(
  */
 export function buildTravelPlannerGraph() {
   const workflow = new StateGraph(TravelPlanState)
-    .addNode('parse_intent', parseIntent)
-    .addNode('gather_info', gatherInfo)
-    .addNode('generate_draft', generateDraft)
-    .addNode('human_review', humanReview)
-    .addNode('refine', refinePlan)
-    .addNode('add_transport', addTransport)
+    .addNode("parse_intent", parseIntent)
+    .addNode("gather_info", gatherInfo)
+    .addNode("generate_draft", generateDraft)
+    .addNode("human_review", humanReview)
+    .addNode("refine", refinePlan)
+    .addNode("add_transport", addTransport)
     // Edges
-    .addEdge(START, 'parse_intent')
-    .addEdge('parse_intent', 'gather_info')
-    .addEdge('gather_info', 'generate_draft')
-    .addEdge('generate_draft', 'human_review')
-    .addConditionalEdges('human_review', routeAfterReview, {
-      refine: 'refine',
-      add_transport: 'add_transport',
+    .addEdge(START, "parse_intent")
+    .addEdge("parse_intent", "gather_info")
+    .addEdge("gather_info", "generate_draft")
+    .addEdge("generate_draft", "human_review")
+    .addConditionalEdges("human_review", routeAfterReview, {
+      refine: "refine",
+      add_transport: "add_transport",
       __end__: END,
     })
-    .addConditionalEdges('refine', routeAfterRefine, {
-      add_transport: 'add_transport',
+    .addConditionalEdges("refine", routeAfterRefine, {
+      add_transport: "add_transport",
       __end__: END,
     })
-    .addEdge('add_transport', END);
+    .addEdge("add_transport", END);
 
   // Compile with checkpointer for state persistence
   const checkpointer = new MemorySaver();
@@ -599,7 +640,7 @@ export async function startPlanningSession(options: {
 }): Promise<{
   sessionId: string;
   response: string;
-  plan?: any;
+  plan?: TravelPlan;
   waitingForFeedback: boolean;
 }> {
   const planner = getTravelPlanner();
@@ -623,21 +664,20 @@ export async function startPlanningSession(options: {
     // Check if we hit an interrupt
     const lastMessage = [...result.messages]
       .reverse()
-      .find(m => m instanceof AIMessage);
+      .find((m) => m instanceof AIMessage);
 
     return {
       sessionId: options.sessionId,
-      response: (lastMessage?.content as string) || '行程规划已启动，请稍候...',
+      response: (lastMessage?.content as string) || "行程规划已启动，请稍候...",
       plan: result.draftPlan,
-      waitingForFeedback: result.currentStep === 'draft_generated',
+      waitingForFeedback: result.currentStep === "draft_generated",
     };
-  }
-  catch (error) {
+  } catch (error) {
     // Check if it's an interrupt
-    if ((error as any)?.name === 'GraphInterrupt') {
+    if ((error as Error & { name?: string })?.name === "GraphInterrupt") {
       return {
         sessionId: options.sessionId,
-        response: '行程草案已生成，请查看并提供反馈。',
+        response: "行程草案已生成，请查看并提供反馈。",
         waitingForFeedback: true,
       };
     }
@@ -654,7 +694,7 @@ export async function resumePlanningSession(options: {
 }): Promise<{
   sessionId: string;
   response: string;
-  plan?: any;
+  plan?: TravelPlan;
   completed: boolean;
 }> {
   const planner = getTravelPlanner();
@@ -674,21 +714,20 @@ export async function resumePlanningSession(options: {
 
     const lastMessage = [...result.messages]
       .reverse()
-      .find(m => m instanceof AIMessage);
+      .find((m) => m instanceof AIMessage);
 
     return {
       sessionId: options.sessionId,
-      response: (lastMessage?.content as string) || '行程已更新。',
+      response: (lastMessage?.content as string) || "行程已更新。",
       plan: result.finalPlan || result.refinedPlan || result.draftPlan,
-      completed: result.currentStep === 'completed',
+      completed: result.currentStep === "completed",
     };
-  }
-  catch (error) {
+  } catch (error) {
     // Handle another interrupt (for iterative refinement)
-    if ((error as any)?.name === 'GraphInterrupt') {
+    if ((error as Error & { name?: string })?.name === "GraphInterrupt") {
       return {
         sessionId: options.sessionId,
-        response: '请继续提供您的反馈。',
+        response: "请继续提供您的反馈。",
         completed: false,
       };
     }

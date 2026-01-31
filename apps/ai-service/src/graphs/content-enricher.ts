@@ -12,6 +12,30 @@ import { loggers } from '../lib/logger.js';
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org';
 
+// Type definitions for POI and Day structures
+interface ExtractedPoi {
+  name: string;
+  type?: string;
+  description?: string;
+  address?: string;
+  duration?: string;
+  tips?: string;
+  dayNumber?: number;
+}
+
+interface GeocodedPoi extends ExtractedPoi {
+  latitude: number;
+  longitude: number;
+  geocodeConfidence: number;
+  geocodeSource: string;
+}
+
+interface DayPlan {
+  dayNumber: number;
+  theme?: string;
+  pois: Array<ExtractedPoi | GeocodedPoi>;
+}
+
 // State annotation for the enrichment pipeline
 const EnrichmentState = Annotation.Root({
   // Input
@@ -21,11 +45,11 @@ const EnrichmentState = Annotation.Root({
   destinations: Annotation<string[]>,
 
   // Extracted data
-  extractedPois: Annotation<any[]>({
+  extractedPois: Annotation<ExtractedPoi[]>({
     reducer: (_, b) => b,
     default: () => [],
   }),
-  geocodedPois: Annotation<any[]>({
+  geocodedPois: Annotation<GeocodedPoi[]>({
     reducer: (_, b) => b,
     default: () => [],
   }),
@@ -39,7 +63,7 @@ const EnrichmentState = Annotation.Root({
   bestTime: Annotation<string | undefined>,
   duration: Annotation<string | undefined>,
   budget: Annotation<string | undefined>,
-  days: Annotation<any[]>({
+  days: Annotation<DayPlan[]>({
     reducer: (_, b) => b,
     default: () => [],
   }),
@@ -153,10 +177,10 @@ JSON:`;
 
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      const days = JSON.parse(jsonMatch[0]);
+      const days = JSON.parse(jsonMatch[0]) as DayPlan[];
       // Flatten POIs for geocoding
-      const allPois = days.flatMap((day: any) =>
-        (day.pois || []).map((poi: any) => ({
+      const allPois = days.flatMap((day: DayPlan) =>
+        (day.pois || []).map((poi: ExtractedPoi) => ({
           ...poi,
           dayNumber: day.dayNumber,
         })),
@@ -191,7 +215,7 @@ async function geocodePois(
 
   try {
     const destination = state.destinations[0] || '';
-    const geocodedPois: any[] = [];
+    const geocodedPois: GeocodedPoi[] = [];
 
     // Geocode each POI (with rate limiting for Nominatim)
     for (const poi of state.extractedPois) {
@@ -237,7 +261,10 @@ async function geocodePois(
         await new Promise(resolve => setTimeout(resolve, 1100));
       }
       catch (err) {
-        loggers.langgraph.error({ err, poiName: poi.name }, 'Geocoding error for POI');
+        loggers.langgraph.error(
+          { err, poiName: poi.name },
+          'Geocoding error for POI',
+        );
         geocodedPois.push({
           ...poi,
           latitude: 0,
@@ -249,9 +276,9 @@ async function geocodePois(
     }
 
     // Update days with geocoded POIs
-    const updatedDays = state.days.map((day: any) => ({
+    const updatedDays = state.days.map((day: DayPlan) => ({
       ...day,
-      pois: (day.pois || []).map((poi: any) => {
+      pois: (day.pois || []).map((poi: ExtractedPoi | GeocodedPoi) => {
         const geocoded = geocodedPois.find(
           g => g.name === poi.name && g.dayNumber === day.dayNumber,
         );
@@ -289,20 +316,21 @@ async function saveToDb(
       aiBestTime: state.bestTime,
       aiDuration: state.duration,
       aiBudget: state.budget,
-      aiDays: state.days.map((day: any) => ({
+      aiDays: state.days.map((day: DayPlan) => ({
         dayNumber: day.dayNumber,
         theme: day.theme,
-        pois: (day.pois || []).map((poi: any) => ({
+        pois: (day.pois || []).map((poi: ExtractedPoi | GeocodedPoi) => ({
           name: poi.name,
           type: poi.type || 'attraction',
           description: poi.description,
-          latitude: poi.latitude || 0,
-          longitude: poi.longitude || 0,
+          latitude: 'latitude' in poi ? poi.latitude : 0,
+          longitude: 'longitude' in poi ? poi.longitude : 0,
           address: poi.address,
           duration: poi.duration,
           tips: poi.tips,
-          geocodeConfidence: poi.geocodeConfidence,
-          geocodeSource: poi.geocodeSource,
+          geocodeConfidence:
+            'geocodeConfidence' in poi ? poi.geocodeConfidence : undefined,
+          geocodeSource: 'geocodeSource' in poi ? poi.geocodeSource : undefined,
         })),
       })),
       enrichmentStatus: state.error ? 'failed' : 'completed',

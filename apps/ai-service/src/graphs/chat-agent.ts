@@ -195,7 +195,7 @@ export async function chat(options: {
   context?: string;
 }): Promise<{
   response: string;
-  toolCalls?: Array<{ name: string; args: any }>;
+  toolCalls?: Array<{ name: string; args: Record<string, unknown> }>;
 }> {
   const agent = getChatAgent();
 
@@ -230,9 +230,9 @@ export async function chat(options: {
 
   return {
     response,
-    toolCalls: lastAIMessage.tool_calls?.map((tc: any) => ({
+    toolCalls: lastAIMessage.tool_calls?.map(tc => ({
       name: tc.name,
-      args: tc.args,
+      args: tc.args as Record<string, unknown>,
     })),
   };
 }
@@ -248,7 +248,7 @@ export async function* streamChat(options: {
 }): AsyncGenerator<{
   type: 'token' | 'tool_start' | 'tool_end' | 'done';
   content?: string;
-  tool?: { name: string; args?: any; result?: any };
+  tool?: { name: string; args?: Record<string, unknown>; result?: string };
 }> {
   const agent = getChatAgent();
 
@@ -293,8 +293,16 @@ export async function* streamChat(options: {
             else if (Array.isArray(msg.content)) {
               // Extract text from content blocks (Claude format)
               content = msg.content
-                .filter((block: any) => block.type === 'text' && block.text)
-                .map((block: any) => block.text)
+                .filter(
+                  (block): block is { type: 'text'; text: string } =>
+                    typeof block === 'object'
+                    && block !== null
+                    && 'type' in block
+                    && block.type === 'text'
+                    && 'text' in block
+                    && typeof block.text === 'string',
+                )
+                .map(block => block.text)
                 .join('');
             }
             else {
@@ -310,7 +318,10 @@ export async function* streamChat(options: {
 
     // Handle tool output
     if ('tools' in chunk && chunk.tools) {
-      const toolMessages = (chunk.tools as any).messages || [];
+      const toolState = chunk.tools as {
+        messages?: Array<{ name: string; content: unknown }>;
+      };
+      const toolMessages = toolState.messages || [];
       for (const msg of toolMessages) {
         yield {
           type: 'tool_end',

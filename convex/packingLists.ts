@@ -320,7 +320,16 @@ export const create = mutation({
           await ctx.db.insert('packingItems', {
             packingListId: listId,
             name: templateItem.name,
-            category: templateItem.category as any,
+            category: templateItem.category as
+            | 'clothing'
+            | 'toiletries'
+            | 'electronics'
+            | 'documents'
+            | 'medicine'
+            | 'accessories'
+            | 'gear'
+            | 'snacks'
+            | 'other',
             quantity: templateItem.quantity,
             isPacked: false,
             isEssential: templateItem.isEssential,

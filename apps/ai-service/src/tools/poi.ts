@@ -7,6 +7,14 @@ import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { createLLM } from '../lib/llm/index.js';
 
+interface NominatimResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+  type: string;
+  class: string;
+}
+
 /**
  * POI extraction tool - extracts POIs from travel content
  */
@@ -80,9 +88,9 @@ export const poiSearchTool = tool(
         throw new Error(`Nominatim API error: ${response.status}`);
       }
 
-      const results = await response.json();
+      const results: NominatimResult[] = await response.json();
 
-      const pois = results.map((r: any) => ({
+      const pois = results.map((r: NominatimResult) => ({
         name: r.display_name.split(',')[0],
         fullName: r.display_name,
         latitude: Number.parseFloat(r.lat),

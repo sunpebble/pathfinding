@@ -1,6 +1,5 @@
-/* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
-import type { Id } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -411,14 +410,19 @@ export const remove = mutation({
 });
 
 // Helper function to update SIM card rating
-async function updateSimCardRating(ctx: any, simCardId: Id<'simCards'>) {
+async function updateSimCardRating(
+  ctx: MutationCtx,
+  simCardId: Id<'simCards'>,
+) {
   const reviews = await ctx.db
     .query('simCardReviews')
-    .withIndex('by_sim_card', (q: any) => q.eq('simCardId', simCardId))
+    .withIndex('by_sim_card', q => q.eq('simCardId', simCardId))
     .collect();
 
   // Only count approved reviews
-  const approvedReviews = reviews.filter((r: any) => r.status === 'approved');
+  const approvedReviews = reviews.filter(
+    (r: Doc<'simCardReviews'>) => r.status === 'approved',
+  );
 
   if (approvedReviews.length === 0) {
     await ctx.db.patch(simCardId, {
@@ -430,7 +434,7 @@ async function updateSimCardRating(ctx: any, simCardId: Id<'simCards'>) {
   }
 
   const totalRating = approvedReviews.reduce(
-    (sum: number, review: any) => sum + review.overallRating,
+    (sum: number, review: Doc<'simCardReviews'>) => sum + review.overallRating,
     0,
   );
   const averageRating = totalRating / approvedReviews.length;

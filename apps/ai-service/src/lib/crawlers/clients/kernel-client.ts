@@ -6,14 +6,21 @@ import type {
   SessionOptions,
 } from './types';
 import Kernel from '@onkernel/sdk';
-import {
-
-  chromium,
-
-} from 'playwright';
+import { chromium } from 'playwright';
 import { createLogger } from '../../logger.js';
 
 const log = createLogger('kernel-client');
+
+/**
+ * Kernel browser instance returned by the SDK
+ * Contains connection details for CDP-based browser control
+ */
+interface KernelBrowserInstance {
+  /** WebSocket URL for Chrome DevTools Protocol connection */
+  cdp_ws_url: string;
+  /** Unique session identifier for this browser instance */
+  session_id: string;
+}
 
 /**
  * Kernel Browser Client - Cloud browser infrastructure for AI agents
@@ -33,7 +40,7 @@ export class KernelBrowserClient implements BrowserClient {
   private capturePatterns: string[] = [];
   private networkCaptureEnabled = false;
   private requestIdCounter = 0;
-  private kernelBrowser: any = null;
+  private kernelBrowser: KernelBrowserInstance | null = null;
 
   /**
    * Initialize the browser session with Kernel SDK
@@ -292,7 +299,10 @@ export class KernelBrowserClient implements BrowserClient {
    * Extract data from the page using natural language instruction and schema
    * Note: KernelBrowserClient does not support AI-based extraction, use StagehandClient instead
    */
-  async extract<T>(_instruction: string, _schema: import('zod').ZodSchema<T>): Promise<T> {
+  async extract<T>(
+    _instruction: string,
+    _schema: import('zod').ZodSchema<T>,
+  ): Promise<T> {
     throw new Error(
       'KernelBrowserClient does not support AI-based extract(). Use StagehandClient instead.',
     );

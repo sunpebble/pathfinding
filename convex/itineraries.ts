@@ -193,7 +193,7 @@ export const getById = query({
     // Batch load all POIs at once (single query per POI, but parallel)
     const poiMap = new Map();
     const pois = await Promise.all(
-      Array.from(poiIds).map(id => ctx.db.get(id as any)),
+      Array.from(poiIds).map(id => ctx.db.get(id as Id<'pois'>)),
     );
     Array.from(poiIds).forEach((id, idx) => {
       poiMap.set(id, pois[idx]);

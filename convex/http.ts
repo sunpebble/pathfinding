@@ -1,5 +1,4 @@
 import type { Id } from './_generated/dataModel';
-// @ts-nocheck
 import { httpRouter } from 'convex/server';
 import { api } from './_generated/api';
 import { httpAction } from './_generated/server';
@@ -354,7 +353,7 @@ http.route({
       }
 
       const comment = await ctx.runMutation(api.itineraryComments.update, {
-        id: id as any,
+        id: id as Id<'itineraryComments'>,
         userId,
         content,
       });
@@ -568,9 +567,14 @@ http.route({
       }
 
       const result = await ctx.runMutation(api.itineraryComments.report, {
-        commentId: commentId as any,
+        commentId: commentId as Id<'itineraryComments'>,
         userId,
-        reason: reason as any,
+        reason: reason as
+        | 'spam'
+        | 'harassment'
+        | 'inappropriate'
+        | 'misinformation'
+        | 'other',
         description,
       });
 
@@ -670,7 +674,9 @@ http.route({
     try {
       const result = await ctx.runQuery(api.itineraryFavorites.listByUser, {
         userId,
-        collectionId: collectionId as any,
+        collectionId: collectionId
+          ? (collectionId as Id<'favoriteCollections'>)
+          : undefined,
         page,
         pageSize,
       });
@@ -758,7 +764,7 @@ function toSnakeCase(str: string): string {
 /**
  * Convert object keys from camelCase to snake_case recursively
  */
-function convertKeysToSnakeCase(obj: any): any {
+function convertKeysToSnakeCase(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -766,7 +772,7 @@ function convertKeysToSnakeCase(obj: any): any {
     return obj.map(convertKeysToSnakeCase);
   }
   if (typeof obj === 'object' && !(obj instanceof Date)) {
-    const converted: any = {};
+    const converted: Record<string, unknown> = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         let newKey: string;
@@ -781,7 +787,9 @@ function convertKeysToSnakeCase(obj: any): any {
         else {
           newKey = toSnakeCase(key);
         }
-        converted[newKey] = convertKeysToSnakeCase(obj[key]);
+        converted[newKey] = convertKeysToSnakeCase(
+          (obj as Record<string, unknown>)[key],
+        );
       }
     }
     return converted;
@@ -792,7 +800,7 @@ function convertKeysToSnakeCase(obj: any): any {
 /**
  * Helper to create JSON response
  */
-function jsonResponse(data: any, status = 200) {
+function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -991,7 +999,7 @@ http.route({
 
     try {
       const guide = await ctx.runQuery(api.travelGuides.getById, {
-        id: id as any,
+        id: id as Id<'travelGuides'>,
       });
 
       if (!guide) {
@@ -1131,7 +1139,7 @@ http.route({
 
     try {
       const messages = await ctx.runQuery(api.chat.listMessages, {
-        sessionId: sessionId as any,
+        sessionId: sessionId as Id<'chatSessions'>,
         limit,
       });
 
@@ -1162,7 +1170,7 @@ http.route({
       }
 
       const messageId = await ctx.runMutation(api.chat.addMessage, {
-        sessionId: sessionId as any,
+        sessionId: sessionId as Id<'chatSessions'>,
         role,
         content,
       });
@@ -1395,10 +1403,10 @@ http.route({
 
     try {
       const result = await ctx.runQuery(api.poiQA.listQuestionsByPoi, {
-        poiId: poiId as any,
+        poiId: poiId as Id<'pois'>,
         page,
         pageSize,
-        sortBy: sortBy as any,
+        sortBy: sortBy as 'newest' | 'oldest' | 'most_upvoted' | 'most_active',
       });
 
       return jsonResponse(result);
@@ -1428,7 +1436,7 @@ http.route({
       }
 
       const questionId = await ctx.runMutation(api.poiQA.createQuestion, {
-        poiId: poiId as any,
+        poiId: poiId as Id<'pois'>,
         userId,
         title,
         content,
@@ -1464,7 +1472,7 @@ http.route({
 
     try {
       const result = await ctx.runQuery(api.poiQA.listAnswersByQuestion, {
-        questionId: questionId as any,
+        questionId: questionId as Id<'poiQuestions'>,
         page,
         pageSize,
       });
@@ -1496,7 +1504,7 @@ http.route({
       }
 
       const answerId = await ctx.runMutation(api.poiQA.createAnswer, {
-        questionId: questionId as any,
+        questionId: questionId as Id<'poiQuestions'>,
         userId,
         content,
       });
@@ -1535,7 +1543,7 @@ http.route({
             userId,
             page,
             pageSize,
-            visibility: visibility as any,
+            visibility: visibility as 'public' | 'followers' | 'private',
           })
         : await ctx.runQuery(api.travelNotes.listPublic, {
             page,
@@ -1608,7 +1616,7 @@ http.route({
 
     try {
       const budget = await ctx.runQuery(api.budgets.getBudget, {
-        itineraryId: itineraryId as any,
+        itineraryId: itineraryId as Id<'itineraries'>,
       });
 
       return jsonResponse({ data: budget });
@@ -1639,7 +1647,7 @@ http.route({
       }
 
       const budgetId = await ctx.runMutation(api.budgets.upsertBudget, {
-        itineraryId: itineraryId as any,
+        itineraryId: itineraryId as Id<'itineraries'>,
         userId,
         totalBudget,
         currency: currency ?? 'CNY',
@@ -1676,7 +1684,7 @@ http.route({
 
     try {
       const result = await ctx.runQuery(api.budgets.listExpenses, {
-        itineraryId: itineraryId as any,
+        itineraryId: itineraryId as Id<'itineraries'>,
       });
 
       return jsonResponse(result);
@@ -1707,9 +1715,9 @@ http.route({
       }
 
       const expenseId = await ctx.runMutation(api.budgets.createExpense, {
-        itineraryId: itineraryId as any,
+        itineraryId: itineraryId as Id<'itineraries'>,
         userId: '',
-        categoryId: category as any,
+        categoryId: category as Id<'expenseCategories'>,
         amount,
         description: description ?? '',
         date: date ?? new Date().toISOString().split('T')[0],
@@ -1783,7 +1791,7 @@ http.route({
       }
 
       await ctx.runMutation(api.notifications.markRead, {
-        id: notificationId as any,
+        id: notificationId as Id<'notifications'>,
         userId,
       });
 
@@ -1850,8 +1858,15 @@ http.route({
     try {
       const result = await ctx.runQuery(api.pois.search, {
         query: query ?? '',
-        cityId: cityId as any,
-        category: category as any,
+        cityId: cityId ? (cityId as Id<'cities'>) : undefined,
+        category: category
+          ? (category as
+          | 'attraction'
+          | 'restaurant'
+          | 'hotel'
+          | 'shopping'
+          | 'other')
+          : undefined,
         limit,
       });
 
@@ -1953,7 +1968,10 @@ http.route({
     try {
       const stats = await ctx.runQuery(api.shareEvents.getStats, {
         resourceId,
-        resourceType: resourceType as any,
+        resourceType: resourceType as
+        | 'itinerary'
+        | 'travelGuide'
+        | 'travelNote',
       });
 
       return jsonResponse(stats);
@@ -2017,7 +2035,17 @@ http.route({
       const phrases = await ctx.runQuery(
         api.translations.listPhrasesByCategory,
         {
-          category: category as any,
+          category: category as
+          | 'greeting'
+          | 'dining'
+          | 'transportation'
+          | 'shopping'
+          | 'emergency'
+          | 'accommodation'
+          | 'directions'
+          | 'numbers'
+          | 'time'
+          | 'common',
           sourceLang: sourceLang ?? undefined,
           limit,
         },
@@ -2054,7 +2082,19 @@ http.route({
     try {
       const phrases = await ctx.runQuery(api.translations.searchPhrases, {
         query,
-        category: category as any,
+        category: category
+          ? (category as
+          | 'greeting'
+          | 'dining'
+          | 'transportation'
+          | 'shopping'
+          | 'emergency'
+          | 'accommodation'
+          | 'directions'
+          | 'numbers'
+          | 'time'
+          | 'common')
+          : undefined,
         sourceLang: sourceLang ?? undefined,
         limit,
       });
@@ -2091,7 +2131,9 @@ http.route({
         api.translations.listSavedTranslations,
         {
           userId,
-          translationType: translationType as any,
+          translationType: translationType
+            ? (translationType as 'text' | 'photo' | 'voice')
+            : undefined,
           favoritesOnly,
           limit,
           offset,
@@ -2180,7 +2222,7 @@ http.route({
       }
 
       await ctx.runMutation(api.translations.deleteSavedTranslation, {
-        id: id as any,
+        id: id as Id<'savedTranslations'>,
       });
 
       return jsonResponse({ success: true });
@@ -2212,7 +2254,7 @@ http.route({
       const isFavorite = await ctx.runMutation(
         api.translations.toggleFavorite,
         {
-          id: id as any,
+          id: id as Id<'savedTranslations'>,
         },
       );
 
@@ -2366,7 +2408,7 @@ http.route({
 
     try {
       const job = await ctx.runQuery(api.crawlJobs.getById, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
       });
 
       if (!job) {
@@ -2400,7 +2442,7 @@ http.route({
       }
 
       await ctx.runMutation(api.crawlJobs.remove, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
       });
 
       return jsonResponse({ success: true });
@@ -2430,7 +2472,7 @@ http.route({
       }
 
       const job = await ctx.runMutation(api.crawlJobs.start, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
       });
 
       return jsonResponse({ data: job });
@@ -2460,7 +2502,7 @@ http.route({
       }
 
       const job = await ctx.runMutation(api.crawlJobs.complete, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
         statistics,
       });
 
@@ -2491,7 +2533,7 @@ http.route({
       }
 
       const job = await ctx.runMutation(api.crawlJobs.fail, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
         errorMessage,
         statistics,
       });
@@ -2524,7 +2566,9 @@ http.route({
 
     try {
       const result = await ctx.runQuery(api.dataQualityReports.list, {
-        datasetId: datasetId as any,
+        datasetId: datasetId
+          ? (datasetId as Id<'trainingDatasets'>)
+          : undefined,
         reportType: reportType ?? undefined,
         limit,
         offset,
@@ -2557,7 +2601,9 @@ http.route({
       }
 
       const report = await ctx.runMutation(api.dataQualityReports.create, {
-        datasetId: datasetId as any,
+        datasetId: datasetId
+          ? (datasetId as Id<'trainingDatasets'>)
+          : undefined,
         reportType,
         metrics,
         issues,
@@ -2590,7 +2636,7 @@ http.route({
 
     try {
       const report = await ctx.runQuery(api.dataQualityReports.getById, {
-        id: id as any,
+        id: id as Id<'dataQualityReports'>,
       });
 
       if (!report) {
@@ -2624,7 +2670,7 @@ http.route({
       }
 
       await ctx.runMutation(api.dataQualityReports.remove, {
-        id: id as any,
+        id: id as Id<'dataQualityReports'>,
       });
 
       return jsonResponse({ success: true });
@@ -2679,7 +2725,9 @@ http.route({
     try {
       const result = await ctx.runQuery(api.trainingDatasets.list, {
         name: name ?? undefined,
-        status: status as any,
+        status: status
+          ? (status as 'pending' | 'generating' | 'completed' | 'failed')
+          : undefined,
         limit,
         offset,
       });
@@ -2753,7 +2801,7 @@ http.route({
 
     try {
       const dataset = await ctx.runQuery(api.trainingDatasets.getById, {
-        id: id as any,
+        id: id as Id<'trainingDatasets'>,
       });
 
       if (!dataset) {
@@ -2787,7 +2835,7 @@ http.route({
       }
 
       await ctx.runMutation(api.trainingDatasets.remove, {
-        id: id as any,
+        id: id as Id<'trainingDatasets'>,
       });
 
       return jsonResponse({ success: true });
@@ -2817,7 +2865,7 @@ http.route({
       }
 
       const dataset = await ctx.runMutation(api.trainingDatasets.update, {
-        id: id as any,
+        id: id as Id<'trainingDatasets'>,
         status,
         statistics,
         storagePaths,

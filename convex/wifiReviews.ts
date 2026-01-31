@@ -1,6 +1,5 @@
-/* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
-import type { Id } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -212,10 +211,13 @@ export const markHelpful = mutation({
 });
 
 // Helper function to recalculate spot average rating
-async function recalculateSpotRating(ctx: any, wifiSpotId: Id<'wifiSpots'>) {
+async function recalculateSpotRating(
+  ctx: MutationCtx,
+  wifiSpotId: Id<'wifiSpots'>,
+) {
   const reviews = await ctx.db
     .query('wifiReviews')
-    .withIndex('by_spot', (q: any) => q.eq('wifiSpotId', wifiSpotId))
+    .withIndex('by_spot', q => q.eq('wifiSpotId', wifiSpotId))
     .collect();
 
   if (reviews.length === 0) {
@@ -228,7 +230,7 @@ async function recalculateSpotRating(ctx: any, wifiSpotId: Id<'wifiSpots'>) {
   }
 
   const totalRating = reviews.reduce(
-    (sum: number, review: any) => sum + review.overallRating,
+    (sum: number, review: Doc<'wifiReviews'>) => sum + review.overallRating,
     0,
   );
   const averageRating = totalRating / reviews.length;

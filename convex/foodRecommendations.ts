@@ -721,7 +721,7 @@ async function updateRestaurantRating(
   }
 
   const totalRating = reviews.reduce(
-    (sum: number, r: any) => sum + r.rating,
+    (sum: number, r: { rating: number }) => sum + r.rating,
     0,
   );
   const avgRating = totalRating / reviews.length;

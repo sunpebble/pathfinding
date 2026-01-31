@@ -6,6 +6,13 @@
 import { enrichGuide } from '../graphs/content-enricher.js';
 import { loggers } from '../lib/logger.js';
 
+interface PendingGuide {
+  _id: string;
+  title?: string;
+  content?: string;
+  destinations?: string[];
+}
+
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const POLL_INTERVAL = Number.parseInt(
   process.env.ENRICHMENT_POLL_INTERVAL || '30000',
@@ -19,7 +26,7 @@ let pollTimer: ReturnType<typeof setTimeout> | null = null;
 /**
  * Fetch pending guides from Convex
  */
-async function fetchPendingGuides(): Promise<any[]> {
+async function fetchPendingGuides(): Promise<PendingGuide[]> {
   try {
     const response = await fetch(
       `${CONVEX_URL}/api/guides?enrichmentStatus=pending&limit=${BATCH_SIZE}`,
@@ -29,7 +36,10 @@ async function fetchPendingGuides(): Promise<any[]> {
     );
 
     if (!response.ok) {
-      loggers.convex.error({ status: response.status }, 'Failed to fetch pending guides');
+      loggers.convex.error(
+        { status: response.status },
+        'Failed to fetch pending guides',
+      );
       return [];
     }
 
@@ -60,7 +70,10 @@ async function markAsProcessing(guideId: string): Promise<boolean> {
     return response.ok;
   }
   catch (error) {
-    loggers.convex.error({ error, guideId }, 'Error marking guide as processing');
+    loggers.convex.error(
+      { error, guideId },
+      'Error marking guide as processing',
+    );
     return false;
   }
 }
@@ -76,7 +89,10 @@ async function pollCycle(): Promise<void> {
     const pendingGuides = await fetchPendingGuides();
 
     if (pendingGuides.length > 0) {
-      loggers.convex.info({ count: pendingGuides.length }, 'Found pending guides to enrich');
+      loggers.convex.info(
+        { count: pendingGuides.length },
+        'Found pending guides to enrich',
+      );
 
       for (const guide of pendingGuides) {
         if (!isPolling)
@@ -85,22 +101,31 @@ async function pollCycle(): Promise<void> {
         // Mark as processing first
         const marked = await markAsProcessing(guide._id);
         if (!marked) {
-          loggers.convex.error({ guideId: guide._id }, 'Failed to mark guide as processing');
+          loggers.convex.error(
+            { guideId: guide._id },
+            'Failed to mark guide as processing',
+          );
           continue;
         }
 
-        loggers.convex.info({ guideId: guide._id, title: guide.title }, 'Enriching guide');
+        loggers.convex.info(
+          { guideId: guide._id, title: guide.title },
+          'Enriching guide',
+        );
 
         try {
           const result = await enrichGuide({
             _id: guide._id,
-            content: guide.content,
-            title: guide.title,
+            content: guide.content || '',
+            title: guide.title || '',
             destinations: guide.destinations || [],
           });
 
           if (result.success) {
-            loggers.convex.info({ guideId: guide._id, title: guide.title }, 'Enriched guide successfully');
+            loggers.convex.info(
+              { guideId: guide._id, title: guide.title },
+              'Enriched guide successfully',
+            );
           }
           else {
             loggers.convex.error(
@@ -110,7 +135,10 @@ async function pollCycle(): Promise<void> {
           }
         }
         catch (error) {
-          loggers.convex.error({ guideId: guide._id, error }, 'Error enriching guide');
+          loggers.convex.error(
+            { guideId: guide._id, error },
+            'Error enriching guide',
+          );
         }
       }
     }

@@ -3,6 +3,7 @@
  * Central export for all available tools
  */
 
+import type { StructuredToolInterface } from '@langchain/core/tools';
 import { guideDetailTool, searchGuidesTool } from './guide.js';
 import { poiExtractTool, poiSearchTool } from './poi.js';
 import { translateTool } from './translate.js';
@@ -62,8 +63,8 @@ export const toolsByUseCase = {
 /**
  * Get tools by name
  */
-export function getToolsByName(names: string[]) {
-  const toolMap: Record<string, any> = {
+export function getToolsByName(names: string[]): StructuredToolInterface[] {
+  const toolMap: Record<string, StructuredToolInterface> = {
     weather_query: weatherQueryTool,
     poi_extract: poiExtractTool,
     poi_search: poiSearchTool,
