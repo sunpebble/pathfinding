@@ -1,25 +1,26 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import type { Id } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { businessHoursValidator } from "../packages/convex/src/validators/index.js";
 
 /**
  * POIs - Points of Interest Queries and Mutations
  */
 
 const poiCategoryValidator = v.union(
-  v.literal('attraction'),
-  v.literal('restaurant'),
-  v.literal('hotel'),
-  v.literal('shopping'),
-  v.literal('other')
+  v.literal("attraction"),
+  v.literal("restaurant"),
+  v.literal("hotel"),
+  v.literal("shopping"),
+  v.literal("other"),
 );
 
 // List POIs with optional filters
 export const list = query({
   args: {
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     category: v.optional(poiCategoryValidator),
     limit: v.optional(v.number()),
   },
@@ -28,23 +29,23 @@ export const list = query({
 
     if (args.cityId && args.category) {
       results = await ctx.db
-        .query('pois')
-        .withIndex('by_city_category', (q) =>
-          q.eq('cityId', args.cityId!).eq('category', args.category!)
+        .query("pois")
+        .withIndex("by_city_category", (q) =>
+          q.eq("cityId", args.cityId!).eq("category", args.category!),
         )
         .collect();
     } else if (args.cityId) {
       results = await ctx.db
-        .query('pois')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .query("pois")
+        .withIndex("by_city", (q) => q.eq("cityId", args.cityId!))
         .collect();
     } else if (args.category) {
       results = await ctx.db
-        .query('pois')
-        .withIndex('by_category', (q) => q.eq('category', args.category!))
+        .query("pois")
+        .withIndex("by_category", (q) => q.eq("category", args.category!))
         .collect();
     } else {
-      results = await ctx.db.query('pois').collect();
+      results = await ctx.db.query("pois").collect();
     }
 
     return args.limit ? results.slice(0, args.limit) : results;
@@ -53,7 +54,7 @@ export const list = query({
 
 // Get a POI by ID
 export const getById = query({
-  args: { id: v.id('pois') },
+  args: { id: v.id("pois") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -63,7 +64,7 @@ export const getById = query({
 export const search = query({
   args: {
     query: v.string(),
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     category: v.optional(poiCategoryValidator),
     minRating: v.optional(v.number()),
     limit: v.optional(v.number()),
@@ -78,29 +79,29 @@ export const search = query({
     // Apply index-based filters first
     if (args.cityId && args.category) {
       pois = await ctx.db
-        .query('pois')
-        .withIndex('by_city_category', (q) =>
-          q.eq('cityId', args.cityId!).eq('category', args.category!)
+        .query("pois")
+        .withIndex("by_city_category", (q) =>
+          q.eq("cityId", args.cityId!).eq("category", args.category!),
         )
         .take(fetchLimit);
     } else if (args.cityId) {
       pois = await ctx.db
-        .query('pois')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .query("pois")
+        .withIndex("by_city", (q) => q.eq("cityId", args.cityId!))
         .take(fetchLimit);
     } else if (args.category) {
       pois = await ctx.db
-        .query('pois')
-        .withIndex('by_category', (q) => q.eq('category', args.category!))
+        .query("pois")
+        .withIndex("by_category", (q) => q.eq("category", args.category!))
         .take(fetchLimit);
     } else {
-      pois = await ctx.db.query('pois').take(fetchLimit);
+      pois = await ctx.db.query("pois").take(fetchLimit);
     }
 
     // Filter by minimum rating
     if (args.minRating !== undefined) {
       pois = pois.filter(
-        (poi) => poi.rating !== undefined && poi.rating >= args.minRating!
+        (poi) => poi.rating !== undefined && poi.rating >= args.minRating!,
       );
     }
 
@@ -109,7 +110,7 @@ export const search = query({
     pois = pois.filter(
       (poi) =>
         poi.name.toLowerCase().includes(searchLower) ||
-        poi.nameEn?.toLowerCase().includes(searchLower)
+        poi.nameEn?.toLowerCase().includes(searchLower),
     );
 
     // Sort by rating (descending)
@@ -136,11 +137,11 @@ export const getNearby = query({
     let pois;
     if (args.category) {
       pois = await ctx.db
-        .query('pois')
-        .withIndex('by_category', (q) => q.eq('category', args.category!))
+        .query("pois")
+        .withIndex("by_category", (q) => q.eq("category", args.category!))
         .take(maxFetch);
     } else {
-      pois = await ctx.db.query('pois').take(maxFetch);
+      pois = await ctx.db.query("pois").take(maxFetch);
     }
 
     // Calculate distance and filter
@@ -151,7 +152,7 @@ export const getNearby = query({
           args.latitude,
           args.longitude,
           poi.latitude,
-          poi.longitude
+          poi.longitude,
         ),
       }))
       .filter((poi) => poi.distance <= args.radiusKm)
@@ -165,14 +166,14 @@ export const getNearby = query({
 // Get recommendations (top-rated POIs)
 export const getRecommendations = query({
   args: {
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     category: v.optional(poiCategoryValidator),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     let pois = await ctx.db
-      .query('pois')
-      .withIndex('by_city', (q) => q.eq('cityId', args.cityId))
+      .query("pois")
+      .withIndex("by_city", (q) => q.eq("cityId", args.cityId))
       .collect();
 
     if (args.category) {
@@ -194,20 +195,20 @@ export const create = mutation({
     name: v.string(),
     nameEn: v.optional(v.string()),
     category: poiCategoryValidator,
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     address: v.optional(v.string()),
     latitude: v.number(),
     longitude: v.number(),
     rating: v.optional(v.number()),
     ratingCount: v.optional(v.number()),
     priceLevel: v.optional(v.number()),
-    businessHours: v.optional(v.any()),
+    businessHours: v.optional(businessHoursValidator),
     phone: v.optional(v.string()),
     imageUrls: v.optional(v.array(v.string())),
     source: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('pois', {
+    return await ctx.db.insert("pois", {
       ...args,
       ratingCount: args.ratingCount ?? 0,
     });
@@ -217,7 +218,7 @@ export const create = mutation({
 // Update a POI
 export const update = mutation({
   args: {
-    id: v.id('pois'),
+    id: v.id("pois"),
     name: v.optional(v.string()),
     nameEn: v.optional(v.string()),
     category: v.optional(poiCategoryValidator),
@@ -227,14 +228,14 @@ export const update = mutation({
     rating: v.optional(v.number()),
     ratingCount: v.optional(v.number()),
     priceLevel: v.optional(v.number()),
-    businessHours: v.optional(v.any()),
+    businessHours: v.optional(businessHoursValidator),
     phone: v.optional(v.string()),
     imageUrls: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, filteredUpdates);
     return await ctx.db.get(id);
@@ -243,7 +244,7 @@ export const update = mutation({
 
 // Delete a POI
 export const remove = mutation({
-  args: { id: v.id('pois') },
+  args: { id: v.id("pois") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -258,24 +259,24 @@ export const bulkInsert = mutation({
         name: v.string(),
         nameEn: v.optional(v.string()),
         category: poiCategoryValidator,
-        cityId: v.id('cities'),
+        cityId: v.id("cities"),
         address: v.optional(v.string()),
         latitude: v.number(),
         longitude: v.number(),
         rating: v.optional(v.number()),
         ratingCount: v.optional(v.number()),
         priceLevel: v.optional(v.number()),
-        businessHours: v.optional(v.any()),
+        businessHours: v.optional(businessHoursValidator),
         phone: v.optional(v.string()),
         imageUrls: v.optional(v.array(v.string())),
         source: v.string(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
-    const ids: Id<'pois'>[] = [];
+    const ids: Id<"pois">[] = [];
     for (const poi of args.pois) {
-      const id = await ctx.db.insert('pois', {
+      const id = await ctx.db.insert("pois", {
         ...poi,
         ratingCount: poi.ratingCount ?? 0,
       });
@@ -290,7 +291,7 @@ function calculateDistanceKm(
   lat1: number,
   lng1: number,
   lat2: number,
-  lng2: number
+  lng2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;

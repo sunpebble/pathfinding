@@ -1,7 +1,11 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import {
+  crawlJobConfigValidator,
+  crawlJobStatisticsValidator,
+} from "../packages/convex/src/validators/index.js";
 
 /**
  * Crawl Jobs - Data Collection Management
@@ -19,18 +23,18 @@ export const list = query({
 
     if (args.status) {
       jobs = await ctx.db
-        .query('crawlJobs')
-        .withIndex('by_status', (q) => q.eq('status', args.status!))
-        .order('desc')
+        .query("crawlJobs")
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .order("desc")
         .collect();
     } else if (args.platform) {
       jobs = await ctx.db
-        .query('crawlJobs')
-        .withIndex('by_platform', (q) => q.eq('platform', args.platform!))
-        .order('desc')
+        .query("crawlJobs")
+        .withIndex("by_platform", (q) => q.eq("platform", args.platform!))
+        .order("desc")
         .collect();
     } else {
-      jobs = await ctx.db.query('crawlJobs').order('desc').collect();
+      jobs = await ctx.db.query("crawlJobs").order("desc").collect();
     }
 
     return args.limit ? jobs.slice(0, args.limit) : jobs;
@@ -39,7 +43,7 @@ export const list = query({
 
 // Get a crawl job by ID
 export const getById = query({
-  args: { id: v.id('crawlJobs') },
+  args: { id: v.id("crawlJobs") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -53,9 +57,9 @@ export const getDueJobs = query({
   handler: async (ctx, args) => {
     const now = Date.now();
     const jobs = await ctx.db
-      .query('crawlJobs')
-      .withIndex('by_nextRunAt')
-      .filter((q) => q.lte(q.field('nextRunAt'), now))
+      .query("crawlJobs")
+      .withIndex("by_nextRunAt")
+      .filter((q) => q.lte(q.field("nextRunAt"), now))
       .collect();
 
     return args.limit ? jobs.slice(0, args.limit) : jobs;
@@ -76,8 +80,8 @@ export const getJobsForIncrementalCrawl = query({
 
     // Get all completed jobs
     const completedJobs = await ctx.db
-      .query('crawlJobs')
-      .withIndex('by_status', (q) => q.eq('status', 'completed'))
+      .query("crawlJobs")
+      .withIndex("by_status", (q) => q.eq("status", "completed"))
       .collect();
 
     // Filter for stale jobs with schedule (candidates for incremental crawl)
@@ -86,7 +90,7 @@ export const getJobsForIncrementalCrawl = query({
         job.completedAt &&
         job.completedAt < staleTimestamp &&
         job.scheduleCron !== undefined &&
-        job.jobType === 'full' // Only full crawls can trigger incremental updates
+        job.jobType === "full", // Only full crawls can trigger incremental updates
     );
 
     // Sort by completedAt (oldest first) to prioritize most stale jobs
@@ -102,17 +106,17 @@ export const create = mutation({
     name: v.string(),
     platform: v.string(),
     jobType: v.optional(v.string()),
-    config: v.any(),
+    config: crawlJobConfigValidator,
     scheduleCron: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('crawlJobs', {
+    return await ctx.db.insert("crawlJobs", {
       name: args.name,
       platform: args.platform,
-      jobType: args.jobType ?? 'full',
+      jobType: args.jobType ?? "full",
       config: args.config,
       scheduleCron: args.scheduleCron,
-      status: 'pending',
+      status: "pending",
       retryCount: 0,
     });
   },
@@ -120,10 +124,10 @@ export const create = mutation({
 
 // Start a crawl job
 export const start = mutation({
-  args: { id: v.id('crawlJobs') },
+  args: { id: v.id("crawlJobs") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
-      status: 'running',
+      status: "running",
       startedAt: Date.now(),
     });
     return await ctx.db.get(args.id);
@@ -133,12 +137,12 @@ export const start = mutation({
 // Complete a crawl job
 export const complete = mutation({
   args: {
-    id: v.id('crawlJobs'),
-    statistics: v.optional(v.any()),
+    id: v.id("crawlJobs"),
+    statistics: v.optional(crawlJobStatisticsValidator),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
-      status: 'completed',
+      status: "completed",
       completedAt: Date.now(),
       statistics: args.statistics,
     });
@@ -149,9 +153,9 @@ export const complete = mutation({
 // Fail a crawl job
 export const fail = mutation({
   args: {
-    id: v.id('crawlJobs'),
+    id: v.id("crawlJobs"),
     errorMessage: v.string(),
-    statistics: v.optional(v.any()),
+    statistics: v.optional(crawlJobStatisticsValidator),
   },
   handler: async (ctx, args) => {
     const job = await ctx.db.get(args.id);
@@ -160,7 +164,7 @@ export const fail = mutation({
     }
 
     await ctx.db.patch(args.id, {
-      status: 'failed',
+      status: "failed",
       completedAt: Date.now(),
       errorMessage: args.errorMessage,
       statistics: args.statistics,
@@ -173,10 +177,10 @@ export const fail = mutation({
 
 // Cancel a crawl job
 export const cancel = mutation({
-  args: { id: v.id('crawlJobs') },
+  args: { id: v.id("crawlJobs") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
-      status: 'cancelled',
+      status: "cancelled",
       completedAt: Date.now(),
     });
     return await ctx.db.get(args.id);
@@ -186,7 +190,7 @@ export const cancel = mutation({
 // Update crawl job status (generic status update)
 export const updateStatus = mutation({
   args: {
-    id: v.id('crawlJobs'),
+    id: v.id("crawlJobs"),
     status: v.string(),
     startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
@@ -213,8 +217,8 @@ export const updateStatus = mutation({
 // Update crawl job statistics (during running)
 export const updateStatistics = mutation({
   args: {
-    id: v.id('crawlJobs'),
-    statistics: v.any(),
+    id: v.id("crawlJobs"),
+    statistics: crawlJobStatisticsValidator,
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
@@ -226,7 +230,7 @@ export const updateStatistics = mutation({
 // Update next run time for scheduled jobs
 export const updateNextRunAt = mutation({
   args: {
-    id: v.id('crawlJobs'),
+    id: v.id("crawlJobs"),
     nextRunAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -239,7 +243,7 @@ export const updateNextRunAt = mutation({
 
 // Increment retry count
 export const incrementRetryCount = mutation({
-  args: { id: v.id('crawlJobs') },
+  args: { id: v.id("crawlJobs") },
   handler: async (ctx, args) => {
     const job = await ctx.db.get(args.id);
     if (!job) {
@@ -255,12 +259,12 @@ export const incrementRetryCount = mutation({
 
 // Delete a crawl job
 export const remove = mutation({
-  args: { id: v.id('crawlJobs') },
+  args: { id: v.id("crawlJobs") },
   handler: async (ctx, args) => {
     // First delete all raw records for this job
     const records = await ctx.db
-      .query('rawCrawlRecords')
-      .withIndex('by_job', (q) => q.eq('jobId', args.id))
+      .query("rawCrawlRecords")
+      .withIndex("by_job", (q) => q.eq("jobId", args.id))
       .collect();
 
     for (const record of records) {

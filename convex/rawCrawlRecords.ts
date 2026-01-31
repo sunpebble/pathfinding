@@ -1,8 +1,9 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import type { Id } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { rawCrawlDataValidator } from "../packages/convex/src/validators/index.js";
 
 /**
  * Raw Crawl Records - Storage for crawled data
@@ -11,14 +12,14 @@ import { mutation, query } from './_generated/server';
 // List records for a job
 export const listByJob = query({
   args: {
-    jobId: v.id('crawlJobs'),
+    jobId: v.id("crawlJobs"),
     limit: v.optional(v.number()),
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     let records = await ctx.db
-      .query('rawCrawlRecords')
-      .withIndex('by_job', (q) => q.eq('jobId', args.jobId))
+      .query("rawCrawlRecords")
+      .withIndex("by_job", (q) => q.eq("jobId", args.jobId))
       .collect();
 
     if (args.status) {
@@ -31,7 +32,7 @@ export const listByJob = query({
 
 // Get a record by ID
 export const getById = query({
-  args: { id: v.id('rawCrawlRecords') },
+  args: { id: v.id("rawCrawlRecords") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -40,17 +41,17 @@ export const getById = query({
 // Create a raw crawl record
 export const create = mutation({
   args: {
-    jobId: v.id('crawlJobs'),
+    jobId: v.id("crawlJobs"),
     sourceUrl: v.string(),
-    rawData: v.any(),
+    rawData: rawCrawlDataValidator,
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('rawCrawlRecords', {
+    return await ctx.db.insert("rawCrawlRecords", {
       jobId: args.jobId,
       sourceUrl: args.sourceUrl,
       rawData: args.rawData,
       crawledAt: Date.now(),
-      processingStatus: 'pending',
+      processingStatus: "pending",
     });
   },
 });
@@ -60,20 +61,20 @@ export const bulkInsert = mutation({
   args: {
     records: v.array(
       v.object({
-        jobId: v.id('crawlJobs'),
+        jobId: v.id("crawlJobs"),
         sourceUrl: v.string(),
-        rawData: v.any(),
-      })
+        rawData: rawCrawlDataValidator,
+      }),
     ),
   },
   handler: async (ctx, args) => {
-    const ids: Id<'rawCrawlRecords'>[] = [];
+    const ids: Id<"rawCrawlRecords">[] = [];
 
     for (const record of args.records) {
-      const id = await ctx.db.insert('rawCrawlRecords', {
+      const id = await ctx.db.insert("rawCrawlRecords", {
         ...record,
         crawledAt: Date.now(),
-        processingStatus: 'pending',
+        processingStatus: "pending",
       });
       ids.push(id);
     }
@@ -85,7 +86,7 @@ export const bulkInsert = mutation({
 // Update record status
 export const updateStatus = mutation({
   args: {
-    id: v.id('rawCrawlRecords'),
+    id: v.id("rawCrawlRecords"),
     status: v.string(),
   },
   handler: async (ctx, args) => {
@@ -95,7 +96,7 @@ export const updateStatus = mutation({
 
 // Delete a record
 export const remove = mutation({
-  args: { id: v.id('rawCrawlRecords') },
+  args: { id: v.id("rawCrawlRecords") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -103,11 +104,11 @@ export const remove = mutation({
 
 // Delete all records for a job
 export const removeByJob = mutation({
-  args: { jobId: v.id('crawlJobs') },
+  args: { jobId: v.id("crawlJobs") },
   handler: async (ctx, args) => {
     const records = await ctx.db
-      .query('rawCrawlRecords')
-      .withIndex('by_job', (q) => q.eq('jobId', args.jobId))
+      .query("rawCrawlRecords")
+      .withIndex("by_job", (q) => q.eq("jobId", args.jobId))
       .collect();
 
     for (const record of records) {
