@@ -282,7 +282,8 @@ function POICard({ poi }: POICardProps) {
         <div className="flex items-center gap-1.5">
           {poi.sources.map((source, idx) => (
             <span
-              key={idx}
+              // eslint-disable-next-line react/no-array-index-key
+              key={`source-${source.platform}-${idx}`}
               className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600"
             >
               {source.platform}

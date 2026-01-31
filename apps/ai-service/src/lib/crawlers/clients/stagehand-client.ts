@@ -7,6 +7,9 @@ import type {
 } from './types';
 import { Stagehand } from '@browserbasehq/stagehand';
 import OpenAI from 'openai';
+import { createLogger } from '../../logger.js';
+
+const log = createLogger('stagehand-client');
 
 /**
  * Custom OpenAI-compatible LLM client for Stagehand
@@ -157,8 +160,7 @@ export class StagehandBrowserClient implements BrowserClient {
     const url = page.url();
 
     if (options?.verbose) {
-      console.warn(`📸 Snapshot taken at ${url}`);
-      console.warn(`   Tree length: ${snapshot.formattedTree.length} bytes`);
+      log.warn({ url, treeLength: snapshot.formattedTree.length }, 'Snapshot taken');
     }
 
     return {
@@ -192,7 +194,7 @@ export class StagehandBrowserClient implements BrowserClient {
     this.capturePatterns = patterns || ['**/*'];
     this.networkCaptureEnabled = true;
 
-    console.warn(
+    log.warn(
       'Network capture not fully supported with Stagehand V3 - events may not be captured'
     );
   }

@@ -16,10 +16,11 @@ import { serve } from '@hono/node-server';
  */
 
 import { Hono } from 'hono';
-
 import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
+
+import { logger as honoLogger } from 'hono/logger';
 import { checkConnection } from './lib/convex.js';
+import { logger as appLogger } from './lib/logger.js';
 import { agentRouter } from './routes/agent.js';
 import { aiRouter } from './routes/ai.js';
 
@@ -34,7 +35,7 @@ import 'dotenv/config';
 const app = new Hono();
 
 // Global middleware
-app.use('*', logger());
+app.use('*', honoLogger());
 app.use('*', cors());
 
 // Health check
@@ -102,7 +103,7 @@ app.notFound((c) => {
 // Start server
 const port = Number.parseInt(process.env.PORT || '3001', 10);
 
-console.log(`🤖 Starting AI Service on port ${port}...`);
+appLogger.info({ port }, '🤖 Starting AI Service');
 
 serve(
   {
@@ -110,7 +111,7 @@ serve(
     port,
   },
   (info) => {
-    console.log(`✅ AI Service running at http://localhost:${info.port}`);
+    appLogger.info({ port: info.port, url: `http://localhost:${info.port}` }, '✅ AI Service running');
   }
 );
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { crawlMafengwo } from './lib/crawlers/mafengwo.js';
 
 async function verifyMafengwoExtraction() {

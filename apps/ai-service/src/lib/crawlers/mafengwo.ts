@@ -1,5 +1,6 @@
 import type { BrowserClient } from './clients/index.js';
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
+import { createLogger } from '../logger.js';
 import {
   extractImageUrls,
   extractMafengwoAuthor,
@@ -11,6 +12,8 @@ import {
 } from './accessibility-parser.js';
 import { createBrowserClient } from './clients/index.js';
 import { waitForContentStable } from './utils.js';
+
+const log = createLogger('mafengwo');
 
 // Helper function for delay
 function sleep(ms: number): Promise<void> {
@@ -74,21 +77,21 @@ export async function crawlMafengwo(
   const client = options.client ?? createBrowserClient();
 
   if (!cityId) {
-    console.warn(`[Mafengwo] City not mapped: ${city}`);
+    log.warn({ city }, 'City not mapped');
     return results;
   }
 
-  console.log(`[Mafengwo] Crawling guides for ${city} (${cityId})`);
+  log.info({ city, cityId }, 'Crawling guides for city');
 
   try {
     await client.init();
 
     // Phase 1: Get guide URLs from list page
     const destUrl = `https://www.mafengwo.cn/travel-scenic-spot/mafengwo/${cityId}.html`;
-    console.log(`[Mafengwo] Fetching guide URLs from: ${destUrl}`);
+    log.info({ destUrl }, 'Fetching guide URLs from list page');
 
     const guideUrls = await fetchGuideUrls(destUrl, maxGuides, client);
-    console.log(`[Mafengwo] Found ${guideUrls.length} guide URLs to fetch`);
+    log.info({ count: guideUrls.length }, 'Found guide URLs to fetch');
 
     // Phase 2: Visit each detail page
     for (const url of guideUrls) {
@@ -96,27 +99,26 @@ export async function crawlMafengwo(
         const guide = await fetchGuideDetail(url, city, client);
         if (guide) {
           results.push(guide);
-          console.log(
-            `[Mafengwo] Extracted guide: ${guide.title} (${guide.content.length} chars)`
+          log.info(
+            { title: guide.title, contentLength: guide.content.length },
+            'Extracted guide'
           );
         }
         // Rate limiting delay
         await sleep(1000 / (options.rateLimit || 0.5));
       } catch (error) {
-        console.error(`[Mafengwo] Error fetching guide: ${url}`, error);
+        log.error({ error, url }, 'Error fetching guide');
       }
     }
 
     if (results.length === 0) {
-      console.warn(
-        '[Mafengwo] No results found. Site may require verification.'
-      );
+      log.warn('No results found. Site may require verification');
     }
   } catch (error) {
-    console.error(`[Mafengwo] Error crawling destination page:`, error);
+    log.error({ error }, 'Error crawling destination page');
   } finally {
     await client.close();
-    console.log('[Mafengwo] Browser client closed');
+    log.info('Browser client closed');
   }
 
   return results;
@@ -148,12 +150,12 @@ async function fetchGuideUrls(
     const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
-    console.log(`[Mafengwo] Snapshot length: ${content.length} chars`);
+    log.debug({ snapshotLength: content.length }, 'Snapshot captured');
 
     // Check for captcha
     if (detectMafengwoCaptcha(content)) {
-      console.warn(
-        '[Mafengwo] Captcha detected on list page - site requires manual verification'
+      log.warn(
+        'Captcha detected on list page - site requires manual verification'
       );
       return guideUrls;
     }
@@ -171,9 +173,9 @@ async function fetchGuideUrls(
       guideUrls.push(`https://www.mafengwo.cn/i/${guideId}.html`);
     }
 
-    console.log(`[Mafengwo] Found ${guideUrls.length} guide URLs`);
+    log.info({ count: guideUrls.length }, 'Found guide URLs');
   } catch (error) {
-    console.error(`[Mafengwo] Error fetching list page:`, error);
+    log.error({ error }, 'Error fetching list page');
   }
 
   return guideUrls;
@@ -202,13 +204,14 @@ async function fetchGuideDetail(
     const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
-    console.log(
-      `[Mafengwo] Detail page snapshot for ${url.split('/').pop()}: ${content.length} chars`
+    log.debug(
+      { guideId: url.split('/').pop(), snapshotLength: content.length },
+      'Detail page snapshot captured'
     );
 
     // Check for captcha/login wall
     if (detectMafengwoCaptcha(content)) {
-      console.warn(`[Mafengwo] Captcha detected on ${url}, skipping`);
+      log.warn({ url }, 'Captcha detected, skipping');
       return null;
     }
 
@@ -217,8 +220,9 @@ async function fetchGuideDetail(
     const textContent = getArticleContent(content);
 
     if (!textContent || textContent.length < 100) {
-      console.log(
-        `[Mafengwo] Insufficient content (${textContent?.length || 0} chars): ${url}`
+      log.info(
+        { contentLength: textContent?.length || 0, url },
+        'Insufficient content, skipping'
       );
       return null;
     }
@@ -266,7 +270,7 @@ async function fetchGuideDetail(
       ),
     };
   } catch (error) {
-    console.error(`[Mafengwo] Error parsing guide: ${url}`, error);
+    log.error({ error, url }, 'Error parsing guide');
     return null;
   }
 }

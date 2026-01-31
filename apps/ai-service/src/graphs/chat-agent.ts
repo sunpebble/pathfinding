@@ -18,6 +18,7 @@ import {
 } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createLLM } from '../lib/llm/index.js';
+import { loggers } from '../lib/logger.js';
 import { toolsByUseCase } from '../tools/index.js';
 
 // Chat state annotation
@@ -92,7 +93,10 @@ export function buildChatAgentGraph(enableTools = true) {
       // @ts-expect-error - bindTools exists on LangChain chat models
       llmWithTools = llm.bindTools(tools);
     } catch (error) {
-      console.warn('Tool binding failed, falling back to simple chat:', error);
+      loggers.langgraph.warn(
+        { error },
+        'Tool binding failed, falling back to simple chat'
+      );
       useTools = false;
     }
   }
@@ -265,7 +269,8 @@ export async function* streamChat(options: {
   for await (const chunk of stream) {
     // Handle agent output
     if ('agent' in chunk && chunk.agent) {
-      const agentMessages = chunk.agent.messages || [];
+      const agentState = chunk.agent as { messages?: unknown[] };
+      const agentMessages = agentState.messages || [];
       for (const msg of agentMessages) {
         if (msg instanceof AIMessage) {
           // Check for tool calls

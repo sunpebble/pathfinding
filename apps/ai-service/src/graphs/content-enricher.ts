@@ -7,6 +7,7 @@
 
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
 import { createLLM } from '../lib/llm/index.js';
+import { loggers } from '../lib/logger.js';
 
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org';
@@ -99,7 +100,7 @@ JSON:`;
 
     return { step: 'metadata_extracted' };
   } catch (error) {
-    console.error('Extract metadata error:', error);
+    loggers.langgraph.error({ error }, 'Extract metadata error');
     return {
       error: `Metadata extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       step: 'metadata_extracted',
@@ -168,7 +169,7 @@ JSON:`;
 
     return { step: 'pois_extracted' };
   } catch (error) {
-    console.error('Extract POIs error:', error);
+    loggers.langgraph.error({ error }, 'Extract POIs error');
     return {
       error: `POI extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       step: 'pois_extracted',
@@ -232,7 +233,7 @@ async function geocodePois(
         // Rate limiting: 1 request per second for Nominatim
         await new Promise((resolve) => setTimeout(resolve, 1100));
       } catch (err) {
-        console.error(`Geocoding error for ${poi.name}:`, err);
+        loggers.langgraph.error({ err, poiName: poi.name }, 'Geocoding error for POI');
         geocodedPois.push({
           ...poi,
           latitude: 0,
@@ -260,7 +261,7 @@ async function geocodePois(
       step: 'pois_geocoded',
     };
   } catch (error) {
-    console.error('Geocode POIs error:', error);
+    loggers.langgraph.error({ error }, 'Geocode POIs error');
     return {
       error: `Geocoding failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       step: 'pois_geocoded',
@@ -322,7 +323,7 @@ async function saveToDb(
 
     return { step: 'saved' };
   } catch (error) {
-    console.error('Save to DB error:', error);
+    loggers.langgraph.error({ error }, 'Save to DB error');
     return {
       error: `Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       step: 'save_failed',

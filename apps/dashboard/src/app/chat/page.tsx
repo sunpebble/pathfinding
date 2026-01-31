@@ -207,14 +207,16 @@ function MessageBubble({
           switch (part.type) {
             case 'text':
               return (
-                <Fragment key={`${message.id}-${i}`}>
+                // eslint-disable-next-line react/no-array-index-key -- parts are immutable and order-dependent
+                <Fragment key={`${message.id}-text-${i}`}>
                   <MessageResponse>{part.text || ''}</MessageResponse>
                 </Fragment>
               );
             case 'reasoning':
               return (
                 <Reasoning
-                  key={`${message.id}-${i}`}
+                  // eslint-disable-next-line react/no-array-index-key -- parts are immutable and order-dependent
+                  key={`${message.id}-reasoning-${i}`}
                   className="w-full"
                   isStreaming={isStreaming && isLastPart}
                 >

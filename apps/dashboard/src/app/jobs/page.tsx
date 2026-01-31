@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle,
   Clock,
@@ -11,9 +11,9 @@ import {
   RefreshCw,
   StopCircle,
   XCircle,
-} from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
+} from "lucide-react";
+import Link from "next/link";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   cancelCrawlJob,
   getCrawlJobs,
@@ -21,19 +21,19 @@ import {
   startCrawlJob,
   startScheduledTask,
   stopScheduledTask,
-} from '@/lib/api';
-import { formatDateTime, shortId } from '@/lib/utils';
+} from "@/lib/api";
+import { formatDateTime, shortId } from "@/lib/utils";
 
 export default function JobsPage() {
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>("");
 
   const {
     data: jobsData,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ['crawl-jobs', statusFilter],
+    queryKey: ["crawl-jobs", statusFilter],
     queryFn: () =>
       getCrawlJobs({ status: statusFilter || undefined, limit: 50 }),
   });
@@ -43,7 +43,7 @@ export default function JobsPage() {
     isLoading: isLoadingScheduler,
     refetch: refetchScheduler,
   } = useQuery({
-    queryKey: ['scheduler-status'],
+    queryKey: ["scheduler-status"],
     queryFn: getSchedulerStatus,
     refetchInterval: 10000,
   });
@@ -51,32 +51,37 @@ export default function JobsPage() {
   const startMutation = useMutation({
     mutationFn: startCrawlJob,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crawl-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ["crawl-jobs"] });
     },
   });
 
   const cancelMutation = useMutation({
     mutationFn: cancelCrawlJob,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crawl-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ["crawl-jobs"] });
     },
   });
 
   const startTaskMutation = useMutation({
     mutationFn: startScheduledTask,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduler-status'] });
+      queryClient.invalidateQueries({ queryKey: ["scheduler-status"] });
     },
   });
 
   const stopTaskMutation = useMutation({
     mutationFn: stopScheduledTask,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduler-status'] });
+      queryClient.invalidateQueries({ queryKey: ["scheduler-status"] });
     },
   });
 
-  const jobs = jobsData?.data || [];
+  const jobs = useMemo(() => jobsData?.data ?? [], [jobsData?.data]);
+
+  const handleRefresh = useCallback(() => {
+    refetch();
+    refetchScheduler();
+  }, [refetch, refetchScheduler]);
 
   return (
     <div className="space-y-6">
@@ -88,10 +93,7 @@ export default function JobsPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => {
-              refetch();
-              refetchScheduler();
-            }}
+            onClick={handleRefresh}
             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <RefreshCw className="h-4 w-4" />
@@ -172,11 +174,11 @@ export default function JobsPage() {
                             <span
                               className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                                 task.enabled
-                                  ? 'bg-emerald-50 text-emerald-600'
-                                  : 'bg-gray-100 text-gray-600'
+                                  ? "bg-emerald-50 text-emerald-600"
+                                  : "bg-gray-100 text-gray-600"
                               }`}
                             >
-                              {task.enabled ? 'Enabled' : 'Disabled'}
+                              {task.enabled ? "Enabled" : "Disabled"}
                             </span>
                           </div>
                           <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
@@ -290,7 +292,7 @@ export default function JobsPage() {
                   colSpan={7}
                   className="px-6 py-12 text-center text-gray-500"
                 >
-                  No jobs found.{' '}
+                  No jobs found.{" "}
                   <Link
                     href="/jobs/create"
                     className="text-blue-600 hover:underline"
@@ -325,7 +327,7 @@ export default function JobsPage() {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {job.status === 'pending' && (
+                      {job.status === "pending" && (
                         <button
                           onClick={() => startMutation.mutate(job.id)}
                           disabled={startMutation.isPending}
@@ -335,11 +337,11 @@ export default function JobsPage() {
                           <Play className="h-4 w-4" />
                         </button>
                       )}
-                      {job.status === 'running' && (
+                      {job.status === "running" && (
                         <button
                           onClick={() => {
                             // eslint-disable-next-line no-alert
-                            if (confirm('Cancel this job?')) {
+                            if (confirm("Cancel this job?")) {
                               cancelMutation.mutate(job.id);
                             }
                           }}
@@ -369,31 +371,39 @@ export default function JobsPage() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { icon: React.ReactNode; className: string }> = {
-    pending: {
-      icon: <Clock className="h-3.5 w-3.5" />,
-      className: 'bg-amber-50 text-amber-600 border-amber-200',
-    },
-    running: {
-      icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-      className: 'bg-blue-50 text-blue-600 border-blue-200',
-    },
-    completed: {
-      icon: <CheckCircle className="h-3.5 w-3.5" />,
-      className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-    },
-    failed: {
-      icon: <XCircle className="h-3.5 w-3.5" />,
-      className: 'bg-red-50 text-red-600 border-red-200',
-    },
-    cancelled: {
-      icon: <XCircle className="h-3.5 w-3.5" />,
-      className: 'bg-gray-50 text-gray-600 border-gray-200',
-    },
-  };
+// Status config moved outside component to avoid recreation on each render
+const STATUS_CONFIG: Record<
+  string,
+  { icon: React.ReactNode; className: string }
+> = {
+  pending: {
+    icon: <Clock className="h-3.5 w-3.5" />,
+    className: "bg-amber-50 text-amber-600 border-amber-200",
+  },
+  running: {
+    icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
+    className: "bg-blue-50 text-blue-600 border-blue-200",
+  },
+  completed: {
+    icon: <CheckCircle className="h-3.5 w-3.5" />,
+    className: "bg-emerald-50 text-emerald-600 border-emerald-200",
+  },
+  failed: {
+    icon: <XCircle className="h-3.5 w-3.5" />,
+    className: "bg-red-50 text-red-600 border-red-200",
+  },
+  cancelled: {
+    icon: <XCircle className="h-3.5 w-3.5" />,
+    className: "bg-gray-50 text-gray-600 border-gray-200",
+  },
+};
 
-  const statusConfig = (config[status] || config.cancelled)!;
+const StatusBadge = React.memo(function StatusBadge({
+  status,
+}: {
+  status: string;
+}) {
+  const statusConfig = STATUS_CONFIG[status] ?? STATUS_CONFIG.cancelled!;
   const { icon, className } = statusConfig;
 
   return (
@@ -404,4 +414,4 @@ function StatusBadge({ status }: { status: string }) {
       {status}
     </span>
   );
-}
+});

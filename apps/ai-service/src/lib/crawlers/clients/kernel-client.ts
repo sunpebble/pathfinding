@@ -7,11 +7,14 @@ import type {
 } from './types';
 import Kernel from '@onkernel/sdk';
 import {
-  
-  
+
+
   chromium
-  
+
 } from 'playwright';
+import { createLogger } from '../../logger.js';
+
+const log = createLogger('kernel-client');
 
 /**
  * Kernel Browser Client - Cloud browser infrastructure for AI agents
@@ -39,7 +42,7 @@ export class KernelBrowserClient implements BrowserClient {
   async init(options?: SessionOptions): Promise<void> {
     this.options = options || {};
 
-    console.log('[Kernel] Creating cloud browser via SDK...');
+    log.info('Creating cloud browser via SDK...');
 
     // Create Kernel instance - SDK reads KERNEL_API_KEY from env
     const kernel = new Kernel();
@@ -51,8 +54,8 @@ export class KernelBrowserClient implements BrowserClient {
     });
 
     const cdpWsUrl = this.kernelBrowser.cdp_ws_url;
-    console.log(`[Kernel] Browser created: ${this.kernelBrowser.session_id}`);
-    console.log(`[Kernel] Connecting via CDP...`);
+    log.info({ sessionId: this.kernelBrowser.session_id }, 'Browser created');
+    log.info('Connecting via CDP...');
 
     // Connect to the browser via CDP
     this.browser = await chromium.connectOverCDP(cdpWsUrl);
@@ -72,7 +75,7 @@ export class KernelBrowserClient implements BrowserClient {
     const pages = this.context.pages();
     this.page = pages.length > 0 ? pages[0] : await this.context.newPage();
 
-    console.log('[Kernel] Browser ready');
+    log.info('Browser ready');
   }
 
   /**
@@ -88,8 +91,9 @@ export class KernelBrowserClient implements BrowserClient {
 
     // Kernel browsers auto-terminate after disconnect
     if (this.kernelBrowser) {
-      console.log(
-        `[Kernel] Browser ${this.kernelBrowser.session_id} disconnected`
+      log.info(
+        { sessionId: this.kernelBrowser.session_id },
+        'Browser disconnected'
       );
       this.kernelBrowser = null;
     }
@@ -126,8 +130,7 @@ export class KernelBrowserClient implements BrowserClient {
     const url = this.page!.url();
 
     if (options?.verbose) {
-      console.warn(`[Kernel] Snapshot taken at ${url}`);
-      console.warn(`   Content length: ${content.length} bytes`);
+      log.warn({ url, contentLength: content.length }, 'Snapshot taken');
     }
 
     return {
@@ -162,23 +165,23 @@ export class KernelBrowserClient implements BrowserClient {
           id,
           url: request.url(),
           method: request.method(),
-          headers: request.headers(),
+          requestHeaders: request.headers(),
+          responseHeaders: {},
           resourceType: request.resourceType(),
-          timestamp: new Date(),
+          status: 0,
+          responseBody: null,
         });
       }
     });
 
-    this.page!.on('response', (response) => {
+    this.page!.on('response', async (response) => {
       const request = response.request();
       if (this.shouldCaptureRequest(request.url())) {
         // Find and update the matching request
         for (const [_id, req] of this.networkRequests) {
-          if (req.url === request.url() && !req.response) {
-            req.response = {
-              status: response.status(),
-              headers: response.headers(),
-            };
+          if (req.url === request.url() && req.status === 0) {
+            req.status = response.status();
+            req.responseHeaders = response.headers();
             break;
           }
         }
@@ -274,6 +277,26 @@ export class KernelBrowserClient implements BrowserClient {
       };
     }
     return { type: 'isolated' };
+  }
+
+  /**
+   * Perform an action using natural language instruction
+   * Note: KernelBrowserClient does not support AI-based actions, use StagehandClient instead
+   */
+  async act(_instruction: string): Promise<void> {
+    throw new Error(
+      'KernelBrowserClient does not support AI-based act(). Use StagehandClient instead.'
+    );
+  }
+
+  /**
+   * Extract data from the page using natural language instruction and schema
+   * Note: KernelBrowserClient does not support AI-based extraction, use StagehandClient instead
+   */
+  async extract<T>(_instruction: string, _schema: import('zod').ZodSchema<T>): Promise<T> {
+    throw new Error(
+      'KernelBrowserClient does not support AI-based extract(). Use StagehandClient instead.'
+    );
   }
 
   /**

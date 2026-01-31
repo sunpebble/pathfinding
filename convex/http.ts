@@ -261,13 +261,6 @@ http.route({
       const body = await request.json();
       const { itineraryId, content, parentId } = body;
 
-      console.log('📝 Create comment request:', {
-        itineraryId,
-        contentLength: content?.length,
-        parentId,
-        parentIdType: typeof parentId,
-      });
-
       if (!itineraryId || !content) {
         return new Response(JSON.stringify({ error: '缺少必要参数' }), {
           status: 400,
@@ -311,6 +304,7 @@ http.route({
         }
       );
     } catch (error) {
+       
       console.error('Create comment error:', error);
       return new Response(
         JSON.stringify({
@@ -485,7 +479,6 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const userId = await getUserIdFromAuth(request);
-      console.log('[Like API] userId from auth:', userId);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
@@ -495,7 +488,6 @@ http.route({
 
       const body = await request.json();
       const { commentId } = body;
-      console.log('[Like API] commentId from body:', commentId);
 
       if (!commentId) {
         return new Response(JSON.stringify({ error: '缺少commentId参数' }), {
@@ -504,12 +496,10 @@ http.route({
         });
       }
 
-      console.log('[Like API] Calling toggleLike mutation...');
       const result = await ctx.runMutation(api.guideComments.toggleLike, {
         commentId: commentId as Id<'guideComments'>,
         userId,
       });
-      console.log('[Like API] Result:', result);
 
       // Convert to snake_case for iOS compatibility
       return new Response(

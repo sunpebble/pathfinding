@@ -1,5 +1,6 @@
 import type { BrowserClient } from './clients/index.js';
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
+import { createLogger } from '../logger.js';
 import {
   extractImageUrls,
   extractPublishDate,
@@ -11,6 +12,8 @@ import {
 } from './accessibility-parser.js';
 import { createBrowserClient } from './clients/index.js';
 import { waitForContentStable } from './utils.js';
+
+const log = createLogger('tongcheng');
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -49,17 +52,17 @@ export async function crawlTongcheng(
   const client = options.client ?? createBrowserClient();
   const shouldCleanup = !options.client;
 
-  console.log(`[Tongcheng] Crawling guides for ${city} (${citySlug})`);
+  log.info({ city, citySlug }, 'Crawling guides for city');
 
   try {
     await client.init();
 
     // Phase 1: Get guide URLs from list page
     const listUrl = 'https://www.ly.com/travels/';
-    console.log(`[Tongcheng] Fetching guide URLs from: ${listUrl}`);
+    log.info({ listUrl }, 'Fetching guide URLs from list page');
 
     const guideUrls = await fetchGuideUrls(client, listUrl, city, maxGuides);
-    console.log(`[Tongcheng] Found ${guideUrls.length} guide URLs to fetch`);
+    log.info({ count: guideUrls.length }, 'Found guide URLs to fetch');
 
     // Phase 2: Visit each detail page (follows Mafengwo/Ctrip pattern)
     for (const { url, guideId } of guideUrls) {
@@ -67,26 +70,27 @@ export async function crawlTongcheng(
         const guide = await fetchGuideDetail(client, url, guideId, city);
         if (guide) {
           results.push(guide);
-          console.log(
-            `[Tongcheng] Extracted guide: ${guide.title} (${guide.content.length} chars)`
+          log.info(
+            { title: guide.title, contentLength: guide.content.length },
+            'Extracted guide'
           );
         }
         // Rate limiting delay (1-2 seconds)
         await sleep(1000 + Math.random() * 1000);
       } catch (error) {
-        console.error(`[Tongcheng] Error fetching guide: ${url}`, error);
+        log.error({ error, url }, 'Error fetching guide');
       }
     }
 
     if (results.length === 0) {
-      console.warn('[Tongcheng] No results found from detail pages');
+      log.warn('No results found from detail pages');
     }
   } catch (error) {
-    console.error(`[Tongcheng] Error crawling travels list:`, error);
+    log.error({ error }, 'Error crawling travels list');
   } finally {
     if (shouldCleanup) {
       await client.close();
-      console.log('[Tongcheng] Browser client closed');
+      log.info('Browser client closed');
     }
   }
 
@@ -120,7 +124,7 @@ async function fetchGuideUrls(
     const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
-    console.log(`[Tongcheng] List page snapshot: ${content.length} chars`);
+    log.debug({ snapshotLength: content.length }, 'List page snapshot captured');
 
     // Extract guide URLs from /travels/{id}.html pattern
     const guideMatches = content.matchAll(/\/travels\/(\d+)\.html/g);
@@ -149,9 +153,9 @@ async function fetchGuideUrls(
       });
     }
 
-    console.log(`[Tongcheng] Found ${guideUrls.length} guide URLs`);
+    log.info({ count: guideUrls.length }, 'Found guide URLs');
   } catch (error) {
-    console.error(`[Tongcheng] Error fetching list page:`, error);
+    log.error({ error }, 'Error fetching list page');
   }
 
   return guideUrls;
@@ -168,7 +172,7 @@ async function fetchGuideDetail(
   city: string
 ): Promise<CrawlResult | null> {
   try {
-    console.log(`[Tongcheng] Entering detail page: ${url}`);
+    log.info({ url }, 'Entering detail page');
 
     await client.navigateTo(url, { timeout: 30000 });
     await waitForContentStable(client);
@@ -183,21 +187,24 @@ async function fetchGuideDetail(
     const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
-    console.log(
-      `[Tongcheng] Detail page snapshot for ${guideId}: ${content.length} chars`
+    log.debug(
+      { guideId, snapshotLength: content.length },
+      'Detail page snapshot captured'
     );
 
     // Extract all fields using accessibility-parser utilities
     const title = getBestTitle(content, `${city}旅游攻略`);
     const textContent = getArticleContent(content);
 
-    console.log(
-      `[Tongcheng] Extracted content length: ${textContent?.length || 0} chars`
+    log.debug(
+      { contentLength: textContent?.length || 0 },
+      'Extracted content length'
     );
 
     if (!textContent || textContent.length < 100) {
-      console.log(
-        `[Tongcheng] Insufficient content (${textContent?.length || 0} chars): ${url}`
+      log.info(
+        { contentLength: textContent?.length || 0, url },
+        'Insufficient content, skipping'
       );
       return null;
     }
@@ -209,7 +216,7 @@ async function fetchGuideDetail(
     const publishedAt = extractPublishDate(content);
     const stats = extractTongchengStats(content);
 
-    console.log(`[Tongcheng] Found ${imageUrls.length} images`);
+    log.debug({ count: imageUrls.length }, 'Found images');
 
     // Build content blocks
     const contentBlocks: ContentBlock[] = [
@@ -245,7 +252,7 @@ async function fetchGuideDetail(
       ),
     };
   } catch (error) {
-    console.error(`[Tongcheng] Error parsing guide: ${url}`, error);
+    log.error({ error, url }, 'Error parsing guide');
     return null;
   }
 }

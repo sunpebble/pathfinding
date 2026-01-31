@@ -46,8 +46,11 @@ export function PoiEditor({
   useEffect(() => {
     const newLat = poi.latitude.toString();
     const newLng = poi.longitude.toString();
+    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- Syncing from props is intentional
     setLatitude(newLat);
+    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- Syncing from props is intentional
     setLongitude(newLng);
+    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- Syncing from props is intentional
     setError('');
   }, [poi.latitude, poi.longitude]);
 
@@ -57,6 +60,7 @@ export function PoiEditor({
     const lng = Number.parseFloat(longitude);
 
     if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- Clearing state on invalid input is intentional
       setReverseAddress('');
       return;
     }

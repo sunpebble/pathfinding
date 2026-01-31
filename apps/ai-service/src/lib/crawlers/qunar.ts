@@ -1,5 +1,6 @@
 import type { BrowserClient } from './clients/index.js';
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
+import { createLogger } from '../logger.js';
 import {
   extractImageUrls,
   extractPublishDate,
@@ -11,6 +12,8 @@ import {
 } from './accessibility-parser.js';
 import { createBrowserClient } from './clients/index.js';
 import { waitForContentStable } from './utils.js';
+
+const log = createLogger('qunar');
 
 // Helper function for delay
 function sleep(ms: number): Promise<void> {
@@ -49,11 +52,11 @@ export async function crawlQunar(
   const cityId = CITY_IDS[city];
 
   if (!cityId) {
-    console.warn(`[Qunar] City not mapped: ${city}`);
+    log.warn({ city }, 'City not mapped');
     return results;
   }
 
-  console.log(`[Qunar] Crawling guides for ${city} (${cityId})`);
+  log.info({ city, cityId }, 'Crawling guides for city');
 
   const client = options.client ?? createBrowserClient();
   const shouldCloseClient = !options.client;
@@ -64,12 +67,10 @@ export async function crawlQunar(
     for (let page = 1; page <= maxPages; page++) {
       try {
         const listUrl = `https://travel.qunar.com/p-cs${cityId}/youji?page=${page}`;
-        console.log(`[Qunar] Fetching page ${page}: ${listUrl}`);
+        log.info({ page, listUrl }, 'Fetching page');
 
         const guideLinks = await fetchListPage(listUrl, client);
-        console.log(
-          `[Qunar] Found ${guideLinks.length} guides on page ${page}`
-        );
+        log.info({ count: guideLinks.length, page }, 'Found guides on page');
 
         for (const guideUrl of guideLinks.slice(0, 10)) {
           try {
@@ -79,17 +80,17 @@ export async function crawlQunar(
             }
             await sleep(1000 / (options.rateLimit || 0.5));
           } catch (error) {
-            console.error(`[Qunar] Error fetching guide: ${guideUrl}`, error);
+            log.error({ error, guideUrl }, 'Error fetching guide');
           }
         }
       } catch (error) {
-        console.error(`[Qunar] Error crawling page ${page}:`, error);
+        log.error({ error, page }, 'Error crawling page');
       }
     }
   } finally {
     if (shouldCloseClient) {
       await client.close();
-      console.log('[Qunar] Browser client closed');
+      log.info('Browser client closed');
     }
   }
 
@@ -123,7 +124,7 @@ async function fetchListPage(
       guideLinks.push(fullUrl);
     }
   } catch (error) {
-    console.error(`[Qunar] Error fetching list page: ${url}`, error);
+    log.error({ error, url }, 'Error fetching list page');
   }
 
   return guideLinks;
@@ -148,7 +149,7 @@ async function fetchQunarGuide(
     const textContent = getArticleContent(content);
 
     if (!textContent || textContent.length < 100) {
-      console.log(`[Qunar] Skipping guide with insufficient content: ${url}`);
+      log.info({ url }, 'Skipping guide with insufficient content');
       return null;
     }
 
@@ -203,7 +204,7 @@ async function fetchQunarGuide(
       ),
     };
   } catch (error) {
-    console.error(`[Qunar] Error parsing guide:`, error);
+    log.error({ error }, 'Error parsing guide');
     return null;
   }
 }

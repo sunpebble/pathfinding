@@ -4,6 +4,9 @@
  */
 
 import { ConvexHttpClient } from 'convex/browser';
+import { createLogger } from './logger.js';
+
+const log = createLogger('convex');
 
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 
@@ -20,7 +23,7 @@ export async function checkConnection(): Promise<boolean> {
     });
     return response.ok;
   } catch (error) {
-    console.error('Convex connection failed:', error);
+    log.error({ error }, 'Convex connection failed');
     return false;
   }
 }

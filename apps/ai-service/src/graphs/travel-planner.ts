@@ -22,6 +22,7 @@ import {
 } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { createLLM } from '../lib/llm/index.js';
+import { loggers } from '../lib/logger.js';
 import { toolsByUseCase } from '../tools/index.js';
 
 // Travel plan state annotation
@@ -174,14 +175,16 @@ async function gatherInfo(
 
   // If tool calling is not supported, skip tool-based gathering
   if (!isToolCallingSupported()) {
-    console.log('Tool calling not supported, skipping gatherInfo tools');
+    loggers.langgraph.info(
+      'Tool calling not supported, skipping gatherInfo tools'
+    );
     return { currentStep: 'info_gathered' };
   }
 
   const tools = toolsByUseCase.travelPlanning;
   const llm = createLLM({ temperature: 0.5 });
-  // @ts-expect-error - bindTools exists on LangChain chat models
-  const llmWithTools = llm.bindTools(tools);
+   
+  const llmWithTools: any = (llm as any).bindTools(tools);
 
   // Create a message to trigger tool calls
   const gatherPrompt = `我需要为用户规划去${destination}的旅行。
@@ -233,7 +236,7 @@ async function gatherInfo(
 
     return { currentStep: 'info_gathered' };
   } catch (error) {
-    console.error('Gather info error:', error);
+    loggers.langgraph.error({ error }, 'Gather info error');
     return { currentStep: 'info_gathered' }; // Continue even if gathering fails
   }
 }

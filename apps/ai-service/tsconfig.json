@@ -4,6 +4,10 @@
     "rootDir": "./src",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "paths": {
+      "@pathfinding/convex/api": ["../../convex/_generated/api"],
+      "@pathfinding/convex/dataModel": ["../../convex/_generated/dataModel"]
+    },
     "resolveJsonModule": true,
     "strict": true,
     "declaration": true,
@@ -12,5 +16,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "../../convex"]
 }

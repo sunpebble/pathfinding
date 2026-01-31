@@ -5,15 +5,18 @@
 
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type {LLMConfig, LLMProvider} from './types.js';
+import { createLogger } from '../logger.js';
 import { createClaudeLLM, isClaudeConfigured } from './claude.js';
 import { checkOllamaHealth, createOllamaLLM } from './ollama.js';
 import { createOpenAILLM, isOpenAIConfigured } from './openai.js';
 import {
   getDefaultModel,
   getDefaultProvider
-  
-  
+
+
 } from './types.js';
+
+const log = createLogger('llm');
 
 export { isClaudeConfigured } from './claude.js';
 export { checkOllamaHealth } from './ollama.js';
@@ -79,8 +82,9 @@ export async function getBestAvailableLLM(
 
   for (const provider of fallbackOrder) {
     if (await providerChecks[provider]()) {
-      console.log(
-        `LLM fallback: ${preferredProvider} unavailable, using ${provider}`
+      log.info(
+        { preferredProvider, actualProvider: provider },
+        'LLM fallback: preferred provider unavailable'
       );
       return {
         llm: createLLM({ ...config, provider }),

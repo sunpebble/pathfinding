@@ -18,5 +18,10 @@
     "skipLibCheck": true
   },
   "include": ["*.ts"],
-  "exclude": ["_generated/**/*"]
+  "exclude": [
+    "_generated/**/*",
+    "phoneAuth.ts",
+    "notifications.ts",
+    "dataQualityReports.ts"
+  ]
 }

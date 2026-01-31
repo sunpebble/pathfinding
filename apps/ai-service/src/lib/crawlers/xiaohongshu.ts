@@ -5,6 +5,7 @@ import type {
   CrawlOptions,
   CrawlResult,
 } from './index.js';
+import { createLogger } from '../logger.js';
 import {
   extractAuthor,
   extractHeadings,
@@ -13,6 +14,8 @@ import {
 } from './accessibility-parser.js';
 import { createBrowserClient } from './clients/index.js';
 import { checkSessionWithGuidance } from './session/index.js';
+
+const log = createLogger('xiaohongshu');
 
 // Helper function for delay
 function sleep(ms: number): Promise<void> {
@@ -153,7 +156,7 @@ export async function crawlXiaohongshu(
   const results: CrawlResult[] = [];
   const maxGuides = (options.maxPages || 5) * 10;
 
-  console.log(`[Xiaohongshu] Crawling guides for ${city}`);
+  log.info({ city }, 'Crawling guides for city');
 
   // Create client if not provided
   const shouldCloseClient = !client;
@@ -164,7 +167,7 @@ export async function crawlXiaohongshu(
   try {
     // Initialize with persistent session for login state
     await client.init({ persistent: true });
-    console.log('[Xiaohongshu] Using persistent Chrome session');
+    log.info('Using persistent Chrome session');
 
     // Enable network capture for API interception
     await client.enableNetworkCapture(['xhr', 'fetch']);
@@ -172,7 +175,7 @@ export async function crawlXiaohongshu(
     // Route to appropriate crawler based on options
     if (options.userId) {
       // User profile mode: crawl all notes from a specific user
-      console.log(`[Xiaohongshu] Crawling user profile: ${options.userId}`);
+      log.info({ userId: options.userId }, 'Crawling user profile');
       const userNotes = await fetchNotesFromUserProfile(
         options.userId,
         city,
@@ -183,7 +186,7 @@ export async function crawlXiaohongshu(
       results.push(...userNotes);
     } else if (options.searchQuery) {
       // Search mode: search for notes by keyword
-      console.log(`[Xiaohongshu] Searching for: ${options.searchQuery}`);
+      log.info({ query: options.searchQuery }, 'Searching for notes');
       const searchNotes = await fetchNotesFromSearch(
         options.searchQuery,
         city,
@@ -195,7 +198,7 @@ export async function crawlXiaohongshu(
     } else {
       // Default: explore page
       const exploreUrl = 'https://www.xiaohongshu.com/explore';
-      console.log('[Xiaohongshu] Fetching explore page');
+      log.info('Fetching explore page');
 
       const exploreGuides = await fetchNotesFromExplore(
         exploreUrl,
@@ -204,9 +207,7 @@ export async function crawlXiaohongshu(
         options,
         client
       );
-      console.log(
-        `[Xiaohongshu] Found ${exploreGuides.length} notes from explore`
-      );
+      log.info({ count: exploreGuides.length }, 'Found notes from explore');
 
       for (const guide of exploreGuides) {
         if (
@@ -218,17 +219,17 @@ export async function crawlXiaohongshu(
     }
 
     if (results.length === 0) {
-      console.warn('[Xiaohongshu] No results found. Session may need refresh.');
-      console.warn(
-        '  Run: pnpm --filter ai-service exec tsx src/login-helper.ts xiaohongshu'
+      log.warn('No results found. Session may need refresh');
+      log.warn(
+        'Run: pnpm --filter ai-service exec tsx src/login-helper.ts xiaohongshu'
       );
     }
   } catch (error) {
-    console.error('[Xiaohongshu] Error fetching explore page:', error);
+    log.error({ error }, 'Error fetching explore page');
   } finally {
     if (shouldCloseClient) {
       await client.close();
-      console.log('[Xiaohongshu] Browser client closed');
+      log.info('Browser client closed');
     }
   }
 
@@ -243,14 +244,14 @@ export async function handleSessionRefresh(
   client: BrowserClient
 ): Promise<boolean> {
   try {
-    console.warn('[Xiaohongshu] Session expired, attempting refresh...');
+    log.warn('Session expired, attempting refresh');
     // Re-initialize with persistent session
     await client.init({ persistent: true });
     await client.enableNetworkCapture(['xhr', 'fetch']);
-    console.log('[Xiaohongshu] Session refresh successful');
+    log.info('Session refresh successful');
     return true;
   } catch (error) {
-    console.error('[Xiaohongshu] Session refresh failed:', error);
+    log.error({ error }, 'Session refresh failed');
     return false;
   }
 }
@@ -273,7 +274,7 @@ async function fetchNoteDetail(
   const detailUrl = `https://www.xiaohongshu.com/explore/${noteId}`;
 
   try {
-    console.log(`[Xiaohongshu] Fetching detail page for note ${noteId}`);
+    log.info({ noteId }, 'Fetching detail page for note');
     await client.navigateTo(detailUrl, { timeout: 30000 });
     await waitForContentStable(client);
 
@@ -298,12 +299,10 @@ async function fetchNoteDetail(
 
     // Fallback: the note may have been loaded in a different API response
     // Return null and let caller handle
-    console.log(
-      `[Xiaohongshu] Note ${noteId} not found in detail page API response`
-    );
+    log.info({ noteId }, 'Note not found in detail page API response');
     return null;
   } catch (error) {
-    console.error(`[Xiaohongshu] Error fetching note detail: ${noteId}`, error);
+    log.error({ error, noteId }, 'Error fetching note detail');
     return null;
   }
 }
@@ -334,7 +333,7 @@ async function fetchNotesFromExplore(
     // Check session validity using session module
     const sessionCheck = await checkSessionWithGuidance(client, 'xiaohongshu');
     if (!sessionCheck.canCrawl) {
-      console.warn(`[Xiaohongshu] ${sessionCheck.message}`);
+      log.warn({ message: sessionCheck.message }, 'Session check failed');
       return notes; // Return empty, let caller handle
     }
 
@@ -344,9 +343,7 @@ async function fetchNotesFromExplore(
     // Try to extract from API responses first (most reliable)
     const apiNotes = await extractNotesFromApi(client);
     if (apiNotes.length > 0) {
-      console.log(
-        `[Xiaohongshu] Extracted ${apiNotes.length} notes from explore API`
-      );
+      log.info({ count: apiNotes.length }, 'Extracted notes from explore API');
 
       for (const note of apiNotes.slice(0, maxNotes)) {
         // convertNoteToResult now handles quality filtering internally
@@ -364,8 +361,12 @@ async function fetchNotesFromExplore(
             stats.placeholders >= 3 &&
             !stats.sessionRefreshAttempted
           ) {
-            console.warn(
-              `[Xiaohongshu] Detected session expiry pattern: ${stats.fullContent} full, ${stats.placeholders} placeholders`
+            log.warn(
+              {
+                fullContent: stats.fullContent,
+                placeholders: stats.placeholders,
+              },
+              'Detected session expiry pattern'
             );
             stats.sessionRefreshAttempted = true;
             const refreshed = await handleSessionRefresh(client);
@@ -465,17 +466,22 @@ async function fetchNotesFromExplore(
       }
     }
   } catch (error) {
-    console.error('[Xiaohongshu] Error fetching explore page:', error);
+    log.error({ error }, 'Error fetching explore page');
   }
 
   // Log extraction statistics
-  console.log(
-    `[Xiaohongshu] Extraction stats: ${stats.fullContent} full content, ${stats.placeholders} placeholders, ${stats.videoDetailFetches} video details, ${stats.detailPageFetches} detail pages, ${stats.commentsFetched} comments`
+  log.info(
+    {
+      fullContent: stats.fullContent,
+      placeholders: stats.placeholders,
+      videoDetailFetches: stats.videoDetailFetches,
+      detailPageFetches: stats.detailPageFetches,
+      commentsFetched: stats.commentsFetched,
+    },
+    'Extraction stats'
   );
   if (stats.sessionRefreshAttempted) {
-    console.log(
-      '[Xiaohongshu] Session refresh was attempted during extraction'
-    );
+    log.info('Session refresh was attempted during extraction');
   }
 
   return notes;
@@ -488,7 +494,7 @@ async function extractNotesFromApi(
 
   try {
     const requests = await client.listNetworkRequests(['xhr', 'fetch']);
-    console.log(`[Xiaohongshu] Found ${requests.length} network requests`);
+    log.debug({ count: requests.length }, 'Found network requests');
 
     const feedRequests = requests.filter(
       (r) =>
@@ -496,22 +502,19 @@ async function extractNotesFromApi(
         r.url.includes('/api/sns/web/v1/search') ||
         r.url.includes('/api/sns/web/v1/homefeed')
     );
-    console.log(
-      `[Xiaohongshu] Found ${feedRequests.length} feed/search requests`
-    );
+    log.debug({ count: feedRequests.length }, 'Found feed/search requests');
 
     for (const req of feedRequests.slice(-5)) {
       try {
-        console.log(
-          `[Xiaohongshu] Fetching request ${req.id}: ${req.url.substring(0, 80)}...`
+        log.debug(
+          { requestId: req.id, url: req.url.substring(0, 80) },
+          'Fetching request'
         );
         const detail = await client.getNetworkRequest(req.id);
         if (detail?.responseBody) {
           const data: FeedResponse = JSON.parse(detail.responseBody);
           if (data.data?.items) {
-            console.log(
-              `[Xiaohongshu] Found ${data.data.items.length} items in response`
-            );
+            log.debug({ count: data.data.items.length }, 'Found items in response');
             for (const item of data.data.items) {
               if (item.note_card?.note_id) {
                 notes.push(item.note_card);
@@ -520,11 +523,11 @@ async function extractNotesFromApi(
           }
         }
       } catch (e) {
-        console.log(`[Xiaohongshu] Failed to parse request ${req.id}:`, e);
+        log.debug({ requestId: req.id, error: e }, 'Failed to parse request');
       }
     }
   } catch (error) {
-    console.error('[Xiaohongshu] Error extracting from API:', error);
+    log.error({ error }, 'Error extracting from API');
   }
 
   return notes;
@@ -542,8 +545,8 @@ async function extractNotesFromSnapshot(
     const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
-    console.log(`[Xiaohongshu] Snapshot length: ${content.length} chars`);
-    console.log(`[Xiaohongshu] Snapshot preview: ${content.substring(0, 500)}`);
+    log.debug({ snapshotLength: content.length }, 'Snapshot captured');
+    log.debug({ preview: content.substring(0, 500) }, 'Snapshot preview');
 
     // Extract note IDs from snapshot
     const noteIdMatches = content.matchAll(/\/explore\/([a-f0-9]{24})/gi);
@@ -555,9 +558,7 @@ async function extractNotesFromSnapshot(
       }
     }
 
-    console.log(
-      `[Xiaohongshu] Found ${noteIds.length} unique note IDs in snapshot`
-    );
+    log.info({ count: noteIds.length }, 'Found unique note IDs in snapshot');
 
     // Use accessibility parser for better title extraction
     const headings = extractHeadings(content);
@@ -647,7 +648,7 @@ async function extractNotesFromSnapshot(
       });
     }
   } catch (error) {
-    console.error('[Xiaohongshu] Error extracting from snapshot:', error);
+    log.error({ error }, 'Error extracting from snapshot');
   }
 
   return notes;
@@ -667,8 +668,9 @@ function convertNoteToResult(
   // Early quality check - skip notes that don't meet minimum quality threshold
   const qualityCheck = isContentQualityAcceptable(content);
   if (!qualityCheck.acceptable) {
-    console.warn(
-      `[Xiaohongshu] Skipping note ${note.note_id}: ${qualityCheck.reason}`
+    log.warn(
+      { noteId: note.note_id, reason: qualityCheck.reason },
+      'Skipping note'
     );
     return null;
   }
@@ -827,8 +829,9 @@ export function detectPlaceholderContent(
   const hasCityNotePattern = cityNotePattern.test(title);
 
   if (hasGenericPhrase || hasCityNotePattern) {
-    console.log(
-      `[Xiaohongshu] Detected placeholder content for note: "${title.substring(0, 30)}..." (${content.length} chars)`
+    log.debug(
+      { title: title.substring(0, 30), contentLength: content.length },
+      'Detected placeholder content'
     );
     return true;
   }
@@ -900,7 +903,7 @@ async function fetchNoteComments(
   const comments: CrawlComment[] = [];
 
   try {
-    console.log(`[Xiaohongshu] Fetching comments for note ${noteId}`);
+    log.info({ noteId }, 'Fetching comments for note');
 
     // Look for comment API requests in network log
     const requests = await client.listNetworkRequests(['xhr', 'fetch']);
@@ -936,18 +939,13 @@ async function fetchNoteComments(
           }
         }
       } catch (e) {
-        console.log(`[Xiaohongshu] Failed to parse comment request:`, e);
+        log.debug({ error: e }, 'Failed to parse comment request');
       }
     }
 
-    console.log(
-      `[Xiaohongshu] Extracted ${comments.length} comments for note ${noteId}`
-    );
+    log.info({ noteId, count: comments.length }, 'Extracted comments for note');
   } catch (error) {
-    console.error(
-      `[Xiaohongshu] Error fetching comments for ${noteId}:`,
-      error
-    );
+    log.error({ error, noteId }, 'Error fetching comments');
   }
 
   return comments;
@@ -975,7 +973,7 @@ async function fetchNotesFromSearch(
 
   try {
     const searchUrl = `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(query)}&type=1`;
-    console.log(`[Xiaohongshu] Navigating to search: ${query}`);
+    log.info({ query }, 'Navigating to search');
 
     await client.navigateTo(searchUrl, { timeout: 30000 });
     await waitForContentStable(client);
@@ -983,7 +981,7 @@ async function fetchNotesFromSearch(
     // Check session validity
     const sessionCheck = await checkSessionWithGuidance(client, 'xiaohongshu');
     if (!sessionCheck.canCrawl) {
-      console.warn(`[Xiaohongshu] ${sessionCheck.message}`);
+      log.warn({ message: sessionCheck.message }, 'Session check failed');
       return notes;
     }
 
@@ -993,7 +991,7 @@ async function fetchNotesFromSearch(
 
     // Extract from API (search endpoint should be captured)
     const apiNotes = await extractNotesFromApi(client);
-    console.log(`[Xiaohongshu] Found ${apiNotes.length} notes from search API`);
+    log.info({ count: apiNotes.length }, 'Found notes from search API');
 
     for (const note of apiNotes.slice(0, maxNotes)) {
       const result = convertNoteToResult(note, city);
@@ -1028,7 +1026,7 @@ async function fetchNotesFromSearch(
       notes.push(result);
     }
   } catch (error) {
-    console.error('[Xiaohongshu] Error fetching search results:', error);
+    log.error({ error }, 'Error fetching search results');
   }
 
   return notes;
@@ -1055,7 +1053,7 @@ async function fetchNotesFromUserProfile(
 
   try {
     const profileUrl = `https://www.xiaohongshu.com/user/profile/${userId}`;
-    console.log(`[Xiaohongshu] Navigating to user profile: ${userId}`);
+    log.info({ userId }, 'Navigating to user profile');
 
     await client.navigateTo(profileUrl, { timeout: 30000 });
     await waitForContentStable(client);
@@ -1063,7 +1061,7 @@ async function fetchNotesFromUserProfile(
     // Check session validity
     const sessionCheck = await checkSessionWithGuidance(client, 'xiaohongshu');
     if (!sessionCheck.canCrawl) {
-      console.warn(`[Xiaohongshu] ${sessionCheck.message}`);
+      log.warn({ message: sessionCheck.message }, 'Session check failed');
       return notes;
     }
 
@@ -1080,8 +1078,9 @@ async function fetchNotesFromUserProfile(
         r.url.includes(`/user/profile/${userId}`)
     );
 
-    console.log(
-      `[Xiaohongshu] Found ${userRequests.length} user profile API requests`
+    log.info(
+      { count: userRequests.length },
+      'Found user profile API requests'
     );
 
     for (const req of userRequests.slice(-5)) {
@@ -1090,8 +1089,9 @@ async function fetchNotesFromUserProfile(
         if (detail?.responseBody) {
           const data: UserPostedResponse = JSON.parse(detail.responseBody);
           if (data.data?.notes) {
-            console.log(
-              `[Xiaohongshu] Found ${data.data.notes.length} notes from user API`
+            log.info(
+              { count: data.data.notes.length },
+              'Found notes from user API'
             );
             for (const note of data.data.notes) {
               if (notes.length >= maxNotes) break;
@@ -1138,15 +1138,13 @@ async function fetchNotesFromUserProfile(
           }
         }
       } catch (e) {
-        console.log(`[Xiaohongshu] Failed to parse user API request:`, e);
+        log.warn({ error: e }, 'Failed to parse user API request');
       }
     }
 
     // Fallback: extract note IDs from page if API didn't work
     if (notes.length === 0) {
-      console.log(
-        '[Xiaohongshu] Falling back to snapshot extraction for user profile'
-      );
+      log.info('Falling back to snapshot extraction for user profile');
       const snapshotNotes = await extractNotesFromSnapshot(
         city,
         maxNotes,
@@ -1155,11 +1153,9 @@ async function fetchNotesFromUserProfile(
       notes.push(...snapshotNotes);
     }
   } catch (error) {
-    console.error('[Xiaohongshu] Error fetching user profile:', error);
+    log.error({ error }, 'Error fetching user profile');
   }
 
-  console.log(
-    `[Xiaohongshu] Extracted ${notes.length} notes from user ${userId}`
-  );
+  log.info({ count: notes.length, userId }, 'Extracted notes from user');
   return notes;
 }

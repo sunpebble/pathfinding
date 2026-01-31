@@ -5,6 +5,9 @@
  */
 
 import { createLLM } from './llm/index.js';
+import { createLogger } from './logger.js';
+
+const log = createLogger('content-cleaner');
 
 export interface CleanedContent {
   title: string;
@@ -92,20 +95,20 @@ ${contentToProcess}
 JSON:`;
 
   try {
-    console.log('[ContentCleaner] Invoking LLM for content cleaning...');
+    log.info('Invoking LLM for content cleaning...');
     const response = await llm.invoke(prompt);
-    console.log('[ContentCleaner] LLM response received');
+    log.info('LLM response received');
     const responseText =
       typeof response.content === 'string'
         ? response.content
         : JSON.stringify(response.content);
 
-    console.log('[ContentCleaner] Response text length:', responseText.length);
+    log.info({ length: responseText.length }, 'Response text received');
 
     // Parse JSON from response
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      console.log('[ContentCleaner] JSON parsed successfully');
+      log.info('JSON parsed successfully');
       const data = JSON.parse(jsonMatch[0]);
       const cleanedContent = data.content?.trim() || rawData.content.trim();
 
@@ -119,7 +122,7 @@ JSON:`;
       };
     }
 
-    console.log('[ContentCleaner] JSON parsing failed, using fallback');
+    log.info('JSON parsing failed, using fallback');
     // Fallback if JSON parsing fails
     return {
       title: rawData.title,
@@ -130,7 +133,7 @@ JSON:`;
       cleanedLength: rawData.content.trim().length,
     };
   } catch (error) {
-    console.error('[ContentCleaner] Error:', error);
+    log.error({ error }, 'Error cleaning content');
     // Return original content on error
     return {
       title: rawData.title,
@@ -159,7 +162,7 @@ export async function batchCleanContent(
       // Small delay between requests to avoid rate limiting
       await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
-      console.error(`Error cleaning content from ${item.sourceUrl}:`, error);
+      log.error({ sourceUrl: item.sourceUrl, error }, 'Error cleaning content from URL');
       // Add original content on error
       results.push({
         title: item.title,

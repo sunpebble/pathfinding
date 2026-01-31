@@ -12,12 +12,14 @@
 import type { CrawlResult } from '../lib/crawlers/index.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { api } from '@pathfinding/convex/api';
 import { ConvexHttpClient } from 'convex/browser';
-// @ts-expect-error - Convex generated files may not exist during type checking
-import { api } from '../../../../convex/_generated/api.js';
+import { createLogger } from '../lib/logger.js';
 
 // Load environment variables
 import 'dotenv/config';
+
+const log = createLogger('import-to-convex');
 
 // ============================================================
 // Configuration
@@ -63,7 +65,7 @@ function createConvexClient(): ConvexHttpClient {
     throw new Error('CONVEX_URL environment variable is not set');
   }
 
-  console.log(`[Convex] Connecting to: ${convexUrl}`);
+  log.info({ convexUrl }, 'Connecting to Convex');
   return new ConvexHttpClient(convexUrl);
 }
 
@@ -82,7 +84,7 @@ function loadGuidesFromDir(inputDir: string): CrawlResult[] {
     .readdirSync(inputDir)
     .filter((f) => f.startsWith('guides_') && f.endsWith('.json'));
 
-  console.log(`[Load] Found ${files.length} guide files`);
+  log.info({ count: files.length }, 'Found guide files');
 
   for (const file of files) {
     try {
@@ -90,7 +92,7 @@ function loadGuidesFromDir(inputDir: string): CrawlResult[] {
       const guides = JSON.parse(data) as CrawlResult[];
       allGuides.push(...guides);
     } catch (error) {
-      console.warn(`[Load] Failed to load ${file}:`, error);
+      log.warn({ file, error }, 'Failed to load file');
     }
   }
 
@@ -125,23 +127,23 @@ async function importToConvex(
   const stats = { imported: 0, skipped: 0, errors: 0 };
   const batchSize = config.batchSize;
 
-  console.log(`[Import] Starting import of ${guides.length} guides...`);
-  console.log(`[Import] Batch size: ${batchSize}`);
+  log.info({ totalGuides: guides.length, batchSize }, 'Starting import');
 
   for (let i = 0; i < guides.length; i += batchSize) {
     const batch = guides.slice(i, i + batchSize);
     const batchNum = Math.floor(i / batchSize) + 1;
     const totalBatches = Math.ceil(guides.length / batchSize);
 
-    console.log(`[Import] Processing batch ${batchNum}/${totalBatches}...`);
+    log.info({ batchNum, totalBatches }, 'Processing batch');
 
     for (const guide of batch) {
       try {
         const convexData = transformToConvexFormat(guide);
 
         if (config.dryRun) {
-          console.log(
-            `  [DRY RUN] Would upsert: ${guide.title?.substring(0, 40)}...`
+          log.info(
+            { title: guide.title?.substring(0, 40) },
+            '[DRY RUN] Would upsert guide'
           );
           stats.imported++;
           continue;
@@ -151,8 +153,9 @@ async function importToConvex(
         stats.imported++;
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error(
-          `  [Error] Failed to import ${guide.sourceExternalId}: ${errorMsg}`
+        log.error(
+          { sourceExternalId: guide.sourceExternalId, error: errorMsg },
+          'Failed to import guide'
         );
         stats.errors++;
       }
@@ -172,28 +175,35 @@ async function importToConvex(
 // ============================================================
 
 async function main(): Promise<void> {
-  console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log(
-    '║       穷游网爬取结果导入 Convex                             ║'
-  );
-  console.log('╚════════════════════════════════════════════════════════════╝');
-  console.log();
+  log.info('╔════════════════════════════════════════════════════════════╗');
+  log.info('║       穷游网爬取结果导入 Convex                             ║');
+  log.info('╚════════════════════════════════════════════════════════════╝');
+  log.info('');
 
   const config = parseArgs();
 
-  console.log('配置:');
-  console.log(`  - 输入目录: ${config.inputDir}`);
-  console.log(`  - 批量大小: ${config.batchSize}`);
-  console.log(`  - 干运行: ${config.dryRun ? '是' : '否'}`);
-  console.log();
+  log.info('配置:');
+  log.info({ inputDir: config.inputDir }, `  - 输入目录: ${config.inputDir}`);
+  log.info(
+    { batchSize: config.batchSize },
+    `  - 批量大小: ${config.batchSize}`
+  );
+  log.info(
+    { dryRun: config.dryRun },
+    `  - 干运行: ${config.dryRun ? '是' : '否'}`
+  );
+  log.info('');
 
   // Load guides
   const guides = loadGuidesFromDir(config.inputDir);
-  console.log(`[Load] Loaded ${guides.length} guides total`);
-  console.log();
+  log.info(
+    { guidesCount: guides.length },
+    `[Load] Loaded ${guides.length} guides total`
+  );
+  log.info('');
 
   if (guides.length === 0) {
-    console.log('没有找到攻略数据，请先运行爬取脚本');
+    log.info('没有找到攻略数据，请先运行爬取脚本');
     return;
   }
 
@@ -204,18 +214,18 @@ async function main(): Promise<void> {
   const stats = await importToConvex(client, guides, config);
 
   // Summary
-  console.log();
-  console.log('════════════════════════════════════════════════════════════');
-  console.log('                      导入完成');
-  console.log('════════════════════════════════════════════════════════════');
-  console.log();
-  console.log('统计:');
-  console.log(`  - 成功导入: ${stats.imported} 篇`);
-  console.log(`  - 跳过: ${stats.skipped} 篇`);
-  console.log(`  - 错误: ${stats.errors} 篇`);
+  log.info('');
+  log.info('════════════════════════════════════════════════════════════');
+  log.info('                      导入完成');
+  log.info('════════════════════════════════════════════════════════════');
+  log.info('');
+  log.info('统计:');
+  log.info({ imported: stats.imported }, `  - 成功导入: ${stats.imported} 篇`);
+  log.info({ skipped: stats.skipped }, `  - 跳过: ${stats.skipped} 篇`);
+  log.info({ errors: stats.errors }, `  - 错误: ${stats.errors} 篇`);
 }
 
 main().catch((error) => {
-  console.error('导入失败:', error);
+  log.error({ error }, '导入失败');
   process.exit(1);
 });

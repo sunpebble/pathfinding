@@ -1,5 +1,6 @@
 import type { BrowserClient } from './clients/index.js';
 import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
+import { createLogger } from '../logger.js';
 import {
   extractAuthorWithAvatar,
   extractCtripStats,
@@ -11,6 +12,8 @@ import {
 } from './accessibility-parser.js';
 import { createBrowserClient } from './clients/index.js';
 import { waitForContentStable } from './utils.js';
+
+const log = createLogger('ctrip');
 
 // Helper function for delay
 function sleep(ms: number): Promise<void> {
@@ -44,7 +47,7 @@ export async function crawlCtrip(
   const cityId = CITY_IDS[city] || city;
   const client = options.client ?? createBrowserClient();
 
-  console.log(`[Ctrip] Crawling guides for ${city} (${cityId})`);
+  log.info({ city, cityId }, 'Crawling guides for city');
 
   try {
     // Initialize browser client
@@ -53,11 +56,12 @@ export async function crawlCtrip(
     for (let page = 1; page <= maxPages; page++) {
       try {
         const listUrl = `https://you.ctrip.com/travels/${cityId}/t3-p${page}.html`;
-        console.log(`[Ctrip] Fetching page ${page}: ${listUrl}`);
+        log.info({ page, url: listUrl }, 'Fetching page');
 
         const guideLinks = await fetchListPage(listUrl, client);
-        console.log(
-          `[Ctrip] Found ${guideLinks.length} guides on page ${page}`
+        log.info(
+          { count: guideLinks.length, page },
+          'Found guides on page'
         );
 
         for (const guideUrl of guideLinks.slice(0, 10)) {
@@ -68,16 +72,16 @@ export async function crawlCtrip(
             }
             await sleep(1000 / (options.rateLimit || 0.5));
           } catch (error) {
-            console.error(`[Ctrip] Error fetching guide: ${guideUrl}`, error);
+            log.error({ error, url: guideUrl }, 'Error fetching guide');
           }
         }
       } catch (error) {
-        console.error(`[Ctrip] Error crawling page ${page}:`, error);
+        log.error({ error, page }, 'Error crawling page');
       }
     }
   } finally {
     await client.close();
-    console.log('[Ctrip] Browser client closed');
+    log.info('Browser client closed');
   }
 
   return results;
@@ -115,7 +119,7 @@ async function fetchListPage(
       guideLinks.push(fullUrl);
     }
   } catch (error) {
-    console.error(`[Ctrip] Error fetching list page: ${url}`, error);
+    log.error({ error, url }, 'Error fetching list page');
   }
 
   return guideLinks;
@@ -140,8 +144,9 @@ async function fetchGuideDetail(
     const snapshot = await client.takeSnapshot({ verbose: true });
     const content = snapshot.content;
 
-    console.log(
-      `[Ctrip] Snapshot for ${url.split('/').pop()}: ${content.length} chars`
+    log.debug(
+      { guideId: url.split('/').pop(), contentLength: content.length },
+      'Snapshot captured'
     );
 
     // Use accessibility tree parser for extraction
@@ -149,7 +154,7 @@ async function fetchGuideDetail(
     const textContent = getArticleContent(content);
 
     if (!textContent || textContent.length < 50) {
-      console.log(`[Ctrip] Skipping guide with insufficient content: ${url}`);
+      log.debug({ url }, 'Skipping guide with insufficient content');
       return null;
     }
 
@@ -204,7 +209,7 @@ async function fetchGuideDetail(
       ),
     };
   } catch (error) {
-    console.error(`[Ctrip] Error parsing guide:`, error);
+    log.error({ error }, 'Error parsing guide');
     return null;
   }
 }

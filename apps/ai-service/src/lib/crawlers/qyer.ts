@@ -9,8 +9,11 @@
 import type {BrowserClient} from './clients/index.js';
 import type { CrawlOptions, CrawlResult } from './index.js';
 import * as cheerio from 'cheerio';
+import { createLogger } from '../logger.js';
 import {  createBrowserClient } from './clients/index.js';
 import { sleep, waitForContentStable } from './utils.js';
+
+const log = createLogger('qyer');
 
 // Destination info structure
 interface DestinationInfo {
@@ -90,12 +93,12 @@ export async function crawlQyer(
   const config = CITY_CONFIG[city];
 
   if (!config) {
-    console.warn(`[Qyer] City not mapped: ${city}, using search fallback`);
+    log.warn({ city }, 'City not mapped, using search fallback');
     // Fallback to search
     return crawlQyerBySearch(city, options);
   }
 
-  console.log(`[Qyer] Crawling guides for ${city} (${config.englishName})`);
+  log.info({ city, englishName: config.englishName }, 'Crawling guides for city');
 
   const client = options.client ?? createBrowserClient();
   const shouldCloseClient = !options.client;
@@ -107,7 +110,7 @@ export async function crawlQyer(
     // This is the most reliable source as forum pages may return 503
     try {
       const placeUrl = `https://place.qyer.com/${config.placeId}/`;
-      console.log(`[Qyer] Fetching destination page: ${placeUrl}`);
+      log.info({ url: placeUrl }, 'Fetching destination page');
 
       // Increase max guides per destination page since forum may be unavailable
       const maxGuidesFromPlace = Math.max(50, maxPages * 10);
@@ -117,8 +120,9 @@ export async function crawlQyer(
         city,
         maxGuidesFromPlace
       );
-      console.log(
-        `[Qyer] Found ${placeGuides.length} guides from destination page`
+      log.info(
+        { count: placeGuides.length },
+        'Found guides from destination page'
       );
 
       for (const guide of placeGuides) {
@@ -129,7 +133,7 @@ export async function crawlQyer(
         }
       }
     } catch (error) {
-      console.error('[Qyer] Error fetching destination page:', error);
+      log.error({ error }, 'Error fetching destination page');
     }
 
     // Strategy 2: Fetch from forum (bbs.qyer.com)
@@ -137,7 +141,7 @@ export async function crawlQyer(
     for (let page = 1; page <= maxPages; page++) {
       try {
         const forumUrl = `https://bbs.qyer.com/forum-${config.forumId}-${page}.html`;
-        console.log(`[Qyer] Fetching forum page ${page}: ${forumUrl}`);
+        log.info({ page, forumUrl }, 'Fetching forum page');
 
         const forumGuides = await fetchGuidesFromForumPage(
           client,
@@ -148,14 +152,13 @@ export async function crawlQyer(
 
         // If we get 0 results, forum may be blocked - skip remaining pages
         if (forumGuides.length === 0 && page === 1) {
-          console.log(
-            '[Qyer] Forum appears to be blocked, skipping forum pages'
-          );
+          log.warn('Forum appears to be blocked, skipping forum pages');
           break;
         }
 
-        console.log(
-          `[Qyer] Found ${forumGuides.length} guides from forum page ${page}`
+        log.info(
+          { count: forumGuides.length, page },
+          'Found guides from forum page'
         );
 
         for (const guide of forumGuides) {
@@ -169,13 +172,13 @@ export async function crawlQyer(
         // Rate limiting between pages
         await sleep(1500);
       } catch (error) {
-        console.error(`[Qyer] Error fetching forum page ${page}:`, error);
+        log.error({ error, page }, 'Error fetching forum page');
       }
     }
   } finally {
     if (shouldCloseClient) {
       await client.close();
-      console.log('[Qyer] Browser client closed');
+      log.info('Browser client closed');
     }
   }
 
@@ -197,12 +200,12 @@ async function crawlQyerBySearch(
     await client.init();
 
     const searchUrl = `https://www.qyer.com/search2/topic?keyword=${encodeURIComponent(`${city}攻略`)}`;
-    console.log(`[Qyer] Searching: ${searchUrl}`);
+    log.info({ searchUrl }, 'Searching');
 
     const guides = await fetchGuidesFromSearchPage(client, searchUrl, city, 30);
     results.push(...guides);
   } catch (error) {
-    console.error('[Qyer] Error searching:', error);
+    log.error({ error }, 'Error searching');
   } finally {
     if (shouldCloseClient) {
       await client.close();
@@ -360,9 +363,9 @@ async function fetchGuidesFromPlacePage(
       });
     }
 
-    console.log(`[Qyer] Extracted ${guides.length} guides from place page`);
+    log.info({ count: guides.length }, 'Extracted guides from place page');
   } catch (error) {
-    console.error('[Qyer] Error fetching place page:', error);
+    log.error({ error }, 'Error fetching place page');
   }
 
   return guides;
@@ -476,9 +479,9 @@ async function fetchGuidesFromForumPage(
       });
     }
 
-    console.log(`[Qyer] Extracted ${guides.length} guides from forum page`);
+    log.info({ count: guides.length }, 'Extracted guides from forum page');
   } catch (error) {
-    console.error('[Qyer] Error fetching forum page:', error);
+    log.error({ error }, 'Error fetching forum page');
   }
 
   return guides;
@@ -557,9 +560,9 @@ async function fetchGuidesFromSearchPage(
       });
     });
 
-    console.log(`[Qyer] Extracted ${guides.length} guides from search`);
+    log.info({ count: guides.length }, 'Extracted guides from search');
   } catch (error) {
-    console.error('[Qyer] Error fetching search page:', error);
+    log.error({ error }, 'Error fetching search page');
   }
 
   return guides;
@@ -630,7 +633,7 @@ export async function fetchQyerGuideDetail(
     const type = travelMatch ? 'travel' : 'thread';
 
     if (!content || content.length < 100) {
-      console.log(`[Qyer] Skipping guide with insufficient content: ${url}`);
+      log.info({ url }, 'Skipping guide with insufficient content');
       return null;
     }
 
@@ -653,7 +656,7 @@ export async function fetchQyerGuideDetail(
       ),
     };
   } catch (error) {
-    console.error('[Qyer] Error fetching guide detail:', error);
+    log.error({ error }, 'Error fetching guide detail');
     return null;
   }
 }
@@ -785,7 +788,7 @@ export async function crawlQyerAllDestinations(
   const allResults: CrawlResult[] = [];
   const seenIds = new Set<string>();
 
-  console.log('[Qyer] Starting full site crawl...');
+  log.info('Starting full site crawl...');
 
   const client = options.client ?? createBrowserClient();
   const shouldCloseClient = !options.client;
@@ -795,15 +798,16 @@ export async function crawlQyerAllDestinations(
 
     // Step 1: Discover all destinations
     const destinations = await discoverAllDestinations({ client });
-    console.log(`[Qyer] Discovered ${destinations.length} destinations`);
+    log.info({ count: destinations.length }, 'Discovered destinations');
 
     const limitedDestinations = destinations.slice(0, maxDestinations);
 
     // Step 2: Crawl each destination
     for (let i = 0; i < limitedDestinations.length; i++) {
       const dest = limitedDestinations[i];
-      console.log(
-        `[Qyer] Crawling destination ${i + 1}/${limitedDestinations.length}: ${dest.name}`
+      log.info(
+        { index: i + 1, total: limitedDestinations.length, name: dest.name },
+        'Crawling destination'
       );
 
       try {
@@ -830,7 +834,7 @@ export async function crawlQyerAllDestinations(
         // Rate limiting between destinations
         await sleep(3000);
       } catch (error) {
-        console.error(`[Qyer] Error crawling ${dest.name}:`, error);
+        log.error({ error, destination: dest.name }, 'Error crawling destination');
       }
     }
   } finally {
@@ -839,9 +843,7 @@ export async function crawlQyerAllDestinations(
     }
   }
 
-  console.log(
-    `[Qyer] Full site crawl complete. Total guides: ${allResults.length}`
-  );
+  log.info({ total: allResults.length }, 'Full site crawl complete');
   return allResults;
 }
 
@@ -886,7 +888,7 @@ export async function discoverAllDestinations(
 
     for (const url of discoveryUrls) {
       try {
-        console.log(`[Qyer] Discovering destinations from: ${url}`);
+        log.info({ url }, 'Discovering destinations from');
         const discovered = await discoverDestinationsFromIndex(client, url);
 
         for (const dest of discovered) {
@@ -898,13 +900,13 @@ export async function discoverAllDestinations(
 
         await sleep(2000);
       } catch (error) {
-        console.error(`[Qyer] Error discovering from ${url}:`, error);
+        log.error({ error, url }, 'Error discovering from URL');
       }
     }
 
     // Strategy 3: Discover from BBS forum list
     try {
-      console.log('[Qyer] Discovering destinations from BBS forum list...');
+      log.info('Discovering destinations from BBS forum list...');
       const forumDestinations = await discoverDestinationsFromBBS(client);
 
       for (const dest of forumDestinations) {
@@ -914,7 +916,7 @@ export async function discoverAllDestinations(
         }
       }
     } catch (error) {
-      console.error('[Qyer] Error discovering from BBS:', error);
+      log.error({ error }, 'Error discovering from BBS');
     }
   } finally {
     if (shouldCloseClient) {
@@ -922,7 +924,7 @@ export async function discoverAllDestinations(
     }
   }
 
-  console.log(`[Qyer] Total destinations discovered: ${destinations.length}`);
+  log.info({ total: destinations.length }, 'Total destinations discovered');
   return destinations;
 }
 
@@ -976,9 +978,9 @@ async function discoverDestinationsFromIndex(
       });
     });
 
-    console.log(`[Qyer] Found ${destinations.length} destinations from ${url}`);
+    log.info({ count: destinations.length, url }, 'Found destinations from URL');
   } catch (error) {
-    console.error(`[Qyer] Error parsing ${url}:`, error);
+    log.error({ error, url }, 'Error parsing URL');
   }
 
   return destinations;
@@ -1029,9 +1031,9 @@ async function discoverDestinationsFromBBS(
       });
     });
 
-    console.log(`[Qyer] Found ${destinations.length} forums from BBS`);
+    log.info({ count: destinations.length }, 'Found forums from BBS');
   } catch (error) {
-    console.error('[Qyer] Error parsing BBS:', error);
+    log.error({ error }, 'Error parsing BBS');
   }
 
   return destinations;
@@ -1074,12 +1076,13 @@ export async function crawlQyerDestinationDeep(
 
   const config = CITY_CONFIG[city];
   if (!config) {
-    console.warn(`[Qyer] City not in config: ${city}, using search`);
+    log.warn({ city }, 'City not in config, using search');
     return crawlQyerBySearch(city, { maxPages: 5, client: options.client });
   }
 
-  console.log(
-    `[Qyer] Deep crawling ${city} (${config.englishName}), max ${maxPages} pages`
+  log.info(
+    { city, englishName: config.englishName, maxPages },
+    'Deep crawling'
   );
 
   const client = options.client ?? createBrowserClient();
@@ -1105,7 +1108,7 @@ export async function crawlQyerDestinationDeep(
         }
       }
     } catch (error) {
-      console.error('[Qyer] Error fetching destination page:', error);
+      log.error({ error }, 'Error fetching destination page');
     }
 
     // Then crawl forum pages deeply
@@ -1115,7 +1118,7 @@ export async function crawlQyerDestinationDeep(
     for (let page = 1; page <= maxPages; page++) {
       try {
         const forumUrl = `https://bbs.qyer.com/forum-${config.forumId}-${page}.html`;
-        console.log(`[Qyer] Fetching forum page ${page}/${maxPages}`);
+        log.info({ page, maxPages }, 'Fetching forum page');
 
         const pageGuides = await fetchGuidesFromForumPage(
           client,
@@ -1139,8 +1142,9 @@ export async function crawlQyerDestinationDeep(
         if (newGuides === 0) {
           emptyPages++;
           if (emptyPages >= maxEmptyPages) {
-            console.log(
-              `[Qyer] Stopping: ${maxEmptyPages} consecutive empty pages`
+            log.info(
+              { maxEmptyPages },
+              'Stopping: consecutive empty pages'
             );
             break;
           }
@@ -1151,7 +1155,7 @@ export async function crawlQyerDestinationDeep(
         // Rate limiting
         await sleep(1500);
       } catch (error) {
-        console.error(`[Qyer] Error on page ${page}:`, error);
+        log.error({ error, page }, 'Error on page');
         emptyPages++;
         if (emptyPages >= maxEmptyPages) break;
       }
@@ -1159,7 +1163,7 @@ export async function crawlQyerDestinationDeep(
 
     // Optionally fetch full details for each guide
     if (fetchDetails && results.length > 0) {
-      console.log(`[Qyer] Fetching details for ${results.length} guides...`);
+      log.info({ count: results.length }, 'Fetching details for guides');
 
       for (let i = 0; i < results.length; i++) {
         const guide = results[i];
@@ -1179,9 +1183,9 @@ export async function crawlQyerDestinationDeep(
           // Rate limiting
           await sleep(2000);
         } catch (error) {
-          console.error(
-            `[Qyer] Error fetching detail for ${guide.sourceExternalId}:`,
-            error
+          log.error(
+            { error, sourceExternalId: guide.sourceExternalId },
+            'Error fetching detail'
           );
         }
       }
@@ -1192,9 +1196,7 @@ export async function crawlQyerDestinationDeep(
     }
   }
 
-  console.log(
-    `[Qyer] Deep crawl complete for ${city}. Total: ${results.length} guides`
-  );
+  log.info({ city, total: results.length }, 'Deep crawl complete');
   return results;
 }
 
