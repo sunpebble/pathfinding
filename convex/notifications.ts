@@ -3,7 +3,7 @@ import { ConvexError, v } from 'convex/values';
 import {
   notificationDataValidator,
   scheduledNotificationDataValidator,
-} from '../packages/convex/src/validators/index.js';
+} from '../packages/convex-client/src/validators/index.js';
 import { internalMutation, mutation, query } from './_generated/server';
 
 /**

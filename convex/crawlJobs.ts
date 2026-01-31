@@ -4,7 +4,7 @@ import { ConvexError, v } from 'convex/values';
 import {
   crawlJobConfigValidator,
   crawlJobStatisticsValidator,
-} from '../packages/convex/src/validators/index.js';
+} from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 /**

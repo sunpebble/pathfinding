@@ -12,7 +12,7 @@
 import type { CrawlResult } from '../lib/crawlers/index.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { api } from '@pathfinding/convex/api';
+import { api } from '@pathfinding/convex-client/api';
 import { ConvexHttpClient } from 'convex/browser';
 import { createLogger } from '../lib/logger.js';
 

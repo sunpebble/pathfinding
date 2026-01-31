@@ -3,7 +3,7 @@
  * Shared type definitions for the LLM abstraction layer
  */
 
-export type LLMProvider = 'ollama' | 'openai' | 'claude';
+export type LLMProvider = 'ollama' | 'openai' | 'claude' | 'gemini';
 
 export interface LLMConfig {
   provider: LLMProvider;
@@ -26,6 +26,10 @@ export interface LLMProviderConfig {
     apiKey: string;
     model: string;
   };
+  gemini: {
+    apiKey: string;
+    model: string;
+  };
 }
 
 /**
@@ -35,6 +39,7 @@ export const DEFAULT_MODELS: Record<LLMProvider, string> = {
   ollama: 'gemma3:latest',
   openai: 'gpt-4o',
   claude: 'claude-opus-4-5-20251101',
+  gemini: 'gemini-2.5-pro-preview-05-06',
 };
 
 /**
@@ -42,10 +47,10 @@ export const DEFAULT_MODELS: Record<LLMProvider, string> = {
  */
 export function getDefaultProvider(): LLMProvider {
   const provider = process.env.LLM_PROVIDER as LLMProvider | undefined;
-  if (provider && ['ollama', 'openai', 'claude'].includes(provider)) {
+  if (provider && ['ollama', 'openai', 'claude', 'gemini'].includes(provider)) {
     return provider;
   }
-  return 'claude';
+  return 'gemini';
 }
 
 /**
@@ -61,6 +66,8 @@ export function getDefaultModel(provider: LLMProvider): string {
       return process.env.OPENAI_MODEL || DEFAULT_MODELS.openai;
     case 'claude':
       return process.env.ANTHROPIC_MODEL || DEFAULT_MODELS.claude;
+    case 'gemini':
+      return process.env.GOOGLE_MODEL || DEFAULT_MODELS.gemini;
     case 'ollama':
     default:
       return process.env.OLLAMA_MODEL || DEFAULT_MODELS.ollama;

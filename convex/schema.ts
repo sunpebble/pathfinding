@@ -1029,6 +1029,94 @@ export default defineSchema({
     }),
 
   // ============================================
+  // Guide Destinations (Auxiliary table for indexed destination lookup)
+  // ============================================
+  guideDestinations: defineTable({
+    guideId: v.id('travelGuides'),
+    destination: v.string(), // Normalized destination name
+    createdAt: v.number(),
+  })
+    .index('by_destination', ['destination'])
+    .index('by_guide', ['guideId'])
+    .index('by_destination_guide', ['destination', 'guideId']),
+
+  // ============================================
+  // Travel Guide AI Data (Separated AI processing results)
+  // ============================================
+  travelGuideAiData: defineTable({
+    guideId: v.id('travelGuides'),
+    version: v.number(), // Processing version for versioning
+    // AI Enhanced Fields
+    aiSummary: v.optional(v.string()),
+    aiTips: v.optional(v.array(v.string())),
+    aiBestTime: v.optional(v.string()),
+    aiDuration: v.optional(v.string()),
+    aiBudget: v.optional(v.string()),
+    // Day-based Itinerary Structure
+    aiDays: v.optional(
+      v.array(
+        v.object({
+          dayNumber: v.number(),
+          theme: v.optional(v.string()),
+          pois: v.array(
+            v.object({
+              name: v.string(),
+              type: v.string(),
+              description: v.optional(v.string()),
+              latitude: v.number(),
+              longitude: v.number(),
+              address: v.optional(v.string()),
+              duration: v.optional(v.string()),
+              priceInfo: v.optional(v.string()),
+              openingHours: v.optional(v.string()),
+              tips: v.optional(v.string()),
+              rating: v.optional(v.number()),
+              highlights: v.optional(v.array(v.string())),
+              transportToNext: v.optional(
+                v.object({
+                  mode: v.optional(v.string()),
+                  duration: v.optional(v.string()),
+                  distance: v.optional(v.string()),
+                  notes: v.optional(v.string()),
+                }),
+              ),
+              geocodeConfidence: v.optional(v.number()),
+              geocodeSource: v.optional(v.string()),
+              isManuallyVerified: v.optional(v.boolean()),
+              verifiedAt: v.optional(v.number()),
+              verifiedBy: v.optional(v.string()),
+            }),
+          ),
+        }),
+      ),
+    ),
+    // Geocoding metrics
+    geocodingMetrics: v.optional(
+      v.object({
+        totalPois: v.number(),
+        averageConfidence: v.number(),
+        lowConfidenceCount: v.number(),
+        manuallyVerifiedCount: v.number(),
+        sourceDistribution: v.optional(
+          v.object({
+            amap: v.optional(v.number()),
+            nominatim: v.optional(v.number()),
+            overpass: v.optional(v.number()),
+            consensus: v.optional(v.number()),
+            manual: v.optional(v.number()),
+          }),
+        ),
+        lastUpdated: v.optional(v.number()),
+      }),
+    ),
+    // Metadata
+    processedAt: v.number(),
+    modelVersion: v.optional(v.string()),
+  })
+    .index('by_guide', ['guideId'])
+    .index('by_guide_version', ['guideId', 'version']),
+
+  // ============================================
   // Itinerary Comments
   // ============================================
   itineraryComments: defineTable({
@@ -1247,6 +1335,9 @@ export default defineSchema({
     title: v.string(),
     body: v.string(),
     data: v.optional(v.any()), // Additional payload
+    priority: v.optional(
+      v.union(v.literal('low'), v.literal('normal'), v.literal('high')),
+    ),
     status: v.union(
       v.literal('pending'),
       v.literal('sent'),
@@ -1262,6 +1353,32 @@ export default defineSchema({
     .index('by_status', ['status'])
     .index('by_scheduled', ['scheduledFor'])
     .index('by_status_scheduled', ['status', 'scheduledFor']),
+
+  // ============================================
+  // Search History
+  // ============================================
+  searchHistory: defineTable({
+    userId: v.string(),
+    query: v.string(),
+    resultType: v.optional(v.string()),
+    resultId: v.optional(v.string()),
+    searchedAt: v.number(),
+  })
+    .index('by_user_query', ['userId', 'query'])
+    .index('by_user_searched', ['userId', 'searchedAt']),
+
+  // ============================================
+  // Search Trends (Aggregated search statistics)
+  // ============================================
+  searchTrends: defineTable({
+    query: v.string(), // Normalized search query
+    date: v.string(), // Date string YYYY-MM-DD
+    searchCount: v.number(), // Number of searches
+    resultType: v.optional(v.string()), // Type of search result
+  })
+    .index('by_query_date', ['query', 'date'])
+    .index('by_date', ['date'])
+    .index('by_count', ['searchCount']),
 
   // ============================================
   // Itinerary Likes

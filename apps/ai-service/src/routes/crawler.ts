@@ -4,14 +4,18 @@
  * Now includes LLM-based content cleaning before storage
  */
 
-import type { Id } from '@pathfinding/convex/dataModel';
+import type { Id } from '@pathfinding/convex-client/dataModel';
+import type { GuideValidationInput } from '@pathfinding/crawler-types';
 import type { FunctionArgs } from 'convex/server';
 import type { CrawlResult } from '../lib/crawlers/index.js';
-import { api } from '@pathfinding/convex/api';
+import { api } from '@pathfinding/convex-client/api';
+import { validateGuides } from '@pathfinding/crawler-types';
 import { Hono } from 'hono';
+import { ALL_CITIES, isValidCity, isValidPlatform, SUPPORTED_PLATFORMS } from '../config/cities.js';
 import { cleanContentWithLLM } from '../lib/content-cleaner.js';
 import { convex } from '../lib/convex.js';
 import { crawlPlatform } from '../lib/crawlers/index.js';
+import { parallelCrawlerManager } from '../lib/crawlers/parallel-crawler.js';
 import { loggers } from '../lib/logger.js';
 
 interface CrawlJobConfig {
@@ -241,7 +245,7 @@ crawlerRouter.post('/clean', async (c) => {
 
 /**
  * POST /process
- * Process raw crawled data: clean with LLM and save to database
+ * Process raw crawled data: validate, clean with LLM and save to database
  * This is the main endpoint for the Python crawler to send data
  */
 crawlerRouter.post('/process', async (c) => {
@@ -250,6 +254,31 @@ crawlerRouter.post('/process', async (c) => {
 
   if (!guides || !Array.isArray(guides)) {
     return c.json({ error: 'Missing or invalid guides array' }, 400);
+  }
+
+  // === Step 0: Validate all guides before processing ===
+  const guidesWithPlatform = guides.map((guide: Record<string, unknown>) => ({
+    ...guide,
+    sourcePlatform: platform as string,
+    destinations: (guide.destinations as string[] | undefined) || (city ? [city] : []),
+  } as GuideValidationInput));
+
+  const validationResult = validateGuides(guidesWithPlatform);
+
+  if (!validationResult.valid) {
+    loggers.crawler.warn(
+      { totalErrors: validationResult.totalErrors, invalidCount: validationResult.results.length },
+      '[Processor] Validation failed for batch',
+    );
+
+    return c.json({
+      error: 'Validation failed',
+      validationErrors: validationResult.results.map(r => ({
+        index: r.index,
+        errors: r.result.errors,
+      })),
+      totalErrors: validationResult.totalErrors,
+    }, 400);
   }
 
   const results = {
@@ -452,6 +481,229 @@ crawlerRouter.post('/cancel/:jobId', async (c) => {
   }
 
   return c.json({ error: 'Job not found or not running' }, 404);
+});
+
+/**
+ * POST /crawl-all
+ * Trigger a full crawl of all platforms × all cities
+ * Returns jobId for progress tracking
+ */
+crawlerRouter.post('/crawl-all', async (c) => {
+  try {
+    // Check if a job is already running
+    if (parallelCrawlerManager.isJobRunning()) {
+      const activeJobId = parallelCrawlerManager.getActiveJobId();
+      return c.json(
+        {
+          error: 'A crawl job is already running',
+          activeJobId,
+          message: 'Wait for the current job to complete or cancel it first',
+        },
+        409,
+      );
+    }
+
+    const body = await c.req.json().catch(() => ({}));
+    const { concurrency = 2 } = body;
+
+    const jobId = parallelCrawlerManager.generateJobId();
+    const platforms = [...SUPPORTED_PLATFORMS];
+    const cities = [...ALL_CITIES];
+
+    loggers.crawler.info(
+      { jobId, platformCount: platforms.length, cityCount: cities.length, concurrency },
+      '[CrawlAll] Starting full crawl job',
+    );
+
+    // Start the job asynchronously (don't await)
+    parallelCrawlerManager
+      .startJob(jobId, platforms, cities, {
+        concurrencyPerPlatform: concurrency,
+        maxPages: 5,
+        rateLimit: 0.5,
+      })
+      .catch((error) => {
+        loggers.crawler.error({ jobId, error }, '[CrawlAll] Job failed');
+      });
+
+    return c.json({
+      success: true,
+      jobId,
+      message: 'Full crawl job started',
+      config: {
+        platforms,
+        cities: cities.length,
+        concurrency,
+        estimatedTasks: platforms.length * cities.length,
+      },
+    });
+  }
+  catch (error) {
+    loggers.crawler.error({ error }, '[CrawlAll] Error starting job');
+    return c.json({ error: 'Failed to start crawl-all job' }, 500);
+  }
+});
+
+/**
+ * POST /crawl-batch
+ * Trigger a crawl for specific platforms and/or cities
+ * Returns jobId for progress tracking
+ */
+crawlerRouter.post('/crawl-batch', async (c) => {
+  try {
+    // Check if a job is already running
+    if (parallelCrawlerManager.isJobRunning()) {
+      const activeJobId = parallelCrawlerManager.getActiveJobId();
+      return c.json(
+        {
+          error: 'A crawl job is already running',
+          activeJobId,
+          message: 'Wait for the current job to complete or cancel it first',
+        },
+        409,
+      );
+    }
+
+    const body = await c.req.json().catch(() => ({}));
+    const {
+      platforms: requestedPlatforms,
+      cities: requestedCities,
+      concurrency = 2,
+    } = body;
+
+    // Validate and set defaults
+    const platforms: string[] = requestedPlatforms?.length
+      ? requestedPlatforms
+      : [...SUPPORTED_PLATFORMS];
+    const cities: string[] = requestedCities?.length
+      ? requestedCities
+      : [...ALL_CITIES];
+
+    // Validate platforms
+    const invalidPlatforms = platforms.filter((p: string) => !isValidPlatform(p));
+    if (invalidPlatforms.length > 0) {
+      return c.json(
+        {
+          error: 'Invalid platforms specified',
+          invalidPlatforms,
+          validPlatforms: SUPPORTED_PLATFORMS,
+        },
+        400,
+      );
+    }
+
+    // Validate cities
+    const invalidCities = cities.filter((city: string) => !isValidCity(city));
+    if (invalidCities.length > 0) {
+      return c.json(
+        {
+          error: 'Invalid cities specified',
+          invalidCities,
+          message: 'Some cities are not in the supported list',
+        },
+        400,
+      );
+    }
+
+    // Ensure at least one platform and one city
+    if (platforms.length === 0 || cities.length === 0) {
+      return c.json(
+        { error: 'At least one platform and one city must be specified' },
+        400,
+      );
+    }
+
+    const jobId = parallelCrawlerManager.generateJobId();
+
+    loggers.crawler.info(
+      { jobId, platforms, cityCount: cities.length, concurrency },
+      '[CrawlBatch] Starting batch crawl job',
+    );
+
+    // Start the job asynchronously (don't await)
+    parallelCrawlerManager
+      .startJob(jobId, platforms, cities, {
+        concurrencyPerPlatform: concurrency,
+        maxPages: 5,
+        rateLimit: 0.5,
+      })
+      .catch((error) => {
+        loggers.crawler.error({ jobId, error }, '[CrawlBatch] Job failed');
+      });
+
+    return c.json({
+      success: true,
+      jobId,
+      message: 'Batch crawl job started',
+      config: {
+        platforms,
+        cities,
+        concurrency,
+        estimatedTasks: platforms.length * cities.length,
+      },
+    });
+  }
+  catch (error) {
+    loggers.crawler.error({ error }, '[CrawlBatch] Error starting job');
+    return c.json({ error: 'Failed to start crawl-batch job' }, 500);
+  }
+});
+
+/**
+ * GET /progress/:jobId
+ * Get progress for a specific crawl job
+ */
+crawlerRouter.get('/progress/:jobId', (c) => {
+  const jobId = c.req.param('jobId');
+  const progress = parallelCrawlerManager.getProgress(jobId);
+
+  if (!progress) {
+    return c.json({ error: 'Job not found', jobId }, 404);
+  }
+
+  return c.json({
+    success: true,
+    progress,
+  });
+});
+
+/**
+ * GET /jobs
+ * List all crawl jobs (active and recent)
+ */
+crawlerRouter.get('/jobs', (c) => {
+  const jobs = parallelCrawlerManager.listJobs();
+  const activeJobId = parallelCrawlerManager.getActiveJobId();
+
+  return c.json({
+    success: true,
+    activeJobId,
+    jobs: jobs.map(job => ({
+      jobId: job.jobId,
+      status: job.status,
+      summary: job.summary,
+      startedAt: job.startedAt,
+      completedAt: job.completedAt,
+      totalResults: job.totalResults,
+    })),
+    totalJobs: jobs.length,
+  });
+});
+
+/**
+ * POST /cancel-parallel/:jobId
+ * Cancel a running parallel crawl job
+ */
+crawlerRouter.post('/cancel-parallel/:jobId', (c) => {
+  const jobId = c.req.param('jobId');
+  const cancelled = parallelCrawlerManager.cancelJob(jobId);
+
+  if (cancelled) {
+    loggers.crawler.info({ jobId }, '[CancelParallel] Job cancelled');
+    return c.json({ success: true, message: 'Job cancelled', jobId });
+  }
+
+  return c.json({ error: 'Job not found or not running', jobId }, 404);
 });
 
 /**

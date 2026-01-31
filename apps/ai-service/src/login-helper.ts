@@ -15,6 +15,7 @@
  *   pnpm --filter ai-service exec tsx src/login-helper.ts all
  */
 
+import type { BrowserClient } from './lib/crawlers/clients/index.js';
 import type { Platform } from './lib/crawlers/session/index.js';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -53,9 +54,7 @@ function waitForEnter(prompt: string): Promise<void> {
 }
 
 async function isLoggedIn(
-  client: {
-    navigateTo: (url: string, opts?: { timeout: number }) => Promise<void>;
-  },
+  client: BrowserClient,
   platform: string,
 ): Promise<boolean> {
   try {
@@ -68,9 +67,7 @@ async function isLoggedIn(
 }
 
 async function loginToPlatform(
-  client: {
-    navigateTo: (url: string, opts?: { timeout: number }) => Promise<void>;
-  },
+  client: BrowserClient,
   platform: string,
 ): Promise<void> {
   const config = PLATFORM_URLS[platform];

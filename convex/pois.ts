@@ -2,7 +2,7 @@
 // @ts-nocheck
 import type { Id } from './_generated/dataModel';
 import { ConvexError, v } from 'convex/values';
-import { businessHoursValidator } from '../packages/convex/src/validators/index.js';
+import { businessHoursValidator } from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 /**

@@ -1,6 +1,8 @@
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
+import { deleteGuideFromAggregates, insertGuideToAggregates, replaceGuideInAggregates } from './guideAggregates';
+import { deleteDestinationsForGuide, syncDestinationsInternal } from './guideDestinations';
 
 /**
  * Travel Guides - Crawled Content from Social Platforms
@@ -275,6 +277,7 @@ export const getByDestination = query({
 });
 
 // Create or update a guide (upsert by platform + external ID)
+// Integrates with guideDestinations sync and Aggregates count updates
 export const upsert = mutation({
   args: {
     sourcePlatform: platformValidator,
@@ -298,7 +301,7 @@ export const upsert = mutation({
     contentHash: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Check if guide already exists
+    // Check if guide already exists using the unique index
     const existing = await ctx.db
       .query('travelGuides')
       .withIndex('by_platform_external', q =>
@@ -331,11 +334,35 @@ export const upsert = mutation({
     };
 
     if (existing) {
+      // Update existing guide
+      const oldDoc = existing;
       await ctx.db.patch(existing._id, data);
-      return existing._id;
+      const newDoc = await ctx.db.get(existing._id);
+
+      // Sync destinations (handles diff between old and new)
+      await syncDestinationsInternal(ctx, existing._id, args.destinations);
+
+      // Update aggregates (in case platform changed, though unlikely)
+      if (newDoc) {
+        await replaceGuideInAggregates(ctx, oldDoc, newDoc);
+      }
+
+      return { id: existing._id, action: 'updated' as const };
     }
     else {
-      return await ctx.db.insert('travelGuides', data);
+      // Insert new guide
+      const id = await ctx.db.insert('travelGuides', data);
+      const newDoc = await ctx.db.get(id);
+
+      // Sync destinations for new guide
+      await syncDestinationsInternal(ctx, id, args.destinations);
+
+      // Update aggregates (increment count)
+      if (newDoc) {
+        await insertGuideToAggregates(ctx, newDoc);
+      }
+
+      return { id, action: 'inserted' as const };
     }
   },
 });
@@ -385,6 +412,111 @@ export const bulkInsert = mutation({
     }
 
     return ids;
+  },
+});
+
+// Bulk upsert guides with deduplication and statistics
+// Returns inserted/updated counts instead of creating duplicates
+export const bulkUpsert = mutation({
+  args: {
+    guides: v.array(
+      v.object({
+        sourcePlatform: platformValidator,
+        sourceExternalId: v.string(),
+        sourceUrl: v.optional(v.string()),
+        title: v.optional(v.string()),
+        content: v.string(),
+        contentHtml: v.optional(v.string()),
+        authorName: v.optional(v.string()),
+        authorId: v.optional(v.string()),
+        destinations: v.array(v.string()),
+        tags: v.array(v.string()),
+        likesCount: v.optional(v.number()),
+        savesCount: v.optional(v.number()),
+        commentsCount: v.optional(v.number()),
+        viewsCount: v.optional(v.number()),
+        coverImageUrl: v.optional(v.string()),
+        imageUrls: v.optional(v.array(v.string())),
+        publishedAt: v.optional(v.number()),
+        qualityScore: v.optional(v.number()),
+        contentHash: v.optional(v.string()),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    let inserted = 0;
+    let updated = 0;
+    const ids: Id<'travelGuides'>[] = [];
+
+    for (const guide of args.guides) {
+      // Check if guide already exists
+      const existing = await ctx.db
+        .query('travelGuides')
+        .withIndex('by_platform_external', q =>
+          q
+            .eq('sourcePlatform', guide.sourcePlatform)
+            .eq('sourceExternalId', guide.sourceExternalId))
+        .first();
+
+      const data = {
+        sourcePlatform: guide.sourcePlatform,
+        sourceExternalId: guide.sourceExternalId,
+        sourceUrl: guide.sourceUrl,
+        title: guide.title,
+        content: guide.content,
+        contentHtml: guide.contentHtml,
+        authorName: guide.authorName,
+        authorId: guide.authorId,
+        destinations: guide.destinations,
+        tags: guide.tags,
+        likesCount: guide.likesCount ?? 0,
+        savesCount: guide.savesCount ?? 0,
+        commentsCount: guide.commentsCount ?? 0,
+        viewsCount: guide.viewsCount ?? 0,
+        coverImageUrl: guide.coverImageUrl,
+        imageUrls: guide.imageUrls ?? [],
+        publishedAt: guide.publishedAt,
+        crawledAt: Date.now(),
+        qualityScore: guide.qualityScore ?? 0,
+        contentHash: guide.contentHash,
+      };
+
+      if (existing) {
+        // Update existing
+        const oldDoc = existing;
+        await ctx.db.patch(existing._id, data);
+        const newDoc = await ctx.db.get(existing._id);
+
+        // Sync destinations
+        await syncDestinationsInternal(ctx, existing._id, guide.destinations);
+
+        // Update aggregates
+        if (newDoc) {
+          await replaceGuideInAggregates(ctx, oldDoc, newDoc);
+        }
+
+        ids.push(existing._id);
+        updated++;
+      }
+      else {
+        // Insert new
+        const id = await ctx.db.insert('travelGuides', data);
+        const newDoc = await ctx.db.get(id);
+
+        // Sync destinations
+        await syncDestinationsInternal(ctx, id, guide.destinations);
+
+        // Update aggregates
+        if (newDoc) {
+          await insertGuideToAggregates(ctx, newDoc);
+        }
+
+        ids.push(id);
+        inserted++;
+      }
+    }
+
+    return { ids, inserted, updated, total: args.guides.length };
   },
 });
 
@@ -460,10 +592,16 @@ export const updateAiData = mutation({
 });
 
 // Delete a guide
+// Also cleans up associated data: recommendations, destinations, aggregates
 export const remove = mutation({
   args: { id: v.id('travelGuides') },
   handler: async (ctx, args) => {
-    // Also delete associated recommendations
+    // Get the guide before deletion for aggregate update
+    const guide = await ctx.db.get(args.id);
+    if (!guide)
+      return;
+
+    // Delete associated recommendations
     const recs = await ctx.db
       .query('guideRecommendations')
       .filter(q => q.eq(q.field('guideId'), args.id))
@@ -473,6 +611,13 @@ export const remove = mutation({
       await ctx.db.delete(rec._id);
     }
 
+    // Delete associated destinations
+    await deleteDestinationsForGuide(ctx, args.id);
+
+    // Update aggregates (decrement count)
+    await deleteGuideFromAggregates(ctx, guide);
+
+    // Delete the guide
     await ctx.db.delete(args.id);
   },
 });
@@ -569,6 +714,14 @@ export const batchDelete = mutation({
     let deletedCount = 0;
     for (const id of args.ids) {
       try {
+        // Get guide for aggregate update
+        const guide = await ctx.db.get(id);
+        if (guide) {
+          // Clean up destinations
+          await deleteDestinationsForGuide(ctx, id);
+          // Update aggregates
+          await deleteGuideFromAggregates(ctx, guide);
+        }
         await ctx.db.delete(id);
         deletedCount++;
       }
@@ -580,6 +733,10 @@ export const batchDelete = mutation({
   },
 });
 
+/**
+ * @deprecated Use bulkUpsert instead. This function will be removed in a future version.
+ * The upsert mutation now handles deduplication atomically via the by_platform_external index.
+ */
 // Remove duplicate guides (keep the one with longer content or higher quality score)
 // Uses platform index to batch process and avoid 16MB limit
 export const removeDuplicates = mutation({

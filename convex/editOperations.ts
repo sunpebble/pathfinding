@@ -1,7 +1,7 @@
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
-import { editOperationChangesValidator } from '../packages/convex/src/validators/index.js';
+import { editOperationChangesValidator } from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 /**

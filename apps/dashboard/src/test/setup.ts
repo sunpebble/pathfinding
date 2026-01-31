@@ -36,7 +36,7 @@ vi.mock('@convex-dev/auth/react', () => ({
   })),
 }));
 
-vi.mock('@pathfinding/convex', () => ({
+vi.mock('@pathfinding/convex-client', () => ({
   api: {
     users: {
       getCurrentUser: 'users:getCurrentUser',

@@ -7,6 +7,7 @@ import type { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import type { LLMConfig, LLMProvider } from './types.js';
 import { createLogger } from '../logger.js';
 import { createClaudeLLM, isClaudeConfigured } from './claude.js';
+import { createGeminiLLM, isGeminiConfigured } from './gemini.js';
 import { checkOllamaHealth, createOllamaLLM } from './ollama.js';
 import { createOpenAILLM, isOpenAIConfigured } from './openai.js';
 import {
@@ -18,6 +19,7 @@ import {
 const log = createLogger('llm');
 
 export { isClaudeConfigured } from './claude.js';
+export { isGeminiConfigured } from './gemini.js';
 export { checkOllamaHealth } from './ollama.js';
 export { isOpenAIConfigured } from './openai.js';
 export * from './types.js';
@@ -43,6 +45,8 @@ export function createLLM(config?: Partial<LLMConfig>): BaseChatModel {
       return createOpenAILLM(fullConfig);
     case 'claude':
       return createClaudeLLM(fullConfig);
+    case 'gemini':
+      return createGeminiLLM(fullConfig);
     case 'ollama':
     default:
       return createOllamaLLM(fullConfig);
@@ -64,6 +68,7 @@ export async function getBestAvailableLLM(
     ollama: checkOllamaHealth,
     openai: async () => isOpenAIConfigured(),
     claude: async () => isClaudeConfigured(),
+    gemini: async () => isGeminiConfigured(),
   };
 
   // Try preferred provider first
@@ -75,7 +80,7 @@ export async function getBestAvailableLLM(
   }
 
   // Fallback order: ollama -> openai -> claude
-  const fallbackOrder: LLMProvider[] = ['ollama', 'openai', 'claude'].filter(
+  const fallbackOrder: LLMProvider[] = ['gemini', 'ollama', 'openai', 'claude'].filter(
     p => p !== preferredProvider,
   ) as LLMProvider[];
 
@@ -110,7 +115,7 @@ export async function getProvidersStatus(): Promise<
   return {
     ollama: {
       available: ollamaHealth,
-      configured: true, // Always configured (uses default URL)
+      configured: true,
     },
     openai: {
       available: isOpenAIConfigured(),
@@ -119,6 +124,10 @@ export async function getProvidersStatus(): Promise<
     claude: {
       available: isClaudeConfigured(),
       configured: isClaudeConfigured(),
+    },
+    gemini: {
+      available: isGeminiConfigured(),
+      configured: isGeminiConfigured(),
     },
   };
 }

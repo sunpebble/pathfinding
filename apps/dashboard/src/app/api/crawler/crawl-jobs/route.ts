@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { api } from '@pathfinding/convex/api';
+import { api } from '@pathfinding/convex-client/api';
 import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
 

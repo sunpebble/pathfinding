@@ -2,7 +2,7 @@
 // @ts-nocheck
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
-import { rawCrawlDataValidator } from '../packages/convex/src/validators/index.js';
+import { rawCrawlDataValidator } from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 /**

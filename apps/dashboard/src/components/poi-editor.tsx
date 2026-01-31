@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@pathfinding/convex';
+import { api } from '@pathfinding/convex-client';
 import { useMutation } from 'convex/react';
 import { CheckCircle2, MapPin, X } from 'lucide-react';
 import { useEffect, useState } from 'react';

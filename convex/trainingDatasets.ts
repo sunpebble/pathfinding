@@ -10,7 +10,7 @@ import {
   trainingGenerationParamsValidator,
   trainingStatisticsValidator,
   trainingStoragePathsValidator,
-} from '../packages/convex/src/validators/index.js';
+} from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 const statusValidator = v.union(
