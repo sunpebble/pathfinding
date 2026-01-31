@@ -74,7 +74,7 @@ export const DEFAULT_TRANSPORT_MODE: TransportMode = 'walking';
  */
 export function getTransportLabel(
   mode: TransportMode,
-  locale: 'zh' | 'en' = 'zh'
+  locale: 'zh' | 'en' = 'zh',
 ): string {
   const transport = TRANSPORT_MODES[mode];
   return locale === 'zh' ? transport.label : transport.labelEn;
@@ -92,7 +92,7 @@ export function getTransportIcon(mode: TransportMode): string {
  */
 export function estimateTravelTime(
   distanceKm: number,
-  mode: TransportMode
+  mode: TransportMode,
 ): number {
   const speed = TRANSPORT_MODES[mode].defaultSpeed;
   const hours = distanceKm / speed;

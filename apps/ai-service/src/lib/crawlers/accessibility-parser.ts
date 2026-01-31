@@ -53,14 +53,16 @@ export function parseNode(line: string): ParsedNode | null {
   //   uid=5_4 img alt="Image description"
 
   const uidMatch = line.match(/uid=(\S+)/);
-  if (!uidMatch) return null;
+  if (!uidMatch)
+    return null;
 
   const uid = uidMatch[1];
 
   // Extract role (word after uid)
   const afterUid = line.substring(line.indexOf(uid) + uid.length).trim();
   const roleMatch = afterUid.match(/^(\w+)/);
-  if (!roleMatch) return null;
+  if (!roleMatch)
+    return null;
 
   const role = roleMatch[1];
 
@@ -137,8 +139,8 @@ export function extractStaticText(content: string): string[] {
       const text = textMatch[1].trim();
       // Filter out very short or navigation-like text
       if (
-        text.length >= 10 &&
-        !/^(?:首页|登录|注册|返回|分享|收藏|评论|点赞)$/.test(text)
+        text.length >= 10
+        && !/^(?:首页|登录|注册|返回|分享|收藏|评论|点赞)$/.test(text)
       ) {
         texts.push(text);
       }
@@ -152,7 +154,7 @@ export function extractStaticText(content: string): string[] {
  * Extract links from accessibility tree
  */
 export function extractLinks(
-  content: string
+  content: string,
 ): Array<{ text: string; url: string }> {
   const links: Array<{ text: string; url: string }> = [];
   const lines = content.split('\n');
@@ -180,19 +182,19 @@ export function extractImageUrls(content: string): string[] {
 
   // Method 1: Look for image URLs in the content
   const urlMatches = content.matchAll(
-    /https?:\/\/[^\s"'\\)\]]+\.(jpg|jpeg|png|webp|gif)/gi
+    /https?:\/\/[^\s"'\\)\]]+\.(jpg|jpeg|png|webp|gif)/gi,
   );
 
   for (const match of urlMatches) {
     const url = match[0];
     // Filter out avatars, icons, logos
     if (
-      !url.includes('avatar') &&
-      !url.includes('icon') &&
-      !url.includes('logo') &&
-      !url.includes('emoji') &&
-      !url.includes('badge') &&
-      !seen.has(url)
+      !url.includes('avatar')
+      && !url.includes('icon')
+      && !url.includes('logo')
+      && !url.includes('emoji')
+      && !url.includes('badge')
+      && !seen.has(url)
     ) {
       seen.add(url);
       urls.push(url);
@@ -222,10 +224,10 @@ export function extractAuthor(content: string): string | undefined {
       const author = match[1].trim();
       // Filter out common false positives
       if (
-        !author.includes('http') &&
-        !author.includes('感谢') &&
-        author.length >= 2 &&
-        author.length <= 30
+        !author.includes('http')
+        && !author.includes('感谢')
+        && author.length >= 2
+        && author.length <= 30
       ) {
         return author;
       }
@@ -297,11 +299,11 @@ export function getBestTitle(content: string, fallback: string = ''): string {
   // Priority 1: First meaningful heading
   const headings = extractHeadings(content);
   const meaningfulHeading = headings.find(
-    (h) =>
-      h.length >= 5 &&
-      h.length <= 100 &&
-      /[\u4E00-\u9FFF]/.test(h) && // Contains Chinese
-      !/^(?:首页|登录|注册|返回|分享|收藏|评论|点赞|导航|菜单)/.test(h)
+    h =>
+      h.length >= 5
+      && h.length <= 100
+      && /[\u4E00-\u9FFF]/.test(h) // Contains Chinese
+      && !/^(?:首页|登录|注册|返回|分享|收藏|评论|点赞|导航|菜单)/.test(h),
   );
 
   if (meaningfulHeading) {
@@ -329,8 +331,10 @@ export function getArticleContent(content: string): string {
 
   for (const text of staticTexts) {
     // Skip if too short or duplicate
-    if (text.length < 15) continue;
-    if (seen.has(text)) continue;
+    if (text.length < 15)
+      continue;
+    if (seen.has(text))
+      continue;
 
     // Skip navigation/UI text
     if (/^(?:首页|登录|注册|返回|分享|收藏|评论|点赞|上一|下一)/.test(text)) {
@@ -338,7 +342,8 @@ export function getArticleContent(content: string): string {
     }
 
     // Skip if it looks like a URL or technical content
-    if (text.includes('http') || text.includes('uid=')) continue;
+    if (text.includes('http') || text.includes('uid='))
+      continue;
 
     seen.add(text);
     filtered.push(text);
@@ -353,7 +358,8 @@ export function getArticleContent(content: string): string {
  */
 export function parseChineseNumber(text: string): number {
   const match = text.match(/([\d.]+)\s*([千万kw])?/i);
-  if (!match) return 0;
+  if (!match)
+    return 0;
 
   const num = Number.parseFloat(match[1]);
   const unit = match[2]?.toLowerCase();
@@ -390,7 +396,7 @@ export function transformToHighRes(url: string): string {
 export function extractPublishDate(content: string): string | undefined {
   // Priority 1: Labeled date (发布时间：2023-05-09)
   const labeledMatch = content.match(
-    /发布(?:时间)?[：:]\s*(\d{4}-\d{2}-\d{2})/
+    /发布(?:时间)?[：:]\s*(\d{4}-\d{2}-\d{2})/,
   );
   if (labeledMatch) {
     return labeledMatch[1];
@@ -440,80 +446,88 @@ export function extractCtripStats(content: string): {
   const viewsMatch = content.match(/(?:阅读|浏览)量\s*([\d.]+[千万kw]?)/i);
   if (viewsMatch) {
     const num = parseChineseNumber(viewsMatch[1]);
-    if (num > 0) stats.views = num;
+    if (num > 0)
+      stats.views = num;
   }
 
   // Format 2: Accessibility tree - "阅读量" followed by number on next StaticText
   if (!stats.views) {
     const accessibilityViewsMatch = content.match(
-      /StaticText\s+"(?:阅读量|浏览量)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+      /StaticText\s+"(?:阅读量|浏览量)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i,
     );
     if (accessibilityViewsMatch) {
       const num = parseChineseNumber(accessibilityViewsMatch[1]);
-      if (num > 0) stats.views = num;
+      if (num > 0)
+        stats.views = num;
     }
   }
 
   // === Likes ===
   // Format 1: Inline - 点赞120 or 120个赞 or 赞 85 or 有用123
-  const likesMatch =
-    content.match(/(?:点赞|有用)\s*([\d.]+[千万kw]?)/i) ||
-    content.match(/([\d.]+[千万kw]?)\s*(?:点赞|个赞)/i);
+  const likesMatch
+    = content.match(/(?:点赞|有用)\s*([\d.]+[千万kw]?)/i)
+      || content.match(/([\d.]+[千万kw]?)\s*(?:点赞|个赞)/i);
   if (likesMatch) {
     const num = parseChineseNumber(likesMatch[1]);
-    if (num > 0) stats.likes = num;
+    if (num > 0)
+      stats.likes = num;
   }
 
   // Format 2: Accessibility tree
   if (!stats.likes) {
     const accessibilityLikesMatch = content.match(
-      /StaticText\s+"(?:点赞|有用|赞)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+      /StaticText\s+"(?:点赞|有用|赞)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i,
     );
     if (accessibilityLikesMatch) {
       const num = parseChineseNumber(accessibilityLikesMatch[1]);
-      if (num > 0) stats.likes = num;
+      if (num > 0)
+        stats.likes = num;
     }
   }
 
   // === Saves ===
   // Format 1: Inline - 收藏85 or 85收藏
-  const savesMatch =
-    content.match(/收藏\s*([\d.]+[千万kw]?)/i) ||
-    content.match(/([\d.]+[千万kw]?)\s*收藏/i);
+  const savesMatch
+    = content.match(/收藏\s*([\d.]+[千万kw]?)/i)
+      || content.match(/([\d.]+[千万kw]?)\s*收藏/i);
   if (savesMatch) {
     const num = parseChineseNumber(savesMatch[1]);
-    if (num > 0) stats.saves = num;
+    if (num > 0)
+      stats.saves = num;
   }
 
   // Format 2: Accessibility tree
   if (!stats.saves) {
     const accessibilitySavesMatch = content.match(
-      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i,
     );
     if (accessibilitySavesMatch) {
       const num = parseChineseNumber(accessibilitySavesMatch[1]);
-      if (num > 0) stats.saves = num;
+      if (num > 0)
+        stats.saves = num;
     }
   }
 
   // === Comments ===
   // Format 1: Inline - 评论30 or 30条评论
-  const commentsMatch =
-    content.match(/(?:评论|条评论)\s*([\d.]+[千万kw]?)/i) ||
-    content.match(/([\d.]+[千万kw]?)\s*(?:条评论|评论)/i);
+  const commentsMatch
+    = content.match(/(?:评论|条评论)\s*([\d.]+[千万kw]?)/i)
+      || content.match(/([\d.]+[千万kw]?)\s*(?:条评论|评论)/i);
   if (commentsMatch) {
     const num = parseChineseNumber(commentsMatch[1]);
-    if (num > 0) stats.comments = num;
+    if (num > 0)
+      stats.comments = num;
   }
 
   // Format 2: Accessibility tree
   if (!stats.comments) {
     const accessibilityCommentsMatch = content.match(
-      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i,
     );
     if (accessibilityCommentsMatch) {
       const num = parseChineseNumber(accessibilityCommentsMatch[1]);
-      if (num > 0) stats.comments = num;
+      if (num > 0)
+        stats.comments = num;
     }
   }
 
@@ -549,7 +563,7 @@ export function extractAuthorWithAvatar(content: string): {
   // Pattern 2: Name before profile link (common in accessibility trees)
   if (!name) {
     const profileLinkMatch = content.match(
-      /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"\s+link.*profile/i
+      /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"\s+link.*profile/i,
     );
     if (profileLinkMatch) {
       const candidate = profileLinkMatch[1].trim();
@@ -566,18 +580,18 @@ export function extractAuthorWithAvatar(content: string): {
 
   // Extract avatar (best effort)
   // Pattern: avatar/头像 followed by image URL
-  const avatarMatch =
-    content.match(
-      /(?:avatar|头像).*?(https?:\/\/[^\s"']+\.(?:jpg|jpeg|png|webp))/i
+  const avatarMatch
+    = content.match(
+      /(?:avatar|头像).*?(https?:\/\/[^\s"']+\.(?:jpg|jpeg|png|webp))/i,
     ) || content.match(/img.*?(?:avatar|author).*?url="([^"]+)"/i);
   if (avatarMatch) {
     const candidateUrl = avatarMatch[1];
     // Filter out generic icons
     if (
-      candidateUrl &&
-      !candidateUrl.includes('icon') &&
-      !candidateUrl.includes('default') &&
-      !candidateUrl.includes('placeholder')
+      candidateUrl
+      && !candidateUrl.includes('icon')
+      && !candidateUrl.includes('default')
+      && !candidateUrl.includes('placeholder')
     ) {
       avatar = candidateUrl;
     }
@@ -630,85 +644,93 @@ export function extractQunarStats(content: string): {
 
   // === Views ===
   // Pattern 1: Inline - 阅读5.7万, 浏览量1234, 5.7万阅读
-  const viewsMatch =
-    content.match(/(?:阅读|浏览量?)[：:\s]*([\d.]+[千万kw]?)/i) ||
-    content.match(/([\d.]+[千万kw]?)\s*(?:阅读|次浏览)/i);
+  const viewsMatch
+    = content.match(/(?:阅读|浏览量?)[：:\s]*([\d.]+[千万kw]?)/i)
+      || content.match(/([\d.]+[千万kw]?)\s*(?:阅读|次浏览)/i);
   if (viewsMatch) {
     const num = parseChineseNumber(viewsMatch[1]);
-    if (num > 0) stats.views = num;
+    if (num > 0)
+      stats.views = num;
   }
 
   // Pattern 2: Accessibility tree - "浏览量" followed by number on next StaticText
   if (!stats.views) {
     const accessibilityViewsMatch = content.match(
-      /StaticText\s+"(?:阅读|浏览量?)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+      /StaticText\s+"(?:阅读|浏览量?)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i,
     );
     if (accessibilityViewsMatch) {
       const num = parseChineseNumber(accessibilityViewsMatch[1]);
-      if (num > 0) stats.views = num;
+      if (num > 0)
+        stats.views = num;
     }
   }
 
   // === Likes ===
   // Pattern 1: Inline - 点赞123, 有用45, 123赞
-  const likesMatch =
-    content.match(/(?:点赞|有用|赞)[：:\s]*([\d.]+[千万kw]?)/i) ||
-    content.match(/([\d.]+[千万kw]?)\s*(?:点赞|个赞|赞)/i);
+  const likesMatch
+    = content.match(/(?:点赞|有用|赞)[：:\s]*([\d.]+[千万kw]?)/i)
+      || content.match(/([\d.]+[千万kw]?)\s*(?:点赞|个赞|赞)/i);
   if (likesMatch) {
     const num = parseChineseNumber(likesMatch[1]);
-    if (num > 0) stats.likes = num;
+    if (num > 0)
+      stats.likes = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.likes) {
     const accessibilityLikesMatch = content.match(
-      /StaticText\s+"(?:点赞|有用|赞)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+      /StaticText\s+"(?:点赞|有用|赞)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i,
     );
     if (accessibilityLikesMatch) {
       const num = parseChineseNumber(accessibilityLikesMatch[1]);
-      if (num > 0) stats.likes = num;
+      if (num > 0)
+        stats.likes = num;
     }
   }
 
   // === Saves ===
   // Pattern 1: Inline - 收藏85, 85人收藏
-  const savesMatch =
-    content.match(/收藏[：:\s]*([\d.]+[千万kw]?)/i) ||
-    content.match(/([\d.]+[千万kw]?)\s*(?:人收藏|收藏)/i);
+  const savesMatch
+    = content.match(/收藏[：:\s]*([\d.]+[千万kw]?)/i)
+      || content.match(/([\d.]+[千万kw]?)\s*(?:人收藏|收藏)/i);
   if (savesMatch) {
     const num = parseChineseNumber(savesMatch[1]);
-    if (num > 0) stats.saves = num;
+    if (num > 0)
+      stats.saves = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.saves) {
     const accessibilitySavesMatch = content.match(
-      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i,
     );
     if (accessibilitySavesMatch) {
       const num = parseChineseNumber(accessibilitySavesMatch[1]);
-      if (num > 0) stats.saves = num;
+      if (num > 0)
+        stats.saves = num;
     }
   }
 
   // === Comments ===
   // Pattern 1: Inline - 评论30, 30条评论
-  const commentsMatch =
-    content.match(/评论[：:\s]*([\d.]+[千万kw]?)/i) ||
-    content.match(/([\d.]+[千万kw]?)\s*(?:条评论|评论)/i);
+  const commentsMatch
+    = content.match(/评论[：:\s]*([\d.]+[千万kw]?)/i)
+      || content.match(/([\d.]+[千万kw]?)\s*(?:条评论|评论)/i);
   if (commentsMatch) {
     const num = parseChineseNumber(commentsMatch[1]);
-    if (num > 0) stats.comments = num;
+    if (num > 0)
+      stats.comments = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.comments) {
     const accessibilityCommentsMatch = content.match(
-      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i
+      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([\d.]+[千万kw]?)"/i,
     );
     if (accessibilityCommentsMatch) {
       const num = parseChineseNumber(accessibilityCommentsMatch[1]);
-      if (num > 0) stats.comments = num;
+      if (num > 0)
+        stats.comments = num;
     }
   }
 
@@ -732,11 +754,11 @@ export function extractQunarStats(content: string): {
  */
 export function transformToHighResQunar(url: string): string {
   // Check if URL is from Qunar CDN domains
-  const isQunarCdn =
-    url.includes('qunar.com') ||
-    url.includes('qunarzz.com') ||
-    url.includes('p0.meituan.net') ||
-    url.includes('p1.meituan.net');
+  const isQunarCdn
+    = url.includes('qunar.com')
+      || url.includes('qunarzz.com')
+      || url.includes('p0.meituan.net')
+      || url.includes('p1.meituan.net');
 
   if (!isQunarCdn) {
     return url;
@@ -750,7 +772,7 @@ export function transformToHighResQunar(url: string): string {
   // Remove thumbnail suffixes: _small, _thumb, _s (before file extension)
   transformedUrl = transformedUrl.replace(
     /(_small|_thumb|_s)(\.(?:jpg|jpeg|png|webp|gif))/gi,
-    '$2'
+    '$2',
   );
 
   // Handle query parameters
@@ -770,7 +792,8 @@ export function transformToHighResQunar(url: string): string {
     }
 
     transformedUrl = urlObj.toString();
-  } catch {
+  }
+  catch {
     // If URL parsing fails, return what we have so far
   }
 
@@ -798,7 +821,7 @@ export function extractQunarAuthor(content: string): {
 
   // Pattern 1: Qunar profile section - look for author near 个人主页
   const profileMatch = content.match(
-    /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"\s*[\s\S]{0,50}?(?:个人主页|travel\.qunar\.com\/user)/i
+    /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"\s*[\s\S]{0,50}?(?:个人主页|travel\.qunar\.com\/user)/i,
   );
   if (profileMatch) {
     const candidate = profileMatch[1].trim();
@@ -810,7 +833,7 @@ export function extractQunarAuthor(content: string): {
   // Pattern 2: Look for author before qunar profile link
   if (!name) {
     const profileLinkMatch = content.match(
-      /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"[\s\S]{0,100}?link[^"]*"[^"]*"[\s\S]{0,50}?travel\.qunar\.com/i
+      /StaticText\s+"([\u4E00-\u9FFF\w]{2,20})"[\s\S]{0,100}?link[^"]*"[^"]*"[\s\S]{0,50}?travel\.qunar\.com/i,
     );
     if (profileLinkMatch) {
       const candidate = profileLinkMatch[1].trim();
@@ -822,9 +845,9 @@ export function extractQunarAuthor(content: string): {
 
   // Pattern 3: Generic labeled patterns - 作者：name or by name
   if (!name) {
-    const labeledMatch =
-      content.match(/作者[：:]\s*"?([\u4E00-\u9FFF\w]{2,20})"?/) ||
-      content.match(/by\s+"?([\u4E00-\u9FFF\w]{2,20})"?/i);
+    const labeledMatch
+      = content.match(/作者[：:]\s*"?([\u4E00-\u9FFF\w]{2,20})"?/)
+        || content.match(/by\s+"?([\u4E00-\u9FFF\w]{2,20})"?/i);
     if (labeledMatch) {
       const candidate = labeledMatch[1].trim();
       if (isValidQunarAuthorName(candidate)) {
@@ -855,11 +878,11 @@ export function extractQunarAuthor(content: string): {
       const candidateUrl = avatarMatch[1];
       // Filter out generic icons and placeholders
       if (
-        candidateUrl &&
-        !candidateUrl.includes('icon') &&
-        !candidateUrl.includes('default') &&
-        !candidateUrl.includes('placeholder') &&
-        !candidateUrl.includes('emoji')
+        candidateUrl
+        && !candidateUrl.includes('icon')
+        && !candidateUrl.includes('default')
+        && !candidateUrl.includes('placeholder')
+        && !candidateUrl.includes('emoji')
       ) {
         avatar = candidateUrl;
         break;
@@ -884,7 +907,7 @@ function isValidQunarAuthorName(name: string): boolean {
   // Skip common button/action text (more comprehensive for Qunar)
   if (
     /^(?:分享|收藏|关注|点赞|评论|返回|首页|登录|注册|查看|更多|去哪儿|旅行)$/.test(
-      name
+      name,
     )
   ) {
     return false;
@@ -918,85 +941,93 @@ export function extractMafengwoStats(content: string): {
 
   // === Views ===
   // Pattern 1: Inline - 浏览量2.7千, 阅读量1234, 2.7千次浏览
-  const viewsMatch =
-    content.match(/(?:浏览量?|阅读量?)[：:\s]*([0-9.]+[千万kw]?)/i) ||
-    content.match(/([0-9.]+[千万kw]?)\s*(?:次浏览|阅读)/i);
+  const viewsMatch
+    = content.match(/(?:浏览量?|阅读量?)[：:\s]*([0-9.]+[千万kw]?)/i)
+      || content.match(/([0-9.]+[千万kw]?)\s*(?:次浏览|阅读)/i);
   if (viewsMatch) {
     const num = parseChineseNumber(viewsMatch[1]);
-    if (num > 0) stats.views = num;
+    if (num > 0)
+      stats.views = num;
   }
 
   // Pattern 2: Accessibility tree - "浏览量" followed by number on next StaticText
   if (!stats.views) {
     const accessibilityViewsMatch = content.match(
-      /StaticText\s+"(?:浏览量?|阅读量?)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+      /StaticText\s+"(?:浏览量?|阅读量?)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i,
     );
     if (accessibilityViewsMatch) {
       const num = parseChineseNumber(accessibilityViewsMatch[1]);
-      if (num > 0) stats.views = num;
+      if (num > 0)
+        stats.views = num;
     }
   }
 
   // === Likes ===
   // Pattern 1: Inline - 点赞123, 顶45, 123赞
-  const likesMatch =
-    content.match(/(?:点赞|顶)[：:\s]*([0-9.]+[千万kw]?)/i) ||
-    content.match(/([0-9.]+[千万kw]?)\s*(?:点赞|个赞|赞)/i);
+  const likesMatch
+    = content.match(/(?:点赞|顶)[：:\s]*([0-9.]+[千万kw]?)/i)
+      || content.match(/([0-9.]+[千万kw]?)\s*(?:点赞|个赞|赞)/i);
   if (likesMatch) {
     const num = parseChineseNumber(likesMatch[1]);
-    if (num > 0) stats.likes = num;
+    if (num > 0)
+      stats.likes = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.likes) {
     const accessibilityLikesMatch = content.match(
-      /StaticText\s+"(?:点赞|顶|赞)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+      /StaticText\s+"(?:点赞|顶|赞)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i,
     );
     if (accessibilityLikesMatch) {
       const num = parseChineseNumber(accessibilityLikesMatch[1]);
-      if (num > 0) stats.likes = num;
+      if (num > 0)
+        stats.likes = num;
     }
   }
 
   // === Saves ===
   // Pattern 1: Inline - 收藏85, 85人收藏
-  const savesMatch =
-    content.match(/收藏[：:\s]*([0-9.]+[千万kw]?)/i) ||
-    content.match(/([0-9.]+[千万kw]?)\s*(?:人收藏|收藏)/i);
+  const savesMatch
+    = content.match(/收藏[：:\s]*([0-9.]+[千万kw]?)/i)
+      || content.match(/([0-9.]+[千万kw]?)\s*(?:人收藏|收藏)/i);
   if (savesMatch) {
     const num = parseChineseNumber(savesMatch[1]);
-    if (num > 0) stats.saves = num;
+    if (num > 0)
+      stats.saves = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.saves) {
     const accessibilitySavesMatch = content.match(
-      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i,
     );
     if (accessibilitySavesMatch) {
       const num = parseChineseNumber(accessibilitySavesMatch[1]);
-      if (num > 0) stats.saves = num;
+      if (num > 0)
+        stats.saves = num;
     }
   }
 
   // === Comments ===
   // Pattern 1: Inline - 评论30, 30条评论
-  const commentsMatch =
-    content.match(/评论[：:\s]*([0-9.]+[千万kw]?)/i) ||
-    content.match(/([0-9.]+[千万kw]?)\s*条评论/i);
+  const commentsMatch
+    = content.match(/评论[：:\s]*([0-9.]+[千万kw]?)/i)
+      || content.match(/([0-9.]+[千万kw]?)\s*条评论/i);
   if (commentsMatch) {
     const num = parseChineseNumber(commentsMatch[1]);
-    if (num > 0) stats.comments = num;
+    if (num > 0)
+      stats.comments = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.comments) {
     const accessibilityCommentsMatch = content.match(
-      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i,
     );
     if (accessibilityCommentsMatch) {
       const num = parseChineseNumber(accessibilityCommentsMatch[1]);
-      if (num > 0) stats.comments = num;
+      if (num > 0)
+        stats.comments = num;
     }
   }
 
@@ -1024,7 +1055,7 @@ export function extractMafengwoAuthor(content: string): {
 
   // Pattern 1: Labeled author - 作者：name or 发布者：name
   const labeledMatch = content.match(
-    /(?:作者|发布者|by)[：:\s]+"?([^"\n\]]{2,30})"?/i
+    /(?:作者|发布者|by)[：:\s]+"?([^"\n\]]{2,30})"?/i,
   );
   if (labeledMatch) {
     const candidate = labeledMatch[1].trim();
@@ -1036,7 +1067,7 @@ export function extractMafengwoAuthor(content: string): {
   // Pattern 2: Name near Mafengwo profile link (u.mafengwo.cn/userId)
   if (!name) {
     const profileMatch = content.match(
-      /StaticText\s+"([^"]{2,20})"\s*[\s\S]{0,100}?u\.mafengwo\.cn\/\d+/
+      /StaticText\s+"([^"]{2,20})"\s*[\s\S]{0,100}?u\.mafengwo\.cn\/\d+/,
     );
     if (profileMatch) {
       const candidate = profileMatch[1].trim();
@@ -1065,10 +1096,10 @@ export function extractMafengwoAuthor(content: string): {
       const candidateUrl = avatarMatch[1];
       // Filter out placeholders and icons
       if (
-        candidateUrl &&
-        !candidateUrl.includes('placeholder') &&
-        !candidateUrl.includes('icon') &&
-        !candidateUrl.includes('default')
+        candidateUrl
+        && !candidateUrl.includes('placeholder')
+        && !candidateUrl.includes('icon')
+        && !candidateUrl.includes('default')
       ) {
         avatar = candidateUrl;
         break;
@@ -1126,7 +1157,7 @@ export function transformToHighResMfw(url: string): string {
   // Remove thumbnail suffix (e.g., .180.w.jpg, .320.h.jpg)
   transformedUrl = transformedUrl.replace(
     /\.\d+\.[wh]\.(?:jpg|jpeg|png|webp)$/i,
-    '.jpg'
+    '.jpg',
   );
 
   // Handle query parameters
@@ -1146,7 +1177,8 @@ export function transformToHighResMfw(url: string): string {
     }
 
     transformedUrl = urlObj.toString();
-  } catch {
+  }
+  catch {
     // If URL parsing fails, return what we have so far
   }
 
@@ -1182,85 +1214,93 @@ export function extractTongchengStats(content: string): {
 
   // === Views ===
   // Pattern 1: Inline - 浏览量2.7千, 阅读量1234, 2.7千次浏览, 阅读 2.5万
-  const viewsMatch =
-    content.match(/(?:浏览量?|阅读量?)[：:\\s]*([0-9.]+[千万kw]?)/i) ||
-    content.match(/([0-9.]+[千万kw]?)\\s*(?:次浏览|阅读)/i);
+  const viewsMatch
+    = content.match(/(?:浏览量?|阅读量?)[：:\\s]*([0-9.]+[千万kw]?)/i)
+      || content.match(/([0-9.]+[千万kw]?)\\s*(?:次浏览|阅读)/i);
   if (viewsMatch) {
     const num = parseChineseNumber(viewsMatch[1]);
-    if (num > 0) stats.views = num;
+    if (num > 0)
+      stats.views = num;
   }
 
   // Pattern 2: Accessibility tree - "浏览量" followed by number on next StaticText
   if (!stats.views) {
     const accessibilityViewsMatch = content.match(
-      /StaticText\s+"(?:浏览量?|阅读量?)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+      /StaticText\s+"(?:浏览量?|阅读量?)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i,
     );
     if (accessibilityViewsMatch) {
       const num = parseChineseNumber(accessibilityViewsMatch[1]);
-      if (num > 0) stats.views = num;
+      if (num > 0)
+        stats.views = num;
     }
   }
 
   // === Likes ===
   // Pattern 1: Inline - 点赞123, 顶45, 123赞
-  const likesMatch =
-    content.match(/(?:点赞|顶)[：:\\s]*([0-9.]+[千万kw]?)/i) ||
-    content.match(/([0-9.]+[千万kw]?)\\s*(?:点赞|个赞|赞)/i);
+  const likesMatch
+    = content.match(/(?:点赞|顶)[：:\\s]*([0-9.]+[千万kw]?)/i)
+      || content.match(/([0-9.]+[千万kw]?)\\s*(?:点赞|个赞|赞)/i);
   if (likesMatch) {
     const num = parseChineseNumber(likesMatch[1]);
-    if (num > 0) stats.likes = num;
+    if (num > 0)
+      stats.likes = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.likes) {
     const accessibilityLikesMatch = content.match(
-      /StaticText\s+"(?:点赞|顶|赞)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+      /StaticText\s+"(?:点赞|顶|赞)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i,
     );
     if (accessibilityLikesMatch) {
       const num = parseChineseNumber(accessibilityLikesMatch[1]);
-      if (num > 0) stats.likes = num;
+      if (num > 0)
+        stats.likes = num;
     }
   }
 
   // === Saves ===
   // Pattern 1: Inline - 收藏85, 85人收藏
-  const savesMatch =
-    content.match(/收藏[：:\\s]*([0-9.]+[千万kw]?)/i) ||
-    content.match(/([0-9.]+[千万kw]?)\\s*(?:人收藏|收藏)/i);
+  const savesMatch
+    = content.match(/收藏[：:\\s]*([0-9.]+[千万kw]?)/i)
+      || content.match(/([0-9.]+[千万kw]?)\\s*(?:人收藏|收藏)/i);
   if (savesMatch) {
     const num = parseChineseNumber(savesMatch[1]);
-    if (num > 0) stats.saves = num;
+    if (num > 0)
+      stats.saves = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.saves) {
     const accessibilitySavesMatch = content.match(
-      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+      /StaticText\s+"收藏"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i,
     );
     if (accessibilitySavesMatch) {
       const num = parseChineseNumber(accessibilitySavesMatch[1]);
-      if (num > 0) stats.saves = num;
+      if (num > 0)
+        stats.saves = num;
     }
   }
 
   // === Comments ===
   // Pattern 1: Inline - 评论30, 30条评论
-  const commentsMatch =
-    content.match(/评论[：:\\s]*([0-9.]+[千万kw]?)/i) ||
-    content.match(/([0-9.]+[千万kw]?)\\s*条评论/i);
+  const commentsMatch
+    = content.match(/评论[：:\\s]*([0-9.]+[千万kw]?)/i)
+      || content.match(/([0-9.]+[千万kw]?)\\s*条评论/i);
   if (commentsMatch) {
     const num = parseChineseNumber(commentsMatch[1]);
-    if (num > 0) stats.comments = num;
+    if (num > 0)
+      stats.comments = num;
   }
 
   // Pattern 2: Accessibility tree
   if (!stats.comments) {
     const accessibilityCommentsMatch = content.match(
-      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i
+      /StaticText\s+"(?:评论|条评论)"[\s\S]{0,100}?StaticText\s+"([0-9.]+[千万kw]?)"/i,
     );
     if (accessibilityCommentsMatch) {
       const num = parseChineseNumber(accessibilityCommentsMatch[1]);
-      if (num > 0) stats.comments = num;
+      if (num > 0)
+        stats.comments = num;
     }
   }
 
@@ -1293,7 +1333,7 @@ export function extractTongchengAuthor(content: string): {
 
   // Pattern 1: Labeled author - 作者：name or 发布者：name or by name
   const labeledMatch = content.match(
-    /(?:作者|发布者|by)[：:\s]+"?([^"\n\]]{2,30})"?/i
+    /(?:作者|发布者|by)[：:\s]+"?([^"\n\]]{2,30})"?/i,
   );
   if (labeledMatch) {
     const candidate = labeledMatch[1].trim();
@@ -1305,7 +1345,7 @@ export function extractTongchengAuthor(content: string): {
   // Pattern 2: Name near ly.com/user profile link
   if (!name) {
     const profileMatch = content.match(
-      /StaticText\s+"([^"]{2,20})"\s*[\s\S]{0,100}?ly\.com\/user/
+      /StaticText\s+"([^"]{2,20})"\s*[\s\S]{0,100}?ly\.com\/user/,
     );
     if (profileMatch) {
       const candidate = profileMatch[1].trim();
@@ -1334,10 +1374,10 @@ export function extractTongchengAuthor(content: string): {
       const candidateUrl = avatarMatch[1];
       // Filter out placeholders and icons
       if (
-        candidateUrl &&
-        !candidateUrl.includes('placeholder') &&
-        !candidateUrl.includes('icon') &&
-        !candidateUrl.includes('default')
+        candidateUrl
+        && !candidateUrl.includes('placeholder')
+        && !candidateUrl.includes('icon')
+        && !candidateUrl.includes('default')
       ) {
         avatar = candidateUrl;
         break;
@@ -1367,7 +1407,7 @@ function isValidTongchengAuthor(name: string): boolean {
   // Skip common button/action text (more comprehensive for Tongcheng)
   if (
     /^(?:分享|收藏|关注|点赞|评论|返回|首页|登录|注册|同程|攻略|旅游)$/.test(
-      name
+      name,
     )
   ) {
     return false;
@@ -1396,10 +1436,10 @@ function isValidTongchengAuthor(name: string): boolean {
  */
 export function transformToHighResTc(url: string): string {
   // Check if URL is from Tongcheng CDN domains
-  const isTongchengCdn =
-    url.includes('ly.com') ||
-    url.includes('tcimg') ||
-    url.includes('tongcheng');
+  const isTongchengCdn
+    = url.includes('ly.com')
+      || url.includes('tcimg')
+      || url.includes('tongcheng');
 
   if (!isTongchengCdn) {
     return url;
@@ -1410,7 +1450,7 @@ export function transformToHighResTc(url: string): string {
   // Remove thumbnail suffixes: _small, _thumb, _s (before file extension)
   transformedUrl = transformedUrl.replace(
     /(_small|_thumb|_s)(\.(jpg|jpeg|png|webp|gif))/gi,
-    '$2'
+    '$2',
   );
 
   // Remove size constraints in path: /180x180/, /320x240/
@@ -1433,7 +1473,8 @@ export function transformToHighResTc(url: string): string {
     }
 
     transformedUrl = urlObj.toString();
-  } catch {
+  }
+  catch {
     // If URL parsing fails, return what we have so far
   }
 

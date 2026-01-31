@@ -63,12 +63,12 @@ export const sendOtp = mutation({
     const cooldownKey = `cooldown:${normalizedPhone}`;
     const cooldownRecord = await ctx.db
       .query('rateLimits')
-      .withIndex('by_key', (q) => q.eq('key', cooldownKey))
+      .withIndex('by_key', q => q.eq('key', cooldownKey))
       .first();
 
     if (cooldownRecord && cooldownRecord.expiresAt > now) {
       const remainingSeconds = Math.ceil(
-        (cooldownRecord.expiresAt - now) / 1000
+        (cooldownRecord.expiresAt - now) / 1000,
       );
       throw new Error(`请${remainingSeconds}秒后再试`);
     }
@@ -77,7 +77,7 @@ export const sendOtp = mutation({
     const hourlyKey = `hourly:${normalizedPhone}`;
     const hourlyRecord = await ctx.db
       .query('rateLimits')
-      .withIndex('by_key', (q) => q.eq('key', hourlyKey))
+      .withIndex('by_key', q => q.eq('key', hourlyKey))
       .first();
 
     if (hourlyRecord) {
@@ -87,14 +87,16 @@ export const sendOtp = mutation({
         }
         // 更新计数
         await ctx.db.patch(hourlyRecord._id, { count: hourlyRecord.count + 1 });
-      } else {
+      }
+      else {
         // 重置
         await ctx.db.patch(hourlyRecord._id, {
           count: 1,
           expiresAt: now + 60 * 60 * 1000,
         });
       }
-    } else {
+    }
+    else {
       await ctx.db.insert('rateLimits', {
         key: hourlyKey,
         count: 1,
@@ -106,7 +108,7 @@ export const sendOtp = mutation({
     const dailyKey = `daily:${normalizedPhone}`;
     const dailyRecord = await ctx.db
       .query('rateLimits')
-      .withIndex('by_key', (q) => q.eq('key', dailyKey))
+      .withIndex('by_key', q => q.eq('key', dailyKey))
       .first();
 
     if (dailyRecord) {
@@ -115,13 +117,15 @@ export const sendOtp = mutation({
           throw new Error('今日发送次数已达上限，请明天再试');
         }
         await ctx.db.patch(dailyRecord._id, { count: dailyRecord.count + 1 });
-      } else {
+      }
+      else {
         await ctx.db.patch(dailyRecord._id, {
           count: 1,
           expiresAt: now + 24 * 60 * 60 * 1000,
         });
       }
-    } else {
+    }
+    else {
       await ctx.db.insert('rateLimits', {
         key: dailyKey,
         count: 1,
@@ -135,7 +139,7 @@ export const sendOtp = mutation({
     // 删除旧的 OTP 记录
     const existingOtp = await ctx.db
       .query('otpCodes')
-      .withIndex('by_phone', (q) => q.eq('phone', normalizedPhone))
+      .withIndex('by_phone', q => q.eq('phone', normalizedPhone))
       .first();
 
     if (existingOtp) {
@@ -156,7 +160,8 @@ export const sendOtp = mutation({
         count: 1,
         expiresAt: now + OTP_CONFIG.cooldownMs,
       });
-    } else {
+    }
+    else {
       await ctx.db.insert('rateLimits', {
         key: cooldownKey,
         count: 1,
@@ -195,7 +200,7 @@ export const verifyOtp = mutation({
     // 查找 OTP 记录
     const otpRecord = await ctx.db
       .query('otpCodes')
-      .withIndex('by_phone', (q) => q.eq('phone', normalizedPhone))
+      .withIndex('by_phone', q => q.eq('phone', normalizedPhone))
       .first();
 
     if (!otpRecord) {
@@ -228,7 +233,7 @@ export const verifyOtp = mutation({
     // 查找或创建用户 profile
     let profile = await ctx.db
       .query('profiles')
-      .filter((q) => q.eq(q.field('phone'), normalizedPhone))
+      .filter(q => q.eq(q.field('phone'), normalizedPhone))
       .first();
 
     let isNewUser = false;
@@ -303,8 +308,10 @@ export const updateProfile = mutation({
     }
 
     const updates: Partial<{ displayName: string; avatarUrl: string }> = {};
-    if (displayName !== undefined) updates.displayName = displayName;
-    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+    if (displayName !== undefined)
+      updates.displayName = displayName;
+    if (avatarUrl !== undefined)
+      updates.avatarUrl = avatarUrl;
 
     await ctx.db.patch(profileId, updates);
 
@@ -342,7 +349,7 @@ export const cleanupExpiredOtps = internalMutation({
     // 清理过期的 OTP
     const expiredOtps = await ctx.db
       .query('otpCodes')
-      .filter((q) => q.lt(q.field('expiresAt'), now))
+      .filter(q => q.lt(q.field('expiresAt'), now))
       .collect();
 
     for (const otp of expiredOtps) {
@@ -364,7 +371,7 @@ export const cleanupExpiredRateLimits = internalMutation({
 
     const expiredRateLimits = await ctx.db
       .query('rateLimits')
-      .filter((q) => q.lt(q.field('expiresAt'), now))
+      .filter(q => q.lt(q.field('expiresAt'), now))
       .collect();
 
     for (const record of expiredRateLimits) {

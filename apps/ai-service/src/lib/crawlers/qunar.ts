@@ -17,7 +17,7 @@ const log = createLogger('qunar');
 
 // Helper function for delay
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const CITY_IDS: Record<string, string> = {
@@ -45,7 +45,7 @@ const CITY_IDS: Record<string, string> = {
 
 export async function crawlQunar(
   city: string,
-  options: CrawlOptions & { client?: BrowserClient } = {}
+  options: CrawlOptions & { client?: BrowserClient } = {},
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxPages = options.maxPages || 5;
@@ -79,15 +79,18 @@ export async function crawlQunar(
               results.push(guide);
             }
             await sleep(1000 / (options.rateLimit || 0.5));
-          } catch (error) {
+          }
+          catch (error) {
             log.error({ error, guideUrl }, 'Error fetching guide');
           }
         }
-      } catch (error) {
+      }
+      catch (error) {
         log.error({ error, page }, 'Error crawling page');
       }
     }
-  } finally {
+  }
+  finally {
     if (shouldCloseClient) {
       await client.close();
       log.info('Browser client closed');
@@ -99,7 +102,7 @@ export async function crawlQunar(
 
 async function fetchListPage(
   url: string,
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<string[]> {
   const guideLinks: string[] = [];
 
@@ -117,13 +120,15 @@ async function fetchListPage(
 
     for (const match of linkMatches) {
       const guideId = match[1];
-      if (seenIds.has(guideId)) continue;
+      if (seenIds.has(guideId))
+        continue;
       seenIds.add(guideId);
 
       const fullUrl = `https://travel.qunar.com/youji/${guideId}`;
       guideLinks.push(fullUrl);
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error, url }, 'Error fetching list page');
   }
 
@@ -133,7 +138,7 @@ async function fetchListPage(
 async function fetchQunarGuide(
   url: string,
   city: string,
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<CrawlResult | null> {
   try {
     await client.navigateTo(url, { timeout: 30000 });
@@ -200,10 +205,11 @@ async function fetchQunarGuide(
       qualityScore: calculateQualityScore(
         textContent,
         imageUrls.length,
-        stats.views || 0
+        stats.views || 0,
       ),
     };
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error parsing guide');
     return null;
   }
@@ -240,18 +246,23 @@ function extractTags(title: string, content: string): string[] {
 function calculateQualityScore(
   content: string,
   imageCount: number,
-  viewsCount: number
+  viewsCount: number,
 ): number {
   let score = 50;
 
-  if (content.length > 1000) score += 10;
-  if (content.length > 3000) score += 10;
-  if (content.length > 5000) score += 5;
+  if (content.length > 1000)
+    score += 10;
+  if (content.length > 3000)
+    score += 10;
+  if (content.length > 5000)
+    score += 5;
 
   score += Math.min(imageCount * 2, 15);
 
-  if (viewsCount > 1000) score += 5;
-  if (viewsCount > 10000) score += 5;
+  if (viewsCount > 1000)
+    score += 5;
+  if (viewsCount > 10000)
+    score += 5;
 
   return Math.min(score, 100);
 }

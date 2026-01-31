@@ -15,7 +15,7 @@ const platformValidator = v.union(
   v.literal('tongcheng'),
   v.literal('mafengwo'),
   v.literal('qunar'),
-  v.literal('qyer')
+  v.literal('qyer'),
 );
 
 // List travel guides with filters
@@ -30,18 +30,19 @@ export const list = query({
 
     // Take limited records before collecting to avoid 16MB limit
     // Note: We fetch more than the limit to allow for quality filtering
-    const fetchLimit =
-      args.minQuality !== undefined ? effectiveLimit * 3 : effectiveLimit;
+    const fetchLimit
+      = args.minQuality !== undefined ? effectiveLimit * 3 : effectiveLimit;
 
     let guides;
 
     if (args.platform) {
       guides = await ctx.db
         .query('travelGuides')
-        .withIndex('by_platform', (q) => q.eq('sourcePlatform', args.platform!))
+        .withIndex('by_platform', q => q.eq('sourcePlatform', args.platform!))
         .order('desc')
         .take(fetchLimit);
-    } else {
+    }
+    else {
       guides = await ctx.db
         .query('travelGuides')
         .order('desc')
@@ -49,7 +50,7 @@ export const list = query({
     }
 
     if (args.minQuality !== undefined) {
-      guides = guides.filter((g) => g.qualityScore >= args.minQuality!);
+      guides = guides.filter(g => g.qualityScore >= args.minQuality!);
     }
 
     return guides.slice(0, effectiveLimit);
@@ -71,7 +72,7 @@ export const listIds = query({
       .paginate({ numItems: limit, cursor: args.cursor ?? null });
 
     // Return only essential fields to avoid 16MB limit
-    const items = result.page.map((g) => ({
+    const items = result.page.map(g => ({
       _id: g._id,
       sourceExternalId: g.sourceExternalId,
       sourcePlatform: g.sourcePlatform,
@@ -152,9 +153,10 @@ export const search = query({
     if (args.query && args.query.trim().length > 0) {
       guides = await ctx.db
         .query('travelGuides')
-        .withSearchIndex('search_title', (q) => q.search('title', args.query!))
+        .withSearchIndex('search_title', q => q.search('title', args.query!))
         .take(effectiveLimit * 2);
-    } else {
+    }
+    else {
       guides = await ctx.db
         .query('travelGuides')
         .order('desc')
@@ -163,20 +165,20 @@ export const search = query({
 
     // Apply filters
     if (args.destination) {
-      guides = guides.filter((g) =>
-        g.destinations.some((d) =>
-          d.toLowerCase().includes(args.destination!.toLowerCase())
-        )
+      guides = guides.filter(g =>
+        g.destinations.some(d =>
+          d.toLowerCase().includes(args.destination!.toLowerCase()),
+        ),
       );
     }
 
     if (args.hasAiData) {
-      guides = guides.filter((g) => g.aiProcessedAt !== undefined);
+      guides = guides.filter(g => g.aiProcessedAt !== undefined);
     }
 
     if (args.daysAgo) {
       const cutoffTime = Date.now() - args.daysAgo * 24 * 60 * 60 * 1000;
-      guides = guides.filter((g) => g.crawledAt >= cutoffTime);
+      guides = guides.filter(g => g.crawledAt >= cutoffTime);
     }
 
     return guides.slice(0, effectiveLimit);
@@ -200,7 +202,7 @@ export const listDestinationsBatch = query({
       .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
 
     // Return only the destinations arrays (minimal data)
-    const destinations = result.page.flatMap((g) => g.destinations);
+    const destinations = result.page.flatMap(g => g.destinations);
 
     return {
       destinations,
@@ -261,8 +263,8 @@ export const getByDestination = query({
     const guides = await ctx.db.query('travelGuides').collect();
 
     const destLower = args.destination.toLowerCase();
-    const filtered = guides.filter((g) =>
-      g.destinations.some((d) => d.toLowerCase().includes(destLower))
+    const filtered = guides.filter(g =>
+      g.destinations.some(d => d.toLowerCase().includes(destLower)),
     );
 
     // Sort by quality score
@@ -299,11 +301,10 @@ export const upsert = mutation({
     // Check if guide already exists
     const existing = await ctx.db
       .query('travelGuides')
-      .withIndex('by_platform_external', (q) =>
+      .withIndex('by_platform_external', q =>
         q
           .eq('sourcePlatform', args.sourcePlatform)
-          .eq('sourceExternalId', args.sourceExternalId)
-      )
+          .eq('sourceExternalId', args.sourceExternalId))
       .first();
 
     const data = {
@@ -332,7 +333,8 @@ export const upsert = mutation({
     if (existing) {
       await ctx.db.patch(existing._id, data);
       return existing._id;
-    } else {
+    }
+    else {
       return await ctx.db.insert('travelGuides', data);
     }
   },
@@ -362,7 +364,7 @@ export const bulkInsert = mutation({
         publishedAt: v.optional(v.number()),
         qualityScore: v.optional(v.number()),
         contentHash: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -433,7 +435,7 @@ export const updateAiData = mutation({
                   duration: v.optional(v.string()),
                   distance: v.optional(v.string()),
                   notes: v.optional(v.string()),
-                })
+                }),
               ),
 
               // Geocoding metadata
@@ -442,10 +444,10 @@ export const updateAiData = mutation({
               isManuallyVerified: v.optional(v.boolean()),
               verifiedAt: v.optional(v.number()),
               verifiedBy: v.optional(v.string()),
-            })
+            }),
           ),
-        })
-      )
+        }),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -464,7 +466,7 @@ export const remove = mutation({
     // Also delete associated recommendations
     const recs = await ctx.db
       .query('guideRecommendations')
-      .filter((q) => q.eq(q.field('guideId'), args.id))
+      .filter(q => q.eq(q.field('guideId'), args.id))
       .collect();
 
     for (const rec of recs) {
@@ -485,11 +487,10 @@ export const findDuplicatesForExternalId = query({
     // Use the by_platform_external index for efficient lookup
     const guides = await ctx.db
       .query('travelGuides')
-      .withIndex('by_platform_external', (q) =>
+      .withIndex('by_platform_external', q =>
         q
           .eq('sourcePlatform', args.sourcePlatform)
-          .eq('sourceExternalId', args.sourceExternalId)
-      )
+          .eq('sourceExternalId', args.sourceExternalId))
       .collect();
 
     if (guides.length <= 1) {
@@ -498,7 +499,7 @@ export const findDuplicatesForExternalId = query({
 
     // Sort to find best one
     const sorted = guides
-      .map((g) => ({
+      .map(g => ({
         _id: g._id,
         contentLength: g.content?.length || 0,
         qualityScore: g.qualityScore,
@@ -507,16 +508,19 @@ export const findDuplicatesForExternalId = query({
       }))
       .sort((a, b) => {
         const aiDiff = (b.aiProcessedAt ? 1 : 0) - (a.aiProcessedAt ? 1 : 0);
-        if (aiDiff !== 0) return aiDiff;
+        if (aiDiff !== 0)
+          return aiDiff;
         const contentDiff = b.contentLength - a.contentLength;
-        if (contentDiff !== 0) return contentDiff;
+        if (contentDiff !== 0)
+          return contentDiff;
         const qualityDiff = b.qualityScore - a.qualityScore;
-        if (qualityDiff !== 0) return qualityDiff;
+        if (qualityDiff !== 0)
+          return qualityDiff;
         return b.crawledAt - a.crawledAt;
       });
 
     return {
-      idsToDelete: sorted.slice(1).map((g) => g._id),
+      idsToDelete: sorted.slice(1).map(g => g._id),
       kept: sorted[0]._id,
       total: guides.length,
     };
@@ -535,14 +539,14 @@ export const getUniqueExternalIds = query({
 
     const result = await ctx.db
       .query('travelGuides')
-      .withIndex('by_platform', (q) => q.eq('sourcePlatform', args.platform))
+      .withIndex('by_platform', q => q.eq('sourcePlatform', args.platform))
       .paginate({
         numItems: limit,
         cursor: args.cursor ?? null,
       });
 
     // Extract externalIds from this page
-    const items = result.page.map((g) => ({
+    const items = result.page.map(g => ({
       id: g._id,
       externalId: g.sourceExternalId,
       platform: g.sourcePlatform,
@@ -567,7 +571,8 @@ export const batchDelete = mutation({
       try {
         await ctx.db.delete(id);
         deletedCount++;
-      } catch {
+      }
+      catch {
         // Skip if already deleted
       }
     }
@@ -624,7 +629,7 @@ export const removeDuplicates = mutation({
     for (const platform of platforms) {
       const guides = await ctx.db
         .query('travelGuides')
-        .withIndex('by_platform', (q) => q.eq('sourcePlatform', platform))
+        .withIndex('by_platform', q => q.eq('sourcePlatform', platform))
         .collect();
 
       for (const g of guides) {
@@ -659,13 +664,16 @@ export const removeDuplicates = mutation({
         group.sort((a, b) => {
           // Prefer guides with AI data
           const aiDiff = (b.aiProcessedAt ? 1 : 0) - (a.aiProcessedAt ? 1 : 0);
-          if (aiDiff !== 0) return aiDiff;
+          if (aiDiff !== 0)
+            return aiDiff;
 
           const contentDiff = b.contentLength - a.contentLength;
-          if (contentDiff !== 0) return contentDiff;
+          if (contentDiff !== 0)
+            return contentDiff;
 
           const qualityDiff = b.qualityScore - a.qualityScore;
-          if (qualityDiff !== 0) return qualityDiff;
+          if (qualityDiff !== 0)
+            return qualityDiff;
 
           return b.crawledAt - a.crawledAt;
         });
@@ -720,7 +728,7 @@ export const clearAllAiData = mutation({
     // Only get guides that have AI data
     const guides = await ctx.db
       .query('travelGuides')
-      .filter((q) => q.neq(q.field('aiProcessedAt'), undefined))
+      .filter(q => q.neq(q.field('aiProcessedAt'), undefined))
       .take(limit);
 
     let clearedCount = 0;
@@ -763,7 +771,7 @@ export const updatePoiCoordinates = mutation({
 
     // Find the day
     const dayIndex = guide.aiDays.findIndex(
-      (day) => day.dayNumber === args.dayNumber
+      day => day.dayNumber === args.dayNumber,
     );
     if (dayIndex === -1) {
       throw new Error(`Day ${args.dayNumber} not found in guide`);
@@ -772,17 +780,19 @@ export const updatePoiCoordinates = mutation({
     const day = guide.aiDays[dayIndex];
     if (args.poiIndex < 0 || args.poiIndex >= day.pois.length) {
       throw new Error(
-        `POI index ${args.poiIndex} out of range (0-${day.pois.length - 1})`
+        `POI index ${args.poiIndex} out of range (0-${day.pois.length - 1})`,
       );
     }
 
     // Create updated aiDays with the modified POI
     const updatedAiDays = guide.aiDays.map((d, dIdx) => {
-      if (dIdx !== dayIndex) return d;
+      if (dIdx !== dayIndex)
+        return d;
       return {
         ...d,
         pois: d.pois.map((poi, pIdx) => {
-          if (pIdx !== args.poiIndex) return poi;
+          if (pIdx !== args.poiIndex)
+            return poi;
           return {
             ...poi,
             latitude: args.latitude,
@@ -823,11 +833,11 @@ export const updatePoiCoordinates = mutation({
         }
         const source = poi.geocodeSource ?? 'unknown';
         if (
-          source === 'amap' ||
-          source === 'nominatim' ||
-          source === 'overpass' ||
-          source === 'consensus' ||
-          source === 'manual'
+          source === 'amap'
+          || source === 'nominatim'
+          || source === 'overpass'
+          || source === 'consensus'
+          || source === 'manual'
         ) {
           sourceDistribution[source] = (sourceDistribution[source] ?? 0) + 1;
         }
@@ -874,13 +884,14 @@ export const getGuidesWithLowConfidence = query({
     // Get all guides with AI data
     const guides = await ctx.db
       .query('travelGuides')
-      .filter((q) => q.neq(q.field('aiDays'), undefined))
+      .filter(q => q.neq(q.field('aiDays'), undefined))
       .collect();
 
     // Calculate low confidence POI count for each guide
     const guidesWithStats = guides
       .map((guide) => {
-        if (!guide.aiDays) return null;
+        if (!guide.aiDays)
+          return null;
 
         let totalPois = 0;
         let lowConfidenceCount = 0;
@@ -902,7 +913,8 @@ export const getGuidesWithLowConfidence = query({
         }
 
         // Only include guides with low-confidence POIs
-        if (lowConfidenceCount === 0) return null;
+        if (lowConfidenceCount === 0)
+          return null;
 
         return {
           _id: guide._id,
@@ -920,7 +932,7 @@ export const getGuidesWithLowConfidence = query({
 
     // Sort by unverified low-confidence count (descending)
     guidesWithStats.sort(
-      (a, b) => b.unverifiedLowConfidence - a.unverifiedLowConfidence
+      (a, b) => b.unverifiedLowConfidence - a.unverifiedLowConfidence,
     );
 
     return guidesWithStats.slice(0, effectiveLimit);

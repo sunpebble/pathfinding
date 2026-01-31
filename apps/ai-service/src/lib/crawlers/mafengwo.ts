@@ -17,7 +17,7 @@ const log = createLogger('mafengwo');
 
 // Helper function for delay
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const CITY_IDS: Record<string, string> = {
@@ -69,7 +69,7 @@ function detectMafengwoCaptcha(content: string): boolean {
 
 export async function crawlMafengwo(
   city: string,
-  options: CrawlOptions & { client?: BrowserClient } = {}
+  options: CrawlOptions & { client?: BrowserClient } = {},
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxGuides = (options.maxPages || 5) * 10;
@@ -101,12 +101,13 @@ export async function crawlMafengwo(
           results.push(guide);
           log.info(
             { title: guide.title, contentLength: guide.content.length },
-            'Extracted guide'
+            'Extracted guide',
           );
         }
         // Rate limiting delay
         await sleep(1000 / (options.rateLimit || 0.5));
-      } catch (error) {
+      }
+      catch (error) {
         log.error({ error, url }, 'Error fetching guide');
       }
     }
@@ -114,9 +115,11 @@ export async function crawlMafengwo(
     if (results.length === 0) {
       log.warn('No results found. Site may require verification');
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error crawling destination page');
-  } finally {
+  }
+  finally {
     await client.close();
     log.info('Browser client closed');
   }
@@ -131,7 +134,7 @@ export async function crawlMafengwo(
 async function fetchGuideUrls(
   destUrl: string,
   maxGuides: number,
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<string[]> {
   const guideUrls: string[] = [];
   const seenIds = new Set<string>();
@@ -155,7 +158,7 @@ async function fetchGuideUrls(
     // Check for captcha
     if (detectMafengwoCaptcha(content)) {
       log.warn(
-        'Captcha detected on list page - site requires manual verification'
+        'Captcha detected on list page - site requires manual verification',
       );
       return guideUrls;
     }
@@ -164,17 +167,20 @@ async function fetchGuideUrls(
     const guideMatches = content.matchAll(/\/i\/(\d+)\.html/g);
 
     for (const match of guideMatches) {
-      if (guideUrls.length >= maxGuides) break;
+      if (guideUrls.length >= maxGuides)
+        break;
 
       const guideId = match[1];
-      if (seenIds.has(guideId)) continue;
+      if (seenIds.has(guideId))
+        continue;
       seenIds.add(guideId);
 
       guideUrls.push(`https://www.mafengwo.cn/i/${guideId}.html`);
     }
 
     log.info({ count: guideUrls.length }, 'Found guide URLs');
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching list page');
   }
 
@@ -188,7 +194,7 @@ async function fetchGuideUrls(
 async function fetchGuideDetail(
   url: string,
   city: string,
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<CrawlResult | null> {
   try {
     await client.navigateTo(url, { timeout: 30000 });
@@ -206,7 +212,7 @@ async function fetchGuideDetail(
 
     log.debug(
       { guideId: url.split('/').pop(), snapshotLength: content.length },
-      'Detail page snapshot captured'
+      'Detail page snapshot captured',
     );
 
     // Check for captcha/login wall
@@ -222,7 +228,7 @@ async function fetchGuideDetail(
     if (!textContent || textContent.length < 100) {
       log.info(
         { contentLength: textContent?.length || 0, url },
-        'Insufficient content, skipping'
+        'Insufficient content, skipping',
       );
       return null;
     }
@@ -266,10 +272,11 @@ async function fetchGuideDetail(
       qualityScore: calculateQualityScore(
         textContent,
         imageUrls.length,
-        stats.views || 0
+        stats.views || 0,
       ),
     };
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error, url }, 'Error parsing guide');
     return null;
   }
@@ -304,14 +311,19 @@ function extractTags(title: string, content: string): string[] {
 function calculateQualityScore(
   content: string,
   imageCount: number,
-  viewsCount: number
+  viewsCount: number,
 ): number {
   let score = 50;
-  if (content.length > 1000) score += 10;
-  if (content.length > 3000) score += 10;
-  if (content.length > 5000) score += 5;
+  if (content.length > 1000)
+    score += 10;
+  if (content.length > 3000)
+    score += 10;
+  if (content.length > 5000)
+    score += 5;
   score += Math.min(imageCount * 2, 15);
-  if (viewsCount > 1000) score += 5;
-  if (viewsCount > 10000) score += 5;
+  if (viewsCount > 1000)
+    score += 5;
+  if (viewsCount > 10000)
+    score += 5;
   return Math.min(score, 100);
 }

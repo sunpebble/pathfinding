@@ -15,7 +15,7 @@ const insuranceTypeValidator = v.union(
   v.literal('flight_delay'),
   v.literal('luggage'),
   v.literal('cancellation'),
-  v.literal('emergency_evacuation')
+  v.literal('emergency_evacuation'),
 );
 
 // Risk level validator
@@ -23,7 +23,7 @@ const riskLevelValidator = v.union(
   v.literal('low'),
   v.literal('medium'),
   v.literal('high'),
-  v.literal('extreme')
+  v.literal('extreme'),
 );
 
 // Claim type validator
@@ -34,7 +34,7 @@ const claimTypeValidator = v.union(
   v.literal('luggage_loss'),
   v.literal('trip_cancellation'),
   v.literal('emergency_evacuation'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 // ============================================
@@ -54,21 +54,22 @@ export const listProducts = query({
     if (args.type) {
       results = await ctx.db
         .query('insuranceProducts')
-        .withIndex('by_type', (q) => q.eq('type', args.type!))
-        .filter((q) => q.eq(q.field('isActive'), true))
+        .withIndex('by_type', q => q.eq('type', args.type!))
+        .filter(q => q.eq(q.field('isActive'), true))
         .collect();
-    } else if (args.domesticOnly !== undefined) {
+    }
+    else if (args.domesticOnly !== undefined) {
       results = await ctx.db
         .query('insuranceProducts')
-        .withIndex('by_domestic', (q) =>
-          q.eq('domesticOnly', args.domesticOnly!)
-        )
-        .filter((q) => q.eq(q.field('isActive'), true))
+        .withIndex('by_domestic', q =>
+          q.eq('domesticOnly', args.domesticOnly!))
+        .filter(q => q.eq(q.field('isActive'), true))
         .collect();
-    } else {
+    }
+    else {
       results = await ctx.db
         .query('insuranceProducts')
-        .withIndex('by_active', (q) => q.eq('isActive', true))
+        .withIndex('by_active', q => q.eq('isActive', true))
         .collect();
     }
 
@@ -98,11 +99,11 @@ export const getRecommendedProducts = query({
     // First, try to find the destination risk profile
     const riskProfile = await ctx.db
       .query('destinationRiskProfiles')
-      .withIndex('by_destination', (q) => q.eq('destination', args.destination))
+      .withIndex('by_destination', q => q.eq('destination', args.destination))
       .first();
 
-    const effectiveRiskLevel =
-      args.riskLevel || riskProfile?.riskLevel || 'medium';
+    const effectiveRiskLevel
+      = args.riskLevel || riskProfile?.riskLevel || 'medium';
     const recommendedTypes = riskProfile?.recommendedInsuranceTypes || [
       'comprehensive',
       'medical',
@@ -112,7 +113,7 @@ export const getRecommendedProducts = query({
     // Get all active products
     const allProducts = await ctx.db
       .query('insuranceProducts')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .withIndex('by_active', q => q.eq('isActive', true))
       .collect();
 
     // Filter products that:
@@ -120,10 +121,10 @@ export const getRecommendedProducts = query({
     // 2. Have trip days within min/max range
     // 3. Are of recommended types (prioritized)
     const filteredProducts = allProducts.filter((product) => {
-      const coversRiskLevel =
-        product.riskLevelCoverage.includes(effectiveRiskLevel);
-      const coversDuration =
-        args.tripDays >= product.minDays && args.tripDays <= product.maxDays;
+      const coversRiskLevel
+        = product.riskLevelCoverage.includes(effectiveRiskLevel);
+      const coversDuration
+        = args.tripDays >= product.minDays && args.tripDays <= product.maxDays;
       return coversRiskLevel && coversDuration;
     });
 
@@ -161,10 +162,10 @@ export const compareProducts = query({
   },
   handler: async (ctx, args) => {
     const products = await Promise.all(
-      args.productIds.map((id) => ctx.db.get(id))
+      args.productIds.map(id => ctx.db.get(id)),
     );
 
-    return products.filter((p) => p !== null);
+    return products.filter(p => p !== null);
   },
 });
 
@@ -182,8 +183,8 @@ export const listUserInsurance = query({
         v.literal('active'),
         v.literal('expired'),
         v.literal('cancelled'),
-        v.literal('claimed')
-      )
+        v.literal('claimed'),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -192,14 +193,14 @@ export const listUserInsurance = query({
     if (args.status) {
       results = await ctx.db
         .query('userInsurance')
-        .withIndex('by_user_status', (q) =>
-          q.eq('userId', args.userId).eq('status', args.status!)
-        )
+        .withIndex('by_user_status', q =>
+          q.eq('userId', args.userId).eq('status', args.status!))
         .collect();
-    } else {
+    }
+    else {
       results = await ctx.db
         .query('userInsurance')
-        .withIndex('by_user', (q) => q.eq('userId', args.userId))
+        .withIndex('by_user', q => q.eq('userId', args.userId))
         .collect();
     }
 
@@ -215,7 +216,8 @@ export const getUserInsuranceById = query({
   args: { id: v.id('userInsurance') },
   handler: async (ctx, args) => {
     const insurance = await ctx.db.get(args.id);
-    if (!insurance) return null;
+    if (!insurance)
+      return null;
 
     // Also fetch the product details
     const product = await ctx.db.get(insurance.productId);
@@ -233,7 +235,7 @@ export const getInsuranceByItinerary = query({
   handler: async (ctx, args) => {
     const insurances = await ctx.db
       .query('userInsurance')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Fetch product details for each insurance
@@ -241,7 +243,7 @@ export const getInsuranceByItinerary = query({
       insurances.map(async (insurance) => {
         const product = await ctx.db.get(insurance.productId);
         return { ...insurance, product };
-      })
+      }),
     );
 
     return results;
@@ -268,7 +270,7 @@ export const createUserInsurance = mutation({
         idType: v.union(
           v.literal('id_card'),
           v.literal('passport'),
-          v.literal('other')
+          v.literal('other'),
         ),
         idNumber: v.string(),
         phone: v.optional(v.string()),
@@ -277,9 +279,9 @@ export const createUserInsurance = mutation({
           v.literal('spouse'),
           v.literal('child'),
           v.literal('parent'),
-          v.literal('other')
+          v.literal('other'),
         ),
-      })
+      }),
     ),
     totalPrice: v.number(),
     notes: v.optional(v.string()),
@@ -307,15 +309,15 @@ export const updateUserInsuranceStatus = mutation({
       v.literal('active'),
       v.literal('expired'),
       v.literal('cancelled'),
-      v.literal('claimed')
+      v.literal('claimed'),
     ),
     paymentStatus: v.optional(
       v.union(
         v.literal('pending'),
         v.literal('paid'),
         v.literal('refunded'),
-        v.literal('failed')
-      )
+        v.literal('failed'),
+      ),
     ),
     orderNumber: v.optional(v.string()),
     policyNumber: v.optional(v.string()),
@@ -323,7 +325,7 @@ export const updateUserInsuranceStatus = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -384,18 +386,16 @@ export const getDestinationRiskProfile = query({
     if (args.destination) {
       return await ctx.db
         .query('destinationRiskProfiles')
-        .withIndex('by_destination', (q) =>
-          q.eq('destination', args.destination!)
-        )
+        .withIndex('by_destination', q =>
+          q.eq('destination', args.destination!))
         .first();
     }
 
     if (args.destinationCode) {
       return await ctx.db
         .query('destinationRiskProfiles')
-        .withIndex('by_code', (q) =>
-          q.eq('destinationCode', args.destinationCode!)
-        )
+        .withIndex('by_code', q =>
+          q.eq('destinationCode', args.destinationCode!))
         .first();
     }
 
@@ -411,7 +411,7 @@ export const listDestinationsByRiskLevel = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('destinationRiskProfiles')
-      .withIndex('by_risk_level', (q) => q.eq('riskLevel', args.riskLevel))
+      .withIndex('by_risk_level', q => q.eq('riskLevel', args.riskLevel))
       .collect();
   },
 });
@@ -431,13 +431,14 @@ export const listClaimGuides = query({
     if (args.claimType) {
       results = await ctx.db
         .query('insuranceClaimGuides')
-        .withIndex('by_claim_type', (q) => q.eq('claimType', args.claimType!))
-        .filter((q) => q.eq(q.field('isActive'), true))
+        .withIndex('by_claim_type', q => q.eq('claimType', args.claimType!))
+        .filter(q => q.eq(q.field('isActive'), true))
         .collect();
-    } else {
+    }
+    else {
       results = await ctx.db
         .query('insuranceClaimGuides')
-        .withIndex('by_active', (q) => q.eq('isActive', true))
+        .withIndex('by_active', q => q.eq('isActive', true))
         .collect();
     }
 
@@ -474,7 +475,7 @@ export const createProduct = mutation({
         item: v.string(),
         amount: v.number(),
         description: v.optional(v.string()),
-      })
+      }),
     ),
     pricePerDay: v.number(),
     minDays: v.number(),
@@ -533,7 +534,7 @@ export const createClaimGuide = mutation({
         description: v.string(),
         requiredDocuments: v.optional(v.array(v.string())),
         tips: v.optional(v.string()),
-      })
+      }),
     ),
     requiredDocuments: v.array(v.string()),
     timeLimit: v.optional(v.string()),
@@ -542,15 +543,15 @@ export const createClaimGuide = mutation({
         phone: v.optional(v.string()),
         email: v.optional(v.string()),
         website: v.optional(v.string()),
-      })
+      }),
     ),
     faqs: v.optional(
       v.array(
         v.object({
           question: v.string(),
           answer: v.string(),
-        })
-      )
+        }),
+      ),
     ),
     isActive: v.boolean(),
     priority: v.number(),

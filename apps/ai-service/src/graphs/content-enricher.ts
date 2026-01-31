@@ -58,7 +58,7 @@ type EnrichmentStateType = typeof EnrichmentState.State;
  * Node: Extract metadata from content
  */
 async function extractMetadata(
-  state: EnrichmentStateType
+  state: EnrichmentStateType,
 ): Promise<Partial<EnrichmentStateType>> {
   try {
     const llm = createLLM({ temperature: 0.3 });
@@ -79,8 +79,8 @@ async function extractMetadata(
 JSON:`;
 
     const response = await llm.invoke(prompt);
-    const responseText =
-      typeof response.content === 'string'
+    const responseText
+      = typeof response.content === 'string'
         ? response.content
         : JSON.stringify(response.content);
 
@@ -99,7 +99,8 @@ JSON:`;
     }
 
     return { step: 'metadata_extracted' };
-  } catch (error) {
+  }
+  catch (error) {
     loggers.langgraph.error({ error }, 'Extract metadata error');
     return {
       error: `Metadata extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -112,7 +113,7 @@ JSON:`;
  * Node: Extract POIs from content
  */
 async function extractPois(
-  state: EnrichmentStateType
+  state: EnrichmentStateType,
 ): Promise<Partial<EnrichmentStateType>> {
   try {
     const llm = createLLM({ temperature: 0.3 });
@@ -145,8 +146,8 @@ async function extractPois(
 JSON:`;
 
     const response = await llm.invoke(prompt);
-    const responseText =
-      typeof response.content === 'string'
+    const responseText
+      = typeof response.content === 'string'
         ? response.content
         : JSON.stringify(response.content);
 
@@ -158,7 +159,7 @@ JSON:`;
         (day.pois || []).map((poi: any) => ({
           ...poi,
           dayNumber: day.dayNumber,
-        }))
+        })),
       );
       return {
         days,
@@ -168,7 +169,8 @@ JSON:`;
     }
 
     return { step: 'pois_extracted' };
-  } catch (error) {
+  }
+  catch (error) {
     loggers.langgraph.error({ error }, 'Extract POIs error');
     return {
       error: `POI extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -181,7 +183,7 @@ JSON:`;
  * Node: Geocode POIs using Nominatim
  */
 async function geocodePois(
-  state: EnrichmentStateType
+  state: EnrichmentStateType,
 ): Promise<Partial<EnrichmentStateType>> {
   if (!state.extractedPois || state.extractedPois.length === 0) {
     return { step: 'pois_geocoded' };
@@ -218,7 +220,8 @@ async function geocodePois(
               geocodeConfidence: 0.8,
               geocodeSource: 'nominatim',
             });
-          } else {
+          }
+          else {
             // No geocoding result, keep POI without coordinates
             geocodedPois.push({
               ...poi,
@@ -231,8 +234,9 @@ async function geocodePois(
         }
 
         // Rate limiting: 1 request per second for Nominatim
-        await new Promise((resolve) => setTimeout(resolve, 1100));
-      } catch (err) {
+        await new Promise(resolve => setTimeout(resolve, 1100));
+      }
+      catch (err) {
         loggers.langgraph.error({ err, poiName: poi.name }, 'Geocoding error for POI');
         geocodedPois.push({
           ...poi,
@@ -249,7 +253,7 @@ async function geocodePois(
       ...day,
       pois: (day.pois || []).map((poi: any) => {
         const geocoded = geocodedPois.find(
-          (g) => g.name === poi.name && g.dayNumber === day.dayNumber
+          g => g.name === poi.name && g.dayNumber === day.dayNumber,
         );
         return geocoded || poi;
       }),
@@ -260,7 +264,8 @@ async function geocodePois(
       days: updatedDays,
       step: 'pois_geocoded',
     };
-  } catch (error) {
+  }
+  catch (error) {
     loggers.langgraph.error({ error }, 'Geocode POIs error');
     return {
       error: `Geocoding failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -273,7 +278,7 @@ async function geocodePois(
  * Node: Save enriched data to Convex
  */
 async function saveToDb(
-  state: EnrichmentStateType
+  state: EnrichmentStateType,
 ): Promise<Partial<EnrichmentStateType>> {
   try {
     // Prepare the update payload
@@ -314,7 +319,7 @@ async function saveToDb(
         },
         body: JSON.stringify(updatePayload),
         signal: AbortSignal.timeout(30000),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -322,7 +327,8 @@ async function saveToDb(
     }
 
     return { step: 'saved' };
-  } catch (error) {
+  }
+  catch (error) {
     loggers.langgraph.error({ error }, 'Save to DB error');
     return {
       error: `Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -373,7 +379,8 @@ export async function enrichGuide(guide: {
     }
 
     return { success: true };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Enrichment failed',

@@ -20,7 +20,7 @@ const preferenceCategories = v.union(
   v.literal('photography'), // Photography spots
   v.literal('family'), // Family-friendly
   v.literal('budget'), // Budget travel
-  v.literal('luxury') // Luxury travel
+  v.literal('luxury'), // Luxury travel
 );
 
 // Get user preferences
@@ -29,7 +29,7 @@ export const getUserPreferences = query({
   handler: async (ctx, args) => {
     const preferences = await ctx.db
       .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!preferences) {
@@ -46,7 +46,7 @@ export const getOrCreatePreferences = query({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (existing) {
@@ -81,18 +81,18 @@ export const upsertPreferences = mutation({
         v.literal('adventurous'),
         v.literal('relaxed'),
         v.literal('cultural'),
-        v.literal('balanced')
-      )
+        v.literal('balanced'),
+      ),
     ),
     budgetLevel: v.optional(
-      v.union(v.literal('budget'), v.literal('moderate'), v.literal('luxury'))
+      v.union(v.literal('budget'), v.literal('moderate'), v.literal('luxury')),
     ),
     pacePreference: v.optional(
       v.union(
         v.literal('slow'), // 1-2 activities per day
         v.literal('moderate'), // 3-4 activities per day
-        v.literal('fast') // 5+ activities per day
-      )
+        v.literal('fast'), // 5+ activities per day
+      ),
     ),
     preferLocalFood: v.optional(v.boolean()),
     preferOffBeatPlaces: v.optional(v.boolean()),
@@ -101,7 +101,7 @@ export const upsertPreferences = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     const now = Date.now();
@@ -170,14 +170,14 @@ export const recordBehavior = mutation({
       v.literal('unlike'), // Removed like
       v.literal('search'), // Searched for term
       v.literal('poi_click'), // Clicked on POI
-      v.literal('poi_add') // Added POI to itinerary
+      v.literal('poi_add'), // Added POI to itinerary
     ),
     targetType: v.union(
       v.literal('guide'),
       v.literal('itinerary'),
       v.literal('poi'),
       v.literal('city'),
-      v.literal('search')
+      v.literal('search'),
     ),
     targetId: v.string(),
     categories: v.optional(v.array(preferenceCategories)), // Associated categories
@@ -188,7 +188,7 @@ export const recordBehavior = mutation({
         searchQuery: v.optional(v.string()),
         cityName: v.optional(v.string()),
         poiCategory: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -209,7 +209,7 @@ export const recordBehavior = mutation({
     if (args.categories && args.categories.length > 0) {
       const preferences = await ctx.db
         .query('userPreferences')
-        .withIndex('by_user', (q) => q.eq('userId', args.userId))
+        .withIndex('by_user', q => q.eq('userId', args.userId))
         .first();
 
       // Behavior type weights
@@ -230,8 +230,8 @@ export const recordBehavior = mutation({
 
       if (preferences) {
         // Update existing scores
-        const currentScores =
-          (preferences.categoryScores as Record<string, number>) || {};
+        const currentScores
+          = (preferences.categoryScores as Record<string, number>) || {};
 
         for (const category of args.categories) {
           currentScores[category] = (currentScores[category] || 0) + weight;
@@ -242,7 +242,8 @@ export const recordBehavior = mutation({
           totalInteractions: (preferences.totalInteractions ?? 0) + 1,
           lastUpdated: now,
         });
-      } else {
+      }
+      else {
         // Create new preferences with initial scores
         const initialScores: Record<string, number> = {};
         for (const category of args.categories) {
@@ -279,7 +280,7 @@ export const getTopCategories = query({
   handler: async (ctx, args) => {
     const preferences = await ctx.db
       .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!preferences || !preferences.categoryScores) {
@@ -315,19 +316,19 @@ export const getRecentBehaviors = query({
         v.literal('unlike'),
         v.literal('search'),
         v.literal('poi_click'),
-        v.literal('poi_add')
-      )
+        v.literal('poi_add'),
+      ),
     ),
   },
   handler: async (ctx, args) => {
     const query = ctx.db
       .query('userBehaviorEvents')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId));
+      .withIndex('by_user', q => q.eq('userId', args.userId));
 
     const events = await query.order('desc').take(args.limit ?? 50);
 
     if (args.behaviorType) {
-      return events.filter((e) => e.behaviorType === args.behaviorType);
+      return events.filter(e => e.behaviorType === args.behaviorType);
     }
 
     return events;
@@ -341,7 +342,7 @@ export const resetPreferences = mutation({
     // Find and update preferences (keep explicit settings, reset learned)
     const preferences = await ctx.db
       .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (preferences) {
@@ -355,7 +356,7 @@ export const resetPreferences = mutation({
     // Delete all behavior events
     const events = await ctx.db
       .query('userBehaviorEvents')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     for (const event of events) {
@@ -372,7 +373,7 @@ export const getRecommendedCategories = query({
   handler: async (ctx, args) => {
     const preferences = await ctx.db
       .query('userPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!preferences) {

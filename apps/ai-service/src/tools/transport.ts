@@ -28,7 +28,7 @@ async function getRoute(
   originLon: number,
   destLat: number,
   destLon: number,
-  mode: TransportMode
+  mode: TransportMode,
 ): Promise<RouteResult> {
   if (!AMAP_KEY) {
     // Fallback: estimate based on straight-line distance
@@ -51,8 +51,8 @@ async function getRoute(
   const origin = `${originLon},${originLat}`;
   const destination = `${destLon},${destLat}`;
 
-  const apiMode =
-    mode === 'walking'
+  const apiMode
+    = mode === 'walking'
       ? 'walking'
       : mode === 'driving'
         ? 'driving'
@@ -87,7 +87,8 @@ async function getRoute(
       duration: formatDuration(path.duration),
       steps: extractSteps(path, mode),
     };
-  } catch (error) {
+  }
+  catch (error) {
     // Fallback to estimation
     const distance = calculateDistance(originLat, originLon, destLat, destLon);
     const speeds: Record<TransportMode, number> = {
@@ -113,17 +114,17 @@ function calculateDistance(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(toRad(lat1))
+      * Math.cos(toRad(lat2))
+      * Math.sin(dLon / 2)
+      * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -181,14 +182,15 @@ export const routePlannerTool = tool(
         originLon,
         destLat,
         destLon,
-        mode as TransportMode
+        mode as TransportMode,
       );
 
       return JSON.stringify({
         success: true,
         ...result,
       });
-    } catch (error) {
+    }
+    catch (error) {
       return JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : 'Route planning failed',
@@ -207,5 +209,5 @@ export const routePlannerTool = tool(
         .enum(['walking', 'driving', 'transit'])
         .describe('交通方式：walking(步行), driving(驾车), transit(公共交通)'),
     }),
-  }
+  },
 );

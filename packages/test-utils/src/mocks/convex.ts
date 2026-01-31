@@ -30,7 +30,7 @@ export function mockId<T extends string>(table: T, id = 'test-id'): string {
  */
 export function mockFetchResponse<T>(
   data: T,
-  options?: { ok?: boolean; status?: number }
+  options?: { ok?: boolean; status?: number },
 ): Mock {
   return vi.fn().mockResolvedValue({
     ok: options?.ok ?? true,
@@ -52,5 +52,5 @@ export function mockFetchError(error: Error | string): Mock {
  * Wait for all promises to resolve (useful for testing async operations)
  */
 export function flushPromises(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+  return new Promise(resolve => setTimeout(resolve, 0));
 }

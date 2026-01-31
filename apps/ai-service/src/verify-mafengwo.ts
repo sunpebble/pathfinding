@@ -34,8 +34,8 @@ async function verifyMafengwoExtraction() {
   for (const guide of results) {
     // Content check
     const contentLen = guide.content?.length || 0;
-    const isPlaceholder =
-      guide.content?.includes('旅游攻略') && contentLen < 200;
+    const isPlaceholder
+      = guide.content?.includes('旅游攻略') && contentLen < 200;
 
     if (isPlaceholder) {
       stats.isPlaceholder++;
@@ -68,10 +68,14 @@ async function verifyMafengwoExtraction() {
     }
 
     // Engagement metrics check
-    if (guide.viewsCount && guide.viewsCount > 0) stats.hasViews++;
-    if (guide.likesCount && guide.likesCount > 0) stats.hasLikes++;
-    if (guide.savesCount && guide.savesCount > 0) stats.hasSaves++;
-    if (guide.commentsCount && guide.commentsCount > 0) stats.hasComments++;
+    if (guide.viewsCount && guide.viewsCount > 0)
+      stats.hasViews++;
+    if (guide.likesCount && guide.likesCount > 0)
+      stats.hasLikes++;
+    if (guide.savesCount && guide.savesCount > 0)
+      stats.hasSaves++;
+    if (guide.commentsCount && guide.commentsCount > 0)
+      stats.hasComments++;
   }
 
   // Calculate averages
@@ -86,41 +90,41 @@ async function verifyMafengwoExtraction() {
   console.log('=== Field Extraction Summary ===\n');
   console.log(`Total guides: ${stats.total}`);
   console.log(
-    `Placeholder content (BAD): ${stats.isPlaceholder} (${pct(stats.isPlaceholder, stats.total)})`
+    `Placeholder content (BAD): ${stats.isPlaceholder} (${pct(stats.isPlaceholder, stats.total)})`,
   );
   console.log(
-    `Real content (>100 chars): ${stats.hasContent} (${pct(stats.hasContent, stats.total)})`
+    `Real content (>100 chars): ${stats.hasContent} (${pct(stats.hasContent, stats.total)})`,
   );
   if (stats.hasContent > 0) {
     console.log(
-      `  Content length: min=${stats.contentLength.min}, max=${stats.contentLength.max}, avg=${stats.contentLength.avg}`
+      `  Content length: min=${stats.contentLength.min}, max=${stats.contentLength.max}, avg=${stats.contentLength.avg}`,
     );
   }
   console.log(
-    `Has images: ${stats.hasImages} (${pct(stats.hasImages, stats.total)})`
+    `Has images: ${stats.hasImages} (${pct(stats.hasImages, stats.total)})`,
   );
   if (stats.hasImages > 0) {
     console.log(
-      `  Image count: min=${stats.imageCount.min}, max=${stats.imageCount.max}, avg=${stats.imageCount.avg}`
+      `  Image count: min=${stats.imageCount.min}, max=${stats.imageCount.max}, avg=${stats.imageCount.avg}`,
     );
   }
   console.log(
-    `Has author (not default): ${stats.hasAuthor} (${pct(stats.hasAuthor, stats.total)})`
+    `Has author (not default): ${stats.hasAuthor} (${pct(stats.hasAuthor, stats.total)})`,
   );
   console.log(
-    `Has publish date: ${stats.hasPublishDate} (${pct(stats.hasPublishDate, stats.total)})`
+    `Has publish date: ${stats.hasPublishDate} (${pct(stats.hasPublishDate, stats.total)})`,
   );
   console.log(
-    `Has views: ${stats.hasViews} (${pct(stats.hasViews, stats.total)})`
+    `Has views: ${stats.hasViews} (${pct(stats.hasViews, stats.total)})`,
   );
   console.log(
-    `Has likes: ${stats.hasLikes} (${pct(stats.hasLikes, stats.total)})`
+    `Has likes: ${stats.hasLikes} (${pct(stats.hasLikes, stats.total)})`,
   );
   console.log(
-    `Has saves: ${stats.hasSaves} (${pct(stats.hasSaves, stats.total)})`
+    `Has saves: ${stats.hasSaves} (${pct(stats.hasSaves, stats.total)})`,
   );
   console.log(
-    `Has comments: ${stats.hasComments} (${pct(stats.hasComments, stats.total)})`
+    `Has comments: ${stats.hasComments} (${pct(stats.hasComments, stats.total)})`,
   );
 
   // Print sample guide
@@ -137,7 +141,7 @@ async function verifyMafengwoExtraction() {
     console.log(`Avatar: ${sample.authorAvatar || 'none'}`);
     console.log(`Published: ${sample.publishedAt || 'unknown'}`);
     console.log(
-      `Views: ${sample.viewsCount}, Likes: ${sample.likesCount}, Saves: ${sample.savesCount}, Comments: ${sample.commentsCount}`
+      `Views: ${sample.viewsCount}, Likes: ${sample.likesCount}, Saves: ${sample.savesCount}, Comments: ${sample.commentsCount}`,
     );
     console.log(`Quality Score: ${sample.qualityScore}`);
   }
@@ -145,23 +149,24 @@ async function verifyMafengwoExtraction() {
   // Final verdict
   console.log('\n=== Verification Verdict ===\n');
 
-  const passed =
-    stats.hasContent >= stats.total * 0.5 && stats.isPlaceholder === 0;
+  const passed
+    = stats.hasContent >= stats.total * 0.5 && stats.isPlaceholder === 0;
 
   if (passed) {
     console.log(
-      '✅ PASSED: Mafengwo crawler extracts real content from detail pages'
+      '✅ PASSED: Mafengwo crawler extracts real content from detail pages',
     );
-  } else {
+  }
+  else {
     console.log('❌ FAILED: Issues detected');
     if (stats.isPlaceholder > 0) {
       console.log(
-        `  - ${stats.isPlaceholder} guides still have placeholder content`
+        `  - ${stats.isPlaceholder} guides still have placeholder content`,
       );
     }
     if (stats.hasContent < stats.total * 0.5) {
       console.log(
-        `  - Only ${stats.hasContent}/${stats.total} guides have sufficient content`
+        `  - Only ${stats.hasContent}/${stats.total} guides have sufficient content`,
       );
     }
   }
@@ -170,7 +175,8 @@ async function verifyMafengwoExtraction() {
 }
 
 function pct(n: number, total: number): string {
-  if (total === 0) return '0%';
+  if (total === 0)
+    return '0%';
   return `${Math.round((n / total) * 100)}%`;
 }
 

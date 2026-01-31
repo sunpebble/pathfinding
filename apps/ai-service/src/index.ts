@@ -44,9 +44,10 @@ app.get('/health', async (c) => {
   try {
     dbConnected = await Promise.race([
       checkConnection(),
-      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2000)),
+      new Promise<boolean>(resolve => setTimeout(() => resolve(false), 2000)),
     ]);
-  } catch {
+  }
+  catch {
     dbConnected = false;
   }
 
@@ -60,7 +61,7 @@ app.get('/health', async (c) => {
         ollama: process.env.OLLAMA_BASE_URL ? 'configured' : 'not configured',
       },
     },
-    dbConnected ? 200 : 503
+    dbConnected ? 200 : 503,
   );
 });
 
@@ -96,7 +97,7 @@ app.notFound((c) => {
       error: 'Not Found',
       message: `Route ${c.req.method} ${c.req.path} not found`,
     },
-    404
+    404,
   );
 });
 
@@ -112,7 +113,7 @@ serve(
   },
   (info) => {
     appLogger.info({ port: info.port, url: `http://localhost:${info.port}` }, '✅ AI Service running');
-  }
+  },
 );
 
 export default app;

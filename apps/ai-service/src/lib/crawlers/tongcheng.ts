@@ -16,7 +16,7 @@ import { waitForContentStable } from './utils.js';
 const log = createLogger('tongcheng');
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const CITY_SLUGS: Record<string, string> = {
@@ -44,7 +44,7 @@ const CITY_SLUGS: Record<string, string> = {
 
 export async function crawlTongcheng(
   city: string,
-  options: CrawlOptions & { client?: BrowserClient } = {}
+  options: CrawlOptions & { client?: BrowserClient } = {},
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxGuides = (options.maxPages || 5) * 10;
@@ -72,12 +72,13 @@ export async function crawlTongcheng(
           results.push(guide);
           log.info(
             { title: guide.title, contentLength: guide.content.length },
-            'Extracted guide'
+            'Extracted guide',
           );
         }
         // Rate limiting delay (1-2 seconds)
         await sleep(1000 + Math.random() * 1000);
-      } catch (error) {
+      }
+      catch (error) {
         log.error({ error, url }, 'Error fetching guide');
       }
     }
@@ -85,9 +86,11 @@ export async function crawlTongcheng(
     if (results.length === 0) {
       log.warn('No results found from detail pages');
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error crawling travels list');
-  } finally {
+  }
+  finally {
     if (shouldCleanup) {
       await client.close();
       log.info('Browser client closed');
@@ -105,7 +108,7 @@ async function fetchGuideUrls(
   client: BrowserClient,
   listUrl: string,
   city: string,
-  maxGuides: number
+  maxGuides: number,
 ): Promise<Array<{ url: string; guideId: string }>> {
   const guideUrls: Array<{ url: string; guideId: string }> = [];
   const seenIds = new Set<string>();
@@ -130,10 +133,12 @@ async function fetchGuideUrls(
     const guideMatches = content.matchAll(/\/travels\/(\d+)\.html/g);
 
     for (const match of guideMatches) {
-      if (guideUrls.length >= maxGuides) break;
+      if (guideUrls.length >= maxGuides)
+        break;
 
       const guideId = match[1];
-      if (seenIds.has(guideId)) continue;
+      if (seenIds.has(guideId))
+        continue;
       seenIds.add(guideId);
 
       // Optional: Check context for city relevance
@@ -144,7 +149,8 @@ async function fetchGuideUrls(
       // Filter by city relevance (if city is mentioned nearby)
       if (city && !context.includes(city)) {
         // Skip if city not mentioned in context (but still allow some generic guides)
-        if (guideUrls.length > maxGuides / 2) continue;
+        if (guideUrls.length > maxGuides / 2)
+          continue;
       }
 
       guideUrls.push({
@@ -154,7 +160,8 @@ async function fetchGuideUrls(
     }
 
     log.info({ count: guideUrls.length }, 'Found guide URLs');
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching list page');
   }
 
@@ -169,7 +176,7 @@ async function fetchGuideDetail(
   client: BrowserClient,
   url: string,
   guideId: string,
-  city: string
+  city: string,
 ): Promise<CrawlResult | null> {
   try {
     log.info({ url }, 'Entering detail page');
@@ -189,7 +196,7 @@ async function fetchGuideDetail(
 
     log.debug(
       { guideId, snapshotLength: content.length },
-      'Detail page snapshot captured'
+      'Detail page snapshot captured',
     );
 
     // Extract all fields using accessibility-parser utilities
@@ -198,13 +205,13 @@ async function fetchGuideDetail(
 
     log.debug(
       { contentLength: textContent?.length || 0 },
-      'Extracted content length'
+      'Extracted content length',
     );
 
     if (!textContent || textContent.length < 100) {
       log.info(
         { contentLength: textContent?.length || 0, url },
-        'Insufficient content, skipping'
+        'Insufficient content, skipping',
       );
       return null;
     }
@@ -248,10 +255,11 @@ async function fetchGuideDetail(
       qualityScore: calculateQualityScore(
         textContent,
         imageUrls.length,
-        stats.views || 0
+        stats.views || 0,
       ),
     };
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error, url }, 'Error parsing guide');
     return null;
   }
@@ -263,26 +271,37 @@ async function fetchGuideDetail(
 function calculateQualityScore(
   textContent: string,
   imageCount: number,
-  viewsCount: number
+  viewsCount: number,
 ): number {
   let score = 30; // Base score
 
   // Content length score (up to +30)
-  if (textContent.length >= 2000) score += 30;
-  else if (textContent.length >= 1000) score += 20;
-  else if (textContent.length >= 500) score += 10;
+  if (textContent.length >= 2000)
+    score += 30;
+  else if (textContent.length >= 1000)
+    score += 20;
+  else if (textContent.length >= 500)
+    score += 10;
 
   // Image count score (up to +20)
-  if (imageCount >= 10) score += 20;
-  else if (imageCount >= 5) score += 15;
-  else if (imageCount >= 2) score += 10;
-  else if (imageCount >= 1) score += 5;
+  if (imageCount >= 10)
+    score += 20;
+  else if (imageCount >= 5)
+    score += 15;
+  else if (imageCount >= 2)
+    score += 10;
+  else if (imageCount >= 1)
+    score += 5;
 
   // Views score (up to +20)
-  if (viewsCount >= 10000) score += 20;
-  else if (viewsCount >= 1000) score += 15;
-  else if (viewsCount >= 100) score += 10;
-  else if (viewsCount > 0) score += 5;
+  if (viewsCount >= 10000)
+    score += 20;
+  else if (viewsCount >= 1000)
+    score += 15;
+  else if (viewsCount >= 100)
+    score += 10;
+  else if (viewsCount > 0)
+    score += 5;
 
   return Math.min(score, 100);
 }

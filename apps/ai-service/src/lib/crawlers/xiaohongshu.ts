@@ -19,13 +19,13 @@ const log = createLogger('xiaohongshu');
 
 // Helper function for delay
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // Helper function to scroll and load content
 async function scrollToLoadContent(
   client: BrowserClient,
-  scrollCount: number = 3
+  scrollCount: number = 3,
 ): Promise<void> {
   for (let i = 0; i < scrollCount; i++) {
     await client.scroll('down');
@@ -45,7 +45,7 @@ async function scrollToLoadContent(
 async function waitForContentStable(
   client: BrowserClient,
   maxWait: number = 10000,
-  stabilityWindow: number = 500
+  stabilityWindow: number = 500,
 ): Promise<boolean> {
   const startTime = Date.now();
   let lastSnapshotLength = 0;
@@ -62,7 +62,8 @@ async function waitForContentStable(
       if (stableCount >= 2) {
         return true;
       }
-    } else {
+    }
+    else {
       stableCount = 0;
     }
 
@@ -151,7 +152,7 @@ interface UserPostedResponse {
 export async function crawlXiaohongshu(
   city: string,
   options: CrawlOptions = {},
-  client?: BrowserClient
+  client?: BrowserClient,
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxGuides = (options.maxPages || 5) * 10;
@@ -181,10 +182,11 @@ export async function crawlXiaohongshu(
         city,
         maxGuides,
         options,
-        client
+        client,
       );
       results.push(...userNotes);
-    } else if (options.searchQuery) {
+    }
+    else if (options.searchQuery) {
       // Search mode: search for notes by keyword
       log.info({ query: options.searchQuery }, 'Searching for notes');
       const searchNotes = await fetchNotesFromSearch(
@@ -192,10 +194,11 @@ export async function crawlXiaohongshu(
         city,
         maxGuides,
         options,
-        client
+        client,
       );
       results.push(...searchNotes);
-    } else {
+    }
+    else {
       // Default: explore page
       const exploreUrl = 'https://www.xiaohongshu.com/explore';
       log.info('Fetching explore page');
@@ -205,13 +208,13 @@ export async function crawlXiaohongshu(
         city,
         maxGuides,
         options,
-        client
+        client,
       );
       log.info({ count: exploreGuides.length }, 'Found notes from explore');
 
       for (const guide of exploreGuides) {
         if (
-          !results.some((r) => r.sourceExternalId === guide.sourceExternalId)
+          !results.some(r => r.sourceExternalId === guide.sourceExternalId)
         ) {
           results.push(guide);
         }
@@ -221,12 +224,14 @@ export async function crawlXiaohongshu(
     if (results.length === 0) {
       log.warn('No results found. Session may need refresh');
       log.warn(
-        'Run: pnpm --filter ai-service exec tsx src/login-helper.ts xiaohongshu'
+        'Run: pnpm --filter ai-service exec tsx src/login-helper.ts xiaohongshu',
       );
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching explore page');
-  } finally {
+  }
+  finally {
     if (shouldCloseClient) {
       await client.close();
       log.info('Browser client closed');
@@ -241,7 +246,7 @@ export async function crawlXiaohongshu(
  * Returns true if refresh was successful, false otherwise.
  */
 export async function handleSessionRefresh(
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<boolean> {
   try {
     log.warn('Session expired, attempting refresh');
@@ -250,7 +255,8 @@ export async function handleSessionRefresh(
     await client.enableNetworkCapture(['xhr', 'fetch']);
     log.info('Session refresh successful');
     return true;
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Session refresh failed');
     return false;
   }
@@ -269,7 +275,7 @@ export async function handleSessionRefresh(
 async function fetchNoteDetail(
   noteId: string,
   city: string,
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<CrawlResult | null> {
   const detailUrl = `https://www.xiaohongshu.com/explore/${noteId}`;
 
@@ -283,7 +289,7 @@ async function fetchNoteDetail(
 
     // Try API interception on detail page for fresh video URLs
     const apiNotes = await extractNotesFromApi(client);
-    const note = apiNotes.find((n) => n.note_id === noteId);
+    const note = apiNotes.find(n => n.note_id === noteId);
 
     if (note) {
       const result = convertNoteToResult(note, city);
@@ -301,7 +307,8 @@ async function fetchNoteDetail(
     // Return null and let caller handle
     log.info({ noteId }, 'Note not found in detail page API response');
     return null;
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error, noteId }, 'Error fetching note detail');
     return null;
   }
@@ -312,7 +319,7 @@ async function fetchNotesFromExplore(
   city: string,
   maxNotes: number,
   options: CrawlOptions = {},
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<CrawlResult[]> {
   const notes: CrawlResult[] = [];
 
@@ -348,7 +355,8 @@ async function fetchNotesFromExplore(
       for (const note of apiNotes.slice(0, maxNotes)) {
         // convertNoteToResult now handles quality filtering internally
         const result = convertNoteToResult(note, city);
-        if (!result) continue; // Skip filtered notes
+        if (!result)
+          continue; // Skip filtered notes
 
         // Track placeholder vs full content for session expiry detection
         const hasNeedsRecrawlTag = result.tags?.includes('needs-recrawl');
@@ -357,16 +365,16 @@ async function fetchNotesFromExplore(
 
           // Detect sudden session expiry: we had good content, now only placeholders
           if (
-            stats.fullContent > 0 &&
-            stats.placeholders >= 3 &&
-            !stats.sessionRefreshAttempted
+            stats.fullContent > 0
+            && stats.placeholders >= 3
+            && !stats.sessionRefreshAttempted
           ) {
             log.warn(
               {
                 fullContent: stats.fullContent,
                 placeholders: stats.placeholders,
               },
-              'Detected session expiry pattern'
+              'Detected session expiry pattern',
             );
             stats.sessionRefreshAttempted = true;
             const refreshed = await handleSessionRefresh(client);
@@ -376,27 +384,28 @@ async function fetchNotesFromExplore(
               await waitForContentStable(client);
             }
           }
-        } else {
+        }
+        else {
           stats.fullContent++;
         }
 
         // For video notes, fetch detail page for fresh video URLs
         // Video CDN URLs expire in ~30 seconds, so we need fresh URLs from detail page
         // Also fetch detail if fetchDetailContent is enabled for full content
-        const shouldFetchDetail =
-          note.type === 'video' || options.fetchDetailContent;
+        const shouldFetchDetail
+          = note.type === 'video' || options.fetchDetailContent;
 
         if (shouldFetchDetail) {
           const detailResult = await fetchNoteDetail(
             note.note_id,
             city,
-            client
+            client,
           );
           if (detailResult) {
             // Merge full content from detail page
             if (
-              options.fetchDetailContent &&
-              detailResult.content.length > result.content.length
+              options.fetchDetailContent
+              && detailResult.content.length > result.content.length
             ) {
               result.content = detailResult.content;
               result.contentBlocks = detailResult.contentBlocks;
@@ -418,7 +427,7 @@ async function fetchNotesFromExplore(
           const comments = await fetchNoteComments(
             note.note_id,
             options.maxCommentsPerPost || 20,
-            client
+            client,
           );
           if (comments.length > 0) {
             result.comments = comments;
@@ -436,24 +445,26 @@ async function fetchNotesFromExplore(
       const snapshotNotes = await extractNotesFromSnapshot(
         city,
         maxNotes - notes.length,
-        client
+        client,
       );
       for (const note of snapshotNotes) {
-        if (!notes.some((n) => n.sourceExternalId === note.sourceExternalId)) {
+        if (!notes.some(n => n.sourceExternalId === note.sourceExternalId)) {
           // Check placeholder for snapshot-extracted notes too
           const isPlaceholder = detectPlaceholderContent(
             note.content,
-            note.title || ''
+            note.title || '',
           );
           if (isPlaceholder) {
             stats.placeholders++;
             note.qualityScore = 20;
             // Add needs-recrawl tag for placeholder notes
-            if (!note.tags) note.tags = [];
+            if (!note.tags)
+              note.tags = [];
             if (!note.tags.includes('needs-recrawl')) {
               note.tags.push('needs-recrawl');
             }
-          } else {
+          }
+          else {
             stats.fullContent++;
           }
 
@@ -465,7 +476,8 @@ async function fetchNotesFromExplore(
         }
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching explore page');
   }
 
@@ -478,7 +490,7 @@ async function fetchNotesFromExplore(
       detailPageFetches: stats.detailPageFetches,
       commentsFetched: stats.commentsFetched,
     },
-    'Extraction stats'
+    'Extraction stats',
   );
   if (stats.sessionRefreshAttempted) {
     log.info('Session refresh was attempted during extraction');
@@ -488,7 +500,7 @@ async function fetchNotesFromExplore(
 }
 
 async function extractNotesFromApi(
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<XiaohongshuNote[]> {
   const notes: XiaohongshuNote[] = [];
 
@@ -497,10 +509,10 @@ async function extractNotesFromApi(
     log.debug({ count: requests.length }, 'Found network requests');
 
     const feedRequests = requests.filter(
-      (r) =>
-        r.url.includes('/api/sns/web/v1/feed') ||
-        r.url.includes('/api/sns/web/v1/search') ||
-        r.url.includes('/api/sns/web/v1/homefeed')
+      r =>
+        r.url.includes('/api/sns/web/v1/feed')
+        || r.url.includes('/api/sns/web/v1/search')
+        || r.url.includes('/api/sns/web/v1/homefeed'),
     );
     log.debug({ count: feedRequests.length }, 'Found feed/search requests');
 
@@ -508,7 +520,7 @@ async function extractNotesFromApi(
       try {
         log.debug(
           { requestId: req.id, url: req.url.substring(0, 80) },
-          'Fetching request'
+          'Fetching request',
         );
         const detail = await client.getNetworkRequest(req.id);
         if (detail?.responseBody) {
@@ -522,11 +534,13 @@ async function extractNotesFromApi(
             }
           }
         }
-      } catch (e) {
+      }
+      catch (e) {
         log.debug({ requestId: req.id, error: e }, 'Failed to parse request');
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error extracting from API');
   }
 
@@ -536,7 +550,7 @@ async function extractNotesFromApi(
 async function extractNotesFromSnapshot(
   city: string,
   maxNotes: number,
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<CrawlResult[]> {
   const notes: CrawlResult[] = [];
   const seenIds = new Set<string>();
@@ -571,7 +585,7 @@ async function extractNotesFromSnapshot(
       // Try to find context around this note ID
       const notePattern = new RegExp(
         `([^\\n]{0,300})\\/explore\\/${noteId}([^\\n]{0,300})`,
-        'i'
+        'i',
       );
       const contextMatch = content.match(notePattern);
 
@@ -593,11 +607,11 @@ async function extractNotesFromSnapshot(
         if (!title) {
           const localTexts = extractStaticText(localContext);
           const meaningfulText = localTexts.find(
-            (t) =>
-              t.length >= 5 &&
-              t.length <= 100 &&
-              /[\u4E00-\u9FFF]/.test(t) &&
-              !t.includes('http')
+            t =>
+              t.length >= 5
+              && t.length <= 100
+              && /[\u4E00-\u9FFF]/.test(t)
+              && !t.includes('http'),
           );
           if (meaningfulText) {
             title = meaningfulText;
@@ -647,7 +661,8 @@ async function extractNotesFromSnapshot(
         qualityScore: 50,
       });
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error extracting from snapshot');
   }
 
@@ -656,12 +671,14 @@ async function extractNotesFromSnapshot(
 
 function convertNoteToResult(
   note: XiaohongshuNote,
-  city: string
+  city: string,
 ): CrawlResult | null {
-  if (!note.note_id) return null;
+  if (!note.note_id)
+    return null;
 
   const title = note.title || note.desc?.substring(0, 50) || '';
-  if (!title || title.length < 2) return null;
+  if (!title || title.length < 2)
+    return null;
 
   const content = note.desc || title;
 
@@ -670,7 +687,7 @@ function convertNoteToResult(
   if (!qualityCheck.acceptable) {
     log.warn(
       { noteId: note.note_id, reason: qualityCheck.reason },
-      'Skipping note'
+      'Skipping note',
     );
     return null;
   }
@@ -720,8 +737,8 @@ function convertNoteToResult(
   const savesCount = parseCount(note.interact_info?.collected_count);
   const commentsCount = parseCount(note.interact_info?.comment_count);
 
-  const tags =
-    (note.tag_list?.map((t) => t.name).filter(Boolean) as string[]) || [];
+  const tags
+    = (note.tag_list?.map(t => t.name).filter(Boolean) as string[]) || [];
   tags.push(...extractTags(title, note.desc || ''));
   const uniqueTags = [...new Set(tags)].slice(0, 10);
 
@@ -730,7 +747,7 @@ function convertNoteToResult(
     content,
     imageUrls.length,
     likesCount,
-    isPlaceholder
+    isPlaceholder,
   );
 
   // Add 'needs-recrawl' tag if flagged for re-crawling
@@ -760,7 +777,8 @@ function convertNoteToResult(
 }
 
 function parseCount(value?: string): number {
-  if (!value) return 0;
+  if (!value)
+    return 0;
   const num = Number.parseFloat(value);
   if (value.includes('万') || value.toLowerCase().includes('w')) {
     return Math.floor(num * 10000);
@@ -811,7 +829,7 @@ function extractTags(title: string, content: string): string[] {
  */
 export function detectPlaceholderContent(
   content: string,
-  title: string
+  title: string,
 ): boolean {
   // Short content is suspicious
   if (content.length >= 300) {
@@ -821,7 +839,7 @@ export function detectPlaceholderContent(
   // Check for generic placeholder phrases
   const genericPhrases = ['旅游笔记', '旅游攻略', '旅游指南', '旅行攻略'];
   const hasGenericPhrase = genericPhrases.some(
-    (phrase) => content.includes(phrase) || title.includes(phrase)
+    phrase => content.includes(phrase) || title.includes(phrase),
   );
 
   // Check if title matches "${city}旅游笔记" pattern (very generic)
@@ -831,7 +849,7 @@ export function detectPlaceholderContent(
   if (hasGenericPhrase || hasCityNotePattern) {
     log.debug(
       { title: title.substring(0, 30), contentLength: content.length },
-      'Detected placeholder content'
+      'Detected placeholder content',
     );
     return true;
   }
@@ -864,7 +882,7 @@ export function calculateXhsQualityScore(
   content: string,
   imageCount: number,
   likesCount: number,
-  isPlaceholder?: boolean
+  isPlaceholder?: boolean,
 ): { score: number; needsRecrawl: boolean } {
   let score = 50;
 
@@ -873,15 +891,21 @@ export function calculateXhsQualityScore(
     return { score: 20, needsRecrawl: true };
   }
 
-  if (content.length > 500) score += 10;
-  if (content.length > 1000) score += 10;
-  if (content.length > 2000) score += 5;
+  if (content.length > 500)
+    score += 10;
+  if (content.length > 1000)
+    score += 10;
+  if (content.length > 2000)
+    score += 5;
 
   score += Math.min(imageCount * 2, 15);
 
-  if (likesCount > 100) score += 5;
-  if (likesCount > 1000) score += 5;
-  if (likesCount > 10000) score += 5;
+  if (likesCount > 100)
+    score += 5;
+  if (likesCount > 1000)
+    score += 5;
+  if (likesCount > 10000)
+    score += 5;
 
   return { score: Math.min(score, 100), needsRecrawl: false };
 }
@@ -898,7 +922,7 @@ export function calculateXhsQualityScore(
 async function fetchNoteComments(
   noteId: string,
   maxComments: number = 20,
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<CrawlComment[]> {
   const comments: CrawlComment[] = [];
 
@@ -908,9 +932,9 @@ async function fetchNoteComments(
     // Look for comment API requests in network log
     const requests = await client.listNetworkRequests(['xhr', 'fetch']);
     const commentRequests = requests.filter(
-      (r) =>
-        r.url.includes('/api/sns/web/v1/comment/') ||
-        r.url.includes('/api/sns/web/v2/comment/')
+      r =>
+        r.url.includes('/api/sns/web/v1/comment/')
+        || r.url.includes('/api/sns/web/v2/comment/'),
     );
 
     for (const req of commentRequests.slice(-3)) {
@@ -920,7 +944,8 @@ async function fetchNoteComments(
           const data: CommentResponse = JSON.parse(detail.responseBody);
           if (data.data?.comments) {
             for (const comment of data.data.comments) {
-              if (comments.length >= maxComments) break;
+              if (comments.length >= maxComments)
+                break;
 
               comments.push({
                 commentId: comment.id,
@@ -938,13 +963,15 @@ async function fetchNoteComments(
             }
           }
         }
-      } catch (e) {
+      }
+      catch (e) {
         log.debug({ error: e }, 'Failed to parse comment request');
       }
     }
 
     log.info({ noteId, count: comments.length }, 'Extracted comments for note');
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error, noteId }, 'Error fetching comments');
   }
 
@@ -967,7 +994,7 @@ async function fetchNotesFromSearch(
   city: string,
   maxNotes: number,
   options: CrawlOptions = {},
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<CrawlResult[]> {
   const notes: CrawlResult[] = [];
 
@@ -995,14 +1022,15 @@ async function fetchNotesFromSearch(
 
     for (const note of apiNotes.slice(0, maxNotes)) {
       const result = convertNoteToResult(note, city);
-      if (!result) continue;
+      if (!result)
+        continue;
 
       // Fetch detail content if enabled
       if (options.fetchDetailContent) {
         const detailResult = await fetchNoteDetail(note.note_id, city, client);
         if (
-          detailResult &&
-          detailResult.content.length > result.content.length
+          detailResult
+          && detailResult.content.length > result.content.length
         ) {
           result.content = detailResult.content;
           result.contentBlocks = detailResult.contentBlocks;
@@ -1015,7 +1043,7 @@ async function fetchNotesFromSearch(
         const comments = await fetchNoteComments(
           note.note_id,
           options.maxCommentsPerPost || 20,
-          client
+          client,
         );
         if (comments.length > 0) {
           result.comments = comments;
@@ -1025,7 +1053,8 @@ async function fetchNotesFromSearch(
 
       notes.push(result);
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching search results');
   }
 
@@ -1047,7 +1076,7 @@ async function fetchNotesFromUserProfile(
   city: string,
   maxNotes: number,
   options: CrawlOptions = {},
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<CrawlResult[]> {
   const notes: CrawlResult[] = [];
 
@@ -1072,15 +1101,15 @@ async function fetchNotesFromUserProfile(
     // Try to extract from user posted API
     const requests = await client.listNetworkRequests(['xhr', 'fetch']);
     const userRequests = requests.filter(
-      (r) =>
-        r.url.includes('/api/sns/web/v1/user_posted') ||
-        r.url.includes('/api/sns/web/v1/user/posted') ||
-        r.url.includes(`/user/profile/${userId}`)
+      r =>
+        r.url.includes('/api/sns/web/v1/user_posted')
+        || r.url.includes('/api/sns/web/v1/user/posted')
+        || r.url.includes(`/user/profile/${userId}`),
     );
 
     log.info(
       { count: userRequests.length },
-      'Found user profile API requests'
+      'Found user profile API requests',
     );
 
     for (const req of userRequests.slice(-5)) {
@@ -1091,14 +1120,17 @@ async function fetchNotesFromUserProfile(
           if (data.data?.notes) {
             log.info(
               { count: data.data.notes.length },
-              'Found notes from user API'
+              'Found notes from user API',
             );
             for (const note of data.data.notes) {
-              if (notes.length >= maxNotes) break;
-              if (!note.note_id) continue;
+              if (notes.length >= maxNotes)
+                break;
+              if (!note.note_id)
+                continue;
 
               const result = convertNoteToResult(note, city);
-              if (!result) continue;
+              if (!result)
+                continue;
 
               // Set author ID for user profile notes
               result.authorId = userId;
@@ -1108,11 +1140,11 @@ async function fetchNotesFromUserProfile(
                 const detailResult = await fetchNoteDetail(
                   note.note_id,
                   city,
-                  client
+                  client,
                 );
                 if (
-                  detailResult &&
-                  detailResult.content.length > result.content.length
+                  detailResult
+                  && detailResult.content.length > result.content.length
                 ) {
                   result.content = detailResult.content;
                   result.contentBlocks = detailResult.contentBlocks;
@@ -1125,7 +1157,7 @@ async function fetchNotesFromUserProfile(
                 const comments = await fetchNoteComments(
                   note.note_id,
                   options.maxCommentsPerPost || 20,
-                  client
+                  client,
                 );
                 if (comments.length > 0) {
                   result.comments = comments;
@@ -1137,7 +1169,8 @@ async function fetchNotesFromUserProfile(
             }
           }
         }
-      } catch (e) {
+      }
+      catch (e) {
         log.warn({ error: e }, 'Failed to parse user API request');
       }
     }
@@ -1148,11 +1181,12 @@ async function fetchNotesFromUserProfile(
       const snapshotNotes = await extractNotesFromSnapshot(
         city,
         maxNotes,
-        client
+        client,
       );
       notes.push(...snapshotNotes);
     }
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching user profile');
   }
 

@@ -33,8 +33,8 @@ ${text}
 翻译：`;
 
       const response = await llm.invoke(prompt);
-      const translation =
-        typeof response.content === 'string'
+      const translation
+        = typeof response.content === 'string'
           ? response.content.trim()
           : JSON.stringify(response.content);
 
@@ -45,7 +45,8 @@ ${text}
         originalLength: text.length,
         translatedLength: translation.length,
       });
-    } catch (error) {
+    }
+    catch (error) {
       return JSON.stringify({
         error:
           error instanceof Error ? error.message : 'Translation service error',
@@ -62,5 +63,5 @@ ${text}
         .enum(['zh', 'en', 'ja', 'ko', 'fr', 'de', 'es'])
         .describe('目标语言代码：zh(中文), en(英语), ja(日语), ko(韩语) 等'),
     }),
-  }
+  },
 );

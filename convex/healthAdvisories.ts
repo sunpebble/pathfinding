@@ -14,10 +14,9 @@ export const listByDestination = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('healthAdvisories')
-      .withIndex('by_destination', (q) =>
-        q.eq('destinationId', args.destinationId)
-      )
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_destination', q =>
+        q.eq('destinationId', args.destinationId))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
   },
 });
@@ -28,7 +27,7 @@ export const listActive = query({
   handler: async (ctx) => {
     return await ctx.db
       .query('healthAdvisories')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .withIndex('by_active', q => q.eq('isActive', true))
       .collect();
   },
 });
@@ -40,14 +39,14 @@ export const listByRiskLevel = query({
       v.literal('low'),
       v.literal('moderate'),
       v.literal('high'),
-      v.literal('extreme')
+      v.literal('extreme'),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query('healthAdvisories')
-      .withIndex('by_risk_level', (q) => q.eq('riskLevel', args.riskLevel))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_risk_level', q => q.eq('riskLevel', args.riskLevel))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
   },
 });
@@ -62,14 +61,14 @@ export const listByCategory = query({
       v.literal('insect_borne'),
       v.literal('altitude'),
       v.literal('climate'),
-      v.literal('general')
+      v.literal('general'),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query('healthAdvisories')
-      .withIndex('by_category', (q) => q.eq('category', args.category))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_category', q => q.eq('category', args.category))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
   },
 });
@@ -91,7 +90,7 @@ export const create = mutation({
       v.literal('low'),
       v.literal('moderate'),
       v.literal('high'),
-      v.literal('extreme')
+      v.literal('extreme'),
     ),
     title: v.string(),
     description: v.string(),
@@ -102,7 +101,7 @@ export const create = mutation({
       v.literal('insect_borne'),
       v.literal('altitude'),
       v.literal('climate'),
-      v.literal('general')
+      v.literal('general'),
     ),
     symptoms: v.optional(v.array(v.string())),
     preventionTips: v.array(v.string()),
@@ -111,7 +110,7 @@ export const create = mutation({
       v.object({
         peakMonths: v.array(v.number()),
         notes: v.optional(v.string()),
-      })
+      }),
     ),
     sourceUrl: v.optional(v.string()),
   },
@@ -133,8 +132,8 @@ export const update = mutation({
         v.literal('low'),
         v.literal('moderate'),
         v.literal('high'),
-        v.literal('extreme')
-      )
+        v.literal('extreme'),
+      ),
     ),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -146,8 +145,8 @@ export const update = mutation({
         v.literal('insect_borne'),
         v.literal('altitude'),
         v.literal('climate'),
-        v.literal('general')
-      )
+        v.literal('general'),
+      ),
     ),
     symptoms: v.optional(v.array(v.string())),
     preventionTips: v.optional(v.array(v.string())),
@@ -156,7 +155,7 @@ export const update = mutation({
       v.object({
         peakMonths: v.array(v.number()),
         notes: v.optional(v.string()),
-      })
+      }),
     ),
     sourceUrl: v.optional(v.string()),
     isActive: v.optional(v.boolean()),
@@ -164,7 +163,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, {
       ...filteredUpdates,

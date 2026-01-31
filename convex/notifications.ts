@@ -1,11 +1,11 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { ConvexError, v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { ConvexError, v } from 'convex/values';
 import {
   notificationDataValidator,
   scheduledNotificationDataValidator,
-} from "../packages/convex/src/validators/index.js";
+} from '../packages/convex/src/validators/index.js';
+import { internalMutation, mutation, query } from './_generated/server';
 
 /**
  * Notifications - Push Notification Management
@@ -14,30 +14,30 @@ import {
 
 // Notification type validator
 const notificationTypeValidator = v.union(
-  v.literal("comment"),
-  v.literal("reply"),
-  v.literal("like"),
-  v.literal("mention"),
-  v.literal("new_follower"),
-  v.literal("following_itinerary"),
-  v.literal("itinerary_reminder"),
-  v.literal("flight_status"),
-  v.literal("weather_alert"),
-  v.literal("social_interaction"),
+  v.literal('comment'),
+  v.literal('reply'),
+  v.literal('like'),
+  v.literal('mention'),
+  v.literal('new_follower'),
+  v.literal('following_itinerary'),
+  v.literal('itinerary_reminder'),
+  v.literal('flight_status'),
+  v.literal('weather_alert'),
+  v.literal('social_interaction'),
 );
 
 const referenceTypeValidator = v.union(
-  v.literal("itinerary"),
-  v.literal("comment"),
-  v.literal("user"),
-  v.literal("flight"),
-  v.literal("weather"),
+  v.literal('itinerary'),
+  v.literal('comment'),
+  v.literal('user'),
+  v.literal('flight'),
+  v.literal('weather'),
 );
 
 const priorityValidator = v.union(
-  v.literal("low"),
-  v.literal("normal"),
-  v.literal("high"),
+  v.literal('low'),
+  v.literal('normal'),
+  v.literal('high'),
 );
 
 // ============================================
@@ -64,23 +64,23 @@ export const listByUser = query({
 
     if (args.unreadOnly) {
       notifications = await ctx.db
-        .query("notifications")
-        .withIndex("by_user_read", (q) =>
-          q.eq("userId", args.userId).eq("isRead", false),
-        )
-        .order("desc")
+        .query('notifications')
+        .withIndex('by_user_read', q =>
+          q.eq('userId', args.userId).eq('isRead', false))
+        .order('desc')
         .collect();
-    } else {
+    }
+    else {
       notifications = await ctx.db
-        .query("notifications")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
-        .order("desc")
+        .query('notifications')
+        .withIndex('by_user', q => q.eq('userId', args.userId))
+        .order('desc')
         .collect();
     }
 
     // Filter by type if provided
     if (args.type) {
-      notifications = notifications.filter((n) => n.type === args.type);
+      notifications = notifications.filter(n => n.type === args.type);
     }
 
     const total = notifications.length;
@@ -103,10 +103,9 @@ export const getUnreadCount = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const unread = await ctx.db
-      .query("notifications")
-      .withIndex("by_user_read", (q) =>
-        q.eq("userId", args.userId).eq("isRead", false),
-      )
+      .query('notifications')
+      .withIndex('by_user_read', q =>
+        q.eq('userId', args.userId).eq('isRead', false))
       .collect();
 
     return { count: unread.length };
@@ -117,7 +116,7 @@ export const getUnreadCount = query({
  * Get a single notification by ID
  */
 export const getById = query({
-  args: { id: v.id("notifications") },
+  args: { id: v.id('notifications') },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -144,7 +143,7 @@ export const create = mutation({
     priority: v.optional(priorityValidator),
   },
   handler: async (ctx, args) => {
-    const notificationId = await ctx.db.insert("notifications", {
+    const notificationId = await ctx.db.insert('notifications', {
       userId: args.userId,
       type: args.type,
       referenceType: args.referenceType,
@@ -154,7 +153,7 @@ export const create = mutation({
       title: args.title,
       body: args.body,
       data: args.data,
-      priority: args.priority ?? "normal",
+      priority: args.priority ?? 'normal',
       isRead: false,
       isPushSent: false,
       createdAt: Date.now(),
@@ -169,16 +168,16 @@ export const create = mutation({
  */
 export const markRead = mutation({
   args: {
-    id: v.id("notifications"),
+    id: v.id('notifications'),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     if (!notification) {
-      throw new ConvexError("Notification not found");
+      throw new ConvexError('Notification not found');
     }
     if (notification.userId !== args.userId) {
-      throw new ConvexError("Access denied");
+      throw new ConvexError('Access denied');
     }
 
     await ctx.db.patch(args.id, {
@@ -197,10 +196,9 @@ export const markAllRead = mutation({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const unread = await ctx.db
-      .query("notifications")
-      .withIndex("by_user_read", (q) =>
-        q.eq("userId", args.userId).eq("isRead", false),
-      )
+      .query('notifications')
+      .withIndex('by_user_read', q =>
+        q.eq('userId', args.userId).eq('isRead', false))
       .collect();
 
     const now = Date.now();
@@ -220,7 +218,7 @@ export const markAllRead = mutation({
  */
 export const markPushSent = mutation({
   args: {
-    id: v.id("notifications"),
+    id: v.id('notifications'),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
@@ -235,16 +233,16 @@ export const markPushSent = mutation({
  */
 export const remove = mutation({
   args: {
-    id: v.id("notifications"),
+    id: v.id('notifications'),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     if (!notification) {
-      throw new ConvexError("Notification not found");
+      throw new ConvexError('Notification not found');
     }
     if (notification.userId !== args.userId) {
-      throw new ConvexError("Access denied");
+      throw new ConvexError('Access denied');
     }
 
     await ctx.db.delete(args.id);
@@ -259,8 +257,8 @@ export const deleteAll = mutation({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const notifications = await ctx.db
-      .query("notifications")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('notifications')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     for (const notification of notifications) {
@@ -282,10 +280,9 @@ export const getActiveTokens = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const tokens = await ctx.db
-      .query("pushTokens")
-      .withIndex("by_user_active", (q) =>
-        q.eq("userId", args.userId).eq("isActive", true),
-      )
+      .query('pushTokens')
+      .withIndex('by_user_active', q =>
+        q.eq('userId', args.userId).eq('isActive', true))
       .collect();
 
     return tokens;
@@ -299,8 +296,8 @@ export const getByToken = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("pushTokens")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .query('pushTokens')
+      .withIndex('by_token', q => q.eq('token', args.token))
       .first();
   },
 });
@@ -316,7 +313,7 @@ export const registerPushToken = mutation({
   args: {
     userId: v.string(),
     token: v.string(),
-    platform: v.union(v.literal("ios"), v.literal("android")),
+    platform: v.union(v.literal('ios'), v.literal('android')),
     deviceId: v.optional(v.string()),
     deviceName: v.optional(v.string()),
     appVersion: v.optional(v.string()),
@@ -327,8 +324,8 @@ export const registerPushToken = mutation({
 
     // Check if token already exists
     const existingToken = await ctx.db
-      .query("pushTokens")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .query('pushTokens')
+      .withIndex('by_token', q => q.eq('token', args.token))
       .first();
 
     if (existingToken) {
@@ -346,7 +343,7 @@ export const registerPushToken = mutation({
     }
 
     // Create new token
-    return await ctx.db.insert("pushTokens", {
+    return await ctx.db.insert('pushTokens', {
       userId: args.userId,
       token: args.token,
       platform: args.platform,
@@ -369,8 +366,8 @@ export const deactivateToken = mutation({
   args: { token: v.string() },
   handler: async (ctx, args) => {
     const existingToken = await ctx.db
-      .query("pushTokens")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .query('pushTokens')
+      .withIndex('by_token', q => q.eq('token', args.token))
       .first();
 
     if (existingToken) {
@@ -391,8 +388,8 @@ export const deactivateAllUserTokens = mutation({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const tokens = await ctx.db
-      .query("pushTokens")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('pushTokens')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const now = Date.now();
@@ -418,8 +415,8 @@ export const getSettings = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const settings = await ctx.db
-      .query("notificationSettings")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('notificationSettings')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     // Return default settings if none exist
@@ -430,9 +427,9 @@ export const getSettings = query({
         emailEnabled: false,
         inAppEnabled: true,
         quietHoursEnabled: false,
-        quietHoursStart: "22:00",
-        quietHoursEnd: "08:00",
-        timezone: "Asia/Shanghai",
+        quietHoursStart: '22:00',
+        quietHoursEnd: '08:00',
+        timezone: 'Asia/Shanghai',
         itineraryReminders: {
           enabled: true,
           advanceHours: 24,
@@ -515,8 +512,8 @@ export const updateSettings = mutation({
 
     // Check if settings exist
     const existing = await ctx.db
-      .query("notificationSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .query('notificationSettings')
+      .withIndex('by_user', q => q.eq('userId', userId))
       .first();
 
     if (existing) {
@@ -534,15 +531,15 @@ export const updateSettings = mutation({
     }
 
     // Create new settings with defaults
-    return await ctx.db.insert("notificationSettings", {
+    return await ctx.db.insert('notificationSettings', {
       userId,
       pushEnabled: updates.pushEnabled ?? true,
       emailEnabled: updates.emailEnabled ?? false,
       inAppEnabled: updates.inAppEnabled ?? true,
       quietHoursEnabled: updates.quietHoursEnabled ?? false,
-      quietHoursStart: updates.quietHoursStart ?? "22:00",
-      quietHoursEnd: updates.quietHoursEnd ?? "08:00",
-      timezone: updates.timezone ?? "Asia/Shanghai",
+      quietHoursStart: updates.quietHoursStart ?? '22:00',
+      quietHoursEnd: updates.quietHoursEnd ?? '08:00',
+      timezone: updates.timezone ?? 'Asia/Shanghai',
       itineraryReminders: updates.itineraryReminders ?? {
         enabled: true,
         advanceHours: 24,
@@ -586,10 +583,9 @@ export const getPendingScheduled = query({
     const limit = args.limit ?? 100;
 
     const scheduled = await ctx.db
-      .query("scheduledNotifications")
-      .withIndex("by_status_scheduled", (q) =>
-        q.eq("status", "pending").lte("scheduledFor", args.beforeTime),
-      )
+      .query('scheduledNotifications')
+      .withIndex('by_status_scheduled', q =>
+        q.eq('status', 'pending').lte('scheduledFor', args.beforeTime))
       .take(limit);
 
     return scheduled;
@@ -603,8 +599,8 @@ export const getScheduledByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("scheduledNotifications")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('scheduledNotifications')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
   },
 });
@@ -620,11 +616,11 @@ export const createScheduled = mutation({
   args: {
     userId: v.string(),
     type: v.union(
-      v.literal("itinerary_reminder"),
-      v.literal("flight_checkin"),
-      v.literal("flight_boarding"),
-      v.literal("weather_check"),
-      v.literal("custom"),
+      v.literal('itinerary_reminder'),
+      v.literal('flight_checkin'),
+      v.literal('flight_boarding'),
+      v.literal('weather_check'),
+      v.literal('custom'),
     ),
     referenceType: v.optional(v.string()),
     referenceId: v.optional(v.string()),
@@ -634,7 +630,7 @@ export const createScheduled = mutation({
     data: v.optional(scheduledNotificationDataValidator),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("scheduledNotifications", {
+    return await ctx.db.insert('scheduledNotifications', {
       userId: args.userId,
       type: args.type,
       referenceType: args.referenceType,
@@ -643,7 +639,7 @@ export const createScheduled = mutation({
       title: args.title,
       body: args.body,
       data: args.data,
-      status: "pending",
+      status: 'pending',
       retryCount: 0,
       createdAt: Date.now(),
     });
@@ -654,10 +650,10 @@ export const createScheduled = mutation({
  * Mark scheduled notification as sent
  */
 export const markScheduledSent = mutation({
-  args: { id: v.id("scheduledNotifications") },
+  args: { id: v.id('scheduledNotifications') },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
-      status: "sent",
+      status: 'sent',
       sentAt: Date.now(),
     });
   },
@@ -668,15 +664,16 @@ export const markScheduledSent = mutation({
  */
 export const markScheduledFailed = mutation({
   args: {
-    id: v.id("scheduledNotifications"),
+    id: v.id('scheduledNotifications'),
     errorMessage: v.string(),
   },
   handler: async (ctx, args) => {
     const scheduled = await ctx.db.get(args.id);
-    if (!scheduled) return;
+    if (!scheduled)
+      return;
 
     await ctx.db.patch(args.id, {
-      status: "failed",
+      status: 'failed',
       errorMessage: args.errorMessage,
       retryCount: (scheduled.retryCount ?? 0) + 1,
     });
@@ -688,20 +685,20 @@ export const markScheduledFailed = mutation({
  */
 export const cancelScheduled = mutation({
   args: {
-    id: v.id("scheduledNotifications"),
+    id: v.id('scheduledNotifications'),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const scheduled = await ctx.db.get(args.id);
     if (!scheduled) {
-      throw new ConvexError("Scheduled notification not found");
+      throw new ConvexError('Scheduled notification not found');
     }
     if (scheduled.userId !== args.userId) {
-      throw new ConvexError("Access denied");
+      throw new ConvexError('Access denied');
     }
 
     await ctx.db.patch(args.id, {
-      status: "cancelled",
+      status: 'cancelled',
     });
 
     return { success: true };
@@ -719,19 +716,19 @@ export const cancelScheduledByReference = mutation({
   },
   handler: async (ctx, args) => {
     const scheduled = await ctx.db
-      .query("scheduledNotifications")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('scheduledNotifications')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     let cancelledCount = 0;
     for (const notification of scheduled) {
       if (
-        notification.referenceType === args.referenceType &&
-        notification.referenceId === args.referenceId &&
-        notification.status === "pending"
+        notification.referenceType === args.referenceType
+        && notification.referenceId === args.referenceId
+        && notification.status === 'pending'
       ) {
         await ctx.db.patch(notification._id, {
-          status: "cancelled",
+          status: 'cancelled',
         });
         cancelledCount++;
       }
@@ -751,11 +748,11 @@ export const sendPendingReminders = internalMutation({
 
     // Find all pending scheduled notifications that are due
     const pendingNotifications = await ctx.db
-      .query("scheduledNotifications")
-      .filter((q) =>
+      .query('scheduledNotifications')
+      .filter(q =>
         q.and(
-          q.eq(q.field("status"), "pending"),
-          q.lte(q.field("scheduledFor"), now),
+          q.eq(q.field('status'), 'pending'),
+          q.lte(q.field('scheduledFor'), now),
         ),
       )
       .collect();
@@ -765,7 +762,7 @@ export const sendPendingReminders = internalMutation({
     for (const scheduled of pendingNotifications) {
       try {
         // Create the actual notification
-        await ctx.db.insert("notifications", {
+        await ctx.db.insert('notifications', {
           userId: scheduled.userId,
           type: scheduled.type as any,
           title: scheduled.title,
@@ -779,18 +776,19 @@ export const sendPendingReminders = internalMutation({
 
         // Mark scheduled notification as sent
         await ctx.db.patch(scheduled._id, {
-          status: "sent",
+          status: 'sent',
           sentAt: now,
         });
 
         sentCount++;
-      } catch (error) {
+      }
+      catch (error) {
         // Mark as failed
         await ctx.db.patch(scheduled._id, {
-          status: "failed",
+          status: 'failed',
         });
 
-        console.error("Failed to send notification:", error);
+        console.error('Failed to send notification:', error);
       }
     }
 
@@ -808,11 +806,11 @@ export const cleanupOldNotifications = internalMutation({
 
     // Find old read notifications
     const oldNotifications = await ctx.db
-      .query("notifications")
-      .filter((q) =>
+      .query('notifications')
+      .filter(q =>
         q.and(
-          q.eq(q.field("isRead"), true),
-          q.lt(q.field("createdAt"), thirtyDaysAgo),
+          q.eq(q.field('isRead'), true),
+          q.lt(q.field('createdAt'), thirtyDaysAgo),
         ),
       )
       .collect();

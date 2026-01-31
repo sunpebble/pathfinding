@@ -125,8 +125,8 @@ export const POI_CATEGORIES = {
 } as const;
 
 export type POICategory = keyof typeof POI_CATEGORIES;
-export type POISubcategory<T extends POICategory> =
-  (typeof POI_CATEGORIES)[T]['subcategories'][number];
+export type POISubcategory<T extends POICategory>
+  = (typeof POI_CATEGORIES)[T]['subcategories'][number];
 
 /**
  * Platform-specific category mappings to unified categories
@@ -195,7 +195,7 @@ export const PLATFORM_CATEGORY_MAPPINGS: Record<
  */
 export function mapPlatformCategory(
   platform: string,
-  platformCategory: string
+  platformCategory: string,
 ): { category: POICategory; subcategory?: string } | null {
   const platformMappings = PLATFORM_CATEGORY_MAPPINGS[platform];
   if (!platformMappings) {

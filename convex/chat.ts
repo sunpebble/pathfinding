@@ -8,7 +8,7 @@ import { mutation, query } from './_generated/server';
 const roleValidator = v.union(
   v.literal('user'),
   v.literal('assistant'),
-  v.literal('system')
+  v.literal('system'),
 );
 
 const metadataValidator = v.optional(
@@ -24,8 +24,8 @@ const metadataValidator = v.optional(
           address: v.optional(v.string()),
           rating: v.optional(v.number()),
           priceInfo: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     itineraryChanges: v.optional(
       v.array(
@@ -34,8 +34,8 @@ const metadataValidator = v.optional(
           dayNumber: v.optional(v.number()),
           poiName: v.optional(v.string()),
           details: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     quickActions: v.optional(
       v.array(
@@ -43,11 +43,11 @@ const metadataValidator = v.optional(
           label: v.string(),
           action: v.string(),
           payload: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     sources: v.optional(v.array(v.string())),
-  })
+  }),
 );
 
 // ============================================
@@ -68,15 +68,15 @@ export const listSessions = query({
     if (args.includeArchived) {
       sessions = await ctx.db
         .query('chatSessions')
-        .withIndex('by_user', (q) => q.eq('userId', args.userId))
+        .withIndex('by_user', q => q.eq('userId', args.userId))
         .order('desc')
         .take(limit);
-    } else {
+    }
+    else {
       sessions = await ctx.db
         .query('chatSessions')
-        .withIndex('by_user_archived', (q) =>
-          q.eq('userId', args.userId).eq('isArchived', false)
-        )
+        .withIndex('by_user_archived', q =>
+          q.eq('userId', args.userId).eq('isArchived', false))
         .order('desc')
         .take(limit);
     }
@@ -90,7 +90,8 @@ export const getSession = query({
   args: { id: v.id('chatSessions') },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.id);
-    if (!session) return null;
+    if (!session)
+      return null;
 
     // Optionally fetch linked itinerary/guide info
     let itinerary = null;
@@ -153,7 +154,7 @@ export const updateSession = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, filteredUpdates);
@@ -168,7 +169,7 @@ export const deleteSession = mutation({
     // Delete all messages in the session
     const messages = await ctx.db
       .query('chatMessages')
-      .withIndex('by_session', (q) => q.eq('sessionId', args.id))
+      .withIndex('by_session', q => q.eq('sessionId', args.id))
       .collect();
 
     for (const message of messages) {
@@ -196,7 +197,7 @@ export const listMessages = query({
 
     const result = await ctx.db
       .query('chatMessages')
-      .withIndex('by_session_created', (q) => q.eq('sessionId', args.sessionId))
+      .withIndex('by_session_created', q => q.eq('sessionId', args.sessionId))
       .order('asc')
       .paginate({ numItems: limit, cursor: args.cursor ?? null });
 
@@ -219,7 +220,7 @@ export const getRecentMessages = query({
 
     const messages = await ctx.db
       .query('chatMessages')
-      .withIndex('by_session_created', (q) => q.eq('sessionId', args.sessionId))
+      .withIndex('by_session_created', q => q.eq('sessionId', args.sessionId))
       .order('desc')
       .take(limit);
 
@@ -258,12 +259,12 @@ export const addMessage = mutation({
 
       // Auto-generate title from first user message if title is default
       if (
-        session.title === '新对话' &&
-        args.role === 'user' &&
-        session.messageCount === 0
+        session.title === '新对话'
+        && args.role === 'user'
+        && session.messageCount === 0
       ) {
-        const newTitle =
-          args.content.slice(0, 30) + (args.content.length > 30 ? '...' : '');
+        const newTitle
+          = args.content.slice(0, 30) + (args.content.length > 30 ? '...' : '');
         await ctx.db.patch(args.sessionId, { title: newTitle });
       }
     }
@@ -299,8 +300,8 @@ export const sendMessage = mutation({
 
       // Auto-generate title from first user message
       if (session.title === '新对话' && session.messageCount === 0) {
-        const newTitle =
-          args.content.slice(0, 30) + (args.content.length > 30 ? '...' : '');
+        const newTitle
+          = args.content.slice(0, 30) + (args.content.length > 30 ? '...' : '');
         await ctx.db.patch(args.sessionId, { title: newTitle });
       }
     }
@@ -308,7 +309,7 @@ export const sendMessage = mutation({
     // Get recent messages for context
     const recentMessages = await ctx.db
       .query('chatMessages')
-      .withIndex('by_session_created', (q) => q.eq('sessionId', args.sessionId))
+      .withIndex('by_session_created', q => q.eq('sessionId', args.sessionId))
       .order('desc')
       .take(10);
 
@@ -320,9 +321,8 @@ export const sendMessage = mutation({
         // Get itinerary days and items for context
         const days = await ctx.db
           .query('itineraryDays')
-          .withIndex('by_itinerary', (q) =>
-            q.eq('itineraryId', session.itineraryId!)
-          )
+          .withIndex('by_itinerary', q =>
+            q.eq('itineraryId', session.itineraryId!))
           .collect();
 
         itineraryContext = {
@@ -394,12 +394,13 @@ export const getSessionWithContext = query({
   args: { sessionId: v.id('chatSessions') },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
-    if (!session) return null;
+    if (!session)
+      return null;
 
     // Get recent messages
     const messages = await ctx.db
       .query('chatMessages')
-      .withIndex('by_session_created', (q) => q.eq('sessionId', args.sessionId))
+      .withIndex('by_session_created', q => q.eq('sessionId', args.sessionId))
       .order('desc')
       .take(20);
 
@@ -410,9 +411,8 @@ export const getSessionWithContext = query({
       if (it) {
         const days = await ctx.db
           .query('itineraryDays')
-          .withIndex('by_itinerary', (q) =>
-            q.eq('itineraryId', session.itineraryId!)
-          )
+          .withIndex('by_itinerary', q =>
+            q.eq('itineraryId', session.itineraryId!))
           .collect();
 
         // Get items for each day
@@ -420,7 +420,7 @@ export const getSessionWithContext = query({
           days.map(async (day) => {
             const items = await ctx.db
               .query('itineraryItems')
-              .withIndex('by_day', (q) => q.eq('dayId', day._id))
+              .withIndex('by_day', q => q.eq('dayId', day._id))
               .collect();
 
             const itemsWithPoi = await Promise.all(
@@ -431,7 +431,7 @@ export const getSessionWithContext = query({
                   poiName: poi?.name,
                   poiCategory: poi?.category,
                 };
-              })
+              }),
             );
 
             return {
@@ -439,7 +439,7 @@ export const getSessionWithContext = query({
               date: day.date,
               items: itemsWithPoi,
             };
-          })
+          }),
         );
 
         const city = await ctx.db.get(it.cityId);
@@ -489,7 +489,7 @@ export const clearMessages = mutation({
   handler: async (ctx, args) => {
     const messages = await ctx.db
       .query('chatMessages')
-      .withIndex('by_session', (q) => q.eq('sessionId', args.sessionId))
+      .withIndex('by_session', q => q.eq('sessionId', args.sessionId))
       .collect();
 
     for (const message of messages) {

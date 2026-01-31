@@ -36,7 +36,7 @@ const weatherDataValidator = v.object({
       sunset: v.number(),
       cloudiness: v.number(),
       pressure: v.number(),
-    })
+    }),
   ),
   daily: v.array(
     v.object({
@@ -62,7 +62,7 @@ const weatherDataValidator = v.object({
       sunset: v.number(),
       cloudiness: v.number(),
       pressure: v.number(),
-    })
+    }),
   ),
   alerts: v.array(
     v.object({
@@ -72,7 +72,7 @@ const weatherDataValidator = v.object({
       end: v.number(),
       description: v.string(),
       severity: v.string(),
-    })
+    }),
   ),
   fetchedAt: v.number(),
 });
@@ -92,9 +92,8 @@ export const get = query({
 
     const cached = await ctx.db
       .query('weatherCache')
-      .withIndex('by_location', (q) =>
-        q.eq('latitude', lat).eq('longitude', lon)
-      )
+      .withIndex('by_location', q =>
+        q.eq('latitude', lat).eq('longitude', lon))
       .first();
 
     return cached;
@@ -119,9 +118,8 @@ export const upsert = mutation({
     // Check if entry already exists
     const existing = await ctx.db
       .query('weatherCache')
-      .withIndex('by_location', (q) =>
-        q.eq('latitude', lat).eq('longitude', lon)
-      )
+      .withIndex('by_location', q =>
+        q.eq('latitude', lat).eq('longitude', lon))
       .first();
 
     if (existing) {
@@ -157,7 +155,7 @@ export const cleanup = mutation({
     const oldEntries = await ctx.db
       .query('weatherCache')
       .withIndex('by_fetched_at')
-      .filter((q) => q.lt(q.field('fetchedAt'), cutoffTime))
+      .filter(q => q.lt(q.field('fetchedAt'), cutoffTime))
       .collect();
 
     let deleted = 0;
@@ -188,7 +186,8 @@ export const stats = query({
     for (const entry of entries) {
       if (entry.fetchedAt > oneHourAgo) {
         recentCount++;
-      } else if (entry.fetchedAt < oneDayAgo) {
+      }
+      else if (entry.fetchedAt < oneDayAgo) {
         staleCount++;
       }
     }

@@ -44,10 +44,12 @@ function parseArgs(): ImportConfig {
     if (arg === '--dir' && args[i + 1]) {
       config.inputDir = args[i + 1];
       i++;
-    } else if (arg === '--batch-size' && args[i + 1]) {
+    }
+    else if (arg === '--batch-size' && args[i + 1]) {
       config.batchSize = Number.parseInt(args[i + 1], 10);
       i++;
-    } else if (arg === '--dry-run') {
+    }
+    else if (arg === '--dry-run') {
       config.dryRun = true;
     }
   }
@@ -82,7 +84,7 @@ function loadGuidesFromDir(inputDir: string): CrawlResult[] {
 
   const files = fs
     .readdirSync(inputDir)
-    .filter((f) => f.startsWith('guides_') && f.endsWith('.json'));
+    .filter(f => f.startsWith('guides_') && f.endsWith('.json'));
 
   log.info({ count: files.length }, 'Found guide files');
 
@@ -91,7 +93,8 @@ function loadGuidesFromDir(inputDir: string): CrawlResult[] {
       const data = fs.readFileSync(path.join(inputDir, file), 'utf-8');
       const guides = JSON.parse(data) as CrawlResult[];
       allGuides.push(...guides);
-    } catch (error) {
+    }
+    catch (error) {
       log.warn({ file, error }, 'Failed to load file');
     }
   }
@@ -122,7 +125,7 @@ function transformToConvexFormat(guide: CrawlResult) {
 async function importToConvex(
   client: ConvexHttpClient,
   guides: CrawlResult[],
-  config: ImportConfig
+  config: ImportConfig,
 ): Promise<{ imported: number; skipped: number; errors: number }> {
   const stats = { imported: 0, skipped: 0, errors: 0 };
   const batchSize = config.batchSize;
@@ -143,7 +146,7 @@ async function importToConvex(
         if (config.dryRun) {
           log.info(
             { title: guide.title?.substring(0, 40) },
-            '[DRY RUN] Would upsert guide'
+            '[DRY RUN] Would upsert guide',
           );
           stats.imported++;
           continue;
@@ -151,11 +154,12 @@ async function importToConvex(
 
         await client.mutation(api.travelGuides.upsert, convexData);
         stats.imported++;
-      } catch (error) {
+      }
+      catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         log.error(
           { sourceExternalId: guide.sourceExternalId, error: errorMsg },
-          'Failed to import guide'
+          'Failed to import guide',
         );
         stats.errors++;
       }
@@ -163,7 +167,7 @@ async function importToConvex(
 
     // Small delay between batches to avoid rate limiting
     if (i + batchSize < guides.length) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 
@@ -186,11 +190,11 @@ async function main(): Promise<void> {
   log.info({ inputDir: config.inputDir }, `  - 输入目录: ${config.inputDir}`);
   log.info(
     { batchSize: config.batchSize },
-    `  - 批量大小: ${config.batchSize}`
+    `  - 批量大小: ${config.batchSize}`,
   );
   log.info(
     { dryRun: config.dryRun },
-    `  - 干运行: ${config.dryRun ? '是' : '否'}`
+    `  - 干运行: ${config.dryRun ? '是' : '否'}`,
   );
   log.info('');
 
@@ -198,7 +202,7 @@ async function main(): Promise<void> {
   const guides = loadGuidesFromDir(config.inputDir);
   log.info(
     { guidesCount: guides.length },
-    `[Load] Loaded ${guides.length} guides total`
+    `[Load] Loaded ${guides.length} guides total`,
   );
   log.info('');
 

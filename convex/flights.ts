@@ -17,7 +17,7 @@ const flightStatusValidator = v.union(
   v.literal('landed'),
   v.literal('arrived'),
   v.literal('cancelled'),
-  v.literal('diverted')
+  v.literal('diverted'),
 );
 
 // Booking status enum
@@ -27,7 +27,7 @@ const bookingStatusValidator = v.union(
   v.literal('cancelled'),
   v.literal('checked_in'),
   v.literal('boarded'),
-  v.literal('completed')
+  v.literal('completed'),
 );
 
 // Cabin class enum
@@ -35,7 +35,7 @@ const cabinClassValidator = v.union(
   v.literal('economy'),
   v.literal('premium_economy'),
   v.literal('business'),
-  v.literal('first')
+  v.literal('first'),
 );
 
 /**
@@ -44,7 +44,7 @@ const cabinClassValidator = v.union(
 async function checkBookingOwnership(
   ctx: QueryCtx | MutationCtx,
   bookingId: Id<'flightBookings'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const booking = await ctx.db.get(bookingId);
   if (!booking) {
@@ -71,11 +71,10 @@ export const getByFlightNumber = query({
   handler: async (ctx, args) => {
     const flight = await ctx.db
       .query('flights')
-      .withIndex('by_flight_number_date', (q) =>
+      .withIndex('by_flight_number_date', q =>
         q
           .eq('flightNumber', args.flightNumber.toUpperCase())
-          .eq('departureDate', args.date)
-      )
+          .eq('departureDate', args.date))
       .first();
 
     return flight;
@@ -110,15 +109,14 @@ export const searchByRoute = query({
 
     let flights = await ctx.db
       .query('flights')
-      .withIndex('by_route', (q) =>
+      .withIndex('by_route', q =>
         q
           .eq('departureAirport', args.departureAirport.toUpperCase())
-          .eq('arrivalAirport', args.arrivalAirport.toUpperCase())
-      )
+          .eq('arrivalAirport', args.arrivalAirport.toUpperCase()))
       .collect();
 
     if (args.date) {
-      flights = flights.filter((f) => f.departureDate === args.date);
+      flights = flights.filter(f => f.departureDate === args.date);
     }
 
     const total = flights.length;
@@ -167,11 +165,10 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('flights')
-      .withIndex('by_flight_number_date', (q) =>
+      .withIndex('by_flight_number_date', q =>
         q
           .eq('flightNumber', args.flightNumber.toUpperCase())
-          .eq('departureDate', args.departureDate)
-      )
+          .eq('departureDate', args.departureDate))
       .first();
 
     const flightData = {
@@ -208,7 +205,7 @@ export const updateStatus = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -242,17 +239,17 @@ export const listBookings = query({
 
     let bookings = await ctx.db
       .query('flightBookings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
     if (args.status) {
-      bookings = bookings.filter((b) => b.status === args.status);
+      bookings = bookings.filter(b => b.status === args.status);
     }
 
     if (args.upcoming) {
       const now = Date.now();
-      bookings = bookings.filter((b) => b.departureTime > now);
+      bookings = bookings.filter(b => b.departureTime > now);
     }
 
     const total = bookings.length;
@@ -266,7 +263,7 @@ export const listBookings = query({
           ...booking,
           flight,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -280,7 +277,8 @@ export const getBookingById = query({
   args: { id: v.id('flightBookings') },
   handler: async (ctx, args) => {
     const booking = await ctx.db.get(args.id);
-    if (!booking) return null;
+    if (!booking)
+      return null;
 
     const flight = await ctx.db.get(booking.flightId);
 
@@ -302,9 +300,8 @@ export const getBookingByConfirmation = query({
   handler: async (ctx, args) => {
     const booking = await ctx.db
       .query('flightBookings')
-      .withIndex('by_confirmation', (q) =>
-        q.eq('confirmationCode', args.confirmationCode.toUpperCase())
-      )
+      .withIndex('by_confirmation', q =>
+        q.eq('confirmationCode', args.confirmationCode.toUpperCase()))
       .first();
 
     if (!booking || booking.userId !== args.userId) {
@@ -331,11 +328,11 @@ export const getBookingsByItinerary = query({
   handler: async (ctx, args) => {
     const bookings = await ctx.db
       .query('flightBookings')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Filter by user and enrich with flight data
-    const userBookings = bookings.filter((b) => b.userId === args.userId);
+    const userBookings = bookings.filter(b => b.userId === args.userId);
 
     const enriched = await Promise.all(
       userBookings.map(async (booking) => {
@@ -344,7 +341,7 @@ export const getBookingsByItinerary = query({
           ...booking,
           flight,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -432,7 +429,7 @@ export const updateBooking = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {

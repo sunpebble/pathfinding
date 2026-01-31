@@ -62,13 +62,15 @@ export default function SignUpPage() {
     try {
       await signIn('password', { email, password, flow: 'signUp' });
       router.push('/');
-    } catch (err) {
+    }
+    catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to sign up. Please try again.'
+          : 'Failed to sign up. Please try again.',
       );
-    } finally {
+    }
+    finally {
       setIsLoading(false);
     }
   };
@@ -80,11 +82,12 @@ export default function SignUpPage() {
     try {
       await signIn(provider);
       // OAuth redirect will happen automatically
-    } catch (err) {
+    }
+    catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : `Failed to sign up with ${provider}`
+          : `Failed to sign up with ${provider}`,
       );
       setIsLoading(false);
     }
@@ -126,7 +129,7 @@ export default function SignUpPage() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="you@example.com"
                 disabled={isLoading}
@@ -145,7 +148,7 @@ export default function SignUpPage() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="••••••••"
                 disabled={isLoading}
@@ -167,7 +170,7 @@ export default function SignUpPage() {
                 type="password"
                 required
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={e => setConfirmPassword(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="••••••••"
                 disabled={isLoading}
@@ -240,7 +243,8 @@ export default function SignUpPage() {
 
           {/* Sign In Link */}
           <div className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{' '}
+            Already have an account?
+            {' '}
             <Link href="/auth/signin" className="text-blue-600 hover:underline">
               Sign in
             </Link>

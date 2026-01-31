@@ -28,8 +28,8 @@ ${content}
 JSON:`;
 
       const response = await llm.invoke(prompt);
-      const responseText =
-        typeof response.content === 'string'
+      const responseText
+        = typeof response.content === 'string'
           ? response.content
           : JSON.stringify(response.content);
 
@@ -41,7 +41,8 @@ JSON:`;
       }
 
       return JSON.stringify({ success: false, pois: [], count: 0 });
-    } catch (error) {
+    }
+    catch (error) {
       return JSON.stringify({
         error: error instanceof Error ? error.message : 'POI extraction failed',
         pois: [],
@@ -55,7 +56,7 @@ JSON:`;
     schema: z.object({
       content: z.string().describe('要提取POI的旅行内容文本'),
     }),
-  }
+  },
 );
 
 /**
@@ -91,7 +92,8 @@ export const poiSearchTool = tool(
       }));
 
       return JSON.stringify({ success: true, pois, count: pois.length });
-    } catch (error) {
+    }
+    catch (error) {
       return JSON.stringify({
         error: error instanceof Error ? error.message : 'POI search failed',
         pois: [],
@@ -106,5 +108,5 @@ export const poiSearchTool = tool(
       query: z.string().describe('搜索关键词，如景点名称、餐厅名称等'),
       city: z.string().optional().describe('城市名称，用于缩小搜索范围'),
     }),
-  }
+  },
 );

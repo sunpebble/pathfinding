@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v } from 'convex/values';
 
 /**
  * Geographic scope for crawl jobs
@@ -7,10 +7,10 @@ export const geographicScopeValidator = v.object({
   /** Type of geographic targeting */
   type: v.optional(
     v.union(
-      v.literal("city"),
-      v.literal("region"),
-      v.literal("country"),
-      v.literal("bbox"),
+      v.literal('city'),
+      v.literal('region'),
+      v.literal('country'),
+      v.literal('bbox'),
     ),
   ),
   /** City IDs to crawl */
@@ -46,11 +46,11 @@ export const categoryConfigValidator = v.object({
   categories: v.optional(
     v.array(
       v.union(
-        v.literal("attraction"),
-        v.literal("restaurant"),
-        v.literal("hotel"),
-        v.literal("shopping"),
-        v.literal("other"),
+        v.literal('attraction'),
+        v.literal('restaurant'),
+        v.literal('hotel'),
+        v.literal('shopping'),
+        v.literal('other'),
       ),
     ),
   ),

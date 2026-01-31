@@ -1,9 +1,9 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import type { Id } from "./_generated/dataModel";
-import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { businessHoursValidator } from "../packages/convex/src/validators/index.js";
+import type { Id } from './_generated/dataModel';
+import { ConvexError, v } from 'convex/values';
+import { businessHoursValidator } from '../packages/convex/src/validators/index.js';
+import { mutation, query } from './_generated/server';
 
 /**
  * POIs - Points of Interest Queries and Mutations
@@ -14,11 +14,11 @@ import { businessHoursValidator } from "../packages/convex/src/validators/index.
 
 /** Validator for POI category types */
 const poiCategoryValidator = v.union(
-  v.literal("attraction"),
-  v.literal("restaurant"),
-  v.literal("hotel"),
-  v.literal("shopping"),
-  v.literal("other"),
+  v.literal('attraction'),
+  v.literal('restaurant'),
+  v.literal('hotel'),
+  v.literal('shopping'),
+  v.literal('other'),
 );
 
 /**
@@ -30,7 +30,7 @@ const poiCategoryValidator = v.union(
  */
 export const list = query({
   args: {
-    cityId: v.optional(v.id("cities")),
+    cityId: v.optional(v.id('cities')),
     category: v.optional(poiCategoryValidator),
     limit: v.optional(v.number()),
   },
@@ -39,23 +39,25 @@ export const list = query({
 
     if (args.cityId && args.category) {
       results = await ctx.db
-        .query("pois")
-        .withIndex("by_city_category", (q) =>
-          q.eq("cityId", args.cityId!).eq("category", args.category!),
-        )
+        .query('pois')
+        .withIndex('by_city_category', q =>
+          q.eq('cityId', args.cityId!).eq('category', args.category!))
         .collect();
-    } else if (args.cityId) {
+    }
+    else if (args.cityId) {
       results = await ctx.db
-        .query("pois")
-        .withIndex("by_city", (q) => q.eq("cityId", args.cityId!))
+        .query('pois')
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .collect();
-    } else if (args.category) {
+    }
+    else if (args.category) {
       results = await ctx.db
-        .query("pois")
-        .withIndex("by_category", (q) => q.eq("category", args.category!))
+        .query('pois')
+        .withIndex('by_category', q => q.eq('category', args.category!))
         .collect();
-    } else {
-      results = await ctx.db.query("pois").collect();
+    }
+    else {
+      results = await ctx.db.query('pois').collect();
     }
 
     return args.limit ? results.slice(0, args.limit) : results;
@@ -68,7 +70,7 @@ export const list = query({
  * @returns The POI document or null if not found
  */
 export const getById = query({
-  args: { id: v.id("pois") },
+  args: { id: v.id('pois') },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -87,7 +89,7 @@ export const getById = query({
 export const search = query({
   args: {
     query: v.string(),
-    cityId: v.optional(v.id("cities")),
+    cityId: v.optional(v.id('cities')),
     category: v.optional(poiCategoryValidator),
     minRating: v.optional(v.number()),
     limit: v.optional(v.number()),
@@ -102,38 +104,40 @@ export const search = query({
     // Apply index-based filters first
     if (args.cityId && args.category) {
       pois = await ctx.db
-        .query("pois")
-        .withIndex("by_city_category", (q) =>
-          q.eq("cityId", args.cityId!).eq("category", args.category!),
-        )
+        .query('pois')
+        .withIndex('by_city_category', q =>
+          q.eq('cityId', args.cityId!).eq('category', args.category!))
         .take(fetchLimit);
-    } else if (args.cityId) {
+    }
+    else if (args.cityId) {
       pois = await ctx.db
-        .query("pois")
-        .withIndex("by_city", (q) => q.eq("cityId", args.cityId!))
+        .query('pois')
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .take(fetchLimit);
-    } else if (args.category) {
+    }
+    else if (args.category) {
       pois = await ctx.db
-        .query("pois")
-        .withIndex("by_category", (q) => q.eq("category", args.category!))
+        .query('pois')
+        .withIndex('by_category', q => q.eq('category', args.category!))
         .take(fetchLimit);
-    } else {
-      pois = await ctx.db.query("pois").take(fetchLimit);
+    }
+    else {
+      pois = await ctx.db.query('pois').take(fetchLimit);
     }
 
     // Filter by minimum rating
     if (args.minRating !== undefined) {
       pois = pois.filter(
-        (poi) => poi.rating !== undefined && poi.rating >= args.minRating!,
+        poi => poi.rating !== undefined && poi.rating >= args.minRating!,
       );
     }
 
     // Search by name (in-memory, but on pre-filtered data)
     const searchLower = args.query.toLowerCase();
     pois = pois.filter(
-      (poi) =>
-        poi.name.toLowerCase().includes(searchLower) ||
-        poi.nameEn?.toLowerCase().includes(searchLower),
+      poi =>
+        poi.name.toLowerCase().includes(searchLower)
+        || poi.nameEn?.toLowerCase().includes(searchLower),
     );
 
     // Sort by rating (descending)
@@ -168,16 +172,17 @@ export const getNearby = query({
     let pois;
     if (args.category) {
       pois = await ctx.db
-        .query("pois")
-        .withIndex("by_category", (q) => q.eq("category", args.category!))
+        .query('pois')
+        .withIndex('by_category', q => q.eq('category', args.category!))
         .take(maxFetch);
-    } else {
-      pois = await ctx.db.query("pois").take(maxFetch);
+    }
+    else {
+      pois = await ctx.db.query('pois').take(maxFetch);
     }
 
     // Calculate distance and filter
     const poisWithDistance = pois
-      .map((poi) => ({
+      .map(poi => ({
         ...poi,
         distance: calculateDistanceKm(
           args.latitude,
@@ -186,7 +191,7 @@ export const getNearby = query({
           poi.longitude,
         ),
       }))
-      .filter((poi) => poi.distance <= args.radiusKm)
+      .filter(poi => poi.distance <= args.radiusKm)
       .sort((a, b) => a.distance - b.distance);
 
     const limit = args.limit ?? 50;
@@ -203,18 +208,18 @@ export const getNearby = query({
  */
 export const getRecommendations = query({
   args: {
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     category: v.optional(poiCategoryValidator),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     let pois = await ctx.db
-      .query("pois")
-      .withIndex("by_city", (q) => q.eq("cityId", args.cityId))
+      .query('pois')
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
       .collect();
 
     if (args.category) {
-      pois = pois.filter((poi) => poi.category === args.category);
+      pois = pois.filter(poi => poi.category === args.category);
     }
 
     // Sort by rating descending
@@ -237,7 +242,7 @@ export const create = mutation({
     name: v.string(),
     nameEn: v.optional(v.string()),
     category: poiCategoryValidator,
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     address: v.optional(v.string()),
     latitude: v.number(),
     longitude: v.number(),
@@ -252,10 +257,10 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const city = await ctx.db.get(args.cityId);
     if (!city) {
-      throw new ConvexError("City not found");
+      throw new ConvexError('City not found');
     }
 
-    return await ctx.db.insert("pois", {
+    return await ctx.db.insert('pois', {
       ...args,
       ratingCount: args.ratingCount ?? 0,
     });
@@ -271,7 +276,7 @@ export const create = mutation({
  */
 export const update = mutation({
   args: {
-    id: v.id("pois"),
+    id: v.id('pois'),
     name: v.optional(v.string()),
     nameEn: v.optional(v.string()),
     category: v.optional(poiCategoryValidator),
@@ -288,7 +293,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
     if (!existing) {
-      throw new ConvexError("POI not found");
+      throw new ConvexError('POI not found');
     }
 
     const { id, ...updates } = args;
@@ -306,11 +311,11 @@ export const update = mutation({
  * @throws {ConvexError} If the POI does not exist
  */
 export const remove = mutation({
-  args: { id: v.id("pois") },
+  args: { id: v.id('pois') },
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
     if (!existing) {
-      throw new ConvexError("POI not found");
+      throw new ConvexError('POI not found');
     }
 
     await ctx.db.delete(args.id);
@@ -330,7 +335,7 @@ export const bulkInsert = mutation({
         name: v.string(),
         nameEn: v.optional(v.string()),
         category: poiCategoryValidator,
-        cityId: v.id("cities"),
+        cityId: v.id('cities'),
         address: v.optional(v.string()),
         latitude: v.number(),
         longitude: v.number(),
@@ -345,9 +350,9 @@ export const bulkInsert = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const ids: Id<"pois">[] = [];
+    const ids: Id<'pois'>[] = [];
     for (const poi of args.pois) {
-      const id = await ctx.db.insert("pois", {
+      const id = await ctx.db.insert('pois', {
         ...poi,
         ratingCount: poi.ratingCount ?? 0,
       });
@@ -367,12 +372,12 @@ function calculateDistanceKm(
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos((lat1 * Math.PI) / 180)
+      * Math.cos((lat2 * Math.PI) / 180)
+      * Math.sin(dLng / 2)
+      * Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }

@@ -24,7 +24,7 @@ function getOllamaConfig() {
 async function translateWithOllama(
   text: string,
   sourceLang: string,
-  targetLang: string
+  targetLang: string,
 ): Promise<string> {
   const langNames: Record<string, string> = {
     zh: '中文',
@@ -117,7 +117,7 @@ translationsRouter.post('/text', async (c) => {
     const translation = await translateWithOllama(
       text,
       detectedLang,
-      targetLang
+      targetLang,
     );
 
     return c.json({
@@ -129,9 +129,10 @@ translationsRouter.post('/text', async (c) => {
         targetLang,
       },
     });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Translation failed';
+  }
+  catch (error) {
+    const message
+      = error instanceof Error ? error.message : 'Translation failed';
     return c.json({ error: message }, 500);
   }
 });
@@ -154,7 +155,8 @@ translationsRouter.post('/detect', async (c) => {
         detectedLanguage: detectedLang,
       },
     });
-  } catch (error) {
+  }
+  catch (error) {
     const message = error instanceof Error ? error.message : 'Detection failed';
     return c.json({ error: message }, 500);
   }
@@ -180,7 +182,7 @@ translationsRouter.post('/batch', async (c) => {
           const translation = await translateWithOllama(
             text,
             detectedLang,
-            targetLang
+            targetLang,
           );
           return {
             original: text,
@@ -188,14 +190,15 @@ translationsRouter.post('/batch', async (c) => {
             sourceLang: detectedLang,
             success: true,
           };
-        } catch {
+        }
+        catch {
           return {
             original: text,
             error: 'Translation failed',
             success: false,
           };
         }
-      })
+      }),
     );
 
     return c.json({
@@ -203,9 +206,10 @@ translationsRouter.post('/batch', async (c) => {
       data: results,
       targetLang,
     });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Batch translation failed';
+  }
+  catch (error) {
+    const message
+      = error instanceof Error ? error.message : 'Batch translation failed';
     return c.json({ error: message }, 500);
   }
 });
@@ -230,16 +234,17 @@ translationsRouter.get('/health', async (c) => {
           available: healthy,
         },
       },
-      healthy ? 200 : 503
+      healthy ? 200 : 503,
     );
-  } catch {
+  }
+  catch {
     return c.json(
       {
         status: 'unhealthy',
         service: 'translations',
         error: 'Ollama service unavailable',
       },
-      503
+      503,
     );
   }
 });

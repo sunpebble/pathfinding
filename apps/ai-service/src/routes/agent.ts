@@ -50,7 +50,8 @@ agentRouter.post('/chat', async (c) => {
       response: result.response,
       toolCalls: result.toolCalls,
     });
-  } catch (error) {
+  }
+  catch (error) {
     const message = error instanceof Error ? error.message : 'Chat failed';
     return c.json({ error: message }, 500);
   }
@@ -83,7 +84,8 @@ agentRouter.post('/chat/stream', async (c) => {
             data: JSON.stringify(chunk),
           });
         }
-      } catch (error) {
+      }
+      catch (error) {
         await stream.writeSSE({
           event: 'error',
           data: JSON.stringify({
@@ -92,7 +94,8 @@ agentRouter.post('/chat/stream', async (c) => {
         });
       }
     });
-  } catch (error) {
+  }
+  catch (error) {
     const message = error instanceof Error ? error.message : 'Stream failed';
     return c.json({ error: message }, 500);
   }
@@ -120,9 +123,10 @@ agentRouter.post('/enrich/:guideId', async (c) => {
     }
 
     return c.json({ success: false, error: result.error }, 500);
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Enrichment failed';
+  }
+  catch (error) {
+    const message
+      = error instanceof Error ? error.message : 'Enrichment failed';
     return c.json({ error: message }, 500);
   }
 });
@@ -177,7 +181,8 @@ agentRouter.post('/plan/start', async (c) => {
       success: true,
       ...result,
     });
-  } catch (error) {
+  }
+  catch (error) {
     const msg = error instanceof Error ? error.message : 'Planning failed';
     return c.json({ error: msg }, 500);
   }
@@ -205,7 +210,8 @@ agentRouter.post('/plan/:sessionId/feedback', async (c) => {
       success: true,
       ...result,
     });
-  } catch (error) {
+  }
+  catch (error) {
     const msg = error instanceof Error ? error.message : 'Feedback failed';
     return c.json({ error: msg }, 500);
   }
@@ -237,7 +243,8 @@ agentRouter.get('/plan/:sessionId/status', async (c) => {
       hasFinalPlan: !!state.values.finalPlan,
       waitingForFeedback: state.values.currentStep === 'draft_generated',
     });
-  } catch (error) {
+  }
+  catch (error) {
     const msg = error instanceof Error ? error.message : 'Status check failed';
     return c.json({ error: msg }, 500);
   }
@@ -259,10 +266,10 @@ agentRouter.get('/plan/:sessionId/result', async (c) => {
       return c.json({ error: 'Session not found' }, 404);
     }
 
-    const plan =
-      state.values.finalPlan ||
-      state.values.refinedPlan ||
-      state.values.draftPlan;
+    const plan
+      = state.values.finalPlan
+        || state.values.refinedPlan
+        || state.values.draftPlan;
 
     if (!plan) {
       return c.json({ error: 'No plan available yet' }, 404);
@@ -274,7 +281,8 @@ agentRouter.get('/plan/:sessionId/result', async (c) => {
       plan,
       completed: state.values.currentStep === 'completed',
     });
-  } catch (error) {
+  }
+  catch (error) {
     const msg = error instanceof Error ? error.message : 'Failed to get plan';
     return c.json({ error: msg }, 500);
   }

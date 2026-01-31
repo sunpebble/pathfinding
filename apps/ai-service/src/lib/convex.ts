@@ -22,7 +22,8 @@ export async function checkConnection(): Promise<boolean> {
       signal: AbortSignal.timeout(5000),
     });
     return response.ok;
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Convex connection failed');
     return false;
   }

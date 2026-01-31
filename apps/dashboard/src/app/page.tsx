@@ -31,9 +31,9 @@ export default function OverviewPage() {
 
   // Calculate job statistics
   const jobs = jobsData?.data || [];
-  const runningJobs = jobs.filter((j) => j.status === 'running').length;
-  const completedJobs = jobs.filter((j) => j.status === 'completed').length;
-  const _failedJobs = jobs.filter((j) => j.status === 'failed').length;
+  const runningJobs = jobs.filter(j => j.status === 'running').length;
+  const completedJobs = jobs.filter(j => j.status === 'completed').length;
+  const _failedJobs = jobs.filter(j => j.status === 'failed').length;
 
   return (
     <div className="space-y-6">
@@ -63,11 +63,15 @@ export default function OverviewPage() {
           <div className="mt-4 flex items-center gap-4 text-sm">
             <span className="flex items-center gap-1 text-emerald-600">
               <CheckCircle className="h-4 w-4" />
-              {completedJobs} completed
+              {completedJobs}
+              {' '}
+              completed
             </span>
             <span className="flex items-center gap-1 text-blue-600">
               <Loader2 className="h-4 w-4" />
-              {runningJobs} running
+              {runningJobs}
+              {' '}
+              running
             </span>
           </div>
         </div>
@@ -132,11 +136,13 @@ export default function OverviewPage() {
                 health?.status === 'healthy' ? 'bg-emerald-100' : 'bg-red-100'
               }`}
             >
-              {health?.status === 'healthy' ? (
-                <CheckCircle className="h-6 w-6 text-emerald-600" />
-              ) : (
-                <XCircle className="h-6 w-6 text-red-600" />
-              )}
+              {health?.status === 'healthy'
+                ? (
+                    <CheckCircle className="h-6 w-6 text-emerald-600" />
+                  )
+                : (
+                    <XCircle className="h-6 w-6 text-red-600" />
+                  )}
             </div>
           </div>
           <p className="mt-4 text-sm text-gray-500">
@@ -154,44 +160,51 @@ export default function OverviewPage() {
           </Link>
         </div>
         <div className="divide-y divide-gray-100">
-          {jobs.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              No jobs found.{' '}
-              <Link
-                href="/jobs/create"
-                className="text-blue-600 hover:underline"
-              >
-                Create one
-              </Link>
-            </div>
-          ) : (
-            jobs.map((job) => (
-              <div
-                key={job.id}
-                className="flex items-center justify-between p-4 hover:bg-gray-50"
-              >
-                <div className="flex items-center gap-4">
-                  <StatusIcon status={job.status} />
-                  <div>
-                    <p className="font-medium text-gray-900">{job.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {job.platform} • {job.statistics?.records_extracted ?? 0}{' '}
-                      records
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <StatusBadge status={job.status} />
+          {jobs.length === 0
+            ? (
+                <div className="p-6 text-center text-gray-500">
+                  No jobs found.
+                  {' '}
                   <Link
-                    href={`/jobs/${job.id}`}
-                    className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+                    href="/jobs/create"
+                    className="text-blue-600 hover:underline"
                   >
-                    View
+                    Create one
                   </Link>
                 </div>
-              </div>
-            ))
-          )}
+              )
+            : (
+                jobs.map(job => (
+                  <div
+                    key={job.id}
+                    className="flex items-center justify-between p-4 hover:bg-gray-50"
+                  >
+                    <div className="flex items-center gap-4">
+                      <StatusIcon status={job.status} />
+                      <div>
+                        <p className="font-medium text-gray-900">{job.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {job.platform}
+                          {' '}
+                          •
+                          {job.statistics?.records_extracted ?? 0}
+                          {' '}
+                          records
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <StatusBadge status={job.status} />
+                      <Link
+                        href={`/jobs/${job.id}`}
+                        className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+                      >
+                        View
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v } from 'convex/values';
 
 /**
  * Time period validator for business hours
@@ -23,7 +23,7 @@ const baseChangesValidator = v.object({
  * Contains the full object being created
  */
 export const createChangesValidator = v.object({
-  operationType: v.literal("create"),
+  operationType: v.literal('create'),
   /** The data for the new entity */
   data: v.object({
     /** For day creation */
@@ -52,7 +52,7 @@ export const createChangesValidator = v.object({
  * Contains before/after values for modified fields
  */
 export const updateChangesValidator = v.object({
-  operationType: v.literal("update"),
+  operationType: v.literal('update'),
   /** Fields that were modified */
   fields: v.array(
     v.object({
@@ -69,7 +69,7 @@ export const updateChangesValidator = v.object({
  * Contains snapshot of deleted entity
  */
 export const deleteChangesValidator = v.object({
-  operationType: v.literal("delete"),
+  operationType: v.literal('delete'),
   /** Snapshot of the deleted entity for potential undo */
   deletedData: v.optional(
     v.object({
@@ -97,7 +97,7 @@ export const deleteChangesValidator = v.object({
  * Contains old and new positions/indices
  */
 export const reorderChangesValidator = v.object({
-  operationType: v.literal("reorder"),
+  operationType: v.literal('reorder'),
   /** Old index/position */
   fromIndex: v.number(),
   /** New index/position */

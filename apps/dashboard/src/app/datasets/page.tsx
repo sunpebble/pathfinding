@@ -57,7 +57,7 @@ export default function DatasetsPage() {
       <div className="flex items-center gap-4">
         <select
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
+          onChange={e => setTypeFilter(e.target.value)}
           className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
         >
           <option value="">All Types</option>
@@ -67,7 +67,7 @@ export default function DatasetsPage() {
         </select>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={e => setStatusFilter(e.target.value)}
           className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
         >
           <option value="">All Status</option>
@@ -77,7 +77,9 @@ export default function DatasetsPage() {
           <option value="failed">Failed</option>
         </select>
         <span className="text-sm text-gray-500">
-          {datasetsData?.pagination.total ?? 0} datasets total
+          {datasetsData?.pagination.total ?? 0}
+          {' '}
+          datasets total
         </span>
       </div>
 
@@ -110,60 +112,64 @@ export default function DatasetsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {isLoading ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
-                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
-                </td>
-              </tr>
-            ) : datasets.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-12 text-center text-gray-500"
-                >
-                  <Database className="mx-auto h-8 w-8 text-gray-300" />
-                  <p className="mt-2">No datasets found</p>
-                </td>
-              </tr>
-            ) : (
-              datasets.map((dataset) => (
-                <tr key={dataset.id} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
-                    {shortId(dataset.id)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">
-                      {dataset.name}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
-                      {dataset.type}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <StatusBadge status={dataset.status} />
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {dataset.statistics?.total_records ?? 0}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {formatDateTime(dataset.created_at)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right">
-                    {dataset.status === 'completed' && dataset.file_path && (
-                      <button
-                        className="rounded-lg bg-blue-100 p-2 text-blue-600 hover:bg-blue-200"
-                        title="Download dataset"
+            {isLoading
+              ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
+                    </td>
+                  </tr>
+                )
+              : datasets.length === 0
+                ? (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-6 py-12 text-center text-gray-500"
                       >
-                        <Download className="h-4 w-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
+                        <Database className="mx-auto h-8 w-8 text-gray-300" />
+                        <p className="mt-2">No datasets found</p>
+                      </td>
+                    </tr>
+                  )
+                : (
+                    datasets.map(dataset => (
+                      <tr key={dataset.id} className="hover:bg-gray-50">
+                        <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
+                          {shortId(dataset.id)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-gray-900">
+                            {dataset.name}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                            {dataset.type}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <StatusBadge status={dataset.status} />
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                          {dataset.statistics?.total_records ?? 0}
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                          {formatDateTime(dataset.created_at)}
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-right">
+                          {dataset.status === 'completed' && dataset.file_path && (
+                            <button
+                              className="rounded-lg bg-blue-100 p-2 text-blue-600 hover:bg-blue-200"
+                              title="Download dataset"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
           </tbody>
         </table>
       </div>

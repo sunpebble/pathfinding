@@ -13,7 +13,7 @@ const poiCategoryValidator = v.union(
   v.literal('restaurant'),
   v.literal('hotel'),
   v.literal('shopping'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const popularityLevelValidator = v.union(
@@ -21,14 +21,14 @@ const popularityLevelValidator = v.union(
   v.literal('emerging'),
   v.literal('moderate'),
   v.literal('popular'),
-  v.literal('crowded')
+  v.literal('crowded'),
 );
 
 const userSubmittedPoiStatusValidator = v.union(
   v.literal('pending'),
   v.literal('approved'),
   v.literal('rejected'),
-  v.literal('merged')
+  v.literal('merged'),
 );
 
 // ============================================
@@ -56,37 +56,37 @@ export const listHiddenGems = query({
     if (args.cityId) {
       pois = await ctx.db
         .query('pois')
-        .withIndex('by_city_hidden_gem', (q) =>
-          q.eq('cityId', args.cityId!).eq('isHiddenGem', true)
-        )
+        .withIndex('by_city_hidden_gem', q =>
+          q.eq('cityId', args.cityId!).eq('isHiddenGem', true))
         .collect();
-    } else {
+    }
+    else {
       pois = await ctx.db
         .query('pois')
-        .withIndex('by_hidden_gem', (q) => q.eq('isHiddenGem', true))
+        .withIndex('by_hidden_gem', q => q.eq('isHiddenGem', true))
         .collect();
     }
 
     // Apply filters
     if (args.category) {
-      pois = pois.filter((poi) => poi.category === args.category);
+      pois = pois.filter(poi => poi.category === args.category);
     }
 
     if (args.popularityLevel) {
-      pois = pois.filter((poi) => poi.popularityLevel === args.popularityLevel);
+      pois = pois.filter(poi => poi.popularityLevel === args.popularityLevel);
     }
 
     if (args.minHiddenGemRating !== undefined) {
       pois = pois.filter(
-        (poi) =>
-          poi.hiddenGemRating !== undefined &&
-          poi.hiddenGemRating >= args.minHiddenGemRating!
+        poi =>
+          poi.hiddenGemRating !== undefined
+          && poi.hiddenGemRating >= args.minHiddenGemRating!,
       );
     }
 
     if (args.onlyLocalRecommended) {
       pois = pois.filter(
-        (poi) => poi.localRecommendation?.isLocalRecommended === true
+        poi => poi.localRecommendation?.isLocalRecommended === true,
       );
     }
 
@@ -111,13 +111,12 @@ export const getByPopularityLevel = query({
 
     let pois = await ctx.db
       .query('pois')
-      .withIndex('by_popularity_level', (q) =>
-        q.eq('popularityLevel', args.popularityLevel)
-      )
+      .withIndex('by_popularity_level', q =>
+        q.eq('popularityLevel', args.popularityLevel))
       .take(limit * 2);
 
     if (args.cityId) {
-      pois = pois.filter((poi) => poi.cityId === args.cityId);
+      pois = pois.filter(poi => poi.cityId === args.cityId);
     }
 
     // Sort by hidden gem rating
@@ -141,16 +140,16 @@ export const getLocalRecommendations = query({
 
     let pois = await ctx.db
       .query('pois')
-      .withIndex('by_city', (q) => q.eq('cityId', args.cityId))
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
       .collect();
 
     // Filter for local recommendations
     pois = pois.filter(
-      (poi) => poi.localRecommendation?.isLocalRecommended === true
+      poi => poi.localRecommendation?.isLocalRecommended === true,
     );
 
     if (args.category) {
-      pois = pois.filter((poi) => poi.category === args.category);
+      pois = pois.filter(poi => poi.category === args.category);
     }
 
     // Sort by rating
@@ -179,28 +178,28 @@ export const searchHiddenGems = query({
     if (args.cityId) {
       pois = await ctx.db
         .query('pois')
-        .withIndex('by_city_hidden_gem', (q) =>
-          q.eq('cityId', args.cityId!).eq('isHiddenGem', true)
-        )
+        .withIndex('by_city_hidden_gem', q =>
+          q.eq('cityId', args.cityId!).eq('isHiddenGem', true))
         .collect();
-    } else {
+    }
+    else {
       pois = await ctx.db
         .query('pois')
-        .withIndex('by_hidden_gem', (q) => q.eq('isHiddenGem', true))
+        .withIndex('by_hidden_gem', q => q.eq('isHiddenGem', true))
         .collect();
     }
 
     // Filter by search query
     pois = pois.filter(
-      (poi) =>
-        poi.name.toLowerCase().includes(searchLower) ||
-        poi.nameEn?.toLowerCase().includes(searchLower) ||
-        poi.address?.toLowerCase().includes(searchLower) ||
-        poi.localRecommendation?.localTips?.toLowerCase().includes(searchLower)
+      poi =>
+        poi.name.toLowerCase().includes(searchLower)
+        || poi.nameEn?.toLowerCase().includes(searchLower)
+        || poi.address?.toLowerCase().includes(searchLower)
+        || poi.localRecommendation?.localTips?.toLowerCase().includes(searchLower),
     );
 
     if (args.category) {
-      pois = pois.filter((poi) => poi.category === args.category);
+      pois = pois.filter(poi => poi.category === args.category);
     }
 
     return pois.slice(0, limit);
@@ -226,7 +225,7 @@ export const markAsHiddenGem = mutation({
         bestTimeToVisit: v.optional(v.string()),
         localSecrets: v.optional(v.array(v.string())),
         recommendedBy: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -256,13 +255,13 @@ export const updateHiddenGemInfo = mutation({
         bestTimeToVisit: v.optional(v.string()),
         localSecrets: v.optional(v.array(v.string())),
         recommendedBy: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
     const { poiId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(poiId, filteredUpdates);
@@ -329,26 +328,29 @@ export const listUserSubmittedPois = query({
     if (args.cityId && args.status) {
       pois = await ctx.db
         .query('userSubmittedPois')
-        .withIndex('by_city_status', (q) =>
-          q.eq('cityId', args.cityId!).eq('status', args.status!)
-        )
+        .withIndex('by_city_status', q =>
+          q.eq('cityId', args.cityId!).eq('status', args.status!))
         .take(limit * 2);
-    } else if (args.status) {
+    }
+    else if (args.status) {
       pois = await ctx.db
         .query('userSubmittedPois')
-        .withIndex('by_status', (q) => q.eq('status', args.status!))
+        .withIndex('by_status', q => q.eq('status', args.status!))
         .take(limit * 2);
-    } else if (args.cityId) {
+    }
+    else if (args.cityId) {
       pois = await ctx.db
         .query('userSubmittedPois')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .take(limit * 2);
-    } else if (args.userId) {
+    }
+    else if (args.userId) {
       pois = await ctx.db
         .query('userSubmittedPois')
-        .withIndex('by_user', (q) => q.eq('userId', args.userId!))
+        .withIndex('by_user', q => q.eq('userId', args.userId!))
         .take(limit * 2);
-    } else {
+    }
+    else {
       pois = await ctx.db
         .query('userSubmittedPois')
         .order('desc')
@@ -358,12 +360,13 @@ export const listUserSubmittedPois = query({
     // Additional filters
     if (args.userId && !args.cityId && !args.status) {
       // Already filtered by userId index
-    } else if (args.userId) {
-      pois = pois.filter((poi) => poi.userId === args.userId);
+    }
+    else if (args.userId) {
+      pois = pois.filter(poi => poi.userId === args.userId);
     }
 
     if (args.category) {
-      pois = pois.filter((poi) => poi.category === args.category);
+      pois = pois.filter(poi => poi.category === args.category);
     }
 
     // Sort by upvotes - downvotes (net votes)
@@ -398,9 +401,8 @@ export const voteOnUserSubmittedPoi = mutation({
     // Check for existing vote
     const existingVote = await ctx.db
       .query('userSubmittedPoiVotes')
-      .withIndex('by_poi_user', (q) =>
-        q.eq('poiId', args.poiId).eq('userId', args.userId)
-      )
+      .withIndex('by_poi_user', q =>
+        q.eq('poiId', args.poiId).eq('userId', args.userId))
       .first();
 
     const poi = await ctx.db.get(args.poiId);
@@ -415,11 +417,13 @@ export const voteOnUserSubmittedPoi = mutation({
         // Decrement the appropriate counter
         if (args.voteType === 'up') {
           await ctx.db.patch(args.poiId, { upvotes: poi.upvotes - 1 });
-        } else {
+        }
+        else {
           await ctx.db.patch(args.poiId, { downvotes: poi.downvotes - 1 });
         }
         return { action: 'removed', voteType: args.voteType };
-      } else {
+      }
+      else {
         // Change vote type
         await ctx.db.patch(existingVote._id, {
           voteType: args.voteType,
@@ -431,7 +435,8 @@ export const voteOnUserSubmittedPoi = mutation({
             upvotes: poi.upvotes + 1,
             downvotes: poi.downvotes - 1,
           });
-        } else {
+        }
+        else {
           await ctx.db.patch(args.poiId, {
             upvotes: poi.upvotes - 1,
             downvotes: poi.downvotes + 1,
@@ -439,7 +444,8 @@ export const voteOnUserSubmittedPoi = mutation({
         }
         return { action: 'changed', voteType: args.voteType };
       }
-    } else {
+    }
+    else {
       // Create new vote
       await ctx.db.insert('userSubmittedPoiVotes', {
         poiId: args.poiId,
@@ -450,7 +456,8 @@ export const voteOnUserSubmittedPoi = mutation({
       // Increment the appropriate counter
       if (args.voteType === 'up') {
         await ctx.db.patch(args.poiId, { upvotes: poi.upvotes + 1 });
-      } else {
+      }
+      else {
         await ctx.db.patch(args.poiId, { downvotes: poi.downvotes + 1 });
       }
       return { action: 'added', voteType: args.voteType };
@@ -518,9 +525,8 @@ export const rateHiddenGem = mutation({
     // Check for existing rating
     const existingRating = await ctx.db
       .query('hiddenGemRatings')
-      .withIndex('by_poi_user', (q) =>
-        q.eq('poiId', args.poiId).eq('userId', args.userId)
-      )
+      .withIndex('by_poi_user', q =>
+        q.eq('poiId', args.poiId).eq('userId', args.userId))
       .first();
 
     const poi = await ctx.db.get(args.poiId);
@@ -542,15 +548,16 @@ export const rateHiddenGem = mutation({
       ratingId = existingRating._id;
 
       // Recalculate average (subtract old, add new)
-      const oldTotal =
-        (poi.hiddenGemRating ?? 0) * (poi.hiddenGemRatingCount ?? 0);
+      const oldTotal
+        = (poi.hiddenGemRating ?? 0) * (poi.hiddenGemRatingCount ?? 0);
       const newTotal = oldTotal - existingRating.rating + args.rating;
       const newAverage = newTotal / (poi.hiddenGemRatingCount ?? 1);
 
       await ctx.db.patch(args.poiId, {
         hiddenGemRating: newAverage,
       });
-    } else {
+    }
+    else {
       // Create new rating
       ratingId = await ctx.db.insert('hiddenGemRatings', {
         poiId: args.poiId,
@@ -591,7 +598,7 @@ export const getHiddenGemRatings = query({
 
     const ratings = await ctx.db
       .query('hiddenGemRatings')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
       .order('desc')
       .take(limit);
 
@@ -610,9 +617,8 @@ export const getUserRating = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('hiddenGemRatings')
-      .withIndex('by_poi_user', (q) =>
-        q.eq('poiId', args.poiId).eq('userId', args.userId)
-      )
+      .withIndex('by_poi_user', q =>
+        q.eq('poiId', args.poiId).eq('userId', args.userId))
       .first();
   },
 });
@@ -648,7 +654,8 @@ export const deleteRating = mutation({
           hiddenGemRating: newAverage,
           hiddenGemRatingCount: newCount,
         });
-      } else {
+      }
+      else {
         await ctx.db.patch(rating.poiId, {
           hiddenGemRating: undefined,
           hiddenGemRatingCount: 0,

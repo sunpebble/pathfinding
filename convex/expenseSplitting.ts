@@ -20,14 +20,14 @@ const expenseCategoryValidator = v.union(
   v.literal('accommodation'),
   v.literal('tickets'),
   v.literal('shopping'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const splitTypeValidator = v.union(
   v.literal('equal'),
   v.literal('exact'),
   v.literal('percentage'),
-  v.literal('shares')
+  v.literal('shares'),
 );
 
 // ============================================
@@ -37,7 +37,7 @@ const splitTypeValidator = v.union(
 async function checkItineraryAccess(
   ctx: QueryCtx | MutationCtx,
   itineraryId: Id<'itineraries'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
@@ -52,9 +52,8 @@ async function checkItineraryAccess(
   // Check if user is a collaborator
   const collab = await ctx.db
     .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', (q) =>
-      q.eq('itineraryId', itineraryId).eq('userId', userId)
-    )
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId))
     .first();
 
   if (!collab) {
@@ -67,7 +66,7 @@ async function checkItineraryAccess(
 async function checkMemberAccess(
   ctx: QueryCtx | MutationCtx,
   memberId: Id<'tripMembers'>,
-  userId: string
+  userId: string,
 ): Promise<Id<'itineraries'>> {
   const member = await ctx.db.get(memberId);
   if (!member) {
@@ -90,13 +89,15 @@ export const listMembers = query({
   handler: async (ctx, args) => {
     const members = await ctx.db
       .query('tripMembers')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     return members.sort((a, b) => {
       // Owner first, then by creation time
-      if (a.isOwner && !b.isOwner) return -1;
-      if (!a.isOwner && b.isOwner) return 1;
+      if (a.isOwner && !b.isOwner)
+        return -1;
+      if (!a.isOwner && b.isOwner)
+        return 1;
       return a.createdAt - b.createdAt;
     });
   },
@@ -118,12 +119,12 @@ export const addMember = mutation({
     // Check if member already exists (by name or linked user ID)
     const existing = await ctx.db
       .query('tripMembers')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     if (args.memberUserId) {
       const existingByUserId = existing.find(
-        (m) => m.userId === args.memberUserId
+        m => m.userId === args.memberUserId,
       );
       if (existingByUserId) {
         throw new Error('This user is already a member of this trip');
@@ -158,9 +159,8 @@ export const addOwnerAsMember = mutation({
     // Check if owner already exists as member
     const existing = await ctx.db
       .query('tripMembers')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (existing) {
@@ -193,9 +193,12 @@ export const updateMember = mutation({
     await checkMemberAccess(ctx, args.memberId, args.userId);
 
     const updates: Record<string, unknown> = {};
-    if (args.name !== undefined) updates.name = args.name;
-    if (args.email !== undefined) updates.email = args.email;
-    if (args.avatarUrl !== undefined) updates.avatarUrl = args.avatarUrl;
+    if (args.name !== undefined)
+      updates.name = args.name;
+    if (args.email !== undefined)
+      updates.email = args.email;
+    if (args.avatarUrl !== undefined)
+      updates.avatarUrl = args.avatarUrl;
 
     await ctx.db.patch(args.memberId, updates);
     return await ctx.db.get(args.memberId);
@@ -219,24 +222,24 @@ export const removeMember = mutation({
     // Check if member has any expenses
     const expenses = await ctx.db
       .query('sharedExpenses')
-      .withIndex('by_paid_by', (q) => q.eq('paidById', args.memberId))
+      .withIndex('by_paid_by', q => q.eq('paidById', args.memberId))
       .first();
 
     if (expenses) {
       throw new Error(
-        'Cannot remove a member who has paid for expenses. Delete the expenses first.'
+        'Cannot remove a member who has paid for expenses. Delete the expenses first.',
       );
     }
 
     // Check if member is participant in any expenses
     const participations = await ctx.db
       .query('expenseParticipants')
-      .withIndex('by_member', (q) => q.eq('memberId', args.memberId))
+      .withIndex('by_member', q => q.eq('memberId', args.memberId))
       .first();
 
     if (participations) {
       throw new Error(
-        'Cannot remove a member who is part of expense splits. Remove them from expenses first.'
+        'Cannot remove a member who is part of expense splits. Remove them from expenses first.',
       );
     }
 
@@ -257,17 +260,18 @@ export const listExpenses = query({
   handler: async (ctx, args) => {
     let expenses = await ctx.db
       .query('sharedExpenses')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     if (args.category) {
-      expenses = expenses.filter((e) => e.category === args.category);
+      expenses = expenses.filter(e => e.category === args.category);
     }
 
     // Sort by date descending, then by creation time
     expenses.sort((a, b) => {
       const dateCompare = b.date.localeCompare(a.date);
-      if (dateCompare !== 0) return dateCompare;
+      if (dateCompare !== 0)
+        return dateCompare;
       return b.createdAt - a.createdAt;
     });
 
@@ -277,7 +281,7 @@ export const listExpenses = query({
         const payer = await ctx.db.get(expense.paidById);
         const participants = await ctx.db
           .query('expenseParticipants')
-          .withIndex('by_expense', (q) => q.eq('expenseId', expense._id))
+          .withIndex('by_expense', q => q.eq('expenseId', expense._id))
           .collect();
 
         // Get participant member info
@@ -288,7 +292,7 @@ export const listExpenses = query({
               ...p,
               memberName: member?.name ?? 'Unknown',
             };
-          })
+          }),
         );
 
         return {
@@ -296,7 +300,7 @@ export const listExpenses = query({
           payerName: payer?.name ?? 'Unknown',
           participants: participantsWithInfo,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -310,12 +314,13 @@ export const getExpense = query({
   },
   handler: async (ctx, args) => {
     const expense = await ctx.db.get(args.expenseId);
-    if (!expense) return null;
+    if (!expense)
+      return null;
 
     const payer = await ctx.db.get(expense.paidById);
     const participants = await ctx.db
       .query('expenseParticipants')
-      .withIndex('by_expense', (q) => q.eq('expenseId', args.expenseId))
+      .withIndex('by_expense', q => q.eq('expenseId', args.expenseId))
       .collect();
 
     const participantsWithInfo = await Promise.all(
@@ -325,7 +330,7 @@ export const getExpense = query({
           ...p,
           memberName: member?.name ?? 'Unknown',
         };
-      })
+      }),
     );
 
     return {
@@ -355,7 +360,7 @@ export const addExpense = mutation({
       v.object({
         memberId: v.id('tripMembers'),
         splitValue: v.number(), // Meaning depends on splitType
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -369,7 +374,7 @@ export const addExpense = mutation({
     const participantsWithAmounts = calculateSplitAmounts(
       args.amount,
       args.splitType,
-      args.participants
+      args.participants,
     );
 
     const now = Date.now();
@@ -423,8 +428,8 @@ export const updateExpense = mutation({
         v.object({
           memberId: v.id('tripMembers'),
           splitValue: v.number(),
-        })
-      )
+        }),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -437,14 +442,22 @@ export const updateExpense = mutation({
 
     // Prepare updates
     const updates: Record<string, unknown> = { updatedAt: Date.now() };
-    if (args.paidById !== undefined) updates.paidById = args.paidById;
-    if (args.amount !== undefined) updates.amount = args.amount;
-    if (args.currency !== undefined) updates.currency = args.currency;
-    if (args.description !== undefined) updates.description = args.description;
-    if (args.category !== undefined) updates.category = args.category;
-    if (args.splitType !== undefined) updates.splitType = args.splitType;
-    if (args.date !== undefined) updates.date = args.date;
-    if (args.notes !== undefined) updates.notes = args.notes;
+    if (args.paidById !== undefined)
+      updates.paidById = args.paidById;
+    if (args.amount !== undefined)
+      updates.amount = args.amount;
+    if (args.currency !== undefined)
+      updates.currency = args.currency;
+    if (args.description !== undefined)
+      updates.description = args.description;
+    if (args.category !== undefined)
+      updates.category = args.category;
+    if (args.splitType !== undefined)
+      updates.splitType = args.splitType;
+    if (args.date !== undefined)
+      updates.date = args.date;
+    if (args.notes !== undefined)
+      updates.notes = args.notes;
     if (args.receiptImageUrl !== undefined)
       updates.receiptImageUrl = args.receiptImageUrl;
 
@@ -455,7 +468,7 @@ export const updateExpense = mutation({
       // Delete existing participants
       const existingParticipants = await ctx.db
         .query('expenseParticipants')
-        .withIndex('by_expense', (q) => q.eq('expenseId', args.expenseId))
+        .withIndex('by_expense', q => q.eq('expenseId', args.expenseId))
         .collect();
 
       for (const p of existingParticipants) {
@@ -468,7 +481,7 @@ export const updateExpense = mutation({
       const participantsWithAmounts = calculateSplitAmounts(
         amount,
         splitType,
-        args.participants
+        args.participants,
       );
 
       // Create new participant records
@@ -503,7 +516,7 @@ export const deleteExpense = mutation({
     // Delete participants first
     const participants = await ctx.db
       .query('expenseParticipants')
-      .withIndex('by_expense', (q) => q.eq('expenseId', args.expenseId))
+      .withIndex('by_expense', q => q.eq('expenseId', args.expenseId))
       .collect();
 
     for (const p of participants) {
@@ -527,12 +540,12 @@ export const getBalances = query({
   handler: async (ctx, args) => {
     const members = await ctx.db
       .query('tripMembers')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     const expenses = await ctx.db
       .query('sharedExpenses')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Initialize balances
@@ -550,7 +563,7 @@ export const getBalances = query({
       // Get participants and their owed amounts
       const participants = await ctx.db
         .query('expenseParticipants')
-        .withIndex('by_expense', (q) => q.eq('expenseId', expense._id))
+        .withIndex('by_expense', q => q.eq('expenseId', expense._id))
         .collect();
 
       // Each participant owes their share (debit)
@@ -563,7 +576,7 @@ export const getBalances = query({
     // Account for existing settlements
     const settlements = await ctx.db
       .query('settlements')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     for (const settlement of settlements) {
@@ -579,7 +592,7 @@ export const getBalances = query({
     }
 
     // Build response with member info
-    const result = members.map((member) => ({
+    const result = members.map(member => ({
       memberId: member._id,
       memberName: member.name,
       avatarUrl: member.avatarUrl,
@@ -599,7 +612,7 @@ export const getExpenseSummary = query({
   handler: async (ctx, args) => {
     const expenses = await ctx.db
       .query('sharedExpenses')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Calculate totals by category
@@ -620,7 +633,7 @@ export const getExpenseSummary = query({
       'shopping',
       'other',
     ];
-    const breakdown = categories.map((category) => ({
+    const breakdown = categories.map(category => ({
       category,
       amount: categoryTotals.get(category) ?? 0,
       percentage:
@@ -651,12 +664,12 @@ export const getSettlementSuggestions = query({
     // Get current balances
     const members = await ctx.db
       .query('tripMembers')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     const expenses = await ctx.db
       .query('sharedExpenses')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Initialize balances
@@ -678,7 +691,7 @@ export const getSettlementSuggestions = query({
 
       const participants = await ctx.db
         .query('expenseParticipants')
-        .withIndex('by_expense', (q) => q.eq('expenseId', expense._id))
+        .withIndex('by_expense', q => q.eq('expenseId', expense._id))
         .collect();
 
       for (const participant of participants) {
@@ -690,7 +703,7 @@ export const getSettlementSuggestions = query({
     // Account for existing settled settlements
     const settlements = await ctx.db
       .query('settlements')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     for (const settlement of settlements) {
@@ -709,8 +722,8 @@ export const getSettlementSuggestions = query({
     return {
       suggestions,
       pendingSettlements: settlements
-        .filter((s) => !s.isSettled)
-        .map((s) => ({
+        .filter(s => !s.isSettled)
+        .map(s => ({
           ...s,
           fromMemberName: memberInfo.get(s.fromMemberId)?.name ?? 'Unknown',
           toMemberName: memberInfo.get(s.toMemberId)?.name ?? 'Unknown',
@@ -806,13 +819,14 @@ export const listSettlements = query({
   handler: async (ctx, args) => {
     let settlements = await ctx.db
       .query('settlements')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     if (args.showSettled === false) {
-      settlements = settlements.filter((s) => !s.isSettled);
-    } else if (args.showSettled === true) {
-      settlements = settlements.filter((s) => s.isSettled);
+      settlements = settlements.filter(s => !s.isSettled);
+    }
+    else if (args.showSettled === true) {
+      settlements = settlements.filter(s => s.isSettled);
     }
 
     // Enrich with member info
@@ -830,7 +844,7 @@ export const listSettlements = query({
           toMemberName: toMember?.name ?? 'Unknown',
           toMemberAvatarUrl: toMember?.avatarUrl,
         };
-      })
+      }),
     );
 
     return enriched.sort((a, b) => b.createdAt - a.createdAt);
@@ -847,7 +861,7 @@ export const listSettlements = query({
 function calculateSplitAmounts(
   totalAmount: number,
   splitType: string,
-  participants: Array<{ memberId: Id<'tripMembers'>; splitValue: number }>
+  participants: Array<{ memberId: Id<'tripMembers'>; splitValue: number }>,
 ): Array<{
   memberId: Id<'tripMembers'>;
   splitValue: number;
@@ -893,7 +907,7 @@ function calculateSplitAmounts(
       // Percentage-based - splitValue is the percentage (0-100)
       const totalPercentage = participants.reduce(
         (sum, p) => sum + p.splitValue,
-        0
+        0,
       );
       if (Math.abs(totalPercentage - 100) > 0.01) {
         throw new Error('Percentages must sum to 100');
@@ -907,7 +921,8 @@ function calculateSplitAmounts(
         if (i === participants.length - 1) {
           // Last person gets the remainder to avoid rounding issues
           amountOwed = totalAmount - allocated;
-        } else {
+        }
+        else {
           amountOwed = Math.round((p.splitValue / 100) * totalAmount);
         }
 
@@ -926,7 +941,7 @@ function calculateSplitAmounts(
       // Share-based - splitValue is the number of shares
       const totalShares = participants.reduce(
         (sum, p) => sum + p.splitValue,
-        0
+        0,
       );
       if (totalShares === 0) {
         throw new Error('Total shares must be greater than 0');
@@ -939,7 +954,8 @@ function calculateSplitAmounts(
 
         if (i === participants.length - 1) {
           amountOwed = totalAmount - allocated;
-        } else {
+        }
+        else {
           amountOwed = Math.round((p.splitValue / totalShares) * totalAmount);
         }
 
@@ -967,7 +983,7 @@ function calculateSplitAmounts(
  */
 function calculateMinimumTransfers(
   balances: Map<string, number>,
-  memberInfo: Map<string, { name: string; avatarUrl?: string }>
+  memberInfo: Map<string, { name: string; avatarUrl?: string }>,
 ): Array<{
   fromMemberId: string;
   fromMemberName: string;
@@ -991,7 +1007,8 @@ function calculateMinimumTransfers(
     if (balance < -1) {
       // Threshold to avoid tiny amounts due to rounding
       debtors.push({ id, amount: -balance });
-    } else if (balance > 1) {
+    }
+    else if (balance > 1) {
       creditors.push({ id, amount: balance });
     }
   });

@@ -20,7 +20,7 @@ const transportModeValidator = v.union(
   v.literal('driving'),
   v.literal('transit'),
   v.literal('cycling'),
-  v.literal('taxi')
+  v.literal('taxi'),
 );
 
 const poiCategoryValidator = v.union(
@@ -28,13 +28,13 @@ const poiCategoryValidator = v.union(
   v.literal('restaurant'),
   v.literal('hotel'),
   v.literal('shopping'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const visibilityValidator = v.union(
   v.literal('private'),
   v.literal('team'),
-  v.literal('public')
+  v.literal('public'),
 );
 
 const draftItemValidator = v.object({
@@ -51,7 +51,7 @@ const draftItemValidator = v.object({
       address: v.optional(v.string()),
       latitude: v.optional(v.number()),
       longitude: v.optional(v.number()),
-    })
+    }),
   ),
 });
 
@@ -77,13 +77,13 @@ export const listByUser = query({
 
     const drafts = await ctx.db
       .query('itineraryDrafts')
-      .withIndex('by_user_modified', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_modified', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
     // Filter out expired drafts
     const now = Date.now();
-    const validDrafts = drafts.filter((d) => d.expiresAt > now);
+    const validDrafts = drafts.filter(d => d.expiresAt > now);
 
     const total = validDrafts.length;
     const data = validDrafts.slice(offset, offset + pageSize);
@@ -96,7 +96,7 @@ export const listByUser = query({
           ...draft,
           cityName: city?.name,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -110,7 +110,8 @@ export const getById = query({
   args: { id: v.id('itineraryDrafts') },
   handler: async (ctx, args) => {
     const draft = await ctx.db.get(args.id);
-    if (!draft) return null;
+    if (!draft)
+      return null;
 
     // Check if expired
     if (draft.expiresAt < Date.now()) {
@@ -137,9 +138,8 @@ export const getByItinerary = query({
   handler: async (ctx, args) => {
     const draft = await ctx.db
       .query('itineraryDrafts')
-      .withIndex('by_user_itinerary', (q) =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId)
-      )
+      .withIndex('by_user_itinerary', q =>
+        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
       .first();
 
     if (!draft || draft.expiresAt < Date.now()) {
@@ -192,11 +192,11 @@ export const save = mutation({
 
       // Optimistic locking check
       if (
-        args.expectedVersion !== undefined &&
-        existing.syncVersion !== args.expectedVersion
+        args.expectedVersion !== undefined
+        && existing.syncVersion !== args.expectedVersion
       ) {
         throw new Error(
-          'Draft has been modified by another device. Please refresh and try again.'
+          'Draft has been modified by another device. Please refresh and try again.',
         );
       }
 
@@ -221,9 +221,8 @@ export const save = mutation({
     if (args.itineraryId) {
       const existingDraft = await ctx.db
         .query('itineraryDrafts')
-        .withIndex('by_user_itinerary', (q) =>
-          q.eq('userId', args.userId).eq('itineraryId', args.itineraryId)
-        )
+        .withIndex('by_user_itinerary', q =>
+          q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
         .first();
 
       if (existingDraft) {
@@ -300,9 +299,8 @@ export const removeByItinerary = mutation({
   handler: async (ctx, args) => {
     const draft = await ctx.db
       .query('itineraryDrafts')
-      .withIndex('by_user_itinerary', (q) =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId)
-      )
+      .withIndex('by_user_itinerary', q =>
+        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
       .first();
 
     if (draft) {
@@ -325,7 +323,7 @@ export const cleanupExpired = mutation({
     const expiredDrafts = await ctx.db
       .query('itineraryDrafts')
       .withIndex('by_expires')
-      .filter((q) => q.lt(q.field('expiresAt'), now))
+      .filter(q => q.lt(q.field('expiresAt'), now))
       .take(batchSize);
 
     let deletedCount = 0;
@@ -349,11 +347,11 @@ export const countByUser = query({
     const now = Date.now();
     const drafts = await ctx.db
       .query('itineraryDrafts')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Count only non-expired drafts
-    return drafts.filter((d) => d.expiresAt > now).length;
+    return drafts.filter(d => d.expiresAt > now).length;
   },
 });
 

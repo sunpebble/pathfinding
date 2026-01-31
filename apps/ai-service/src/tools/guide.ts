@@ -43,7 +43,7 @@ export const guideDetailTool = tool(
           id: guide._id,
           title: guide.title,
           destinations: guide.destinations,
-          content: `${guide.content?.substring(0, 1000)  }...`, // Truncate for context
+          content: `${guide.content?.substring(0, 1000)}...`, // Truncate for context
           aiSummary: guide.aiSummary,
           aiTips: guide.aiTips,
           aiBestTime: guide.aiBestTime,
@@ -53,11 +53,12 @@ export const guideDetailTool = tool(
           poisCount:
             guide.aiDays?.reduce(
               (acc: number, day: any) => acc + (day.pois?.length || 0),
-              0
+              0,
             ) || 0,
         },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch guide',
@@ -70,7 +71,7 @@ export const guideDetailTool = tool(
     schema: z.object({
       guideId: z.string().describe('旅行攻略的ID'),
     }),
-  }
+  },
 );
 
 /**
@@ -103,7 +104,8 @@ export const searchGuidesTool = tool(
           qualityScore: g.qualityScore,
         })),
       });
-    } catch (error) {
+    }
+    catch (error) {
       return JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : 'Search failed',
@@ -118,5 +120,5 @@ export const searchGuidesTool = tool(
       destination: z.string().describe('目的地名称，如"杭州"、"西湖"'),
       limit: z.number().min(1).max(20).default(5).describe('返回结果数量限制'),
     }),
-  }
+  },
 );

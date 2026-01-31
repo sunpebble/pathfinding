@@ -30,7 +30,7 @@ export async function createPage(context: BrowserContext): Promise<Page> {
 export async function scrollToLoadContent(page: Page): Promise<void> {
   for (let i = 0; i < 3; i++) {
     await page.evaluate(() => window.scrollBy(0, 500));
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 }
 
@@ -40,11 +40,12 @@ export async function scrollToLoadContent(page: Page): Promise<void> {
 export async function waitForContent(
   page: Page,
   selector: string,
-  timeout = 15000
+  timeout = 15000,
 ): Promise<void> {
   try {
     await page.waitForSelector(selector, { timeout });
-  } catch {
+  }
+  catch {
     // Ignore timeout, continue with available content
   }
 }

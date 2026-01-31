@@ -17,7 +17,7 @@ const travelStyleValidator = v.union(
   v.literal('shopping'),
   v.literal('photography'),
   v.literal('budget'),
-  v.literal('luxury')
+  v.literal('luxury'),
 );
 
 const ageRangeValidator = v.union(
@@ -25,14 +25,14 @@ const ageRangeValidator = v.union(
   v.literal('26-35'),
   v.literal('36-45'),
   v.literal('46-55'),
-  v.literal('55+')
+  v.literal('55+'),
 );
 
 const genderValidator = v.union(
   v.literal('male'),
   v.literal('female'),
   v.literal('other'),
-  v.literal('any')
+  v.literal('any'),
 );
 
 const requestStatusValidator = v.union(
@@ -40,7 +40,7 @@ const requestStatusValidator = v.union(
   v.literal('paused'),
   v.literal('fulfilled'),
   v.literal('cancelled'),
-  v.literal('expired')
+  v.literal('expired'),
 );
 
 const applicationStatusValidator = v.union(
@@ -48,14 +48,14 @@ const applicationStatusValidator = v.union(
   v.literal('accepted'),
   v.literal('rejected'),
   v.literal('withdrawn'),
-  v.literal('expired')
+  v.literal('expired'),
 );
 
 const budgetRangeValidator = v.union(
   v.literal('budget'),
   v.literal('moderate'),
   v.literal('comfortable'),
-  v.literal('luxury')
+  v.literal('luxury'),
 );
 
 // ============================================
@@ -70,7 +70,7 @@ export const getTravelPreferences = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('userTravelPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
   },
 });
@@ -83,12 +83,12 @@ export const upsertTravelPreferences = mutation({
     userId: v.string(),
     travelStyles: v.optional(v.array(travelStyleValidator)),
     preferredPace: v.optional(
-      v.union(v.literal('slow'), v.literal('moderate'), v.literal('fast'))
+      v.union(v.literal('slow'), v.literal('moderate'), v.literal('fast')),
     ),
     languages: v.optional(v.array(v.string())),
     ageRange: v.optional(ageRangeValidator),
     gender: v.optional(
-      v.union(v.literal('male'), v.literal('female'), v.literal('other'))
+      v.union(v.literal('male'), v.literal('female'), v.literal('other')),
     ),
     preferredPartnerGender: v.optional(genderValidator),
     bio: v.optional(v.string()),
@@ -97,8 +97,8 @@ export const upsertTravelPreferences = mutation({
       v.union(
         v.literal('smoker'),
         v.literal('non_smoker'),
-        v.literal('no_preference')
-      )
+        v.literal('no_preference'),
+      ),
     ),
     accommodationPreference: v.optional(
       v.union(
@@ -106,14 +106,14 @@ export const upsertTravelPreferences = mutation({
         v.literal('budget_hotel'),
         v.literal('mid_range'),
         v.literal('luxury'),
-        v.literal('no_preference')
-      )
+        v.literal('no_preference'),
+      ),
     ),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userTravelPreferences')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     const now = Date.now();
@@ -162,39 +162,40 @@ export const listRequests = query({
     // Get active requests
     let requests = await ctx.db
       .query('travelPartnerRequests')
-      .withIndex('by_status', (q) => q.eq('status', 'active'))
+      .withIndex('by_status', q => q.eq('status', 'active'))
       .order('desc')
       .collect();
 
     // Apply filters
     if (args.destination) {
       const destLower = args.destination.toLowerCase();
-      requests = requests.filter((r) =>
-        r.destination.toLowerCase().includes(destLower)
+      requests = requests.filter(r =>
+        r.destination.toLowerCase().includes(destLower),
       );
     }
 
     if (args.cityId) {
-      requests = requests.filter((r) => r.destinationCityId === args.cityId);
+      requests = requests.filter(r => r.destinationCityId === args.cityId);
     }
 
     if (args.startDateFrom) {
-      requests = requests.filter((r) => r.startDate >= args.startDateFrom!);
+      requests = requests.filter(r => r.startDate >= args.startDateFrom!);
     }
 
     if (args.startDateTo) {
-      requests = requests.filter((r) => r.startDate <= args.startDateTo!);
+      requests = requests.filter(r => r.startDate <= args.startDateTo!);
     }
 
     if (args.budgetRange) {
-      requests = requests.filter((r) => r.budgetRange === args.budgetRange);
+      requests = requests.filter(r => r.budgetRange === args.budgetRange);
     }
 
     if (args.travelStyles && args.travelStyles.length > 0) {
       requests = requests.filter((r) => {
-        if (!r.travelStyles) return false;
-        return args.travelStyles!.some((style) =>
-          r.travelStyles!.includes(style)
+        if (!r.travelStyles)
+          return false;
+        return args.travelStyles!.some(style =>
+          r.travelStyles!.includes(style),
         );
       });
     }
@@ -212,22 +213,22 @@ export const listRequests = query({
         // Get user profile
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), request.userId))
+          .filter(q => q.eq(q.field('email'), request.userId))
           .first();
 
         // Get user trust score
         const trustScore = await ctx.db
           .query('userTrustScores')
-          .withIndex('by_user', (q) => q.eq('userId', request.userId))
+          .withIndex('by_user', q => q.eq('userId', request.userId))
           .first();
 
         // Get user verifications count
         const verifications = await ctx.db
           .query('userVerifications')
-          .withIndex('by_user', (q) => q.eq('userId', request.userId))
+          .withIndex('by_user', q => q.eq('userId', request.userId))
           .collect();
         const verifiedCount = verifications.filter(
-          (v) => v.status === 'verified'
+          v => v.status === 'verified',
         ).length;
 
         return {
@@ -243,7 +244,7 @@ export const listRequests = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -257,7 +258,8 @@ export const getRequestById = query({
   args: { id: v.id('travelPartnerRequests') },
   handler: async (ctx, args) => {
     const request = await ctx.db.get(args.id);
-    if (!request) return null;
+    if (!request)
+      return null;
 
     const city = request.destinationCityId
       ? await ctx.db.get(request.destinationCityId)
@@ -266,25 +268,25 @@ export const getRequestById = query({
     // Get user profile
     const profile = await ctx.db
       .query('profiles')
-      .filter((q) => q.eq(q.field('email'), request.userId))
+      .filter(q => q.eq(q.field('email'), request.userId))
       .first();
 
     // Get user trust score
     const trustScore = await ctx.db
       .query('userTrustScores')
-      .withIndex('by_user', (q) => q.eq('userId', request.userId))
+      .withIndex('by_user', q => q.eq('userId', request.userId))
       .first();
 
     // Get user verifications
     const verifications = await ctx.db
       .query('userVerifications')
-      .withIndex('by_user', (q) => q.eq('userId', request.userId))
+      .withIndex('by_user', q => q.eq('userId', request.userId))
       .collect();
 
     // Get applications count
     const applications = await ctx.db
       .query('partnerMatchApplications')
-      .withIndex('by_request', (q) => q.eq('requestId', args.id))
+      .withIndex('by_request', q => q.eq('requestId', args.id))
       .collect();
 
     // Get linked itinerary if exists
@@ -303,12 +305,12 @@ export const getRequestById = query({
             bio: profile.bio,
             trustScore: trustScore?.overallScore ?? 0,
             badges: trustScore?.badges ?? [],
-            verifications: verifications.filter((v) => v.status === 'verified'),
+            verifications: verifications.filter(v => v.status === 'verified'),
           }
         : null,
       applicationsCount: applications.length,
       pendingApplicationsCount: applications.filter(
-        (a) => a.status === 'pending'
+        a => a.status === 'pending',
       ).length,
       itinerary: itinerary
         ? {
@@ -339,12 +341,12 @@ export const listMyRequests = query({
 
     let requests = await ctx.db
       .query('travelPartnerRequests')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
     if (args.status) {
-      requests = requests.filter((r) => r.status === args.status);
+      requests = requests.filter(r => r.status === args.status);
     }
 
     const total = requests.length;
@@ -359,7 +361,7 @@ export const listMyRequests = query({
 
         const applications = await ctx.db
           .query('partnerMatchApplications')
-          .withIndex('by_request', (q) => q.eq('requestId', request._id))
+          .withIndex('by_request', q => q.eq('requestId', request._id))
           .collect();
 
         return {
@@ -367,10 +369,10 @@ export const listMyRequests = query({
           cityName: city?.name,
           applicationsCount: applications.length,
           pendingApplicationsCount: applications.filter(
-            (a) => a.status === 'pending'
+            a => a.status === 'pending',
           ).length,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -468,7 +470,7 @@ export const updateRequest = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -501,7 +503,7 @@ export const deleteRequest = mutation({
     // Delete all related applications
     const applications = await ctx.db
       .query('partnerMatchApplications')
-      .withIndex('by_request', (q) => q.eq('requestId', args.id))
+      .withIndex('by_request', q => q.eq('requestId', args.id))
       .collect();
 
     for (const app of applications) {
@@ -511,7 +513,7 @@ export const deleteRequest = mutation({
     // Delete all related matches
     const matches = await ctx.db
       .query('partnerMatches')
-      .withIndex('by_request', (q) => q.eq('requestId', args.id))
+      .withIndex('by_request', q => q.eq('requestId', args.id))
       .collect();
 
     for (const match of matches) {
@@ -521,7 +523,7 @@ export const deleteRequest = mutation({
     // Delete all saves
     const saves = await ctx.db
       .query('partnerRequestSaves')
-      .withIndex('by_request', (q) => q.eq('requestId', args.id))
+      .withIndex('by_request', q => q.eq('requestId', args.id))
       .collect();
 
     for (const save of saves) {
@@ -578,11 +580,11 @@ export const applyToRequest = mutation({
     // Check if already applied
     const existing = await ctx.db
       .query('partnerMatchApplications')
-      .withIndex('by_request', (q) => q.eq('requestId', args.requestId))
+      .withIndex('by_request', q => q.eq('requestId', args.requestId))
       .collect();
 
     const alreadyApplied = existing.find(
-      (a) => a.applicantId === args.applicantId && a.status !== 'withdrawn'
+      a => a.applicantId === args.applicantId && a.status !== 'withdrawn',
     );
     if (alreadyApplied) {
       throw new Error('You have already applied to this request');
@@ -592,7 +594,7 @@ export const applyToRequest = mutation({
     const matchScore = await calculateMatchScore(
       ctx,
       args.applicantId,
-      request
+      request,
     );
 
     const now = Date.now();
@@ -628,12 +630,12 @@ async function calculateMatchScore(
     preferredGender?: string;
     travelStyles?: string[];
     budgetRange?: string;
-  }
+  },
 ) {
   // Get applicant's preferences
   const applicantPrefs = await ctx.db
     .query('userTravelPreferences')
-    .withIndex('by_user', (q) => q.eq('userId', applicantId))
+    .withIndex('by_user', q => q.eq('userId', applicantId))
     .first();
 
   const factors: {
@@ -649,16 +651,16 @@ async function calculateMatchScore(
 
   // Travel style match
   if (request.travelStyles && applicantPrefs?.travelStyles) {
-    const matchingStyles = request.travelStyles.filter((style) =>
-      applicantPrefs.travelStyles!.includes(style as any)
+    const matchingStyles = request.travelStyles.filter(style =>
+      applicantPrefs.travelStyles!.includes(style as any),
     );
     factors.styleMatch = Math.round(
-      (matchingStyles.length /
-        Math.max(
+      (matchingStyles.length
+        / Math.max(
           request.travelStyles.length,
-          applicantPrefs.travelStyles.length
-        )) *
-        100
+          applicantPrefs.travelStyles.length,
+        ))
+        * 100,
     );
     totalScore += factors.styleMatch;
     factorCount++;
@@ -667,7 +669,7 @@ async function calculateMatchScore(
   // Age range match
   if (request.preferredAgeRange && applicantPrefs?.ageRange) {
     factors.ageMatch = request.preferredAgeRange.includes(
-      applicantPrefs.ageRange
+      applicantPrefs.ageRange,
     )
       ? 100
       : 50;
@@ -685,7 +687,7 @@ async function calculateMatchScore(
     };
     const compatibleAccommodations = budgetMap[request.budgetRange] || [];
     factors.budgetMatch = compatibleAccommodations.includes(
-      applicantPrefs.accommodationPreference
+      applicantPrefs.accommodationPreference,
     )
       ? 100
       : 60;
@@ -726,12 +728,12 @@ export const listApplications = query({
 
     let applications = await ctx.db
       .query('partnerMatchApplications')
-      .withIndex('by_request', (q) => q.eq('requestId', args.requestId))
+      .withIndex('by_request', q => q.eq('requestId', args.requestId))
       .order('desc')
       .collect();
 
     if (args.status) {
-      applications = applications.filter((a) => a.status === args.status);
+      applications = applications.filter(a => a.status === args.status);
     }
 
     const total = applications.length;
@@ -742,22 +744,22 @@ export const listApplications = query({
       data.map(async (app) => {
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), app.applicantId))
+          .filter(q => q.eq(q.field('email'), app.applicantId))
           .first();
 
         const trustScore = await ctx.db
           .query('userTrustScores')
-          .withIndex('by_user', (q) => q.eq('userId', app.applicantId))
+          .withIndex('by_user', q => q.eq('userId', app.applicantId))
           .first();
 
         const verifications = await ctx.db
           .query('userVerifications')
-          .withIndex('by_user', (q) => q.eq('userId', app.applicantId))
+          .withIndex('by_user', q => q.eq('userId', app.applicantId))
           .collect();
 
         const prefs = await ctx.db
           .query('userTravelPreferences')
-          .withIndex('by_user', (q) => q.eq('userId', app.applicantId))
+          .withIndex('by_user', q => q.eq('userId', app.applicantId))
           .first();
 
         return {
@@ -771,13 +773,13 @@ export const listApplications = query({
                 trustScore: trustScore?.overallScore ?? 0,
                 badges: trustScore?.badges ?? [],
                 verifications: verifications.filter(
-                  (v) => v.status === 'verified'
+                  v => v.status === 'verified',
                 ),
                 preferences: prefs,
               }
             : null,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -801,12 +803,12 @@ export const listMyApplications = query({
 
     let applications = await ctx.db
       .query('partnerMatchApplications')
-      .withIndex('by_applicant', (q) => q.eq('applicantId', args.userId))
+      .withIndex('by_applicant', q => q.eq('applicantId', args.userId))
       .order('desc')
       .collect();
 
     if (args.status) {
-      applications = applications.filter((a) => a.status === args.status);
+      applications = applications.filter(a => a.status === args.status);
     }
 
     const total = applications.length;
@@ -834,7 +836,7 @@ export const listMyApplications = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -988,8 +990,8 @@ export const listMatches = query({
       v.union(
         v.literal('active'),
         v.literal('completed'),
-        v.literal('cancelled')
-      )
+        v.literal('cancelled'),
+      ),
     ),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
@@ -1002,23 +1004,23 @@ export const listMatches = query({
     // Get matches where user is owner
     const ownerMatches = await ctx.db
       .query('partnerMatches')
-      .withIndex('by_owner', (q) => q.eq('requestOwnerId', args.userId))
+      .withIndex('by_owner', q => q.eq('requestOwnerId', args.userId))
       .collect();
 
     // Get matches where user is partner
     const partnerMatches = await ctx.db
       .query('partnerMatches')
-      .withIndex('by_partner', (q) => q.eq('partnerId', args.userId))
+      .withIndex('by_partner', q => q.eq('partnerId', args.userId))
       .collect();
 
     // Combine and deduplicate
     let allMatches = [
-      ...ownerMatches.map((m) => ({ ...m, userRole: 'owner' as const })),
-      ...partnerMatches.map((m) => ({ ...m, userRole: 'partner' as const })),
+      ...ownerMatches.map(m => ({ ...m, userRole: 'owner' as const })),
+      ...partnerMatches.map(m => ({ ...m, userRole: 'partner' as const })),
     ];
 
     if (args.status) {
-      allMatches = allMatches.filter((m) => m.status === args.status);
+      allMatches = allMatches.filter(m => m.status === args.status);
     }
 
     // Sort by createdAt descending
@@ -1030,12 +1032,12 @@ export const listMatches = query({
     // Enrich with partner info
     const enriched = await Promise.all(
       data.map(async (match) => {
-        const otherUserId =
-          match.userRole === 'owner' ? match.partnerId : match.requestOwnerId;
+        const otherUserId
+          = match.userRole === 'owner' ? match.partnerId : match.requestOwnerId;
 
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), otherUserId))
+          .filter(q => q.eq(q.field('email'), otherUserId))
           .first();
 
         const request = await ctx.db.get(match.requestId);
@@ -1056,7 +1058,7 @@ export const listMatches = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -1093,12 +1095,14 @@ export const submitMatchFeedback = mutation({
         ownerFeedback: feedback,
         updatedAt: now,
       });
-    } else if (match.partnerId === args.userId) {
+    }
+    else if (match.partnerId === args.userId) {
       await ctx.db.patch(args.matchId, {
         partnerFeedback: feedback,
         updatedAt: now,
       });
-    } else {
+    }
+    else {
       throw new Error('You are not part of this match');
     }
 
@@ -1123,39 +1127,40 @@ async function updateTrustScore(ctx: MutationCtx, userId: string) {
   // Get all verifications
   const verifications = await ctx.db
     .query('userVerifications')
-    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .withIndex('by_user', q => q.eq('userId', userId))
     .collect();
   const verifiedCount = verifications.filter(
-    (v) => v.status === 'verified'
+    v => v.status === 'verified',
   ).length;
   const verificationScore = Math.min(verifiedCount * 15, 30);
 
   // Get all matches for feedback
   const ownerMatches = await ctx.db
     .query('partnerMatches')
-    .withIndex('by_owner', (q) => q.eq('requestOwnerId', userId))
+    .withIndex('by_owner', q => q.eq('requestOwnerId', userId))
     .collect();
   const partnerMatches = await ctx.db
     .query('partnerMatches')
-    .withIndex('by_partner', (q) => q.eq('partnerId', userId))
+    .withIndex('by_partner', q => q.eq('partnerId', userId))
     .collect();
 
   const allMatches = [...ownerMatches, ...partnerMatches];
-  const completedMatches = allMatches.filter((m) => m.status === 'completed');
-  const cancelledMatches = allMatches.filter((m) => m.status === 'cancelled');
+  const completedMatches = allMatches.filter(m => m.status === 'completed');
+  const cancelledMatches = allMatches.filter(m => m.status === 'cancelled');
 
   // Calculate ratings received
   const ratings: number[] = [];
   for (const match of completedMatches) {
     if (match.requestOwnerId === userId && match.partnerFeedback) {
       ratings.push(match.partnerFeedback.rating);
-    } else if (match.partnerId === userId && match.ownerFeedback) {
+    }
+    else if (match.partnerId === userId && match.ownerFeedback) {
       ratings.push(match.ownerFeedback.rating);
     }
   }
 
-  const averageRating =
-    ratings.length > 0
+  const averageRating
+    = ratings.length > 0
       ? ratings.reduce((a, b) => a + b, 0) / ratings.length
       : 0;
   const feedbackScore = Math.round((averageRating / 5) * 30);
@@ -1167,22 +1172,26 @@ async function updateTrustScore(ctx: MutationCtx, userId: string) {
   const responseScore = 15;
 
   // Calculate overall score
-  const overallScore =
-    verificationScore + feedbackScore + activityScore + responseScore;
+  const overallScore
+    = verificationScore + feedbackScore + activityScore + responseScore;
 
   // Determine badges
   const badges: string[] = [];
-  if (verifiedCount > 0) badges.push('verified_identity');
-  if (completedMatches.length >= 5) badges.push('experienced');
-  if (averageRating >= 4.5 && ratings.length >= 3) badges.push('top_rated');
-  if (overallScore >= 70) badges.push('trusted_traveler');
+  if (verifiedCount > 0)
+    badges.push('verified_identity');
+  if (completedMatches.length >= 5)
+    badges.push('experienced');
+  if (averageRating >= 4.5 && ratings.length >= 3)
+    badges.push('top_rated');
+  if (overallScore >= 70)
+    badges.push('trusted_traveler');
 
   const now = Date.now();
 
   // Check if trust score exists
   const existing = await ctx.db
     .query('userTrustScores')
-    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .withIndex('by_user', q => q.eq('userId', userId))
     .first();
 
   if (existing) {
@@ -1201,7 +1210,8 @@ async function updateTrustScore(ctx: MutationCtx, userId: string) {
       lastCalculatedAt: now,
       updatedAt: now,
     });
-  } else {
+  }
+  else {
     await ctx.db.insert('userTrustScores', {
       userId,
       overallScore,
@@ -1237,9 +1247,8 @@ export const toggleSaveRequest = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('partnerRequestSaves')
-      .withIndex('by_user_request', (q) =>
-        q.eq('userId', args.userId).eq('requestId', args.requestId)
-      )
+      .withIndex('by_user_request', q =>
+        q.eq('userId', args.userId).eq('requestId', args.requestId))
       .first();
 
     if (existing) {
@@ -1272,7 +1281,7 @@ export const listSavedRequests = query({
 
     const saves = await ctx.db
       .query('partnerRequestSaves')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -1283,7 +1292,8 @@ export const listSavedRequests = query({
     const enriched = await Promise.all(
       data.map(async (save) => {
         const request = await ctx.db.get(save.requestId);
-        if (!request) return null;
+        if (!request)
+          return null;
 
         const city = request.destinationCityId
           ? await ctx.db.get(request.destinationCityId)
@@ -1291,7 +1301,7 @@ export const listSavedRequests = query({
 
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), request.userId))
+          .filter(q => q.eq(q.field('email'), request.userId))
           .first();
 
         return {
@@ -1307,11 +1317,11 @@ export const listSavedRequests = query({
               : null,
           },
         };
-      })
+      }),
     );
 
     return {
-      data: enriched.filter((e) => e !== null),
+      data: enriched.filter(e => e !== null),
       total,
     };
   },
@@ -1328,9 +1338,8 @@ export const isRequestSaved = query({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('partnerRequestSaves')
-      .withIndex('by_user_request', (q) =>
-        q.eq('userId', args.userId).eq('requestId', args.requestId)
-      )
+      .withIndex('by_user_request', q =>
+        q.eq('userId', args.userId).eq('requestId', args.requestId))
       .first();
 
     return existing !== null;
@@ -1349,7 +1358,7 @@ export const getUserVerifications = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('userVerifications')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
   },
 });
@@ -1366,7 +1375,7 @@ export const submitVerification = mutation({
       v.literal('email'),
       v.literal('social'),
       v.literal('travel_history'),
-      v.literal('reference')
+      v.literal('reference'),
     ),
     verificationData: v.optional(v.string()),
     verificationMethod: v.optional(v.string()),
@@ -1379,11 +1388,10 @@ export const submitVerification = mutation({
     // Check if verification already exists
     const existing = await ctx.db
       .query('userVerifications')
-      .withIndex('by_user_type', (q) =>
+      .withIndex('by_user_type', q =>
         q
           .eq('userId', args.userId)
-          .eq('verificationType', args.verificationType)
-      )
+          .eq('verificationType', args.verificationType))
       .first();
 
     if (existing && existing.status === 'verified') {
@@ -1421,7 +1429,7 @@ export const getUserTrustScore = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('userTrustScores')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
   },
 });

@@ -69,7 +69,7 @@ describe('getBoundingBox', () => {
     const large = getBoundingBox(39.9042, 116.4074, 10);
 
     expect(large.maxLat - large.minLat).toBeGreaterThan(
-      small.maxLat - small.minLat
+      small.maxLat - small.minLat,
     );
   });
 });

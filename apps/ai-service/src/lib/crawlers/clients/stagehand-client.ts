@@ -67,8 +67,8 @@ export class StagehandBrowserClient implements BrowserClient {
     this.options = options || {};
 
     // Determine environment: prefer STAGEHAND_ENV, fallback to STEEL_LOCAL
-    const env =
-      process.env.STAGEHAND_ENV === 'BROWSERBASE'
+    const env
+      = process.env.STAGEHAND_ENV === 'BROWSERBASE'
         ? 'BROWSERBASE'
         : process.env.STEEL_LOCAL === 'true'
           ? 'LOCAL'
@@ -77,7 +77,7 @@ export class StagehandBrowserClient implements BrowserClient {
     // Create custom OpenAI client for Stagehand
     if (!process.env.STAGEHAND_API_KEY) {
       throw new Error(
-        'STAGEHAND_API_KEY environment variable is required for Stagehand client'
+        'STAGEHAND_API_KEY environment variable is required for Stagehand client',
       );
     }
 
@@ -131,7 +131,7 @@ export class StagehandBrowserClient implements BrowserClient {
     options?: {
       timeout?: number;
       waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
-    }
+    },
   ): Promise<void> {
     this.ensureInitialized();
     const page = this.stagehand!.context.activePage();
@@ -195,7 +195,7 @@ export class StagehandBrowserClient implements BrowserClient {
     this.networkCaptureEnabled = true;
 
     log.warn(
-      'Network capture not fully supported with Stagehand V3 - events may not be captured'
+      'Network capture not fully supported with Stagehand V3 - events may not be captured',
     );
   }
 
@@ -205,14 +205,14 @@ export class StagehandBrowserClient implements BrowserClient {
   async listNetworkRequests(types?: string[]): Promise<NetworkRequest[]> {
     if (!this.networkCaptureEnabled) {
       throw new Error(
-        'Network capture not enabled. Call enableNetworkCapture() first.'
+        'Network capture not enabled. Call enableNetworkCapture() first.',
       );
     }
 
     const requests = Array.from(this.networkRequests.values());
 
     if (types && types.length > 0) {
-      return requests.filter((req) => types.includes(req.resourceType));
+      return requests.filter(req => types.includes(req.resourceType));
     }
 
     return requests;
@@ -224,7 +224,7 @@ export class StagehandBrowserClient implements BrowserClient {
   async getNetworkRequest(id: string): Promise<NetworkRequest | null> {
     if (!this.networkCaptureEnabled) {
       throw new Error(
-        'Network capture not enabled. Call enableNetworkCapture() first.'
+        'Network capture not enabled. Call enableNetworkCapture() first.',
       );
     }
 
@@ -348,7 +348,7 @@ export class StagehandBrowserClient implements BrowserClient {
   private ensureInitialized(): void {
     if (!this.stagehand) {
       throw new Error(
-        'StagehandBrowserClient not initialized. Call init() first.'
+        'StagehandBrowserClient not initialized. Call init() first.',
       );
     }
   }

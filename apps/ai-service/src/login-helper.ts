@@ -56,7 +56,8 @@ async function isLoggedIn(client: any, platform: string): Promise<boolean> {
   try {
     const result = await checkSession(client, platform as Platform);
     return result.isValid;
-  } catch {
+  }
+  catch {
     return false;
   }
 }
@@ -97,15 +98,16 @@ async function loginToPlatform(client: any, platform: string): Promise<void> {
   const finalStatus = await isLoggedIn(client, platform);
   if (finalStatus) {
     console.log(`\n✅ Login successful! Session saved.`);
-  } else {
+  }
+  else {
     console.log(
-      `\n⚠️  Login may not be complete. Try running the crawler to verify.`
+      `\n⚠️  Login may not be complete. Try running the crawler to verify.`,
     );
   }
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function main(): Promise<void> {
@@ -125,8 +127,8 @@ async function main(): Promise<void> {
     console.log(`[Starting Chrome with persistent profile...]\n`);
     await client.init({ persistent: true });
 
-    const platforms =
-      platform === 'all' ? Object.keys(PLATFORM_URLS) : [platform];
+    const platforms
+      = platform === 'all' ? Object.keys(PLATFORM_URLS) : [platform];
 
     for (const p of platforms) {
       await loginToPlatform(client, p);
@@ -137,12 +139,13 @@ async function main(): Promise<void> {
     console.log(`${'='.repeat(60)}`);
     console.log(`\nYou can now run crawlers:`);
     console.log(
-      `  pnpm --filter ai-service exec tsx src/test-crawlers.ts 杭州 xiaohongshu`
+      `  pnpm --filter ai-service exec tsx src/test-crawlers.ts 杭州 xiaohongshu`,
     );
     console.log(
-      `  pnpm --filter ai-service exec tsx src/test-crawlers.ts 杭州 mafengwo\n`
+      `  pnpm --filter ai-service exec tsx src/test-crawlers.ts 杭州 mafengwo\n`,
     );
-  } finally {
+  }
+  finally {
     await client.close();
   }
 }

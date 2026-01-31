@@ -73,5 +73,5 @@ export function getToolsByName(names: string[]) {
     search_guides: searchGuidesTool,
   };
 
-  return names.map((name) => toolMap[name]).filter(Boolean);
+  return names.map(name => toolMap[name]).filter(Boolean);
 }

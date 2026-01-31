@@ -208,4 +208,3 @@ export interface CityEncyclopedia {
 export interface CityWithEncyclopedia extends City {
   encyclopedia?: CityEncyclopedia;
 }
-

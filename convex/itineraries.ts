@@ -1,7 +1,7 @@
-import type { Id } from "./_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import type { Id } from './_generated/dataModel';
+import type { MutationCtx, QueryCtx } from './_generated/server';
+import { ConvexError, v } from 'convex/values';
+import { mutation, query } from './_generated/server';
 
 /**
  * Itineraries - Travel Plan Queries and Mutations
@@ -10,20 +10,20 @@ import { mutation, query } from "./_generated/server";
  */
 
 const visibilityValidator = v.union(
-  v.literal("private"),
-  v.literal("team"),
-  v.literal("public"),
+  v.literal('private'),
+  v.literal('team'),
+  v.literal('public'),
 );
 
 /** Checks if user can edit itinerary (owner or editor role) */
 async function checkEditPermission(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<"itineraries">,
+  itineraryId: Id<'itineraries'>,
   userId: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
-    throw new ConvexError("Itinerary not found");
+    throw new ConvexError('Itinerary not found');
   }
 
   if (itinerary.userId === userId) {
@@ -31,19 +31,18 @@ async function checkEditPermission(
   }
 
   const collab = await ctx.db
-    .query("itineraryCollaborators")
-    .withIndex("by_itinerary_user", (q) =>
-      q.eq("itineraryId", itineraryId).eq("userId", userId),
-    )
+    .query('itineraryCollaborators')
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId))
     .first();
 
   if (!collab) {
-    throw new ConvexError("You do not have access to this itinerary");
+    throw new ConvexError('You do not have access to this itinerary');
   }
 
-  if (collab.role === "viewer") {
+  if (collab.role === 'viewer') {
     throw new ConvexError(
-      "You do not have edit permissions for this itinerary",
+      'You do not have edit permissions for this itinerary',
     );
   }
 
@@ -53,12 +52,12 @@ async function checkEditPermission(
 /** Checks if user is the owner of the itinerary */
 async function checkOwnerPermission(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<"itineraries">,
+  itineraryId: Id<'itineraries'>,
   userId: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
-    throw new ConvexError("Itinerary not found");
+    throw new ConvexError('Itinerary not found');
   }
 
   if (itinerary.userId === userId) {
@@ -66,14 +65,13 @@ async function checkOwnerPermission(
   }
 
   const collab = await ctx.db
-    .query("itineraryCollaborators")
-    .withIndex("by_itinerary_user", (q) =>
-      q.eq("itineraryId", itineraryId).eq("userId", userId),
-    )
+    .query('itineraryCollaborators')
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId))
     .first();
 
-  if (!collab || collab.role !== "owner") {
-    throw new ConvexError("Only the owner can perform this action");
+  if (!collab || collab.role !== 'owner') {
+    throw new ConvexError('Only the owner can perform this action');
   }
 
   return true;
@@ -91,9 +89,9 @@ export const listByUser = query({
     const offset = (page - 1) * pageSize;
 
     const itineraries = await ctx.db
-      .query("itineraries")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .order("desc")
+      .query('itineraries')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .order('desc')
       .collect();
 
     const total = itineraries.length;
@@ -122,7 +120,7 @@ export const listByUser = query({
 // List public itineraries
 export const listPublic = query({
   args: {
-    cityId: v.optional(v.id("cities")),
+    cityId: v.optional(v.id('cities')),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
   },
@@ -132,13 +130,13 @@ export const listPublic = query({
     const offset = (page - 1) * pageSize;
 
     let itineraries = await ctx.db
-      .query("itineraries")
-      .withIndex("by_visibility", (q) => q.eq("visibility", "public"))
-      .order("desc")
+      .query('itineraries')
+      .withIndex('by_visibility', q => q.eq('visibility', 'public'))
+      .order('desc')
       .collect();
 
     if (args.cityId) {
-      itineraries = itineraries.filter((i) => i.cityId === args.cityId);
+      itineraries = itineraries.filter(i => i.cityId === args.cityId);
     }
 
     const total = itineraries.length;
@@ -161,17 +159,18 @@ export const listPublic = query({
 
 // Get itinerary by ID with full details (days and items) - optimized to avoid N+1
 export const getById = query({
-  args: { id: v.id("itineraries") },
+  args: { id: v.id('itineraries') },
   handler: async (ctx, args) => {
     const itinerary = await ctx.db.get(args.id);
-    if (!itinerary) return null;
+    if (!itinerary)
+      return null;
 
     const city = await ctx.db.get(itinerary.cityId);
 
     // Get days
     const days = await ctx.db
-      .query("itineraryDays")
-      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.id))
+      .query('itineraryDays')
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.id))
       .collect();
 
     // Sort days by dayNumber
@@ -179,22 +178,22 @@ export const getById = query({
 
     // Get all items for all days in a single batch
     const allItems = await Promise.all(
-      days.map((day) =>
+      days.map(day =>
         ctx.db
-          .query("itineraryItems")
-          .withIndex("by_day", (q) => q.eq("dayId", day._id))
+          .query('itineraryItems')
+          .withIndex('by_day', q => q.eq('dayId', day._id))
           .collect(),
       ),
     );
 
     // Collect all unique POI IDs
     const poiIds = new Set<string>();
-    allItems.flat().forEach((item) => poiIds.add(item.poiId));
+    allItems.flat().forEach(item => poiIds.add(item.poiId));
 
     // Batch load all POIs at once (single query per POI, but parallel)
     const poiMap = new Map();
     const pois = await Promise.all(
-      Array.from(poiIds).map((id) => ctx.db.get(id as any)),
+      Array.from(poiIds).map(id => ctx.db.get(id as any)),
     );
     Array.from(poiIds).forEach((id, idx) => {
       poiMap.set(id, pois[idx]);
@@ -231,8 +230,8 @@ export const getById = query({
 
     // Get collaborators
     const collaborators = await ctx.db
-      .query("itineraryCollaborators")
-      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.id))
+      .query('itineraryCollaborators')
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.id))
       .collect();
 
     return {
@@ -250,7 +249,7 @@ export const create = mutation({
   args: {
     userId: v.string(),
     title: v.string(),
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     startDate: v.string(),
     endDate: v.string(),
     visibility: v.optional(visibilityValidator),
@@ -258,20 +257,20 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     // Create itinerary
-    const itineraryId = await ctx.db.insert("itineraries", {
+    const itineraryId = await ctx.db.insert('itineraries', {
       userId: args.userId,
       title: args.title,
       cityId: args.cityId,
       startDate: args.startDate,
       endDate: args.endDate,
-      visibility: args.visibility ?? "private",
+      visibility: args.visibility ?? 'private',
       coverImageUrl: args.coverImageUrl,
     });
 
     // Generate days
     const dates = getDateRange(args.startDate, args.endDate);
     for (let i = 0; i < dates.length; i++) {
-      await ctx.db.insert("itineraryDays", {
+      await ctx.db.insert('itineraryDays', {
         itineraryId,
         dayNumber: i + 1,
         date: dates[i],
@@ -285,10 +284,10 @@ export const create = mutation({
 // Update an itinerary
 export const update = mutation({
   args: {
-    id: v.id("itineraries"),
+    id: v.id('itineraries'),
     userId: v.string(),
     title: v.optional(v.string()),
-    cityId: v.optional(v.id("cities")),
+    cityId: v.optional(v.id('cities')),
     startDate: v.optional(v.string()),
     endDate: v.optional(v.string()),
     visibility: v.optional(visibilityValidator),
@@ -310,7 +309,7 @@ export const update = mutation({
 // Delete an itinerary (cascades to days and items)
 export const remove = mutation({
   args: {
-    id: v.id("itineraries"),
+    id: v.id('itineraries'),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -319,15 +318,15 @@ export const remove = mutation({
 
     // Get all days
     const days = await ctx.db
-      .query("itineraryDays")
-      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.id))
+      .query('itineraryDays')
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.id))
       .collect();
 
     // Delete all items for each day
     for (const day of days) {
       const items = await ctx.db
-        .query("itineraryItems")
-        .withIndex("by_day", (q) => q.eq("dayId", day._id))
+        .query('itineraryItems')
+        .withIndex('by_day', q => q.eq('dayId', day._id))
         .collect();
       for (const item of items) {
         await ctx.db.delete(item._id);
@@ -337,8 +336,8 @@ export const remove = mutation({
 
     // Delete all collaborators
     const collaborators = await ctx.db
-      .query("itineraryCollaborators")
-      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.id))
+      .query('itineraryCollaborators')
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.id))
       .collect();
     for (const collab of collaborators) {
       await ctx.db.delete(collab._id);
@@ -352,25 +351,25 @@ export const remove = mutation({
 // Copy an itinerary (full copy)
 export const copy = mutation({
   args: {
-    itineraryId: v.id("itineraries"),
+    itineraryId: v.id('itineraries'),
     userId: v.string(),
     newStartDate: v.string(),
   },
   handler: async (ctx, args) => {
     const original = await ctx.db.get(args.itineraryId);
     if (!original) {
-      throw new ConvexError("Itinerary not found");
+      throw new ConvexError('Itinerary not found');
     }
 
-    if (original.userId !== args.userId && original.visibility !== "public") {
-      throw new ConvexError("You do not have access to copy this itinerary");
+    if (original.userId !== args.userId && original.visibility !== 'public') {
+      throw new ConvexError('You do not have access to copy this itinerary');
     }
 
     const daysCount = calculateDaysCount(original.startDate, original.endDate);
     const newStart = new Date(args.newStartDate);
     const newEnd = new Date(newStart);
     newEnd.setDate(newEnd.getDate() + daysCount - 1);
-    const newEndDate = newEnd.toISOString().split("T")[0];
+    const newEndDate = newEnd.toISOString().split('T')[0];
 
     // Calculate date offset
     const originalStart = new Date(original.startDate);
@@ -379,28 +378,28 @@ export const copy = mutation({
     );
 
     // Create new itinerary
-    const newItineraryId = await ctx.db.insert("itineraries", {
+    const newItineraryId = await ctx.db.insert('itineraries', {
       userId: args.userId,
       title: original.title,
       cityId: original.cityId,
       startDate: args.newStartDate,
       endDate: newEndDate,
-      visibility: "private",
+      visibility: 'private',
       coverImageUrl: original.coverImageUrl,
       copiedFromId: args.itineraryId,
     });
 
     // Get original days
     const originalDays = await ctx.db
-      .query("itineraryDays")
-      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
+      .query('itineraryDays')
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
     originalDays.sort((a, b) => a.dayNumber - b.dayNumber);
 
     // Create new days with copied items
     const newDates = getDateRange(args.newStartDate, newEndDate);
     for (let i = 0; i < newDates.length; i++) {
-      const newDayId = await ctx.db.insert("itineraryDays", {
+      const newDayId = await ctx.db.insert('itineraryDays', {
         itineraryId: newItineraryId,
         dayNumber: i + 1,
         date: newDates[i],
@@ -409,12 +408,12 @@ export const copy = mutation({
       // Copy items from original day if it exists
       if (i < originalDays.length) {
         const originalItems = await ctx.db
-          .query("itineraryItems")
-          .withIndex("by_day", (q) => q.eq("dayId", originalDays[i]._id))
+          .query('itineraryItems')
+          .withIndex('by_day', q => q.eq('dayId', originalDays[i]._id))
           .collect();
 
         for (const item of originalItems) {
-          await ctx.db.insert("itineraryItems", {
+          await ctx.db.insert('itineraryItems', {
             dayId: newDayId,
             poiId: item.poiId,
             orderIndex: item.orderIndex,
@@ -428,11 +427,11 @@ export const copy = mutation({
     }
 
     // Record copy history
-    await ctx.db.insert("itineraryCopyHistory", {
+    await ctx.db.insert('itineraryCopyHistory', {
       originalItineraryId: args.itineraryId,
       copiedItineraryId: newItineraryId,
       userId: args.userId,
-      copyType: "full",
+      copyType: 'full',
       originalStartDate: original.startDate,
       newStartDate: args.newStartDate,
       dateOffset,
@@ -446,7 +445,7 @@ export const copy = mutation({
 // Copy an itinerary with partial days selection
 export const copyPartial = mutation({
   args: {
-    itineraryId: v.id("itineraries"),
+    itineraryId: v.id('itineraries'),
     userId: v.string(),
     newStartDate: v.string(),
     selectedDays: v.array(v.number()),
@@ -455,15 +454,15 @@ export const copyPartial = mutation({
   handler: async (ctx, args) => {
     const original = await ctx.db.get(args.itineraryId);
     if (!original) {
-      throw new ConvexError("Itinerary not found");
+      throw new ConvexError('Itinerary not found');
     }
 
-    if (original.userId !== args.userId && original.visibility !== "public") {
-      throw new ConvexError("You do not have access to copy this itinerary");
+    if (original.userId !== args.userId && original.visibility !== 'public') {
+      throw new ConvexError('You do not have access to copy this itinerary');
     }
 
     if (args.selectedDays.length === 0) {
-      throw new ConvexError("At least one day must be selected");
+      throw new ConvexError('At least one day must be selected');
     }
 
     const sortedDays = [...args.selectedDays].sort((a, b) => a - b);
@@ -472,7 +471,7 @@ export const copyPartial = mutation({
     const newStart = new Date(args.newStartDate);
     const newEnd = new Date(newStart);
     newEnd.setDate(newEnd.getDate() + sortedDays.length - 1);
-    const newEndDate = newEnd.toISOString().split("T")[0];
+    const newEndDate = newEnd.toISOString().split('T')[0];
 
     // Calculate date offset
     const originalStart = new Date(original.startDate);
@@ -481,31 +480,31 @@ export const copyPartial = mutation({
     );
 
     // Create new itinerary
-    const newItineraryId = await ctx.db.insert("itineraries", {
+    const newItineraryId = await ctx.db.insert('itineraries', {
       userId: args.userId,
       title: args.newTitle || original.title,
       cityId: original.cityId,
       startDate: args.newStartDate,
       endDate: newEndDate,
-      visibility: "private",
+      visibility: 'private',
       coverImageUrl: original.coverImageUrl,
       copiedFromId: args.itineraryId,
     });
 
     // Get original days
     const originalDays = await ctx.db
-      .query("itineraryDays")
-      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
+      .query('itineraryDays')
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Create a map of original days by day number
-    const originalDaysMap = new Map(originalDays.map((d) => [d.dayNumber, d]));
+    const originalDaysMap = new Map(originalDays.map(d => [d.dayNumber, d]));
 
     // Create new days with copied items
     const newDates = getDateRange(args.newStartDate, newEndDate);
     for (let i = 0; i < sortedDays.length; i++) {
       const originalDayNumber = sortedDays[i];
-      const newDayId = await ctx.db.insert("itineraryDays", {
+      const newDayId = await ctx.db.insert('itineraryDays', {
         itineraryId: newItineraryId,
         dayNumber: i + 1,
         date: newDates[i],
@@ -515,12 +514,12 @@ export const copyPartial = mutation({
       const originalDay = originalDaysMap.get(originalDayNumber);
       if (originalDay) {
         const originalItems = await ctx.db
-          .query("itineraryItems")
-          .withIndex("by_day", (q) => q.eq("dayId", originalDay._id))
+          .query('itineraryItems')
+          .withIndex('by_day', q => q.eq('dayId', originalDay._id))
           .collect();
 
         for (const item of originalItems) {
-          await ctx.db.insert("itineraryItems", {
+          await ctx.db.insert('itineraryItems', {
             dayId: newDayId,
             poiId: item.poiId,
             orderIndex: item.orderIndex,
@@ -534,11 +533,11 @@ export const copyPartial = mutation({
     }
 
     // Record copy history
-    await ctx.db.insert("itineraryCopyHistory", {
+    await ctx.db.insert('itineraryCopyHistory', {
       originalItineraryId: args.itineraryId,
       copiedItineraryId: newItineraryId,
       userId: args.userId,
-      copyType: "partial",
+      copyType: 'partial',
       selectedDays: sortedDays,
       originalStartDate: original.startDate,
       newStartDate: args.newStartDate,
@@ -563,9 +562,9 @@ export const getCopyHistory = query({
     const offset = (page - 1) * pageSize;
 
     const history = await ctx.db
-      .query("itineraryCopyHistory")
-      .withIndex("by_user_created", (q) => q.eq("userId", args.userId))
-      .order("desc")
+      .query('itineraryCopyHistory')
+      .withIndex('by_user_created', q => q.eq('userId', args.userId))
+      .order('desc')
       .collect();
 
     const total = history.length;
@@ -608,14 +607,13 @@ export const getCopyHistory = query({
 // Get copy history for a specific itinerary (to see who copied it)
 export const getItineraryCopyStats = query({
   args: {
-    itineraryId: v.id("itineraries"),
+    itineraryId: v.id('itineraries'),
   },
   handler: async (ctx, args) => {
     const copies = await ctx.db
-      .query("itineraryCopyHistory")
-      .withIndex("by_original", (q) =>
-        q.eq("originalItineraryId", args.itineraryId),
-      )
+      .query('itineraryCopyHistory')
+      .withIndex('by_original', q =>
+        q.eq('originalItineraryId', args.itineraryId))
       .collect();
 
     return {
@@ -623,7 +621,7 @@ export const getItineraryCopyStats = query({
       recentCopies: copies
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, 5)
-        .map((c) => ({
+        .map(c => ({
           copiedAt: c.createdAt,
           copyType: c.copyType,
         })),
@@ -647,7 +645,7 @@ function getDateRange(startDate: string, endDate: string): string[] {
   const current = new Date(start);
 
   while (current <= end) {
-    dates.push(current.toISOString().split("T")[0]);
+    dates.push(current.toISOString().split('T')[0]);
     current.setDate(current.getDate() + 1);
   }
 

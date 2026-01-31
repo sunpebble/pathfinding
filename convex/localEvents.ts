@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
 
 /**
  * Local Events - CRUD operations for destination events and festivals
@@ -9,26 +9,26 @@ import { mutation, query } from "./_generated/server";
 
 // Event type validator
 const eventTypeValidator = v.union(
-  v.literal("festival"),
-  v.literal("concert"),
-  v.literal("exhibition"),
-  v.literal("sports"),
-  v.literal("food"),
-  v.literal("cultural"),
-  v.literal("market"),
-  v.literal("performance"),
-  v.literal("religious"),
-  v.literal("seasonal"),
-  v.literal("local_custom"),
-  v.literal("other"),
+  v.literal('festival'),
+  v.literal('concert'),
+  v.literal('exhibition'),
+  v.literal('sports'),
+  v.literal('food'),
+  v.literal('cultural'),
+  v.literal('market'),
+  v.literal('performance'),
+  v.literal('religious'),
+  v.literal('seasonal'),
+  v.literal('local_custom'),
+  v.literal('other'),
 );
 
 // Event status validator
 const eventStatusValidator = v.union(
-  v.literal("upcoming"),
-  v.literal("ongoing"),
-  v.literal("ended"),
-  v.literal("cancelled"),
+  v.literal('upcoming'),
+  v.literal('ongoing'),
+  v.literal('ended'),
+  v.literal('cancelled'),
 );
 
 // ============================================
@@ -40,7 +40,7 @@ const eventStatusValidator = v.union(
  */
 export const listByCity = query({
   args: {
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     eventType: v.optional(eventTypeValidator),
     status: v.optional(eventStatusValidator),
     startDate: v.optional(v.string()),
@@ -53,8 +53,8 @@ export const listByCity = query({
     const pageSize = args.pageSize ?? 20;
 
     const eventsQuery = ctx.db
-      .query("localEvents")
-      .withIndex("by_city", (q) => q.eq("cityId", args.cityId));
+      .query('localEvents')
+      .withIndex('by_city', q => q.eq('cityId', args.cityId));
 
     const allEvents = await eventsQuery.collect();
 
@@ -62,19 +62,19 @@ export const listByCity = query({
     let filtered = allEvents;
 
     if (args.eventType) {
-      filtered = filtered.filter((e) => e.eventType === args.eventType);
+      filtered = filtered.filter(e => e.eventType === args.eventType);
     }
 
     if (args.status) {
-      filtered = filtered.filter((e) => e.status === args.status);
+      filtered = filtered.filter(e => e.status === args.status);
     }
 
     if (args.startDate) {
-      filtered = filtered.filter((e) => e.startDate >= args.startDate!);
+      filtered = filtered.filter(e => e.startDate >= args.startDate!);
     }
 
     if (args.endDate) {
-      filtered = filtered.filter((e) => e.endDate <= args.endDate!);
+      filtered = filtered.filter(e => e.endDate <= args.endDate!);
     }
 
     // Sort by start date
@@ -97,23 +97,22 @@ export const listByCity = query({
  */
 export const listUpcoming = query({
   args: {
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 10;
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split('T')[0];
 
     const events = await ctx.db
-      .query("localEvents")
-      .withIndex("by_city_status", (q) =>
-        q.eq("cityId", args.cityId).eq("status", "upcoming"),
-      )
+      .query('localEvents')
+      .withIndex('by_city_status', q =>
+        q.eq('cityId', args.cityId).eq('status', 'upcoming'))
       .collect();
 
     // Filter events that haven't started yet and sort by start date
     const filtered = events
-      .filter((e) => e.startDate >= today)
+      .filter(e => e.startDate >= today)
       .sort(
         (a, b) =>
           new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
@@ -129,17 +128,16 @@ export const listUpcoming = query({
  */
 export const listOngoing = query({
   args: {
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 10;
 
     const events = await ctx.db
-      .query("localEvents")
-      .withIndex("by_city_status", (q) =>
-        q.eq("cityId", args.cityId).eq("status", "ongoing"),
-      )
+      .query('localEvents')
+      .withIndex('by_city_status', q =>
+        q.eq('cityId', args.cityId).eq('status', 'ongoing'))
       .take(limit);
 
     return events;
@@ -151,20 +149,20 @@ export const listOngoing = query({
  */
 export const listFeatured = query({
   args: {
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 5;
 
     const allEvents = await ctx.db
-      .query("localEvents")
-      .withIndex("by_city", (q) => q.eq("cityId", args.cityId))
+      .query('localEvents')
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
       .collect();
 
     const featured = allEvents
       .filter(
-        (e) => e.isFeatured && e.status !== "ended" && e.status !== "cancelled",
+        e => e.isFeatured && e.status !== 'ended' && e.status !== 'cancelled',
       )
       .slice(0, limit);
 
@@ -177,14 +175,14 @@ export const listFeatured = query({
  */
 export const listByDateRange = query({
   args: {
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     startDate: v.string(),
     endDate: v.string(),
   },
   handler: async (ctx, args) => {
     const events = await ctx.db
-      .query("localEvents")
-      .withIndex("by_city", (q) => q.eq("cityId", args.cityId))
+      .query('localEvents')
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
       .collect();
 
     // Filter events that overlap with the date range
@@ -207,10 +205,11 @@ export const listByDateRange = query({
  * Get event by ID
  */
 export const getById = query({
-  args: { id: v.id("localEvents") },
+  args: { id: v.id('localEvents') },
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.id);
-    if (!event) return null;
+    if (!event)
+      return null;
 
     // Get city info
     const city = await ctx.db.get(event.cityId);
@@ -225,7 +224,7 @@ export const getById = query({
 export const search = query({
   args: {
     query: v.string(),
-    cityId: v.optional(v.id("cities")),
+    cityId: v.optional(v.id('cities')),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -235,19 +234,20 @@ export const search = query({
     let events;
     if (args.cityId) {
       events = await ctx.db
-        .query("localEvents")
-        .withIndex("by_city", (q) => q.eq("cityId", args.cityId))
+        .query('localEvents')
+        .withIndex('by_city', q => q.eq('cityId', args.cityId))
         .collect();
-    } else {
-      events = await ctx.db.query("localEvents").collect();
+    }
+    else {
+      events = await ctx.db.query('localEvents').collect();
     }
 
     const filtered = events
       .filter(
-        (e) =>
-          e.name.toLowerCase().includes(searchLower) ||
-          e.nameEn?.toLowerCase().includes(searchLower) ||
-          e.description.toLowerCase().includes(searchLower),
+        e =>
+          e.name.toLowerCase().includes(searchLower)
+          || e.nameEn?.toLowerCase().includes(searchLower)
+          || e.description.toLowerCase().includes(searchLower),
       )
       .slice(0, limit);
 
@@ -260,18 +260,18 @@ export const search = query({
  */
 export const listRecurring = query({
   args: {
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 20;
 
     const events = await ctx.db
-      .query("localEvents")
-      .withIndex("by_city", (q) => q.eq("cityId", args.cityId))
+      .query('localEvents')
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
       .collect();
 
-    const recurring = events.filter((e) => e.isRecurring).slice(0, limit);
+    const recurring = events.filter(e => e.isRecurring).slice(0, limit);
 
     return recurring;
   },
@@ -290,7 +290,7 @@ export const create = mutation({
     nameEn: v.optional(v.string()),
     description: v.string(),
     descriptionEn: v.optional(v.string()),
-    cityId: v.id("cities"),
+    cityId: v.id('cities'),
     venue: v.optional(v.string()),
     venueAddress: v.optional(v.string()),
     latitude: v.optional(v.number()),
@@ -325,17 +325,18 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split('T')[0];
 
     // Determine initial status
-    let status: "upcoming" | "ongoing" | "ended" = "upcoming";
+    let status: 'upcoming' | 'ongoing' | 'ended' = 'upcoming';
     if (args.startDate <= today && args.endDate >= today) {
-      status = "ongoing";
-    } else if (args.endDate < today) {
-      status = "ended";
+      status = 'ongoing';
+    }
+    else if (args.endDate < today) {
+      status = 'ended';
     }
 
-    const eventId = await ctx.db.insert("localEvents", {
+    const eventId = await ctx.db.insert('localEvents', {
       ...args,
       status,
       viewCount: 0,
@@ -354,7 +355,7 @@ export const create = mutation({
  */
 export const update = mutation({
   args: {
-    id: v.id("localEvents"),
+    id: v.id('localEvents'),
     name: v.optional(v.string()),
     nameEn: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -412,12 +413,12 @@ export const update = mutation({
  * Delete an event
  */
 export const remove = mutation({
-  args: { id: v.id("localEvents") },
+  args: { id: v.id('localEvents') },
   handler: async (ctx, args) => {
     // Delete associated favorites
     const favorites = await ctx.db
-      .query("eventFavorites")
-      .withIndex("by_event", (q) => q.eq("eventId", args.id))
+      .query('eventFavorites')
+      .withIndex('by_event', q => q.eq('eventId', args.id))
       .collect();
     for (const fav of favorites) {
       await ctx.db.delete(fav._id);
@@ -425,8 +426,8 @@ export const remove = mutation({
 
     // Delete associated reminders
     const reminders = await ctx.db
-      .query("eventReminders")
-      .withIndex("by_event", (q) => q.eq("eventId", args.id))
+      .query('eventReminders')
+      .withIndex('by_event', q => q.eq('eventId', args.id))
       .collect();
     for (const reminder of reminders) {
       await ctx.db.delete(reminder._id);
@@ -434,14 +435,14 @@ export const remove = mutation({
 
     // Delete associated reviews
     const reviews = await ctx.db
-      .query("eventReviews")
-      .withIndex("by_event", (q) => q.eq("eventId", args.id))
+      .query('eventReviews')
+      .withIndex('by_event', q => q.eq('eventId', args.id))
       .collect();
     for (const review of reviews) {
       // Delete review votes
       const votes = await ctx.db
-        .query("eventReviewVotes")
-        .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+        .query('eventReviewVotes')
+        .withIndex('by_review', q => q.eq('reviewId', review._id))
         .collect();
       for (const vote of votes) {
         await ctx.db.delete(vote._id);
@@ -458,10 +459,11 @@ export const remove = mutation({
  * Increment view count
  */
 export const incrementViewCount = mutation({
-  args: { id: v.id("localEvents") },
+  args: { id: v.id('localEvents') },
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.id);
-    if (!event) return;
+    if (!event)
+      return;
 
     await ctx.db.patch(args.id, {
       viewCount: (event.viewCount || 0) + 1,
@@ -475,22 +477,25 @@ export const incrementViewCount = mutation({
 export const updateEventStatuses = mutation({
   args: {},
   handler: async (ctx) => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split('T')[0];
 
     // Get all non-ended, non-cancelled events
-    const events = await ctx.db.query("localEvents").collect();
+    const events = await ctx.db.query('localEvents').collect();
 
     for (const event of events) {
-      if (event.status === "cancelled") continue;
+      if (event.status === 'cancelled')
+        continue;
 
       let newStatus = event.status;
 
       if (event.endDate < today) {
-        newStatus = "ended";
-      } else if (event.startDate <= today && event.endDate >= today) {
-        newStatus = "ongoing";
-      } else if (event.startDate > today) {
-        newStatus = "upcoming";
+        newStatus = 'ended';
+      }
+      else if (event.startDate <= today && event.endDate >= today) {
+        newStatus = 'ongoing';
+      }
+      else if (event.startDate > today) {
+        newStatus = 'upcoming';
       }
 
       if (newStatus !== event.status) {
@@ -513,16 +518,15 @@ export const updateEventStatuses = mutation({
 export const addFavorite = mutation({
   args: {
     userId: v.string(),
-    eventId: v.id("localEvents"),
+    eventId: v.id('localEvents'),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Check if already favorited
     const existing = await ctx.db
-      .query("eventFavorites")
-      .withIndex("by_user_event", (q) =>
-        q.eq("userId", args.userId).eq("eventId", args.eventId),
-      )
+      .query('eventFavorites')
+      .withIndex('by_user_event', q =>
+        q.eq('userId', args.userId).eq('eventId', args.eventId))
       .first();
 
     if (existing) {
@@ -530,7 +534,7 @@ export const addFavorite = mutation({
     }
 
     // Add to favorites
-    const favoriteId = await ctx.db.insert("eventFavorites", {
+    const favoriteId = await ctx.db.insert('eventFavorites', {
       userId: args.userId,
       eventId: args.eventId,
       notes: args.notes,
@@ -555,17 +559,17 @@ export const addFavorite = mutation({
 export const removeFavorite = mutation({
   args: {
     userId: v.string(),
-    eventId: v.id("localEvents"),
+    eventId: v.id('localEvents'),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db
-      .query("eventFavorites")
-      .withIndex("by_user_event", (q) =>
-        q.eq("userId", args.userId).eq("eventId", args.eventId),
-      )
+      .query('eventFavorites')
+      .withIndex('by_user_event', q =>
+        q.eq('userId', args.userId).eq('eventId', args.eventId))
       .first();
 
-    if (!favorite) return;
+    if (!favorite)
+      return;
 
     await ctx.db.delete(favorite._id);
 
@@ -585,14 +589,13 @@ export const removeFavorite = mutation({
 export const isFavorited = query({
   args: {
     userId: v.string(),
-    eventId: v.id("localEvents"),
+    eventId: v.id('localEvents'),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db
-      .query("eventFavorites")
-      .withIndex("by_user_event", (q) =>
-        q.eq("userId", args.userId).eq("eventId", args.eventId),
-      )
+      .query('eventFavorites')
+      .withIndex('by_user_event', q =>
+        q.eq('userId', args.userId).eq('eventId', args.eventId))
       .first();
 
     return !!favorite;
@@ -613,8 +616,8 @@ export const listFavorites = query({
     const pageSize = args.pageSize ?? 20;
 
     const favorites = await ctx.db
-      .query("eventFavorites")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('eventFavorites')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by created at descending
@@ -648,11 +651,11 @@ export const listFavorites = query({
 export const createReminder = mutation({
   args: {
     userId: v.string(),
-    eventId: v.id("localEvents"),
+    eventId: v.id('localEvents'),
     reminderType: v.union(
-      v.literal("event_start"),
-      v.literal("booking_open"),
-      v.literal("custom"),
+      v.literal('event_start'),
+      v.literal('booking_open'),
+      v.literal('custom'),
     ),
     reminderTime: v.number(),
     minutesBefore: v.optional(v.number()),
@@ -661,7 +664,7 @@ export const createReminder = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    const reminderId = await ctx.db.insert("eventReminders", {
+    const reminderId = await ctx.db.insert('eventReminders', {
       userId: args.userId,
       eventId: args.eventId,
       reminderType: args.reminderType,
@@ -682,7 +685,7 @@ export const createReminder = mutation({
  * Delete event reminder
  */
 export const deleteReminder = mutation({
-  args: { id: v.id("eventReminders") },
+  args: { id: v.id('eventReminders') },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -698,13 +701,13 @@ export const listReminders = query({
   },
   handler: async (ctx, args) => {
     const reminders = await ctx.db
-      .query("eventReminders")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .query('eventReminders')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     let filtered = reminders;
     if (!args.includeTriggered) {
-      filtered = reminders.filter((r) => !r.isTriggered);
+      filtered = reminders.filter(r => !r.isTriggered);
     }
 
     // Sort by reminder time
@@ -731,12 +734,12 @@ export const getPendingReminders = query({
     const now = Date.now();
 
     const reminders = await ctx.db
-      .query("eventReminders")
-      .withIndex("by_triggered", (q) => q.eq("isTriggered", false))
+      .query('eventReminders')
+      .withIndex('by_triggered', q => q.eq('isTriggered', false))
       .collect();
 
     // Filter reminders that should be triggered
-    const pending = reminders.filter((r) => r.reminderTime <= now);
+    const pending = reminders.filter(r => r.reminderTime <= now);
 
     // Fetch event details
     const withEvents = await Promise.all(
@@ -754,7 +757,7 @@ export const getPendingReminders = query({
  * Mark reminder as triggered
  */
 export const markReminderTriggered = mutation({
-  args: { id: v.id("eventReminders") },
+  args: { id: v.id('eventReminders') },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
       isTriggered: true,
@@ -768,7 +771,7 @@ export const markReminderTriggered = mutation({
  * Mark reminder as read
  */
 export const markReminderRead = mutation({
-  args: { id: v.id("eventReminders") },
+  args: { id: v.id('eventReminders') },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
       isRead: true,

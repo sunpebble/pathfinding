@@ -145,7 +145,7 @@ export const getBudget = query({
   handler: async (ctx, args) => {
     const budget = await ctx.db
       .query('itineraryBudgets')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .first();
     return budget;
   },
@@ -159,7 +159,7 @@ export const getBudgetWithCategories = query({
   handler: async (ctx, args) => {
     const budget = await ctx.db
       .query('itineraryBudgets')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .first();
 
     if (!budget) {
@@ -174,7 +174,7 @@ export const getBudgetWithCategories = query({
           ...cb,
           category,
         };
-      })
+      }),
     );
 
     return {
@@ -197,14 +197,14 @@ export const upsertBudget = mutation({
       v.object({
         categoryId: v.id('expenseCategories'),
         amount: v.number(),
-      })
+      }),
     ),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('itineraryBudgets')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .first();
 
     const now = Date.now();
@@ -218,7 +218,8 @@ export const upsertBudget = mutation({
         updatedAt: now,
       });
       return existing._id;
-    } else {
+    }
+    else {
       return await ctx.db.insert('itineraryBudgets', {
         ...args,
         createdAt: now,
@@ -256,16 +257,16 @@ export const listExpenses = query({
     if (args.categoryId) {
       expenses = await ctx.db
         .query('expenses')
-        .withIndex('by_itinerary_category', (q) =>
+        .withIndex('by_itinerary_category', q =>
           q
             .eq('itineraryId', args.itineraryId)
-            .eq('categoryId', args.categoryId!)
-        )
+            .eq('categoryId', args.categoryId!))
         .collect();
-    } else {
+    }
+    else {
       expenses = await ctx.db
         .query('expenses')
-        .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+        .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
         .collect();
     }
 
@@ -283,7 +284,7 @@ export const listExpensesWithCategories = query({
   handler: async (ctx, args) => {
     const expenses = await ctx.db
       .query('expenses')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Enrich with category details
@@ -294,7 +295,7 @@ export const listExpensesWithCategories = query({
           ...expense,
           category,
         };
-      })
+      }),
     );
 
     // Sort by date descending
@@ -367,7 +368,7 @@ export const updateExpense = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([_, v]) => v !== undefined)
+      Object.entries(updates).filter(([_, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -400,13 +401,13 @@ export const getBudgetSummary = query({
     // Get budget
     const budget = await ctx.db
       .query('itineraryBudgets')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .first();
 
     // Get all expenses
     const expenses = await ctx.db
       .query('expenses')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Get all categories
@@ -421,11 +422,11 @@ export const getBudgetSummary = query({
     // Calculate spending by category
     const spendingByCategory = categories.map((category) => {
       const categoryExpenses = expenses.filter(
-        (e) => e.categoryId === category._id
+        e => e.categoryId === category._id,
       );
       const spent = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-      const budgetAmount =
-        budget?.categoryBudgets.find((cb) => cb.categoryId === category._id)
+      const budgetAmount
+        = budget?.categoryBudgets.find(cb => cb.categoryId === category._id)
           ?.amount || 0;
 
       return {
@@ -442,8 +443,8 @@ export const getBudgetSummary = query({
     // Calculate daily spending trend
     const spendingByDate: Record<string, number> = {};
     expenses.forEach((expense) => {
-      spendingByDate[expense.date] =
-        (spendingByDate[expense.date] || 0) + expense.amount;
+      spendingByDate[expense.date]
+        = (spendingByDate[expense.date] || 0) + expense.amount;
     });
 
     const dailyTrend = Object.entries(spendingByDate)
@@ -467,7 +468,7 @@ export const getBudgetSummary = query({
       isOverBudget: budget ? totalSpent > budget.totalBudget : false,
       expenseCount: expenses.length,
       spendingByCategory: spendingByCategory.filter(
-        (c) => c.spent > 0 || c.budgetAmount > 0
+        c => c.spent > 0 || c.budgetAmount > 0,
       ),
       dailyTrend,
     };
@@ -485,7 +486,7 @@ export const getSpendingTrend = query({
   handler: async (ctx, args) => {
     const expenses = await ctx.db
       .query('expenses')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     const categories = await ctx.db
@@ -493,7 +494,7 @@ export const getSpendingTrend = query({
       .withIndex('by_sort_order')
       .collect();
 
-    const categoryMap = new Map(categories.map((c) => [c._id, c]));
+    const categoryMap = new Map(categories.map(c => [c._id, c]));
 
     if (args.groupBy === 'category') {
       // Group by category for pie chart
@@ -515,9 +516,10 @@ export const getSpendingTrend = query({
       });
 
       return Array.from(byCategory.values())
-        .filter((item) => item.amount > 0)
+        .filter(item => item.amount > 0)
         .sort((a, b) => b.amount - a.amount);
-    } else {
+    }
+    else {
       // Group by day for line chart
       const byDate = new Map<string, number>();
 

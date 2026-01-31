@@ -6,15 +6,15 @@
 /**
  * Supported platforms for travel guide crawling
  */
-export type GuidePlatform =
-  | 'xiaohongshu'
-  | 'weibo'
-  | 'ctrip'
-  | 'douyin'
-  | 'tripadvisor'
-  | 'tongcheng'
-  | 'mafengwo'
-  | 'qunar';
+export type GuidePlatform
+  = | 'xiaohongshu'
+    | 'weibo'
+    | 'ctrip'
+    | 'douyin'
+    | 'tripadvisor'
+    | 'tongcheng'
+    | 'mafengwo'
+    | 'qunar';
 
 /**
  * Raw travel guide data as extracted from source platforms

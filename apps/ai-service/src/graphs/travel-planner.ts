@@ -98,12 +98,12 @@ const PLANNING_SYSTEM_PROMPT = `你是一个专业的旅行规划师。你需要
  * Node: Parse user intent from initial request
  */
 async function parseIntent(
-  state: TravelPlanStateType
+  state: TravelPlanStateType,
 ): Promise<Partial<TravelPlanStateType>> {
   const llm = createLLM({ temperature: 0.3 });
 
   // Get the initial user message
-  const userMessage = state.messages.find((m) => m instanceof HumanMessage);
+  const userMessage = state.messages.find(m => m instanceof HumanMessage);
   if (!userMessage) {
     return { error: 'No user message found', currentStep: 'error' };
   }
@@ -127,8 +127,8 @@ JSON:`;
 
   try {
     const response = await llm.invoke(prompt);
-    const responseText =
-      typeof response.content === 'string'
+    const responseText
+      = typeof response.content === 'string'
         ? response.content
         : JSON.stringify(response.content);
 
@@ -148,7 +148,8 @@ JSON:`;
     }
 
     return { currentStep: 'intent_parsed' };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       error: `Intent parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       currentStep: 'error',
@@ -169,21 +170,21 @@ function isToolCallingSupported(): boolean {
  * Falls back to simple mode if tool calling is not supported
  */
 async function gatherInfo(
-  state: TravelPlanStateType
+  state: TravelPlanStateType,
 ): Promise<Partial<TravelPlanStateType>> {
   const destination = state.destination || '未知目的地';
 
   // If tool calling is not supported, skip tool-based gathering
   if (!isToolCallingSupported()) {
     loggers.langgraph.info(
-      'Tool calling not supported, skipping gatherInfo tools'
+      'Tool calling not supported, skipping gatherInfo tools',
     );
     return { currentStep: 'info_gathered' };
   }
 
   const tools = toolsByUseCase.travelPlanning;
   const llm = createLLM({ temperature: 0.5 });
-   
+
   const llmWithTools: any = (llm as any).bindTools(tools);
 
   // Create a message to trigger tool calls
@@ -197,7 +198,7 @@ async function gatherInfo(
   try {
     const response = await llmWithTools.invoke([
       new SystemMessage(
-        '你是一个旅行信息收集助手。请使用工具获取旅行相关信息。'
+        '你是一个旅行信息收集助手。请使用工具获取旅行相关信息。',
       ),
       new HumanMessage(gatherPrompt),
     ]);
@@ -222,7 +223,8 @@ async function gatherInfo(
           if (data.pois) {
             pois.push(...data.pois);
           }
-        } catch {
+        }
+        catch {
           // Ignore parse errors
         }
       }
@@ -235,7 +237,8 @@ async function gatherInfo(
     }
 
     return { currentStep: 'info_gathered' };
-  } catch (error) {
+  }
+  catch (error) {
     loggers.langgraph.error({ error }, 'Gather info error');
     return { currentStep: 'info_gathered' }; // Continue even if gathering fails
   }
@@ -245,7 +248,7 @@ async function gatherInfo(
  * Node: Generate draft plan
  */
 async function generateDraft(
-  state: TravelPlanStateType
+  state: TravelPlanStateType,
 ): Promise<Partial<TravelPlanStateType>> {
   const llm = createLLM({ temperature: 0.7 });
 
@@ -259,12 +262,12 @@ async function generateDraft(
   // Prepare context from gathered info
   const guidesContext = state.relatedGuides
     .slice(0, 3)
-    .map((g) => `- ${g.title}: ${g.aiSummary || ''}`)
+    .map(g => `- ${g.title}: ${g.aiSummary || ''}`)
     .join('\n');
 
   const poisContext = state.recommendedPois
     .slice(0, 10)
-    .map((p) => `- ${p.name} (${p.type || '景点'})`)
+    .map(p => `- ${p.name} (${p.type || '景点'})`)
     .join('\n');
 
   const prompt = `${PLANNING_SYSTEM_PROMPT}
@@ -312,8 +315,8 @@ JSON:`;
 
   try {
     const response = await llm.invoke(prompt);
-    const responseText =
-      typeof response.content === 'string'
+    const responseText
+      = typeof response.content === 'string'
         ? response.content
         : JSON.stringify(response.content);
 
@@ -325,11 +328,11 @@ JSON:`;
         currentStep: 'draft_generated',
         messages: [
           new AIMessage(
-            `我已经为您生成了${destination}${duration}天的行程草案：\n\n` +
-              `**${plan.title}**\n\n${plan.summary}\n\n` +
-              `行程包含${plan.days?.length || 0}天的详细安排。请查看后告诉我：\n` +
-              `- 如果满意，回复"确认"\n` +
-              `- 如果需要修改，请说明具体需求`
+            `我已经为您生成了${destination}${duration}天的行程草案：\n\n`
+            + `**${plan.title}**\n\n${plan.summary}\n\n`
+            + `行程包含${plan.days?.length || 0}天的详细安排。请查看后告诉我：\n`
+            + `- 如果满意，回复"确认"\n`
+            + `- 如果需要修改，请说明具体需求`,
           ),
         ],
       };
@@ -339,7 +342,8 @@ JSON:`;
       error: 'Failed to generate plan',
       currentStep: 'error',
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       error: `Plan generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       currentStep: 'error',
@@ -362,27 +366,29 @@ function humanReview(state: TravelPlanStateType): Partial<TravelPlanStateType> {
   if (typeof feedback === 'string') {
     const lowerFeedback = feedback.toLowerCase();
     if (
-      lowerFeedback.includes('确认') ||
-      lowerFeedback.includes('approve') ||
-      lowerFeedback.includes('好的') ||
-      lowerFeedback.includes('可以')
+      lowerFeedback.includes('确认')
+      || lowerFeedback.includes('approve')
+      || lowerFeedback.includes('好的')
+      || lowerFeedback.includes('可以')
     ) {
       return {
         feedbackAction: 'approve',
         humanFeedback: feedback,
         currentStep: 'approved',
       };
-    } else if (
-      lowerFeedback.includes('取消') ||
-      lowerFeedback.includes('reject') ||
-      lowerFeedback.includes('不要')
+    }
+    else if (
+      lowerFeedback.includes('取消')
+      || lowerFeedback.includes('reject')
+      || lowerFeedback.includes('不要')
     ) {
       return {
         feedbackAction: 'reject',
         humanFeedback: feedback,
         currentStep: 'rejected',
       };
-    } else {
+    }
+    else {
       return {
         feedbackAction: 'modify',
         humanFeedback: feedback,
@@ -402,7 +408,7 @@ function humanReview(state: TravelPlanStateType): Partial<TravelPlanStateType> {
  * Node: Refine plan based on feedback
  */
 async function refinePlan(
-  state: TravelPlanStateType
+  state: TravelPlanStateType,
 ): Promise<Partial<TravelPlanStateType>> {
   if (state.feedbackAction === 'approve') {
     // No refinement needed
@@ -435,8 +441,8 @@ ${JSON.stringify(state.draftPlan, null, 2)}
 
   try {
     const response = await llm.invoke(prompt);
-    const responseText =
-      typeof response.content === 'string'
+    const responseText
+      = typeof response.content === 'string'
         ? response.content
         : JSON.stringify(response.content);
 
@@ -448,7 +454,7 @@ ${JSON.stringify(state.draftPlan, null, 2)}
         currentStep: 'refined',
         messages: [
           new AIMessage(
-            `我已根据您的反馈修改了行程。主要调整：\n${state.humanFeedback}\n\n请确认是否满意这个版本。`
+            `我已根据您的反馈修改了行程。主要调整：\n${state.humanFeedback}\n\n请确认是否满意这个版本。`,
           ),
         ],
       };
@@ -459,7 +465,8 @@ ${JSON.stringify(state.draftPlan, null, 2)}
       refinedPlan: state.draftPlan,
       currentStep: 'refined',
     };
-  } catch {
+  }
+  catch {
     return {
       refinedPlan: state.draftPlan,
       currentStep: 'refined',
@@ -471,7 +478,7 @@ ${JSON.stringify(state.draftPlan, null, 2)}
  * Node: Add transport routing between POIs
  */
 async function addTransport(
-  state: TravelPlanStateType
+  state: TravelPlanStateType,
 ): Promise<Partial<TravelPlanStateType>> {
   const plan = state.refinedPlan || state.draftPlan;
   if (!plan || !plan.days) {
@@ -502,8 +509,8 @@ async function addTransport(
     currentStep: 'completed',
     messages: [
       new AIMessage(
-        `您的${state.destination}${state.duration || 3}天行程已规划完成！\n\n` +
-          `行程包含详细的每日安排和交通建议。祝您旅途愉快！`
+        `您的${state.destination}${state.duration || 3}天行程已规划完成！\n\n`
+        + `行程包含详细的每日安排和交通建议。祝您旅途愉快！`,
       ),
     ],
   };
@@ -513,7 +520,7 @@ async function addTransport(
  * Routing function after human review
  */
 function routeAfterReview(
-  state: TravelPlanStateType
+  state: TravelPlanStateType,
 ): 'refine' | 'add_transport' | '__end__' {
   if (state.feedbackAction === 'reject') {
     return '__end__';
@@ -528,7 +535,7 @@ function routeAfterReview(
  * Routing after refinement
  */
 function routeAfterRefine(
-  state: TravelPlanStateType
+  state: TravelPlanStateType,
 ): 'add_transport' | '__end__' {
   if (state.currentStep === 'cancelled') {
     return '__end__';
@@ -610,13 +617,13 @@ export async function startPlanningSession(options: {
         userId: options.userId,
         messages: [new HumanMessage(options.message)],
       },
-      config
+      config,
     );
 
     // Check if we hit an interrupt
     const lastMessage = [...result.messages]
       .reverse()
-      .find((m) => m instanceof AIMessage);
+      .find(m => m instanceof AIMessage);
 
     return {
       sessionId: options.sessionId,
@@ -624,7 +631,8 @@ export async function startPlanningSession(options: {
       plan: result.draftPlan,
       waitingForFeedback: result.currentStep === 'draft_generated',
     };
-  } catch (error) {
+  }
+  catch (error) {
     // Check if it's an interrupt
     if ((error as any)?.name === 'GraphInterrupt') {
       return {
@@ -661,12 +669,12 @@ export async function resumePlanningSession(options: {
     // Resume with Command containing the feedback
     const result = await planner.invoke(
       new Command({ resume: options.feedback }),
-      config
+      config,
     );
 
     const lastMessage = [...result.messages]
       .reverse()
-      .find((m) => m instanceof AIMessage);
+      .find(m => m instanceof AIMessage);
 
     return {
       sessionId: options.sessionId,
@@ -674,7 +682,8 @@ export async function resumePlanningSession(options: {
       plan: result.finalPlan || result.refinedPlan || result.draftPlan,
       completed: result.currentStep === 'completed',
     };
-  } catch (error) {
+  }
+  catch (error) {
     // Handle another interrupt (for iterative refinement)
     if ((error as any)?.name === 'GraphInterrupt') {
       return {

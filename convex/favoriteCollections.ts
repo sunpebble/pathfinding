@@ -20,21 +20,20 @@ export const create = mutation({
     // Get the next sort order
     const existingCollections = await ctx.db
       .query('favoriteCollections')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const maxSortOrder = existingCollections.reduce(
       (max, c) => Math.max(max, c.sortOrder),
-      0
+      0,
     );
 
     // If setting as default, unset existing default
     if (args.isDefault) {
       const existingDefault = await ctx.db
         .query('favoriteCollections')
-        .withIndex('by_user_default', (q) =>
-          q.eq('userId', args.userId).eq('isDefault', true)
-        )
+        .withIndex('by_user_default', q =>
+          q.eq('userId', args.userId).eq('isDefault', true))
         .first();
 
       if (existingDefault) {
@@ -66,9 +65,8 @@ export const getOrCreateDefault = mutation({
     // Try to find existing default
     const existing = await ctx.db
       .query('favoriteCollections')
-      .withIndex('by_user_default', (q) =>
-        q.eq('userId', args.userId).eq('isDefault', true)
-      )
+      .withIndex('by_user_default', q =>
+        q.eq('userId', args.userId).eq('isDefault', true))
       .first();
 
     if (existing) {
@@ -99,7 +97,7 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const collections = await ctx.db
       .query('favoriteCollections')
-      .withIndex('by_user_sort', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_sort', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by sortOrder
@@ -110,16 +108,15 @@ export const listByUser = query({
       collections.map(async (collection) => {
         const favorites = await ctx.db
           .query('itineraryFavorites')
-          .withIndex('by_collection', (q) =>
-            q.eq('collectionId', collection._id)
-          )
+          .withIndex('by_collection', q =>
+            q.eq('collectionId', collection._id))
           .collect();
 
         return {
           ...collection,
           itemCount: favorites.length,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -135,7 +132,8 @@ export const getById = query({
   },
   handler: async (ctx, args) => {
     const collection = await ctx.db.get(args.id);
-    if (!collection) return null;
+    if (!collection)
+      return null;
 
     const page = args.page ?? 1;
     const pageSize = args.pageSize ?? 20;
@@ -144,7 +142,7 @@ export const getById = query({
     // Get favorites in this collection
     const favorites = await ctx.db
       .query('itineraryFavorites')
-      .withIndex('by_collection', (q) => q.eq('collectionId', args.id))
+      .withIndex('by_collection', q => q.eq('collectionId', args.id))
       .order('desc')
       .collect();
 
@@ -155,7 +153,8 @@ export const getById = query({
     const enrichedFavorites = await Promise.all(
       paginatedFavorites.map(async (fav) => {
         const itinerary = await ctx.db.get(fav.itineraryId);
-        if (!itinerary) return null;
+        if (!itinerary)
+          return null;
 
         const city = await ctx.db.get(itinerary.cityId);
         return {
@@ -165,10 +164,10 @@ export const getById = query({
             cityName: city?.name,
           },
         };
-      })
+      }),
     );
 
-    const items = enrichedFavorites.filter((item) => item !== null);
+    const items = enrichedFavorites.filter(item => item !== null);
 
     return {
       ...collection,
@@ -202,9 +201,8 @@ export const update = mutation({
     if (args.isDefault && !collection.isDefault) {
       const existingDefault = await ctx.db
         .query('favoriteCollections')
-        .withIndex('by_user_default', (q) =>
-          q.eq('userId', args.userId).eq('isDefault', true)
-        )
+        .withIndex('by_user_default', q =>
+          q.eq('userId', args.userId).eq('isDefault', true))
         .first();
 
       if (existingDefault) {
@@ -216,11 +214,14 @@ export const update = mutation({
       updatedAt: Date.now(),
     };
 
-    if (args.name !== undefined) updates.name = args.name;
-    if (args.description !== undefined) updates.description = args.description;
+    if (args.name !== undefined)
+      updates.name = args.name;
+    if (args.description !== undefined)
+      updates.description = args.description;
     if (args.coverImageUrl !== undefined)
       updates.coverImageUrl = args.coverImageUrl;
-    if (args.isDefault !== undefined) updates.isDefault = args.isDefault;
+    if (args.isDefault !== undefined)
+      updates.isDefault = args.isDefault;
 
     await ctx.db.patch(args.id, updates);
     return await ctx.db.get(args.id);
@@ -247,12 +248,12 @@ export const remove = mutation({
     if (collection.isDefault) {
       const favorites = await ctx.db
         .query('itineraryFavorites')
-        .withIndex('by_collection', (q) => q.eq('collectionId', args.id))
+        .withIndex('by_collection', q => q.eq('collectionId', args.id))
         .first();
 
       if (favorites) {
         throw new Error(
-          'Cannot delete default collection while it contains items'
+          'Cannot delete default collection while it contains items',
         );
       }
     }
@@ -260,7 +261,7 @@ export const remove = mutation({
     // Delete all favorites in this collection
     const favorites = await ctx.db
       .query('itineraryFavorites')
-      .withIndex('by_collection', (q) => q.eq('collectionId', args.id))
+      .withIndex('by_collection', q => q.eq('collectionId', args.id))
       .collect();
 
     for (const fav of favorites) {

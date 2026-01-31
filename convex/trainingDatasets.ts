@@ -5,19 +5,19 @@
  * CRUD operations for ML training datasets
  */
 
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { v } from 'convex/values';
 import {
   trainingGenerationParamsValidator,
   trainingStatisticsValidator,
   trainingStoragePathsValidator,
-} from "../packages/convex/src/validators/index.js";
+} from '../packages/convex/src/validators/index.js';
+import { mutation, query } from './_generated/server';
 
 const statusValidator = v.union(
-  v.literal("pending"),
-  v.literal("generating"),
-  v.literal("completed"),
-  v.literal("failed"),
+  v.literal('pending'),
+  v.literal('generating'),
+  v.literal('completed'),
+  v.literal('failed'),
 );
 
 // List training datasets with filters
@@ -30,19 +30,19 @@ export const list = query({
   },
   handler: async (ctx, args) => {
     let datasets = await ctx.db
-      .query("trainingDatasets")
-      .order("desc")
+      .query('trainingDatasets')
+      .order('desc')
       .collect();
 
     if (args.name) {
       const nameLower = args.name.toLowerCase();
-      datasets = datasets.filter((d) =>
+      datasets = datasets.filter(d =>
         d.name.toLowerCase().includes(nameLower),
       );
     }
 
     if (args.status) {
-      datasets = datasets.filter((d) => d.status === args.status);
+      datasets = datasets.filter(d => d.status === args.status);
     }
 
     const total = datasets.length;
@@ -62,7 +62,7 @@ export const list = query({
 
 // Get a dataset by ID
 export const getById = query({
-  args: { id: v.id("trainingDatasets") },
+  args: { id: v.id('trainingDatasets') },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -81,11 +81,11 @@ export const create = mutation({
   handler: async (ctx, args) => {
     // Check for duplicate name+version
     const existing = await ctx.db
-      .query("trainingDatasets")
-      .filter((q) =>
+      .query('trainingDatasets')
+      .filter(q =>
         q.and(
-          q.eq(q.field("name"), args.name),
-          q.eq(q.field("version"), args.version),
+          q.eq(q.field('name'), args.name),
+          q.eq(q.field('version'), args.version),
         ),
       )
       .first();
@@ -96,12 +96,12 @@ export const create = mutation({
       );
     }
 
-    const id = await ctx.db.insert("trainingDatasets", {
+    const id = await ctx.db.insert('trainingDatasets', {
       name: args.name,
       version: args.version,
       generationParams: args.generationParams,
       outputFormats: args.outputFormats,
-      status: args.status || "pending",
+      status: args.status || 'pending',
       statistics: args.statistics,
       storagePaths: {},
       generatedAt: undefined,
@@ -114,7 +114,7 @@ export const create = mutation({
 // Update a training dataset
 export const update = mutation({
   args: {
-    id: v.id("trainingDatasets"),
+    id: v.id('trainingDatasets'),
     status: v.optional(statusValidator),
     statistics: v.optional(trainingStatisticsValidator),
     storagePaths: v.optional(trainingStoragePathsValidator),
@@ -138,12 +138,12 @@ export const update = mutation({
 
 // Delete a training dataset
 export const remove = mutation({
-  args: { id: v.id("trainingDatasets") },
+  args: { id: v.id('trainingDatasets') },
   handler: async (ctx, args) => {
     // Also delete associated quality reports
     const reports = await ctx.db
-      .query("dataQualityReports")
-      .filter((q) => q.eq(q.field("datasetId"), args.id))
+      .query('dataQualityReports')
+      .filter(q => q.eq(q.field('datasetId'), args.id))
       .collect();
 
     for (const report of reports) {
@@ -162,11 +162,11 @@ export const checkExists = query({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query("trainingDatasets")
-      .filter((q) =>
+      .query('trainingDatasets')
+      .filter(q =>
         q.and(
-          q.eq(q.field("name"), args.name),
-          q.eq(q.field("version"), args.version),
+          q.eq(q.field('name'), args.name),
+          q.eq(q.field('version'), args.version),
         ),
       )
       .first();

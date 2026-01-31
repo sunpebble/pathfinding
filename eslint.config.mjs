@@ -25,6 +25,7 @@ export default antfu({
     '**/.claude/**',
     '.auto-claude/**',
     '.sisyphus/**',
+    '.planning/**',
     'dist/**',
     'node_modules/**',
     'pnpm-workspace.yaml',

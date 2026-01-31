@@ -132,7 +132,7 @@ export interface CrawlOptions {
 
 type CrawlerFunction = (
   city: string,
-  options: CrawlOptions
+  options: CrawlOptions,
 ) => Promise<CrawlResult[]>;
 
 const crawlers: Record<string, CrawlerFunction> = {
@@ -150,7 +150,7 @@ const crawlers: Record<string, CrawlerFunction> = {
 export async function crawlPlatform(
   platform: string,
   city: string,
-  options: CrawlOptions = {}
+  options: CrawlOptions = {},
 ): Promise<CrawlResult[]> {
   const crawler = crawlers[platform];
 

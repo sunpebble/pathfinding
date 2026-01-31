@@ -79,7 +79,7 @@ export interface BrowserClient {
     options?: {
       timeout?: number;
       waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
-    }
+    },
   ) => Promise<void>;
 
   /**

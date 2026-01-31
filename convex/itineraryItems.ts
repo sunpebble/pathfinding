@@ -12,7 +12,7 @@ const transportModeValidator = v.union(
   v.literal('driving'),
   v.literal('transit'),
   v.literal('cycling'),
-  v.literal('taxi')
+  v.literal('taxi'),
 );
 
 /**
@@ -23,7 +23,7 @@ const transportModeValidator = v.union(
 async function checkItemEditPermission(
   ctx: QueryCtx | MutationCtx,
   dayId: Id<'itineraryDays'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const day = await ctx.db.get(dayId);
   if (!day) {
@@ -43,9 +43,8 @@ async function checkItemEditPermission(
   // Check if user is a collaborator with edit permissions
   const collab = await ctx.db
     .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', (q) =>
-      q.eq('itineraryId', day.itineraryId).eq('userId', userId)
-    )
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', day.itineraryId).eq('userId', userId))
     .first();
 
   if (!collab) {
@@ -65,7 +64,7 @@ export const listByDay = query({
   handler: async (ctx, args) => {
     const items = await ctx.db
       .query('itineraryItems')
-      .withIndex('by_day', (q) => q.eq('dayId', args.dayId))
+      .withIndex('by_day', q => q.eq('dayId', args.dayId))
       .collect();
 
     // Sort by orderIndex
@@ -90,7 +89,7 @@ export const listByDay = query({
               }
             : null,
         };
-      })
+      }),
     );
   },
 });
@@ -100,7 +99,8 @@ export const getById = query({
   args: { id: v.id('itineraryItems') },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.id);
-    if (!item) return null;
+    if (!item)
+      return null;
 
     const poi = await ctx.db.get(item.poiId);
     return {
@@ -131,11 +131,11 @@ export const create = mutation({
     if (orderIndex === undefined) {
       const existingItems = await ctx.db
         .query('itineraryItems')
-        .withIndex('by_day', (q) => q.eq('dayId', args.dayId))
+        .withIndex('by_day', q => q.eq('dayId', args.dayId))
         .collect();
-      orderIndex =
-        existingItems.length > 0
-          ? Math.max(...existingItems.map((i) => i.orderIndex)) + 1
+      orderIndex
+        = existingItems.length > 0
+          ? Math.max(...existingItems.map(i => i.orderIndex)) + 1
           : 0;
     }
 
@@ -165,14 +165,15 @@ export const update = mutation({
   handler: async (ctx, args) => {
     // Get item to check permissions
     const item = await ctx.db.get(args.id);
-    if (!item) throw new Error('Item not found');
+    if (!item)
+      throw new Error('Item not found');
 
     // Check edit permission
     await checkItemEditPermission(ctx, item.dayId, args.userId);
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, filteredUpdates);
     return await ctx.db.get(id);
@@ -188,7 +189,8 @@ export const remove = mutation({
   handler: async (ctx, args) => {
     // Get item to check permissions
     const item = await ctx.db.get(args.id);
-    if (!item) throw new Error('Item not found');
+    if (!item)
+      throw new Error('Item not found');
 
     // Check edit permission
     await checkItemEditPermission(ctx, item.dayId, args.userId);
@@ -206,7 +208,8 @@ export const reorder = mutation({
   },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.itemId);
-    if (!item) throw new Error('Item not found');
+    if (!item)
+      throw new Error('Item not found');
 
     // Check edit permission
     await checkItemEditPermission(ctx, item.dayId, args.userId);
@@ -214,24 +217,27 @@ export const reorder = mutation({
     const oldOrder = item.orderIndex;
     const newOrder = args.newOrderIndex;
 
-    if (oldOrder === newOrder) return;
+    if (oldOrder === newOrder)
+      return;
 
     // Get all items in the same day
     const items = await ctx.db
       .query('itineraryItems')
-      .withIndex('by_day', (q) => q.eq('dayId', item.dayId))
+      .withIndex('by_day', q => q.eq('dayId', item.dayId))
       .collect();
 
     // Reorder items
     for (const i of items) {
       if (i._id === args.itemId) {
         await ctx.db.patch(i._id, { orderIndex: newOrder });
-      } else if (newOrder < oldOrder) {
+      }
+      else if (newOrder < oldOrder) {
         // Moving up: shift items between newOrder and oldOrder down
         if (i.orderIndex >= newOrder && i.orderIndex < oldOrder) {
           await ctx.db.patch(i._id, { orderIndex: i.orderIndex + 1 });
         }
-      } else {
+      }
+      else {
         // Moving down: shift items between oldOrder and newOrder up
         if (i.orderIndex > oldOrder && i.orderIndex <= newOrder) {
           await ctx.db.patch(i._id, { orderIndex: i.orderIndex - 1 });
@@ -251,7 +257,8 @@ export const moveToDay = mutation({
   },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.itemId);
-    if (!item) throw new Error('Item not found');
+    if (!item)
+      throw new Error('Item not found');
 
     // Check edit permission for the source day
     await checkItemEditPermission(ctx, item.dayId, args.userId);
@@ -264,11 +271,11 @@ export const moveToDay = mutation({
     if (orderIndex === undefined) {
       const existingItems = await ctx.db
         .query('itineraryItems')
-        .withIndex('by_day', (q) => q.eq('dayId', args.newDayId))
+        .withIndex('by_day', q => q.eq('dayId', args.newDayId))
         .collect();
-      orderIndex =
-        existingItems.length > 0
-          ? Math.max(...existingItems.map((i) => i.orderIndex)) + 1
+      orderIndex
+        = existingItems.length > 0
+          ? Math.max(...existingItems.map(i => i.orderIndex)) + 1
           : 0;
     }
 

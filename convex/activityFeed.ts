@@ -15,12 +15,12 @@ const activityTypeValidator = v.union(
   v.literal('like_itinerary'),
   v.literal('comment_itinerary'),
   v.literal('copy_itinerary'),
-  v.literal('follow_user')
+  v.literal('follow_user'),
 );
 
 const visibilityValidator = v.union(
   v.literal('public'),
-  v.literal('followers')
+  v.literal('followers'),
 );
 
 // ============================================
@@ -44,10 +44,10 @@ export const getFollowingFeed = query({
     // Get list of users this user follows
     const follows = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower', (q) => q.eq('followerId', args.userId))
+      .withIndex('by_follower', q => q.eq('followerId', args.userId))
       .collect();
 
-    const followingIds = follows.map((f) => f.followingId);
+    const followingIds = follows.map(f => f.followingId);
 
     // If user doesn't follow anyone, return empty feed
     if (followingIds.length === 0) {
@@ -64,12 +64,12 @@ export const getFollowingFeed = query({
       .query('activityFeed')
       .withIndex('by_created')
       .order('desc')
-      .filter((q) => q.lt(q.field('createdAt'), cursor))
+      .filter(q => q.lt(q.field('createdAt'), cursor))
       .take(limit * 5); // Fetch more to account for filtering
 
     // Filter to only include activities from followed users
     const filteredActivities = allActivities
-      .filter((activity) => followingIds.includes(activity.actorId))
+      .filter(activity => followingIds.includes(activity.actorId))
       .slice(0, limit + 1);
 
     const hasMore = filteredActivities.length > limit;
@@ -102,14 +102,14 @@ export const getPublicFeed = query({
 
     let activitiesQuery = ctx.db
       .query('activityFeed')
-      .withIndex('by_visibility_created', (q) => q.eq('visibility', 'public'))
+      .withIndex('by_visibility_created', q => q.eq('visibility', 'public'))
       .order('desc')
-      .filter((q) => q.lt(q.field('createdAt'), cursor));
+      .filter(q => q.lt(q.field('createdAt'), cursor));
 
     // Apply activity type filter if provided
     if (args.activityType) {
-      activitiesQuery = activitiesQuery.filter((q) =>
-        q.eq(q.field('activityType'), args.activityType)
+      activitiesQuery = activitiesQuery.filter(q =>
+        q.eq(q.field('activityType'), args.activityType),
       );
     }
 
@@ -143,18 +143,18 @@ export const getTrendingFeed = query({
     // Get recent public activities for new itineraries
     const activities = await ctx.db
       .query('activityFeed')
-      .withIndex('by_visibility_created', (q) => q.eq('visibility', 'public'))
+      .withIndex('by_visibility_created', q => q.eq('visibility', 'public'))
       .order('desc')
-      .filter((q) =>
+      .filter(q =>
         q.and(
           q.gt(q.field('createdAt'), cutoffTime),
-          q.eq(q.field('activityType'), 'new_itinerary')
-        )
+          q.eq(q.field('activityType'), 'new_itinerary'),
+        ),
       )
       .take(limit * 3);
 
     // Calculate engagement score and sort
-    const scoredActivities = activities.map((activity) => ({
+    const scoredActivities = activities.map(activity => ({
       ...activity,
       engagementScore:
         (activity.likesCount || 0) * 2 + (activity.commentsCount || 0) * 3,
@@ -184,13 +184,13 @@ export const getUserActivities = query({
 
     let query = ctx.db
       .query('activityFeed')
-      .withIndex('by_actor_created', (q) => q.eq('actorId', args.userId))
+      .withIndex('by_actor_created', q => q.eq('actorId', args.userId))
       .order('desc')
-      .filter((q) => q.lt(q.field('createdAt'), cursor));
+      .filter(q => q.lt(q.field('createdAt'), cursor));
 
     if (args.activityType) {
-      query = query.filter((q) =>
-        q.eq(q.field('activityType'), args.activityType)
+      query = query.filter(q =>
+        q.eq(q.field('activityType'), args.activityType),
       );
     }
 
@@ -264,9 +264,8 @@ export const updateActivityEngagement = mutation({
     // Find the most recent activity for this target
     const activity = await ctx.db
       .query('activityFeed')
-      .withIndex('by_target', (q) =>
-        q.eq('targetType', args.targetType).eq('targetId', args.targetId)
-      )
+      .withIndex('by_target', q =>
+        q.eq('targetType', args.targetType).eq('targetId', args.targetId))
       .order('desc')
       .first();
 
@@ -304,9 +303,8 @@ export const deleteActivitiesForTarget = mutation({
   handler: async (ctx, args) => {
     const activities = await ctx.db
       .query('activityFeed')
-      .withIndex('by_target', (q) =>
-        q.eq('targetType', args.targetType).eq('targetId', args.targetId)
-      )
+      .withIndex('by_target', q =>
+        q.eq('targetType', args.targetType).eq('targetId', args.targetId))
       .collect();
 
     for (const activity of activities) {
@@ -334,9 +332,8 @@ export const followUser = mutation({
     // Check if already following
     const existing = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', args.followerId).eq('followingId', args.followingId)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.followerId).eq('followingId', args.followingId))
       .first();
 
     if (existing) {
@@ -354,13 +351,13 @@ export const followUser = mutation({
     const followerProfile = await ctx.db
       .query('profiles')
       .withIndex('by_email')
-      .filter((q) => q.eq(q.field('email'), args.followerId))
+      .filter(q => q.eq(q.field('email'), args.followerId))
       .first();
 
     const followingProfile = await ctx.db
       .query('profiles')
       .withIndex('by_email')
-      .filter((q) => q.eq(q.field('email'), args.followingId))
+      .filter(q => q.eq(q.field('email'), args.followingId))
       .first();
 
     if (followerProfile) {
@@ -417,9 +414,8 @@ export const unfollowUser = mutation({
   handler: async (ctx, args) => {
     const follow = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', args.followerId).eq('followingId', args.followingId)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.followerId).eq('followingId', args.followingId))
       .first();
 
     if (!follow) {
@@ -432,13 +428,13 @@ export const unfollowUser = mutation({
     const followerProfile = await ctx.db
       .query('profiles')
       .withIndex('by_email')
-      .filter((q) => q.eq(q.field('email'), args.followerId))
+      .filter(q => q.eq(q.field('email'), args.followerId))
       .first();
 
     const followingProfile = await ctx.db
       .query('profiles')
       .withIndex('by_email')
-      .filter((q) => q.eq(q.field('email'), args.followingId))
+      .filter(q => q.eq(q.field('email'), args.followingId))
       .first();
 
     if (followerProfile && (followerProfile.followingCount || 0) > 0) {
@@ -468,9 +464,8 @@ export const isFollowing = query({
   handler: async (ctx, args) => {
     const follow = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', args.followerId).eq('followingId', args.followingId)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.followerId).eq('followingId', args.followingId))
       .first();
 
     return { isFollowing: !!follow };
@@ -492,9 +487,9 @@ export const getFollowers = query({
 
     const follows = await ctx.db
       .query('userFollows')
-      .withIndex('by_following', (q) => q.eq('followingId', args.userId))
+      .withIndex('by_following', q => q.eq('followingId', args.userId))
       .order('desc')
-      .filter((q) => q.lt(q.field('createdAt'), cursor))
+      .filter(q => q.lt(q.field('createdAt'), cursor))
       .take(limit + 1);
 
     const hasMore = follows.length > limit;
@@ -505,7 +500,7 @@ export const getFollowers = query({
       data.map(async (follow) => {
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), follow.followerId))
+          .filter(q => q.eq(q.field('email'), follow.followerId))
           .first();
 
         return {
@@ -518,7 +513,7 @@ export const getFollowers = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return {
@@ -544,9 +539,9 @@ export const getFollowing = query({
 
     const follows = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower', (q) => q.eq('followerId', args.userId))
+      .withIndex('by_follower', q => q.eq('followerId', args.userId))
       .order('desc')
-      .filter((q) => q.lt(q.field('createdAt'), cursor))
+      .filter(q => q.lt(q.field('createdAt'), cursor))
       .take(limit + 1);
 
     const hasMore = follows.length > limit;
@@ -557,7 +552,7 @@ export const getFollowing = query({
       data.map(async (follow) => {
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), follow.followingId))
+          .filter(q => q.eq(q.field('email'), follow.followingId))
           .first();
 
         return {
@@ -570,7 +565,7 @@ export const getFollowing = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return {

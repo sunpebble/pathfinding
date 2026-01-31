@@ -1,18 +1,18 @@
 /**
  * POI category enum - matches Convex category strings
  */
-export type PoiCategory =
-  | 'attraction'
-  | 'restaurant'
-  | 'hotel'
-  | 'shopping'
-  | 'cafe'
-  | 'bar'
-  | 'museum'
-  | 'park'
-  | 'entertainment'
-  | 'transport'
-  | 'other';
+export type PoiCategory
+  = | 'attraction'
+    | 'restaurant'
+    | 'hotel'
+    | 'shopping'
+    | 'cafe'
+    | 'bar'
+    | 'museum'
+    | 'park'
+    | 'entertainment'
+    | 'transport'
+    | 'other';
 
 /**
  * Business hours by day of week

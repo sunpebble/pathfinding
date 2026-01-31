@@ -53,7 +53,8 @@ export function getDefaultProvider(): LLMProvider {
  */
 export function getDefaultModel(provider: LLMProvider): string {
   const envModel = process.env.LLM_MODEL;
-  if (envModel) return envModel;
+  if (envModel)
+    return envModel;
 
   switch (provider) {
     case 'openai':

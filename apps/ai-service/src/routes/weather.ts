@@ -75,9 +75,10 @@ weatherRouter.get('/forecast', async (c) => {
   try {
     const forecast = await fetchWeather(lat, lon);
     return c.json({ data: forecast });
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : 'Weather service unavailable';
+  }
+  catch (err) {
+    const message
+      = err instanceof Error ? err.message : 'Weather service unavailable';
     return c.json({ error: message }, 503);
   }
 });
@@ -98,9 +99,10 @@ weatherRouter.get('/daily', async (c) => {
       data: forecast.daily || [],
       count: (forecast.daily || []).length,
     });
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : 'Weather service unavailable';
+  }
+  catch (err) {
+    const message
+      = err instanceof Error ? err.message : 'Weather service unavailable';
     return c.json({ error: message }, 503);
   }
 });
@@ -123,13 +125,14 @@ weatherRouter.get('/alerts', async (c) => {
         alerts,
         count: alerts.length,
         has_severe: alerts.some(
-          (a: any) => a.severity === 'severe' || a.severity === 'extreme'
+          (a: any) => a.severity === 'severe' || a.severity === 'extreme',
         ),
       },
     });
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : 'Weather service unavailable';
+  }
+  catch (err) {
+    const message
+      = err instanceof Error ? err.message : 'Weather service unavailable';
     return c.json({ error: message }, 503);
   }
 });
@@ -165,11 +168,14 @@ weatherRouter.get('/recommendations', async (c) => {
     // Clothing
     if (temp < 5) {
       recommendations.clothing.push('厚外套', '围巾', '手套', '保暖内衣');
-    } else if (temp < 15) {
+    }
+    else if (temp < 15) {
       recommendations.clothing.push('外套', '长裤', '薄毛衣');
-    } else if (temp < 25) {
+    }
+    else if (temp < 25) {
       recommendations.clothing.push('薄外套', '长袖衬衫');
-    } else {
+    }
+    else {
       recommendations.clothing.push('短袖', '短裤', '凉鞋');
     }
 
@@ -182,7 +188,8 @@ weatherRouter.get('/recommendations', async (c) => {
     // Activities
     if (description.includes('晴') || description.includes('clear')) {
       recommendations.activities.push('户外观光', '拍照', '徒步');
-    } else if (description.includes('阴') || description.includes('cloud')) {
+    }
+    else if (description.includes('阴') || description.includes('cloud')) {
       recommendations.activities.push('室内景点', '博物馆', '购物');
     }
 
@@ -197,9 +204,10 @@ weatherRouter.get('/recommendations', async (c) => {
         recommendations,
       },
     });
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : 'Weather service unavailable';
+  }
+  catch (err) {
+    const message
+      = err instanceof Error ? err.message : 'Weather service unavailable';
     return c.json({ error: message }, 503);
   }
 });

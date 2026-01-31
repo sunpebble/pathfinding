@@ -3,8 +3,8 @@
  * Handles caching and retrieval of exchange rate data
  */
 
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
 
 // Typed validator for rates - Record<string, number>
 const currencyRatesMapValidator = v.record(v.string(), v.number());
@@ -20,7 +20,7 @@ const exchangeRateHistoryValidator = v.object({
     }),
   ),
   change: v.number(),
-  trend: v.union(v.literal("up"), v.literal("down"), v.literal("stable")),
+  trend: v.union(v.literal('up'), v.literal('down'), v.literal('stable')),
 });
 
 /**
@@ -34,8 +34,8 @@ export const get = query({
     const baseUpper = args.base.toUpperCase();
 
     const cached = await ctx.db
-      .query("currencyRates")
-      .withIndex("by_base", (q) => q.eq("base", baseUpper))
+      .query('currencyRates')
+      .withIndex('by_base', q => q.eq('base', baseUpper))
       .first();
 
     return cached;
@@ -56,8 +56,8 @@ export const upsert = mutation({
 
     // Check if entry already exists
     const existing = await ctx.db
-      .query("currencyRates")
-      .withIndex("by_base", (q) => q.eq("base", baseUpper))
+      .query('currencyRates')
+      .withIndex('by_base', q => q.eq('base', baseUpper))
       .first();
 
     if (existing) {
@@ -70,7 +70,7 @@ export const upsert = mutation({
     }
 
     // Create new entry
-    return await ctx.db.insert("currencyRates", {
+    return await ctx.db.insert('currencyRates', {
       base: baseUpper,
       rates: args.rates,
       fetchedAt: args.fetchedAt,
@@ -92,10 +92,9 @@ export const getHistory = query({
     const targetUpper = args.target.toUpperCase();
 
     const cached = await ctx.db
-      .query("currencyHistory")
-      .withIndex("by_pair_days", (q) =>
-        q.eq("base", baseUpper).eq("target", targetUpper).eq("days", args.days),
-      )
+      .query('currencyHistory')
+      .withIndex('by_pair_days', q =>
+        q.eq('base', baseUpper).eq('target', targetUpper).eq('days', args.days))
       .first();
 
     return cached;
@@ -119,10 +118,9 @@ export const upsertHistory = mutation({
 
     // Check if entry already exists
     const existing = await ctx.db
-      .query("currencyHistory")
-      .withIndex("by_pair_days", (q) =>
-        q.eq("base", baseUpper).eq("target", targetUpper).eq("days", args.days),
-      )
+      .query('currencyHistory')
+      .withIndex('by_pair_days', q =>
+        q.eq('base', baseUpper).eq('target', targetUpper).eq('days', args.days))
       .first();
 
     if (existing) {
@@ -135,7 +133,7 @@ export const upsertHistory = mutation({
     }
 
     // Create new entry
-    return await ctx.db.insert("currencyHistory", {
+    return await ctx.db.insert('currencyHistory', {
       base: baseUpper,
       target: targetUpper,
       days: args.days,
@@ -158,9 +156,9 @@ export const cleanup = mutation({
 
     // Clean up rates cache
     const oldRates = await ctx.db
-      .query("currencyRates")
-      .withIndex("by_fetched_at")
-      .filter((q) => q.lt(q.field("fetchedAt"), cutoffTime))
+      .query('currencyRates')
+      .withIndex('by_fetched_at')
+      .filter(q => q.lt(q.field('fetchedAt'), cutoffTime))
       .collect();
 
     let deletedRates = 0;
@@ -171,9 +169,9 @@ export const cleanup = mutation({
 
     // Clean up history cache
     const oldHistory = await ctx.db
-      .query("currencyHistory")
-      .withIndex("by_fetched_at")
-      .filter((q) => q.lt(q.field("fetchedAt"), cutoffTime))
+      .query('currencyHistory')
+      .withIndex('by_fetched_at')
+      .filter(q => q.lt(q.field('fetchedAt'), cutoffTime))
       .collect();
 
     let deletedHistory = 0;
@@ -192,8 +190,8 @@ export const cleanup = mutation({
 export const stats = query({
   args: {},
   handler: async (ctx) => {
-    const ratesEntries = await ctx.db.query("currencyRates").collect();
-    const historyEntries = await ctx.db.query("currencyHistory").collect();
+    const ratesEntries = await ctx.db.query('currencyRates').collect();
+    const historyEntries = await ctx.db.query('currencyHistory').collect();
 
     const now = Date.now();
     const oneHourAgo = now - 60 * 60 * 1000;
@@ -205,7 +203,8 @@ export const stats = query({
     for (const entry of ratesEntries) {
       if (entry.fetchedAt > oneHourAgo) {
         recentRatesCount++;
-      } else if (entry.fetchedAt < oneDayAgo) {
+      }
+      else if (entry.fetchedAt < oneDayAgo) {
         staleRatesCount++;
       }
     }
@@ -216,7 +215,8 @@ export const stats = query({
     for (const entry of historyEntries) {
       if (entry.fetchedAt > oneHourAgo) {
         recentHistoryCount++;
-      } else if (entry.fetchedAt < oneDayAgo) {
+      }
+      else if (entry.fetchedAt < oneDayAgo) {
         staleHistoryCount++;
       }
     }

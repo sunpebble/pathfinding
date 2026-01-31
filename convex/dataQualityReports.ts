@@ -5,33 +5,33 @@
  * CRUD operations for data quality analysis reports
  */
 
-import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { v } from 'convex/values';
 import {
-  dataQualityMetricsValidator,
   dataQualityIssueValidator,
-} from "../packages/convex/src/validators/index.js";
+  dataQualityMetricsValidator,
+} from '../packages/convex/src/validators/index.js';
+import { internalMutation, mutation, query } from './_generated/server';
 
 // List data quality reports with pagination
 export const list = query({
   args: {
-    datasetId: v.optional(v.id("trainingDatasets")),
+    datasetId: v.optional(v.id('trainingDatasets')),
     reportType: v.optional(v.string()),
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     let reports = await ctx.db
-      .query("dataQualityReports")
-      .order("desc")
+      .query('dataQualityReports')
+      .order('desc')
       .collect();
 
     if (args.datasetId) {
-      reports = reports.filter((r) => r.datasetId === args.datasetId);
+      reports = reports.filter(r => r.datasetId === args.datasetId);
     }
 
     if (args.reportType) {
-      reports = reports.filter((r) => r.reportType === args.reportType);
+      reports = reports.filter(r => r.reportType === args.reportType);
     }
 
     const total = reports.length;
@@ -51,7 +51,7 @@ export const list = query({
 
 // Get a report by ID
 export const getById = query({
-  args: { id: v.id("dataQualityReports") },
+  args: { id: v.id('dataQualityReports') },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -59,11 +59,11 @@ export const getById = query({
 
 // Get reports for a specific dataset
 export const getByDataset = query({
-  args: { datasetId: v.id("trainingDatasets") },
+  args: { datasetId: v.id('trainingDatasets') },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("dataQualityReports")
-      .withIndex("by_dataset", (q) => q.eq("datasetId", args.datasetId))
+      .query('dataQualityReports')
+      .withIndex('by_dataset', q => q.eq('datasetId', args.datasetId))
       .collect();
   },
 });
@@ -71,13 +71,13 @@ export const getByDataset = query({
 // Create a new quality report
 export const create = mutation({
   args: {
-    datasetId: v.optional(v.id("trainingDatasets")),
+    datasetId: v.optional(v.id('trainingDatasets')),
     reportType: v.string(),
     metrics: dataQualityMetricsValidator,
     issues: v.optional(v.array(dataQualityIssueValidator)),
   },
   handler: async (ctx, args) => {
-    const id = await ctx.db.insert("dataQualityReports", {
+    const id = await ctx.db.insert('dataQualityReports', {
       datasetId: args.datasetId,
       reportType: args.reportType,
       metrics: args.metrics,
@@ -91,7 +91,7 @@ export const create = mutation({
 
 // Delete a quality report
 export const remove = mutation({
-  args: { id: v.id("dataQualityReports") },
+  args: { id: v.id('dataQualityReports') },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -101,7 +101,7 @@ export const remove = mutation({
 export const getSummary = query({
   args: {},
   handler: async (ctx) => {
-    const reports = await ctx.db.query("dataQualityReports").collect();
+    const reports = await ctx.db.query('dataQualityReports').collect();
 
     const byType: Record<string, number> = {};
     for (const report of reports) {
@@ -113,7 +113,7 @@ export const getSummary = query({
       byType,
       latestAt:
         reports.length > 0
-          ? Math.max(...reports.map((r) => r.generatedAt))
+          ? Math.max(...reports.map(r => r.generatedAt))
           : null,
     };
   },
@@ -129,8 +129,8 @@ export const cleanupOld = internalMutation({
 
     // Find old reports
     const oldReports = await ctx.db
-      .query("dataQualityReports")
-      .filter((q) => q.lt(q.field("generatedAt"), ninetyDaysAgo))
+      .query('dataQualityReports')
+      .filter(q => q.lt(q.field('generatedAt'), ninetyDaysAgo))
       .collect();
 
     // Delete them

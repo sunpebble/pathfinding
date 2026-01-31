@@ -29,7 +29,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { data: job, isLoading } = useQuery({
     queryKey: ['crawl-job', id],
     queryFn: () => getCrawlJob(id),
-    refetchInterval: (query) =>
+    refetchInterval: query =>
       query.state.data?.status === 'running' ? 5000 : false,
   });
 
@@ -181,7 +181,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   Categories
                 </dt>
                 <dd className="mt-1 flex flex-wrap gap-2">
-                  {job.config.categories.map((cat) => (
+                  {job.config.categories.map(cat => (
                     <span
                       key={cat}
                       className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700"
@@ -192,30 +192,35 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                 </dd>
               </div>
             )}
-            {job.config?.geographic_scope?.cities &&
-              job.config.geographic_scope.cities.length > 0 && (
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Cities</dt>
-                  <dd className="mt-1 flex flex-wrap gap-2">
-                    {job.config.geographic_scope.cities.map((city) => (
-                      <span
-                        key={city}
-                        className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
-                      >
-                        {city}
-                      </span>
-                    ))}
-                  </dd>
-                </div>
-              )}
+            {job.config?.geographic_scope?.cities
+              && job.config.geographic_scope.cities.length > 0 && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Cities</dt>
+                <dd className="mt-1 flex flex-wrap gap-2">
+                  {job.config.geographic_scope.cities.map(city => (
+                    <span
+                      key={city}
+                      className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
+                    >
+                      {city}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            )}
             {job.config?.rate_limit && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
                   Rate Limit
                 </dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {job.config.rate_limit.requests_per_second} req/s,{' '}
-                  {job.config.rate_limit.max_concurrent} concurrent
+                  {job.config.rate_limit.requests_per_second}
+                  {' '}
+                  req/s,
+                  {' '}
+                  {job.config.rate_limit.max_concurrent}
+                  {' '}
+                  concurrent
                 </dd>
               </div>
             )}

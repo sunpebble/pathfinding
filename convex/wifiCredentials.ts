@@ -16,12 +16,12 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const results = await ctx.db
       .query('wifiCredentials')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by most recently used
     results.sort(
-      (a, b) => (b.lastUsedAt ?? b.createdAt) - (a.lastUsedAt ?? a.createdAt)
+      (a, b) => (b.lastUsedAt ?? b.createdAt) - (a.lastUsedAt ?? a.createdAt),
     );
 
     return args.limit ? results.slice(0, args.limit) : results;
@@ -37,9 +37,8 @@ export const getBySpot = query({
   handler: async (ctx, args) => {
     const results = await ctx.db
       .query('wifiCredentials')
-      .withIndex('by_user_spot', (q) =>
-        q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId)
-      )
+      .withIndex('by_user_spot', q =>
+        q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId))
       .first();
 
     return results;
@@ -66,15 +65,15 @@ export const search = query({
 
     const credentials = await ctx.db
       .query('wifiCredentials')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const searchLower = args.query.toLowerCase();
     const filtered = credentials.filter(
-      (cred) =>
-        cred.name.toLowerCase().includes(searchLower) ||
-        cred.ssid.toLowerCase().includes(searchLower) ||
-        cred.locationName?.toLowerCase().includes(searchLower)
+      cred =>
+        cred.name.toLowerCase().includes(searchLower)
+        || cred.ssid.toLowerCase().includes(searchLower)
+        || cred.locationName?.toLowerCase().includes(searchLower),
     );
 
     return filtered.slice(0, maxResults);
@@ -96,8 +95,8 @@ export const create = mutation({
         v.literal('wpa'),
         v.literal('wpa2'),
         v.literal('wpa3'),
-        v.literal('unknown')
-      )
+        v.literal('unknown'),
+      ),
     ),
     locationName: v.optional(v.string()),
     latitude: v.optional(v.number()),
@@ -110,9 +109,8 @@ export const create = mutation({
     if (args.wifiSpotId) {
       const existing = await ctx.db
         .query('wifiCredentials')
-        .withIndex('by_user_spot', (q) =>
-          q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId)
-        )
+        .withIndex('by_user_spot', q =>
+          q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId))
         .first();
 
       if (existing) {
@@ -151,8 +149,8 @@ export const update = mutation({
         v.literal('wpa'),
         v.literal('wpa2'),
         v.literal('wpa3'),
-        v.literal('unknown')
-      )
+        v.literal('unknown'),
+      ),
     ),
     locationName: v.optional(v.string()),
     latitude: v.optional(v.number()),
@@ -163,7 +161,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, { ...filteredUpdates, updatedAt: Date.now() });
     return await ctx.db.get(id);
@@ -200,9 +198,8 @@ export const getSharedBySpot = query({
   handler: async (ctx, args) => {
     const results = await ctx.db
       .query('wifiCredentials')
-      .withIndex('by_spot_shared', (q) =>
-        q.eq('wifiSpotId', args.wifiSpotId).eq('isShared', true)
-      )
+      .withIndex('by_spot_shared', q =>
+        q.eq('wifiSpotId', args.wifiSpotId).eq('isShared', true))
       .collect();
 
     // Sort by most recently updated

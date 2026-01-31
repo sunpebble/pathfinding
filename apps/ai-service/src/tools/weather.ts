@@ -85,7 +85,8 @@ export const weatherQueryTool = tool(
           description: day.weather?.[0]?.description || '未知',
         })),
       });
-    } catch (error) {
+    }
+    catch (error) {
       return JSON.stringify({
         error: error instanceof Error ? error.message : 'Weather service error',
       });
@@ -103,5 +104,5 @@ export const weatherQueryTool = tool(
         .optional()
         .describe('查询日期 (YYYY-MM-DD 格式)，不填则返回当前和未来几天的天气'),
     }),
-  }
+  },
 );

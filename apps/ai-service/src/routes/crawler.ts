@@ -31,7 +31,7 @@ crawlerRouter.post('/clean-all', async (c) => {
     // Get guide IDs using cursor-based pagination
     loggers.crawler.info(
       { limit, cursor: cursor || 'start' },
-      '[CleanAll] Fetching guides'
+      '[CleanAll] Fetching guides',
     );
 
     const listResult = await convex.query(api.travelGuides.listIds, {
@@ -51,7 +51,7 @@ crawlerRouter.post('/clean-all', async (c) => {
 
     loggers.crawler.info(
       { count: listResult.items.length },
-      '[CleanAll] Found guides to clean'
+      '[CleanAll] Found guides to clean',
     );
 
     const results = {
@@ -86,7 +86,7 @@ crawlerRouter.post('/clean-all', async (c) => {
 
         loggers.crawler.info(
           { guideId: guide._id, title: guide.title?.substring(0, 30) },
-          '[CleanAll] Cleaning guide'
+          '[CleanAll] Cleaning guide',
         );
 
         const cleaned = await cleanContentWithLLM({
@@ -116,7 +116,7 @@ crawlerRouter.post('/clean-all', async (c) => {
         });
 
         const reduction = Math.round(
-          (1 - cleaned.cleanedLength / cleaned.originalLength) * 100
+          (1 - cleaned.cleanedLength / cleaned.originalLength) * 100,
         );
         results.cleaned++;
         results.details.push({
@@ -128,15 +128,16 @@ crawlerRouter.post('/clean-all', async (c) => {
 
         loggers.crawler.info(
           { guideId: guide._id, reduction },
-          '[CleanAll] ✓ Cleaned guide'
+          '[CleanAll] ✓ Cleaned guide',
         );
 
         // Rate limiting
         await sleep(300);
-      } catch (error) {
+      }
+      catch (error) {
         loggers.crawler.error(
           { guideId: guideInfo._id, error },
-          '[CleanAll] Error cleaning guide'
+          '[CleanAll] Error cleaning guide',
         );
         results.failed++;
         results.details.push({
@@ -153,7 +154,7 @@ crawlerRouter.post('/clean-all', async (c) => {
         skipped: results.skipped,
         failed: results.failed,
       },
-      '[CleanAll] Batch complete'
+      '[CleanAll] Batch complete',
     );
 
     return c.json({
@@ -162,11 +163,12 @@ crawlerRouter.post('/clean-all', async (c) => {
       nextCursor: listResult.cursor,
       isDone: listResult.isDone,
     });
-  } catch (error) {
+  }
+  catch (error) {
     loggers.crawler.error({ error }, '[CleanAll] Error');
     return c.json(
       { error: 'Failed to clean guides', details: String(error) },
-      500
+      500,
     );
   }
 });
@@ -187,7 +189,7 @@ crawlerRouter.post('/clean', async (c) => {
   try {
     loggers.crawler.info(
       { platform, title: title?.substring(0, 50) },
-      '[Cleaner] Cleaning content'
+      '[Cleaner] Cleaning content',
     );
 
     const cleaned = await cleanContentWithLLM({
@@ -198,7 +200,7 @@ crawlerRouter.post('/clean', async (c) => {
     });
 
     const reduction = Math.round(
-      (1 - cleaned.cleanedLength / cleaned.originalLength) * 100
+      (1 - cleaned.cleanedLength / cleaned.originalLength) * 100,
     );
     loggers.crawler.info(
       {
@@ -206,14 +208,15 @@ crawlerRouter.post('/clean', async (c) => {
         cleanedLength: cleaned.cleanedLength,
         reduction,
       },
-      '[Cleaner] Cleaned content'
+      '[Cleaner] Cleaned content',
     );
 
     return c.json({
       success: true,
       data: cleaned,
     });
-  } catch (error) {
+  }
+  catch (error) {
     loggers.crawler.error({ error }, '[Cleaner] Error');
     return c.json({ error: 'Content cleaning failed' }, 500);
   }
@@ -242,7 +245,7 @@ crawlerRouter.post('/process', async (c) => {
 
   loggers.crawler.info(
     { count: guides.length, platform, city },
-    '[Processor] Processing guides'
+    '[Processor] Processing guides',
   );
 
   for (const guide of guides) {
@@ -250,7 +253,7 @@ crawlerRouter.post('/process', async (c) => {
       // Step 1: Clean content with LLM
       loggers.crawler.info(
         { title: guide.title?.substring(0, 30) },
-        '[Processor] Cleaning guide'
+        '[Processor] Cleaning guide',
       );
 
       const cleaned = await cleanContentWithLLM({
@@ -266,7 +269,7 @@ crawlerRouter.post('/process', async (c) => {
       if (cleaned.cleanedLength < 100) {
         loggers.crawler.info(
           { sourceExternalId: guide.sourceExternalId },
-          '[Processor] Skipped (too short after cleaning)'
+          '[Processor] Skipped (too short after cleaning)',
         );
         results.details.push({
           id: guide.sourceExternalId,
@@ -279,7 +282,7 @@ crawlerRouter.post('/process', async (c) => {
       // Step 2: Save to Convex with cleaned content
       loggers.crawler.info(
         { sourceExternalId: guide.sourceExternalId },
-        '[Processor] Saving guide'
+        '[Processor] Saving guide',
       );
 
       const upsertArgs: Record<string, unknown> = {
@@ -318,10 +321,11 @@ crawlerRouter.post('/process', async (c) => {
 
       // Rate limiting between saves
       await sleep(200);
-    } catch (error) {
+    }
+    catch (error) {
       loggers.crawler.error(
         { sourceExternalId: guide.sourceExternalId, error },
-        '[Processor] Error processing guide'
+        '[Processor] Error processing guide',
       );
       results.failed++;
       results.details.push({
@@ -334,7 +338,7 @@ crawlerRouter.post('/process', async (c) => {
 
   loggers.crawler.info(
     { saved: results.saved, failed: results.failed, total: results.total },
-    '[Processor] Complete'
+    '[Processor] Complete',
   );
 
   return c.json({
@@ -359,7 +363,7 @@ crawlerRouter.post('/execute', async (c) => {
   if (activeJobs.has(jobId)) {
     return c.json(
       { error: 'Job is already running', status: activeJobs.get(jobId) },
-      409
+      409,
     );
   }
 
@@ -386,7 +390,8 @@ crawlerRouter.post('/execute', async (c) => {
       jobId,
       platform: job.platform,
     });
-  } catch (error) {
+  }
+  catch (error) {
     activeJobs.delete(jobId);
     loggers.crawler.error({ jobId, error }, 'Error starting job');
     return c.json({ error: 'Failed to start job' }, 500);
@@ -448,7 +453,7 @@ async function executeJob(jobId: string, job: any) {
   try {
     loggers.crawler.info(
       { jobId, platform: job.platform },
-      '[Crawler] Starting job'
+      '[Crawler] Starting job',
     );
 
     // Get cities from config
@@ -466,7 +471,7 @@ async function executeJob(jobId: string, job: any) {
 
       loggers.crawler.info(
         { platform: job.platform, city },
-        '[Crawler] Crawling city'
+        '[Crawler] Crawling city',
       );
 
       try {
@@ -481,13 +486,14 @@ async function executeJob(jobId: string, job: any) {
 
         // Update statistics periodically
         statistics.duration_seconds = Math.floor(
-          (Date.now() - startTime) / 1000
+          (Date.now() - startTime) / 1000,
         );
         await convex.mutation(api.crawlJobs.updateStatistics, {
           id: jobId as Id<'crawlJobs'>,
           statistics,
         });
-      } catch (error) {
+      }
+      catch (error) {
         loggers.crawler.error({ city, error }, '[Crawler] Error crawling city');
         statistics.requests_failed += 1;
       }
@@ -501,7 +507,7 @@ async function executeJob(jobId: string, job: any) {
     // Clean and save guides to database
     loggers.crawler.info(
       { count: results.length },
-      '[Crawler] Cleaning and saving guides to database'
+      '[Crawler] Cleaning and saving guides to database',
     );
 
     for (const guide of results) {
@@ -520,7 +526,7 @@ async function executeJob(jobId: string, job: any) {
         if (cleaned.cleanedLength < 100) {
           loggers.crawler.info(
             { sourceExternalId: guide.sourceExternalId },
-            '[Crawler] Skipped (too short)'
+            '[Crawler] Skipped (too short)',
           );
           continue;
         }
@@ -552,7 +558,8 @@ async function executeJob(jobId: string, job: any) {
         }
 
         await convex.mutation(api.travelGuides.upsert, upsertArgs as any);
-      } catch (error) {
+      }
+      catch (error) {
         loggers.crawler.error({ error }, '[Crawler] Error saving guide');
       }
 
@@ -573,9 +580,10 @@ async function executeJob(jobId: string, job: any) {
         extractedCount: results.length,
         cleanedCount: statistics.records_cleaned,
       },
-      'Job completed'
+      'Job completed',
     );
-  } catch (error) {
+  }
+  catch (error) {
     loggers.crawler.error({ jobId, error }, 'Job failed');
 
     statistics.duration_seconds = Math.floor((Date.now() - startTime) / 1000);
@@ -584,11 +592,12 @@ async function executeJob(jobId: string, job: any) {
       errorMessage: error instanceof Error ? error.message : String(error),
       statistics,
     });
-  } finally {
+  }
+  finally {
     activeJobs.delete(jobId);
   }
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

@@ -51,7 +51,7 @@ aiRouter.get('/health', async (c) => {
       services: status,
       timestamp: new Date().toISOString(),
     },
-    isHealthy ? 200 : 503
+    isHealthy ? 200 : 503,
   );
 });
 
@@ -80,9 +80,10 @@ ${content}`;
 
     const summary = await callLLM(prompt, systemPrompt);
     return c.json({ success: true, summary });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Summarization failed';
+  }
+  catch (error) {
+    const message
+      = error instanceof Error ? error.message : 'Summarization failed';
     return c.json({ error: message }, 500);
   }
 });
@@ -117,12 +118,14 @@ ${content}
       const jsonMatch = response.match(/\[[\s\S]*\]/);
       const pois = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
       return c.json({ success: true, pois, count: pois.length });
-    } catch {
+    }
+    catch {
       return c.json({ success: true, pois: [], count: 0, raw: response });
     }
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'POI extraction failed';
+  }
+  catch (error) {
+    const message
+      = error instanceof Error ? error.message : 'POI extraction failed';
     return c.json({ error: message }, 500);
   }
 });
@@ -150,9 +153,10 @@ ${content}`;
 
     const translation = await callLLM(prompt, systemPrompt);
     return c.json({ success: true, translation, targetLang });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Translation failed';
+  }
+  catch (error) {
+    const message
+      = error instanceof Error ? error.message : 'Translation failed';
     return c.json({ error: message }, 500);
   }
 });
@@ -172,7 +176,8 @@ aiRouter.post('/chat', async (c) => {
 
     const response = await callLLM(message, systemPrompt);
     return c.json({ success: true, response });
-  } catch (error) {
+  }
+  catch (error) {
     const msg = error instanceof Error ? error.message : 'Chat failed';
     return c.json({ error: msg }, 500);
   }

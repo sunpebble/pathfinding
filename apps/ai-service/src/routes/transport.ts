@@ -54,17 +54,17 @@ function calculateDistance(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(toRad(lat1))
+      * Math.cos(toRad(lat2))
+      * Math.sin(dLon / 2)
+      * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -78,12 +78,11 @@ function toRad(deg: number): number {
  */
 async function getDistanceMatrix(
   pois: POI[],
-  mode: TransportMode
+  mode: TransportMode,
 ): Promise<number[][]> {
   const n = pois.length;
   const matrix: number[][] = Array.from({ length: n }, () =>
-    Array.from({ length: n }, () => 0)
-  );
+    Array.from({ length: n }, () => 0));
 
   if (!AMAP_KEY) {
     // Fallback: use straight-line distance with speed estimates
@@ -97,12 +96,13 @@ async function getDistanceMatrix(
       for (let j = 0; j < n; j++) {
         if (i === j) {
           matrix[i][j] = 0;
-        } else {
+        }
+        else {
           const distance = calculateDistance(
             pois[i].latitude,
             pois[i].longitude,
             pois[j].latitude,
-            pois[j].longitude
+            pois[j].longitude,
           );
           // Convert to duration in minutes
           matrix[i][j] = (distance / speeds[mode]) * 60;
@@ -113,8 +113,8 @@ async function getDistanceMatrix(
   }
 
   // Use Amap API for accurate distances
-  const apiMode =
-    mode === 'walking' ? 'walking' : mode === 'driving' ? 'driving' : 'transit';
+  const apiMode
+    = mode === 'walking' ? 'walking' : mode === 'driving' ? 'driving' : 'transit';
 
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
@@ -148,13 +148,14 @@ async function getDistanceMatrix(
         if (path && path.duration) {
           // Duration in seconds, convert to minutes
           matrix[i][j] = Number.parseInt(path.duration, 10) / 60;
-        } else {
+        }
+        else {
           // Fallback to estimation
           const distance = calculateDistance(
             pois[i].latitude,
             pois[i].longitude,
             pois[j].latitude,
-            pois[j].longitude
+            pois[j].longitude,
           );
           const speeds: Record<TransportMode, number> = {
             walking: 5,
@@ -163,13 +164,14 @@ async function getDistanceMatrix(
           };
           matrix[i][j] = (distance / speeds[mode]) * 60;
         }
-      } catch {
+      }
+      catch {
         // Fallback to estimation
         const distance = calculateDistance(
           pois[i].latitude,
           pois[i].longitude,
           pois[j].latitude,
-          pois[j].longitude
+          pois[j].longitude,
         );
         const speeds: Record<TransportMode, number> = {
           walking: 5,
@@ -180,7 +182,7 @@ async function getDistanceMatrix(
       }
 
       // Add small delay to avoid rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
 
@@ -192,8 +194,10 @@ async function getDistanceMatrix(
  */
 function nearestNeighborTSP(distanceMatrix: number[][]): number[] {
   const n = distanceMatrix.length;
-  if (n === 0) return [];
-  if (n === 1) return [0];
+  if (n === 0)
+    return [];
+  if (n === 1)
+    return [0];
 
   const visited = new Set<number>();
   const route: number[] = [];
@@ -213,7 +217,8 @@ function nearestNeighborTSP(distanceMatrix: number[][]): number[] {
       }
     }
 
-    if (nearest === -1) break;
+    if (nearest === -1)
+      break;
 
     route.push(nearest);
     visited.add(nearest);
@@ -228,7 +233,7 @@ function nearestNeighborTSP(distanceMatrix: number[][]): number[] {
  */
 function calculateRouteDistance(
   route: number[],
-  distanceMatrix: number[][]
+  distanceMatrix: number[][],
 ): number {
   let total = 0;
   for (let i = 0; i < route.length - 1; i++) {
@@ -243,7 +248,7 @@ function calculateRouteDistance(
 async function getRouteSegments(
   pois: POI[],
   order: number[],
-  mode: TransportMode
+  mode: TransportMode,
 ): Promise<RouteSegment[]> {
   const segments: RouteSegment[] = [];
 
@@ -255,7 +260,7 @@ async function getRouteSegments(
       fromPOI.latitude,
       fromPOI.longitude,
       toPOI.latitude,
-      toPOI.longitude
+      toPOI.longitude,
     );
 
     const speeds: Record<TransportMode, number> = {
@@ -330,7 +335,7 @@ transportRouter.post('/optimize', async (c) => {
           error:
             'Invalid transport mode. Must be one of: walking, driving, transit',
         },
-        400
+        400,
       );
     }
 
@@ -357,27 +362,27 @@ transportRouter.post('/optimize', async (c) => {
     const originalOrder = Array.from({ length: pois.length }, (_, i) => i);
     const originalDistance = calculateRouteDistance(
       originalOrder,
-      distanceMatrix
+      distanceMatrix,
     );
 
     // Optimized order using nearest neighbor
     const optimizedOrder = nearestNeighborTSP(distanceMatrix);
     const optimizedDistance = calculateRouteDistance(
       optimizedOrder,
-      distanceMatrix
+      distanceMatrix,
     );
 
     // Get detailed segments
     const segments = await getRouteSegments(
       pois,
       optimizedOrder,
-      transportMode
+      transportMode,
     );
 
     // Calculate savings
     const distanceSaved = originalDistance - optimizedDistance;
-    const distancePercent =
-      originalDistance > 0 ? (distanceSaved / originalDistance) * 100 : 0;
+    const distancePercent
+      = originalDistance > 0 ? (distanceSaved / originalDistance) * 100 : 0;
 
     // Estimate actual distances in km (convert from duration)
     const speeds: Record<TransportMode, number> = {
@@ -406,10 +411,11 @@ transportRouter.post('/optimize', async (c) => {
     };
 
     return c.json(response);
-  } catch (error) {
+  }
+  catch (error) {
     loggers.transport.error({ error }, 'Route optimization error');
-    const message =
-      error instanceof Error ? error.message : 'Route optimization failed';
+    const message
+      = error instanceof Error ? error.message : 'Route optimization failed';
     return c.json({ error: message }, 500);
   }
 });

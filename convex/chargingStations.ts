@@ -13,21 +13,21 @@ const stationTypeValidator = v.union(
   v.literal('public'),
   v.literal('private'),
   v.literal('destination'),
-  v.literal('highway')
+  v.literal('highway'),
 );
 
 const stationStatusValidator = v.union(
   v.literal('operational'),
   v.literal('maintenance'),
   v.literal('offline'),
-  v.literal('coming_soon')
+  v.literal('coming_soon'),
 );
 
 const chargerTypeValidator = v.union(
   v.literal('ac_slow'),
   v.literal('ac_fast'),
   v.literal('dc_fast'),
-  v.literal('dc_superfast')
+  v.literal('dc_superfast'),
 );
 
 const amenityValidator = v.union(
@@ -39,7 +39,7 @@ const amenityValidator = v.union(
   v.literal('car_wash'),
   v.literal('covered'),
   v.literal('lighting'),
-  v.literal('security')
+  v.literal('security'),
 );
 
 const paymentMethodValidator = v.union(
@@ -47,7 +47,7 @@ const paymentMethodValidator = v.union(
   v.literal('wechat'),
   v.literal('alipay'),
   v.literal('card'),
-  v.literal('membership')
+  v.literal('membership'),
 );
 
 // ============================================
@@ -73,26 +73,29 @@ export const list = query({
     if (args.cityId && args.status) {
       results = await ctx.db
         .query('chargingStations')
-        .withIndex('by_city_status', (q) =>
-          q.eq('cityId', args.cityId!).eq('status', args.status!)
-        )
+        .withIndex('by_city_status', q =>
+          q.eq('cityId', args.cityId!).eq('status', args.status!))
         .collect();
-    } else if (args.cityId) {
+    }
+    else if (args.cityId) {
       results = await ctx.db
         .query('chargingStations')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .collect();
-    } else if (args.status) {
+    }
+    else if (args.status) {
       results = await ctx.db
         .query('chargingStations')
-        .withIndex('by_status', (q) => q.eq('status', args.status!))
+        .withIndex('by_status', q => q.eq('status', args.status!))
         .collect();
-    } else if (args.stationType) {
+    }
+    else if (args.stationType) {
       results = await ctx.db
         .query('chargingStations')
-        .withIndex('by_type', (q) => q.eq('stationType', args.stationType!))
+        .withIndex('by_type', q => q.eq('stationType', args.stationType!))
         .collect();
-    } else {
+    }
+    else {
       results = await ctx.db.query('chargingStations').collect();
     }
 
@@ -140,47 +143,48 @@ export const getNearby = query({
     if (args.status) {
       stations = await ctx.db
         .query('chargingStations')
-        .withIndex('by_status', (q) => q.eq('status', args.status!))
+        .withIndex('by_status', q => q.eq('status', args.status!))
         .take(maxFetch);
-    } else {
+    }
+    else {
       // Default to only operational stations
       stations = await ctx.db
         .query('chargingStations')
-        .withIndex('by_status', (q) => q.eq('status', 'operational'))
+        .withIndex('by_status', q => q.eq('status', 'operational'))
         .take(maxFetch);
     }
 
     // Filter by station type if specified
     if (args.stationType) {
-      stations = stations.filter((s) => s.stationType === args.stationType);
+      stations = stations.filter(s => s.stationType === args.stationType);
     }
 
     // Filter by available ports
     if (args.hasAvailablePorts) {
-      stations = stations.filter((s) => s.availablePorts > 0);
+      stations = stations.filter(s => s.availablePorts > 0);
     }
 
     // Filter by charger type
     if (args.chargerType) {
-      stations = stations.filter((s) =>
+      stations = stations.filter(s =>
         s.chargerTypes.some(
-          (ct) => ct.type === args.chargerType && ct.available > 0
-        )
+          ct => ct.type === args.chargerType && ct.available > 0,
+        ),
       );
     }
 
     // Calculate distance and filter by radius
     const stationsWithDistance = stations
-      .map((station) => ({
+      .map(station => ({
         ...station,
         distance: calculateDistanceKm(
           args.latitude,
           args.longitude,
           station.latitude,
-          station.longitude
+          station.longitude,
         ),
       }))
-      .filter((station) => station.distance <= args.radiusKm)
+      .filter(station => station.distance <= args.radiusKm)
       .sort((a, b) => a.distance - b.distance);
 
     const limit = args.limit ?? 50;
@@ -208,30 +212,31 @@ export const search = query({
     if (args.cityId) {
       stations = await ctx.db
         .query('chargingStations')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .take(fetchLimit);
-    } else {
+    }
+    else {
       stations = await ctx.db.query('chargingStations').take(fetchLimit);
     }
 
     // Filter by station type
     if (args.stationType) {
-      stations = stations.filter((s) => s.stationType === args.stationType);
+      stations = stations.filter(s => s.stationType === args.stationType);
     }
 
     // Filter by status
     if (args.status) {
-      stations = stations.filter((s) => s.status === args.status);
+      stations = stations.filter(s => s.status === args.status);
     }
 
     // Search by name and operator
     const searchLower = args.query.toLowerCase();
     stations = stations.filter(
-      (s) =>
-        s.name.toLowerCase().includes(searchLower) ||
-        s.nameEn?.toLowerCase().includes(searchLower) ||
-        s.operatorName?.toLowerCase().includes(searchLower) ||
-        s.address.toLowerCase().includes(searchLower)
+      s =>
+        s.name.toLowerCase().includes(searchLower)
+        || s.nameEn?.toLowerCase().includes(searchLower)
+        || s.operatorName?.toLowerCase().includes(searchLower)
+        || s.address.toLowerCase().includes(searchLower),
     );
 
     // Sort by rating
@@ -254,7 +259,7 @@ export const getByOperator = query({
 
     const stations = await ctx.db
       .query('chargingStations')
-      .withIndex('by_operator', (q) => q.eq('operatorName', args.operatorName))
+      .withIndex('by_operator', q => q.eq('operatorName', args.operatorName))
       .take(limit);
 
     return stations;
@@ -274,34 +279,35 @@ export const getStats = query({
     if (args.cityId) {
       stations = await ctx.db
         .query('chargingStations')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .collect();
-    } else {
+    }
+    else {
       stations = await ctx.db.query('chargingStations').collect();
     }
 
     const total = stations.length;
     const operational = stations.filter(
-      (s) => s.status === 'operational'
+      s => s.status === 'operational',
     ).length;
     const maintenance = stations.filter(
-      (s) => s.status === 'maintenance'
+      s => s.status === 'maintenance',
     ).length;
-    const offline = stations.filter((s) => s.status === 'offline').length;
+    const offline = stations.filter(s => s.status === 'offline').length;
 
     const totalPorts = stations.reduce((sum, s) => sum + s.totalPorts, 0);
     const availablePorts = stations.reduce(
       (sum, s) => sum + s.availablePorts,
-      0
+      0,
     );
 
     // Count by type
     const byType = {
-      public: stations.filter((s) => s.stationType === 'public').length,
-      private: stations.filter((s) => s.stationType === 'private').length,
-      destination: stations.filter((s) => s.stationType === 'destination')
+      public: stations.filter(s => s.stationType === 'public').length,
+      private: stations.filter(s => s.stationType === 'private').length,
+      destination: stations.filter(s => s.stationType === 'destination')
         .length,
-      highway: stations.filter((s) => s.stationType === 'highway').length,
+      highway: stations.filter(s => s.stationType === 'highway').length,
     };
 
     // Count by charger type
@@ -322,8 +328,8 @@ export const getStats = query({
     const operatorCounts: Record<string, number> = {};
     for (const station of stations) {
       if (station.operatorName) {
-        operatorCounts[station.operatorName] =
-          (operatorCounts[station.operatorName] || 0) + 1;
+        operatorCounts[station.operatorName]
+          = (operatorCounts[station.operatorName] || 0) + 1;
       }
     }
 
@@ -373,7 +379,7 @@ export const create = mutation({
         count: v.number(),
         available: v.number(),
         connectorType: v.optional(v.string()),
-      })
+      }),
     ),
     pricingInfo: v.optional(
       v.object({
@@ -384,7 +390,7 @@ export const create = mutation({
         valleyPrice: v.optional(v.number()),
         flatPrice: v.optional(v.number()),
         pricingNotes: v.optional(v.string()),
-      })
+      }),
     ),
     operatingHours: v.optional(v.string()),
     is24Hours: v.boolean(),
@@ -432,8 +438,8 @@ export const update = mutation({
           count: v.number(),
           available: v.number(),
           connectorType: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     pricingInfo: v.optional(
       v.object({
@@ -444,7 +450,7 @@ export const update = mutation({
         valleyPrice: v.optional(v.number()),
         flatPrice: v.optional(v.number()),
         pricingNotes: v.optional(v.string()),
-      })
+      }),
     ),
     operatingHours: v.optional(v.string()),
     is24Hours: v.optional(v.boolean()),
@@ -461,7 +467,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     // Add updatedAt timestamp
@@ -492,8 +498,8 @@ export const updateAvailability = mutation({
           count: v.number(),
           available: v.number(),
           connectorType: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     status: v.optional(stationStatusValidator),
   },
@@ -520,7 +526,7 @@ export const remove = mutation({
     // Delete associated reviews first
     const reviews = await ctx.db
       .query('chargingStationReviews')
-      .withIndex('by_station', (q) => q.eq('stationId', args.id))
+      .withIndex('by_station', q => q.eq('stationId', args.id))
       .collect();
 
     for (const review of reviews) {
@@ -530,7 +536,7 @@ export const remove = mutation({
     // Delete favorites
     const favorites = await ctx.db
       .query('favoriteChargingStations')
-      .withIndex('by_station', (q) => q.eq('stationId', args.id))
+      .withIndex('by_station', q => q.eq('stationId', args.id))
       .collect();
 
     for (const favorite of favorites) {
@@ -567,7 +573,7 @@ export const upsert = mutation({
         count: v.number(),
         available: v.number(),
         connectorType: v.optional(v.string()),
-      })
+      }),
     ),
     pricingInfo: v.optional(
       v.object({
@@ -578,7 +584,7 @@ export const upsert = mutation({
         valleyPrice: v.optional(v.number()),
         flatPrice: v.optional(v.number()),
         pricingNotes: v.optional(v.string()),
-      })
+      }),
     ),
     operatingHours: v.optional(v.string()),
     is24Hours: v.boolean(),
@@ -599,9 +605,8 @@ export const upsert = mutation({
     // Check if station already exists
     const existing = await ctx.db
       .query('chargingStations')
-      .withIndex('by_external', (q) =>
-        q.eq('externalId', args.externalId).eq('source', args.source)
-      )
+      .withIndex('by_external', q =>
+        q.eq('externalId', args.externalId).eq('source', args.source))
       .first();
 
     if (existing) {
@@ -612,7 +617,8 @@ export const upsert = mutation({
         lastStatusUpdate: now,
       });
       return existing._id;
-    } else {
+    }
+    else {
       // Create new station
       return await ctx.db.insert('chargingStations', {
         ...args,
@@ -650,7 +656,7 @@ export const bulkInsert = mutation({
             count: v.number(),
             available: v.number(),
             connectorType: v.optional(v.string()),
-          })
+          }),
         ),
         pricingInfo: v.optional(
           v.object({
@@ -661,7 +667,7 @@ export const bulkInsert = mutation({
             valleyPrice: v.optional(v.number()),
             flatPrice: v.optional(v.number()),
             pricingNotes: v.optional(v.string()),
-          })
+          }),
         ),
         operatingHours: v.optional(v.string()),
         is24Hours: v.boolean(),
@@ -676,7 +682,7 @@ export const bulkInsert = mutation({
         sourceUrl: v.optional(v.string()),
         paymentMethods: v.optional(v.array(paymentMethodValidator)),
         supportedBrands: v.optional(v.array(v.string())),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -716,7 +722,7 @@ export const getReviews = query({
 
     const reviews = await ctx.db
       .query('chargingStationReviews')
-      .withIndex('by_station', (q) => q.eq('stationId', args.stationId))
+      .withIndex('by_station', q => q.eq('stationId', args.stationId))
       .collect();
 
     // Sort by createdAt descending
@@ -761,7 +767,7 @@ export const addReview = mutation({
     // Update station rating
     const reviews = await ctx.db
       .query('chargingStationReviews')
-      .withIndex('by_station', (q) => q.eq('stationId', args.stationId))
+      .withIndex('by_station', q => q.eq('stationId', args.stationId))
       .collect();
 
     const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
@@ -795,7 +801,7 @@ export const getUserFavorites = query({
 
     const favorites = await ctx.db
       .query('favoriteChargingStations')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .take(limit);
 
     // Get the actual station data
@@ -808,10 +814,10 @@ export const getUserFavorites = query({
           notes: fav.notes,
           addedAt: fav.createdAt,
         };
-      })
+      }),
     );
 
-    return stationsWithNotes.filter((s) => s !== null);
+    return stationsWithNotes.filter(s => s !== null);
   },
 });
 
@@ -828,9 +834,8 @@ export const addToFavorites = mutation({
     // Check if already favorited
     const existing = await ctx.db
       .query('favoriteChargingStations')
-      .withIndex('by_user_station', (q) =>
-        q.eq('userId', args.userId).eq('stationId', args.stationId)
-      )
+      .withIndex('by_user_station', q =>
+        q.eq('userId', args.userId).eq('stationId', args.stationId))
       .first();
 
     if (existing) {
@@ -857,9 +862,8 @@ export const removeFromFavorites = mutation({
   handler: async (ctx, args) => {
     const favorite = await ctx.db
       .query('favoriteChargingStations')
-      .withIndex('by_user_station', (q) =>
-        q.eq('userId', args.userId).eq('stationId', args.stationId)
-      )
+      .withIndex('by_user_station', q =>
+        q.eq('userId', args.userId).eq('stationId', args.stationId))
       .first();
 
     if (favorite) {
@@ -879,9 +883,8 @@ export const isFavorite = query({
   handler: async (ctx, args) => {
     const favorite = await ctx.db
       .query('favoriteChargingStations')
-      .withIndex('by_user_station', (q) =>
-        q.eq('userId', args.userId).eq('stationId', args.stationId)
-      )
+      .withIndex('by_user_station', q =>
+        q.eq('userId', args.userId).eq('stationId', args.stationId))
       .first();
 
     return favorite !== null;
@@ -899,17 +902,17 @@ function calculateDistanceKm(
   lat1: number,
   lng1: number,
   lat2: number,
-  lng2: number
+  lng2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos((lat1 * Math.PI) / 180)
+      * Math.cos((lat2 * Math.PI) / 180)
+      * Math.sin(dLng / 2)
+      * Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }

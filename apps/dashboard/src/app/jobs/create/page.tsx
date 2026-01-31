@@ -40,10 +40,10 @@ export default function CreateJobPage() {
       schedule_cron: (formData.get('schedule_cron') as string) || undefined,
       config: {
         categories: categories
-          ? categories.split(',').map((c) => c.trim())
+          ? categories.split(',').map(c => c.trim())
           : undefined,
         geographic_scope: cities
-          ? { cities: cities.split(',').map((c) => c.trim()) }
+          ? { cities: cities.split(',').map(c => c.trim()) }
           : undefined,
         rate_limit: {
           requests_per_second:

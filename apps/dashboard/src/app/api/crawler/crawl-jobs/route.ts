@@ -1,4 +1,4 @@
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { api } from '@pathfinding/convex/api';
 import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
@@ -19,11 +19,11 @@ export async function GET(request: NextRequest) {
     // Filter by status if provided
     let filteredJobs = jobs;
     if (status) {
-      filteredJobs = jobs.filter((job) => job.status === status);
+      filteredJobs = jobs.filter(job => job.status === status);
     }
 
     // Transform to snake_case for frontend compatibility
-    const transformedJobs = filteredJobs.map((job) => ({
+    const transformedJobs = filteredJobs.map(job => ({
       id: job._id,
       name: job.name,
       platform: job.platform,
@@ -53,11 +53,12 @@ export async function GET(request: NextRequest) {
         offset: 0,
       },
     });
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching crawl jobs:', error);
     return NextResponse.json(
       { error: 'Internal server error', message: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -75,11 +76,12 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ id: jobId }, { status: 201 });
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error creating crawl job:', error);
     return NextResponse.json(
       { error: 'Failed to create job', message: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -92,10 +92,11 @@ export function buildChatAgentGraph(enableTools = true) {
     try {
       // @ts-expect-error - bindTools exists on LangChain chat models
       llmWithTools = llm.bindTools(tools);
-    } catch (error) {
+    }
+    catch (error) {
       loggers.langgraph.warn(
         { error },
-        'Tool binding failed, falling back to simple chat'
+        'Tool binding failed, falling back to simple chat',
       );
       useTools = false;
     }
@@ -106,12 +107,12 @@ export function buildChatAgentGraph(enableTools = true) {
 
   // Agent node: decide whether to call tools or respond
   async function agentNode(
-    state: ChatStateType
+    state: ChatStateType,
   ): Promise<Partial<ChatStateType>> {
     const messages = state.messages;
 
     // Add system message if this is the first message
-    const hasSystemMessage = messages.some((m) => m instanceof SystemMessage);
+    const hasSystemMessage = messages.some(m => m instanceof SystemMessage);
     const systemPrompt = useTools ? SYSTEM_PROMPT : SIMPLE_SYSTEM_PROMPT;
     const messagesWithSystem = hasSystemMessage
       ? messages
@@ -122,7 +123,7 @@ export function buildChatAgentGraph(enableTools = true) {
       messagesWithSystem.splice(
         1,
         0,
-        new SystemMessage(`用户上下文：${state.context}`)
+        new SystemMessage(`用户上下文：${state.context}`),
       );
     }
 
@@ -160,7 +161,8 @@ export function buildChatAgentGraph(enableTools = true) {
         __end__: END,
       })
       .addEdge('tools', 'agent');
-  } else {
+  }
+  else {
     workflow.addEdge('agent', END);
   }
 
@@ -210,21 +212,21 @@ export async function chat(options: {
       userId: options.userId,
       context: options.context,
     },
-    config
+    config,
   );
 
   // Find the last AI message
   const lastAIMessage = [...result.messages]
     .reverse()
-    .find((m) => m instanceof AIMessage);
+    .find(m => m instanceof AIMessage);
 
   if (!lastAIMessage) {
     return { response: '抱歉，我无法生成回复。' };
   }
 
   const content = lastAIMessage.content;
-  const response =
-    typeof content === 'string' ? content : JSON.stringify(content);
+  const response
+    = typeof content === 'string' ? content : JSON.stringify(content);
 
   return {
     response,
@@ -263,7 +265,7 @@ export async function* streamChat(options: {
       userId: options.userId,
       context: options.context,
     },
-    config
+    config,
   );
 
   for await (const chunk of stream) {
@@ -287,13 +289,15 @@ export async function* streamChat(options: {
             let content: string;
             if (typeof msg.content === 'string') {
               content = msg.content;
-            } else if (Array.isArray(msg.content)) {
+            }
+            else if (Array.isArray(msg.content)) {
               // Extract text from content blocks (Claude format)
               content = msg.content
                 .filter((block: any) => block.type === 'text' && block.text)
                 .map((block: any) => block.text)
                 .join('');
-            } else {
+            }
+            else {
               content = String(msg.content);
             }
             if (content) {

@@ -17,7 +17,7 @@ export const listVisitedCities = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('visitedCities')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
   },
 });
@@ -52,9 +52,8 @@ export const addVisitedCity = mutation({
     // Check if city already exists for this user
     const existing = await ctx.db
       .query('visitedCities')
-      .withIndex('by_user_city', (q) =>
-        q.eq('userId', args.userId).eq('cityName', args.cityName)
-      )
+      .withIndex('by_user_city', q =>
+        q.eq('userId', args.userId).eq('cityName', args.cityName))
       .first();
 
     if (existing) {
@@ -94,7 +93,7 @@ export const updateVisitedCity = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, filteredUpdates);
     return await ctx.db.get(id);
@@ -119,7 +118,7 @@ export const listVisitedCountries = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('visitedCountries')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
   },
 });
@@ -136,25 +135,24 @@ export const upsertVisitedCountry = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('visitedCountries')
-      .withIndex('by_user_country', (q) =>
-        q.eq('userId', args.userId).eq('countryCode', args.countryCode)
-      )
+      .withIndex('by_user_country', q =>
+        q.eq('userId', args.userId).eq('countryCode', args.countryCode))
       .first();
 
     if (existing) {
       // Update city count
       const cities = await ctx.db
         .query('visitedCities')
-        .withIndex('by_user', (q) => q.eq('userId', args.userId))
+        .withIndex('by_user', q => q.eq('userId', args.userId))
         .collect();
 
       const countryCities = cities.filter(
-        (c) => c.countryCode === args.countryCode
+        c => c.countryCode === args.countryCode,
       );
       await ctx.db.patch(existing._id, {
         citiesCount: countryCities.length,
         lastVisitedAt: Math.max(
-          ...countryCities.map((c) => c.lastVisitedAt || c.visitedAt)
+          ...countryCities.map(c => c.lastVisitedAt || c.visitedAt),
         ),
       });
       return existing._id;
@@ -183,7 +181,7 @@ export const getTravelStats = query({
   handler: async (ctx, args) => {
     const stats = await ctx.db
       .query('travelStats')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!stats) {
@@ -217,12 +215,12 @@ export const updateTravelStats = mutation({
     // Aggregate stats from visited cities and countries
     const cities = await ctx.db
       .query('visitedCities')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const countries = await ctx.db
       .query('visitedCountries')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const totalCities = cities.length;
@@ -232,18 +230,18 @@ export const updateTravelStats = mutation({
     const mostVisitedCity = cities.reduce(
       (max, city) =>
         (city.visitCount || 1) > (max?.visitCount || 0) ? city : max,
-      null as (typeof cities)[0] | null
+      null as (typeof cities)[0] | null,
     );
 
     // Find most visited country (by cities count)
     const mostVisitedCountry = countries.reduce(
       (max, country) =>
         (country.citiesCount || 1) > (max?.citiesCount || 0) ? country : max,
-      null as (typeof countries)[0] | null
+      null as (typeof countries)[0] | null,
     );
 
     // Get date range
-    const allDates = cities.map((c) => c.firstVisitedAt || c.visitedAt);
+    const allDates = cities.map(c => c.firstVisitedAt || c.visitedAt);
     const firstTripDate = allDates.length > 0 ? Math.min(...allDates) : null;
     const lastTripDate = allDates.length > 0 ? Math.max(...allDates) : null;
 
@@ -267,7 +265,7 @@ export const updateTravelStats = mutation({
       Object.entries(yearlyStats).map(([year, data]) => [
         year,
         { cities: data.cities, countries: data.countries.size },
-      ])
+      ]),
     );
 
     const statsData = {
@@ -299,7 +297,7 @@ export const updateTravelStats = mutation({
     // Upsert stats
     const existing = await ctx.db
       .query('travelStats')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (existing) {
@@ -329,7 +327,7 @@ export const setTravelGoals = mutation({
         longitude: v.number(),
         plannedDate: v.optional(v.number()),
         notes: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -337,11 +335,11 @@ export const setTravelGoals = mutation({
 
     const existing = await ctx.db
       .query('travelStats')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .withIndex('by_user', q => q.eq('userId', userId))
       .first();
 
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     if (existing) {
@@ -386,13 +384,13 @@ export const getTravelTimeline = query({
   handler: async (ctx, args) => {
     const allCities = await ctx.db
       .query('visitedCities')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by visit date descending
     const sorted = allCities.sort(
       (a, b) =>
-        (b.lastVisitedAt || b.visitedAt) - (a.lastVisitedAt || a.visitedAt)
+        (b.lastVisitedAt || b.visitedAt) - (a.lastVisitedAt || a.visitedAt),
     );
 
     const limit = args.limit || 20;

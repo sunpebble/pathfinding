@@ -45,7 +45,7 @@ export function parseTime(timeStr: string): { hours: number; minutes: number } {
 export function combineDateAndTime(
   date: Date | string,
   timeStr: string,
-  timezone?: string
+  timezone?: string,
 ): Date {
   const d = typeof date === 'string' ? new Date(date) : date;
   const { hours, minutes } = parseTime(timeStr);
@@ -56,10 +56,10 @@ export function combineDateAndTime(
   if (timezone) {
     // Adjust for timezone if specified
     const utcDate = new Date(
-      result.toLocaleString('en-US', { timeZone: 'UTC' })
+      result.toLocaleString('en-US', { timeZone: 'UTC' }),
     );
     const tzDate = new Date(
-      result.toLocaleString('en-US', { timeZone: timezone })
+      result.toLocaleString('en-US', { timeZone: timezone }),
     );
     const diff = utcDate.getTime() - tzDate.getTime();
     return new Date(result.getTime() + diff);
@@ -73,7 +73,7 @@ export function combineDateAndTime(
  */
 export function getDaysBetween(
   startDate: Date | string,
-  endDate: Date | string
+  endDate: Date | string,
 ): number {
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
@@ -89,7 +89,7 @@ export function getDaysBetween(
  */
 export function getDateRange(
   startDate: Date | string,
-  endDate: Date | string
+  endDate: Date | string,
 ): Date[] {
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
@@ -111,7 +111,7 @@ export function getDateRange(
 export function isDateInRange(
   date: Date | string,
   startDate: Date | string,
-  endDate: Date | string
+  endDate: Date | string,
 ): boolean {
   const d = typeof date === 'string' ? new Date(date) : date;
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
@@ -125,7 +125,7 @@ export function isDateInRange(
  */
 export function getRelativeTime(
   date: Date | string,
-  locale: 'zh' | 'en' = 'zh'
+  locale: 'zh' | 'en' = 'zh',
 ): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
@@ -135,20 +135,33 @@ export function getRelativeTime(
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (locale === 'zh') {
-    if (diffMins < 1) return '刚刚';
-    if (diffMins < 60) return `${diffMins}分钟前`;
-    if (diffHours < 24) return `${diffHours}小时前`;
-    if (diffDays < 7) return `${diffDays}天前`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}周前`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)}个月前`;
+    if (diffMins < 1)
+      return '刚刚';
+    if (diffMins < 60)
+      return `${diffMins}分钟前`;
+    if (diffHours < 24)
+      return `${diffHours}小时前`;
+    if (diffDays < 7)
+      return `${diffDays}天前`;
+    if (diffDays < 30)
+      return `${Math.floor(diffDays / 7)}周前`;
+    if (diffDays < 365)
+      return `${Math.floor(diffDays / 30)}个月前`;
     return `${Math.floor(diffDays / 365)}年前`;
-  } else {
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+  }
+  else {
+    if (diffMins < 1)
+      return 'just now';
+    if (diffMins < 60)
+      return `${diffMins} min ago`;
+    if (diffHours < 24)
+      return `${diffHours}h ago`;
+    if (diffDays < 7)
+      return `${diffDays}d ago`;
+    if (diffDays < 30)
+      return `${Math.floor(diffDays / 7)}w ago`;
+    if (diffDays < 365)
+      return `${Math.floor(diffDays / 30)}mo ago`;
     return `${Math.floor(diffDays / 365)}y ago`;
   }
 }
@@ -159,7 +172,7 @@ export function getRelativeTime(
 export function formatLocalizedDate(
   date: Date | string,
   locale: 'zh' | 'en' = 'en',
-  options?: Intl.DateTimeFormatOptions
+  options?: Intl.DateTimeFormatOptions,
 ): string {
   try {
     const d = typeof date === 'string' ? new Date(date) : date;
@@ -174,7 +187,8 @@ export function formatLocalizedDate(
       day: 'numeric',
       ...options,
     });
-  } catch {
+  }
+  catch {
     return typeof date === 'string' ? date : 'Invalid Date';
   }
 }
@@ -185,7 +199,7 @@ export function formatLocalizedDate(
 export function formatDateRange(
   startDate: Date | string,
   endDate: Date | string,
-  locale: 'zh' | 'en' = 'en'
+  locale: 'zh' | 'en' = 'en',
 ): string {
   const localeStr = locale === 'zh' ? 'zh-CN' : 'en-US';
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;

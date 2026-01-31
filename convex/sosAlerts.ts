@@ -14,7 +14,7 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const alerts = await ctx.db
       .query('sosAlerts')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by most recent first
@@ -38,9 +38,8 @@ export const getActiveAlerts = query({
   handler: async (ctx, args) => {
     const alerts = await ctx.db
       .query('sosAlerts')
-      .withIndex('by_user_status', (q) =>
-        q.eq('userId', args.userId).eq('status', 'sent')
-      )
+      .withIndex('by_user_status', q =>
+        q.eq('userId', args.userId).eq('status', 'sent'))
       .collect();
 
     return alerts;
@@ -59,7 +58,7 @@ export const create = mutation({
       v.literal('emergency'),
       v.literal('medical'),
       v.literal('safety'),
-      v.literal('other')
+      v.literal('other'),
     ),
     message: v.optional(v.string()),
   },
@@ -69,12 +68,12 @@ export const create = mutation({
     // Get all SOS contacts for the user
     const sosContacts = await ctx.db
       .query('emergencyContacts')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const contactsToNotify = sosContacts
-      .filter((c) => c.notifyOnSos)
-      .map((c) => c._id);
+      .filter(c => c.notifyOnSos)
+      .map(c => c._id);
 
     const alertId = await ctx.db.insert('sosAlerts', {
       userId: args.userId,
@@ -101,7 +100,7 @@ export const updateStatus = mutation({
       v.literal('sent'),
       v.literal('received'),
       v.literal('resolved'),
-      v.literal('cancelled')
+      v.literal('cancelled'),
     ),
   },
   handler: async (ctx, args) => {
@@ -182,7 +181,7 @@ export const getWithContacts = query({
               relationship: contact.relationship,
             }
           : null;
-      })
+      }),
     );
 
     return {
@@ -217,7 +216,7 @@ export const getWithEmergencyInfo = query({
               relationship: contact.relationship,
             }
           : null;
-      })
+      }),
     );
 
     // Get emergency services for the country if provided
@@ -225,8 +224,8 @@ export const getWithEmergencyInfo = query({
     if (args.countryCode) {
       emergencyServices = await ctx.db
         .query('emergencyServices')
-        .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode!))
-        .filter((q) => q.eq(q.field('cityName'), undefined))
+        .withIndex('by_country', q => q.eq('countryCode', args.countryCode!))
+        .filter(q => q.eq(q.field('cityName'), undefined))
         .first();
     }
 
@@ -278,8 +277,8 @@ export const getRecentAlerts = query({
         v.literal('sent'),
         v.literal('received'),
         v.literal('resolved'),
-        v.literal('cancelled')
-      )
+        v.literal('cancelled'),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -289,9 +288,10 @@ export const getRecentAlerts = query({
     if (args.status) {
       alerts = await ctx.db
         .query('sosAlerts')
-        .withIndex('by_status', (q) => q.eq('status', args.status!))
+        .withIndex('by_status', q => q.eq('status', args.status!))
         .collect();
-    } else {
+    }
+    else {
       alerts = await ctx.db.query('sosAlerts').collect();
     }
 

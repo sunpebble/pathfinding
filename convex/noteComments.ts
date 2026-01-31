@@ -139,16 +139,17 @@ export const listByNote = query({
     // 获取顶级评论（非回复）
     let comments = await ctx.db
       .query('noteComments')
-      .withIndex('by_note', (q) => q.eq('noteId', args.noteId))
+      .withIndex('by_note', q => q.eq('noteId', args.noteId))
       .collect();
 
     // 只获取顶级评论
-    comments = comments.filter((c) => !c.parentId);
+    comments = comments.filter(c => !c.parentId);
 
     // 排序
     if (sortBy === 'popular') {
       comments.sort((a, b) => b.likesCount - a.likesCount);
-    } else {
+    }
+    else {
       comments.sort((a, b) => b.createdAt - a.createdAt);
     }
 
@@ -161,13 +162,13 @@ export const listByNote = query({
         // 获取用户信息
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), comment.userId))
+          .filter(q => q.eq(q.field('email'), comment.userId))
           .first();
 
         // 获取回复（最多3条）
         const replies = await ctx.db
           .query('noteComments')
-          .withIndex('by_parent', (q) => q.eq('parentId', comment._id))
+          .withIndex('by_parent', q => q.eq('parentId', comment._id))
           .order('asc')
           .take(3);
 
@@ -175,7 +176,7 @@ export const listByNote = query({
           replies.map(async (reply) => {
             const replyProfile = await ctx.db
               .query('profiles')
-              .filter((q) => q.eq(q.field('email'), reply.userId))
+              .filter(q => q.eq(q.field('email'), reply.userId))
               .first();
 
             return {
@@ -183,7 +184,7 @@ export const listByNote = query({
               userName: replyProfile?.displayName ?? '匿名用户',
               userAvatar: replyProfile?.avatarUrl,
             };
-          })
+          }),
         );
 
         return {
@@ -192,7 +193,7 @@ export const listByNote = query({
           userAvatar: profile?.avatarUrl,
           replies: enrichedReplies,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -213,7 +214,7 @@ export const listReplies = query({
 
     const replies = await ctx.db
       .query('noteComments')
-      .withIndex('by_parent', (q) => q.eq('parentId', args.parentId))
+      .withIndex('by_parent', q => q.eq('parentId', args.parentId))
       .order('asc')
       .collect();
 
@@ -225,7 +226,7 @@ export const listReplies = query({
       data.map(async (reply) => {
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), reply.userId))
+          .filter(q => q.eq(q.field('email'), reply.userId))
           .first();
 
         return {
@@ -233,7 +234,7 @@ export const listReplies = query({
           userName: profile?.displayName ?? '匿名用户',
           userAvatar: profile?.avatarUrl,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -255,9 +256,8 @@ export const toggleLike = mutation({
     // 检查是否已点赞
     const existing = await ctx.db
       .query('noteCommentLikes')
-      .withIndex('by_comment_user', (q) =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId)
-      )
+      .withIndex('by_comment_user', q =>
+        q.eq('commentId', args.commentId).eq('userId', args.userId))
       .first();
 
     if (existing) {
@@ -267,7 +267,8 @@ export const toggleLike = mutation({
         likesCount: Math.max(0, comment.likesCount - 1),
       });
       return { liked: false };
-    } else {
+    }
+    else {
       // 添加点赞
       await ctx.db.insert('noteCommentLikes', {
         commentId: args.commentId,
@@ -291,9 +292,8 @@ export const isCommentLiked = query({
   handler: async (ctx, args) => {
     const like = await ctx.db
       .query('noteCommentLikes')
-      .withIndex('by_comment_user', (q) =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId)
-      )
+      .withIndex('by_comment_user', q =>
+        q.eq('commentId', args.commentId).eq('userId', args.userId))
       .first();
 
     return { liked: !!like };
@@ -313,13 +313,12 @@ export const batchCheckCommentLikes = query({
       args.commentIds.map(async (commentId) => {
         const like = await ctx.db
           .query('noteCommentLikes')
-          .withIndex('by_comment_user', (q) =>
-            q.eq('commentId', commentId).eq('userId', args.userId)
-          )
+          .withIndex('by_comment_user', q =>
+            q.eq('commentId', commentId).eq('userId', args.userId))
           .first();
 
         results[commentId] = !!like;
-      })
+      }),
     );
 
     return results;
@@ -340,7 +339,7 @@ export const listByUser = query({
 
     const comments = await ctx.db
       .query('noteComments')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -356,7 +355,7 @@ export const listByUser = query({
           ...comment,
           noteTitle: note?.title,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };

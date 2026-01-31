@@ -20,12 +20,12 @@ export type {
 
 // Environment-aware client factory
 export function createConvexClient(url?: string): ConvexHttpClient {
-  const convexUrl =
-    url || process.env.CONVEX_URL || process.env.CONVEX_SELF_HOSTED_URL;
+  const convexUrl
+    = url || process.env.CONVEX_URL || process.env.CONVEX_SELF_HOSTED_URL;
 
   if (!convexUrl) {
     throw new Error(
-      'Missing Convex URL. Set CONVEX_URL or CONVEX_SELF_HOSTED_URL environment variable.'
+      'Missing Convex URL. Set CONVEX_URL or CONVEX_SELF_HOSTED_URL environment variable.',
     );
   }
 

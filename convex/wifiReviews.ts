@@ -18,7 +18,7 @@ export const listBySpot = query({
   handler: async (ctx, args) => {
     const results = await ctx.db
       .query('wifiReviews')
-      .withIndex('by_spot', (q) => q.eq('wifiSpotId', args.wifiSpotId))
+      .withIndex('by_spot', q => q.eq('wifiSpotId', args.wifiSpotId))
       .collect();
 
     // Sort by most recent
@@ -39,7 +39,7 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const results = await ctx.db
       .query('wifiReviews')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by most recent
@@ -66,9 +66,8 @@ export const getUserReview = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('wifiReviews')
-      .withIndex('by_user_spot', (q) =>
-        q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId)
-      )
+      .withIndex('by_user_spot', q =>
+        q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId))
       .first();
   },
 });
@@ -94,9 +93,8 @@ export const create = mutation({
     // Check if user already reviewed this spot
     const existing = await ctx.db
       .query('wifiReviews')
-      .withIndex('by_user_spot', (q) =>
-        q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId)
-      )
+      .withIndex('by_user_spot', q =>
+        q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId))
       .first();
 
     if (existing) {
@@ -142,10 +140,11 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const review = await ctx.db.get(id);
-    if (!review) return null;
+    if (!review)
+      return null;
 
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, { ...filteredUpdates, updatedAt: Date.now() });
 
@@ -161,7 +160,8 @@ export const remove = mutation({
   args: { id: v.id('wifiReviews') },
   handler: async (ctx, args) => {
     const review = await ctx.db.get(args.id);
-    if (!review) return;
+    if (!review)
+      return;
 
     await ctx.db.delete(args.id);
 
@@ -178,14 +178,14 @@ export const markHelpful = mutation({
   },
   handler: async (ctx, args) => {
     const review = await ctx.db.get(args.id);
-    if (!review) return null;
+    if (!review)
+      return null;
 
     // Check if user already marked this review as helpful
     const existing = await ctx.db
       .query('wifiReviewHelpful')
-      .withIndex('by_review_user', (q) =>
-        q.eq('reviewId', args.id).eq('userId', args.userId)
-      )
+      .withIndex('by_review_user', q =>
+        q.eq('reviewId', args.id).eq('userId', args.userId))
       .first();
 
     if (existing) {
@@ -194,7 +194,8 @@ export const markHelpful = mutation({
       await ctx.db.patch(args.id, {
         helpfulCount: Math.max(0, review.helpfulCount - 1),
       });
-    } else {
+    }
+    else {
       // Add helpful mark
       await ctx.db.insert('wifiReviewHelpful', {
         reviewId: args.id,
@@ -228,7 +229,7 @@ async function recalculateSpotRating(ctx: any, wifiSpotId: Id<'wifiSpots'>) {
 
   const totalRating = reviews.reduce(
     (sum: number, review: any) => sum + review.overallRating,
-    0
+    0,
   );
   const averageRating = totalRating / reviews.length;
 

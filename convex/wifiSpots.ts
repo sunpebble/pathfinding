@@ -18,7 +18,7 @@ const wifiSpotTypeValidator = v.union(
   v.literal('library'),
   v.literal('coworking'),
   v.literal('public'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 // WiFi quality rating validator (1-5)
@@ -37,26 +37,28 @@ export const list = query({
     if (args.cityId && args.type) {
       results = await ctx.db
         .query('wifiSpots')
-        .withIndex('by_city_type', (q) =>
-          q.eq('cityId', args.cityId!).eq('type', args.type!)
-        )
+        .withIndex('by_city_type', q =>
+          q.eq('cityId', args.cityId!).eq('type', args.type!))
         .collect();
-    } else if (args.cityId) {
+    }
+    else if (args.cityId) {
       results = await ctx.db
         .query('wifiSpots')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .collect();
-    } else if (args.type) {
+    }
+    else if (args.type) {
       results = await ctx.db
         .query('wifiSpots')
-        .withIndex('by_type', (q) => q.eq('type', args.type!))
+        .withIndex('by_type', q => q.eq('type', args.type!))
         .collect();
-    } else {
+    }
+    else {
       results = await ctx.db.query('wifiSpots').collect();
     }
 
     // Filter only verified spots
-    results = results.filter((spot) => spot.isVerified);
+    results = results.filter(spot => spot.isVerified);
 
     return args.limit ? results.slice(0, args.limit) : results;
   },
@@ -86,27 +88,28 @@ export const getNearby = query({
     if (args.type) {
       spots = await ctx.db
         .query('wifiSpots')
-        .withIndex('by_type', (q) => q.eq('type', args.type!))
+        .withIndex('by_type', q => q.eq('type', args.type!))
         .take(maxFetch);
-    } else {
+    }
+    else {
       spots = await ctx.db.query('wifiSpots').take(maxFetch);
     }
 
     // Filter only verified spots
-    spots = spots.filter((spot) => spot.isVerified);
+    spots = spots.filter(spot => spot.isVerified);
 
     // Calculate distance and filter
     const spotsWithDistance = spots
-      .map((spot) => ({
+      .map(spot => ({
         ...spot,
         distance: calculateDistanceKm(
           args.latitude,
           args.longitude,
           spot.latitude,
-          spot.longitude
+          spot.longitude,
         ),
       }))
-      .filter((spot) => spot.distance <= args.radiusKm)
+      .filter(spot => spot.distance <= args.radiusKm)
       .sort((a, b) => a.distance - b.distance);
 
     const limit = args.limit ?? 50;
@@ -131,34 +134,36 @@ export const search = query({
     if (args.cityId && args.type) {
       spots = await ctx.db
         .query('wifiSpots')
-        .withIndex('by_city_type', (q) =>
-          q.eq('cityId', args.cityId!).eq('type', args.type!)
-        )
+        .withIndex('by_city_type', q =>
+          q.eq('cityId', args.cityId!).eq('type', args.type!))
         .take(fetchLimit);
-    } else if (args.cityId) {
+    }
+    else if (args.cityId) {
       spots = await ctx.db
         .query('wifiSpots')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .take(fetchLimit);
-    } else if (args.type) {
+    }
+    else if (args.type) {
       spots = await ctx.db
         .query('wifiSpots')
-        .withIndex('by_type', (q) => q.eq('type', args.type!))
+        .withIndex('by_type', q => q.eq('type', args.type!))
         .take(fetchLimit);
-    } else {
+    }
+    else {
       spots = await ctx.db.query('wifiSpots').take(fetchLimit);
     }
 
     // Filter only verified spots
-    spots = spots.filter((spot) => spot.isVerified);
+    spots = spots.filter(spot => spot.isVerified);
 
     // Search by name
     const searchLower = args.query.toLowerCase();
     spots = spots.filter(
-      (spot) =>
-        spot.name.toLowerCase().includes(searchLower) ||
-        spot.nameEn?.toLowerCase().includes(searchLower) ||
-        spot.address?.toLowerCase().includes(searchLower)
+      spot =>
+        spot.name.toLowerCase().includes(searchLower)
+        || spot.nameEn?.toLowerCase().includes(searchLower)
+        || spot.address?.toLowerCase().includes(searchLower),
     );
 
     // Sort by average rating (descending)
@@ -221,7 +226,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, { ...filteredUpdates, updatedAt: Date.now() });
     return await ctx.db.get(id);
@@ -275,17 +280,17 @@ function calculateDistanceKm(
   lat1: number,
   lng1: number,
   lat2: number,
-  lng2: number
+  lng2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos((lat1 * Math.PI) / 180)
+      * Math.cos((lat2 * Math.PI) / 180)
+      * Math.sin(dLng / 2)
+      * Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }

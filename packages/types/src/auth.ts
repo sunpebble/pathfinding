@@ -59,15 +59,15 @@ export interface VerifyOtpResponse {
 /**
  * Auth error codes
  */
-export type AuthErrorCode =
-  | 'INVALID_PHONE'
-  | 'RATE_LIMITED'
-  | 'DAILY_LIMIT_EXCEEDED'
-  | 'SMS_SEND_FAILED'
-  | 'INVALID_CODE'
-  | 'CODE_EXPIRED'
-  | 'TOO_MANY_ATTEMPTS'
-  | 'AUTH_FAILED';
+export type AuthErrorCode
+  = | 'INVALID_PHONE'
+    | 'RATE_LIMITED'
+    | 'DAILY_LIMIT_EXCEEDED'
+    | 'SMS_SEND_FAILED'
+    | 'INVALID_CODE'
+    | 'CODE_EXPIRED'
+    | 'TOO_MANY_ATTEMPTS'
+    | 'AUTH_FAILED';
 
 /**
  * Auth error response

@@ -22,17 +22,17 @@ export function calculateDistance(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
 
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(lat1)) *
-      Math.cos(toRadians(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(toRadians(lat1))
+      * Math.cos(toRadians(lat2))
+      * Math.sin(dLon / 2)
+      * Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -44,7 +44,7 @@ export function calculateDistance(
  */
 export function formatDistance(
   distanceKm: number,
-  locale: 'zh' | 'en' = 'zh'
+  locale: 'zh' | 'en' = 'zh',
 ): string {
   if (distanceKm < 1) {
     const meters = Math.round(distanceKm * 1000);
@@ -60,7 +60,7 @@ export function formatDistance(
 export function getBoundingBox(
   centerLat: number,
   centerLon: number,
-  radiusKm: number
+  radiusKm: number,
 ): { minLat: number; maxLat: number; minLon: number; maxLon: number } {
   // Approximate degrees per km
   const latDelta = radiusKm / 111;
@@ -82,7 +82,7 @@ export function isWithinRadius(
   pointLon: number,
   centerLat: number,
   centerLon: number,
-  radiusKm: number
+  radiusKm: number,
 ): boolean {
   const distance = calculateDistance(centerLat, centerLon, pointLat, pointLon);
   return distance <= radiusKm;
@@ -92,7 +92,7 @@ export function isWithinRadius(
  * Calculate center point of multiple coordinates
  */
 export function calculateCenter(
-  coordinates: Array<{ lat: number; lon: number }>
+  coordinates: Array<{ lat: number; lon: number }>,
 ): {
   lat: number;
   lon: number;
@@ -156,13 +156,13 @@ export function sortByDistance<
 export function filterByRadius<
   T extends { latitude: number; longitude: number },
 >(items: T[], centerLat: number, centerLon: number, radiusKm: number): T[] {
-  return items.filter((item) =>
+  return items.filter(item =>
     isWithinRadius(
       item.latitude,
       item.longitude,
       centerLat,
       centerLon,
-      radiusKm
-    )
+      radiusKm,
+    ),
   );
 }

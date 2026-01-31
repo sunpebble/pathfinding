@@ -3,9 +3,9 @@
  * Wrapper for ChatOllama from @langchain/ollama
  */
 
-import type {LLMConfig} from './types.js';
+import type { LLMConfig } from './types.js';
 import { ChatOllama } from '@langchain/ollama';
-import { DEFAULT_MODELS  } from './types.js';
+import { DEFAULT_MODELS } from './types.js';
 
 /**
  * Get Ollama configuration from environment
@@ -37,7 +37,8 @@ export async function checkOllamaHealth(): Promise<boolean> {
       signal: AbortSignal.timeout(5000),
     });
     return response.ok;
-  } catch {
+  }
+  catch {
     return false;
   }
 }

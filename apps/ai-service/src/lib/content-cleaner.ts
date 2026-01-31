@@ -30,7 +30,7 @@ export interface RawCrawlData {
  * This is more intelligent than regex-based cleaning as it understands context
  */
 export async function cleanContentWithLLM(
-  rawData: RawCrawlData
+  rawData: RawCrawlData,
 ): Promise<CleanedContent> {
   const llm = createLLM({ temperature: 0.1 }); // Low temperature for consistent output
 
@@ -50,8 +50,8 @@ export async function cleanContentWithLLM(
 
   // Truncate very long content to fit in context window
   const maxContentLength = 15000;
-  const contentToProcess =
-    rawData.content.length > maxContentLength
+  const contentToProcess
+    = rawData.content.length > maxContentLength
       ? `${rawData.content.substring(0, maxContentLength)}\n[内容已截断...]`
       : rawData.content;
 
@@ -98,8 +98,8 @@ JSON:`;
     log.info('Invoking LLM for content cleaning...');
     const response = await llm.invoke(prompt);
     log.info('LLM response received');
-    const responseText =
-      typeof response.content === 'string'
+    const responseText
+      = typeof response.content === 'string'
         ? response.content
         : JSON.stringify(response.content);
 
@@ -132,7 +132,8 @@ JSON:`;
       originalLength,
       cleanedLength: rawData.content.trim().length,
     };
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error cleaning content');
     // Return original content on error
     return {
@@ -151,7 +152,7 @@ JSON:`;
  * Processes sequentially to avoid overwhelming the LLM
  */
 export async function batchCleanContent(
-  items: RawCrawlData[]
+  items: RawCrawlData[],
 ): Promise<CleanedContent[]> {
   const results: CleanedContent[] = [];
 
@@ -160,8 +161,9 @@ export async function batchCleanContent(
       const cleaned = await cleanContentWithLLM(item);
       results.push(cleaned);
       // Small delay between requests to avoid rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    } catch (error) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    catch (error) {
       log.error({ sourceUrl: item.sourceUrl, error }, 'Error cleaning content from URL');
       // Add original content on error
       results.push({

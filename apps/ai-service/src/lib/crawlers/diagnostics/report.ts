@@ -25,20 +25,20 @@ export interface DiagnosticCapture {
  * Failure category union type
  * Distinguishes between acquisition (page not loaded) and parsing (data not extracted) issues
  */
-export type FailureCategory =
+export type FailureCategory
   // Acquisition issues - page didn't load correctly
-  | 'acquisition:blocked' // Anti-bot detected, access denied
-  | 'acquisition:login_required' // Login wall shown
-  | 'acquisition:timeout' // Page didn't load in time
-  | 'acquisition:captcha' // Captcha challenge presented
-  | 'acquisition:empty' // Page loaded but content is empty
+  = | 'acquisition:blocked' // Anti-bot detected, access denied
+    | 'acquisition:login_required' // Login wall shown
+    | 'acquisition:timeout' // Page didn't load in time
+    | 'acquisition:captcha' // Captcha challenge presented
+    | 'acquisition:empty' // Page loaded but content is empty
   // Parsing issues - page loaded but data extraction failed
-  | 'parsing:no_content' // Snapshot exists but no text extracted
-  | 'parsing:no_images' // Text extracted but no images
-  | 'parsing:partial' // Some fields missing
-  | 'parsing:selector_miss' // Pattern didn't match expected structure
+    | 'parsing:no_content' // Snapshot exists but no text extracted
+    | 'parsing:no_images' // Text extracted but no images
+    | 'parsing:partial' // Some fields missing
+    | 'parsing:selector_miss' // Pattern didn't match expected structure
   // Success
-  | 'success';
+    | 'success';
 
 /**
  * Anti-bot indicator detection result
@@ -61,10 +61,10 @@ export function detectAntiBotIndicators(content: string): AntiBotIndicators {
   return {
     captcha: /验证|captcha|verify|滑动验证/i.test(content),
     loginWall:
-      /登录|sign.?in|login|扫码|请先登录/i.test(content) &&
-      !/退出|logout|已登录/i.test(content),
+      /登录|sign.?in|login|扫码|请先登录/i.test(content)
+      && !/退出|logout|已登录/i.test(content),
     blocked: /blocked|forbidden|access.?denied|访问被拒绝|请求过于频繁/i.test(
-      content
+      content,
     ),
     empty: content.length < 500,
   };
@@ -114,8 +114,10 @@ export function categorizeFailure(capture: DiagnosticCapture): FailureCategory {
 
   // Check for partial extraction (missing important fields)
   const missingFields: string[] = [];
-  if (!parseResult.title) missingFields.push('title');
-  if (!parseResult.authorName) missingFields.push('authorName');
+  if (!parseResult.title)
+    missingFields.push('title');
+  if (!parseResult.authorName)
+    missingFields.push('authorName');
 
   if (missingFields.length > 0) {
     return 'parsing:partial';
@@ -190,7 +192,7 @@ export interface DiagnosticReport {
  * @returns Formatted diagnostic report
  */
 export function generateDiagnosticReport(
-  capture: DiagnosticCapture
+  capture: DiagnosticCapture,
 ): DiagnosticReport {
   const category = categorizeFailure(capture);
   const antiBot = detectAntiBotIndicators(capture.snapshot);
@@ -260,7 +262,7 @@ export function formatReportAsText(report: DiagnosticReport): string {
     lines.push(`--- Parse Results ---`);
     lines.push(`Title: ${report.parseResult.title || '(missing)'}`);
     lines.push(
-      `Content: ${report.parseResult.content?.substring(0, 100) || '(missing)'}...`
+      `Content: ${report.parseResult.content?.substring(0, 100) || '(missing)'}...`,
     );
     lines.push(`Images: ${report.parseResult.imageUrls?.length || 0}`);
     lines.push(`Videos: ${report.parseResult.videoUrls?.length || 0}`);
@@ -270,7 +272,7 @@ export function formatReportAsText(report: DiagnosticReport): string {
 
   if (report.parseErrors.length > 0) {
     lines.push(`--- Parse Errors ---`);
-    report.parseErrors.forEach((err) => lines.push(`  - ${err}`));
+    report.parseErrors.forEach(err => lines.push(`  - ${err}`));
     lines.push(``);
   }
 

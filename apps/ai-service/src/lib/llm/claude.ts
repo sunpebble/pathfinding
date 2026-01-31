@@ -6,8 +6,8 @@
 import type { LLMConfig } from './types.js';
 import { ChatAnthropic } from '@langchain/anthropic';
 
-const ANTHROPIC_MODEL =
-  process.env.ANTHROPIC_MODEL || 'claude-opus-4-5-20251101';
+const ANTHROPIC_MODEL
+  = process.env.ANTHROPIC_MODEL || 'claude-opus-4-5-20251101';
 
 export function createClaudeLLM(config?: Partial<LLMConfig>): ChatAnthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;

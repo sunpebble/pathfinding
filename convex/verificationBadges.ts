@@ -10,7 +10,7 @@ import { mutation, query } from './_generated/server';
 const badgeTypeValidator = v.union(
   v.literal('travel_expert'),
   v.literal('local_guide'),
-  v.literal('official_account')
+  v.literal('official_account'),
 );
 
 // Application status validator
@@ -19,14 +19,14 @@ const applicationStatusValidator = v.union(
   v.literal('under_review'),
   v.literal('approved'),
   v.literal('rejected'),
-  v.literal('cancelled')
+  v.literal('cancelled'),
 );
 
 // ID type validator
 const idTypeValidator = v.union(
   v.literal('id_card'),
   v.literal('passport'),
-  v.literal('business_license')
+  v.literal('business_license'),
 );
 
 // Supporting material type validator
@@ -35,7 +35,7 @@ const materialTypeValidator = v.union(
   v.literal('work_proof'),
   v.literal('portfolio'),
   v.literal('certificate'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 // Badge display names
@@ -62,14 +62,13 @@ export const getUserBadges = query({
   handler: async (ctx, args) => {
     const badges = await ctx.db
       .query('verificationBadges')
-      .withIndex('by_user_active', (q) =>
-        q.eq('userId', args.userId).eq('isActive', true)
-      )
+      .withIndex('by_user_active', q =>
+        q.eq('userId', args.userId).eq('isActive', true))
       .collect();
 
     // Filter out expired badges
     const now = Date.now();
-    return badges.filter((badge) => !badge.expiresAt || badge.expiresAt > now);
+    return badges.filter(badge => !badge.expiresAt || badge.expiresAt > now);
   },
 });
 
@@ -90,9 +89,8 @@ export const hasBadge = query({
   handler: async (ctx, args) => {
     const badge = await ctx.db
       .query('verificationBadges')
-      .withIndex('by_user_type', (q) =>
-        q.eq('userId', args.userId).eq('badgeType', args.badgeType)
-      )
+      .withIndex('by_user_type', q =>
+        q.eq('userId', args.userId).eq('badgeType', args.badgeType))
       .first();
 
     if (!badge || !badge.isActive) {
@@ -118,7 +116,7 @@ export const listBadgesByType = query({
     const limit = args.limit || 50;
     return await ctx.db
       .query('verificationBadges')
-      .withIndex('by_type', (q) => q.eq('badgeType', args.badgeType))
+      .withIndex('by_type', q => q.eq('badgeType', args.badgeType))
       .take(limit);
   },
 });
@@ -149,16 +147,15 @@ export const createBadge = mutation({
         organizationName: v.optional(v.string()),
         organizationType: v.optional(v.string()),
         officialWebsite: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
     // Check if user already has this badge type
     const existing = await ctx.db
       .query('verificationBadges')
-      .withIndex('by_user_type', (q) =>
-        q.eq('userId', args.userId).eq('badgeType', args.badgeType)
-      )
+      .withIndex('by_user_type', q =>
+        q.eq('userId', args.userId).eq('badgeType', args.badgeType))
       .first();
 
     if (existing && existing.isActive) {
@@ -281,15 +278,14 @@ export const getUserApplications = query({
     if (args.status) {
       return await ctx.db
         .query('verificationApplications')
-        .withIndex('by_user_status', (q) =>
-          q.eq('userId', args.userId).eq('status', args.status!)
-        )
+        .withIndex('by_user_status', q =>
+          q.eq('userId', args.userId).eq('status', args.status!))
         .collect();
     }
 
     return await ctx.db
       .query('verificationApplications')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
   },
 });
@@ -315,24 +311,25 @@ export const listPendingApplications = query({
     if (args.badgeType) {
       applications = await ctx.db
         .query('verificationApplications')
-        .withIndex('by_type', (q) => q.eq('badgeType', args.badgeType!))
-        .filter((q) =>
+        .withIndex('by_type', q => q.eq('badgeType', args.badgeType!))
+        .filter(q =>
           q.or(
             q.eq(q.field('status'), 'pending'),
-            q.eq(q.field('status'), 'under_review')
-          )
+            q.eq(q.field('status'), 'under_review'),
+          ),
         )
         .take(limit);
-    } else {
+    }
+    else {
       applications = await ctx.db
         .query('verificationApplications')
-        .withIndex('by_status', (q) => q.eq('status', 'pending'))
+        .withIndex('by_status', q => q.eq('status', 'pending'))
         .take(limit);
 
       // Also get under_review
       const underReview = await ctx.db
         .query('verificationApplications')
-        .withIndex('by_status', (q) => q.eq('status', 'under_review'))
+        .withIndex('by_status', q => q.eq('status', 'under_review'))
         .take(limit);
 
       applications = [...applications, ...underReview].slice(0, limit);
@@ -363,8 +360,8 @@ export const submitApplication = mutation({
           type: materialTypeValidator,
           url: v.string(),
           description: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     applicationData: v.optional(
       v.object({
@@ -381,16 +378,15 @@ export const submitApplication = mutation({
         businessLicenseUrl: v.optional(v.string()),
         authorizationLetterUrl: v.optional(v.string()),
         officialWebsite: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
     // Check if user already has an active badge of this type
     const existingBadge = await ctx.db
       .query('verificationBadges')
-      .withIndex('by_user_type', (q) =>
-        q.eq('userId', args.userId).eq('badgeType', args.badgeType)
-      )
+      .withIndex('by_user_type', q =>
+        q.eq('userId', args.userId).eq('badgeType', args.badgeType))
       .first();
 
     if (existingBadge && existingBadge.isActive) {
@@ -400,14 +396,13 @@ export const submitApplication = mutation({
     // Check if user has a pending application
     const existingApplication = await ctx.db
       .query('verificationApplications')
-      .withIndex('by_user_type', (q) =>
-        q.eq('userId', args.userId).eq('badgeType', args.badgeType)
-      )
-      .filter((q) =>
+      .withIndex('by_user_type', q =>
+        q.eq('userId', args.userId).eq('badgeType', args.badgeType))
+      .filter(q =>
         q.or(
           q.eq(q.field('status'), 'pending'),
-          q.eq(q.field('status'), 'under_review')
-        )
+          q.eq(q.field('status'), 'under_review'),
+        ),
       )
       .first();
 
@@ -507,7 +502,7 @@ export const approveApplication = mutation({
         organizationName: v.optional(v.string()),
         organizationType: v.optional(v.string()),
         officialWebsite: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -539,31 +534,31 @@ export const approveApplication = mutation({
 
     // Merge application data for specific badge types
     if (
-      application.badgeType === 'local_guide' &&
-      application.applicationData
+      application.badgeType === 'local_guide'
+      && application.applicationData
     ) {
-      finalMetadata.localCity =
-        args.metadata?.localCity || application.applicationData.localCity;
-      finalMetadata.yearsOfResidence =
-        args.metadata?.yearsOfResidence ||
-        application.applicationData.yearsOfResidence;
-      finalMetadata.languages =
-        args.metadata?.languages || application.applicationData.languages;
+      finalMetadata.localCity
+        = args.metadata?.localCity || application.applicationData.localCity;
+      finalMetadata.yearsOfResidence
+        = args.metadata?.yearsOfResidence
+          || application.applicationData.yearsOfResidence;
+      finalMetadata.languages
+        = args.metadata?.languages || application.applicationData.languages;
     }
 
     if (
-      application.badgeType === 'official_account' &&
-      application.applicationData
+      application.badgeType === 'official_account'
+      && application.applicationData
     ) {
-      finalMetadata.organizationName =
-        args.metadata?.organizationName ||
-        application.applicationData.organizationName;
-      finalMetadata.organizationType =
-        args.metadata?.organizationType ||
-        application.applicationData.organizationType;
-      finalMetadata.officialWebsite =
-        args.metadata?.officialWebsite ||
-        application.applicationData.officialWebsite;
+      finalMetadata.organizationName
+        = args.metadata?.organizationName
+          || application.applicationData.organizationName;
+      finalMetadata.organizationType
+        = args.metadata?.organizationType
+          || application.applicationData.organizationType;
+      finalMetadata.officialWebsite
+        = args.metadata?.officialWebsite
+          || application.applicationData.officialWebsite;
     }
 
     // Create the badge
@@ -655,9 +650,11 @@ export const getBadgeStatistics = query({
     for (const badge of allBadges) {
       if (!badge.isActive) {
         stats.revoked++;
-      } else if (badge.expiresAt && badge.expiresAt < now) {
+      }
+      else if (badge.expiresAt && badge.expiresAt < now) {
         stats.expired++;
-      } else {
+      }
+      else {
         stats.active++;
         stats.byType[badge.badgeType]++;
       }

@@ -11,7 +11,7 @@ import { mutation, query } from './_generated/server';
 const messageTypeValidator = v.union(
   v.literal('text'),
   v.literal('image'),
-  v.literal('itinerary_share')
+  v.literal('itinerary_share'),
 );
 
 // ============================================
@@ -38,8 +38,8 @@ export const listConversations = query({
       .collect();
 
     // Filter to only conversations where user is a participant
-    const userConversations = allConversations.filter((conv) =>
-      conv.participantIds.includes(args.userId)
+    const userConversations = allConversations.filter(conv =>
+      conv.participantIds.includes(args.userId),
     );
 
     const limitedConversations = userConversations.slice(0, limit);
@@ -49,7 +49,7 @@ export const listConversations = query({
       limitedConversations.map(async (conv) => {
         // Get the other participant's ID
         const otherUserId = conv.participantIds.find(
-          (id) => id !== args.userId
+          id => id !== args.userId,
         );
 
         // Get other participant's profile
@@ -57,7 +57,7 @@ export const listConversations = query({
         if (otherUserId) {
           const profile = await ctx.db
             .query('profiles')
-            .withIndex('by_email', (q) => q.eq('email', otherUserId))
+            .withIndex('by_email', q => q.eq('email', otherUserId))
             .first();
 
           otherUser = profile
@@ -76,9 +76,8 @@ export const listConversations = query({
         // Get unread count
         const readStatus = await ctx.db
           .query('messageReadStatus')
-          .withIndex('by_conversation_user', (q) =>
-            q.eq('conversationId', conv._id).eq('userId', args.userId)
-          )
+          .withIndex('by_conversation_user', q =>
+            q.eq('conversationId', conv._id).eq('userId', args.userId))
           .first();
 
         let unreadCount = 0;
@@ -86,27 +85,26 @@ export const listConversations = query({
           // Count messages after lastReadAt that are not from this user
           const unreadMessages = await ctx.db
             .query('messages')
-            .withIndex('by_conversation_time', (q) =>
+            .withIndex('by_conversation_time', q =>
               q
                 .eq('conversationId', conv._id)
-                .gt('sentAt', readStatus.lastReadAt)
-            )
+                .gt('sentAt', readStatus.lastReadAt))
             .collect();
 
           unreadCount = unreadMessages.filter(
-            (msg) => msg.senderId !== args.userId && !msg.isDeleted
+            msg => msg.senderId !== args.userId && !msg.isDeleted,
           ).length;
-        } else if (conv.lastMessageAt) {
+        }
+        else if (conv.lastMessageAt) {
           // No read status yet, count all messages not from this user
           const allMessages = await ctx.db
             .query('messages')
-            .withIndex('by_conversation', (q) =>
-              q.eq('conversationId', conv._id)
-            )
+            .withIndex('by_conversation', q =>
+              q.eq('conversationId', conv._id))
             .collect();
 
           unreadCount = allMessages.filter(
-            (msg) => msg.senderId !== args.userId && !msg.isDeleted
+            msg => msg.senderId !== args.userId && !msg.isDeleted,
           ).length;
         }
 
@@ -115,7 +113,7 @@ export const listConversations = query({
           otherUser,
           unreadCount,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -142,10 +140,10 @@ export const getOrCreateConversation = mutation({
     const allConversations = await ctx.db.query('conversations').collect();
 
     const existing = allConversations.find(
-      (conv) =>
-        conv.participantIds.length === 2 &&
-        conv.participantIds[0] === participantIds[0] &&
-        conv.participantIds[1] === participantIds[1]
+      conv =>
+        conv.participantIds.length === 2
+        && conv.participantIds[0] === participantIds[0]
+        && conv.participantIds[1] === participantIds[1],
     );
 
     if (existing) {
@@ -198,14 +196,14 @@ export const getConversation = query({
 
     // Get the other participant's profile
     const otherUserId = conversation.participantIds.find(
-      (id) => id !== args.userId
+      id => id !== args.userId,
     );
 
     let otherUser = null;
     if (otherUserId) {
       const profile = await ctx.db
         .query('profiles')
-        .withIndex('by_email', (q) => q.eq('email', otherUserId))
+        .withIndex('by_email', q => q.eq('email', otherUserId))
         .first();
 
       otherUser = profile
@@ -254,22 +252,21 @@ export const getMessages = query({
     // Get messages
     let messages = await ctx.db
       .query('messages')
-      .withIndex('by_conversation_time', (q) =>
-        q.eq('conversationId', args.conversationId)
-      )
+      .withIndex('by_conversation_time', q =>
+        q.eq('conversationId', args.conversationId))
       .order('desc')
       .collect();
 
     // Filter by timestamp if provided
     if (args.before) {
-      messages = messages.filter((msg) => msg.sentAt < args.before);
+      messages = messages.filter(msg => msg.sentAt < args.before);
     }
 
     // Apply limit
     messages = messages.slice(0, limit);
 
     // Filter out deleted messages
-    messages = messages.filter((msg) => !msg.isDeleted);
+    messages = messages.filter(msg => !msg.isDeleted);
 
     // Enrich with sender info and shared itinerary data
     const enriched = await Promise.all(
@@ -277,7 +274,7 @@ export const getMessages = query({
         // Get sender profile
         const profile = await ctx.db
           .query('profiles')
-          .withIndex('by_email', (q) => q.eq('email', msg.senderId))
+          .withIndex('by_email', q => q.eq('email', msg.senderId))
           .first();
 
         const sender = profile
@@ -314,7 +311,7 @@ export const getMessages = query({
           sender,
           sharedItinerary,
         };
-      })
+      }),
     );
 
     // Return in chronological order (oldest first)
@@ -356,8 +353,8 @@ export const sendMessage = mutation({
     });
 
     // Update conversation's last message
-    const previewText =
-      args.messageType === 'text'
+    const previewText
+      = args.messageType === 'text'
         ? args.content.slice(0, 100)
         : args.messageType === 'image'
           ? '[图片]'
@@ -372,9 +369,8 @@ export const sendMessage = mutation({
     // Update sender's read status
     const senderReadStatus = await ctx.db
       .query('messageReadStatus')
-      .withIndex('by_conversation_user', (q) =>
-        q.eq('conversationId', args.conversationId).eq('userId', args.senderId)
-      )
+      .withIndex('by_conversation_user', q =>
+        q.eq('conversationId', args.conversationId).eq('userId', args.senderId))
       .first();
 
     if (senderReadStatus) {
@@ -382,7 +378,8 @@ export const sendMessage = mutation({
         lastReadAt: now,
         lastReadMessageId: messageId,
       });
-    } else {
+    }
+    else {
       await ctx.db.insert('messageReadStatus', {
         conversationId: args.conversationId,
         userId: args.senderId,
@@ -393,14 +390,14 @@ export const sendMessage = mutation({
 
     // Create notification for the other participant
     const recipientId = conversation.participantIds.find(
-      (id) => id !== args.senderId
+      id => id !== args.senderId,
     );
 
     if (recipientId) {
       // Get sender's display name
       const senderProfile = await ctx.db
         .query('profiles')
-        .withIndex('by_email', (q) => q.eq('email', args.senderId))
+        .withIndex('by_email', q => q.eq('email', args.senderId))
         .first();
 
       const senderName = senderProfile?.displayName || '用户';
@@ -470,18 +467,16 @@ export const markAsRead = mutation({
     // Get the latest message
     const latestMessage = await ctx.db
       .query('messages')
-      .withIndex('by_conversation_time', (q) =>
-        q.eq('conversationId', args.conversationId)
-      )
+      .withIndex('by_conversation_time', q =>
+        q.eq('conversationId', args.conversationId))
       .order('desc')
       .first();
 
     // Update or create read status
     const readStatus = await ctx.db
       .query('messageReadStatus')
-      .withIndex('by_conversation_user', (q) =>
-        q.eq('conversationId', args.conversationId).eq('userId', args.userId)
-      )
+      .withIndex('by_conversation_user', q =>
+        q.eq('conversationId', args.conversationId).eq('userId', args.userId))
       .first();
 
     if (readStatus) {
@@ -489,7 +484,8 @@ export const markAsRead = mutation({
         lastReadAt: now,
         lastReadMessageId: latestMessage?._id,
       });
-    } else {
+    }
+    else {
       await ctx.db.insert('messageReadStatus', {
         conversationId: args.conversationId,
         userId: args.userId,
@@ -511,8 +507,8 @@ export const getUnreadCount = query({
     // Get all conversations for user
     const allConversations = await ctx.db.query('conversations').collect();
 
-    const userConversations = allConversations.filter((conv) =>
-      conv.participantIds.includes(args.userId)
+    const userConversations = allConversations.filter(conv =>
+      conv.participantIds.includes(args.userId),
     );
 
     let totalUnread = 0;
@@ -520,30 +516,29 @@ export const getUnreadCount = query({
     for (const conv of userConversations) {
       const readStatus = await ctx.db
         .query('messageReadStatus')
-        .withIndex('by_conversation_user', (q) =>
-          q.eq('conversationId', conv._id).eq('userId', args.userId)
-        )
+        .withIndex('by_conversation_user', q =>
+          q.eq('conversationId', conv._id).eq('userId', args.userId))
         .first();
 
       if (readStatus?.lastReadAt) {
         const unreadMessages = await ctx.db
           .query('messages')
-          .withIndex('by_conversation_time', (q) =>
-            q.eq('conversationId', conv._id).gt('sentAt', readStatus.lastReadAt)
-          )
+          .withIndex('by_conversation_time', q =>
+            q.eq('conversationId', conv._id).gt('sentAt', readStatus.lastReadAt))
           .collect();
 
         totalUnread += unreadMessages.filter(
-          (msg) => msg.senderId !== args.userId && !msg.isDeleted
+          msg => msg.senderId !== args.userId && !msg.isDeleted,
         ).length;
-      } else if (conv.lastMessageAt) {
+      }
+      else if (conv.lastMessageAt) {
         const allMessages = await ctx.db
           .query('messages')
-          .withIndex('by_conversation', (q) => q.eq('conversationId', conv._id))
+          .withIndex('by_conversation', q => q.eq('conversationId', conv._id))
           .collect();
 
         totalUnread += allMessages.filter(
-          (msg) => msg.senderId !== args.userId && !msg.isDeleted
+          msg => msg.senderId !== args.userId && !msg.isDeleted,
         ).length;
       }
     }
@@ -571,14 +566,15 @@ export const searchUsers = query({
     // Filter by display name or email (case-insensitive)
     const matches = profiles
       .filter((profile) => {
-        if (profile.email === args.currentUserId) return false;
+        if (profile.email === args.currentUserId)
+          return false;
         const displayName = profile.displayName?.toLowerCase() || '';
         const email = profile.email.toLowerCase();
         return displayName.includes(searchQuery) || email.includes(searchQuery);
       })
       .slice(0, limit);
 
-    return matches.map((profile) => ({
+    return matches.map(profile => ({
       id: profile.email,
       displayName: profile.displayName,
       avatarUrl: profile.avatarUrl,

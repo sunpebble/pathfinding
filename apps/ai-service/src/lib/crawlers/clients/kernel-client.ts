@@ -1,4 +1,4 @@
-import type {Browser, BrowserContext, Page} from 'playwright';
+import type { Browser, BrowserContext, Page } from 'playwright';
 import type {
   BrowserClient,
   NetworkRequest,
@@ -8,8 +8,7 @@ import type {
 import Kernel from '@onkernel/sdk';
 import {
 
-
-  chromium
+  chromium,
 
 } from 'playwright';
 import { createLogger } from '../../logger.js';
@@ -62,8 +61,8 @@ export class KernelBrowserClient implements BrowserClient {
 
     // Get or create context
     const contexts = this.browser.contexts();
-    this.context =
-      contexts.length > 0
+    this.context
+      = contexts.length > 0
         ? contexts[0]
         : await this.browser.newContext({
             viewport: this.options.viewport || { width: 1920, height: 1080 },
@@ -93,7 +92,7 @@ export class KernelBrowserClient implements BrowserClient {
     if (this.kernelBrowser) {
       log.info(
         { sessionId: this.kernelBrowser.session_id },
-        'Browser disconnected'
+        'Browser disconnected',
       );
       this.kernelBrowser = null;
     }
@@ -111,7 +110,7 @@ export class KernelBrowserClient implements BrowserClient {
     options?: {
       timeout?: number;
       waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
-    }
+    },
   ): Promise<void> {
     this.ensureInitialized();
     await this.page!.goto(url, {
@@ -195,14 +194,14 @@ export class KernelBrowserClient implements BrowserClient {
   async listNetworkRequests(types?: string[]): Promise<NetworkRequest[]> {
     if (!this.networkCaptureEnabled) {
       throw new Error(
-        'Network capture not enabled. Call enableNetworkCapture() first.'
+        'Network capture not enabled. Call enableNetworkCapture() first.',
       );
     }
 
     const requests = Array.from(this.networkRequests.values());
 
     if (types && types.length > 0) {
-      return requests.filter((req) => types.includes(req.resourceType));
+      return requests.filter(req => types.includes(req.resourceType));
     }
 
     return requests;
@@ -214,7 +213,7 @@ export class KernelBrowserClient implements BrowserClient {
   async getNetworkRequest(id: string): Promise<NetworkRequest | null> {
     if (!this.networkCaptureEnabled) {
       throw new Error(
-        'Network capture not enabled. Call enableNetworkCapture() first.'
+        'Network capture not enabled. Call enableNetworkCapture() first.',
       );
     }
 
@@ -285,7 +284,7 @@ export class KernelBrowserClient implements BrowserClient {
    */
   async act(_instruction: string): Promise<void> {
     throw new Error(
-      'KernelBrowserClient does not support AI-based act(). Use StagehandClient instead.'
+      'KernelBrowserClient does not support AI-based act(). Use StagehandClient instead.',
     );
   }
 
@@ -295,7 +294,7 @@ export class KernelBrowserClient implements BrowserClient {
    */
   async extract<T>(_instruction: string, _schema: import('zod').ZodSchema<T>): Promise<T> {
     throw new Error(
-      'KernelBrowserClient does not support AI-based extract(). Use StagehandClient instead.'
+      'KernelBrowserClient does not support AI-based extract(). Use StagehandClient instead.',
     );
   }
 
@@ -313,7 +312,7 @@ export class KernelBrowserClient implements BrowserClient {
   private ensureInitialized(): void {
     if (!this.page) {
       throw new Error(
-        'KernelBrowserClient not initialized. Call init() first.'
+        'KernelBrowserClient not initialized. Call init() first.',
       );
     }
   }
@@ -322,11 +321,12 @@ export class KernelBrowserClient implements BrowserClient {
    * Check if a URL matches the capture patterns
    */
   private shouldCaptureRequest(url: string): boolean {
-    if (this.capturePatterns.length === 0) return true;
+    if (this.capturePatterns.length === 0)
+      return true;
 
     return this.capturePatterns.some((pattern) => {
       const regex = new RegExp(
-        pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*')
+        pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*'),
       );
       return regex.test(url);
     });

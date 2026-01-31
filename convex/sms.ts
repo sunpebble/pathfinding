@@ -66,7 +66,8 @@ export const send = internalAction({
       }
 
       return { success: true };
-    } catch (error) {
+    }
+    catch (error) {
       console.error('SMS send error:', error);
       return {
         success: false,

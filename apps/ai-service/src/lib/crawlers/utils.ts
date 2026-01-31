@@ -9,7 +9,7 @@ import type { BrowserClient } from './clients/index.js';
  * Helper function for delay
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -23,7 +23,7 @@ export function sleep(ms: number): Promise<void> {
 export async function waitForContentStable(
   client: BrowserClient,
   maxWait: number = 10000,
-  stabilityWindow: number = 500
+  stabilityWindow: number = 500,
 ): Promise<boolean> {
   const startTime = Date.now();
   let lastSnapshotLength = 0;
@@ -40,7 +40,8 @@ export async function waitForContentStable(
       if (stableCount >= 2) {
         return true;
       }
-    } else {
+    }
+    else {
       stableCount = 0;
     }
 

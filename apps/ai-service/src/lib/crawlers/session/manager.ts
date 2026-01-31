@@ -29,7 +29,7 @@ export function needsPersistentSession(platform: Platform): boolean {
  */
 export async function checkSession(
   client: BrowserClient,
-  platform: Platform
+  platform: Platform,
 ): Promise<ValidationResult> {
   const snapshot = await client.takeSnapshot();
   const validator = getValidator(platform);
@@ -44,7 +44,7 @@ export async function checkSession(
  */
 export async function initSessionForPlatform(
   client: BrowserClient,
-  platform: Platform
+  platform: Platform,
 ): Promise<void> {
   const needsPersistent = needsPersistentSession(platform);
 
@@ -71,7 +71,7 @@ export interface SessionCheckResult {
  */
 export async function checkSessionWithGuidance(
   client: BrowserClient,
-  platform: Platform
+  platform: Platform,
 ): Promise<SessionCheckResult> {
   const validation = await checkSession(client, platform);
 

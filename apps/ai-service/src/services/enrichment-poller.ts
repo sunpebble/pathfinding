@@ -9,7 +9,7 @@ import { loggers } from '../lib/logger.js';
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const POLL_INTERVAL = Number.parseInt(
   process.env.ENRICHMENT_POLL_INTERVAL || '30000',
-  10
+  10,
 );
 const BATCH_SIZE = 5;
 
@@ -25,7 +25,7 @@ async function fetchPendingGuides(): Promise<any[]> {
       `${CONVEX_URL}/api/guides?enrichmentStatus=pending&limit=${BATCH_SIZE}`,
       {
         signal: AbortSignal.timeout(10000),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -35,7 +35,8 @@ async function fetchPendingGuides(): Promise<any[]> {
 
     const data = await response.json();
     return data.guides || data || [];
-  } catch (error) {
+  }
+  catch (error) {
     loggers.convex.error({ error }, 'Error fetching pending guides');
     return [];
   }
@@ -57,7 +58,8 @@ async function markAsProcessing(guideId: string): Promise<boolean> {
     });
 
     return response.ok;
-  } catch (error) {
+  }
+  catch (error) {
     loggers.convex.error({ error, guideId }, 'Error marking guide as processing');
     return false;
   }
@@ -67,7 +69,8 @@ async function markAsProcessing(guideId: string): Promise<boolean> {
  * Process a single poll cycle
  */
 async function pollCycle(): Promise<void> {
-  if (!isPolling) return;
+  if (!isPolling)
+    return;
 
   try {
     const pendingGuides = await fetchPendingGuides();
@@ -76,7 +79,8 @@ async function pollCycle(): Promise<void> {
       loggers.convex.info({ count: pendingGuides.length }, 'Found pending guides to enrich');
 
       for (const guide of pendingGuides) {
-        if (!isPolling) break;
+        if (!isPolling)
+          break;
 
         // Mark as processing first
         const marked = await markAsProcessing(guide._id);
@@ -97,18 +101,21 @@ async function pollCycle(): Promise<void> {
 
           if (result.success) {
             loggers.convex.info({ guideId: guide._id, title: guide.title }, 'Enriched guide successfully');
-          } else {
+          }
+          else {
             loggers.convex.error(
               { guideId: guide._id, error: result.error },
-              'Failed to enrich guide'
+              'Failed to enrich guide',
             );
           }
-        } catch (error) {
+        }
+        catch (error) {
           loggers.convex.error({ guideId: guide._id, error }, 'Error enriching guide');
         }
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     loggers.convex.error({ error }, 'Poll cycle error');
   }
 
@@ -130,7 +137,7 @@ export function startEnrichmentPoller(): void {
   isPolling = true;
   loggers.convex.info(
     { intervalSeconds: POLL_INTERVAL / 1000 },
-    'Starting enrichment poller'
+    'Starting enrichment poller',
   );
 
   // Start first poll immediately
@@ -166,7 +173,7 @@ export function getPollerStatus(): {
  * Manually trigger enrichment for a specific guide
  */
 export async function triggerEnrichment(
-  guideId: string
+  guideId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Fetch the guide
@@ -190,7 +197,8 @@ export async function triggerEnrichment(
       title: guide.title,
       destinations: guide.destinations || [],
     });
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Trigger failed',

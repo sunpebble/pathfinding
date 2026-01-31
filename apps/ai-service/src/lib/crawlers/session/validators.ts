@@ -3,12 +3,12 @@
  * Each validator checks page content to determine login status
  */
 
-export type Platform =
-  | 'xiaohongshu'
-  | 'mafengwo'
-  | 'ctrip'
-  | 'qunar'
-  | 'tongcheng';
+export type Platform
+  = | 'xiaohongshu'
+    | 'mafengwo'
+    | 'ctrip'
+    | 'qunar'
+    | 'tongcheng';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -25,10 +25,10 @@ export function validateXiaohongshuSession(content: string): ValidationResult {
 
   // Check for login wall indicators
   if (
-    lowerContent.includes('captcha') ||
-    lowerContent.includes('security verification') ||
-    lowerContent.includes('扫码登录') ||
-    lowerContent.includes('请登录')
+    lowerContent.includes('captcha')
+    || lowerContent.includes('security verification')
+    || lowerContent.includes('扫码登录')
+    || lowerContent.includes('请登录')
   ) {
     return {
       isValid: false,
@@ -48,14 +48,14 @@ export function validateMafengwoSession(content: string): ValidationResult {
   const lowerContent = content.toLowerCase();
 
   // Check for logged-in indicators
-  const isLoggedIn =
-    lowerContent.includes('退出') ||
-    lowerContent.includes('我的主页') ||
-    lowerContent.includes('我的游记');
+  const isLoggedIn
+    = lowerContent.includes('退出')
+      || lowerContent.includes('我的主页')
+      || lowerContent.includes('我的游记');
 
   // Check for login prompts without being blocked
-  const hasLoginPrompt =
-    lowerContent.includes('验证') && !lowerContent.includes('退出');
+  const hasLoginPrompt
+    = lowerContent.includes('验证') && !lowerContent.includes('退出');
 
   if (hasLoginPrompt) {
     return {
@@ -83,7 +83,7 @@ export function validatePublicSession(_content: string): ValidationResult {
  * Get validator for platform
  */
 export function getValidator(
-  platform: Platform
+  platform: Platform,
 ): (content: string) => ValidationResult {
   switch (platform) {
     case 'xiaohongshu':

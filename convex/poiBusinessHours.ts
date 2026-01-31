@@ -41,7 +41,7 @@ const bestVisitTimeValidator = v.object({
 const reminderTypeValidator = v.union(
   v.literal('opening'),
   v.literal('closing'),
-  v.literal('best_time')
+  v.literal('best_time'),
 );
 
 // ============================================
@@ -77,7 +77,7 @@ function parseTimeToMinutes(time: string): number {
  */
 function isWithinTimeSlot(
   currentMinutes: number,
-  slot: { open: string; close: string }
+  slot: { open: string; close: string },
 ): boolean {
   const openMinutes = parseTimeToMinutes(slot.open);
   const closeMinutes = parseTimeToMinutes(slot.close);
@@ -104,7 +104,8 @@ export const getPoiWithBusinessHours = query({
   },
   handler: async (ctx, args) => {
     const poi = await ctx.db.get(args.poiId);
-    if (!poi) return null;
+    if (!poi)
+      return null;
 
     // Get today's date in the POI's timezone or client's timezone
     const now = new Date();
@@ -142,12 +143,12 @@ export const getPoiWithBusinessHours = query({
     const today = now.toISOString().split('T')[0];
     const holidayHours = await ctx.db
       .query('poiHolidayHours')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
-      .filter((q) =>
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
+      .filter(q =>
         q.and(
           q.lte(q.field('startDate'), today),
-          q.gte(q.field('endDate'), today)
-        )
+          q.gte(q.field('endDate'), today),
+        ),
       )
       .first();
 
@@ -166,7 +167,8 @@ export const getPoiWithBusinessHours = query({
         isOpen = false;
         nextOpenTime = null;
         nextCloseTime = null;
-      } else if (holidayHours.hours && holidayHours.hours.length > 0) {
+      }
+      else if (holidayHours.hours && holidayHours.hours.length > 0) {
         isOpen = false;
         for (const slot of holidayHours.hours) {
           if (isWithinTimeSlot(currentMinutes, slot)) {
@@ -239,10 +241,10 @@ export const getHolidayHours = query({
 
     let query = ctx.db
       .query('poiHolidayHours')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId));
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId));
 
     if (!args.includeExpired) {
-      query = query.filter((q) => q.gte(q.field('endDate'), today));
+      query = query.filter(q => q.gte(q.field('endDate'), today));
     }
 
     return await query.collect();
@@ -261,12 +263,11 @@ export const getUpcomingHolidays = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('poiHolidayHours')
-      .withIndex('by_poi_dates', (q) =>
+      .withIndex('by_poi_dates', q =>
         q
           .eq('poiId', args.poiId)
           .gte('startDate', args.startDate)
-          .lte('startDate', args.endDate)
-      )
+          .lte('startDate', args.endDate))
       .collect();
   },
 });
@@ -362,7 +363,7 @@ export const updateHolidayHours = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -427,10 +428,10 @@ export const getUserReminders = query({
   handler: async (ctx, args) => {
     let query = ctx.db
       .query('poiBusinessHoursReminders')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId));
+      .withIndex('by_user', q => q.eq('userId', args.userId));
 
     if (!args.includeTriggered) {
-      query = query.filter((q) => q.eq(q.field('isTriggered'), false));
+      query = query.filter(q => q.eq(q.field('isTriggered'), false));
     }
 
     const reminders = await query.collect();
@@ -450,7 +451,7 @@ export const getUserReminders = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return enrichedReminders;
@@ -468,11 +469,11 @@ export const getPendingReminders = query({
     return await ctx.db
       .query('poiBusinessHoursReminders')
       .withIndex('by_scheduled_time')
-      .filter((q) =>
+      .filter(q =>
         q.and(
           q.lte(q.field('scheduledTime'), args.beforeTime),
-          q.eq(q.field('isTriggered'), false)
-        )
+          q.eq(q.field('isTriggered'), false),
+        ),
       )
       .collect();
   },
@@ -516,9 +517,8 @@ export const deletePoiReminders = mutation({
   handler: async (ctx, args) => {
     const reminders = await ctx.db
       .query('poiBusinessHoursReminders')
-      .withIndex('by_user_poi', (q) =>
-        q.eq('userId', args.userId).eq('poiId', args.poiId)
-      )
+      .withIndex('by_user_poi', q =>
+        q.eq('userId', args.userId).eq('poiId', args.poiId))
       .collect();
 
     for (const reminder of reminders) {

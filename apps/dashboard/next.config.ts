@@ -14,10 +14,10 @@ const nextConfig: NextConfig = {
 
   // Rewrites to proxy API requests to the appropriate services
   async rewrites() {
-    const convexUrl =
-      process.env.NEXT_PUBLIC_CONVEX_URL || 'https://convex.kunish.org';
-    const aiServiceUrl =
-      process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:3001';
+    const convexUrl
+      = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://convex.kunish.org';
+    const aiServiceUrl
+      = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:3001';
     return [
       // Convex HTTP Actions for CRUD operations
       {

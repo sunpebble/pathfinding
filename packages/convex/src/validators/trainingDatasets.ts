@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v } from 'convex/values';
 
 /**
  * Geographic scope for training dataset generation
@@ -7,10 +7,10 @@ export const trainingGeographicScopeValidator = v.object({
   /** Type of geographic scope */
   type: v.optional(
     v.union(
-      v.literal("global"),
-      v.literal("country"),
-      v.literal("region"),
-      v.literal("city"),
+      v.literal('global'),
+      v.literal('country'),
+      v.literal('region'),
+      v.literal('city'),
     ),
   ),
   /** Country codes to include */
@@ -60,9 +60,9 @@ export const trainingGenerationParamsValidator = v.union(
     /** Sampling strategy */
     samplingStrategy: v.optional(
       v.union(
-        v.literal("random"),
-        v.literal("stratified"),
-        v.literal("weighted"),
+        v.literal('random'),
+        v.literal('stratified'),
+        v.literal('weighted'),
       ),
     ),
     /** Random seed for reproducibility */

@@ -16,7 +16,7 @@ const tripTypeValidator = v.union(
   v.literal('ski'),
   v.literal('city'),
   v.literal('hiking'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const categoryValidator = v.union(
@@ -28,7 +28,7 @@ const categoryValidator = v.union(
   v.literal('accessories'),
   v.literal('gear'),
   v.literal('snacks'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const suggestedByValidator = v.union(
@@ -36,7 +36,7 @@ const suggestedByValidator = v.union(
   v.literal('weather'),
   v.literal('activity'),
   v.literal('template'),
-  v.literal('ai')
+  v.literal('ai'),
 );
 
 /**
@@ -47,7 +47,7 @@ const suggestedByValidator = v.union(
 async function checkViewPermission(
   ctx: QueryCtx | MutationCtx,
   listId: Id<'packingLists'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const list = await ctx.db.get(listId);
   if (!list) {
@@ -76,7 +76,7 @@ async function checkViewPermission(
 async function checkEditPermission(
   ctx: QueryCtx | MutationCtx,
   listId: Id<'packingLists'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const list = await ctx.db.get(listId);
   if (!list) {
@@ -124,7 +124,7 @@ export const listByUser = query({
 
     const lists = await ctx.db
       .query('packingLists')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -136,10 +136,10 @@ export const listByUser = query({
       data.map(async (list) => {
         const items = await ctx.db
           .query('packingItems')
-          .withIndex('by_list', (q) => q.eq('packingListId', list._id))
+          .withIndex('by_list', q => q.eq('packingListId', list._id))
           .collect();
 
-        const packedCount = items.filter((i) => i.isPacked).length;
+        const packedCount = items.filter(i => i.isPacked).length;
         const totalItems = items.length;
 
         return {
@@ -149,7 +149,7 @@ export const listByUser = query({
           progress:
             totalItems > 0 ? Math.round((packedCount / totalItems) * 100) : 0,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -164,7 +164,8 @@ export const getById = query({
   },
   handler: async (ctx, args) => {
     const list = await ctx.db.get(args.id);
-    if (!list) return null;
+    if (!list)
+      return null;
 
     // Check view permission if userId provided
     if (args.userId) {
@@ -174,7 +175,7 @@ export const getById = query({
     // Get all items
     const items = await ctx.db
       .query('packingItems')
-      .withIndex('by_list', (q) => q.eq('packingListId', args.id))
+      .withIndex('by_list', q => q.eq('packingListId', args.id))
       .collect();
 
     // Group items by category
@@ -191,7 +192,7 @@ export const getById = query({
       itemsByCategory[category].sort((a, b) => a.orderIndex - b.orderIndex);
     }
 
-    const packedCount = items.filter((i) => i.isPacked).length;
+    const packedCount = items.filter(i => i.isPacked).length;
     const totalItems = items.length;
 
     // Get linked itinerary info if available
@@ -228,15 +229,16 @@ export const getByShareCode = query({
   handler: async (ctx, args) => {
     const list = await ctx.db
       .query('packingLists')
-      .withIndex('by_share_code', (q) => q.eq('shareCode', args.shareCode))
+      .withIndex('by_share_code', q => q.eq('shareCode', args.shareCode))
       .first();
 
-    if (!list) return null;
+    if (!list)
+      return null;
 
     // Get all items
     const items = await ctx.db
       .query('packingItems')
-      .withIndex('by_list', (q) => q.eq('packingListId', list._id))
+      .withIndex('by_list', q => q.eq('packingListId', list._id))
       .collect();
 
     // Group items by category
@@ -253,7 +255,7 @@ export const getByShareCode = query({
       itemsByCategory[category].sort((a, b) => a.orderIndex - b.orderIndex);
     }
 
-    const packedCount = items.filter((i) => i.isPacked).length;
+    const packedCount = items.filter(i => i.isPacked).length;
     const totalItems = items.length;
 
     return {
@@ -352,7 +354,7 @@ export const update = mutation({
         condition: v.optional(v.string()),
         humidity: v.optional(v.number()),
         fetchedAt: v.optional(v.number()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -360,7 +362,7 @@ export const update = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -392,7 +394,7 @@ export const remove = mutation({
     // Delete all items
     const items = await ctx.db
       .query('packingItems')
-      .withIndex('by_list', (q) => q.eq('packingListId', args.id))
+      .withIndex('by_list', q => q.eq('packingListId', args.id))
       .collect();
 
     for (const item of items) {
@@ -476,7 +478,7 @@ export const removeSharedUser = mutation({
 
     const currentShared = list.sharedWith ?? [];
     await ctx.db.patch(args.id, {
-      sharedWith: currentShared.filter((id) => id !== args.sharedUserId),
+      sharedWith: currentShared.filter(id => id !== args.sharedUserId),
       updatedAt: Date.now(),
     });
   },
@@ -504,14 +506,13 @@ export const addItem = mutation({
     // Get the current max orderIndex for this category
     const existingItems = await ctx.db
       .query('packingItems')
-      .withIndex('by_list_category', (q) =>
-        q.eq('packingListId', args.packingListId).eq('category', args.category)
-      )
+      .withIndex('by_list_category', q =>
+        q.eq('packingListId', args.packingListId).eq('category', args.category))
       .collect();
 
     const maxOrderIndex = existingItems.reduce(
       (max, item) => Math.max(max, item.orderIndex),
-      -1
+      -1,
     );
 
     const now = Date.now();
@@ -559,7 +560,7 @@ export const updateItem = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     const now = Date.now();
@@ -646,7 +647,7 @@ export const addItemsBulk = mutation({
         isEssential: v.optional(v.boolean()),
         suggestedBy: v.optional(suggestedByValidator),
         notes: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -662,16 +663,15 @@ export const addItemsBulk = mutation({
       if (categoryMaxIndex[newItem.category] === undefined) {
         const existingItems = await ctx.db
           .query('packingItems')
-          .withIndex('by_list_category', (q) =>
+          .withIndex('by_list_category', q =>
             q
               .eq('packingListId', args.packingListId)
-              .eq('category', newItem.category)
-          )
+              .eq('category', newItem.category))
           .collect();
 
         categoryMaxIndex[newItem.category] = existingItems.reduce(
           (max, item) => Math.max(max, item.orderIndex),
-          -1
+          -1,
         );
       }
 
@@ -718,13 +718,14 @@ export const listSystemTemplates = query({
     if (args.tripType) {
       templates = await ctx.db
         .query('packingTemplates')
-        .withIndex('by_trip_type', (q) => q.eq('tripType', args.tripType!))
-        .filter((q) => q.eq(q.field('isSystem'), true))
+        .withIndex('by_trip_type', q => q.eq('tripType', args.tripType!))
+        .filter(q => q.eq(q.field('isSystem'), true))
         .collect();
-    } else {
+    }
+    else {
       templates = await ctx.db
         .query('packingTemplates')
-        .withIndex('by_system', (q) => q.eq('isSystem', true))
+        .withIndex('by_system', q => q.eq('isSystem', true))
         .collect();
     }
 
@@ -749,13 +750,14 @@ export const listPublicTemplates = query({
     if (args.tripType) {
       templates = await ctx.db
         .query('packingTemplates')
-        .withIndex('by_trip_type', (q) => q.eq('tripType', args.tripType!))
-        .filter((q) => q.eq(q.field('isPublic'), true))
+        .withIndex('by_trip_type', q => q.eq('tripType', args.tripType!))
+        .filter(q => q.eq(q.field('isPublic'), true))
         .collect();
-    } else {
+    }
+    else {
       templates = await ctx.db
         .query('packingTemplates')
-        .withIndex('by_public', (q) => q.eq('isPublic', true))
+        .withIndex('by_public', q => q.eq('isPublic', true))
         .collect();
     }
 
@@ -805,7 +807,7 @@ export const createTemplateFromList = mutation({
     // Get all items from the list
     const items = await ctx.db
       .query('packingItems')
-      .withIndex('by_list', (q) => q.eq('packingListId', args.packingListId))
+      .withIndex('by_list', q => q.eq('packingListId', args.packingListId))
       .collect();
 
     const now = Date.now();
@@ -814,7 +816,7 @@ export const createTemplateFromList = mutation({
       name: args.name,
       description: args.description,
       tripType: list.tripType ?? 'other',
-      items: items.map((item) => ({
+      items: items.map(item => ({
         name: item.name,
         category: item.category,
         quantity: item.quantity,
@@ -857,7 +859,7 @@ export const updateTemplate = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {

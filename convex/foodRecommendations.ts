@@ -29,7 +29,7 @@ export const listRestaurants = query({
 
     const query = ctx.db
       .query('pois')
-      .withIndex('by_category', (q) => q.eq('category', 'restaurant'));
+      .withIndex('by_category', q => q.eq('category', 'restaurant'));
 
     const pois = await query.collect();
 
@@ -37,25 +37,25 @@ export const listRestaurants = query({
     let filtered = pois;
 
     if (args.cityId) {
-      filtered = filtered.filter((p) => p.cityId === args.cityId);
+      filtered = filtered.filter(p => p.cityId === args.cityId);
     }
 
     if (args.cuisineType) {
-      filtered = filtered.filter((p) => p.cuisineType === args.cuisineType);
+      filtered = filtered.filter(p => p.cuisineType === args.cuisineType);
     }
 
     if (args.priceLevel) {
-      filtered = filtered.filter((p) => p.priceLevel === args.priceLevel);
+      filtered = filtered.filter(p => p.priceLevel === args.priceLevel);
     }
 
     if (args.minRating) {
       filtered = filtered.filter(
-        (p) => p.rating && p.rating >= args.minRating!
+        p => p.rating && p.rating >= args.minRating!,
       );
     }
 
     if (args.isLocalFavorite) {
-      filtered = filtered.filter((p) => p.isLocalFavorite === true);
+      filtered = filtered.filter(p => p.isLocalFavorite === true);
     }
 
     return filtered.slice(0, limit);
@@ -78,26 +78,26 @@ export const searchRestaurants = query({
 
     const dbQuery = ctx.db
       .query('pois')
-      .withIndex('by_category', (q) => q.eq('category', 'restaurant'));
+      .withIndex('by_category', q => q.eq('category', 'restaurant'));
 
     const pois = await dbQuery.collect();
 
     // Filter by search query
     let filtered = pois.filter(
-      (p) =>
-        p.name.toLowerCase().includes(searchQuery) ||
-        p.nameEn?.toLowerCase().includes(searchQuery) ||
-        p.address?.toLowerCase().includes(searchQuery) ||
-        p.cuisineType?.toLowerCase().includes(searchQuery) ||
-        p.signatureDishes?.some((d) => d.toLowerCase().includes(searchQuery))
+      p =>
+        p.name.toLowerCase().includes(searchQuery)
+        || p.nameEn?.toLowerCase().includes(searchQuery)
+        || p.address?.toLowerCase().includes(searchQuery)
+        || p.cuisineType?.toLowerCase().includes(searchQuery)
+        || p.signatureDishes?.some(d => d.toLowerCase().includes(searchQuery)),
     );
 
     if (args.cityId) {
-      filtered = filtered.filter((p) => p.cityId === args.cityId);
+      filtered = filtered.filter(p => p.cityId === args.cityId);
     }
 
     if (args.cuisineType) {
-      filtered = filtered.filter((p) => p.cuisineType === args.cuisineType);
+      filtered = filtered.filter(p => p.cuisineType === args.cuisineType);
     }
 
     return filtered.slice(0, limit);
@@ -137,7 +137,7 @@ export const getNearbyRestaurants = query({
 
     const pois = await ctx.db
       .query('pois')
-      .withIndex('by_category', (q) => q.eq('category', 'restaurant'))
+      .withIndex('by_category', q => q.eq('category', 'restaurant'))
       .collect();
 
     // Calculate distance and filter
@@ -147,16 +147,16 @@ export const getNearbyRestaurants = query({
           args.latitude,
           args.longitude,
           poi.latitude,
-          poi.longitude
+          poi.longitude,
         );
         return { ...poi, distance };
       })
-      .filter((p) => p.distance <= radiusKm);
+      .filter(p => p.distance <= radiusKm);
 
     // Apply cuisine filter
     let filtered = withDistance;
     if (args.cuisineType) {
-      filtered = filtered.filter((p) => p.cuisineType === args.cuisineType);
+      filtered = filtered.filter(p => p.cuisineType === args.cuisineType);
     }
 
     // Sort by distance
@@ -180,15 +180,14 @@ export const getLocalFavorites = query({
 
     const pois = await ctx.db
       .query('pois')
-      .withIndex('by_city_category', (q) =>
-        q.eq('cityId', args.cityId).eq('category', 'restaurant')
-      )
+      .withIndex('by_city_category', q =>
+        q.eq('cityId', args.cityId).eq('category', 'restaurant'))
       .collect();
 
-    let filtered = pois.filter((p) => p.isLocalFavorite === true);
+    let filtered = pois.filter(p => p.isLocalFavorite === true);
 
     if (args.cuisineType) {
-      filtered = filtered.filter((p) => p.cuisineType === args.cuisineType);
+      filtered = filtered.filter(p => p.cuisineType === args.cuisineType);
     }
 
     // Sort by rating
@@ -212,13 +211,13 @@ export const getByCuisineType = query({
 
     const pois = await ctx.db
       .query('pois')
-      .withIndex('by_category', (q) => q.eq('category', 'restaurant'))
+      .withIndex('by_category', q => q.eq('category', 'restaurant'))
       .collect();
 
-    let filtered = pois.filter((p) => p.cuisineType === args.cuisineType);
+    let filtered = pois.filter(p => p.cuisineType === args.cuisineType);
 
     if (args.cityId) {
-      filtered = filtered.filter((p) => p.cityId === args.cityId);
+      filtered = filtered.filter(p => p.cityId === args.cityId);
     }
 
     // Sort by rating
@@ -245,9 +244,8 @@ export const getRestaurantReviews = query({
 
     const reviews = await ctx.db
       .query('foodReviews')
-      .withIndex('by_restaurant', (q) =>
-        q.eq('restaurantId', args.restaurantId)
-      )
+      .withIndex('by_restaurant', q =>
+        q.eq('restaurantId', args.restaurantId))
       .order('desc')
       .take(limit);
 
@@ -266,9 +264,8 @@ export const getUserReview = query({
   handler: async (ctx, args) => {
     const review = await ctx.db
       .query('foodReviews')
-      .withIndex('by_restaurant_user', (q) =>
-        q.eq('restaurantId', args.restaurantId).eq('userId', args.userId)
-      )
+      .withIndex('by_restaurant_user', q =>
+        q.eq('restaurantId', args.restaurantId).eq('userId', args.userId))
       .first();
 
     return review;
@@ -297,9 +294,8 @@ export const createFoodReview = mutation({
     // Check if user already has a review
     const existingReview = await ctx.db
       .query('foodReviews')
-      .withIndex('by_restaurant_user', (q) =>
-        q.eq('restaurantId', args.restaurantId).eq('userId', args.userId)
-      )
+      .withIndex('by_restaurant_user', q =>
+        q.eq('restaurantId', args.restaurantId).eq('userId', args.userId))
       .first();
 
     const now = Date.now();
@@ -390,9 +386,8 @@ export const markReviewHelpful = mutation({
     // Check if user already marked this review
     const existingMark = await ctx.db
       .query('foodReviewHelpful')
-      .withIndex('by_review_user', (q) =>
-        q.eq('reviewId', args.reviewId).eq('userId', args.userId)
-      )
+      .withIndex('by_review_user', q =>
+        q.eq('reviewId', args.reviewId).eq('userId', args.userId))
       .first();
 
     if (existingMark) {
@@ -447,9 +442,8 @@ export const addToFavorites = mutation({
     // Check if already in favorites
     const existing = await ctx.db
       .query('foodFavorites')
-      .withIndex('by_user_restaurant', (q) =>
-        q.eq('userId', args.userId).eq('restaurantId', args.restaurantId)
-      )
+      .withIndex('by_user_restaurant', q =>
+        q.eq('userId', args.userId).eq('restaurantId', args.restaurantId))
       .first();
 
     if (existing) {
@@ -483,9 +477,8 @@ export const removeFromFavorites = mutation({
   handler: async (ctx, args) => {
     const favorite = await ctx.db
       .query('foodFavorites')
-      .withIndex('by_user_restaurant', (q) =>
-        q.eq('userId', args.userId).eq('restaurantId', args.restaurantId)
-      )
+      .withIndex('by_user_restaurant', q =>
+        q.eq('userId', args.userId).eq('restaurantId', args.restaurantId))
       .first();
 
     if (favorite) {
@@ -508,12 +501,12 @@ export const getUserFavorites = query({
 
     let favorites = await ctx.db
       .query('foodFavorites')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
     if (args.collectionId) {
-      favorites = favorites.filter((f) => f.collectionId === args.collectionId);
+      favorites = favorites.filter(f => f.collectionId === args.collectionId);
     }
 
     // Get restaurant details
@@ -524,10 +517,10 @@ export const getUserFavorites = query({
           ...fav,
           restaurant,
         };
-      })
+      }),
     );
 
-    return results.filter((r) => r.restaurant !== null);
+    return results.filter(r => r.restaurant !== null);
   },
 });
 
@@ -542,9 +535,8 @@ export const isInFavorites = query({
   handler: async (ctx, args) => {
     const favorite = await ctx.db
       .query('foodFavorites')
-      .withIndex('by_user_restaurant', (q) =>
-        q.eq('userId', args.userId).eq('restaurantId', args.restaurantId)
-      )
+      .withIndex('by_user_restaurant', q =>
+        q.eq('userId', args.userId).eq('restaurantId', args.restaurantId))
       .first();
 
     return favorite !== null;
@@ -592,7 +584,7 @@ export const getUserCollections = query({
   handler: async (ctx, args) => {
     const collections = await ctx.db
       .query('foodCollections')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -621,9 +613,8 @@ export const deleteCollection = mutation({
     // Remove collection reference from favorites
     const favorites = await ctx.db
       .query('foodFavorites')
-      .withIndex('by_collection', (q) =>
-        q.eq('collectionId', args.collectionId)
-      )
+      .withIndex('by_collection', q =>
+        q.eq('collectionId', args.collectionId))
       .collect();
 
     for (const fav of favorites) {
@@ -650,14 +641,14 @@ export const getCuisineTypes = query({
     if (args.cityId) {
       pois = await ctx.db
         .query('pois')
-        .withIndex('by_city_category', (q) =>
-          q.eq('cityId', args.cityId!).eq('category', 'restaurant')
-        )
+        .withIndex('by_city_category', q =>
+          q.eq('cityId', args.cityId!).eq('category', 'restaurant'))
         .collect();
-    } else {
+    }
+    else {
       pois = await ctx.db
         .query('pois')
-        .withIndex('by_category', (q) => q.eq('category', 'restaurant'))
+        .withIndex('by_category', q => q.eq('category', 'restaurant'))
         .collect();
     }
 
@@ -667,7 +658,7 @@ export const getCuisineTypes = query({
       if (poi.cuisineType) {
         cuisineTypes.set(
           poi.cuisineType,
-          (cuisineTypes.get(poi.cuisineType) ?? 0) + 1
+          (cuisineTypes.get(poi.cuisineType) ?? 0) + 1,
         );
       }
     }
@@ -690,17 +681,17 @@ function haversineDistance(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(toRad(lat1))
+      * Math.cos(toRad(lat2))
+      * Math.sin(dLon / 2)
+      * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -714,11 +705,11 @@ function toRad(deg: number): number {
  */
 async function updateRestaurantRating(
   ctx: MutationCtx,
-  restaurantId: Id<'pois'>
+  restaurantId: Id<'pois'>,
 ): Promise<void> {
   const reviews = await ctx.db
     .query('foodReviews')
-    .withIndex('by_restaurant', (q) => q.eq('restaurantId', restaurantId))
+    .withIndex('by_restaurant', q => q.eq('restaurantId', restaurantId))
     .collect();
 
   if (reviews.length === 0) {
@@ -731,7 +722,7 @@ async function updateRestaurantRating(
 
   const totalRating = reviews.reduce(
     (sum: number, r: any) => sum + r.rating,
-    0
+    0,
   );
   const avgRating = totalRating / reviews.length;
 

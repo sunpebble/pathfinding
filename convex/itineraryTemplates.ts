@@ -9,7 +9,7 @@ import { mutation, query } from './_generated/server';
 const visibilityValidator = v.union(
   v.literal('private'),
   v.literal('public'),
-  v.literal('unlisted')
+  v.literal('unlisted'),
 );
 
 const templateTypeValidator = v.union(v.literal('preset'), v.literal('user'));
@@ -20,7 +20,7 @@ const poiTypeValidator = v.union(
   v.literal('hotel'),
   v.literal('transportation'),
   v.literal('activity'),
-  v.literal('shopping')
+  v.literal('shopping'),
 );
 
 const templatePoiValidator = v.object({
@@ -57,7 +57,7 @@ export const listCategories = query({
   handler: async (ctx) => {
     const categories = await ctx.db
       .query('templateCategories')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .withIndex('by_active', q => q.eq('isActive', true))
       .collect();
 
     return categories.sort((a, b) => a.sortOrder - b.sortOrder);
@@ -106,7 +106,7 @@ export const updateCategory = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, {
       ...filteredUpdates,
@@ -127,7 +127,7 @@ export const listPublicTemplates = query({
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
     sortBy: v.optional(
-      v.union(v.literal('popular'), v.literal('newest'), v.literal('most_used'))
+      v.union(v.literal('popular'), v.literal('newest'), v.literal('most_used')),
     ),
   },
   handler: async (ctx, args) => {
@@ -138,12 +138,12 @@ export const listPublicTemplates = query({
 
     let templates = await ctx.db
       .query('itineraryTemplates')
-      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .withIndex('by_published', q => q.eq('isPublished', true))
       .collect();
 
     // Filter by category if specified
     if (args.categoryId) {
-      templates = templates.filter((t) => t.categoryId === args.categoryId);
+      templates = templates.filter(t => t.categoryId === args.categoryId);
     }
 
     // Sort
@@ -171,7 +171,7 @@ export const listPublicTemplates = query({
           categoryName: category?.name,
           categoryIcon: category?.icon,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -192,7 +192,7 @@ export const listUserTemplates = query({
 
     const templates = await ctx.db
       .query('itineraryTemplates')
-      .withIndex('by_creator', (q) => q.eq('creatorId', args.userId))
+      .withIndex('by_creator', q => q.eq('creatorId', args.userId))
       .order('desc')
       .collect();
 
@@ -208,7 +208,7 @@ export const listUserTemplates = query({
           categoryName: category?.name,
           categoryIcon: category?.icon,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -220,7 +220,8 @@ export const getTemplateById = query({
   args: { id: v.id('itineraryTemplates') },
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
-    if (!template) return null;
+    if (!template)
+      return null;
 
     const category = await ctx.db.get(template.categoryId);
 
@@ -240,7 +241,8 @@ export const getTemplateWithUserStatus = query({
   },
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
-    if (!template) return null;
+    if (!template)
+      return null;
 
     const category = await ctx.db.get(template.categoryId);
 
@@ -250,17 +252,15 @@ export const getTemplateWithUserStatus = query({
     if (args.userId) {
       const like = await ctx.db
         .query('templateLikes')
-        .withIndex('by_template_user', (q) =>
-          q.eq('templateId', args.id).eq('userId', args.userId!)
-        )
+        .withIndex('by_template_user', q =>
+          q.eq('templateId', args.id).eq('userId', args.userId!))
         .first();
       isLiked = !!like;
 
       const save = await ctx.db
         .query('templateSaves')
-        .withIndex('by_template_user', (q) =>
-          q.eq('templateId', args.id).eq('userId', args.userId!)
-        )
+        .withIndex('by_template_user', q =>
+          q.eq('templateId', args.id).eq('userId', args.userId!))
         .first();
       isSaved = !!save;
     }
@@ -289,7 +289,7 @@ export const listSavedTemplates = query({
 
     const saves = await ctx.db
       .query('templateSaves')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -300,7 +300,8 @@ export const listSavedTemplates = query({
     const templates = await Promise.all(
       paginatedSaves.map(async (save) => {
         const template = await ctx.db.get(save.templateId);
-        if (!template) return null;
+        if (!template)
+          return null;
 
         const category = await ctx.db.get(template.categoryId);
         return {
@@ -309,11 +310,11 @@ export const listSavedTemplates = query({
           categoryIcon: category?.icon,
           savedAt: save.createdAt,
         };
-      })
+      }),
     );
 
     return {
-      data: templates.filter((t) => t !== null),
+      data: templates.filter(t => t !== null),
       total,
     };
   },
@@ -334,18 +335,18 @@ export const searchTemplates = query({
 
     const templates = await ctx.db
       .query('itineraryTemplates')
-      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .withIndex('by_published', q => q.eq('isPublished', true))
       .collect();
 
     // Filter by search query
     const filtered = templates.filter((t) => {
       const titleMatch = t.title.toLowerCase().includes(searchQuery);
       const descMatch = t.description?.toLowerCase().includes(searchQuery);
-      const tagMatch = t.tags?.some((tag) =>
-        tag.toLowerCase().includes(searchQuery)
+      const tagMatch = t.tags?.some(tag =>
+        tag.toLowerCase().includes(searchQuery),
       );
-      const destMatch = t.destinations?.some((dest) =>
-        dest.toLowerCase().includes(searchQuery)
+      const destMatch = t.destinations?.some(dest =>
+        dest.toLowerCase().includes(searchQuery),
       );
       return titleMatch || descMatch || tagMatch || destMatch;
     });
@@ -362,7 +363,7 @@ export const searchTemplates = query({
           categoryName: category?.name,
           categoryIcon: category?.icon,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -380,7 +381,7 @@ export const getRecommendedTemplates = query({
     // Get all published templates
     const templates = await ctx.db
       .query('itineraryTemplates')
-      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .withIndex('by_published', q => q.eq('isPublished', true))
       .collect();
 
     // Sort by a combination of likes and uses
@@ -395,7 +396,8 @@ export const getRecommendedTemplates = query({
     const usedCategories = new Set<string>();
 
     for (const template of templates) {
-      if (selectedTemplates.length >= limit) break;
+      if (selectedTemplates.length >= limit)
+        break;
 
       // Prioritize diversity in first half
       if (selectedTemplates.length < limit / 2) {
@@ -403,7 +405,8 @@ export const getRecommendedTemplates = query({
           selectedTemplates.push(template);
           usedCategories.add(template.categoryId);
         }
-      } else {
+      }
+      else {
         selectedTemplates.push(template);
       }
     }
@@ -417,7 +420,7 @@ export const getRecommendedTemplates = query({
           categoryName: category?.name,
           categoryIcon: category?.icon,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -505,22 +508,23 @@ export const updateTemplate = mutation({
 
     // Check ownership (only creator can update user templates)
     if (
-      template.templateType === 'user' &&
-      template.creatorId !== args.userId
+      template.templateType === 'user'
+      && template.creatorId !== args.userId
     ) {
       throw new Error('You do not have permission to update this template');
     }
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     // Handle visibility change
     if (updates.visibility === 'public' && template.visibility !== 'public') {
       (filteredUpdates as any).isPublished = true;
       (filteredUpdates as any).publishedAt = Date.now();
-    } else if (updates.visibility !== 'public') {
+    }
+    else if (updates.visibility !== 'public') {
       (filteredUpdates as any).isPublished = false;
     }
 
@@ -547,8 +551,8 @@ export const deleteTemplate = mutation({
 
     // Check ownership
     if (
-      template.templateType === 'user' &&
-      template.creatorId !== args.userId
+      template.templateType === 'user'
+      && template.creatorId !== args.userId
     ) {
       throw new Error('You do not have permission to delete this template');
     }
@@ -556,7 +560,7 @@ export const deleteTemplate = mutation({
     // Delete associated likes
     const likes = await ctx.db
       .query('templateLikes')
-      .withIndex('by_template', (q) => q.eq('templateId', args.id))
+      .withIndex('by_template', q => q.eq('templateId', args.id))
       .collect();
     for (const like of likes) {
       await ctx.db.delete(like._id);
@@ -565,7 +569,7 @@ export const deleteTemplate = mutation({
     // Delete associated saves
     const saves = await ctx.db
       .query('templateSaves')
-      .withIndex('by_template', (q) => q.eq('templateId', args.id))
+      .withIndex('by_template', q => q.eq('templateId', args.id))
       .collect();
     for (const save of saves) {
       await ctx.db.delete(save._id);
@@ -581,7 +585,8 @@ export const incrementViewCount = mutation({
   args: { id: v.id('itineraryTemplates') },
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
-    if (!template) return;
+    if (!template)
+      return;
 
     await ctx.db.patch(args.id, {
       viewCount: template.viewCount + 1,
@@ -594,7 +599,8 @@ export const incrementUseCount = mutation({
   args: { id: v.id('itineraryTemplates') },
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
-    if (!template) return;
+    if (!template)
+      return;
 
     await ctx.db.patch(args.id, {
       useCount: template.useCount + 1,
@@ -615,9 +621,8 @@ export const toggleLike = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('templateLikes')
-      .withIndex('by_template_user', (q) =>
-        q.eq('templateId', args.templateId).eq('userId', args.userId)
-      )
+      .withIndex('by_template_user', q =>
+        q.eq('templateId', args.templateId).eq('userId', args.userId))
       .first();
 
     const template = await ctx.db.get(args.templateId);
@@ -632,7 +637,8 @@ export const toggleLike = mutation({
         likeCount: Math.max(0, template.likeCount - 1),
       });
       return { liked: false };
-    } else {
+    }
+    else {
       // Like
       await ctx.db.insert('templateLikes', {
         templateId: args.templateId,
@@ -656,9 +662,8 @@ export const toggleSave = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('templateSaves')
-      .withIndex('by_template_user', (q) =>
-        q.eq('templateId', args.templateId).eq('userId', args.userId)
-      )
+      .withIndex('by_template_user', q =>
+        q.eq('templateId', args.templateId).eq('userId', args.userId))
       .first();
 
     const template = await ctx.db.get(args.templateId);
@@ -673,7 +678,8 @@ export const toggleSave = mutation({
         saveCount: Math.max(0, template.saveCount - 1),
       });
       return { saved: false };
-    } else {
+    }
+    else {
       // Save
       await ctx.db.insert('templateSaves', {
         templateId: args.templateId,
@@ -786,7 +792,7 @@ export const saveItineraryAsTemplate = mutation({
     // Get days and items
     const days = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
     days.sort((a, b) => a.dayNumber - b.dayNumber);
 
@@ -795,7 +801,7 @@ export const saveItineraryAsTemplate = mutation({
       days.map(async (day) => {
         const items = await ctx.db
           .query('itineraryItems')
-          .withIndex('by_day', (q) => q.eq('dayId', day._id))
+          .withIndex('by_day', q => q.eq('dayId', day._id))
           .collect();
         items.sort((a, b) => a.orderIndex - b.orderIndex);
 
@@ -816,7 +822,7 @@ export const saveItineraryAsTemplate = mutation({
               longitude: poi?.longitude,
               address: poi?.address,
             };
-          })
+          }),
         );
 
         return {
@@ -824,7 +830,7 @@ export const saveItineraryAsTemplate = mutation({
           theme: undefined,
           pois,
         };
-      })
+      }),
     );
 
     const now = Date.now();

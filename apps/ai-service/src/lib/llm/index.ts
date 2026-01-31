@@ -4,15 +4,14 @@
  */
 
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import type {LLMConfig, LLMProvider} from './types.js';
+import type { LLMConfig, LLMProvider } from './types.js';
 import { createLogger } from '../logger.js';
 import { createClaudeLLM, isClaudeConfigured } from './claude.js';
 import { checkOllamaHealth, createOllamaLLM } from './ollama.js';
 import { createOpenAILLM, isOpenAIConfigured } from './openai.js';
 import {
   getDefaultModel,
-  getDefaultProvider
-
+  getDefaultProvider,
 
 } from './types.js';
 
@@ -55,7 +54,7 @@ export function createLLM(config?: Partial<LLMConfig>): BaseChatModel {
  * Falls back through providers based on availability
  */
 export async function getBestAvailableLLM(
-  config?: Partial<Omit<LLMConfig, 'provider'>>
+  config?: Partial<Omit<LLMConfig, 'provider'>>,
 ): Promise<{ llm: BaseChatModel; provider: LLMProvider }> {
   // Try configured provider first
   const preferredProvider = getDefaultProvider();
@@ -77,14 +76,14 @@ export async function getBestAvailableLLM(
 
   // Fallback order: ollama -> openai -> claude
   const fallbackOrder: LLMProvider[] = ['ollama', 'openai', 'claude'].filter(
-    (p) => p !== preferredProvider
+    p => p !== preferredProvider,
   ) as LLMProvider[];
 
   for (const provider of fallbackOrder) {
     if (await providerChecks[provider]()) {
       log.info(
         { preferredProvider, actualProvider: provider },
-        'LLM fallback: preferred provider unavailable'
+        'LLM fallback: preferred provider unavailable',
       );
       return {
         llm: createLLM({ ...config, provider }),

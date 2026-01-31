@@ -14,7 +14,7 @@ export const getByUser = query({
   handler: async (ctx, args) => {
     const stats = await ctx.db
       .query('travelStats')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     return stats;
@@ -32,14 +32,14 @@ export const calculate = mutation({
     // Get all user's itineraries
     const itineraries = await ctx.db
       .query('itineraries')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     if (itineraries.length === 0) {
       // Create or update empty stats
       const existingStats = await ctx.db
         .query('travelStats')
-        .withIndex('by_user', (q) => q.eq('userId', args.userId))
+        .withIndex('by_user', q => q.eq('userId', args.userId))
         .first();
 
       const emptyStats = {
@@ -66,7 +66,8 @@ export const calculate = mutation({
       if (existingStats) {
         await ctx.db.patch(existingStats._id, emptyStats);
         return existingStats._id;
-      } else {
+      }
+      else {
         return await ctx.db.insert('travelStats', emptyStats);
       }
     }
@@ -75,9 +76,9 @@ export const calculate = mutation({
     const itineraryDaysData = itineraries.map((it) => {
       const start = new Date(it.startDate);
       const end = new Date(it.endDate);
-      const days =
-        Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
-        1;
+      const days
+        = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+          + 1;
       return { itinerary: it, days };
     });
 
@@ -85,13 +86,13 @@ export const calculate = mutation({
     const totalDays = itineraryDaysData.reduce((sum, d) => sum + d.days, 0);
 
     // Get unique cities
-    const cityIds = [...new Set(itineraries.map((it) => it.cityId))];
-    const cities = await Promise.all(cityIds.map((id) => ctx.db.get(id)));
+    const cityIds = [...new Set(itineraries.map(it => it.cityId))];
+    const cities = await Promise.all(cityIds.map(id => ctx.db.get(id)));
     const totalCities = cityIds.length;
 
     // Get unique countries from cities
     const countryCodes = new Set(
-      cities.filter((c) => c).map((c) => c!.countryCode)
+      cities.filter(c => c).map(c => c!.countryCode),
     );
     const totalCountries = countryCodes.size;
 
@@ -103,27 +104,27 @@ export const calculate = mutation({
     for (const it of itineraries) {
       const days = await ctx.db
         .query('itineraryDays')
-        .withIndex('by_itinerary', (q) => q.eq('itineraryId', it._id))
+        .withIndex('by_itinerary', q => q.eq('itineraryId', it._id))
         .collect();
 
       for (const day of days) {
         const items = await ctx.db
           .query('itineraryItems')
-          .withIndex('by_day', (q) => q.eq('dayId', day._id))
+          .withIndex('by_day', q => q.eq('dayId', day._id))
           .collect();
 
         totalPois += items.length;
 
         for (const item of items) {
           // Count transport modes
-          transportModeCount[item.transportMode] =
-            (transportModeCount[item.transportMode] || 0) + 1;
+          transportModeCount[item.transportMode]
+            = (transportModeCount[item.transportMode] || 0) + 1;
 
           // Get POI category
           const poi = await ctx.db.get(item.poiId);
           if (poi) {
-            poiCategoryCount[poi.category] =
-              (poiCategoryCount[poi.category] || 0) + 1;
+            poiCategoryCount[poi.category]
+              = (poiCategoryCount[poi.category] || 0) + 1;
           }
         }
       }
@@ -141,8 +142,8 @@ export const calculate = mutation({
         }
       : undefined;
 
-    const shortestTrip =
-      sortedByDays.length > 0
+    const shortestTrip
+      = sortedByDays.length > 0
         ? {
             itineraryId: sortedByDays[sortedByDays.length - 1].itinerary._id,
             title: sortedByDays[sortedByDays.length - 1].itinerary.title,
@@ -156,7 +157,7 @@ export const calculate = mutation({
     // Get expenses
     const expenses = await ctx.db
       .query('expenses')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -184,7 +185,7 @@ export const calculate = mutation({
           amount: ec.amount,
           percentage: totalExpenses > 0 ? (ec.amount / totalExpenses) * 100 : 0,
         };
-      })
+      }),
     );
 
     // Calculate top destinations
@@ -217,13 +218,13 @@ export const calculate = mutation({
             visitCount: cv.visitCount,
             totalDays: cv.totalDays,
           };
-        })
+        }),
     );
 
     // Calculate preferred transport modes
     const totalTransportModes = Object.values(transportModeCount).reduce(
       (sum, c) => sum + c,
-      0
+      0,
     );
     const preferredTransportModes = Object.entries(transportModeCount)
       .sort((a, b) => b[1] - a[1])
@@ -237,7 +238,7 @@ export const calculate = mutation({
     // Calculate preferred POI categories
     const totalPoiCategories = Object.values(poiCategoryCount).reduce(
       (sum, c) => sum + c,
-      0
+      0,
     );
     const preferredPoiCategories = Object.entries(poiCategoryCount)
       .sort((a, b) => b[1] - a[1])
@@ -258,7 +259,7 @@ export const calculate = mutation({
       ([month, count]) => ({
         month: Number.parseInt(month),
         count,
-      })
+      }),
     );
 
     // Create stats object
@@ -288,7 +289,7 @@ export const calculate = mutation({
     // Check if stats exist
     const existingStats = await ctx.db
       .query('travelStats')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (existingStats) {
@@ -297,7 +298,8 @@ export const calculate = mutation({
         createdAt: existingStats.createdAt,
       });
       return existingStats._id;
-    } else {
+    }
+    else {
       return await ctx.db.insert('travelStats', stats);
     }
   },
@@ -311,7 +313,7 @@ export const getQuickStats = query({
   handler: async (ctx, args) => {
     const stats = await ctx.db
       .query('travelStats')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!stats) {

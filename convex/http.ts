@@ -37,7 +37,7 @@ http.route({
           {
             status: 400,
             headers: { 'Content-Type': 'application/json' },
-          }
+          },
         );
       }
 
@@ -80,7 +80,7 @@ http.route({
           {
             status: result.started ? 200 : 401,
             headers: { 'Content-Type': 'application/json' },
-          }
+          },
         );
       }
 
@@ -91,11 +91,12 @@ http.route({
           'Set-Cookie': `convex-auth-token=${result.tokens.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
         },
       });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Authentication failed';
-      const status =
-        message.includes('Invalid') || message.includes('not found')
+    }
+    catch (error) {
+      const message
+        = error instanceof Error ? error.message : 'Authentication failed';
+      const status
+        = message.includes('Invalid') || message.includes('not found')
           ? 401
           : 500;
 
@@ -131,7 +132,8 @@ http.route({
             'convex-auth-token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
         },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : 'Sign out failed',
@@ -139,7 +141,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -162,7 +164,8 @@ async function getUserIdFromAuth(request: Request): Promise<string | null> {
   try {
     // Decode JWT payload (base64url encoded)
     const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3)
+      return null;
 
     const payload = parts[1];
     // Convert base64url to base64
@@ -172,7 +175,8 @@ async function getUserIdFromAuth(request: Request): Promise<string | null> {
 
     // Convex Auth uses 'sub' for the user ID
     return json.sub || null;
-  } catch {
+  }
+  catch {
     return null;
   }
 }
@@ -221,9 +225,10 @@ http.route({
         {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '请求失败',
@@ -231,7 +236,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -301,10 +306,10 @@ http.route({
         {
           status: 201,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
-    } catch (error) {
-       
+    }
+    catch (error) {
       console.error('Create comment error:', error);
       return new Response(
         JSON.stringify({
@@ -313,7 +318,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -358,7 +363,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '更新评论失败',
@@ -366,7 +372,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -410,7 +416,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '删除评论失败',
@@ -418,7 +425,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -453,7 +460,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '获取回复失败',
@@ -461,7 +469,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -513,9 +521,10 @@ http.route({
         {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '操作失败',
@@ -523,7 +532,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -569,7 +578,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '举报失败',
@@ -577,7 +587,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -617,7 +627,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '请求失败',
@@ -625,7 +636,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -668,7 +679,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '请求失败',
@@ -676,7 +688,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -717,7 +729,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '请求失败',
@@ -725,7 +738,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -739,7 +752,7 @@ http.route({
  * Convert camelCase keys to snake_case for API compatibility with iOS
  */
 function toSnakeCase(str: string): string {
-  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
 /**
@@ -760,10 +773,12 @@ function convertKeysToSnakeCase(obj: any): any {
         if (key === '_id') {
           // Convert Convex _id to standard id for iOS compatibility
           newKey = 'id';
-        } else if (key.startsWith('_')) {
+        }
+        else if (key.startsWith('_')) {
           // Skip other internal Convex fields like _creationTime
           continue;
-        } else {
+        }
+        else {
           newKey = toSnakeCase(key);
         }
         converted[newKey] = convertKeysToSnakeCase(obj[key]);
@@ -811,7 +826,7 @@ http.route({
     const url = new URL(request.url);
     const platform = url.searchParams.get('platform');
     const minQuality = Number.parseFloat(
-      url.searchParams.get('min_quality') ?? '0'
+      url.searchParams.get('min_quality') ?? '0',
     );
     const limit = Number.parseInt(url.searchParams.get('limit') ?? '20');
     const offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
@@ -827,9 +842,9 @@ http.route({
         'tongcheng',
         'mafengwo',
       ] as const;
-      const validPlatform =
-        platform &&
-        validPlatforms.includes(platform as (typeof validPlatforms)[number])
+      const validPlatform
+        = platform
+          && validPlatforms.includes(platform as (typeof validPlatforms)[number])
           ? (platform as (typeof validPlatforms)[number])
           : undefined;
 
@@ -850,9 +865,10 @@ http.route({
           total: guides.length,
         },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取指南列表失败'
+        error instanceof Error ? error.message : '获取指南列表失败',
       );
     }
   }),
@@ -896,10 +912,11 @@ http.route({
           offset: 0,
         },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : '搜索失败',
-        500
+        500,
       );
     }
   }),
@@ -928,7 +945,7 @@ http.route({
       while (!isDone) {
         const batch = await ctx.runQuery(
           api.travelGuides.listDestinationsBatch,
-          { cursor, batchSize: 50 }
+          { cursor, batchSize: 50 },
         );
         allDestinations.push(...batch.destinations);
         cursor = batch.cursor ?? undefined;
@@ -947,10 +964,11 @@ http.route({
         .map(([name, count]) => ({ name, count }));
 
       return jsonResponse({ data: topDestinations });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : '获取目的地失败',
-        500
+        500,
       );
     }
   }),
@@ -982,9 +1000,10 @@ http.route({
 
       // Convert to snake_case for iOS compatibility
       return jsonResponse(convertKeysToSnakeCase(guide));
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取指南失败'
+        error instanceof Error ? error.message : '获取指南失败',
       );
     }
   }),
@@ -1003,17 +1022,18 @@ http.route({
 
       const platformCounts: Record<string, number> = {};
       for (const guide of guides) {
-        platformCounts[guide.sourcePlatform] =
-          (platformCounts[guide.sourcePlatform] || 0) + 1;
+        platformCounts[guide.sourcePlatform]
+          = (platformCounts[guide.sourcePlatform] || 0) + 1;
       }
 
       return jsonResponse({
         total: guides.length,
         by_platform: platformCounts,
       });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取统计失败'
+        error instanceof Error ? error.message : '获取统计失败',
       );
     }
   }),
@@ -1048,9 +1068,10 @@ http.route({
       });
 
       return jsonResponse({ data: sessions });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取会话列表失败'
+        error instanceof Error ? error.message : '获取会话列表失败',
       );
     }
   }),
@@ -1083,9 +1104,10 @@ http.route({
       });
 
       return jsonResponse({ data: session }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建会话失败'
+        error instanceof Error ? error.message : '创建会话失败',
       );
     }
   }),
@@ -1114,9 +1136,10 @@ http.route({
       });
 
       return jsonResponse({ data: messages });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取消息失败'
+        error instanceof Error ? error.message : '获取消息失败',
       );
     }
   }),
@@ -1145,9 +1168,10 @@ http.route({
       });
 
       return jsonResponse({ id: messageId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '添加消息失败'
+        error instanceof Error ? error.message : '添加消息失败',
       );
     }
   }),
@@ -1182,9 +1206,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取粉丝列表失败'
+        error instanceof Error ? error.message : '获取粉丝列表失败',
       );
     }
   }),
@@ -1215,9 +1240,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取关注列表失败'
+        error instanceof Error ? error.message : '获取关注列表失败',
       );
     }
   }),
@@ -1245,7 +1271,8 @@ http.route({
       });
 
       return jsonResponse({ success: true }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(error instanceof Error ? error.message : '关注失败');
     }
   }),
@@ -1273,9 +1300,10 @@ http.route({
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '取消关注失败'
+        error instanceof Error ? error.message : '取消关注失败',
       );
     }
   }),
@@ -1304,9 +1332,10 @@ http.route({
       });
 
       return jsonResponse({ isFollowing });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '查询关注状态失败'
+        error instanceof Error ? error.message : '查询关注状态失败',
       );
     }
   }),
@@ -1333,9 +1362,10 @@ http.route({
       });
 
       return jsonResponse(stats);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取统计失败'
+        error instanceof Error ? error.message : '获取统计失败',
       );
     }
   }),
@@ -1372,9 +1402,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取问题列表失败'
+        error instanceof Error ? error.message : '获取问题列表失败',
       );
     }
   }),
@@ -1405,9 +1436,10 @@ http.route({
       });
 
       return jsonResponse({ id: questionId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建问题失败'
+        error instanceof Error ? error.message : '创建问题失败',
       );
     }
   }),
@@ -1438,9 +1470,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取回答列表失败'
+        error instanceof Error ? error.message : '获取回答列表失败',
       );
     }
   }),
@@ -1469,9 +1502,10 @@ http.route({
       });
 
       return jsonResponse({ id: answerId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建回答失败'
+        error instanceof Error ? error.message : '创建回答失败',
       );
     }
   }),
@@ -1509,9 +1543,10 @@ http.route({
           });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取笔记列表失败'
+        error instanceof Error ? error.message : '获取笔记列表失败',
       );
     }
   }),
@@ -1543,9 +1578,10 @@ http.route({
       });
 
       return jsonResponse({ id: noteId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建笔记失败'
+        error instanceof Error ? error.message : '创建笔记失败',
       );
     }
   }),
@@ -1576,9 +1612,10 @@ http.route({
       });
 
       return jsonResponse({ data: budget });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取预算失败'
+        error instanceof Error ? error.message : '获取预算失败',
       );
     }
   }),
@@ -1594,8 +1631,8 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { itineraryId, userId, totalBudget, currency, categoryBudgets } =
-        body;
+      const { itineraryId, userId, totalBudget, currency, categoryBudgets }
+        = body;
 
       if (!itineraryId || totalBudget === undefined || !userId) {
         return errorResponse('缺少必要参数', 400);
@@ -1610,9 +1647,10 @@ http.route({
       });
 
       return jsonResponse({ id: budgetId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建预算失败'
+        error instanceof Error ? error.message : '创建预算失败',
       );
     }
   }),
@@ -1642,9 +1680,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取支出列表失败'
+        error instanceof Error ? error.message : '获取支出列表失败',
       );
     }
   }),
@@ -1660,8 +1699,8 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { itineraryId, amount, category, description, date, currency } =
-        body;
+      const { itineraryId, amount, category, description, date, currency }
+        = body;
 
       if (!itineraryId || amount === undefined || !category) {
         return errorResponse('缺少必要参数', 400);
@@ -1678,9 +1717,10 @@ http.route({
       });
 
       return jsonResponse({ id: expenseId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '添加支出失败'
+        error instanceof Error ? error.message : '添加支出失败',
       );
     }
   }),
@@ -1717,9 +1757,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取通知失败'
+        error instanceof Error ? error.message : '获取通知失败',
       );
     }
   }),
@@ -1747,9 +1788,10 @@ http.route({
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '标记已读失败'
+        error instanceof Error ? error.message : '标记已读失败',
       );
     }
   }),
@@ -1776,9 +1818,10 @@ http.route({
       });
 
       return jsonResponse({ count });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取未读数量失败'
+        error instanceof Error ? error.message : '获取未读数量失败',
       );
     }
   }),
@@ -1813,9 +1856,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '搜索POI失败'
+        error instanceof Error ? error.message : '搜索POI失败',
       );
     }
   }),
@@ -1849,9 +1893,10 @@ http.route({
       });
 
       return jsonResponse(result, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建分享链接失败'
+        error instanceof Error ? error.message : '创建分享链接失败',
       );
     }
   }),
@@ -1879,9 +1924,10 @@ http.route({
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '记录事件失败'
+        error instanceof Error ? error.message : '记录事件失败',
       );
     }
   }),
@@ -1911,9 +1957,10 @@ http.route({
       });
 
       return jsonResponse(stats);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取统计失败'
+        error instanceof Error ? error.message : '获取统计失败',
       );
     }
   }),
@@ -1940,9 +1987,10 @@ http.route({
       });
 
       return jsonResponse({ data: categories });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取分类失败'
+        error instanceof Error ? error.message : '获取分类失败',
       );
     }
   }),
@@ -1972,13 +2020,14 @@ http.route({
           category: category as any,
           sourceLang: sourceLang ?? undefined,
           limit,
-        }
+        },
       );
 
       return jsonResponse({ data: phrases });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取短语失败'
+        error instanceof Error ? error.message : '获取短语失败',
       );
     }
   }),
@@ -2011,7 +2060,8 @@ http.route({
       });
 
       return jsonResponse({ data: phrases });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(error instanceof Error ? error.message : '搜索失败');
     }
   }),
@@ -2045,13 +2095,14 @@ http.route({
           favoritesOnly,
           limit,
           offset,
-        }
+        },
       );
 
       return jsonResponse({ data: translations });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取保存的翻译失败'
+        error instanceof Error ? error.message : '获取保存的翻译失败',
       );
     }
   }),
@@ -2080,12 +2131,12 @@ http.route({
       } = body;
 
       if (
-        !userId ||
-        !sourceText ||
-        !sourceLang ||
-        !targetText ||
-        !targetLang ||
-        !translationType
+        !userId
+        || !sourceText
+        || !sourceLang
+        || !targetText
+        || !targetLang
+        || !translationType
       ) {
         return errorResponse('缺少必要参数', 400);
       }
@@ -2103,9 +2154,10 @@ http.route({
       });
 
       return jsonResponse({ id }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '保存翻译失败'
+        error instanceof Error ? error.message : '保存翻译失败',
       );
     }
   }),
@@ -2132,9 +2184,10 @@ http.route({
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '删除翻译失败'
+        error instanceof Error ? error.message : '删除翻译失败',
       );
     }
   }),
@@ -2160,11 +2213,12 @@ http.route({
         api.translations.toggleFavorite,
         {
           id: id as any,
-        }
+        },
       );
 
       return jsonResponse({ isFavorite });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(error instanceof Error ? error.message : '操作失败');
     }
   }),
@@ -2189,9 +2243,10 @@ http.route({
       });
 
       return jsonResponse({ data: packs });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取离线包失败'
+        error instanceof Error ? error.message : '获取离线包失败',
       );
     }
   }),
@@ -2249,9 +2304,10 @@ http.route({
       });
 
       return jsonResponse({ data: jobs });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取任务列表失败'
+        error instanceof Error ? error.message : '获取任务列表失败',
       );
     }
   }),
@@ -2284,9 +2340,10 @@ http.route({
       const job = await ctx.runQuery(api.crawlJobs.getById, { id: jobId });
 
       return jsonResponse({ data: job }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建任务失败'
+        error instanceof Error ? error.message : '创建任务失败',
       );
     }
   }),
@@ -2317,9 +2374,10 @@ http.route({
       }
 
       return jsonResponse({ data: job });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取任务失败'
+        error instanceof Error ? error.message : '获取任务失败',
       );
     }
   }),
@@ -2346,9 +2404,10 @@ http.route({
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '删除任务失败'
+        error instanceof Error ? error.message : '删除任务失败',
       );
     }
   }),
@@ -2375,9 +2434,10 @@ http.route({
       });
 
       return jsonResponse({ data: job });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '启动任务失败'
+        error instanceof Error ? error.message : '启动任务失败',
       );
     }
   }),
@@ -2405,9 +2465,10 @@ http.route({
       });
 
       return jsonResponse({ data: job });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '完成任务失败'
+        error instanceof Error ? error.message : '完成任务失败',
       );
     }
   }),
@@ -2436,7 +2497,8 @@ http.route({
       });
 
       return jsonResponse({ data: job });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(error instanceof Error ? error.message : '操作失败');
     }
   }),
@@ -2469,9 +2531,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取报告列表失败'
+        error instanceof Error ? error.message : '获取报告列表失败',
       );
     }
   }),
@@ -2501,9 +2564,10 @@ http.route({
       });
 
       return jsonResponse({ data: report }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建报告失败'
+        error instanceof Error ? error.message : '创建报告失败',
       );
     }
   }),
@@ -2534,9 +2598,10 @@ http.route({
       }
 
       return jsonResponse({ data: report });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取报告失败'
+        error instanceof Error ? error.message : '获取报告失败',
       );
     }
   }),
@@ -2563,9 +2628,10 @@ http.route({
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '删除报告失败'
+        error instanceof Error ? error.message : '删除报告失败',
       );
     }
   }),
@@ -2583,9 +2649,10 @@ http.route({
       const summary = await ctx.runQuery(api.dataQualityReports.getSummary, {});
 
       return jsonResponse({ data: summary });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取摘要失败'
+        error instanceof Error ? error.message : '获取摘要失败',
       );
     }
   }),
@@ -2618,9 +2685,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取数据集列表失败'
+        error instanceof Error ? error.message : '获取数据集列表失败',
       );
     }
   }),
@@ -2659,9 +2727,10 @@ http.route({
       });
 
       return jsonResponse({ data: dataset }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建数据集失败'
+        error instanceof Error ? error.message : '创建数据集失败',
       );
     }
   }),
@@ -2692,9 +2761,10 @@ http.route({
       }
 
       return jsonResponse({ data: dataset });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取数据集失败'
+        error instanceof Error ? error.message : '获取数据集失败',
       );
     }
   }),
@@ -2721,9 +2791,10 @@ http.route({
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '删除数据集失败'
+        error instanceof Error ? error.message : '删除数据集失败',
       );
     }
   }),
@@ -2754,9 +2825,10 @@ http.route({
       });
 
       return jsonResponse({ data: dataset });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '更新数据集失败'
+        error instanceof Error ? error.message : '更新数据集失败',
       );
     }
   }),
@@ -2783,9 +2855,10 @@ http.route({
       });
 
       return jsonResponse({ data: rates });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取汇率失败'
+        error instanceof Error ? error.message : '获取汇率失败',
       );
     }
   }),
@@ -2812,9 +2885,10 @@ http.route({
       });
 
       return jsonResponse({ data: history });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取汇率历史失败'
+        error instanceof Error ? error.message : '获取汇率历史失败',
       );
     }
   }),
@@ -2832,9 +2906,10 @@ http.route({
       const stats = await ctx.runQuery(api.currencyRates.stats, {});
 
       return jsonResponse({ data: stats });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取统计失败'
+        error instanceof Error ? error.message : '获取统计失败',
       );
     }
   }),

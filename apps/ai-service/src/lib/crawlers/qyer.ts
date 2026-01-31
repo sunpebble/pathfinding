@@ -6,11 +6,11 @@
  * especially for international destinations.
  */
 
-import type {BrowserClient} from './clients/index.js';
+import type { BrowserClient } from './clients/index.js';
 import type { CrawlOptions, CrawlResult } from './index.js';
 import * as cheerio from 'cheerio';
 import { createLogger } from '../logger.js';
-import {  createBrowserClient } from './clients/index.js';
+import { createBrowserClient } from './clients/index.js';
 import { sleep, waitForContentStable } from './utils.js';
 
 const log = createLogger('qyer');
@@ -86,7 +86,7 @@ async function scrollToLoadContent(client: BrowserClient): Promise<void> {
  */
 export async function crawlQyer(
   city: string,
-  options: CrawlOptions & { client?: BrowserClient } = {}
+  options: CrawlOptions & { client?: BrowserClient } = {},
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const maxPages = options.maxPages || 3;
@@ -118,21 +118,22 @@ export async function crawlQyer(
         client,
         placeUrl,
         city,
-        maxGuidesFromPlace
+        maxGuidesFromPlace,
       );
       log.info(
         { count: placeGuides.length },
-        'Found guides from destination page'
+        'Found guides from destination page',
       );
 
       for (const guide of placeGuides) {
         if (
-          !results.some((r) => r.sourceExternalId === guide.sourceExternalId)
+          !results.some(r => r.sourceExternalId === guide.sourceExternalId)
         ) {
           results.push(guide);
         }
       }
-    } catch (error) {
+    }
+    catch (error) {
       log.error({ error }, 'Error fetching destination page');
     }
 
@@ -147,7 +148,7 @@ export async function crawlQyer(
           client,
           forumUrl,
           city,
-          20
+          20,
         );
 
         // If we get 0 results, forum may be blocked - skip remaining pages
@@ -158,12 +159,12 @@ export async function crawlQyer(
 
         log.info(
           { count: forumGuides.length, page },
-          'Found guides from forum page'
+          'Found guides from forum page',
         );
 
         for (const guide of forumGuides) {
           if (
-            !results.some((r) => r.sourceExternalId === guide.sourceExternalId)
+            !results.some(r => r.sourceExternalId === guide.sourceExternalId)
           ) {
             results.push(guide);
           }
@@ -171,11 +172,13 @@ export async function crawlQyer(
 
         // Rate limiting between pages
         await sleep(1500);
-      } catch (error) {
+      }
+      catch (error) {
         log.error({ error, page }, 'Error fetching forum page');
       }
     }
-  } finally {
+  }
+  finally {
     if (shouldCloseClient) {
       await client.close();
       log.info('Browser client closed');
@@ -190,7 +193,7 @@ export async function crawlQyer(
  */
 async function crawlQyerBySearch(
   city: string,
-  options: CrawlOptions & { client?: BrowserClient } = {}
+  options: CrawlOptions & { client?: BrowserClient } = {},
 ): Promise<CrawlResult[]> {
   const results: CrawlResult[] = [];
   const client = options.client ?? createBrowserClient();
@@ -204,9 +207,11 @@ async function crawlQyerBySearch(
 
     const guides = await fetchGuidesFromSearchPage(client, searchUrl, city, 30);
     results.push(...guides);
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error searching');
-  } finally {
+  }
+  finally {
     if (shouldCloseClient) {
       await client.close();
     }
@@ -222,7 +227,7 @@ async function fetchGuidesFromPlacePage(
   client: BrowserClient,
   url: string,
   city: string,
-  maxGuides: number
+  maxGuides: number,
 ): Promise<CrawlResult[]> {
   const guides: CrawlResult[] = [];
   const seenIds = new Set<string>();
@@ -244,19 +249,23 @@ async function fetchGuidesFromPlacePage(
     // Strategy 1: Extract from "热门游记" section (ess-diary-list)
     // Links format: href="//bbs.qyer.com/thread-xxx-1.html"
     $('.ess-diary-list li').each((_, el) => {
-      if (guides.length >= maxGuides) return false;
+      if (guides.length >= maxGuides)
+        return false;
 
       const $li = $(el);
       const $link = $li.find('a.diary-box');
       const href = $link.attr('href');
-      if (!href) return;
+      if (!href)
+        return;
 
       // Match thread URLs: //bbs.qyer.com/thread-XXXXX-1.html
       const threadMatch = href.match(/thread-(\d+)/);
-      if (!threadMatch) return;
+      if (!threadMatch)
+        return;
 
       const threadId = threadMatch[1];
-      if (seenIds.has(threadId)) return;
+      if (seenIds.has(threadId))
+        return;
       seenIds.add(threadId);
 
       // Get title from .diary-title
@@ -264,14 +273,16 @@ async function fetchGuidesFromPlacePage(
       if (!title || title.length < 5) {
         title = $li.find('img').attr('alt') || '';
       }
-      if (!title || title.length < 5) return;
+      if (!title || title.length < 5)
+        return;
 
       // Skip non-travel posts
-      if (isSkippableThread(title)) return;
+      if (isSkippableThread(title))
+        return;
 
       // Get author from .user-info
-      const authorName =
-        $li.find('.user-info .user-link').text().trim() || '穷游用户';
+      const authorName
+        = $li.find('.user-info .user-link').text().trim() || '穷游用户';
 
       // Get cover image
       const $img = $li.find('.diary-pic img');
@@ -301,18 +312,22 @@ async function fetchGuidesFromPlacePage(
     // Strategy 2: Look for any thread links in the page as fallback
     if (guides.length < maxGuides) {
       $('a[href*="thread-"]').each((_, el) => {
-        if (guides.length >= maxGuides) return false;
+        if (guides.length >= maxGuides)
+          return false;
 
         const $el = $(el);
         const href = $el.attr('href');
-        if (!href) return;
+        if (!href)
+          return;
 
         // Match thread URLs
         const threadMatch = href.match(/thread-(\d+)/);
-        if (!threadMatch) return;
+        if (!threadMatch)
+          return;
 
         const threadId = threadMatch[1];
-        if (seenIds.has(threadId)) return;
+        if (seenIds.has(threadId))
+          return;
         seenIds.add(threadId);
 
         // Get title
@@ -320,17 +335,19 @@ async function fetchGuidesFromPlacePage(
         if (!title || title.length < 5) {
           title = $el.attr('title') || '';
         }
-        if (!title || title.length < 5) return;
+        if (!title || title.length < 5)
+          return;
 
         // Skip non-travel posts
-        if (isSkippableThread(title)) return;
+        if (isSkippableThread(title))
+          return;
 
         // Get parent container for more info
         const $container = $el.closest('li, .diary-box, article');
 
         // Get author
-        const authorName =
-          $container
+        const authorName
+          = $container
             .find('.author, .user-name, .name, .user-link')
             .first()
             .text()
@@ -364,7 +381,8 @@ async function fetchGuidesFromPlacePage(
     }
 
     log.info({ count: guides.length }, 'Extracted guides from place page');
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching place page');
   }
 
@@ -378,7 +396,7 @@ async function fetchGuidesFromForumPage(
   client: BrowserClient,
   url: string,
   city: string,
-  maxGuides: number
+  maxGuides: number,
 ): Promise<CrawlResult[]> {
   const guides: CrawlResult[] = [];
   const seenIds = new Set<string>();
@@ -407,21 +425,26 @@ async function fetchGuidesFromForumPage(
     ];
 
     for (const selector of threadSelectors) {
-      if (guides.length >= maxGuides) break;
+      if (guides.length >= maxGuides)
+        break;
 
       $(selector).each((_, el) => {
-        if (guides.length >= maxGuides) return false;
+        if (guides.length >= maxGuides)
+          return false;
 
         const $el = $(el);
         const href = $el.attr('href');
-        if (!href) return;
+        if (!href)
+          return;
 
         // Match thread URLs: /thread-XXXXX-1.html
         const threadMatch = href.match(/\/thread-(\d+)/);
-        if (!threadMatch) return;
+        if (!threadMatch)
+          return;
 
         const threadId = threadMatch[1];
-        if (seenIds.has(threadId)) return;
+        if (seenIds.has(threadId))
+          return;
         seenIds.add(threadId);
 
         // Get title
@@ -429,17 +452,19 @@ async function fetchGuidesFromForumPage(
         if (!title || title.length < 5) {
           title = $el.attr('title') || '';
         }
-        if (!title || title.length < 5) return;
+        if (!title || title.length < 5)
+          return;
 
         // Skip non-travel posts (ads, announcements, etc.)
-        if (isSkippableThread(title)) return;
+        if (isSkippableThread(title))
+          return;
 
         // Get parent row/container
         const $container = $el.closest('tr, .bbs-item, .thread-item, li');
 
         // Get author
-        const authorName =
-          $container
+        const authorName
+          = $container
             .find('.author, .user, td:nth-child(2)')
             .first()
             .text()
@@ -480,7 +505,8 @@ async function fetchGuidesFromForumPage(
     }
 
     log.info({ count: guides.length }, 'Extracted guides from forum page');
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching forum page');
   }
 
@@ -494,7 +520,7 @@ async function fetchGuidesFromSearchPage(
   client: BrowserClient,
   url: string,
   city: string,
-  maxGuides: number
+  maxGuides: number,
 ): Promise<CrawlResult[]> {
   const guides: CrawlResult[] = [];
   const seenIds = new Set<string>();
@@ -514,31 +540,36 @@ async function fetchGuidesFromSearchPage(
 
     // Search result selectors
     $('a[href*="/travels/"], a[href*="/thread-"]').each((_, el) => {
-      if (guides.length >= maxGuides) return false;
+      if (guides.length >= maxGuides)
+        return false;
 
       const $el = $(el);
       const href = $el.attr('href');
-      if (!href) return;
+      if (!href)
+        return;
 
       // Match travel or thread URLs
       const travelMatch = href.match(/\/travels\/([a-zA-Z0-9-]+)/);
       const threadMatch = href.match(/\/thread-(\d+)/);
       const match = travelMatch || threadMatch;
-      if (!match) return;
+      if (!match)
+        return;
 
       const id = match[1];
       const type = travelMatch ? 'travel' : 'thread';
-      if (seenIds.has(id)) return;
+      if (seenIds.has(id))
+        return;
       seenIds.add(id);
 
       const title = $el.text().trim();
-      if (!title || title.length < 5) return;
+      if (!title || title.length < 5)
+        return;
 
       const $container = $el.closest(
-        '.result-item, .search-result, article, li'
+        '.result-item, .search-result, article, li',
       );
-      const authorName =
-        $container.find('.author, .user').first().text().trim() || '穷游用户';
+      const authorName
+        = $container.find('.author, .user').first().text().trim() || '穷游用户';
 
       const sourceExternalId = `qyer_${type}_${id}`;
       const fullUrl = href.startsWith('http')
@@ -561,7 +592,8 @@ async function fetchGuidesFromSearchPage(
     });
 
     log.info({ count: guides.length }, 'Extracted guides from search');
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching search page');
   }
 
@@ -574,7 +606,7 @@ async function fetchGuidesFromSearchPage(
 export async function fetchQyerGuideDetail(
   client: BrowserClient,
   url: string,
-  city: string
+  city: string,
 ): Promise<CrawlResult | null> {
   try {
     await client.navigateTo(url, {
@@ -588,30 +620,30 @@ export async function fetchQyerGuideDetail(
     const $ = cheerio.load(html);
 
     // Extract title
-    const title =
-      $('h1, .title, .thread-title, .travel-title').first().text().trim() ||
-      $('title').text().split('-')[0].trim();
+    const title
+      = $('h1, .title, .thread-title, .travel-title').first().text().trim()
+        || $('title').text().split('-')[0].trim();
 
     // Extract content
-    const content =
-      $('article, .post-content, .travel-content, .thread-content')
+    const content
+      = $('article, .post-content, .travel-content, .thread-content')
         .text()
         .trim() || $('.content, main').text().trim();
 
     // Extract author
-    const authorName =
-      $('.author-name, .user-name, .author').first().text().trim() ||
-      '穷游用户';
+    const authorName
+      = $('.author-name, .user-name, .author').first().text().trim()
+        || '穷游用户';
 
     // Extract images
     const imageUrls: string[] = [];
     $('article img, .post-content img, .travel-content img').each((_, el) => {
       const src = $(el).attr('src') || $(el).attr('data-src');
       if (
-        src &&
-        !src.includes('avatar') &&
-        !src.includes('icon') &&
-        !src.includes('emoji')
+        src
+        && !src.includes('avatar')
+        && !src.includes('icon')
+        && !src.includes('emoji')
       ) {
         const fullSrc = normalizeImageUrl(src);
         if (fullSrc && !imageUrls.includes(fullSrc)) {
@@ -652,10 +684,11 @@ export async function fetchQyerGuideDetail(
       qualityScore: calculateQualityScore(
         content,
         imageUrls.length,
-        viewsCount
+        viewsCount,
       ),
     };
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error fetching guide detail');
     return null;
   }
@@ -682,16 +715,19 @@ function isSkippableThread(title: string): boolean {
     /置顶|精华申请/,
     /版规|版务/,
   ];
-  return skipPatterns.some((pattern) => pattern.test(title));
+  return skipPatterns.some(pattern => pattern.test(title));
 }
 
 /**
  * Normalize image URL
  */
 function normalizeImageUrl(src: string | undefined): string | undefined {
-  if (!src) return undefined;
-  if (src.startsWith('http')) return src;
-  if (src.startsWith('//')) return `https:${src}`;
+  if (!src)
+    return undefined;
+  if (src.startsWith('http'))
+    return src;
+  if (src.startsWith('//'))
+    return `https:${src}`;
   return undefined;
 }
 
@@ -736,24 +772,32 @@ function extractTags(title: string, content: string): string[] {
 function calculateQualityScore(
   content: string,
   imageCount: number,
-  viewsCount: number
+  viewsCount: number,
 ): number {
   let score = 50;
 
   // Content length bonus
-  if (content.length > 500) score += 5;
-  if (content.length > 1000) score += 10;
-  if (content.length > 3000) score += 10;
-  if (content.length > 5000) score += 5;
+  if (content.length > 500)
+    score += 5;
+  if (content.length > 1000)
+    score += 10;
+  if (content.length > 3000)
+    score += 10;
+  if (content.length > 5000)
+    score += 5;
 
   // Image bonus
   score += Math.min(imageCount * 2, 15);
 
   // Views bonus
-  if (viewsCount > 500) score += 3;
-  if (viewsCount > 1000) score += 5;
-  if (viewsCount > 5000) score += 5;
-  if (viewsCount > 10000) score += 2;
+  if (viewsCount > 500)
+    score += 3;
+  if (viewsCount > 1000)
+    score += 5;
+  if (viewsCount > 5000)
+    score += 5;
+  if (viewsCount > 10000)
+    score += 2;
 
   return Math.min(score, 100);
 }
@@ -777,7 +821,7 @@ export async function crawlQyerAllDestinations(
       totalDestinations: number;
       guidesFound: number;
     }) => void;
-  } = {}
+  } = {},
 ): Promise<CrawlResult[]> {
   const {
     maxPagesPerDestination = 10,
@@ -807,7 +851,7 @@ export async function crawlQyerAllDestinations(
       const dest = limitedDestinations[i];
       log.info(
         { index: i + 1, total: limitedDestinations.length, name: dest.name },
-        'Crawling destination'
+        'Crawling destination',
       );
 
       try {
@@ -833,11 +877,13 @@ export async function crawlQyerAllDestinations(
 
         // Rate limiting between destinations
         await sleep(3000);
-      } catch (error) {
+      }
+      catch (error) {
         log.error({ error, destination: dest.name }, 'Error crawling destination');
       }
     }
-  } finally {
+  }
+  finally {
     if (shouldCloseClient) {
       await client.close();
     }
@@ -852,7 +898,7 @@ export async function crawlQyerAllDestinations(
  * Scrapes place.qyer.com to find all available destinations
  */
 export async function discoverAllDestinations(
-  options: { client?: BrowserClient } = {}
+  options: { client?: BrowserClient } = {},
 ): Promise<DestinationInfo[]> {
   const destinations: DestinationInfo[] = [];
   const seenPlaceIds = new Set<string>();
@@ -899,7 +945,8 @@ export async function discoverAllDestinations(
         }
 
         await sleep(2000);
-      } catch (error) {
+      }
+      catch (error) {
         log.error({ error, url }, 'Error discovering from URL');
       }
     }
@@ -915,10 +962,12 @@ export async function discoverAllDestinations(
           destinations.push(dest);
         }
       }
-    } catch (error) {
+    }
+    catch (error) {
       log.error({ error }, 'Error discovering from BBS');
     }
-  } finally {
+  }
+  finally {
     if (shouldCloseClient) {
       await client.close();
     }
@@ -933,7 +982,7 @@ export async function discoverAllDestinations(
  */
 async function discoverDestinationsFromIndex(
   client: BrowserClient,
-  url: string
+  url: string,
 ): Promise<DestinationInfo[]> {
   const destinations: DestinationInfo[] = [];
 
@@ -957,11 +1006,12 @@ async function discoverDestinationsFromIndex(
       const text = $el.text().trim();
 
       // Extract placeId from URL
-      const placeMatch =
-        href.match(/place\.qyer\.com\/([a-z0-9-]+)\/?$/) ||
-        href.match(/^\/([a-z0-9-]+)\/?$/);
+      const placeMatch
+        = href.match(/place\.qyer\.com\/([a-z0-9-]+)\/?$/)
+          || href.match(/^\/([a-z0-9-]+)\/?$/);
 
-      if (!placeMatch || !text || text.length < 2 || text.length > 20) return;
+      if (!placeMatch || !text || text.length < 2 || text.length > 20)
+        return;
 
       const placeId = placeMatch[1];
 
@@ -979,7 +1029,8 @@ async function discoverDestinationsFromIndex(
     });
 
     log.info({ count: destinations.length, url }, 'Found destinations from URL');
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error, url }, 'Error parsing URL');
   }
 
@@ -991,7 +1042,7 @@ async function discoverDestinationsFromIndex(
  * This gets destinations with their forumIds directly
  */
 async function discoverDestinationsFromBBS(
-  client: BrowserClient
+  client: BrowserClient,
 ): Promise<DestinationInfo[]> {
   const destinations: DestinationInfo[] = [];
 
@@ -1015,10 +1066,12 @@ async function discoverDestinationsFromBBS(
       const text = $el.text().trim();
 
       const forumMatch = href.match(/\/forum-(\d+)-/);
-      if (!forumMatch || !text || text.length < 2 || text.length > 20) return;
+      if (!forumMatch || !text || text.length < 2 || text.length > 20)
+        return;
 
       // Skip non-destination forums (general discussion, etc.)
-      if (/版务|公告|活动|签证|交通|摄影|装备|自驾/.test(text)) return;
+      if (/版务|公告|活动|签证|交通|摄影|装备|自驾/.test(text))
+        return;
 
       const forumId = forumMatch[1];
 
@@ -1032,7 +1085,8 @@ async function discoverDestinationsFromBBS(
     });
 
     log.info({ count: destinations.length }, 'Found forums from BBS');
-  } catch (error) {
+  }
+  catch (error) {
     log.error({ error }, 'Error parsing BBS');
   }
 
@@ -1054,7 +1108,7 @@ function isInternationalDestination(name: string): boolean {
     /迪拜|土耳其|埃及/, // 中东
   ];
 
-  return internationalPatterns.some((pattern) => pattern.test(name));
+  return internationalPatterns.some(pattern => pattern.test(name));
 }
 
 /**
@@ -1068,7 +1122,7 @@ export async function crawlQyerDestinationDeep(
     fetchDetails?: boolean;
     client?: BrowserClient;
     onPageComplete?: (page: number, guides: number) => void;
-  } = {}
+  } = {},
 ): Promise<CrawlResult[]> {
   const { maxPages = 50, fetchDetails = false, onPageComplete } = options;
   const results: CrawlResult[] = [];
@@ -1082,7 +1136,7 @@ export async function crawlQyerDestinationDeep(
 
   log.info(
     { city, englishName: config.englishName, maxPages },
-    'Deep crawling'
+    'Deep crawling',
   );
 
   const client = options.client ?? createBrowserClient();
@@ -1098,7 +1152,7 @@ export async function crawlQyerDestinationDeep(
         client,
         placeUrl,
         city,
-        50
+        50,
       );
 
       for (const guide of placeGuides) {
@@ -1107,7 +1161,8 @@ export async function crawlQyerDestinationDeep(
           results.push(guide);
         }
       }
-    } catch (error) {
+    }
+    catch (error) {
       log.error({ error }, 'Error fetching destination page');
     }
 
@@ -1124,7 +1179,7 @@ export async function crawlQyerDestinationDeep(
           client,
           forumUrl,
           city,
-          50
+          50,
         );
 
         let newGuides = 0;
@@ -1144,20 +1199,23 @@ export async function crawlQyerDestinationDeep(
           if (emptyPages >= maxEmptyPages) {
             log.info(
               { maxEmptyPages },
-              'Stopping: consecutive empty pages'
+              'Stopping: consecutive empty pages',
             );
             break;
           }
-        } else {
+        }
+        else {
           emptyPages = 0;
         }
 
         // Rate limiting
         await sleep(1500);
-      } catch (error) {
+      }
+      catch (error) {
         log.error({ error, page }, 'Error on page');
         emptyPages++;
-        if (emptyPages >= maxEmptyPages) break;
+        if (emptyPages >= maxEmptyPages)
+          break;
       }
     }
 
@@ -1167,13 +1225,14 @@ export async function crawlQyerDestinationDeep(
 
       for (let i = 0; i < results.length; i++) {
         const guide = results[i];
-        if (!guide.sourceUrl) continue;
+        if (!guide.sourceUrl)
+          continue;
 
         try {
           const detail = await fetchQyerGuideDetail(
             client,
             guide.sourceUrl,
-            city
+            city,
           );
           if (detail) {
             // Merge detail into result
@@ -1182,15 +1241,17 @@ export async function crawlQyerDestinationDeep(
 
           // Rate limiting
           await sleep(2000);
-        } catch (error) {
+        }
+        catch (error) {
           log.error(
             { error, sourceExternalId: guide.sourceExternalId },
-            'Error fetching detail'
+            'Error fetching detail',
           );
         }
       }
     }
-  } finally {
+  }
+  finally {
     if (shouldCloseClient) {
       await client.close();
     }
