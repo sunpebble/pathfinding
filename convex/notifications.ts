@@ -1,6 +1,6 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import {
   notificationDataValidator,
@@ -174,8 +174,11 @@ export const markRead = mutation({
   },
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
-    if (!notification || notification.userId !== args.userId) {
-      throw new Error("Notification not found or access denied");
+    if (!notification) {
+      throw new ConvexError("Notification not found");
+    }
+    if (notification.userId !== args.userId) {
+      throw new ConvexError("Access denied");
     }
 
     await ctx.db.patch(args.id, {
@@ -237,8 +240,11 @@ export const remove = mutation({
   },
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
-    if (!notification || notification.userId !== args.userId) {
-      throw new Error("Notification not found or access denied");
+    if (!notification) {
+      throw new ConvexError("Notification not found");
+    }
+    if (notification.userId !== args.userId) {
+      throw new ConvexError("Access denied");
     }
 
     await ctx.db.delete(args.id);
@@ -687,8 +693,11 @@ export const cancelScheduled = mutation({
   },
   handler: async (ctx, args) => {
     const scheduled = await ctx.db.get(args.id);
-    if (!scheduled || scheduled.userId !== args.userId) {
-      throw new Error("Scheduled notification not found or access denied");
+    if (!scheduled) {
+      throw new ConvexError("Scheduled notification not found");
+    }
+    if (scheduled.userId !== args.userId) {
+      throw new ConvexError("Access denied");
     }
 
     await ctx.db.patch(args.id, {

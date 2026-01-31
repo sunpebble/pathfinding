@@ -1,14 +1,18 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
 import type { Id } from "./_generated/dataModel";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { businessHoursValidator } from "../packages/convex/src/validators/index.js";
 
 /**
  * POIs - Points of Interest Queries and Mutations
+ *
+ * This module provides CRUD operations for Points of Interest (POIs),
+ * including search, nearby queries, and bulk operations for crawling.
  */
 
+/** Validator for POI category types */
 const poiCategoryValidator = v.union(
   v.literal("attraction"),
   v.literal("restaurant"),
@@ -17,7 +21,13 @@ const poiCategoryValidator = v.union(
   v.literal("other"),
 );
 
-// List POIs with optional filters
+/**
+ * Lists POIs with optional filters by city, category, and limit.
+ * @param args.cityId - Optional city ID to filter by
+ * @param args.category - Optional category to filter by
+ * @param args.limit - Optional maximum number of results
+ * @returns Array of POI documents
+ */
 export const list = query({
   args: {
     cityId: v.optional(v.id("cities")),
@@ -52,7 +62,11 @@ export const list = query({
   },
 });
 
-// Get a POI by ID
+/**
+ * Gets a POI by its ID.
+ * @param args.id - The POI document ID
+ * @returns The POI document or null if not found
+ */
 export const getById = query({
   args: { id: v.id("pois") },
   handler: async (ctx, args) => {
@@ -60,7 +74,16 @@ export const getById = query({
   },
 });
 
-// Search POIs by name - optimized to use indexes first
+/**
+ * Searches POIs by name with optional filters.
+ * Uses indexes for efficient filtering before in-memory text search.
+ * @param args.query - Search query string
+ * @param args.cityId - Optional city ID filter
+ * @param args.category - Optional category filter
+ * @param args.minRating - Optional minimum rating filter
+ * @param args.limit - Maximum results (default 100)
+ * @returns Array of matching POIs sorted by rating
+ */
 export const search = query({
   args: {
     query: v.string(),
@@ -120,7 +143,15 @@ export const search = query({
   },
 });
 
-// Get nearby POIs - optimized with index and early limit
+/**
+ * Gets nearby POIs within a radius using Haversine distance calculation.
+ * @param args.latitude - Center point latitude
+ * @param args.longitude - Center point longitude
+ * @param args.radiusKm - Search radius in kilometers
+ * @param args.category - Optional category filter
+ * @param args.limit - Maximum results (default 50)
+ * @returns Array of POIs with distance, sorted by proximity
+ */
 export const getNearby = query({
   args: {
     latitude: v.number(),
@@ -163,7 +194,13 @@ export const getNearby = query({
   },
 });
 
-// Get recommendations (top-rated POIs)
+/**
+ * Gets top-rated POI recommendations for a city.
+ * @param args.cityId - The city to get recommendations for
+ * @param args.category - Optional category filter
+ * @param args.limit - Maximum results (default 10)
+ * @returns Array of POIs sorted by rating descending
+ */
 export const getRecommendations = query({
   args: {
     cityId: v.id("cities"),
@@ -188,7 +225,12 @@ export const getRecommendations = query({
   },
 });
 
-// Create a new POI
+/**
+ * Creates a new POI.
+ * @param args - POI data including name, category, location, etc.
+ * @returns The ID of the created POI
+ * @throws {ConvexError} If the referenced city does not exist
+ */
 export const create = mutation({
   args: {
     externalId: v.optional(v.string()),
@@ -208,6 +250,11 @@ export const create = mutation({
     source: v.string(),
   },
   handler: async (ctx, args) => {
+    const city = await ctx.db.get(args.cityId);
+    if (!city) {
+      throw new ConvexError("City not found");
+    }
+
     return await ctx.db.insert("pois", {
       ...args,
       ratingCount: args.ratingCount ?? 0,
@@ -215,7 +262,13 @@ export const create = mutation({
   },
 });
 
-// Update a POI
+/**
+ * Updates an existing POI.
+ * @param args.id - The POI ID to update
+ * @param args - Fields to update
+ * @returns The updated POI document
+ * @throws {ConvexError} If the POI does not exist
+ */
 export const update = mutation({
   args: {
     id: v.id("pois"),
@@ -233,6 +286,11 @@ export const update = mutation({
     imageUrls: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
+    const existing = await ctx.db.get(args.id);
+    if (!existing) {
+      throw new ConvexError("POI not found");
+    }
+
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
@@ -242,15 +300,28 @@ export const update = mutation({
   },
 });
 
-// Delete a POI
+/**
+ * Deletes a POI by ID.
+ * @param args.id - The POI ID to delete
+ * @throws {ConvexError} If the POI does not exist
+ */
 export const remove = mutation({
   args: { id: v.id("pois") },
   handler: async (ctx, args) => {
+    const existing = await ctx.db.get(args.id);
+    if (!existing) {
+      throw new ConvexError("POI not found");
+    }
+
     await ctx.db.delete(args.id);
   },
 });
 
-// Bulk insert POIs (for crawling)
+/**
+ * Bulk inserts multiple POIs (for crawling operations).
+ * @param args.pois - Array of POI data to insert
+ * @returns Array of created POI IDs
+ */
 export const bulkInsert = mutation({
   args: {
     pois: v.array(
@@ -286,7 +357,7 @@ export const bulkInsert = mutation({
   },
 });
 
-// Helper function for distance calculation (Haversine formula)
+/** Calculates distance between two coordinates using Haversine formula */
 function calculateDistanceKm(
   lat1: number,
   lng1: number,
