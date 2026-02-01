@@ -29,6 +29,7 @@ import { translationsRouter } from './routes/translations.js';
 import { transportRouter } from './routes/transport.js';
 
 import { weatherRouter } from './routes/weather.js';
+import { getPollerStatus, startEnrichmentPoller } from './services/enrichment-poller.js';
 // Load environment variables FIRST, before any other imports
 import 'dotenv/config';
 
@@ -51,6 +52,8 @@ app.get('/health', async (c) => {
     dbConnected = false;
   }
 
+  const pollerStatus = getPollerStatus();
+
   return c.json(
     {
       status: dbConnected ? 'healthy' : 'unhealthy',
@@ -59,6 +62,7 @@ app.get('/health', async (c) => {
       checks: {
         database: dbConnected ? 'connected' : 'disconnected',
         ollama: process.env.OLLAMA_BASE_URL ? 'configured' : 'not configured',
+        enrichmentPoller: pollerStatus.running ? 'running' : 'stopped',
       },
     },
     dbConnected ? 200 : 503,
@@ -113,6 +117,12 @@ serve(
   },
   (info) => {
     appLogger.info({ port: info.port, url: `http://localhost:${info.port}` }, '✅ AI Service running');
+
+    // Start enrichment poller after server is ready
+    if (process.env.ENABLE_ENRICHMENT_POLLER !== 'false') {
+      startEnrichmentPoller();
+      appLogger.info('🔄 Enrichment poller started');
+    }
   },
 );
 

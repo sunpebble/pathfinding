@@ -1,24 +1,14 @@
+/**
+ * Mafengwo Crawler - AI-powered travel guide extraction
+ *
+ * Uses Stagehand's AI capabilities (act, extract) to crawl travel guides
+ * from Mafengwo without relying on brittle CSS selectors or regex patterns.
+ */
+
+import type { AICrawlOptions } from './ai-crawler-base.js';
 import type { BrowserClient } from './clients/index.js';
-import type { ContentBlock, CrawlOptions, CrawlResult } from './index.js';
-import { createLogger } from '../logger.js';
-import {
-  extractImageUrls,
-  extractMafengwoAuthor,
-  extractMafengwoStats,
-  extractPublishDate,
-  getArticleContent,
-  getBestTitle,
-  transformToHighResMfw,
-} from './accessibility-parser.js';
-import { createBrowserClient } from './clients/index.js';
-import { waitForContentStable } from './utils.js';
-
-const log = createLogger('mafengwo');
-
-// Helper function for delay
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+import type { CrawlOptions, CrawlResult } from './index.js';
+import { AICrawlerBase } from './ai-crawler-base.js';
 
 const CITY_IDS: Record<string, string> = {
   北京: '10065',
@@ -39,291 +29,95 @@ const CITY_IDS: Record<string, string> = {
 };
 
 /**
- * Detect captcha/verification pages from Mafengwo
- * Returns true if content appears to be a captcha or blocked page
+ * Mafengwo AI Crawler
+ * Extracts travel guides using Stagehand's AI-powered extraction
  */
-function detectMafengwoCaptcha(content: string): boolean {
-  const indicators = [
-    /验证码/,
-    /captcha/i,
-    /滑动验证/,
-    /请完成验证/,
-    /安全验证/,
-    /频繁访问/,
-    /请求过于频繁/,
-  ];
-
-  for (const pattern of indicators) {
-    if (pattern.test(content)) {
-      return true;
-    }
+class MafengwoAICrawler extends AICrawlerBase {
+  constructor() {
+    super('mafengwo', '马蜂窝');
   }
 
-  // Also check for very short content (blocked page)
-  if (content.length < 500) {
-    return true;
+  protected getCityId(city: string): string | undefined {
+    return CITY_IDS[city];
   }
 
-  return false;
+  protected getListPageUrl(city: string, page: number): string {
+    const cityId = this.getCityId(city);
+    // Mafengwo travel notes list page: /yj/{cityId}/1-0-{page}.html
+    // Format: /yj/城市ID/排序-类型-页码.html
+    return `https://www.mafengwo.cn/yj/${cityId}/1-0-${page}.html`;
+  }
+
+  protected getSourceExternalId(url: string): string {
+    const match = url.match(/\/i\/(\d+)\.html/);
+    return `mafengwo_${match?.[1] || Date.now()}`;
+  }
+
+  protected getListExtractionInstruction(city: string): string {
+    return `
+      从马蜂窝旅游页面中提取所有游记/攻略的列表。
+      目标城市: ${city}
+      
+      请提取每篇游记的:
+      - 标题 (title)
+      - 详情页链接URL (url) - 通常是 /i/数字.html 格式的链接，请返回完整URL
+      - 作者名称 (author)
+      - 缩略图URL (thumbnail)
+      
+      只提取游记类内容（/i/ 开头的链接），忽略酒店、景点介绍等其他链接。
+      确保URL是完整的，如果是相对路径请补全为 https://www.mafengwo.cn 开头的完整URL。
+    `;
+  }
+
+  protected getDetailExtractionInstruction(): string {
+    return `
+      从这篇马蜂窝游记页面中提取完整信息。
+      
+      请提取:
+      - 文章标题 (title)
+      - 完整的游记正文内容 (content) - 保留段落结构，提取所有文字内容
+      - 作者信息 (author):
+        - 名称 (name) - 蜂首/作者名
+        - 头像URL (avatar)
+      - 发布日期 (publishDate) - 格式为 YYYY-MM-DD
+      - 所有配图的URL (images) - 提取高清大图URL，马蜂窝图片通常有多种尺寸
+      - 统计数据 (stats):
+        - 浏览量 (views)
+        - 点赞数 (likes) - 顶/赞
+        - 评论数 (comments)
+        - 收藏数 (saves)
+      - 文章标签 (tags)
+      - 提到的目的地/景点名称 (destinations)
+      
+      注意：
+      1. 内容要完整，马蜂窝游记通常很长
+      2. 图片URL优先选择大图版本
+      3. 数字统计如果带有"万"等单位，请转换为实际数字（如 1.2万 = 12000）
+    `;
+  }
 }
 
+// Singleton instance
+const mafengwoCrawler = new MafengwoAICrawler();
+
+/**
+ * Crawl Mafengwo for travel guides using AI extraction
+ *
+ * @param city - City name in Chinese (e.g., "北京", "上海")
+ * @param options - Crawl options
+ * @returns Array of crawl results
+ */
 export async function crawlMafengwo(
   city: string,
   options: CrawlOptions & { client?: BrowserClient } = {},
 ): Promise<CrawlResult[]> {
-  const results: CrawlResult[] = [];
-  const maxGuides = (options.maxPages || 5) * 10;
-  const cityId = CITY_IDS[city];
-  const client = options.client ?? createBrowserClient();
+  const aiOptions: AICrawlOptions = {
+    maxPages: options.maxPages || 5,
+    maxGuidesPerPage: 10,
+  };
 
-  if (!cityId) {
-    log.warn({ city }, 'City not mapped');
-    return results;
-  }
-
-  log.info({ city, cityId }, 'Crawling guides for city');
-
-  try {
-    await client.init();
-
-    // Phase 1: Get guide URLs from list page
-    const destUrl = `https://www.mafengwo.cn/travel-scenic-spot/mafengwo/${cityId}.html`;
-    log.info({ destUrl }, 'Fetching guide URLs from list page');
-
-    const guideUrls = await fetchGuideUrls(destUrl, maxGuides, client);
-    log.info({ count: guideUrls.length }, 'Found guide URLs to fetch');
-
-    // Phase 2: Visit each detail page
-    for (const url of guideUrls) {
-      try {
-        const guide = await fetchGuideDetail(url, city, client);
-        if (guide) {
-          results.push(guide);
-          log.info(
-            { title: guide.title, contentLength: guide.content.length },
-            'Extracted guide',
-          );
-        }
-        // Rate limiting delay
-        await sleep(1000 / (options.rateLimit || 0.5));
-      }
-      catch (error) {
-        log.error({ error, url }, 'Error fetching guide');
-      }
-    }
-
-    if (results.length === 0) {
-      log.warn('No results found. Site may require verification');
-    }
-  }
-  catch (error) {
-    log.error({ error }, 'Error crawling destination page');
-  }
-  finally {
-    await client.close();
-    log.info('Browser client closed');
-  }
-
-  return results;
+  return mafengwoCrawler.crawl(city, aiOptions);
 }
 
-/**
- * Fetch guide URLs from the destination list page
- * Only extracts URLs, does not parse content (that's done in fetchGuideDetail)
- */
-async function fetchGuideUrls(
-  destUrl: string,
-  maxGuides: number,
-  client: BrowserClient,
-): Promise<string[]> {
-  const guideUrls: string[] = [];
-  const seenIds = new Set<string>();
-
-  try {
-    await client.navigateTo(destUrl, { timeout: 30000 });
-    await waitForContentStable(client);
-    // Scroll multiple times to load content
-    await client.scroll('down');
-    await sleep(500);
-    await client.scroll('down');
-    await sleep(500);
-    await client.scroll('down');
-    await sleep(2000);
-
-    const snapshot = await client.takeSnapshot({ verbose: true });
-    const content = snapshot.content;
-
-    log.debug({ snapshotLength: content.length }, 'Snapshot captured');
-
-    // Check for captcha
-    if (detectMafengwoCaptcha(content)) {
-      log.warn(
-        'Captcha detected on list page - site requires manual verification',
-      );
-      return guideUrls;
-    }
-
-    // Extract guide URLs from /i/{id}.html pattern
-    const guideMatches = content.matchAll(/\/i\/(\d+)\.html/g);
-
-    for (const match of guideMatches) {
-      if (guideUrls.length >= maxGuides)
-        break;
-
-      const guideId = match[1];
-      if (seenIds.has(guideId))
-        continue;
-      seenIds.add(guideId);
-
-      guideUrls.push(`https://www.mafengwo.cn/i/${guideId}.html`);
-    }
-
-    log.info({ count: guideUrls.length }, 'Found guide URLs');
-  }
-  catch (error) {
-    log.error({ error }, 'Error fetching list page');
-  }
-
-  return guideUrls;
-}
-
-/**
- * Fetch and parse a single guide detail page
- * Navigates to the detail page, extracts all 6 core fields
- */
-async function fetchGuideDetail(
-  url: string,
-  city: string,
-  client: BrowserClient,
-): Promise<CrawlResult | null> {
-  try {
-    await client.navigateTo(url, { timeout: 30000 });
-    await waitForContentStable(client);
-    // Scroll multiple times to load content
-    await client.scroll('down');
-    await sleep(500);
-    await client.scroll('down');
-    await sleep(500);
-    await client.scroll('down');
-    await sleep(1000);
-
-    const snapshot = await client.takeSnapshot({ verbose: true });
-    const content = snapshot.content;
-
-    log.debug(
-      { guideId: url.split('/').pop(), snapshotLength: content.length },
-      'Detail page snapshot captured',
-    );
-
-    // Check for captcha/login wall
-    if (detectMafengwoCaptcha(content)) {
-      log.warn({ url }, 'Captcha detected, skipping');
-      return null;
-    }
-
-    // Extract all fields using accessibility-parser utilities
-    const title = getBestTitle(content, `${city}旅游攻略`);
-    const textContent = getArticleContent(content);
-
-    if (!textContent || textContent.length < 100) {
-      log.info(
-        { contentLength: textContent?.length || 0, url },
-        'Insufficient content, skipping',
-      );
-      return null;
-    }
-
-    // Mafengwo-specific extractors (from Plan 01)
-    const authorInfo = extractMafengwoAuthor(content);
-    const rawImageUrls = extractImageUrls(content);
-    const imageUrls = rawImageUrls.map(transformToHighResMfw);
-    const publishedAt = extractPublishDate(content);
-    const stats = extractMafengwoStats(content);
-
-    // Build result
-    const urlMatch = url.match(/\/i\/(\d+)\.html/);
-    const sourceExternalId = `mafengwo_${urlMatch?.[1] || Date.now()}`;
-
-    const contentBlocks: ContentBlock[] = [
-      { type: 'text', content: textContent },
-    ];
-    for (const imgUrl of imageUrls) {
-      contentBlocks.push({ type: 'image', url: imgUrl });
-    }
-
-    return {
-      sourceExternalId,
-      sourceUrl: url,
-      title: title || `${city}旅游攻略`,
-      content: textContent.substring(0, 50000),
-      contentBlocks,
-      contentType: 'normal',
-      authorName: authorInfo.name || '马蜂窝用户',
-      authorAvatar: authorInfo.avatar,
-      publishedAt,
-      coverImageUrl: imageUrls[0],
-      imageUrls: imageUrls.slice(0, 20),
-      destinations: [city],
-      tags: extractTags(title || '', textContent),
-      likesCount: stats.likes || 0,
-      savesCount: stats.saves || 0,
-      commentsCount: stats.comments || 0,
-      viewsCount: stats.views || 0,
-      qualityScore: calculateQualityScore(
-        textContent,
-        imageUrls.length,
-        stats.views || 0,
-      ),
-    };
-  }
-  catch (error) {
-    log.error({ error, url }, 'Error parsing guide');
-    return null;
-  }
-}
-
-function extractTags(title: string, content: string): string[] {
-  const tags: string[] = [];
-  const text = `${title} ${content}`.toLowerCase();
-
-  const tagPatterns = [
-    { pattern: /美食|餐厅|吃|小吃/, tag: '美食' },
-    { pattern: /住宿|酒店|民宿|客栈/, tag: '住宿' },
-    { pattern: /景点|景区|打卡|必去/, tag: '景点' },
-    { pattern: /交通|出行|高铁|飞机|地铁/, tag: '交通' },
-    { pattern: /购物|商场|特产/, tag: '购物' },
-    { pattern: /亲子|带娃|儿童|宝宝/, tag: '亲子游' },
-    { pattern: /情侣|浪漫|蜜月/, tag: '情侣游' },
-    { pattern: /自驾|租车/, tag: '自驾游' },
-    { pattern: /摄影|拍照|出片/, tag: '摄影' },
-    { pattern: /徒步|登山|户外/, tag: '户外' },
-  ];
-
-  for (const { pattern, tag } of tagPatterns) {
-    if (pattern.test(text)) {
-      tags.push(tag);
-    }
-  }
-
-  return tags.slice(0, 5);
-}
-
-function calculateQualityScore(
-  content: string,
-  imageCount: number,
-  viewsCount: number,
-): number {
-  let score = 50;
-  if (content.length > 1000)
-    score += 10;
-  if (content.length > 3000)
-    score += 10;
-  if (content.length > 5000)
-    score += 5;
-  score += Math.min(imageCount * 2, 15);
-  if (viewsCount > 1000)
-    score += 5;
-  if (viewsCount > 10000)
-    score += 5;
-  return Math.min(score, 100);
-}
+// Export the crawler class for direct use
+export { MafengwoAICrawler };

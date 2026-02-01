@@ -3,7 +3,9 @@
  * Polls Convex for pending guides and triggers enrichment
  */
 
+import { api } from '../../../../convex/_generated/api.js';
 import { enrichGuide } from '../graphs/content-enricher.js';
+import { convex } from '../lib/convex.js';
 import { loggers } from '../lib/logger.js';
 
 interface PendingGuide {
@@ -13,7 +15,6 @@ interface PendingGuide {
   destinations?: string[];
 }
 
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const POLL_INTERVAL = Number.parseInt(
   process.env.ENRICHMENT_POLL_INTERVAL || '30000',
   10,
@@ -24,27 +25,40 @@ let isPolling = false;
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
- * Fetch pending guides from Convex
+ * Fetch pending guides from Convex using HTTP client
  */
 async function fetchPendingGuides(): Promise<PendingGuide[]> {
   try {
-    const response = await fetch(
-      `${CONVEX_URL}/api/guides?enrichmentStatus=pending&limit=${BATCH_SIZE}`,
-      {
-        signal: AbortSignal.timeout(10000),
-      },
-    );
+    const result = await convex.query(api.migrations.batchAiProcess.getPending, {
+      limit: BATCH_SIZE,
+    });
 
-    if (!response.ok) {
-      loggers.convex.error(
-        { status: response.status },
-        'Failed to fetch pending guides',
-      );
+    if (!result.guides || result.guides.length === 0) {
       return [];
     }
 
-    const data = await response.json();
-    return data.guides || data || [];
+    // We need full guide data for enrichment, fetch each one
+    const guides: PendingGuide[] = [];
+    for (const g of result.guides) {
+      try {
+        const full = await convex.query(api.travelGuides.getById, {
+          id: g._id as never,
+        });
+        if (full) {
+          guides.push({
+            _id: g._id,
+            title: full.title,
+            content: full.content,
+            destinations: full.destinations,
+          });
+        }
+      }
+      catch (err) {
+        loggers.convex.error({ guideId: g._id, error: err }, 'Failed to fetch guide details');
+      }
+    }
+
+    return guides;
   }
   catch (error) {
     loggers.convex.error({ error }, 'Error fetching pending guides');
@@ -57,17 +71,11 @@ async function fetchPendingGuides(): Promise<PendingGuide[]> {
  */
 async function markAsProcessing(guideId: string): Promise<boolean> {
   try {
-    const response = await fetch(`${CONVEX_URL}/api/guides/${guideId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        enrichmentStatus: 'processing',
-        enrichmentStartedAt: Date.now(),
-      }),
-      signal: AbortSignal.timeout(10000),
+    await convex.mutation(api.travelGuides.updateEnrichmentStatus, {
+      id: guideId as never,
+      status: 'processing',
     });
-
-    return response.ok;
+    return true;
   }
   catch (error) {
     loggers.convex.error(
@@ -205,24 +213,22 @@ export async function triggerEnrichment(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Fetch the guide
-    const response = await fetch(`${CONVEX_URL}/api/guides/${guideId}`, {
-      signal: AbortSignal.timeout(10000),
+    const guide = await convex.query(api.travelGuides.getById, {
+      id: guideId as never,
     });
 
-    if (!response.ok) {
-      return { success: false, error: `Guide not found: ${response.status}` };
+    if (!guide) {
+      return { success: false, error: 'Guide not found' };
     }
-
-    const guide = await response.json();
 
     // Mark as processing
     await markAsProcessing(guideId);
 
     // Run enrichment
     return enrichGuide({
-      _id: guide._id,
-      content: guide.content,
-      title: guide.title,
+      _id: guideId,
+      content: guide.content || '',
+      title: guide.title || '',
       destinations: guide.destinations || [],
     });
   }

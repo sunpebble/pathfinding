@@ -13,9 +13,11 @@ import {
   extractStaticText,
 } from './accessibility-parser.js';
 import { createBrowserClient } from './clients/index.js';
+import { rateLimiter } from './rate-limiter/index.js';
 import { checkSessionWithGuidance } from './session/index.js';
 
 const log = createLogger('xiaohongshu');
+const PLATFORM = 'xiaohongshu';
 
 // Helper function for delay
 function sleep(ms: number): Promise<void> {
@@ -202,6 +204,9 @@ export async function crawlXiaohongshu(
       // Default: explore page
       const exploreUrl = 'https://www.xiaohongshu.com/explore';
       log.info('Fetching explore page');
+
+      // Apply rate limiting before request
+      await rateLimiter.waitBeforeRequest(PLATFORM);
 
       const exploreGuides = await fetchNotesFromExplore(
         exploreUrl,

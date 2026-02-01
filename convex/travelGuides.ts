@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { deleteGuideFromAggregates, insertGuideToAggregates, replaceGuideInAggregates } from './guideAggregates';
 import { deleteDestinationsForGuide, syncDestinationsInternal } from './guideDestinations';
+import { ensureDisplayFields, fillMissingDisplayFields } from './lib/displayFields';
 
 /**
  * Travel Guides - Crawled Content from Social Platforms
@@ -20,7 +21,7 @@ const platformValidator = v.union(
   v.literal('qyer'),
 );
 
-// List travel guides with filters
+// List travel guides with filters (with display fields guaranteed)
 export const list = query({
   args: {
     platform: v.optional(platformValidator),
@@ -55,7 +56,8 @@ export const list = query({
       guides = guides.filter(g => g.qualityScore >= args.minQuality!);
     }
 
-    return guides.slice(0, effectiveLimit);
+    // Apply display field guarantee to all returned guides
+    return guides.slice(0, effectiveLimit).map(ensureDisplayFields);
   },
 });
 
@@ -106,11 +108,14 @@ export const count = query({
   },
 });
 
-// Get a guide by ID
+// Get a guide by ID (with display fields guaranteed)
 export const getById = query({
   args: { id: v.id('travelGuides') },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const guide = await ctx.db.get(args.id);
+    if (!guide)
+      return null;
+    return ensureDisplayFields(guide);
   },
 });
 
@@ -138,7 +143,7 @@ export const update = mutation({
   },
 });
 
-// Search travel guides with filters
+// Search travel guides with filters (with display fields guaranteed)
 export const search = query({
   args: {
     query: v.optional(v.string()),
@@ -183,7 +188,8 @@ export const search = query({
       guides = guides.filter(g => g.crawledAt >= cutoffTime);
     }
 
-    return guides.slice(0, effectiveLimit);
+    // Apply display field guarantee to all returned guides
+    return guides.slice(0, effectiveLimit).map(ensureDisplayFields);
   },
 });
 
@@ -310,7 +316,8 @@ export const upsert = mutation({
           .eq('sourceExternalId', args.sourceExternalId))
       .first();
 
-    const data = {
+    // Prepare base data
+    const baseData = {
       sourcePlatform: args.sourcePlatform,
       sourceExternalId: args.sourceExternalId,
       sourceUrl: args.sourceUrl,
@@ -321,16 +328,30 @@ export const upsert = mutation({
       authorId: args.authorId,
       destinations: args.destinations,
       tags: args.tags,
-      likesCount: args.likesCount ?? 0,
-      savesCount: args.savesCount ?? 0,
-      commentsCount: args.commentsCount ?? 0,
-      viewsCount: args.viewsCount ?? 0,
+      likesCount: args.likesCount,
+      savesCount: args.savesCount,
+      commentsCount: args.commentsCount,
+      viewsCount: args.viewsCount,
       coverImageUrl: args.coverImageUrl,
       imageUrls: args.imageUrls ?? [],
       publishedAt: args.publishedAt,
       crawledAt: Date.now(),
-      qualityScore: args.qualityScore ?? 0,
+      qualityScore: args.qualityScore,
       contentHash: args.contentHash,
+    };
+
+    // Fill missing display fields with defaults
+    const filledData = fillMissingDisplayFields(baseData);
+
+    // Prepare final data (ensure all required fields have values)
+    const data = {
+      ...filledData,
+      // Ensure numeric fields are numbers (fillMissingDisplayFields guarantees this)
+      likesCount: filledData.likesCount,
+      savesCount: filledData.savesCount,
+      commentsCount: filledData.commentsCount,
+      viewsCount: filledData.viewsCount,
+      qualityScore: filledData.qualityScore,
     };
 
     if (existing) {
@@ -1093,5 +1114,44 @@ export const getGuidesWithLowConfidence = query({
     );
 
     return guidesWithStats.slice(0, effectiveLimit);
+  },
+});
+
+// Update enrichment status (used by AI service poller)
+export const updateEnrichmentStatus = mutation({
+  args: {
+    id: v.id('travelGuides'),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('processing'),
+      v.literal('completed'),
+      v.literal('failed'),
+    ),
+    error: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const guide = await ctx.db.get(args.id);
+    if (!guide) {
+      throw new Error(`Guide not found: ${args.id}`);
+    }
+
+    const update: Record<string, unknown> = {
+      enrichmentStatus: args.status,
+    };
+
+    if (args.status === 'processing') {
+      update.enrichmentStartedAt = Date.now();
+    }
+
+    if (args.status === 'failed' && args.error) {
+      update.enrichmentError = args.error;
+    }
+
+    if (args.status === 'completed') {
+      update.enrichmentError = undefined;
+    }
+
+    await ctx.db.patch(args.id, update);
+    return { success: true };
   },
 });

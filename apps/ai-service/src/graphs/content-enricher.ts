@@ -6,10 +6,11 @@
  */
 
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
+import { api } from '../../../../convex/_generated/api.js';
+import { convex } from '../lib/convex.js';
 import { createLLM } from '../lib/llm/index.js';
 import { loggers } from '../lib/logger.js';
 
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org';
 
 // Type definitions for POI and Day structures
@@ -308,58 +309,51 @@ async function saveToDb(
   state: EnrichmentStateType,
 ): Promise<Partial<EnrichmentStateType>> {
   try {
-    // Prepare the update payload
-    const updatePayload = {
-      aiProcessedAt: Date.now(),
-      aiSummary: state.summary,
-      aiTips: state.tips,
-      aiBestTime: state.bestTime,
-      aiDuration: state.duration,
-      aiBudget: state.budget,
-      aiDays: state.days.map((day: DayPlan) => ({
-        dayNumber: day.dayNumber,
-        theme: day.theme,
-        pois: (day.pois || []).map((poi: ExtractedPoi | GeocodedPoi) => ({
-          name: poi.name,
-          type: poi.type || 'attraction',
-          description: poi.description,
-          latitude: 'latitude' in poi ? poi.latitude : 0,
-          longitude: 'longitude' in poi ? poi.longitude : 0,
-          address: poi.address,
-          duration: poi.duration,
-          tips: poi.tips,
-          geocodeConfidence:
-            'geocodeConfidence' in poi ? poi.geocodeConfidence : undefined,
-          geocodeSource: 'geocodeSource' in poi ? poi.geocodeSource : undefined,
-        })),
+    // Prepare the update payload with proper data sanitization
+    const aiDays = (state.days || []).map((day: DayPlan) => ({
+      dayNumber: day.dayNumber ?? 1,
+      theme: day.theme || undefined,
+      pois: (day.pois || []).map((poi: ExtractedPoi | GeocodedPoi) => ({
+        name: poi.name || '未知地点',
+        type: poi.type || 'attraction',
+        description: poi.description || undefined,
+        latitude: 'latitude' in poi && typeof poi.latitude === 'number' ? poi.latitude : 0,
+        longitude: 'longitude' in poi && typeof poi.longitude === 'number' ? poi.longitude : 0,
+        address: poi.address || undefined,
+        duration: poi.duration || undefined,
+        tips: poi.tips || undefined,
+        geocodeConfidence:
+          'geocodeConfidence' in poi && typeof poi.geocodeConfidence === 'number'
+            ? poi.geocodeConfidence
+            : undefined,
+        geocodeSource:
+          'geocodeSource' in poi && poi.geocodeSource ? poi.geocodeSource : undefined,
       })),
-      enrichmentStatus: state.error ? 'failed' : 'completed',
-      enrichmentError: state.error,
-    };
+    }));
 
-    // Call Convex HTTP API to update the guide
-    const response = await fetch(
-      `${CONVEX_URL}/api/guides/${state.guideId}/ai-data`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatePayload),
-        signal: AbortSignal.timeout(30000),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Convex API error: ${response.status}`);
-    }
+    // Use Convex HTTP Client to update the guide
+    await convex.mutation(api.migrations.batchAiProcess.updateAiData, {
+      guideId: state.guideId as never,
+      aiSummary: state.summary || undefined,
+      aiTips: state.tips && state.tips.length > 0 ? state.tips : undefined,
+      aiBestTime: state.bestTime || undefined,
+      aiDuration: state.duration || undefined,
+      aiBudget: state.budget || undefined,
+      aiDays: aiDays.length > 0 ? aiDays : undefined,
+    });
 
     return { step: 'saved' };
   }
   catch (error) {
-    loggers.langgraph.error({ error }, 'Save to DB error');
+    // Properly serialize the error for logging
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    loggers.langgraph.error(
+      { errorMessage, errorStack, guideId: state.guideId },
+      'Save to DB error',
+    );
     return {
-      error: `Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error: `Save failed: ${errorMessage}`,
       step: 'save_failed',
     };
   }

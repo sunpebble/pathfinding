@@ -369,3 +369,117 @@ export function isContentTruncated(content: string): boolean {
 export function isValidPlatform(platform: string): platform is GuidePlatform {
   return VALID_PLATFORMS.includes(platform as GuidePlatform);
 }
+
+// ============================================================================
+// iOS Display Fields Validation
+// ============================================================================
+
+/**
+ * Fields required for iOS App display
+ */
+export const IOS_REQUIRED_DISPLAY_FIELDS = [
+  'title',
+  'coverImageUrl',
+  'authorName',
+  'destinations',
+  'likesCount',
+  'savesCount',
+  'commentsCount',
+  'viewsCount',
+  'qualityScore',
+] as const;
+
+export type IosDisplayField = (typeof IOS_REQUIRED_DISPLAY_FIELDS)[number];
+
+/**
+ * Result of iOS display field validation
+ */
+export interface DisplayFieldValidationResult {
+  isValid: boolean;
+  missingFields: IosDisplayField[];
+}
+
+/**
+ * Input for display field validation
+ */
+export interface DisplayFieldInput {
+  title?: string;
+  coverImageUrl?: string;
+  authorName?: string;
+  destinations?: string[];
+  imageUrls?: string[];
+  likesCount?: number;
+  savesCount?: number;
+  commentsCount?: number;
+  viewsCount?: number;
+  qualityScore?: number;
+  [key: string]: unknown;
+}
+
+/**
+ * Validates whether a guide has all required iOS display fields populated
+ *
+ * @example
+ * const result = validateDisplayFields({
+ *   title: 'My Guide',
+ *   coverImageUrl: 'https://example.com/img.jpg',
+ *   authorName: 'Author',
+ *   destinations: ['Beijing'],
+ *   likesCount: 10,
+ *   savesCount: 5,
+ *   commentsCount: 3,
+ *   viewsCount: 100,
+ *   qualityScore: 0.8,
+ * });
+ *
+ * if (!result.isValid) {
+ *   console.log('Missing fields:', result.missingFields);
+ * }
+ */
+export function validateDisplayFields(guide: DisplayFieldInput): DisplayFieldValidationResult {
+  const missingFields: IosDisplayField[] = [];
+
+  // Check title
+  if (!guide.title || (typeof guide.title === 'string' && guide.title.trim() === '')) {
+    missingFields.push('title');
+  }
+
+  // Check coverImageUrl - also check imageUrls as fallback source
+  if (!guide.coverImageUrl && (!guide.imageUrls || guide.imageUrls.length === 0)) {
+    missingFields.push('coverImageUrl');
+  }
+
+  // Check authorName
+  if (!guide.authorName || (typeof guide.authorName === 'string' && guide.authorName.trim() === '')) {
+    missingFields.push('authorName');
+  }
+
+  // Check destinations (allowed to be empty, but must exist)
+  if (!guide.destinations) {
+    missingFields.push('destinations');
+  }
+
+  // Check count fields
+  if (guide.likesCount === undefined || guide.likesCount === null) {
+    missingFields.push('likesCount');
+  }
+  if (guide.savesCount === undefined || guide.savesCount === null) {
+    missingFields.push('savesCount');
+  }
+  if (guide.commentsCount === undefined || guide.commentsCount === null) {
+    missingFields.push('commentsCount');
+  }
+  if (guide.viewsCount === undefined || guide.viewsCount === null) {
+    missingFields.push('viewsCount');
+  }
+
+  // Check qualityScore
+  if (guide.qualityScore === undefined || guide.qualityScore === null) {
+    missingFields.push('qualityScore');
+  }
+
+  return {
+    isValid: missingFields.length === 0,
+    missingFields,
+  };
+}

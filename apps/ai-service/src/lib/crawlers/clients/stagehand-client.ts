@@ -76,13 +76,15 @@ export class StagehandBrowserClient implements BrowserClient {
   async init(options?: SessionOptions): Promise<void> {
     this.options = options || {};
 
-    // Determine environment: prefer STAGEHAND_ENV, fallback to STEEL_LOCAL
+    // Determine environment: prefer STAGEHAND_ENV, fallback to STEEL_LOCAL, default to LOCAL
     const env
       = process.env.STAGEHAND_ENV === 'BROWSERBASE'
         ? 'BROWSERBASE'
-        : process.env.STEEL_LOCAL === 'true'
+        : process.env.STAGEHAND_ENV === 'LOCAL'
           ? 'LOCAL'
-          : 'BROWSERBASE';
+          : process.env.STEEL_LOCAL === 'true'
+            ? 'LOCAL'
+            : 'LOCAL'; // Default to LOCAL for development
 
     // Create custom OpenAI client for Stagehand
     if (!process.env.STAGEHAND_API_KEY) {
@@ -94,11 +96,11 @@ export class StagehandBrowserClient implements BrowserClient {
     const openaiClient = new OpenAI({
       apiKey: process.env.STAGEHAND_API_KEY,
       baseURL:
-        process.env.STAGEHAND_BASE_URL || 'https://new-api.kunish.org/v1',
+        process.env.STAGEHAND_BASE_URL || 'https://n.kunish.org/v1',
     });
 
     const llmClient = new CustomOpenAIClient({
-      modelName: process.env.STAGEHAND_MODEL || 'gpt-4o',
+      modelName: process.env.STAGEHAND_MODEL || 'claude-opus-4-5-20251101',
       client: openaiClient,
     });
 
