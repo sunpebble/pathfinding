@@ -6,6 +6,11 @@ export {
 } from './businessHours.js';
 
 export {
+  completenessLevelValidator,
+  optionalCompletenessLevelValidator,
+} from './completenessLevel.js';
+
+export {
   categoryConfigValidator,
   categoryDistributionValidator,
   crawlBehaviorValidator,

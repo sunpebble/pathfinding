@@ -50,4 +50,24 @@ crons.daily(
   internal.dataQualityReports.cleanupOld,
 );
 
+/**
+ * 每5分钟处理二次爬取队列
+ * Process content refetch queue for truncated guides
+ */
+crons.interval(
+  'process-refetch-queue',
+  { minutes: 5 },
+  internal.refetchTasks.processRefetchQueue,
+);
+
+/**
+ * 每天清理已完成的二次爬取任务（保留7天）
+ * Clean up completed refetch tasks
+ */
+crons.daily(
+  'cleanup-completed-refetch-tasks',
+  { hourUTC: 20, minuteUTC: 0 }, // 4:00 AM UTC+8
+  internal.refetchTasks.cleanupCompletedInternal,
+);
+
 export default crons;

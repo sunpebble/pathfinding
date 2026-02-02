@@ -9,6 +9,84 @@ import { ensureDisplayFields, fillMissingDisplayFields } from './lib/displayFiel
  * Travel Guides - Crawled Content from Social Platforms
  */
 
+// Truncation patterns for detecting incomplete content
+const TRUNCATION_PATTERNS = [
+  /\.{3}$/,
+  /…$/,
+  /\[查看更多\]$/,
+  /\[展开全文\]$/,
+  /\[阅读全文\]$/,
+  /查看更多$/,
+  /展开全文$/,
+];
+
+function isContentTruncated(content: string): boolean {
+  return TRUNCATION_PATTERNS.some(pattern => pattern.test(content));
+}
+
+// Completeness level calculation
+const MIN_CONTENT_LENGTH = 200;
+const MIN_CONTENT_LENGTH_COMPLETE = 500;
+
+function calculateCompletenessLevel(input: {
+  title?: string;
+  content?: string;
+  coverImageUrl?: string;
+  imageUrls?: string[];
+  authorName?: string;
+  destinations?: string[];
+  contentTruncated?: boolean;
+  likesCount?: number;
+  savesCount?: number;
+  commentsCount?: number;
+  viewsCount?: number;
+  qualityScore?: number;
+}): 'complete' | 'usable' | 'incomplete' {
+  const {
+    title,
+    content,
+    coverImageUrl,
+    imageUrls,
+    authorName,
+    destinations,
+    contentTruncated,
+    likesCount,
+    savesCount,
+    commentsCount,
+    viewsCount,
+    qualityScore,
+  } = input;
+
+  const isTruncated = contentTruncated || (content ? isContentTruncated(content) : false);
+  const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
+  const hasTitle = !!(title && title.trim().length > 0);
+  const hasAuthor = !!(authorName && authorName.trim().length > 0);
+  const hasDestinations = !!(destinations && destinations.length > 0);
+  const contentLength = content?.length ?? 0;
+
+  const hasAllCounts
+    = likesCount !== undefined && likesCount !== null
+      && savesCount !== undefined && savesCount !== null
+      && commentsCount !== undefined && commentsCount !== null
+      && viewsCount !== undefined && viewsCount !== null;
+
+  const hasQualityScore = qualityScore !== undefined && qualityScore !== null;
+
+  if (
+    hasTitle && hasImages && hasAuthor && hasDestinations
+    && hasAllCounts && hasQualityScore
+    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE && !isTruncated
+  ) {
+    return 'complete';
+  }
+
+  if (hasTitle && contentLength >= MIN_CONTENT_LENGTH && hasImages) {
+    return 'usable';
+  }
+
+  return 'incomplete';
+}
+
 const platformValidator = v.union(
   v.literal('xiaohongshu'),
   v.literal('weibo'),
@@ -21,11 +99,18 @@ const platformValidator = v.union(
   v.literal('qyer'),
 );
 
+const completenessLevelValidator = v.union(
+  v.literal('complete'),
+  v.literal('usable'),
+  v.literal('incomplete'),
+);
+
 // List travel guides with filters (with display fields guaranteed)
 export const list = query({
   args: {
     platform: v.optional(platformValidator),
     minQuality: v.optional(v.number()),
+    completenessLevel: v.optional(completenessLevelValidator),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -34,11 +119,26 @@ export const list = query({
     // Take limited records before collecting to avoid 16MB limit
     // Note: We fetch more than the limit to allow for quality filtering
     const fetchLimit
-      = args.minQuality !== undefined ? effectiveLimit * 3 : effectiveLimit;
+      = args.minQuality !== undefined || args.completenessLevel !== undefined
+        ? effectiveLimit * 3
+        : effectiveLimit;
 
     let guides;
 
-    if (args.platform) {
+    // Use completeness index if specified
+    if (args.completenessLevel) {
+      guides = await ctx.db
+        .query('travelGuides')
+        .withIndex('by_completeness', q => q.eq('completenessLevel', args.completenessLevel!))
+        .order('desc')
+        .take(fetchLimit);
+
+      // Additional platform filter if needed
+      if (args.platform) {
+        guides = guides.filter(g => g.sourcePlatform === args.platform);
+      }
+    }
+    else if (args.platform) {
       guides = await ctx.db
         .query('travelGuides')
         .withIndex('by_platform', q => q.eq('sourcePlatform', args.platform!))
@@ -343,6 +443,25 @@ export const upsert = mutation({
     // Fill missing display fields with defaults
     const filledData = fillMissingDisplayFields(baseData);
 
+    // Check for content truncation
+    const contentTruncated = isContentTruncated(args.content);
+
+    // Calculate completeness level
+    const completenessLevel = calculateCompletenessLevel({
+      title: args.title,
+      content: args.content,
+      coverImageUrl: filledData.coverImageUrl,
+      imageUrls: filledData.imageUrls,
+      authorName: args.authorName,
+      destinations: args.destinations,
+      contentTruncated,
+      likesCount: filledData.likesCount,
+      savesCount: filledData.savesCount,
+      commentsCount: filledData.commentsCount,
+      viewsCount: filledData.viewsCount,
+      qualityScore: filledData.qualityScore,
+    });
+
     // Prepare final data (ensure all required fields have values)
     const data = {
       ...filledData,
@@ -352,7 +471,12 @@ export const upsert = mutation({
       commentsCount: filledData.commentsCount,
       viewsCount: filledData.viewsCount,
       qualityScore: filledData.qualityScore,
+      // New fields
+      contentTruncated,
+      completenessLevel,
     };
+
+    let guideId: Id<'travelGuides'>;
 
     if (existing) {
       // Update existing guide
@@ -368,7 +492,7 @@ export const upsert = mutation({
         await replaceGuideInAggregates(ctx, oldDoc, newDoc);
       }
 
-      return { id: existing._id, action: 'updated' as const };
+      guideId = existing._id;
     }
     else {
       // Insert new guide
@@ -383,8 +507,29 @@ export const upsert = mutation({
         await insertGuideToAggregates(ctx, newDoc);
       }
 
-      return { id, action: 'inserted' as const };
+      guideId = id;
     }
+
+    // Trigger refetch task if content is truncated and we have a source URL
+    if (contentTruncated && args.sourceUrl) {
+      await ctx.db.insert('refetchTasks', {
+        guideId,
+        sourceUrl: args.sourceUrl,
+        sourceExternalId: args.sourceExternalId,
+        sourcePlatform: args.sourcePlatform,
+        status: 'pending',
+        retryCount: 0,
+        maxRetries: 3,
+        createdAt: Date.now(),
+      });
+    }
+
+    return {
+      id: guideId,
+      action: existing ? 'updated' as const : 'inserted' as const,
+      contentTruncated,
+      completenessLevel,
+    };
   },
 });
 
@@ -609,6 +754,94 @@ export const updateAiData = mutation({
       ...aiData,
       aiProcessedAt: Date.now(),
     });
+  },
+});
+
+// Update guide with AI-enhanced content (title, summary) and recalculate completenessLevel
+export const updateWithEnhancement = mutation({
+  args: {
+    id: v.id('travelGuides'),
+    title: v.optional(v.string()),
+    aiSummary: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const guide = await ctx.db.get(args.id);
+    if (!guide) {
+      throw new Error(`Guide not found: ${args.id}`);
+    }
+
+    const updates: Record<string, unknown> = {};
+
+    if (args.title) {
+      updates.title = args.title;
+    }
+
+    if (args.aiSummary) {
+      updates.aiSummary = args.aiSummary;
+    }
+
+    // Recalculate completeness level with new data
+    const newCompletenessLevel = calculateCompletenessLevel({
+      title: args.title || guide.title,
+      content: guide.content,
+      coverImageUrl: guide.coverImageUrl,
+      imageUrls: guide.imageUrls,
+      authorName: guide.authorName,
+      destinations: guide.destinations,
+      contentTruncated: guide.contentTruncated,
+      likesCount: guide.likesCount,
+      savesCount: guide.savesCount,
+      commentsCount: guide.commentsCount,
+      viewsCount: guide.viewsCount,
+      qualityScore: guide.qualityScore,
+    });
+
+    updates.completenessLevel = newCompletenessLevel;
+    updates.aiProcessedAt = Date.now();
+
+    await ctx.db.patch(args.id, updates);
+
+    return {
+      id: args.id,
+      previousCompletenessLevel: guide.completenessLevel,
+      newCompletenessLevel,
+      titleUpdated: !!args.title,
+      summaryUpdated: !!args.aiSummary,
+    };
+  },
+});
+
+// Get guides needing enhancement (usable level, prioritized over incomplete)
+export const getGuidesForEnhancement = query({
+  args: {
+    limit: v.optional(v.number()),
+    priorityLevel: v.optional(completenessLevelValidator),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10;
+    const priorityLevel = args.priorityLevel || 'usable';
+
+    // Get guides at the specified completeness level that haven't been AI processed
+    const guides = await ctx.db
+      .query('travelGuides')
+      .withIndex('by_completeness', q => q.eq('completenessLevel', priorityLevel))
+      .order('desc')
+      .take(limit * 2);
+
+    // Filter to guides missing title or without AI summary
+    const needsEnhancement = guides.filter(g =>
+      !g.title || !g.aiSummary,
+    );
+
+    return needsEnhancement.slice(0, limit).map(g => ({
+      _id: g._id,
+      title: g.title,
+      content: g.content?.slice(0, 1000), // Limit content for API response
+      contentLength: g.content?.length || 0,
+      completenessLevel: g.completenessLevel,
+      hasTitle: !!g.title,
+      hasSummary: !!g.aiSummary,
+    }));
   },
 });
 

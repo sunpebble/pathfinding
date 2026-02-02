@@ -183,4 +183,138 @@ aiRouter.post('/chat', async (c) => {
   }
 });
 
+// ============================================================
+// Content Enhancement API
+// ============================================================
+
+interface EnhanceRequest {
+  guideId: string;
+  content: string;
+  title?: string;
+  generateTitle?: boolean;
+  generateSummary?: boolean;
+}
+
+interface EnhanceResult {
+  guideId: string;
+  success: boolean;
+  title?: string;
+  summary?: string;
+  error?: string;
+}
+
+// Enhance a single guide (generate missing title and/or summary)
+aiRouter.post('/enhance', async (c) => {
+  try {
+    const {
+      guideId,
+      content,
+      title,
+      generateTitle = true,
+      generateSummary = true,
+    } = await c.req.json() as EnhanceRequest;
+
+    if (!guideId || !content) {
+      return c.json({ error: 'guideId and content are required' }, 400);
+    }
+
+    const result: EnhanceResult = { guideId, success: true };
+
+    // Generate title if missing and requested
+    if (generateTitle && !title) {
+      const titlePrompt = `从以下旅行攻略内容中提取或生成一个简洁的标题，不超过50个字符。只返回标题文字，不要包含引号或其他格式：
+
+${content.slice(0, 1000)}`;
+
+      const generatedTitle = await callLLM(titlePrompt, '你是一个旅行内容编辑，擅长提取文章标题。');
+      result.title = generatedTitle.trim().slice(0, 50);
+    }
+
+    // Generate summary if requested and content is long enough
+    if (generateSummary && content.length > 500) {
+      const summaryPrompt = `请为以下旅行攻略生成一个100-200字的摘要，突出目的地、亮点和实用信息。只返回摘要文字：
+
+${content.slice(0, 3000)}`;
+
+      const generatedSummary = await callLLM(summaryPrompt, '你是一个旅行内容编辑，擅长提炼文章要点。');
+      result.summary = generatedSummary.trim().slice(0, 200);
+    }
+
+    return c.json(result);
+  }
+  catch (error) {
+    const message = error instanceof Error ? error.message : 'Enhancement failed';
+    return c.json({ error: message }, 500);
+  }
+});
+
+// Batch enhance multiple guides
+aiRouter.post('/enhance/batch', async (c) => {
+  try {
+    const { guides, generateTitle = true, generateSummary = true } = await c.req.json() as {
+      guides: Array<{ guideId: string; content: string; title?: string }>;
+      generateTitle?: boolean;
+      generateSummary?: boolean;
+    };
+
+    if (!guides || !Array.isArray(guides)) {
+      return c.json({ error: 'guides array is required' }, 400);
+    }
+
+    if (guides.length > 10) {
+      return c.json({ error: 'Maximum 10 guides per batch' }, 400);
+    }
+
+    const results: EnhanceResult[] = [];
+
+    for (const guide of guides) {
+      try {
+        const result: EnhanceResult = { guideId: guide.guideId, success: true };
+
+        // Generate title if missing
+        if (generateTitle && !guide.title) {
+          const titlePrompt = `从以下旅行攻略内容中提取或生成一个简洁的标题，不超过50个字符。只返回标题文字：
+
+${guide.content.slice(0, 1000)}`;
+
+          const generatedTitle = await callLLM(titlePrompt, '你是一个旅行内容编辑。');
+          result.title = generatedTitle.trim().slice(0, 50);
+        }
+
+        // Generate summary if content is long enough
+        if (generateSummary && guide.content.length > 500) {
+          const summaryPrompt = `请为以下旅行攻略生成一个100-200字的摘要。只返回摘要文字：
+
+${guide.content.slice(0, 3000)}`;
+
+          const generatedSummary = await callLLM(summaryPrompt, '你是一个旅行内容编辑。');
+          result.summary = generatedSummary.trim().slice(0, 200);
+        }
+
+        results.push(result);
+      }
+      catch (error) {
+        results.push({
+          guideId: guide.guideId,
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed',
+        });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    return c.json({
+      success: true,
+      total: guides.length,
+      succeeded: successCount,
+      failed: guides.length - successCount,
+      results,
+    });
+  }
+  catch (error) {
+    const message = error instanceof Error ? error.message : 'Batch enhancement failed';
+    return c.json({ error: message }, 500);
+  }
+});
+
 export default aiRouter;

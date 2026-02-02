@@ -13,6 +13,12 @@ import type { CrawlResult } from '../lib/crawlers/index.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { api } from '@pathfinding/convex-client/api';
+import {
+  calculateCompletenessLevel,
+  isContentTruncated,
+  validateImages,
+  validateTitle,
+} from '@pathfinding/crawler-types';
 import { ConvexHttpClient } from 'convex/browser';
 import { createLogger } from '../lib/logger.js';
 
@@ -103,11 +109,32 @@ function loadGuidesFromDir(inputDir: string): CrawlResult[] {
 }
 
 function transformToConvexFormat(guide: CrawlResult) {
+  // Validate and normalize fields
+  const titleResult = validateTitle(guide.title);
+  const imageResult = validateImages(guide.coverImageUrl, guide.imageUrls);
+  const contentTruncated = guide.content ? isContentTruncated(guide.content) : false;
+
+  // Calculate completeness level
+  const completenessLevel = calculateCompletenessLevel({
+    title: titleResult.title,
+    content: guide.content,
+    coverImageUrl: imageResult.coverImageUrl,
+    imageUrls: imageResult.imageUrls,
+    authorName: guide.authorName,
+    destinations: guide.destinations,
+    contentTruncated,
+    likesCount: guide.likesCount,
+    savesCount: guide.savesCount,
+    commentsCount: guide.commentsCount,
+    viewsCount: guide.viewsCount,
+    qualityScore: guide.qualityScore,
+  });
+
   return {
     sourcePlatform: 'qyer' as const,
     sourceExternalId: guide.sourceExternalId,
     sourceUrl: guide.sourceUrl,
-    title: guide.title,
+    title: titleResult.title,
     content: guide.content || '',
     authorName: guide.authorName,
     destinations: guide.destinations || [],
@@ -116,9 +143,11 @@ function transformToConvexFormat(guide: CrawlResult) {
     savesCount: guide.savesCount || 0,
     commentsCount: guide.commentsCount || 0,
     viewsCount: guide.viewsCount || 0,
-    coverImageUrl: guide.coverImageUrl,
-    imageUrls: guide.imageUrls || [],
+    coverImageUrl: imageResult.coverImageUrl,
+    imageUrls: imageResult.imageUrls,
     qualityScore: guide.qualityScore || 50,
+    contentTruncated,
+    completenessLevel,
   };
 }
 

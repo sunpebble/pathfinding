@@ -930,6 +930,16 @@ export default defineSchema({
     qualityScore: v.number(), // 0-1
     contentHash: v.optional(v.string()),
 
+    // Content completeness tracking
+    contentTruncated: v.optional(v.boolean()),
+    completenessLevel: v.optional(
+      v.union(
+        v.literal('complete'),
+        v.literal('usable'),
+        v.literal('incomplete'),
+      ),
+    ),
+
     // AI Enrichment Status (for LangGraph pipeline)
     enrichmentStatus: v.optional(
       v.union(
@@ -1018,6 +1028,7 @@ export default defineSchema({
     .index('by_platform', ['sourcePlatform'])
     .index('by_platform_external', ['sourcePlatform', 'sourceExternalId'])
     .index('by_quality', ['qualityScore'])
+    .index('by_completeness', ['completenessLevel'])
     .index('by_destinations', ['destinations'])
     .searchIndex('search_content', {
       searchField: 'content',
@@ -1039,6 +1050,32 @@ export default defineSchema({
     .index('by_destination', ['destination'])
     .index('by_guide', ['guideId'])
     .index('by_destination_guide', ['destination', 'guideId']),
+
+  // ============================================
+  // Content Refetch Tasks (For truncated content recovery)
+  // ============================================
+  refetchTasks: defineTable({
+    guideId: v.id('travelGuides'),
+    sourceUrl: v.string(),
+    sourceExternalId: v.string(),
+    sourcePlatform: v.string(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('running'),
+      v.literal('completed'),
+      v.literal('failed'),
+    ),
+    retryCount: v.number(),
+    maxRetries: v.number(),
+    lastError: v.optional(v.string()),
+    createdAt: v.number(),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    nextRetryAt: v.optional(v.number()),
+  })
+    .index('by_status', ['status'])
+    .index('by_guide', ['guideId'])
+    .index('by_next_retry', ['status', 'nextRetryAt']),
 
   // ============================================
   // Travel Guide AI Data (Separated AI processing results)
