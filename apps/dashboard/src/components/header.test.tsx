@@ -105,4 +105,19 @@ describe('header', () => {
     fireEvent.click(refreshButton);
     expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
+
+  it('disables refresh button and shows spinner when loading', () => {
+    vi.mocked(useHealthStatus).mockReturnValue({
+      data: null,
+      isLoading: true,
+      refetch: mockRefetch,
+    } as ReturnType<typeof useHealthStatus>);
+
+    render(<Header />);
+    const refreshButton = screen.getByLabelText('Refresh status');
+    expect(refreshButton).toHaveProperty('disabled', true);
+    // Check for spinner inside the button
+    const icon = refreshButton.querySelector('.animate-spin');
+    expect(icon).not.toBeNull();
+  });
 });

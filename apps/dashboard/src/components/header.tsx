@@ -1,6 +1,7 @@
 'use client';
 
 import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useHealthStatus } from '@/hooks/use-health-status';
 import { AuthButton } from './auth-button';
 
@@ -40,10 +41,12 @@ export function Header() {
         {/* Refresh Button */}
         <button
           onClick={() => refetch()}
-          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+          disabled={isLoading}
+          aria-label="Refresh status"
+          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
           title="Refresh status"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
         </button>
 
         {/* Auth Button */}
