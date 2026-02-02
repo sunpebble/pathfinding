@@ -85,6 +85,7 @@ ${textContent.substring(0, 30000)}`;
     console.error('LLM 调用失败:', error);
   }
 
+  // @ts-expect-error - disconnect exists on CDP connected browser
   browser.disconnect();
   console.log('\n完成');
 }

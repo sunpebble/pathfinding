@@ -155,7 +155,7 @@ async function main() {
     // Disconnect (don't close the browser)
     // @ts-expect-error - disconnect exists on CDP connected browser
     if (browser.disconnect)
-      browser.disconnect();
+      (browser as any).disconnect();
     console.log('\n✅ Disconnected from Chrome (browser still running)');
   }
   catch (error) {
