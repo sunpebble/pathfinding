@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AI Crawler Base - AI-driven web crawling
  *
@@ -293,6 +292,7 @@ export abstract class AICrawlerBase {
     });
 
     try {
+      // eslint-disable-next-line ts/no-explicit-any
       const result = await (this as any).extract(instruction, schema);
       return {
         guides: result.guides,
@@ -316,6 +316,7 @@ export abstract class AICrawlerBase {
     const schema = AISchemas.guideDetail(zod);
 
     try {
+      // eslint-disable-next-line ts/no-explicit-any
       const result = await (this as any).extract(instruction, schema);
       return result;
     }

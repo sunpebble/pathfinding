@@ -345,7 +345,7 @@ export const updatePushToken = mutation({
  */
 export const cleanupExpiredOtps: RegisteredMutation<
   'internal',
-  {},
+  Record<string, never>,
   Promise<{ cleanedOtps: number }>
 > = internalMutation({
   handler: async (ctx): Promise<{ cleanedOtps: number }> => {
@@ -367,7 +367,7 @@ export const cleanupExpiredOtps: RegisteredMutation<
   },
 }) as unknown as RegisteredMutation<
   'internal',
-  {},
+  Record<string, never>,
   Promise<{ cleanedOtps: number }>
 >;
 
@@ -376,7 +376,7 @@ export const cleanupExpiredOtps: RegisteredMutation<
  */
 export const cleanupExpiredRateLimits: RegisteredMutation<
   'internal',
-  {},
+  Record<string, never>,
   Promise<{ cleaned: number }>
 > = internalMutation({
   handler: async (ctx): Promise<{ cleaned: number }> => {
@@ -397,6 +397,6 @@ export const cleanupExpiredRateLimits: RegisteredMutation<
   },
 }) as unknown as RegisteredMutation<
   'internal',
-  {},
+  Record<string, never>,
   Promise<{ cleaned: number }>
 >;

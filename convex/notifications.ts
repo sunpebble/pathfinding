@@ -1,5 +1,5 @@
-import type { Doc } from './_generated/dataModel';
 import type { RegisteredMutation } from 'convex/server';
+import type { Doc } from './_generated/dataModel';
 import { ConvexError, v } from 'convex/values';
 import {
   notificationDataValidator,
@@ -744,7 +744,7 @@ export const cancelScheduledByReference = mutation({
  */
 export const sendPendingReminders: RegisteredMutation<
   'internal',
-  {},
+  Record<string, never>,
   Promise<{ sentCount: number; total: number }>
 > = internalMutation({
   handler: async (ctx): Promise<{ sentCount: number; total: number }> => {
@@ -805,7 +805,7 @@ export const sendPendingReminders: RegisteredMutation<
   },
 }) as unknown as RegisteredMutation<
   'internal',
-  {},
+  Record<string, never>,
   Promise<{ sentCount: number; total: number }>
 >;
 
@@ -815,7 +815,7 @@ export const sendPendingReminders: RegisteredMutation<
  */
 export const cleanupOldNotifications: RegisteredMutation<
   'internal',
-  {},
+  Record<string, never>,
   Promise<{ deletedCount: number }>
 > = internalMutation({
   handler: async (ctx): Promise<{ deletedCount: number }> => {
@@ -843,6 +843,6 @@ export const cleanupOldNotifications: RegisteredMutation<
   },
 }) as unknown as RegisteredMutation<
   'internal',
-  {},
+  Record<string, never>,
   Promise<{ deletedCount: number }>
 >;
