@@ -1,14 +1,89 @@
 import type { Id } from './_generated/dataModel';
+import type { DatabaseWriter } from './_generated/server';
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
 
 /**
  * Guide Comments - Comments on Travel Guides (travelGuides table)
  * Uses string IDs to support various guide sources
  */
 
+// Shared logic for creating a comment
+async function createComment(
+  db: DatabaseWriter,
+  args: {
+    guideId: string;
+    userId: string;
+    content: string;
+    parentId?: string;
+  },
+) {
+  // Validate content
+  if (!args.content.trim()) {
+    throw new Error('Comment content cannot be empty');
+  }
+
+  if (args.content.length > 2000) {
+    throw new Error(
+      'Comment content exceeds maximum length of 2000 characters',
+    );
+  }
+
+  // Create the comment
+  const commentId = await db.insert('guideComments', {
+    guideId: args.guideId,
+    userId: args.userId,
+    parentId: args.parentId,
+    content: args.content.trim(),
+    likesCount: 0,
+    repliesCount: 0,
+    isEdited: false,
+    isDeleted: false,
+    createdAt: Date.now(),
+  });
+
+  // If this is a reply, update parent's reply count
+  if (args.parentId) {
+    try {
+      // parentId is stored as string, need to convert to Id for db.get
+      const parentComment = await db.get(
+        args.parentId as Id<'guideComments'>,
+      );
+
+      if (parentComment) {
+        await db.patch(parentComment._id, {
+          repliesCount: parentComment.repliesCount + 1,
+        });
+      }
+    }
+    catch (error) {
+      // Parent comment might not exist or ID format might be invalid
+      // Continue without updating parent reply count
+      console.warn('Failed to update parent reply count:', error);
+    }
+  }
+
+  // Return the comment ID as a string for client use
+  return commentId.toString();
+}
+
 /**
- * Create a new comment on a guide
+ * Internal mutation for creating a comment (trusted caller, e.g. http action)
+ */
+export const createInternal = internalMutation({
+  args: {
+    guideId: v.string(),
+    userId: v.string(),
+    content: v.string(),
+    parentId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return createComment(ctx.db, args);
+  },
+});
+
+/**
+ * Create a new comment on a guide (Public, secure)
  */
 export const create = mutation({
   args: {
@@ -18,53 +93,16 @@ export const create = mutation({
     parentId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Validate content
-    if (!args.content.trim()) {
-      throw new Error('Comment content cannot be empty');
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Unauthorized');
     }
 
-    if (args.content.length > 2000) {
-      throw new Error(
-        'Comment content exceeds maximum length of 2000 characters',
-      );
+    if (identity.subject !== args.userId) {
+      throw new Error('Unauthorized: UserId mismatch');
     }
 
-    // Create the comment
-    const commentId = await ctx.db.insert('guideComments', {
-      guideId: args.guideId,
-      userId: args.userId,
-      parentId: args.parentId,
-      content: args.content.trim(),
-      likesCount: 0,
-      repliesCount: 0,
-      isEdited: false,
-      isDeleted: false,
-      createdAt: Date.now(),
-    });
-
-    // If this is a reply, update parent's reply count
-    if (args.parentId) {
-      try {
-        // parentId is stored as string, need to convert to Id for db.get
-        const parentComment = await ctx.db.get(
-          args.parentId as Id<'guideComments'>,
-        );
-
-        if (parentComment) {
-          await ctx.db.patch(parentComment._id, {
-            repliesCount: parentComment.repliesCount + 1,
-          });
-        }
-      }
-      catch (error) {
-        // Parent comment might not exist or ID format might be invalid
-        // Continue without updating parent reply count
-        console.warn('Failed to update parent reply count:', error);
-      }
-    }
-
-    // Return the comment ID as a string for client use
-    return commentId.toString();
+    return createComment(ctx.db, args);
   },
 });
 

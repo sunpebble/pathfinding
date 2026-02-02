@@ -1,0 +1,4 @@
+## 2026-02-02 - Auth Bypass in Convex Mutations
+**Vulnerability:** Public mutation `guideComments.create` accepted `userId` as an argument and trusted it, allowing impersonation. Also `convex/http.ts` used manual JWT parsing without signature verification.
+**Learning:** Convex `mutation` is public by default. If it accepts user identity as an argument instead of using `ctx.auth.getUserIdentity()`, it is vulnerable. Also, manual JWT decoding `JSON.parse(atob(token.split('.')[1]))` is insecure as it skips signature verification.
+**Prevention:** Always use `ctx.auth.getUserIdentity()` in mutations. If a mutation needs to be called by a trusted internal service (like HTTP actions), use `internalMutation` and call it via `runMutation` or logic extraction. Never manually parse JWTs for auth; use the platform's auth provider.

@@ -1,6 +1,6 @@
 import type { Id } from './_generated/dataModel';
 import { httpRouter } from 'convex/server';
-import { api } from './_generated/api';
+import { api, internal } from './_generated/api';
 import { httpAction } from './_generated/server';
 import { auth } from './auth';
 
@@ -253,14 +253,15 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     try {
-      // Extract userId from JWT token
-      const userId = await getUserIdFromAuth(request);
-      if (!userId) {
+      // Extract userId from JWT token using Convex Auth
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      const userId = identity.subject;
 
       const body = await request.json();
       const { itineraryId, content, parentId } = body;
@@ -275,7 +276,8 @@ http.route({
       // Store the comment with guide/itinerary ID as string
       // Using a simplified insert that stores reference as string
       const now = Date.now();
-      const commentId = await ctx.runMutation(api.guideComments.create, {
+      // Use internal mutation to bypass auth check in public mutation (since we already checked it)
+      const commentId = await ctx.runMutation(internal.guideComments.createInternal, {
         guideId: itineraryId,
         userId,
         content,
