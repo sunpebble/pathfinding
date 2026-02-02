@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "rootDir": "./src",
+    "rootDir": "../..",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
@@ -15,6 +15,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../packages/convex-client/src/**/*"],
   "exclude": ["node_modules", "dist", "../../convex"]
 }

@@ -270,7 +270,7 @@ export abstract class AICrawlerBase {
    * Use AI to extract structured data from the page
    * Uses direct LLM extraction to bypass Stagehand's model restrictions
    */
-  protected async extract<T>(
+  protected async aiExtract<T>(
     instruction: string,
     schema: z.ZodSchema<T>,
   ): Promise<T> {
@@ -292,7 +292,8 @@ export abstract class AICrawlerBase {
     });
 
     try {
-      const result = await this.extract(instruction, schema);
+      // Cast the schema to any to bypass complex union type checks that TS is failing on
+      const result = await this.aiExtract<AIListResult>(instruction, schema as any);
       return {
         guides: result.guides,
         hasMore: result.hasMore,
@@ -315,7 +316,8 @@ export abstract class AICrawlerBase {
     const schema = AISchemas.guideDetail(zod);
 
     try {
-      const result = await this.extract(instruction, schema);
+      // Cast the schema to any to bypass complex union type checks that TS is failing on
+      const result = await this.aiExtract<AIDetailResult>(instruction, schema as any);
       return result;
     }
     catch (error) {
