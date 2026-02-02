@@ -270,7 +270,7 @@ export abstract class AICrawlerBase {
    * Use AI to extract structured data from the page
    * Uses direct LLM extraction to bypass Stagehand's model restrictions
    */
-  protected async extract<T>(
+  protected async aiExtract<T>(
     instruction: string,
     schema: z.ZodSchema<T>,
   ): Promise<T> {
@@ -292,8 +292,7 @@ export abstract class AICrawlerBase {
     });
 
     try {
-      // eslint-disable-next-line ts/no-explicit-any
-      const result = await (this as any).extract(instruction, schema);
+      const result = await this.aiExtract(instruction, schema);
       return {
         guides: result.guides,
         hasMore: result.hasMore,
@@ -316,8 +315,7 @@ export abstract class AICrawlerBase {
     const schema = AISchemas.guideDetail(zod);
 
     try {
-      // eslint-disable-next-line ts/no-explicit-any
-      const result = await (this as any).extract(instruction, schema);
+      const result = await this.aiExtract(instruction, schema);
       return result;
     }
     catch (error) {
@@ -338,7 +336,8 @@ export abstract class AICrawlerBase {
         return true;
 
       // Extract visible text content
-      const textContent = await page.evaluate(() => {
+      // eslint-disable-next-line ts/no-explicit-any
+      const textContent = await (page as any).evaluate(() => {
         return document.body?.textContent || '';
       });
 
@@ -372,7 +371,8 @@ export abstract class AICrawlerBase {
       // and check for actual page structure
       if (content.length < 100) {
         // Check if page has any meaningful elements
-        const hasContent = await page.evaluate(() => {
+        // eslint-disable-next-line ts/no-explicit-any
+        const hasContent = await (page as any).evaluate(() => {
           const links = document.querySelectorAll('a[href]');
           const images = document.querySelectorAll('img');
           return links.length > 5 || images.length > 2;
