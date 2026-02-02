@@ -280,13 +280,11 @@ function DayEditor({
   items,
   userId,
   cityId,
-  onItemsChange,
 }: {
   day: Day;
   items: Item[];
   userId: string;
   cityId?: string;
-  onItemsChange: () => void;
 }) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -343,7 +341,6 @@ function DayEditor({
       });
       setIsSearching(false);
       setSearchQuery('');
-      onItemsChange();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add POI');
@@ -371,7 +368,6 @@ function DayEditor({
         | 'taxi'
         | undefined,
       });
-      onItemsChange();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update item');
@@ -389,7 +385,6 @@ function DayEditor({
         id: toConvexId<'itineraryItems'>(itemId),
         userId,
       });
-      onItemsChange();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove item');
@@ -411,7 +406,6 @@ function DayEditor({
         userId,
         newOrderIndex: item.orderIndex - 1,
       });
-      onItemsChange();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder item');
@@ -433,7 +427,6 @@ function DayEditor({
         userId,
         newOrderIndex: item.orderIndex + 1,
       });
-      onItemsChange();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder item');
@@ -602,16 +595,10 @@ export function ItineraryEditor({
   days,
   userId,
 }: ItineraryEditorProps) {
-  const [refreshKey, setRefreshKey] = useState(0);
-
   // Fetch itinerary to get cityId
   const itinerary = useQuery(api.itineraries.getById, {
     id: toConvexId<'itineraries'>(itineraryId),
   });
-
-  const handleItemsChange = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
-  }, []);
 
   if (!isOpen)
     return null;
@@ -651,12 +638,11 @@ export function ItineraryEditor({
             : (
                 enrichedDays.map((day: Day) => (
                   <DayEditor
-                    key={`${day._id}-${refreshKey}`}
+                    key={day._id}
                     day={day}
                     items={day.items || []}
                     userId={userId}
                     cityId={cityId}
-                    onItemsChange={handleItemsChange}
                   />
                 ))
               )}
