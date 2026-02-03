@@ -2,6 +2,7 @@
 // @ts-nocheck
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
+import { rawCrawlDataValidator } from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 /**
@@ -18,11 +19,11 @@ export const listByJob = query({
   handler: async (ctx, args) => {
     let records = await ctx.db
       .query('rawCrawlRecords')
-      .withIndex('by_job', (q) => q.eq('jobId', args.jobId))
+      .withIndex('by_job', q => q.eq('jobId', args.jobId))
       .collect();
 
     if (args.status) {
-      records = records.filter((r) => r.processingStatus === args.status);
+      records = records.filter(r => r.processingStatus === args.status);
     }
 
     return args.limit ? records.slice(0, args.limit) : records;
@@ -42,7 +43,7 @@ export const create = mutation({
   args: {
     jobId: v.id('crawlJobs'),
     sourceUrl: v.string(),
-    rawData: v.any(),
+    rawData: rawCrawlDataValidator,
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert('rawCrawlRecords', {
@@ -62,8 +63,8 @@ export const bulkInsert = mutation({
       v.object({
         jobId: v.id('crawlJobs'),
         sourceUrl: v.string(),
-        rawData: v.any(),
-      })
+        rawData: rawCrawlDataValidator,
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -107,7 +108,7 @@ export const removeByJob = mutation({
   handler: async (ctx, args) => {
     const records = await ctx.db
       .query('rawCrawlRecords')
-      .withIndex('by_job', (q) => q.eq('jobId', args.jobId))
+      .withIndex('by_job', q => q.eq('jobId', args.jobId))
       .collect();
 
     for (const record of records) {

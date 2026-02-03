@@ -4,24 +4,32 @@ export default antfu({
   // Enable React support
   react: true,
 
-  // Enable TypeScript support
+  // Enable TypeScript support (without type-aware linting for monorepo compatibility)
   typescript: true,
 
-  // Disable all formatters (use Prettier instead)
-  formatters: false,
+  // Enable formatters (antfu's config handles formatting)
+  formatters: true,
 
-  // Disable stylistic rules (formatting handled by Prettier)
-  stylistic: false,
+  // Enable stylistic rules (antfu's config handles code style)
+  stylistic: {
+    indent: 2,
+    quotes: 'single',
+    semi: true,
+  },
 
   markdown: false,
 
   // Ignore patterns
   ignores: [
     '.claude/**',
+    '**/.claude/**',
+    '.auto-claude/**',
+    '.sisyphus/**',
+    '.planning/**',
     'dist/**',
     'node_modules/**',
     'pnpm-workspace.yaml',
-    '**/\_generated/**',
+    '**/_generated/**',
     // Ignore auto-generated shadcn/ui and AI Elements components
     '**/components/ui/**',
     '**/components/ai-elements/**',
@@ -51,5 +59,8 @@ export default antfu({
 
     // Allow non-component exports in files with components
     'react-refresh/only-export-components': 'off',
+
+    // Stricter TypeScript rules (non-type-aware)
+    'ts/no-explicit-any': 'error',
   },
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@pathfinding/convex';
+import { api } from '@pathfinding/convex-client';
 import { useQuery } from 'convex/react';
 import {
   ArrowLeft,
@@ -44,7 +44,7 @@ function VisibilityBadge({ visibility }: { visibility: string }) {
     <span
       className={cn(
         'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border',
-        colors[visibility] || 'bg-gray-100 text-gray-800 border-gray-200'
+        colors[visibility] || 'bg-gray-100 text-gray-800 border-gray-200',
       )}
     >
       <Icon className="h-3.5 w-3.5" />
@@ -60,7 +60,8 @@ function formatDate(dateString: string) {
       day: 'numeric',
       year: 'numeric',
     });
-  } catch {
+  }
+  catch {
     return dateString;
   }
 }
@@ -178,7 +179,8 @@ function PoiCard({ item }: { item: Item }) {
           )}
           {item.transportMode && (
             <span className="text-xs text-gray-500 mt-2 inline-block">
-              Transport:{' '}
+              Transport:
+              {' '}
               {transportModeLabels[item.transportMode] || item.transportMode}
             </span>
           )}
@@ -204,20 +206,25 @@ function DaySection({ day }: { day: Day }) {
           {day.dayNumber}
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900">Day {day.dayNumber}</h3>
+          <h3 className="font-semibold text-gray-900">
+            Day
+            {day.dayNumber}
+          </h3>
           <p className="text-sm text-gray-500">{dayDate}</p>
         </div>
       </div>
       <div className="ml-5 pl-5 border-l-2 border-gray-200 space-y-3 pb-4">
-        {day.items.length === 0 ? (
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
-            <p className="text-sm text-gray-500">
-              No activities planned for this day
-            </p>
-          </div>
-        ) : (
-          day.items.map((item) => <PoiCard key={item._id} item={item} />)
-        )}
+        {day.items.length === 0
+          ? (
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+                <p className="text-sm text-gray-500">
+                  No activities planned for this day
+                </p>
+              </div>
+            )
+          : (
+              day.items.map(item => <PoiCard key={item._id} item={item} />)
+            )}
       </div>
     </div>
   );
@@ -239,12 +246,12 @@ export default function ItineraryDetailPage() {
 
   // Determine current user's role
   const currentUserCollaborator = itinerary?.collaborators?.find(
-    (c) => c.userId === TEST_USER_ID
+    c => c.userId === TEST_USER_ID,
   );
   const isOwner = currentUserCollaborator?.role === 'owner';
-  const isEditor =
-    currentUserCollaborator?.role === 'editor' ||
-    currentUserCollaborator?.role === 'owner';
+  const isEditor
+    = currentUserCollaborator?.role === 'editor'
+      || currentUserCollaborator?.role === 'owner';
   const canInvite = isOwner || isEditor;
 
   if (isLoading) {
@@ -319,7 +326,8 @@ export default function ItineraryDetailPage() {
                 </span>
                 <span className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
-                  {itinerary.daysCount}{' '}
+                  {itinerary.daysCount}
+                  {' '}
                   {itinerary.daysCount === 1 ? 'day' : 'days'}
                 </span>
               </div>
@@ -358,14 +366,16 @@ export default function ItineraryDetailPage() {
           Itinerary
         </h2>
         <div className="space-y-6">
-          {itinerary.days.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">No days found for this itinerary</p>
-            </div>
-          ) : (
-            itinerary.days.map((day) => <DaySection key={day._id} day={day} />)
-          )}
+          {itinerary.days.length === 0
+            ? (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">No days found for this itinerary</p>
+                </div>
+              )
+            : (
+                itinerary.days.map(day => <DaySection key={day._id} day={day} />)
+              )}
         </div>
       </div>
 

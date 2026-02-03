@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@pathfinding/convex';
+import { api } from '@pathfinding/convex-client';
 import { useMutation } from 'convex/react';
 import { CheckCircle2, MapPin, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -39,15 +39,18 @@ export function PoiEditor({
   const [error, setError] = useState<string>('');
 
   const updatePoiCoordinates = useMutation(
-    api.travelGuides.updatePoiCoordinates
+    api.travelGuides.updatePoiCoordinates,
   );
 
   // Update local state when poi changes
   useEffect(() => {
     const newLat = poi.latitude.toString();
     const newLng = poi.longitude.toString();
+    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- Syncing from props is intentional
     setLatitude(newLat);
+    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- Syncing from props is intentional
     setLongitude(newLng);
+    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- Syncing from props is intentional
     setError('');
   }, [poi.latitude, poi.longitude]);
 
@@ -57,6 +60,7 @@ export function PoiEditor({
     const lng = Number.parseFloat(longitude);
 
     if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- Clearing state on invalid input is intentional
       setReverseAddress('');
       return;
     }
@@ -65,17 +69,20 @@ export function PoiEditor({
       setIsLoadingAddress(true);
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
         );
         if (response.ok) {
           const data = await response.json();
           setReverseAddress(data.display_name || 'Address not found');
-        } else {
+        }
+        else {
           setReverseAddress('Could not fetch address');
         }
-      } catch {
+      }
+      catch {
         setReverseAddress('Error fetching address');
-      } finally {
+      }
+      finally {
         setIsLoadingAddress(false);
       }
     };
@@ -117,16 +124,19 @@ export function PoiEditor({
         verifiedBy,
       });
       onClose();
-    } catch (err) {
+    }
+    catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to update coordinates'
+        err instanceof Error ? err.message : 'Failed to update coordinates',
       );
-    } finally {
+    }
+    finally {
       setIsSaving(false);
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen)
+    return null;
 
   const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude},${latitude},${longitude},${latitude}&layer=mapnik&marker=${latitude},${longitude}`;
 
@@ -161,7 +171,9 @@ export function PoiEditor({
                   Current Location
                 </p>
                 <p className="text-sm text-blue-700 mt-1">
-                  {poi.latitude.toFixed(6)}, {poi.longitude.toFixed(6)}
+                  {poi.latitude.toFixed(6)}
+                  ,
+                  {poi.longitude.toFixed(6)}
                 </p>
                 {poi.address && (
                   <p className="text-xs text-blue-600 mt-1">{poi.address}</p>
@@ -205,7 +217,7 @@ export function PoiEditor({
                 id="latitude"
                 type="text"
                 value={latitude}
-                onChange={(e) => setLatitude(e.target.value)}
+                onChange={e => setLatitude(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="-90 to 90"
               />
@@ -221,7 +233,7 @@ export function PoiEditor({
                 id="longitude"
                 type="text"
                 value={longitude}
-                onChange={(e) => setLongitude(e.target.value)}
+                onChange={e => setLongitude(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="-180 to 180"
               />
@@ -236,21 +248,25 @@ export function PoiEditor({
             <div
               className={cn(
                 'px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm min-h-[2.5rem] flex items-center',
-                isLoadingAddress && 'text-gray-400'
+                isLoadingAddress && 'text-gray-400',
               )}
             >
-              {isLoadingAddress ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
-                  Loading address...
-                </span>
-              ) : reverseAddress ? (
-                <span className="text-gray-700">{reverseAddress}</span>
-              ) : (
-                <span className="text-gray-400">
-                  Enter valid coordinates to preview address
-                </span>
-              )}
+              {isLoadingAddress
+                ? (
+                    <span className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                      Loading address...
+                    </span>
+                  )
+                : reverseAddress
+                  ? (
+                      <span className="text-gray-700">{reverseAddress}</span>
+                    )
+                  : (
+                      <span className="text-gray-400">
+                        Enter valid coordinates to preview address
+                      </span>
+                    )}
             </div>
           </div>
 
@@ -276,20 +292,22 @@ export function PoiEditor({
               className={cn(
                 'px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium transition-all',
                 'hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed',
-                'flex items-center gap-2'
+                'flex items-center gap-2',
               )}
             >
-              {isSaving ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Save Coordinates
-                </>
-              )}
+              {isSaving
+                ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Saving...
+                    </>
+                  )
+                : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Save Coordinates
+                    </>
+                  )}
             </button>
           </div>
         </div>

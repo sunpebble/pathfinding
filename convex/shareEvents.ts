@@ -14,27 +14,27 @@ const platformValidator = v.union(
   v.literal('douyin'),
   v.literal('copy_link'),
   v.literal('system_share'),
-  v.literal('generic')
+  v.literal('generic'),
 );
 
 const eventTypeValidator = v.union(
   v.literal('share'),
   v.literal('click'),
   v.literal('view'),
-  v.literal('save')
+  v.literal('save'),
 );
 
 const permissionValidator = v.union(
   v.literal('public'), // Anyone with link can view
   v.literal('unlisted'), // Only people with link can view (not searchable)
   v.literal('private'), // Only owner and explicitly shared users can view
-  v.literal('password') // Requires password to view
+  v.literal('password'), // Requires password to view
 );
 
 const resourceTypeValidator = v.union(
   v.literal('itinerary'),
   v.literal('travelGuide'),
-  v.literal('travelNote')
+  v.literal('travelNote'),
 );
 
 /**
@@ -146,9 +146,10 @@ export const trackEvent = mutation({
     if (args.shareCode) {
       shareLink = await ctx.db
         .query('shareLinks')
-        .withIndex('by_share_code', (q) => q.eq('shareCode', args.shareCode!))
+        .withIndex('by_share_code', q => q.eq('shareCode', args.shareCode!))
         .first();
-    } else if (args.shareLinkId) {
+    }
+    else if (args.shareLinkId) {
       shareLink = await ctx.db.get(args.shareLinkId);
     }
 
@@ -220,7 +221,7 @@ export const verifyAccess = query({
   handler: async (ctx, args) => {
     const shareLink = await ctx.db
       .query('shareLinks')
-      .withIndex('by_share_code', (q) => q.eq('shareCode', args.shareCode))
+      .withIndex('by_share_code', q => q.eq('shareCode', args.shareCode))
       .first();
 
     if (!shareLink) {
@@ -277,7 +278,7 @@ export const getByCode = query({
   handler: async (ctx, args) => {
     const shareLink = await ctx.db
       .query('shareLinks')
-      .withIndex('by_share_code', (q) => q.eq('shareCode', args.shareCode))
+      .withIndex('by_share_code', q => q.eq('shareCode', args.shareCode))
       .first();
 
     if (!shareLink) {
@@ -302,21 +303,19 @@ export const getStats = query({
     // Get all share links for this resource
     const shareLinks = await ctx.db
       .query('shareLinks')
-      .withIndex('by_resource', (q) =>
+      .withIndex('by_resource', q =>
         q
           .eq('resourceType', args.resourceType)
-          .eq('resourceId', args.resourceId)
-      )
+          .eq('resourceId', args.resourceId))
       .collect();
 
     // Get all share events for this resource
     const shareEvents = await ctx.db
       .query('shareEvents')
-      .withIndex('by_resource', (q) =>
+      .withIndex('by_resource', q =>
         q
           .eq('resourceType', args.resourceType)
-          .eq('resourceId', args.resourceId)
-      )
+          .eq('resourceId', args.resourceId))
       .collect();
 
     // Aggregate stats by platform
@@ -332,7 +331,7 @@ export const getStats = query({
     > = {};
 
     const totalShares = shareEvents.filter(
-      (e) => e.eventType === 'share'
+      e => e.eventType === 'share',
     ).length;
     let totalClicks = 0;
     let totalViews = 0;
@@ -355,7 +354,7 @@ export const getStats = query({
       statsByPlatform[link.platform].saves += link.saveCount || 0;
       statsByPlatform[link.platform].lastShareAt = Math.max(
         statsByPlatform[link.platform].lastShareAt || 0,
-        link.createdAt
+        link.createdAt,
       );
 
       totalClicks += link.clickCount || 0;
@@ -371,7 +370,7 @@ export const getStats = query({
         clicks: totalClicks,
         views: totalViews,
         saves: totalSaves,
-        activeLinks: shareLinks.filter((l) => l.isActive).length,
+        activeLinks: shareLinks.filter(l => l.isActive).length,
       },
       byPlatform: statsByPlatform,
       recentShares: shareEvents.slice(-10).reverse(),
@@ -391,12 +390,11 @@ export const getShareLinks = query({
   handler: async (ctx, args) => {
     const shareLinks = await ctx.db
       .query('shareLinks')
-      .withIndex('by_resource', (q) =>
+      .withIndex('by_resource', q =>
         q
           .eq('resourceType', args.resourceType)
-          .eq('resourceId', args.resourceId)
-      )
-      .filter((q) => q.eq(q.field('ownerId'), args.ownerId))
+          .eq('resourceId', args.resourceId))
+      .filter(q => q.eq(q.field('ownerId'), args.ownerId))
       .collect();
 
     // Don't expose passwords
@@ -421,7 +419,7 @@ export const getShareHistory = query({
 
     const shareEvents = await ctx.db
       .query('shareEvents')
-      .withIndex('by_sharer', (q) => q.eq('sharerId', args.userId))
+      .withIndex('by_sharer', q => q.eq('sharerId', args.userId))
       .order('desc')
       .take(limit + 1);
 
@@ -466,14 +464,20 @@ export const updateShareLink = mutation({
       updatedAt: Date.now(),
     };
 
-    if (args.permission !== undefined) updates.permission = args.permission;
-    if (args.password !== undefined) updates.password = args.password;
-    if (args.expiresAt !== undefined) updates.expiresAt = args.expiresAt;
-    if (args.maxViews !== undefined) updates.maxViews = args.maxViews;
+    if (args.permission !== undefined)
+      updates.permission = args.permission;
+    if (args.password !== undefined)
+      updates.password = args.password;
+    if (args.expiresAt !== undefined)
+      updates.expiresAt = args.expiresAt;
+    if (args.maxViews !== undefined)
+      updates.maxViews = args.maxViews;
     if (args.allowDownload !== undefined)
       updates.allowDownload = args.allowDownload;
-    if (args.allowCopy !== undefined) updates.allowCopy = args.allowCopy;
-    if (args.isActive !== undefined) updates.isActive = args.isActive;
+    if (args.allowCopy !== undefined)
+      updates.allowCopy = args.allowCopy;
+    if (args.isActive !== undefined)
+      updates.isActive = args.isActive;
 
     await ctx.db.patch(args.shareLinkId, updates);
 
@@ -551,11 +555,11 @@ export const getTopShared = query({
     // Get share events within the time range
     let eventsQuery = ctx.db
       .query('shareEvents')
-      .filter((q) => q.gte(q.field('createdAt'), cutoffTime));
+      .filter(q => q.gte(q.field('createdAt'), cutoffTime));
 
     if (args.resourceType) {
-      eventsQuery = eventsQuery.filter((q) =>
-        q.eq(q.field('resourceType'), args.resourceType)
+      eventsQuery = eventsQuery.filter(q =>
+        q.eq(q.field('resourceType'), args.resourceType),
       );
     }
 
@@ -610,7 +614,7 @@ export const cleanupOldLogs = mutation({
 
     const oldLogs = await ctx.db
       .query('shareEventLogs')
-      .filter((q) => q.lt(q.field('createdAt'), cutoffTime))
+      .filter(q => q.lt(q.field('createdAt'), cutoffTime))
       .take(1000);
 
     let deletedCount = 0;
@@ -636,12 +640,12 @@ export const cleanupExpiredLinks = mutation({
 
     const expiredLinks = await ctx.db
       .query('shareLinks')
-      .filter((q) =>
+      .filter(q =>
         q.and(
           q.eq(q.field('isActive'), true),
           q.neq(q.field('expiresAt'), undefined),
-          q.lt(q.field('expiresAt'), now)
-        )
+          q.lt(q.field('expiresAt'), now),
+        ),
       )
       .take(100);
 

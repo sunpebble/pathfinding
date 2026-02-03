@@ -6,6 +6,10 @@
  */
 
 import { v } from 'convex/values';
+import {
+  dataQualityIssueValidator,
+  dataQualityMetricsValidator,
+} from '../packages/convex-client/src/validators/index.js';
 import { internalMutation, mutation, query } from './_generated/server';
 
 // List data quality reports with pagination
@@ -23,11 +27,11 @@ export const list = query({
       .collect();
 
     if (args.datasetId) {
-      reports = reports.filter((r) => r.datasetId === args.datasetId);
+      reports = reports.filter(r => r.datasetId === args.datasetId);
     }
 
     if (args.reportType) {
-      reports = reports.filter((r) => r.reportType === args.reportType);
+      reports = reports.filter(r => r.reportType === args.reportType);
     }
 
     const total = reports.length;
@@ -59,7 +63,7 @@ export const getByDataset = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('dataQualityReports')
-      .withIndex('by_dataset', (q) => q.eq('datasetId', args.datasetId))
+      .withIndex('by_dataset', q => q.eq('datasetId', args.datasetId))
       .collect();
   },
 });
@@ -69,8 +73,8 @@ export const create = mutation({
   args: {
     datasetId: v.optional(v.id('trainingDatasets')),
     reportType: v.string(),
-    metrics: v.any(),
-    issues: v.optional(v.array(v.any())),
+    metrics: dataQualityMetricsValidator,
+    issues: v.optional(v.array(dataQualityIssueValidator)),
   },
   handler: async (ctx, args) => {
     const id = await ctx.db.insert('dataQualityReports', {
@@ -109,7 +113,7 @@ export const getSummary = query({
       byType,
       latestAt:
         reports.length > 0
-          ? Math.max(...reports.map((r) => r.generatedAt))
+          ? Math.max(...reports.map(r => r.generatedAt))
           : null,
     };
   },
@@ -120,13 +124,13 @@ export const getSummary = query({
  * Deletes reports older than 90 days
  */
 export const cleanupOld = internalMutation({
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ deletedCount: number }> => {
     const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
 
     // Find old reports
     const oldReports = await ctx.db
       .query('dataQualityReports')
-      .filter((q) => q.lt(q.field('generatedAt'), ninetyDaysAgo))
+      .filter(q => q.lt(q.field('generatedAt'), ninetyDaysAgo))
       .collect();
 
     // Delete them
@@ -136,7 +140,6 @@ export const cleanupOld = internalMutation({
       deletedCount++;
     }
 
-    console.log(`Cleaned up ${deletedCount} old quality reports`);
     return { deletedCount };
   },
 });

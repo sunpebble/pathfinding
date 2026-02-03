@@ -22,23 +22,22 @@ export const getSafetyRating = query({
     if (args.cityId) {
       return await ctx.db
         .query('safetyRatings')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .first();
     }
 
     if (args.destinationName) {
       return await ctx.db
         .query('safetyRatings')
-        .withIndex('by_destination', (q) =>
-          q.eq('destinationName', args.destinationName!)
-        )
+        .withIndex('by_destination', q =>
+          q.eq('destinationName', args.destinationName!))
         .first();
     }
 
     if (args.countryCode) {
       const ratings = await ctx.db
         .query('safetyRatings')
-        .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode!))
+        .withIndex('by_country', q => q.eq('countryCode', args.countryCode!))
         .collect();
       return ratings[0] || null;
     }
@@ -56,7 +55,7 @@ export const listSafetyRatingsByCountry = query({
   handler: async (ctx, args) => {
     const ratings = await ctx.db
       .query('safetyRatings')
-      .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode))
+      .withIndex('by_country', q => q.eq('countryCode', args.countryCode))
       .collect();
 
     return args.limit ? ratings.slice(0, args.limit) : ratings;
@@ -74,7 +73,7 @@ export const listSafestDestinations = query({
 
     let filtered = allRatings;
     if (args.minRating !== undefined) {
-      filtered = allRatings.filter((r) => r.overallRating >= args.minRating!);
+      filtered = allRatings.filter(r => r.overallRating >= args.minRating!);
     }
 
     // Sort by overall rating descending
@@ -108,7 +107,7 @@ export const upsertSafetyRating = mutation({
         ambulance: v.optional(v.string()),
         fire: v.optional(v.string()),
         touristHotline: v.optional(v.string()),
-      })
+      }),
     ),
     source: v.string(),
     sourceUrl: v.optional(v.string()),
@@ -120,9 +119,8 @@ export const upsertSafetyRating = mutation({
     // Check if rating exists
     const existing = await ctx.db
       .query('safetyRatings')
-      .withIndex('by_destination', (q) =>
-        q.eq('destinationName', args.destinationName)
-      )
+      .withIndex('by_destination', q =>
+        q.eq('destinationName', args.destinationName))
       .first();
 
     if (existing) {
@@ -155,7 +153,7 @@ const alertTypeValidator = v.union(
   v.literal('terrorism'),
   v.literal('crime_spike'),
   v.literal('scam_warning'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const severityValidator = v.union(
@@ -163,7 +161,7 @@ const severityValidator = v.union(
   v.literal('low'),
   v.literal('medium'),
   v.literal('high'),
-  v.literal('critical')
+  v.literal('critical'),
 );
 
 // Get active alerts for a destination
@@ -181,43 +179,46 @@ export const getActiveAlerts = query({
     if (args.destinationName) {
       alerts = await ctx.db
         .query('safetyAlerts')
-        .withIndex('by_active_destination', (q) =>
-          q.eq('isActive', true).eq('destinationName', args.destinationName!)
-        )
+        .withIndex('by_active_destination', q =>
+          q.eq('isActive', true).eq('destinationName', args.destinationName!))
         .collect();
-    } else if (args.countryCode) {
+    }
+    else if (args.countryCode) {
       const allActive = await ctx.db
         .query('safetyAlerts')
-        .withIndex('by_active', (q) => q.eq('isActive', true))
+        .withIndex('by_active', q => q.eq('isActive', true))
         .collect();
-      alerts = allActive.filter((a) => a.countryCode === args.countryCode);
-    } else if (args.cityId) {
+      alerts = allActive.filter(a => a.countryCode === args.countryCode);
+    }
+    else if (args.cityId) {
       const allActive = await ctx.db
         .query('safetyAlerts')
-        .withIndex('by_active', (q) => q.eq('isActive', true))
+        .withIndex('by_active', q => q.eq('isActive', true))
         .collect();
-      alerts = allActive.filter((a) => a.cityId === args.cityId);
-    } else {
+      alerts = allActive.filter(a => a.cityId === args.cityId);
+    }
+    else {
       alerts = await ctx.db
         .query('safetyAlerts')
-        .withIndex('by_active', (q) => q.eq('isActive', true))
+        .withIndex('by_active', q => q.eq('isActive', true))
         .collect();
     }
 
     // Filter by type and severity if provided
     if (args.alertType) {
-      alerts = alerts.filter((a) => a.alertType === args.alertType);
+      alerts = alerts.filter(a => a.alertType === args.alertType);
     }
     if (args.severity) {
-      alerts = alerts.filter((a) => a.severity === args.severity);
+      alerts = alerts.filter(a => a.severity === args.severity);
     }
 
     // Sort by severity (critical first) then by start date
     const severityOrder = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
     alerts.sort((a, b) => {
-      const severityDiff =
-        severityOrder[a.severity] - severityOrder[b.severity];
-      if (severityDiff !== 0) return severityDiff;
+      const severityDiff
+        = severityOrder[a.severity] - severityOrder[b.severity];
+      if (severityDiff !== 0)
+        return severityDiff;
       return b.startDate - a.startDate;
     });
 
@@ -283,7 +284,7 @@ export const updateAlert = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, {
       ...filteredUpdates,
@@ -313,7 +314,7 @@ const dangerLevelValidator = v.union(
   v.literal('avoid_night'),
   v.literal('avoid_alone'),
   v.literal('high_risk'),
-  v.literal('no_go')
+  v.literal('no_go'),
 );
 
 const dangerTypeValidator = v.union(
@@ -323,7 +324,7 @@ const dangerTypeValidator = v.union(
   v.literal('natural_hazard'),
   v.literal('political'),
   v.literal('health'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 // Get danger zones for a destination
@@ -341,32 +342,34 @@ export const getDangerZones = query({
     if (args.cityId) {
       zones = await ctx.db
         .query('dangerZones')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .collect();
-    } else if (args.destinationName) {
+    }
+    else if (args.destinationName) {
       zones = await ctx.db
         .query('dangerZones')
-        .withIndex('by_destination', (q) =>
-          q.eq('destinationName', args.destinationName!)
-        )
+        .withIndex('by_destination', q =>
+          q.eq('destinationName', args.destinationName!))
         .collect();
-    } else if (args.countryCode) {
+    }
+    else if (args.countryCode) {
       zones = await ctx.db
         .query('dangerZones')
-        .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode!))
+        .withIndex('by_country', q => q.eq('countryCode', args.countryCode!))
         .collect();
-    } else {
+    }
+    else {
       zones = await ctx.db.query('dangerZones').collect();
     }
 
     // Filter by active status
     if (args.activeOnly !== false) {
-      zones = zones.filter((z) => z.isActive);
+      zones = zones.filter(z => z.isActive);
     }
 
     // Filter by danger level
     if (args.dangerLevel) {
-      zones = zones.filter((z) => z.dangerLevel === args.dangerLevel);
+      zones = zones.filter(z => z.dangerLevel === args.dangerLevel);
     }
 
     // Sort by danger level (no_go first)
@@ -396,21 +399,21 @@ export const getNearbyDangerZones = query({
 
     // Filter by active status
     if (args.activeOnly !== false) {
-      zones = zones.filter((z) => z.isActive);
+      zones = zones.filter(z => z.isActive);
     }
 
     // Calculate distance and filter
     const zonesWithDistance = zones
-      .map((zone) => ({
+      .map(zone => ({
         ...zone,
         distance: calculateDistanceKm(
           args.latitude,
           args.longitude,
           zone.latitude,
-          zone.longitude
+          zone.longitude,
         ),
       }))
-      .filter((zone) => zone.distance <= args.radiusKm)
+      .filter(zone => zone.distance <= args.radiusKm)
       .sort((a, b) => a.distance - b.distance);
 
     return zonesWithDistance;
@@ -433,8 +436,8 @@ export const createDangerZone = mutation({
         v.object({
           lat: v.number(),
           lng: v.number(),
-        })
-      )
+        }),
+      ),
     ),
     dangerLevel: dangerLevelValidator,
     dangerTypes: v.array(dangerTypeValidator),
@@ -447,7 +450,7 @@ export const createDangerZone = mutation({
         nightOnly: v.optional(v.boolean()),
         specificHours: v.optional(v.string()),
         specificDays: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     source: v.string(),
   },
@@ -482,7 +485,7 @@ export const updateDangerZone = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, {
       ...filteredUpdates,
@@ -505,21 +508,21 @@ const incidentTypeValidator = v.union(
   v.literal('natural_disaster'),
   v.literal('health_issue'),
   v.literal('police_issue'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const incidentSeverityValidator = v.union(
   v.literal('minor'),
   v.literal('moderate'),
   v.literal('severe'),
-  v.literal('critical')
+  v.literal('critical'),
 );
 
 const incidentStatusValidator = v.union(
   v.literal('pending'),
   v.literal('verified'),
   v.literal('rejected'),
-  v.literal('resolved')
+  v.literal('resolved'),
 );
 
 // Get incident reports for a destination
@@ -538,33 +541,36 @@ export const getIncidentReports = query({
     if (args.destinationName) {
       reports = await ctx.db
         .query('safetyIncidentReports')
-        .withIndex('by_destination', (q) =>
-          q.eq('destinationName', args.destinationName!)
-        )
+        .withIndex('by_destination', q =>
+          q.eq('destinationName', args.destinationName!))
         .collect();
-    } else if (args.countryCode) {
+    }
+    else if (args.countryCode) {
       reports = await ctx.db
         .query('safetyIncidentReports')
-        .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode!))
+        .withIndex('by_country', q => q.eq('countryCode', args.countryCode!))
         .collect();
-    } else if (args.cityId) {
+    }
+    else if (args.cityId) {
       reports = await ctx.db
         .query('safetyIncidentReports')
-        .withIndex('by_city', (q) => q.eq('cityId', args.cityId!))
+        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
         .collect();
-    } else {
+    }
+    else {
       reports = await ctx.db.query('safetyIncidentReports').collect();
     }
 
     // Filter by type and status
     if (args.incidentType) {
-      reports = reports.filter((r) => r.incidentType === args.incidentType);
+      reports = reports.filter(r => r.incidentType === args.incidentType);
     }
     if (args.status) {
-      reports = reports.filter((r) => r.status === args.status);
-    } else {
+      reports = reports.filter(r => r.status === args.status);
+    }
+    else {
       // By default, only show verified reports
-      reports = reports.filter((r) => r.status === 'verified');
+      reports = reports.filter(r => r.status === 'verified');
     }
 
     // Sort by incident date descending
@@ -584,7 +590,7 @@ export const getUserIncidentReports = query({
   handler: async (ctx, args) => {
     const reports = await ctx.db
       .query('safetyIncidentReports')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     reports.sort((a, b) => b.createdAt - a.createdAt);
@@ -632,7 +638,8 @@ export const markReportHelpful = mutation({
   args: { id: v.id('safetyIncidentReports') },
   handler: async (ctx, args) => {
     const report = await ctx.db.get(args.id);
-    if (!report) return;
+    if (!report)
+      return;
 
     await ctx.db.patch(args.id, {
       helpfulCount: report.helpfulCount + 1,
@@ -674,37 +681,33 @@ export const getDestinationSafetyInfo = query({
     // Get safety rating
     const rating = await ctx.db
       .query('safetyRatings')
-      .withIndex('by_destination', (q) =>
-        q.eq('destinationName', args.destinationName)
-      )
+      .withIndex('by_destination', q =>
+        q.eq('destinationName', args.destinationName))
       .first();
 
     // Get active alerts
     const alerts = await ctx.db
       .query('safetyAlerts')
-      .withIndex('by_active_destination', (q) =>
-        q.eq('isActive', true).eq('destinationName', args.destinationName)
-      )
+      .withIndex('by_active_destination', q =>
+        q.eq('isActive', true).eq('destinationName', args.destinationName))
       .collect();
 
     // Get danger zones
     const dangerZones = await ctx.db
       .query('dangerZones')
-      .withIndex('by_destination', (q) =>
-        q.eq('destinationName', args.destinationName)
-      )
+      .withIndex('by_destination', q =>
+        q.eq('destinationName', args.destinationName))
       .collect();
-    const activeDangerZones = dangerZones.filter((z) => z.isActive);
+    const activeDangerZones = dangerZones.filter(z => z.isActive);
 
     // Get recent verified incident reports
     const allReports = await ctx.db
       .query('safetyIncidentReports')
-      .withIndex('by_destination', (q) =>
-        q.eq('destinationName', args.destinationName)
-      )
+      .withIndex('by_destination', q =>
+        q.eq('destinationName', args.destinationName))
       .collect();
     const recentReports = allReports
-      .filter((r) => r.status === 'verified')
+      .filter(r => r.status === 'verified')
       .sort((a, b) => b.incidentDate - a.incidentDate)
       .slice(0, 10);
 
@@ -714,7 +717,7 @@ export const getDestinationSafetyInfo = query({
       dangerZones: activeDangerZones,
       recentIncidents: recentReports,
       hasActiveAlerts: alerts.length > 0,
-      hasCriticalAlerts: alerts.some((a) => a.severity === 'critical'),
+      hasCriticalAlerts: alerts.some(a => a.severity === 'critical'),
       dangerZoneCount: activeDangerZones.length,
     };
   },
@@ -725,17 +728,17 @@ function calculateDistanceKm(
   lat1: number,
   lng1: number,
   lat2: number,
-  lng2: number
+  lng2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos((lat1 * Math.PI) / 180)
+      * Math.cos((lat2 * Math.PI) / 180)
+      * Math.sin(dLng / 2)
+      * Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }

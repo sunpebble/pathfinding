@@ -13,13 +13,15 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const policies = await ctx.db
       .query('travelInsurance')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by active first, then by end date (newest first)
     policies.sort((a, b) => {
-      if (a.isActive && !b.isActive) return -1;
-      if (!a.isActive && b.isActive) return 1;
+      if (a.isActive && !b.isActive)
+        return -1;
+      if (!a.isActive && b.isActive)
+        return 1;
       return b.endDate.localeCompare(a.endDate);
     });
 
@@ -41,9 +43,8 @@ export const getActive = query({
   handler: async (ctx, args) => {
     const policies = await ctx.db
       .query('travelInsurance')
-      .withIndex('by_user_active', (q) =>
-        q.eq('userId', args.userId).eq('isActive', true)
-      )
+      .withIndex('by_user_active', q =>
+        q.eq('userId', args.userId).eq('isActive', true))
       .collect();
 
     return policies;
@@ -58,14 +59,13 @@ export const getCurrentValid = query({
 
     const policies = await ctx.db
       .query('travelInsurance')
-      .withIndex('by_user_active', (q) =>
-        q.eq('userId', args.userId).eq('isActive', true)
-      )
+      .withIndex('by_user_active', q =>
+        q.eq('userId', args.userId).eq('isActive', true))
       .collect();
 
     // Filter for policies that are currently valid
     const validPolicies = policies.filter(
-      (p) => p.startDate <= today && p.endDate >= today
+      p => p.startDate <= today && p.endDate >= today,
     );
 
     return validPolicies;
@@ -138,7 +138,7 @@ export const update = mutation({
     }
 
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, { ...filteredUpdates, updatedAt: Date.now() });

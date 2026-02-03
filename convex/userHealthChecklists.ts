@@ -17,9 +17,8 @@ export const getByUserAndDestination = query({
   handler: async (ctx, args) => {
     const checklists = await ctx.db
       .query('userHealthChecklists')
-      .withIndex('by_user_destination', (q) =>
-        q.eq('userId', args.userId).eq('destinationId', args.destinationId)
-      )
+      .withIndex('by_user_destination', q =>
+        q.eq('userId', args.userId).eq('destinationId', args.destinationId))
       .collect();
 
     return checklists[0] ?? null;
@@ -35,10 +34,10 @@ export const getByItinerary = query({
   handler: async (ctx, args) => {
     const checklists = await ctx.db
       .query('userHealthChecklists')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
-    return checklists.find((c) => c.userId === args.userId) ?? null;
+    return checklists.find(c => c.userId === args.userId) ?? null;
   },
 });
 
@@ -48,7 +47,7 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('userHealthChecklists')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
   },
 });
@@ -75,8 +74,8 @@ export const create = mutation({
           name: v.string(),
           category: v.string(),
           isCompleted: v.boolean(),
-        })
-      )
+        }),
+      ),
     ),
     notes: v.optional(v.string()),
   },
@@ -108,15 +107,15 @@ export const update = mutation({
           name: v.string(),
           category: v.string(),
           isCompleted: v.boolean(),
-        })
-      )
+        }),
+      ),
     ),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, {
       ...filteredUpdates,
@@ -142,7 +141,7 @@ export const toggleVaccine = mutation({
     const isCompleted = currentVaccines.includes(args.vaccineId);
 
     const updatedVaccines = isCompleted
-      ? currentVaccines.filter((v) => v !== args.vaccineId)
+      ? currentVaccines.filter(v => v !== args.vaccineId)
       : [...currentVaccines, args.vaccineId];
 
     await ctx.db.patch(args.id, {
@@ -170,7 +169,7 @@ export const toggleMedication = mutation({
     const isPacked = currentMedications.includes(args.medicationId);
 
     const updatedMedications = isPacked
-      ? currentMedications.filter((m) => m !== args.medicationId)
+      ? currentMedications.filter(m => m !== args.medicationId)
       : [...currentMedications, args.medicationId];
 
     await ctx.db.patch(args.id, {
@@ -224,10 +223,10 @@ export const toggleCustomItem = mutation({
     }
 
     const currentItems = checklist.customItems ?? [];
-    const updatedItems = currentItems.map((item) =>
+    const updatedItems = currentItems.map(item =>
       item.name === args.itemName
         ? { ...item, isCompleted: !item.isCompleted }
-        : item
+        : item,
     );
 
     await ctx.db.patch(args.id, {
@@ -253,7 +252,7 @@ export const removeCustomItem = mutation({
 
     const currentItems = checklist.customItems ?? [];
     const updatedItems = currentItems.filter(
-      (item) => item.name !== args.itemName
+      item => item.name !== args.itemName,
     );
 
     await ctx.db.patch(args.id, {

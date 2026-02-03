@@ -6,6 +6,7 @@ struct ItineraryListView: View {
   @State private var showCreateSheet = false
   @State private var showVoiceItinerary = false
   @State private var showDiscovery = false
+  @State private var showAIPlanner = false
 
   var body: some View {
     NavigationStack {
@@ -25,6 +26,13 @@ struct ItineraryListView: View {
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
           HStack(spacing: DesignTokens.Spacing.sm) {
+            Button {
+              showAIPlanner = true
+            } label: {
+              Image(systemName: "sparkles")
+                .symbolRenderingMode(.hierarchical)
+            }
+
             Button {
               showVoiceItinerary = true
             } label: {
@@ -59,6 +67,11 @@ struct ItineraryListView: View {
       }
       .sheet(isPresented: $showDiscovery) {
         PublicItineraryDiscoveryView()
+      }
+      .sheet(isPresented: $showAIPlanner) {
+        AIPlannerSheet { itinerary in
+          store.add(itinerary)
+        }
       }
       .navigationDestination(for: SavedItinerary.self) { itinerary in
         SavedItineraryDetailView(itinerary: itinerary)
@@ -96,13 +109,21 @@ struct ItineraryListView: View {
       Text("从攻略中导入行程，或创建新行程")
     } actions: {
       VStack(spacing: DesignTokens.Spacing.md) {
-        // Voice creation button - prominent placement
+        // AI generation button - most prominent
+        Button {
+          showAIPlanner = true
+        } label: {
+          Label("AI 生成行程", systemImage: "sparkles")
+        }
+        .buttonStyle(.primary)
+
+        // Voice creation button
         Button {
           showVoiceItinerary = true
         } label: {
           Label("语音创建", systemImage: "mic.fill")
         }
-        .buttonStyle(.primary)
+        .buttonStyle(.secondary)
 
         HStack(spacing: DesignTokens.Spacing.md) {
           NavigationLink {

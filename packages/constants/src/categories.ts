@@ -86,7 +86,7 @@ export const POI_CATEGORY_VALUES: PoiCategory[] = [
  */
 export function getCategoryLabel(
   category: PoiCategory,
-  locale: 'zh' | 'en' = 'zh'
+  locale: 'zh' | 'en' = 'zh',
 ): string {
   const cat = POI_CATEGORIES[category];
   return locale === 'zh' ? cat.label : cat.labelEn;

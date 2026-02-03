@@ -6,6 +6,9 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
+// Typed validator for rates - Record<string, number>
+const currencyRatesMapValidator = v.record(v.string(), v.number());
+
 // Type validator for exchange rate history data
 const exchangeRateHistoryValidator = v.object({
   base: v.string(),
@@ -14,7 +17,7 @@ const exchangeRateHistoryValidator = v.object({
     v.object({
       date: v.string(),
       rate: v.number(),
-    })
+    }),
   ),
   change: v.number(),
   trend: v.union(v.literal('up'), v.literal('down'), v.literal('stable')),
@@ -32,7 +35,7 @@ export const get = query({
 
     const cached = await ctx.db
       .query('currencyRates')
-      .withIndex('by_base', (q) => q.eq('base', baseUpper))
+      .withIndex('by_base', q => q.eq('base', baseUpper))
       .first();
 
     return cached;
@@ -45,7 +48,7 @@ export const get = query({
 export const upsert = mutation({
   args: {
     base: v.string(),
-    rates: v.any(), // Record<string, number>
+    rates: currencyRatesMapValidator,
     fetchedAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -54,7 +57,7 @@ export const upsert = mutation({
     // Check if entry already exists
     const existing = await ctx.db
       .query('currencyRates')
-      .withIndex('by_base', (q) => q.eq('base', baseUpper))
+      .withIndex('by_base', q => q.eq('base', baseUpper))
       .first();
 
     if (existing) {
@@ -90,9 +93,8 @@ export const getHistory = query({
 
     const cached = await ctx.db
       .query('currencyHistory')
-      .withIndex('by_pair_days', (q) =>
-        q.eq('base', baseUpper).eq('target', targetUpper).eq('days', args.days)
-      )
+      .withIndex('by_pair_days', q =>
+        q.eq('base', baseUpper).eq('target', targetUpper).eq('days', args.days))
       .first();
 
     return cached;
@@ -117,9 +119,8 @@ export const upsertHistory = mutation({
     // Check if entry already exists
     const existing = await ctx.db
       .query('currencyHistory')
-      .withIndex('by_pair_days', (q) =>
-        q.eq('base', baseUpper).eq('target', targetUpper).eq('days', args.days)
-      )
+      .withIndex('by_pair_days', q =>
+        q.eq('base', baseUpper).eq('target', targetUpper).eq('days', args.days))
       .first();
 
     if (existing) {
@@ -157,7 +158,7 @@ export const cleanup = mutation({
     const oldRates = await ctx.db
       .query('currencyRates')
       .withIndex('by_fetched_at')
-      .filter((q) => q.lt(q.field('fetchedAt'), cutoffTime))
+      .filter(q => q.lt(q.field('fetchedAt'), cutoffTime))
       .collect();
 
     let deletedRates = 0;
@@ -170,7 +171,7 @@ export const cleanup = mutation({
     const oldHistory = await ctx.db
       .query('currencyHistory')
       .withIndex('by_fetched_at')
-      .filter((q) => q.lt(q.field('fetchedAt'), cutoffTime))
+      .filter(q => q.lt(q.field('fetchedAt'), cutoffTime))
       .collect();
 
     let deletedHistory = 0;
@@ -202,7 +203,8 @@ export const stats = query({
     for (const entry of ratesEntries) {
       if (entry.fetchedAt > oneHourAgo) {
         recentRatesCount++;
-      } else if (entry.fetchedAt < oneDayAgo) {
+      }
+      else if (entry.fetchedAt < oneDayAgo) {
         staleRatesCount++;
       }
     }
@@ -213,7 +215,8 @@ export const stats = query({
     for (const entry of historyEntries) {
       if (entry.fetchedAt > oneHourAgo) {
         recentHistoryCount++;
-      } else if (entry.fetchedAt < oneDayAgo) {
+      }
+      else if (entry.fetchedAt < oneDayAgo) {
         staleHistoryCount++;
       }
     }

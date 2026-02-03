@@ -50,20 +50,13 @@ coverage/
 .next/
 out/
 
-# Auto Claude generated files
-.auto-claude/
-.auto-claude-security.json
-.auto-claude-status
-.claude_settings.json
-.worktrees/
-.security-key
-logs/security/
-
 # iOS
 *.xcuserstate
-.worktrees
 
-convex/_generated
+# Convex compiled JS files (source is TypeScript)
+convex/*.js
+convex/*.d.ts
+!convex/_generated/
 
 # Python virtual environments
 .venv/

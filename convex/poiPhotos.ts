@@ -11,7 +11,7 @@ const photoStatusValidator = v.union(
   v.literal('pending'),
   v.literal('approved'),
   v.literal('rejected'),
-  v.literal('hidden')
+  v.literal('hidden'),
 );
 
 const photoCategoryValidator = v.union(
@@ -21,7 +21,7 @@ const photoCategoryValidator = v.union(
   v.literal('scenery'),
   v.literal('activity'),
   v.literal('detail'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 // ============================================
@@ -47,17 +47,16 @@ export const listByPoi = query({
       // Filter by category
       photosQuery = ctx.db
         .query('poiPhotos')
-        .withIndex('by_poi_category', (q) =>
-          q.eq('poiId', args.poiId).eq('category', args.category)
-        )
-        .filter((q) => q.eq(q.field('status'), status))
+        .withIndex('by_poi_category', q =>
+          q.eq('poiId', args.poiId).eq('category', args.category))
+        .filter(q => q.eq(q.field('status'), status))
         .order('desc');
-    } else {
+    }
+    else {
       photosQuery = ctx.db
         .query('poiPhotos')
-        .withIndex('by_poi_status', (q) =>
-          q.eq('poiId', args.poiId).eq('status', status)
-        )
+        .withIndex('by_poi_status', q =>
+          q.eq('poiId', args.poiId).eq('status', status))
         .order('desc');
     }
 
@@ -86,9 +85,8 @@ export const getFeaturedByPoi = query({
 
     const photos = await ctx.db
       .query('poiPhotos')
-      .withIndex('by_poi_featured', (q) =>
-        q.eq('poiId', args.poiId).eq('isFeatured', true)
-      )
+      .withIndex('by_poi_featured', q =>
+        q.eq('poiId', args.poiId).eq('isFeatured', true))
       .order('desc')
       .take(limit);
 
@@ -115,7 +113,7 @@ export const listByUser = query({
 
     const photos = await ctx.db
       .query('poiPhotos')
-      .withIndex('by_user_created', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_created', q => q.eq('userId', args.userId))
       .order('desc')
       .take(limit);
 
@@ -134,7 +132,7 @@ export const getTimeline = query({
 
     const photosQuery = ctx.db
       .query('poiPhotos')
-      .withIndex('by_status', (q) => q.eq('status', 'approved'))
+      .withIndex('by_status', q => q.eq('status', 'approved'))
       .order('desc');
 
     const photos = await photosQuery.take(limit + 1);
@@ -157,11 +155,11 @@ export const getPoiPhotoStats = query({
   handler: async (ctx, args) => {
     const allPhotos = await ctx.db
       .query('poiPhotos')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
       .collect();
 
-    const approvedPhotos = allPhotos.filter((p) => p.status === 'approved');
-    const featuredPhotos = approvedPhotos.filter((p) => p.isFeatured);
+    const approvedPhotos = allPhotos.filter(p => p.status === 'approved');
+    const featuredPhotos = approvedPhotos.filter(p => p.isFeatured);
     const totalLikes = approvedPhotos.reduce((sum, p) => sum + p.likesCount, 0);
     const totalViews = approvedPhotos.reduce((sum, p) => sum + p.viewsCount, 0);
 
@@ -177,7 +175,7 @@ export const getPoiPhotoStats = query({
       featuredCount: featuredPhotos.length,
       totalLikes,
       totalViews,
-      pendingCount: allPhotos.filter((p) => p.status === 'pending').length,
+      pendingCount: allPhotos.filter(p => p.status === 'pending').length,
       categoryBreakdown,
     };
   },
@@ -196,13 +194,13 @@ export const getPopularPhotos = query({
     if (args.poiId) {
       query = ctx.db
         .query('poiPhotos')
-        .withIndex('by_poi_status', (q) =>
-          q.eq('poiId', args.poiId).eq('status', 'approved')
-        );
-    } else {
+        .withIndex('by_poi_status', q =>
+          q.eq('poiId', args.poiId).eq('status', 'approved'));
+    }
+    else {
       query = ctx.db
         .query('poiPhotos')
-        .withIndex('by_status', (q) => q.eq('status', 'approved'));
+        .withIndex('by_status', q => q.eq('status', 'approved'));
     }
 
     // Get all approved photos and sort by likes
@@ -224,9 +222,8 @@ export const hasUserLiked = query({
   handler: async (ctx, args) => {
     const like = await ctx.db
       .query('poiPhotoLikes')
-      .withIndex('by_photo_user', (q) =>
-        q.eq('photoId', args.photoId).eq('userId', args.userId)
-      )
+      .withIndex('by_photo_user', q =>
+        q.eq('photoId', args.photoId).eq('userId', args.userId))
       .first();
 
     return like !== null;
@@ -244,7 +241,7 @@ export const getUserLikedPhotos = query({
 
     const likes = await ctx.db
       .query('poiPhotoLikes')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .take(limit);
 
@@ -252,10 +249,10 @@ export const getUserLikedPhotos = query({
       likes.map(async (like) => {
         const photo = await ctx.db.get(like.photoId);
         return photo;
-      })
+      }),
     );
 
-    return photos.filter((p) => p !== null && p.status === 'approved');
+    return photos.filter(p => p !== null && p.status === 'approved');
   },
 });
 
@@ -281,7 +278,7 @@ export const upload = mutation({
       v.object({
         latitude: v.number(),
         longitude: v.number(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -376,9 +373,8 @@ export const like = mutation({
     // Check if already liked
     const existingLike = await ctx.db
       .query('poiPhotoLikes')
-      .withIndex('by_photo_user', (q) =>
-        q.eq('photoId', args.photoId).eq('userId', args.userId)
-      )
+      .withIndex('by_photo_user', q =>
+        q.eq('photoId', args.photoId).eq('userId', args.userId))
       .first();
 
     if (existingLike) {
@@ -411,9 +407,8 @@ export const unlike = mutation({
   handler: async (ctx, args) => {
     const existingLike = await ctx.db
       .query('poiPhotoLikes')
-      .withIndex('by_photo_user', (q) =>
-        q.eq('photoId', args.photoId).eq('userId', args.userId)
-      )
+      .withIndex('by_photo_user', q =>
+        q.eq('photoId', args.photoId).eq('userId', args.userId))
       .first();
 
     if (!existingLike) {
@@ -504,7 +499,8 @@ export const setFeatured = mutation({
     if (args.isFeatured) {
       updates.featuredAt = Date.now();
       updates.featuredBy = args.featuredBy;
-    } else {
+    }
+    else {
       updates.featuredAt = undefined;
       updates.featuredBy = undefined;
     }
@@ -525,7 +521,7 @@ export const getPendingPhotos = query({
 
     const photos = await ctx.db
       .query('poiPhotos')
-      .withIndex('by_status', (q) => q.eq('status', 'pending'))
+      .withIndex('by_status', q => q.eq('status', 'pending'))
       .order('asc') // Oldest first for FIFO moderation
       .take(limit);
 

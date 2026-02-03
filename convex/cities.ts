@@ -29,7 +29,7 @@ export const getByCountry = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('cities')
-      .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode))
+      .withIndex('by_country', q => q.eq('countryCode', args.countryCode))
       .collect();
   },
 });
@@ -40,7 +40,7 @@ export const getByTimezone = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('cities')
-      .withIndex('by_timezone', (q) => q.eq('timezone', args.timezone))
+      .withIndex('by_timezone', q => q.eq('timezone', args.timezone))
       .collect();
   },
 });
@@ -52,9 +52,9 @@ export const searchByName = query({
     const cities = await ctx.db.query('cities').collect();
     const searchLower = args.name.toLowerCase();
     return cities.filter(
-      (city) =>
-        city.name.toLowerCase().includes(searchLower) ||
-        city.nameEn?.toLowerCase().includes(searchLower)
+      city =>
+        city.name.toLowerCase().includes(searchLower)
+        || city.nameEn?.toLowerCase().includes(searchLower),
     );
   },
 });
@@ -63,8 +63,8 @@ export const searchByName = query({
 export const getByIds = query({
   args: { ids: v.array(v.id('cities')) },
   handler: async (ctx, args) => {
-    const cities = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
-    return cities.filter((city) => city !== null);
+    const cities = await Promise.all(args.ids.map(id => ctx.db.get(id)));
+    return cities.filter(city => city !== null);
   },
 });
 
@@ -73,7 +73,8 @@ export const getTimezoneInfo = query({
   args: { id: v.id('cities') },
   handler: async (ctx, args) => {
     const city = await ctx.db.get(args.id);
-    if (!city) return null;
+    if (!city)
+      return null;
 
     return {
       id: city._id,
@@ -124,7 +125,7 @@ export const update = mutation({
     const { id, ...updates } = args;
     // Filter out undefined values
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, filteredUpdates);
     return await ctx.db.get(id);
@@ -149,7 +150,7 @@ export const getEncyclopedia = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('cityEncyclopedia')
-      .withIndex('by_city', (q) => q.eq('cityId', args.cityId))
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
       .first();
   },
 });
@@ -159,11 +160,12 @@ export const getCityWithEncyclopedia = query({
   args: { cityId: v.id('cities') },
   handler: async (ctx, args) => {
     const city = await ctx.db.get(args.cityId);
-    if (!city) return null;
+    if (!city)
+      return null;
 
     const encyclopedia = await ctx.db
       .query('cityEncyclopedia')
-      .withIndex('by_city', (q) => q.eq('cityId', args.cityId))
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
       .first();
 
     return {
@@ -189,7 +191,7 @@ export const createEncyclopedia = mutation({
         mottoEn: v.optional(v.string()),
         nicknames: v.optional(v.array(v.string())),
         nicknamesEn: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     history: v.optional(
       v.object({
@@ -202,7 +204,7 @@ export const createEncyclopedia = mutation({
         famousFor: v.array(v.string()),
         famousForEn: v.optional(v.array(v.string())),
         worldHeritageSites: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     bestTravelTime: v.optional(
       v.object({
@@ -212,20 +214,20 @@ export const createEncyclopedia = mutation({
             v.literal('summer'),
             v.literal('autumn'),
             v.literal('winter'),
-            v.literal('all_year')
-          )
+            v.literal('all_year'),
+          ),
         ),
         months: v.array(v.number()),
         description: v.string(),
         descriptionEn: v.optional(v.string()),
         weatherNotes: v.optional(v.string()),
         crowdLevel: v.optional(
-          v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+          v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
         ),
         priceLevel: v.optional(
-          v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+          v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
         ),
-      })
+      }),
     ),
     customs: v.array(
       v.object({
@@ -236,7 +238,7 @@ export const createEncyclopedia = mutation({
           v.literal('dress'),
           v.literal('gift'),
           v.literal('gesture'),
-          v.literal('general')
+          v.literal('general'),
         ),
         title: v.string(),
         titleEn: v.optional(v.string()),
@@ -246,9 +248,9 @@ export const createEncyclopedia = mutation({
         importance: v.union(
           v.literal('low'),
           v.literal('medium'),
-          v.literal('high')
+          v.literal('high'),
         ),
-      })
+      }),
     ),
     practicalInfo: v.optional(
       v.object({
@@ -263,7 +265,7 @@ export const createEncyclopedia = mutation({
         waterSafety: v.union(
           v.literal('safe'),
           v.literal('boil'),
-          v.literal('bottled')
+          v.literal('bottled'),
         ),
         waterSafetyNote: v.optional(v.string()),
         visaRequired: v.optional(v.boolean()),
@@ -274,7 +276,7 @@ export const createEncyclopedia = mutation({
         ambulanceNumber: v.string(),
         fireNumber: v.string(),
         touristHotline: v.optional(v.string()),
-      })
+      }),
     ),
     sources: v.optional(v.array(v.string())),
   },
@@ -284,7 +286,7 @@ export const createEncyclopedia = mutation({
     // Check if encyclopedia already exists for this city
     const existing = await ctx.db
       .query('cityEncyclopedia')
-      .withIndex('by_city', (q) => q.eq('cityId', args.cityId))
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
       .first();
 
     if (existing) {
@@ -322,7 +324,7 @@ export const updateEncyclopedia = mutation({
         mottoEn: v.optional(v.string()),
         nicknames: v.optional(v.array(v.string())),
         nicknamesEn: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     history: v.optional(
       v.object({
@@ -335,7 +337,7 @@ export const updateEncyclopedia = mutation({
         famousFor: v.array(v.string()),
         famousForEn: v.optional(v.array(v.string())),
         worldHeritageSites: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     bestTravelTime: v.optional(
       v.object({
@@ -345,20 +347,20 @@ export const updateEncyclopedia = mutation({
             v.literal('summer'),
             v.literal('autumn'),
             v.literal('winter'),
-            v.literal('all_year')
-          )
+            v.literal('all_year'),
+          ),
         ),
         months: v.array(v.number()),
         description: v.string(),
         descriptionEn: v.optional(v.string()),
         weatherNotes: v.optional(v.string()),
         crowdLevel: v.optional(
-          v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+          v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
         ),
         priceLevel: v.optional(
-          v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+          v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
         ),
-      })
+      }),
     ),
     customs: v.optional(
       v.array(
@@ -370,7 +372,7 @@ export const updateEncyclopedia = mutation({
             v.literal('dress'),
             v.literal('gift'),
             v.literal('gesture'),
-            v.literal('general')
+            v.literal('general'),
           ),
           title: v.string(),
           titleEn: v.optional(v.string()),
@@ -380,10 +382,10 @@ export const updateEncyclopedia = mutation({
           importance: v.union(
             v.literal('low'),
             v.literal('medium'),
-            v.literal('high')
+            v.literal('high'),
           ),
-        })
-      )
+        }),
+      ),
     ),
     practicalInfo: v.optional(
       v.object({
@@ -398,7 +400,7 @@ export const updateEncyclopedia = mutation({
         waterSafety: v.union(
           v.literal('safe'),
           v.literal('boil'),
-          v.literal('bottled')
+          v.literal('bottled'),
         ),
         waterSafetyNote: v.optional(v.string()),
         visaRequired: v.optional(v.boolean()),
@@ -409,7 +411,7 @@ export const updateEncyclopedia = mutation({
         ambulanceNumber: v.string(),
         fireNumber: v.string(),
         touristHotline: v.optional(v.string()),
-      })
+      }),
     ),
     sources: v.optional(v.array(v.string())),
   },
@@ -417,7 +419,7 @@ export const updateEncyclopedia = mutation({
     const { id, ...updates } = args;
     // Filter out undefined values
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, val]) => val !== undefined)
+      Object.entries(updates).filter(([, val]) => val !== undefined),
     );
     await ctx.db.patch(id, {
       ...filteredUpdates,
@@ -447,9 +449,8 @@ export const listWithEncyclopedia = query({
     let citiesQuery = ctx.db.query('cities');
 
     if (args.countryCode) {
-      citiesQuery = citiesQuery.withIndex('by_country', (q) =>
-        q.eq('countryCode', args.countryCode!)
-      );
+      citiesQuery = citiesQuery.withIndex('by_country', q =>
+        q.eq('countryCode', args.countryCode!));
     }
 
     const cities = await citiesQuery.take(limit);
@@ -459,7 +460,7 @@ export const listWithEncyclopedia = query({
       cities.map(async (city) => {
         const encyclopedia = await ctx.db
           .query('cityEncyclopedia')
-          .withIndex('by_city', (q) => q.eq('cityId', city._id))
+          .withIndex('by_city', q => q.eq('cityId', city._id))
           .first();
 
         return {
@@ -467,7 +468,7 @@ export const listWithEncyclopedia = query({
           encyclopedia: encyclopedia || null,
           hasEncyclopedia: !!encyclopedia,
         };
-      })
+      }),
     );
 
     return citiesWithEncyclopedia;

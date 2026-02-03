@@ -14,8 +14,8 @@ export const listByCity = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('medicalFacilities')
-      .withIndex('by_city', (q) => q.eq('cityId', args.cityId))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
   },
 });
@@ -30,16 +30,15 @@ export const listByCityAndType = query({
       v.literal('pharmacy'),
       v.literal('emergency'),
       v.literal('dental'),
-      v.literal('specialist')
+      v.literal('specialist'),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query('medicalFacilities')
-      .withIndex('by_city_type', (q) =>
-        q.eq('cityId', args.cityId).eq('facilityType', args.facilityType)
-      )
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_city_type', q =>
+        q.eq('cityId', args.cityId).eq('facilityType', args.facilityType))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
   },
 });
@@ -50,12 +49,12 @@ export const list24Hour = query({
   handler: async (ctx, args) => {
     let facilities = await ctx.db
       .query('medicalFacilities')
-      .withIndex('by_24hour', (q) => q.eq('is24Hour', true))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_24hour', q => q.eq('is24Hour', true))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
 
     if (args.cityId) {
-      facilities = facilities.filter((f) => f.cityId === args.cityId);
+      facilities = facilities.filter(f => f.cityId === args.cityId);
     }
 
     return facilities;
@@ -68,12 +67,12 @@ export const listWithEmergency = query({
   handler: async (ctx, args) => {
     let facilities = await ctx.db
       .query('medicalFacilities')
-      .withIndex('by_emergency', (q) => q.eq('hasEmergencyRoom', true))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_emergency', q => q.eq('hasEmergencyRoom', true))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
 
     if (args.cityId) {
-      facilities = facilities.filter((f) => f.cityId === args.cityId);
+      facilities = facilities.filter(f => f.cityId === args.cityId);
     }
 
     return facilities;
@@ -102,8 +101,8 @@ export const searchNearby = query({
         v.literal('pharmacy'),
         v.literal('emergency'),
         v.literal('dental'),
-        v.literal('specialist')
-      )
+        v.literal('specialist'),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -111,13 +110,13 @@ export const searchNearby = query({
 
     let facilities = await ctx.db
       .query('medicalFacilities')
-      .withIndex('by_city', (q) => q.eq('cityId', args.cityId))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_city', q => q.eq('cityId', args.cityId))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
 
     if (args.facilityType) {
       facilities = facilities.filter(
-        (f) => f.facilityType === args.facilityType
+        f => f.facilityType === args.facilityType,
       );
     }
 
@@ -128,11 +127,11 @@ export const searchNearby = query({
           args.latitude,
           args.longitude,
           facility.latitude,
-          facility.longitude
+          facility.longitude,
         );
         return { ...facility, distance };
       })
-      .filter((f) => f.distance <= radius)
+      .filter(f => f.distance <= radius)
       .sort((a, b) => a.distance - b.distance);
 
     return filteredFacilities;
@@ -144,17 +143,17 @@ function calculateDistance(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+  const a
+    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos((lat1 * Math.PI) / 180)
+      * Math.cos((lat2 * Math.PI) / 180)
+      * Math.sin(dLon / 2)
+      * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -171,7 +170,7 @@ export const create = mutation({
       v.literal('pharmacy'),
       v.literal('emergency'),
       v.literal('dental'),
-      v.literal('specialist')
+      v.literal('specialist'),
     ),
     address: v.string(),
     latitude: v.number(),
@@ -211,8 +210,8 @@ export const update = mutation({
         v.literal('pharmacy'),
         v.literal('emergency'),
         v.literal('dental'),
-        v.literal('specialist')
-      )
+        v.literal('specialist'),
+      ),
     ),
     address: v.optional(v.string()),
     latitude: v.optional(v.number()),
@@ -234,7 +233,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, {
       ...filteredUpdates,

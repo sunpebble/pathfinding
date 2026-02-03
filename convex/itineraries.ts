@@ -1,89 +1,82 @@
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
 /**
  * Itineraries - Travel Plan Queries and Mutations
+ *
+ * This module handles travel itinerary CRUD operations with permission checks.
  */
 
 const visibilityValidator = v.union(
   v.literal('private'),
   v.literal('team'),
-  v.literal('public')
+  v.literal('public'),
 );
 
-/**
- * Permission checking helpers
- */
-
-// Check if user can edit itinerary (owner or editor)
+/** Checks if user can edit itinerary (owner or editor role) */
 async function checkEditPermission(
   ctx: QueryCtx | MutationCtx,
   itineraryId: Id<'itineraries'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
-    throw new Error('Itinerary not found');
+    throw new ConvexError('Itinerary not found');
   }
 
-  // Check if user is the owner (via itinerary.userId)
   if (itinerary.userId === userId) {
     return true;
   }
 
-  // Check if user is a collaborator with edit permissions
   const collab = await ctx.db
     .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', (q) =>
-      q.eq('itineraryId', itineraryId).eq('userId', userId)
-    )
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId))
     .first();
 
   if (!collab) {
-    throw new Error('You do not have access to this itinerary');
+    throw new ConvexError('You do not have access to this itinerary');
   }
 
   if (collab.role === 'viewer') {
-    throw new Error('You do not have edit permissions for this itinerary');
+    throw new ConvexError(
+      'You do not have edit permissions for this itinerary',
+    );
   }
 
   return true;
 }
 
-// Check if user is the owner
+/** Checks if user is the owner of the itinerary */
 async function checkOwnerPermission(
   ctx: QueryCtx | MutationCtx,
   itineraryId: Id<'itineraries'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
-    throw new Error('Itinerary not found');
+    throw new ConvexError('Itinerary not found');
   }
 
-  // Check if user is the owner (via itinerary.userId)
   if (itinerary.userId === userId) {
     return true;
   }
 
-  // Check if user is a collaborator with owner role
   const collab = await ctx.db
     .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', (q) =>
-      q.eq('itineraryId', itineraryId).eq('userId', userId)
-    )
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId))
     .first();
 
   if (!collab || collab.role !== 'owner') {
-    throw new Error('Only the owner can perform this action');
+    throw new ConvexError('Only the owner can perform this action');
   }
 
   return true;
 }
 
-// List itineraries for a user
 export const listByUser = query({
   args: {
     userId: v.string(),
@@ -97,7 +90,7 @@ export const listByUser = query({
 
     const itineraries = await ctx.db
       .query('itineraries')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -110,14 +103,14 @@ export const listByUser = query({
         const city = await ctx.db.get(itinerary.cityId);
         const daysCount = calculateDaysCount(
           itinerary.startDate,
-          itinerary.endDate
+          itinerary.endDate,
         );
         return {
           ...itinerary,
           cityName: city?.name,
           daysCount,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -138,12 +131,12 @@ export const listPublic = query({
 
     let itineraries = await ctx.db
       .query('itineraries')
-      .withIndex('by_visibility', (q) => q.eq('visibility', 'public'))
+      .withIndex('by_visibility', q => q.eq('visibility', 'public'))
       .order('desc')
       .collect();
 
     if (args.cityId) {
-      itineraries = itineraries.filter((i) => i.cityId === args.cityId);
+      itineraries = itineraries.filter(i => i.cityId === args.cityId);
     }
 
     const total = itineraries.length;
@@ -157,7 +150,7 @@ export const listPublic = query({
           cityName: city?.name,
           daysCount: calculateDaysCount(itinerary.startDate, itinerary.endDate),
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -169,14 +162,15 @@ export const getById = query({
   args: { id: v.id('itineraries') },
   handler: async (ctx, args) => {
     const itinerary = await ctx.db.get(args.id);
-    if (!itinerary) return null;
+    if (!itinerary)
+      return null;
 
     const city = await ctx.db.get(itinerary.cityId);
 
     // Get days
     const days = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.id))
       .collect();
 
     // Sort days by dayNumber
@@ -184,22 +178,22 @@ export const getById = query({
 
     // Get all items for all days in a single batch
     const allItems = await Promise.all(
-      days.map((day) =>
+      days.map(day =>
         ctx.db
           .query('itineraryItems')
-          .withIndex('by_day', (q) => q.eq('dayId', day._id))
-          .collect()
-      )
+          .withIndex('by_day', q => q.eq('dayId', day._id))
+          .collect(),
+      ),
     );
 
     // Collect all unique POI IDs
     const poiIds = new Set<string>();
-    allItems.flat().forEach((item) => poiIds.add(item.poiId));
+    allItems.flat().forEach(item => poiIds.add(item.poiId));
 
     // Batch load all POIs at once (single query per POI, but parallel)
     const poiMap = new Map();
     const pois = await Promise.all(
-      Array.from(poiIds).map((id) => ctx.db.get(id as any))
+      Array.from(poiIds).map(id => ctx.db.get(id as Id<'pois'>)),
     );
     Array.from(poiIds).forEach((id, idx) => {
       poiMap.set(id, pois[idx]);
@@ -237,7 +231,7 @@ export const getById = query({
     // Get collaborators
     const collaborators = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.id))
       .collect();
 
     return {
@@ -305,7 +299,7 @@ export const update = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, filteredUpdates);
     return await ctx.db.get(id);
@@ -325,14 +319,14 @@ export const remove = mutation({
     // Get all days
     const days = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.id))
       .collect();
 
     // Delete all items for each day
     for (const day of days) {
       const items = await ctx.db
         .query('itineraryItems')
-        .withIndex('by_day', (q) => q.eq('dayId', day._id))
+        .withIndex('by_day', q => q.eq('dayId', day._id))
         .collect();
       for (const item of items) {
         await ctx.db.delete(item._id);
@@ -343,7 +337,7 @@ export const remove = mutation({
     // Delete all collaborators
     const collaborators = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.id))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.id))
       .collect();
     for (const collab of collaborators) {
       await ctx.db.delete(collab._id);
@@ -363,14 +357,14 @@ export const copy = mutation({
   },
   handler: async (ctx, args) => {
     const original = await ctx.db.get(args.itineraryId);
-    if (!original) throw new Error('Itinerary not found');
-
-    // Check access - must be owner or public itinerary
-    if (original.userId !== args.userId && original.visibility !== 'public') {
-      throw new Error('You do not have access to copy this itinerary');
+    if (!original) {
+      throw new ConvexError('Itinerary not found');
     }
 
-    // Calculate new end date
+    if (original.userId !== args.userId && original.visibility !== 'public') {
+      throw new ConvexError('You do not have access to copy this itinerary');
+    }
+
     const daysCount = calculateDaysCount(original.startDate, original.endDate);
     const newStart = new Date(args.newStartDate);
     const newEnd = new Date(newStart);
@@ -380,7 +374,7 @@ export const copy = mutation({
     // Calculate date offset
     const originalStart = new Date(original.startDate);
     const dateOffset = Math.floor(
-      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)
+      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     // Create new itinerary
@@ -398,7 +392,7 @@ export const copy = mutation({
     // Get original days
     const originalDays = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
     originalDays.sort((a, b) => a.dayNumber - b.dayNumber);
 
@@ -415,7 +409,7 @@ export const copy = mutation({
       if (i < originalDays.length) {
         const originalItems = await ctx.db
           .query('itineraryItems')
-          .withIndex('by_day', (q) => q.eq('dayId', originalDays[i]._id))
+          .withIndex('by_day', q => q.eq('dayId', originalDays[i]._id))
           .collect();
 
         for (const item of originalItems) {
@@ -454,21 +448,21 @@ export const copyPartial = mutation({
     itineraryId: v.id('itineraries'),
     userId: v.string(),
     newStartDate: v.string(),
-    selectedDays: v.array(v.number()), // Array of day numbers to copy
+    selectedDays: v.array(v.number()),
     newTitle: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const original = await ctx.db.get(args.itineraryId);
-    if (!original) throw new Error('Itinerary not found');
-
-    // Check access - must be owner or public itinerary
-    if (original.userId !== args.userId && original.visibility !== 'public') {
-      throw new Error('You do not have access to copy this itinerary');
+    if (!original) {
+      throw new ConvexError('Itinerary not found');
     }
 
-    // Validate selected days
+    if (original.userId !== args.userId && original.visibility !== 'public') {
+      throw new ConvexError('You do not have access to copy this itinerary');
+    }
+
     if (args.selectedDays.length === 0) {
-      throw new Error('At least one day must be selected');
+      throw new ConvexError('At least one day must be selected');
     }
 
     const sortedDays = [...args.selectedDays].sort((a, b) => a - b);
@@ -482,7 +476,7 @@ export const copyPartial = mutation({
     // Calculate date offset
     const originalStart = new Date(original.startDate);
     const dateOffset = Math.floor(
-      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24)
+      (newStart.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     // Create new itinerary
@@ -500,11 +494,11 @@ export const copyPartial = mutation({
     // Get original days
     const originalDays = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Create a map of original days by day number
-    const originalDaysMap = new Map(originalDays.map((d) => [d.dayNumber, d]));
+    const originalDaysMap = new Map(originalDays.map(d => [d.dayNumber, d]));
 
     // Create new days with copied items
     const newDates = getDateRange(args.newStartDate, newEndDate);
@@ -521,7 +515,7 @@ export const copyPartial = mutation({
       if (originalDay) {
         const originalItems = await ctx.db
           .query('itineraryItems')
-          .withIndex('by_day', (q) => q.eq('dayId', originalDay._id))
+          .withIndex('by_day', q => q.eq('dayId', originalDay._id))
           .collect();
 
         for (const item of originalItems) {
@@ -569,7 +563,7 @@ export const getCopyHistory = query({
 
     const history = await ctx.db
       .query('itineraryCopyHistory')
-      .withIndex('by_user_created', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_created', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -603,7 +597,7 @@ export const getCopyHistory = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -618,9 +612,8 @@ export const getItineraryCopyStats = query({
   handler: async (ctx, args) => {
     const copies = await ctx.db
       .query('itineraryCopyHistory')
-      .withIndex('by_original', (q) =>
-        q.eq('originalItineraryId', args.itineraryId)
-      )
+      .withIndex('by_original', q =>
+        q.eq('originalItineraryId', args.itineraryId))
       .collect();
 
     return {
@@ -628,7 +621,7 @@ export const getItineraryCopyStats = query({
       recentCopies: copies
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, 5)
-        .map((c) => ({
+        .map(c => ({
           copiedAt: c.createdAt,
           copyType: c.copyType,
         })),

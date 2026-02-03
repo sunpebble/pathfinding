@@ -13,7 +13,7 @@ const reportReasonValidator = v.union(
   v.literal('harassment'),
   v.literal('inappropriate'),
   v.literal('misinformation'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 /**
@@ -22,7 +22,7 @@ const reportReasonValidator = v.union(
 async function checkItineraryAccess(
   ctx: QueryCtx | MutationCtx,
   itineraryId: Id<'itineraries'>,
-  userId?: string
+  userId?: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
@@ -46,9 +46,8 @@ async function checkItineraryAccess(
   // Check collaborator access
   const collab = await ctx.db
     .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', (q) =>
-      q.eq('itineraryId', itineraryId).eq('userId', userId)
-    )
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId))
     .first();
 
   if (!collab) {
@@ -64,7 +63,7 @@ async function checkItineraryAccess(
 async function getUserProfile(ctx: QueryCtx | MutationCtx, userId: string) {
   const profile = await ctx.db
     .query('profiles')
-    .withIndex('by_email', (q) => q.eq('email', userId))
+    .withIndex('by_email', q => q.eq('email', userId))
     .first();
 
   return profile;
@@ -82,7 +81,7 @@ async function createNotification(
     referenceId: string;
     actorId: string;
     message: string;
-  }
+  },
 ) {
   // Don't notify yourself
   if (params.userId === params.actorId) {
@@ -124,12 +123,12 @@ export const listByItinerary = query({
     // Get top-level comments (no parentId)
     const allComments = await ctx.db
       .query('itineraryComments')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .order('desc')
       .collect();
 
     // Filter to top-level comments only
-    const topLevelComments = allComments.filter((c) => !c.parentId);
+    const topLevelComments = allComments.filter(c => !c.parentId);
     const total = topLevelComments.length;
     const paginatedComments = topLevelComments.slice(offset, offset + pageSize);
 
@@ -143,9 +142,8 @@ export const listByItinerary = query({
         if (args.userId) {
           const like = await ctx.db
             .query('commentLikes')
-            .withIndex('by_comment_user', (q) =>
-              q.eq('commentId', comment._id).eq('userId', args.userId!)
-            )
+            .withIndex('by_comment_user', q =>
+              q.eq('commentId', comment._id).eq('userId', args.userId!))
             .first();
           isLikedByUser = !!like;
         }
@@ -157,7 +155,7 @@ export const listByItinerary = query({
           authorAvatar: profile?.avatarUrl,
           isLikedByUser,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -175,7 +173,7 @@ export const getReplies = query({
   handler: async (ctx, args) => {
     const replies = await ctx.db
       .query('itineraryComments')
-      .withIndex('by_parent', (q) => q.eq('parentId', args.commentId))
+      .withIndex('by_parent', q => q.eq('parentId', args.commentId))
       .order('asc')
       .collect();
 
@@ -187,9 +185,8 @@ export const getReplies = query({
         if (args.userId) {
           const like = await ctx.db
             .query('commentLikes')
-            .withIndex('by_comment_user', (q) =>
-              q.eq('commentId', reply._id).eq('userId', args.userId!)
-            )
+            .withIndex('by_comment_user', q =>
+              q.eq('commentId', reply._id).eq('userId', args.userId!))
             .first();
           isLikedByUser = !!like;
         }
@@ -201,7 +198,7 @@ export const getReplies = query({
           authorAvatar: profile?.avatarUrl,
           isLikedByUser,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -215,7 +212,8 @@ export const getById = query({
   args: { id: v.id('itineraryComments') },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.id);
-    if (!comment) return null;
+    if (!comment)
+      return null;
 
     const profile = await getUserProfile(ctx, comment.userId);
 
@@ -236,11 +234,11 @@ export const getCommentCount = query({
   handler: async (ctx, args) => {
     const comments = await ctx.db
       .query('itineraryComments')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Count only non-deleted comments
-    return comments.filter((c) => !c.isDeleted).length;
+    return comments.filter(c => !c.isDeleted).length;
   },
 });
 
@@ -266,7 +264,7 @@ export const create = mutation({
 
     if (args.content.length > 2000) {
       throw new Error(
-        'Comment content exceeds maximum length of 2000 characters'
+        'Comment content exceeds maximum length of 2000 characters',
       );
     }
 
@@ -315,7 +313,8 @@ export const create = mutation({
         actorId: args.userId,
         message: `${profile?.displayName ?? 'Someone'} replied to your comment`,
       });
-    } else {
+    }
+    else {
       // Notify itinerary owner about new comment
       const itinerary = await ctx.db.get(args.itineraryId);
       if (itinerary) {
@@ -364,7 +363,7 @@ export const update = mutation({
 
     if (args.content.length > 2000) {
       throw new Error(
-        'Comment content exceeds maximum length of 2000 characters'
+        'Comment content exceeds maximum length of 2000 characters',
       );
     }
 
@@ -432,9 +431,8 @@ export const toggleLike = mutation({
     // Check if already liked
     const existingLike = await ctx.db
       .query('commentLikes')
-      .withIndex('by_comment_user', (q) =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId)
-      )
+      .withIndex('by_comment_user', q =>
+        q.eq('commentId', args.commentId).eq('userId', args.userId))
       .first();
 
     if (existingLike) {
@@ -444,7 +442,8 @@ export const toggleLike = mutation({
         likesCount: Math.max(0, comment.likesCount - 1),
       });
       return { liked: false, likesCount: Math.max(0, comment.likesCount - 1) };
-    } else {
+    }
+    else {
       // Like
       await ctx.db.insert('commentLikes', {
         commentId: args.commentId,
@@ -490,9 +489,8 @@ export const report = mutation({
     // Check if user already reported this comment
     const existingReport = await ctx.db
       .query('commentReports')
-      .withIndex('by_comment_user', (q) =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId)
-      )
+      .withIndex('by_comment_user', q =>
+        q.eq('commentId', args.commentId).eq('userId', args.userId))
       .first();
 
     if (existingReport) {
@@ -541,15 +539,15 @@ export const listNotifications = query({
     if (args.unreadOnly) {
       notifications = await ctx.db
         .query('notifications')
-        .withIndex('by_user_read', (q) =>
-          q.eq('userId', args.userId).eq('isRead', false)
-        )
+        .withIndex('by_user_read', q =>
+          q.eq('userId', args.userId).eq('isRead', false))
         .order('desc')
         .collect();
-    } else {
+    }
+    else {
       notifications = await ctx.db
         .query('notifications')
-        .withIndex('by_user', (q) => q.eq('userId', args.userId))
+        .withIndex('by_user', q => q.eq('userId', args.userId))
         .order('desc')
         .collect();
     }
@@ -569,7 +567,7 @@ export const listNotifications = query({
           actorName: actorProfile?.displayName ?? 'Someone',
           actorAvatar: actorProfile?.avatarUrl,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -584,9 +582,8 @@ export const getUnreadCount = query({
   handler: async (ctx, args) => {
     const notifications = await ctx.db
       .query('notifications')
-      .withIndex('by_user_read', (q) =>
-        q.eq('userId', args.userId).eq('isRead', false)
-      )
+      .withIndex('by_user_read', q =>
+        q.eq('userId', args.userId).eq('isRead', false))
       .collect();
 
     return notifications.length;
@@ -626,9 +623,8 @@ export const markAllNotificationsRead = mutation({
   handler: async (ctx, args) => {
     const notifications = await ctx.db
       .query('notifications')
-      .withIndex('by_user_read', (q) =>
-        q.eq('userId', args.userId).eq('isRead', false)
-      )
+      .withIndex('by_user_read', q =>
+        q.eq('userId', args.userId).eq('isRead', false))
       .collect();
 
     const now = Date.now();

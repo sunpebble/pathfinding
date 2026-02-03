@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuthActions } from '@convex-dev/auth/react';
-import { api } from '@pathfinding/convex';
+import { api } from '@pathfinding/convex-client';
 import { useQuery } from 'convex/react';
 import { ChevronDown, LogOut, User } from 'lucide-react';
 import Link from 'next/link';
@@ -19,7 +19,7 @@ export function AuthButton() {
   // Get current user data
   const currentUser = useQuery(
     api.users.getCurrentUser,
-    isAuthenticated ? {} : 'skip'
+    isAuthenticated ? {} : 'skip',
   );
 
   // Close dropdown when clicking outside
@@ -63,11 +63,11 @@ export function AuthButton() {
   }
 
   // Authenticated - show user menu
-  const displayName =
-    currentUser?.profile?.displayName ||
-    currentUser?.name ||
-    currentUser?.email?.split('@')[0] ||
-    'User';
+  const displayName
+    = currentUser?.profile?.displayName
+      || currentUser?.name
+      || currentUser?.email?.split('@')[0]
+      || 'User';
   const userEmail = currentUser?.email || '';
 
   return (

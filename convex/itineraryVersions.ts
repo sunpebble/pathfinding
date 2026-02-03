@@ -23,17 +23,17 @@ const snapshotDayValidator = v.object({
         v.literal('driving'),
         v.literal('transit'),
         v.literal('cycling'),
-        v.literal('taxi')
+        v.literal('taxi'),
       ),
       notes: v.optional(v.string()),
-    })
+    }),
   ),
 });
 
 const visibilityValidator = v.union(
   v.literal('private'),
   v.literal('team'),
-  v.literal('public')
+  v.literal('public'),
 );
 
 const _snapshotValidator = v.object({
@@ -60,7 +60,7 @@ const _changesCountValidator = v.object({
 async function checkVersionAccess(
   ctx: QueryCtx | MutationCtx,
   itineraryId: Id<'itineraries'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
@@ -75,9 +75,8 @@ async function checkVersionAccess(
   // Check if user is a collaborator with edit permissions
   const collab = await ctx.db
     .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', (q) =>
-      q.eq('itineraryId', itineraryId).eq('userId', userId)
-    )
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId))
     .first();
 
   if (!collab) {
@@ -92,18 +91,18 @@ async function checkVersionAccess(
  */
 async function getNextVersionNumber(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>
+  itineraryId: Id<'itineraries'>,
 ): Promise<number> {
   const versions = await ctx.db
     .query('itineraryVersions')
-    .withIndex('by_itinerary', (q) => q.eq('itineraryId', itineraryId))
+    .withIndex('by_itinerary', q => q.eq('itineraryId', itineraryId))
     .collect();
 
   if (versions.length === 0) {
     return 1;
   }
 
-  return Math.max(...versions.map((v) => v.versionNumber)) + 1;
+  return Math.max(...versions.map(v => v.versionNumber)) + 1;
 }
 
 /**
@@ -111,7 +110,7 @@ async function getNextVersionNumber(
  */
 async function createItinerarySnapshot(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>
+  itineraryId: Id<'itineraries'>,
 ) {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
@@ -121,7 +120,7 @@ async function createItinerarySnapshot(
   // Get all days
   const days = await ctx.db
     .query('itineraryDays')
-    .withIndex('by_itinerary', (q) => q.eq('itineraryId', itineraryId))
+    .withIndex('by_itinerary', q => q.eq('itineraryId', itineraryId))
     .collect();
 
   days.sort((a, b) => a.dayNumber - b.dayNumber);
@@ -131,7 +130,7 @@ async function createItinerarySnapshot(
     days.map(async (day) => {
       const items = await ctx.db
         .query('itineraryItems')
-        .withIndex('by_day', (q) => q.eq('dayId', day._id))
+        .withIndex('by_day', q => q.eq('dayId', day._id))
         .collect();
 
       items.sort((a, b) => a.orderIndex - b.orderIndex);
@@ -139,7 +138,7 @@ async function createItinerarySnapshot(
       return {
         dayNumber: day.dayNumber,
         date: day.date,
-        items: items.map((item) => ({
+        items: items.map(item => ({
           poiId: item.poiId,
           orderIndex: item.orderIndex,
           startTime: item.startTime,
@@ -148,7 +147,7 @@ async function createItinerarySnapshot(
           notes: item.notes,
         })),
       };
-    })
+    }),
   );
 
   return {
@@ -177,10 +176,10 @@ function calculateChanges(
       dayNumber: number;
       items: Array<{ poiId: Id<'pois'>; orderIndex: number }>;
     }>;
-  }
+  },
 ) {
-  const oldDayNumbers = new Set(oldSnapshot.days.map((d) => d.dayNumber));
-  const newDayNumbers = new Set(newSnapshot.days.map((d) => d.dayNumber));
+  const oldDayNumbers = new Set(oldSnapshot.days.map(d => d.dayNumber));
+  const newDayNumbers = new Set(newSnapshot.days.map(d => d.dayNumber));
 
   let daysAdded = 0;
   let daysRemoved = 0;
@@ -207,13 +206,13 @@ function calculateChanges(
   for (const day of oldSnapshot.days) {
     oldItemsByDay.set(
       day.dayNumber,
-      new Set(day.items.map((i) => `${i.poiId}:${i.orderIndex}`))
+      new Set(day.items.map(i => `${i.poiId}:${i.orderIndex}`)),
     );
   }
   for (const day of newSnapshot.days) {
     newItemsByDay.set(
       day.dayNumber,
-      new Set(day.items.map((i) => `${i.poiId}:${i.orderIndex}`))
+      new Set(day.items.map(i => `${i.poiId}:${i.orderIndex}`)),
     );
   }
 
@@ -239,7 +238,7 @@ function calculateChanges(
   // Items in added days
   for (const dayNum of newDayNumbers) {
     if (!oldDayNumbers.has(dayNum)) {
-      const newDay = newSnapshot.days.find((d) => d.dayNumber === dayNum);
+      const newDay = newSnapshot.days.find(d => d.dayNumber === dayNum);
       if (newDay) {
         itemsAdded += newDay.items.length;
       }
@@ -249,7 +248,7 @@ function calculateChanges(
   // Items in removed days
   for (const dayNum of oldDayNumbers) {
     if (!newDayNumbers.has(dayNum)) {
-      const oldDay = oldSnapshot.days.find((d) => d.dayNumber === dayNum);
+      const oldDay = oldSnapshot.days.find(d => d.dayNumber === dayNum);
       if (oldDay) {
         itemsRemoved += oldDay.items.length;
       }
@@ -319,7 +318,7 @@ export const listByItinerary = query({
 
     const versions = await ctx.db
       .query('itineraryVersions')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .order('desc')
       .collect();
 
@@ -327,7 +326,7 @@ export const listByItinerary = query({
     const data = versions.slice(offset, offset + pageSize);
 
     // Enrich with user info (could be extended)
-    const enriched = data.map((version) => ({
+    const enriched = data.map(version => ({
       id: version._id,
       itineraryId: version.itineraryId,
       versionNumber: version.versionNumber,
@@ -341,7 +340,7 @@ export const listByItinerary = query({
         daysCount: version.snapshot.days.length,
         itemsCount: version.snapshot.days.reduce(
           (acc, day) => acc + day.items.length,
-          0
+          0,
         ),
       },
     }));
@@ -385,13 +384,13 @@ export const getById = query({
                   }
                 : null,
             };
-          })
+          }),
         );
         return {
           ...day,
           items: enrichedItems,
         };
-      })
+      }),
     );
 
     // Get city name
@@ -432,10 +431,10 @@ export const compare = query({
     await checkVersionAccess(ctx, version1.itineraryId, args.userId);
 
     // Calculate differences
-    const older =
-      version1.versionNumber < version2.versionNumber ? version1 : version2;
-    const newer =
-      version1.versionNumber < version2.versionNumber ? version2 : version1;
+    const older
+      = version1.versionNumber < version2.versionNumber ? version1 : version2;
+    const newer
+      = version1.versionNumber < version2.versionNumber ? version2 : version1;
 
     const changes = calculateChanges(older.snapshot, newer.snapshot);
 
@@ -448,24 +447,27 @@ export const compare = query({
     }> = [];
 
     const allDayNumbers = new Set([
-      ...older.snapshot.days.map((d) => d.dayNumber),
-      ...newer.snapshot.days.map((d) => d.dayNumber),
+      ...older.snapshot.days.map(d => d.dayNumber),
+      ...newer.snapshot.days.map(d => d.dayNumber),
     ]);
 
     for (const dayNum of Array.from(allDayNumbers).sort((a, b) => a - b)) {
-      const olderDay = older.snapshot.days.find((d) => d.dayNumber === dayNum);
-      const newerDay = newer.snapshot.days.find((d) => d.dayNumber === dayNum);
+      const olderDay = older.snapshot.days.find(d => d.dayNumber === dayNum);
+      const newerDay = newer.snapshot.days.find(d => d.dayNumber === dayNum);
 
       let status: 'added' | 'removed' | 'modified' | 'unchanged';
       if (!olderDay && newerDay) {
         status = 'added';
-      } else if (olderDay && !newerDay) {
+      }
+      else if (olderDay && !newerDay) {
         status = 'removed';
-      } else if (olderDay && newerDay) {
+      }
+      else if (olderDay && newerDay) {
         const olderItems = JSON.stringify(olderDay.items);
         const newerItems = JSON.stringify(newerDay.items);
         status = olderItems === newerItems ? 'unchanged' : 'modified';
-      } else {
+      }
+      else {
         continue;
       }
 
@@ -523,11 +525,10 @@ export const create = mutation({
     if (versionNumber > 1) {
       const prevVersion = await ctx.db
         .query('itineraryVersions')
-        .withIndex('by_itinerary_version', (q) =>
+        .withIndex('by_itinerary_version', q =>
           q
             .eq('itineraryId', args.itineraryId)
-            .eq('versionNumber', versionNumber - 1)
-        )
+            .eq('versionNumber', versionNumber - 1))
         .first();
 
       if (prevVersion) {
@@ -599,11 +600,11 @@ export const restore = mutation({
     if (createBackup) {
       const currentSnapshot = await createItinerarySnapshot(
         ctx,
-        version.itineraryId
+        version.itineraryId,
       );
       const backupVersionNumber = await getNextVersionNumber(
         ctx,
-        version.itineraryId
+        version.itineraryId,
       );
 
       await ctx.db.insert('itineraryVersions', {
@@ -632,15 +633,14 @@ export const restore = mutation({
     // Delete existing days and items
     const existingDays = await ctx.db
       .query('itineraryDays')
-      .withIndex('by_itinerary', (q) =>
-        q.eq('itineraryId', version.itineraryId)
-      )
+      .withIndex('by_itinerary', q =>
+        q.eq('itineraryId', version.itineraryId))
       .collect();
 
     for (const day of existingDays) {
       const items = await ctx.db
         .query('itineraryItems')
-        .withIndex('by_day', (q) => q.eq('dayId', day._id))
+        .withIndex('by_day', q => q.eq('dayId', day._id))
         .collect();
 
       for (const item of items) {
@@ -693,9 +693,8 @@ export const remove = mutation({
     // Don't allow deleting the only version
     const allVersions = await ctx.db
       .query('itineraryVersions')
-      .withIndex('by_itinerary', (q) =>
-        q.eq('itineraryId', version.itineraryId)
-      )
+      .withIndex('by_itinerary', q =>
+        q.eq('itineraryId', version.itineraryId))
       .collect();
 
     if (allVersions.length <= 1) {
@@ -724,7 +723,7 @@ export const cleanup = mutation({
 
     const versions = await ctx.db
       .query('itineraryVersions')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .order('desc')
       .collect();
 
@@ -754,14 +753,14 @@ export const getVersionCount = query({
 
     const versions = await ctx.db
       .query('itineraryVersions')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     return {
       count: versions.length,
       latestVersion:
         versions.length > 0
-          ? Math.max(...versions.map((v) => v.versionNumber))
+          ? Math.max(...versions.map(v => v.versionNumber))
           : 0,
     };
   },

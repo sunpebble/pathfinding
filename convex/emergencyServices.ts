@@ -15,8 +15,8 @@ export const getByCountry = query({
     // First try to get country-level services (no city specified)
     const countryServices = await ctx.db
       .query('emergencyServices')
-      .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode))
-      .filter((q) => q.eq(q.field('cityName'), undefined))
+      .withIndex('by_country', q => q.eq('countryCode', args.countryCode))
+      .filter(q => q.eq(q.field('cityName'), undefined))
       .first();
 
     return countryServices;
@@ -34,9 +34,8 @@ export const getByCountryCity = query({
     if (args.cityName) {
       const cityServices = await ctx.db
         .query('emergencyServices')
-        .withIndex('by_country_city', (q) =>
-          q.eq('countryCode', args.countryCode).eq('cityName', args.cityName)
-        )
+        .withIndex('by_country_city', q =>
+          q.eq('countryCode', args.countryCode).eq('cityName', args.cityName))
         .first();
 
       if (cityServices) {
@@ -47,8 +46,8 @@ export const getByCountryCity = query({
     // Fall back to country-level services
     const countryServices = await ctx.db
       .query('emergencyServices')
-      .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode))
-      .filter((q) => q.eq(q.field('cityName'), undefined))
+      .withIndex('by_country', q => q.eq('countryCode', args.countryCode))
+      .filter(q => q.eq(q.field('cityName'), undefined))
       .first();
 
     return countryServices;
@@ -63,8 +62,8 @@ export const listCountries = query({
 
     // Get unique countries (country-level entries only)
     const countries = services
-      .filter((s) => !s.cityName)
-      .map((s) => ({
+      .filter(s => !s.cityName)
+      .map(s => ({
         countryCode: s.countryCode,
         countryName: s.countryName,
         countryNameEn: s.countryNameEn,
@@ -85,11 +84,11 @@ export const searchByName = query({
 
     const searchTerm = args.query.toLowerCase();
     const matches = services.filter(
-      (s) =>
-        !s.cityName &&
-        (s.countryName.toLowerCase().includes(searchTerm) ||
-          (s.countryNameEn &&
-            s.countryNameEn.toLowerCase().includes(searchTerm)))
+      s =>
+        !s.cityName
+        && (s.countryName.toLowerCase().includes(searchTerm)
+          || (s.countryNameEn
+            && s.countryNameEn.toLowerCase().includes(searchTerm))),
     );
 
     return matches;
@@ -116,8 +115,8 @@ export const create = mutation({
           city: v.string(),
           phone: v.string(),
           address: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     touristPoliceNumber: v.optional(v.string()),
     coastGuardNumber: v.optional(v.string()),
@@ -152,8 +151,8 @@ export const update = mutation({
           city: v.string(),
           phone: v.string(),
           address: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     touristPoliceNumber: v.optional(v.string()),
     coastGuardNumber: v.optional(v.string()),
@@ -165,7 +164,7 @@ export const update = mutation({
     const { id, ...updates } = args;
 
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, { ...filteredUpdates, lastUpdated: Date.now() });
@@ -325,10 +324,9 @@ export const seedCommonCountries = mutation({
       // Check if already exists
       const existing = await ctx.db
         .query('emergencyServices')
-        .withIndex('by_country', (q) =>
-          q.eq('countryCode', country.countryCode)
-        )
-        .filter((q) => q.eq(q.field('cityName'), undefined))
+        .withIndex('by_country', q =>
+          q.eq('countryCode', country.countryCode))
+        .filter(q => q.eq(q.field('cityName'), undefined))
         .first();
 
       if (!existing) {
@@ -341,7 +339,8 @@ export const seedCommonCountries = mutation({
           id,
           action: 'created',
         });
-      } else {
+      }
+      else {
         results.push({
           countryCode: country.countryCode,
           id: existing._id,
@@ -364,7 +363,7 @@ export const getEmergencyGuide = query({
       v.literal('natural_disaster'),
       v.literal('accident'),
       v.literal('assault'),
-      v.literal('general')
+      v.literal('general'),
     ),
     countryCode: v.optional(v.string()),
   },
@@ -516,8 +515,8 @@ export const getEmergencyGuide = query({
     if (args.countryCode) {
       emergencyServices = await ctx.db
         .query('emergencyServices')
-        .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode!))
-        .filter((q) => q.eq(q.field('cityName'), undefined))
+        .withIndex('by_country', q => q.eq('countryCode', args.countryCode!))
+        .filter(q => q.eq(q.field('cityName'), undefined))
         .first();
     }
 
@@ -541,9 +540,8 @@ export const getComprehensiveEmergencyInfo = query({
     if (args.cityName) {
       emergencyServices = await ctx.db
         .query('emergencyServices')
-        .withIndex('by_country_city', (q) =>
-          q.eq('countryCode', args.countryCode).eq('cityName', args.cityName)
-        )
+        .withIndex('by_country_city', q =>
+          q.eq('countryCode', args.countryCode).eq('cityName', args.cityName))
         .first();
     }
 
@@ -551,8 +549,8 @@ export const getComprehensiveEmergencyInfo = query({
     if (!emergencyServices) {
       emergencyServices = await ctx.db
         .query('emergencyServices')
-        .withIndex('by_country', (q) => q.eq('countryCode', args.countryCode))
-        .filter((q) => q.eq(q.field('cityName'), undefined))
+        .withIndex('by_country', q => q.eq('countryCode', args.countryCode))
+        .filter(q => q.eq(q.field('cityName'), undefined))
         .first();
     }
 
@@ -567,9 +565,9 @@ export const getComprehensiveEmergencyInfo = query({
     if (args.userId) {
       const contacts = await ctx.db
         .query('emergencyContacts')
-        .withIndex('by_user', (q) => q.eq('userId', args.userId!))
+        .withIndex('by_user', q => q.eq('userId', args.userId!))
         .collect();
-      emergencyContacts = contacts.map((c) => ({
+      emergencyContacts = contacts.map(c => ({
         _id: c._id,
         name: c.name,
         phoneNumber: c.phoneNumber,
@@ -583,9 +581,8 @@ export const getComprehensiveEmergencyInfo = query({
     if (args.userId) {
       activeInsurance = await ctx.db
         .query('travelInsurance')
-        .withIndex('by_user_active', (q) =>
-          q.eq('userId', args.userId!).eq('isActive', true)
-        )
+        .withIndex('by_user_active', q =>
+          q.eq('userId', args.userId!).eq('isActive', true))
         .first();
     }
 

@@ -1,5 +1,4 @@
-/* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
+import type { Doc } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -12,7 +11,7 @@ const searchResultTypeValidator = v.union(
   v.literal('poi'),
   v.literal('itinerary'),
   v.literal('guide'),
-  v.literal('user')
+  v.literal('user'),
 );
 
 /**
@@ -34,7 +33,12 @@ export const globalSearch = query({
       id: string;
       type: 'poi' | 'itinerary' | 'guide' | 'user';
       score: number;
-      data: any;
+      data:
+        | Doc<'pois'>
+        | Doc<'itineraries'>
+        | Doc<'travelGuides'>
+        | Doc<'profiles'>
+        | Record<string, unknown>;
     }> = [];
 
     // Search POIs
@@ -42,7 +46,7 @@ export const globalSearch = query({
       let pois = await ctx.db.query('pois').take(500);
 
       if (args.cityId) {
-        pois = pois.filter((p) => p.cityId === args.cityId);
+        pois = pois.filter(p => p.cityId === args.cityId);
       }
 
       for (const poi of pois) {
@@ -95,11 +99,11 @@ export const globalSearch = query({
     if (types.includes('itinerary')) {
       let itineraries = await ctx.db
         .query('itineraries')
-        .withIndex('by_visibility', (q) => q.eq('visibility', 'public'))
+        .withIndex('by_visibility', q => q.eq('visibility', 'public'))
         .take(200);
 
       if (args.cityId) {
-        itineraries = itineraries.filter((i) => i.cityId === args.cityId);
+        itineraries = itineraries.filter(i => i.cityId === args.cityId);
       }
 
       for (const itinerary of itineraries) {
@@ -115,7 +119,7 @@ export const globalSearch = query({
           const city = await ctx.db.get(itinerary.cityId);
           const daysCount = calculateDaysCount(
             itinerary.startDate,
-            itinerary.endDate
+            itinerary.endDate,
           );
 
           results.push({
@@ -152,12 +156,12 @@ export const globalSearch = query({
           score += guide.title.toLowerCase() === searchQuery ? 1.0 : 0.8;
         }
         if (
-          guide.destinations.some((d) => d.toLowerCase().includes(searchQuery))
+          guide.destinations.some(d => d.toLowerCase().includes(searchQuery))
         ) {
           matchedFields.push('destinations');
           score += 0.7;
         }
-        if (guide.tags.some((t) => t.toLowerCase().includes(searchQuery))) {
+        if (guide.tags.some(t => t.toLowerCase().includes(searchQuery))) {
           matchedFields.push('tags');
           score += 0.5;
         }
@@ -203,8 +207,8 @@ export const globalSearch = query({
 
         if (profile.displayName?.toLowerCase().includes(searchQuery)) {
           matchedFields.push('displayName');
-          score +=
-            profile.displayName.toLowerCase() === searchQuery ? 1.0 : 0.8;
+          score
+            += profile.displayName.toLowerCase() === searchQuery ? 1.0 : 0.8;
         }
         if (profile.email.toLowerCase().includes(searchQuery)) {
           matchedFields.push('email');
@@ -310,8 +314,8 @@ export const getSuggestions = query({
     for (const guide of guides) {
       for (const dest of guide.destinations) {
         if (
-          dest.toLowerCase().startsWith(searchQuery) &&
-          !seenDestinations.has(dest.toLowerCase())
+          dest.toLowerCase().startsWith(searchQuery)
+          && !seenDestinations.has(dest.toLowerCase())
         ) {
           seenDestinations.add(dest.toLowerCase());
           suggestions.push({
@@ -344,9 +348,8 @@ export const recordSearchHistory = mutation({
     // Check if this query already exists for the user
     const existing = await ctx.db
       .query('searchHistory')
-      .withIndex('by_user_query', (q) =>
-        q.eq('userId', args.userId).eq('query', args.query)
-      )
+      .withIndex('by_user_query', q =>
+        q.eq('userId', args.userId).eq('query', args.query))
       .first();
 
     if (existing) {
@@ -383,12 +386,12 @@ export const getSearchHistory = query({
 
     const history = await ctx.db
       .query('searchHistory')
-      .withIndex('by_user_searched', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_searched', q => q.eq('userId', args.userId))
       .order('desc')
       .take(limit);
 
     return {
-      history: history.map((h) => ({
+      history: history.map(h => ({
         id: h._id,
         query: h.query,
         resultType: h.resultType,
@@ -409,7 +412,7 @@ export const clearSearchHistory = mutation({
   handler: async (ctx, args) => {
     const history = await ctx.db
       .query('searchHistory')
-      .withIndex('by_user_searched', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_searched', q => q.eq('userId', args.userId))
       .collect();
 
     for (const h of history) {
@@ -453,9 +456,8 @@ export const recordSearchTrend = mutation({
     // Find existing trend record for today
     const existing = await ctx.db
       .query('searchTrends')
-      .withIndex('by_query_date', (q) =>
-        q.eq('query', normalizedQuery).eq('date', today)
-      )
+      .withIndex('by_query_date', q =>
+        q.eq('query', normalizedQuery).eq('date', today))
       .first();
 
     if (existing) {
@@ -494,7 +496,7 @@ export const getTrendingSearches = query({
     // Get all trends in date range
     const trends = await ctx.db
       .query('searchTrends')
-      .withIndex('by_date', (q) => q.gte('date', startDateStr))
+      .withIndex('by_date', q => q.gte('date', startDateStr))
       .collect();
 
     // Aggregate by query
@@ -506,7 +508,8 @@ export const getTrendingSearches = query({
       const existing = aggregated.get(t.query);
       if (existing) {
         existing.searchCount += t.searchCount;
-      } else {
+      }
+      else {
         aggregated.set(t.query, {
           query: t.query,
           searchCount: t.searchCount,

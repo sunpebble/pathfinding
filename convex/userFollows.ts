@@ -21,9 +21,8 @@ export const follow = mutation({
     // Check if already following
     const existing = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', args.followerId).eq('followingId', args.followingId)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.followerId).eq('followingId', args.followingId))
       .first();
 
     if (existing) {
@@ -40,7 +39,7 @@ export const follow = mutation({
     // Update follower's followingCount
     const followerProfile = await ctx.db
       .query('profiles')
-      .withIndex('by_email', (q) => q.eq('email', args.followerId))
+      .withIndex('by_email', q => q.eq('email', args.followerId))
       .first();
 
     if (followerProfile) {
@@ -52,7 +51,7 @@ export const follow = mutation({
     // Update following's followersCount
     const followingProfile = await ctx.db
       .query('profiles')
-      .withIndex('by_email', (q) => q.eq('email', args.followingId))
+      .withIndex('by_email', q => q.eq('email', args.followingId))
       .first();
 
     if (followingProfile) {
@@ -87,9 +86,8 @@ export const unfollow = mutation({
     // Find the follow relationship
     const existing = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', args.followerId).eq('followingId', args.followingId)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.followerId).eq('followingId', args.followingId))
       .first();
 
     if (!existing) {
@@ -102,7 +100,7 @@ export const unfollow = mutation({
     // Update follower's followingCount
     const followerProfile = await ctx.db
       .query('profiles')
-      .withIndex('by_email', (q) => q.eq('email', args.followerId))
+      .withIndex('by_email', q => q.eq('email', args.followerId))
       .first();
 
     if (followerProfile && (followerProfile.followingCount ?? 0) > 0) {
@@ -114,7 +112,7 @@ export const unfollow = mutation({
     // Update following's followersCount
     const followingProfile = await ctx.db
       .query('profiles')
-      .withIndex('by_email', (q) => q.eq('email', args.followingId))
+      .withIndex('by_email', q => q.eq('email', args.followingId))
       .first();
 
     if (followingProfile && (followingProfile.followersCount ?? 0) > 0) {
@@ -134,9 +132,8 @@ export const isFollowing = query({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', args.followerId).eq('followingId', args.followingId)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.followerId).eq('followingId', args.followingId))
       .first();
 
     return existing !== null;
@@ -152,16 +149,14 @@ export const getMutualFollowStatus = query({
   handler: async (ctx, args) => {
     const aFollowsB = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', args.userIdA).eq('followingId', args.userIdB)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.userIdA).eq('followingId', args.userIdB))
       .first();
 
     const bFollowsA = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', args.userIdB).eq('followingId', args.userIdA)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.userIdB).eq('followingId', args.userIdA))
       .first();
 
     return {
@@ -188,7 +183,7 @@ export const getFollowers = query({
     // Get all followers
     const follows = await ctx.db
       .query('userFollows')
-      .withIndex('by_following', (q) => q.eq('followingId', args.userId))
+      .withIndex('by_following', q => q.eq('followingId', args.userId))
       .order('desc')
       .collect();
 
@@ -200,7 +195,7 @@ export const getFollowers = query({
       paginatedFollows.map(async (follow) => {
         const profile = await ctx.db
           .query('profiles')
-          .withIndex('by_email', (q) => q.eq('email', follow.followerId))
+          .withIndex('by_email', q => q.eq('email', follow.followerId))
           .first();
 
         // Check if current user follows this follower
@@ -210,11 +205,10 @@ export const getFollowers = query({
         if (args.currentUserId && args.currentUserId !== follow.followerId) {
           const currentUserFollows = await ctx.db
             .query('userFollows')
-            .withIndex('by_follower_following', (q) =>
+            .withIndex('by_follower_following', q =>
               q
                 .eq('followerId', args.currentUserId!)
-                .eq('followingId', follow.followerId)
-            )
+                .eq('followingId', follow.followerId))
             .first();
           isFollowedByCurrentUser = currentUserFollows !== null;
 
@@ -235,7 +229,7 @@ export const getFollowers = query({
           isFollowedByCurrentUser,
           isMutual,
         };
-      })
+      }),
     );
 
     return {
@@ -264,7 +258,7 @@ export const getFollowing = query({
     // Get all following
     const follows = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower', (q) => q.eq('followerId', args.userId))
+      .withIndex('by_follower', q => q.eq('followerId', args.userId))
       .order('desc')
       .collect();
 
@@ -276,7 +270,7 @@ export const getFollowing = query({
       paginatedFollows.map(async (follow) => {
         const profile = await ctx.db
           .query('profiles')
-          .withIndex('by_email', (q) => q.eq('email', follow.followingId))
+          .withIndex('by_email', q => q.eq('email', follow.followingId))
           .first();
 
         // Check if current user follows this user
@@ -291,21 +285,20 @@ export const getFollowing = query({
             // Check if they follow back
             const followsBack = await ctx.db
               .query('userFollows')
-              .withIndex('by_follower_following', (q) =>
+              .withIndex('by_follower_following', q =>
                 q
                   .eq('followerId', follow.followingId)
-                  .eq('followingId', args.userId)
-              )
+                  .eq('followingId', args.userId))
               .first();
             isMutual = followsBack !== null;
-          } else if (args.currentUserId !== follow.followingId) {
+          }
+          else if (args.currentUserId !== follow.followingId) {
             const currentUserFollows = await ctx.db
               .query('userFollows')
-              .withIndex('by_follower_following', (q) =>
+              .withIndex('by_follower_following', q =>
                 q
                   .eq('followerId', args.currentUserId!)
-                  .eq('followingId', follow.followingId)
-              )
+                  .eq('followingId', follow.followingId))
               .first();
             isFollowedByCurrentUser = currentUserFollows !== null;
           }
@@ -322,7 +315,7 @@ export const getFollowing = query({
           isFollowedByCurrentUser,
           isMutual,
         };
-      })
+      }),
     );
 
     return {
@@ -343,7 +336,7 @@ export const getFollowStats = query({
   handler: async (ctx, args) => {
     const profile = await ctx.db
       .query('profiles')
-      .withIndex('by_email', (q) => q.eq('email', args.userId))
+      .withIndex('by_email', q => q.eq('email', args.userId))
       .first();
 
     return {
@@ -368,10 +361,10 @@ export const getFollowingFeed = query({
     // Get all users that the current user follows
     const following = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower', (q) => q.eq('followerId', args.userId))
+      .withIndex('by_follower', q => q.eq('followerId', args.userId))
       .collect();
 
-    const followingIds = following.map((f) => f.followingId);
+    const followingIds = following.map(f => f.followingId);
 
     if (followingIds.length === 0) {
       return {
@@ -386,19 +379,19 @@ export const getFollowingFeed = query({
     // Get public itineraries from followed users
     const allItineraries = await ctx.db
       .query('itineraries')
-      .withIndex('by_visibility', (q) => q.eq('visibility', 'public'))
+      .withIndex('by_visibility', q => q.eq('visibility', 'public'))
       .order('desc')
       .collect();
 
     // Filter to only include itineraries from followed users
-    const feedItineraries = allItineraries.filter((itinerary) =>
-      followingIds.includes(itinerary.userId)
+    const feedItineraries = allItineraries.filter(itinerary =>
+      followingIds.includes(itinerary.userId),
     );
 
     const total = feedItineraries.length;
     const paginatedItineraries = feedItineraries.slice(
       offset,
-      offset + pageSize
+      offset + pageSize,
     );
 
     // Enrich with city and user data
@@ -407,12 +400,12 @@ export const getFollowingFeed = query({
         const city = await ctx.db.get(itinerary.cityId);
         const userProfile = await ctx.db
           .query('profiles')
-          .withIndex('by_email', (q) => q.eq('email', itinerary.userId))
+          .withIndex('by_email', q => q.eq('email', itinerary.userId))
           .first();
 
         const daysCount = calculateDaysCount(
           itinerary.startDate,
-          itinerary.endDate
+          itinerary.endDate,
         );
 
         return {
@@ -425,7 +418,7 @@ export const getFollowingFeed = query({
             avatarUrl: userProfile?.avatarUrl,
           },
         };
-      })
+      }),
     );
 
     return {
@@ -462,20 +455,20 @@ export const getMutualFollowers = query({
     // Get all users that the current user follows
     const following = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower', (q) => q.eq('followerId', args.userId))
+      .withIndex('by_follower', q => q.eq('followerId', args.userId))
       .collect();
 
-    const followingIds = new Set(following.map((f) => f.followingId));
+    const followingIds = new Set(following.map(f => f.followingId));
 
     // Get all users that follow the current user
     const followers = await ctx.db
       .query('userFollows')
-      .withIndex('by_following', (q) => q.eq('followingId', args.userId))
+      .withIndex('by_following', q => q.eq('followingId', args.userId))
       .collect();
 
     // Find mutual follows (intersection)
-    const mutualFollows = followers.filter((f) =>
-      followingIds.has(f.followerId)
+    const mutualFollows = followers.filter(f =>
+      followingIds.has(f.followerId),
     );
 
     const total = mutualFollows.length;
@@ -486,7 +479,7 @@ export const getMutualFollowers = query({
       paginatedMutuals.map(async (follow) => {
         const profile = await ctx.db
           .query('profiles')
-          .withIndex('by_email', (q) => q.eq('email', follow.followerId))
+          .withIndex('by_email', q => q.eq('email', follow.followerId))
           .first();
 
         return {
@@ -498,7 +491,7 @@ export const getMutualFollowers = query({
           followingCount: profile?.followingCount ?? 0,
           followedAt: follow.createdAt,
         };
-      })
+      }),
     );
 
     return {
@@ -523,20 +516,20 @@ export const getFollowRecommendations = query({
     // Get users the current user already follows
     const following = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower', (q) => q.eq('followerId', args.userId))
+      .withIndex('by_follower', q => q.eq('followerId', args.userId))
       .collect();
 
-    const followingIds = new Set(following.map((f) => f.followingId));
+    const followingIds = new Set(following.map(f => f.followingId));
     followingIds.add(args.userId); // Exclude self
 
     // Strategy 1: Friends of friends (users followed by people you follow)
-    const friendsOfFriends: Map<string, { count: number; source: string }> =
-      new Map();
+    const friendsOfFriends: Map<string, { count: number; source: string }>
+      = new Map();
 
     for (const follow of following) {
       const theirFollowing = await ctx.db
         .query('userFollows')
-        .withIndex('by_follower', (q) => q.eq('followerId', follow.followingId))
+        .withIndex('by_follower', q => q.eq('followerId', follow.followingId))
         .take(50); // Limit to prevent too many queries
 
       for (const ff of theirFollowing) {
@@ -544,7 +537,8 @@ export const getFollowRecommendations = query({
           const existing = friendsOfFriends.get(ff.followingId);
           if (existing) {
             existing.count += 1;
-          } else {
+          }
+          else {
             friendsOfFriends.set(ff.followingId, {
               count: 1,
               source: 'friends_of_friends',
@@ -558,14 +552,14 @@ export const getFollowRecommendations = query({
     const allProfiles = await ctx.db.query('profiles').collect();
 
     const popularUsers = allProfiles
-      .filter((p) => !followingIds.has(p.email) && (p.followersCount ?? 0) > 0)
+      .filter(p => !followingIds.has(p.email) && (p.followersCount ?? 0) > 0)
       .sort((a, b) => (b.followersCount ?? 0) - (a.followersCount ?? 0))
       .slice(0, 20);
 
     // Strategy 3: Active content creators (users with recent itineraries)
     const recentActivities = await ctx.db
       .query('activityFeed')
-      .withIndex('by_type', (q) => q.eq('activityType', 'new_itinerary'))
+      .withIndex('by_type', q => q.eq('activityType', 'new_itinerary'))
       .order('desc')
       .take(100);
 
@@ -574,14 +568,14 @@ export const getFollowRecommendations = query({
       if (!followingIds.has(activity.actorId)) {
         activeCreators.set(
           activity.actorId,
-          (activeCreators.get(activity.actorId) ?? 0) + 1
+          (activeCreators.get(activity.actorId) ?? 0) + 1,
         );
       }
     }
 
     // Combine and score recommendations
-    const recommendations: Map<string, { score: number; reasons: string[] }> =
-      new Map();
+    const recommendations: Map<string, { score: number; reasons: string[] }>
+      = new Map();
 
     // Add friends of friends with high weight
     for (const [userId, data] of friendsOfFriends) {
@@ -620,15 +614,14 @@ export const getFollowRecommendations = query({
       sortedRecommendations.map(async ([userId, data]) => {
         const profile = await ctx.db
           .query('profiles')
-          .withIndex('by_email', (q) => q.eq('email', userId))
+          .withIndex('by_email', q => q.eq('email', userId))
           .first();
 
         // Check if this user follows the current user
         const followsBack = await ctx.db
           .query('userFollows')
-          .withIndex('by_follower_following', (q) =>
-            q.eq('followerId', userId).eq('followingId', args.userId)
-          )
+          .withIndex('by_follower_following', q =>
+            q.eq('followerId', userId).eq('followingId', args.userId))
           .first();
 
         return {
@@ -642,11 +635,11 @@ export const getFollowRecommendations = query({
           reasons: data.reasons,
           followsYou: followsBack !== null,
         };
-      })
+      }),
     );
 
     return {
-      data: enrichedRecommendations.filter((r) => r.displayName), // Filter out users without profiles
+      data: enrichedRecommendations.filter(r => r.displayName), // Filter out users without profiles
     };
   },
 });
@@ -666,16 +659,14 @@ export const batchCheckFollowStatus = query({
     for (const targetId of args.targetUserIds) {
       const isFollowing = await ctx.db
         .query('userFollows')
-        .withIndex('by_follower_following', (q) =>
-          q.eq('followerId', args.userId).eq('followingId', targetId)
-        )
+        .withIndex('by_follower_following', q =>
+          q.eq('followerId', args.userId).eq('followingId', targetId))
         .first();
 
       const isFollowedBy = await ctx.db
         .query('userFollows')
-        .withIndex('by_follower_following', (q) =>
-          q.eq('followerId', targetId).eq('followingId', args.userId)
-        )
+        .withIndex('by_follower_following', q =>
+          q.eq('followerId', targetId).eq('followingId', args.userId))
         .first();
 
       results[targetId] = {

@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@pathfinding/convex';
+import { api } from '@pathfinding/convex-client';
 import { useMutation, useQuery } from 'convex/react';
 import {
   Calendar,
@@ -14,7 +14,8 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import * as React from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { toConvexId } from '@/types/convex';
 
@@ -69,7 +70,8 @@ function formatDate(dateString: string) {
       day: 'numeric',
       year: 'numeric',
     });
-  } catch {
+  }
+  catch {
     return dateString;
   }
 }
@@ -98,7 +100,7 @@ function ItemEditor({
   const [localEndTime, setLocalEndTime] = useState(item.endTime || '');
   const [localNotes, setLocalNotes] = useState(item.notes || '');
   const [localTransportMode, setLocalTransportMode] = useState(
-    item.transportMode || 'walking'
+    item.transportMode || 'walking',
   );
 
   const poi = item.poi;
@@ -158,7 +160,7 @@ function ItemEditor({
             <ChevronDown
               className={cn(
                 'h-4 w-4 transition-transform',
-                isExpanded && 'rotate-180'
+                isExpanded && 'rotate-180',
               )}
             />
           </button>
@@ -185,7 +187,7 @@ function ItemEditor({
               <input
                 type="time"
                 value={localStartTime}
-                onChange={(e) => setLocalStartTime(e.target.value)}
+                onChange={e => setLocalStartTime(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
@@ -196,7 +198,7 @@ function ItemEditor({
               <input
                 type="time"
                 value={localEndTime}
-                onChange={(e) => setLocalEndTime(e.target.value)}
+                onChange={e => setLocalEndTime(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
@@ -209,12 +211,14 @@ function ItemEditor({
             </label>
             <select
               value={localTransportMode}
-              onChange={(e) => setLocalTransportMode(e.target.value)}
+              onChange={e => setLocalTransportMode(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
-              {transportModeOptions.map((option) => (
+              {transportModeOptions.map(option => (
                 <option key={option.value} value={option.value}>
-                  {option.emoji} {option.label}
+                  {option.emoji}
+                  {' '}
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -227,7 +231,7 @@ function ItemEditor({
             </label>
             <textarea
               value={localNotes}
-              onChange={(e) => setLocalNotes(e.target.value)}
+              onChange={e => setLocalNotes(e.target.value)}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               placeholder="Add notes about this activity..."
@@ -258,7 +262,7 @@ function ItemEditor({
               className={cn(
                 'px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium transition-all',
                 'hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed',
-                'flex items-center gap-2'
+                'flex items-center gap-2',
               )}
             >
               <Save className="h-4 w-4" />
@@ -303,26 +307,30 @@ function DayEditor({
           query: searchQuery || '',
           cityId: toConvexId<'cities'>(cityId),
           category: selectedCategory as
-            | 'attraction'
-            | 'restaurant'
-            | 'hotel'
-            | 'shopping'
-            | 'other'
-            | undefined,
+          | 'attraction'
+          | 'restaurant'
+          | 'hotel'
+          | 'shopping'
+          | 'other'
+          | undefined,
           limit: 20,
         }
-      : 'skip'
+      : 'skip',
   );
 
-  const pois = (poisQuery || []).map((poi) => ({
-    id: poi._id,
-    name: poi.name,
-    category: poi.category,
-    address: poi.address,
-    rating: poi.rating,
-    latitude: poi.latitude,
-    longitude: poi.longitude,
-  }));
+  const pois = useMemo(
+    () =>
+      (poisQuery || []).map(poi => ({
+        id: poi._id,
+        name: poi.name,
+        category: poi.category,
+        address: poi.address,
+        rating: poi.rating,
+        latitude: poi.latitude,
+        longitude: poi.longitude,
+      })),
+    [poisQuery],
+  );
 
   const handleAddPoi = async (poiId: string) => {
     setIsSaving(true);
@@ -336,9 +344,11 @@ function DayEditor({
       setIsSearching(false);
       setSearchQuery('');
       onItemsChange();
-    } catch (err) {
+    }
+    catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add POI');
-    } finally {
+    }
+    finally {
       setIsSaving(false);
     }
   };
@@ -354,17 +364,19 @@ function DayEditor({
         endTime: updates.endTime,
         notes: updates.notes,
         transportMode: updates.transportMode as
-          | 'walking'
-          | 'driving'
-          | 'transit'
-          | 'cycling'
-          | 'taxi'
-          | undefined,
+        | 'walking'
+        | 'driving'
+        | 'transit'
+        | 'cycling'
+        | 'taxi'
+        | undefined,
       });
       onItemsChange();
-    } catch (err) {
+    }
+    catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update item');
-    } finally {
+    }
+    finally {
       setIsSaving(false);
     }
   };
@@ -378,15 +390,18 @@ function DayEditor({
         userId,
       });
       onItemsChange();
-    } catch (err) {
+    }
+    catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove item');
-    } finally {
+    }
+    finally {
       setIsSaving(false);
     }
   };
 
   const handleMoveUp = async (item: Item) => {
-    if (item.orderIndex === 0) return;
+    if (item.orderIndex === 0)
+      return;
 
     setIsSaving(true);
     setError('');
@@ -397,15 +412,18 @@ function DayEditor({
         newOrderIndex: item.orderIndex - 1,
       });
       onItemsChange();
-    } catch (err) {
+    }
+    catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder item');
-    } finally {
+    }
+    finally {
       setIsSaving(false);
     }
   };
 
   const handleMoveDown = async (item: Item) => {
-    if (item.orderIndex >= items.length - 1) return;
+    if (item.orderIndex >= items.length - 1)
+      return;
 
     setIsSaving(true);
     setError('');
@@ -416,9 +434,11 @@ function DayEditor({
         newOrderIndex: item.orderIndex + 1,
       });
       onItemsChange();
-    } catch (err) {
+    }
+    catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder item');
-    } finally {
+    }
+    finally {
       setIsSaving(false);
     }
   };
@@ -431,7 +451,10 @@ function DayEditor({
           {day.dayNumber}
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900">Day {day.dayNumber}</h3>
+          <h3 className="font-semibold text-gray-900">
+            Day
+            {day.dayNumber}
+          </h3>
           <p className="text-xs text-gray-500">{formatDate(day.date)}</p>
         </div>
         <button
@@ -442,20 +465,22 @@ function DayEditor({
             isSearching
               ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               : 'bg-emerald-600 text-white hover:bg-emerald-700',
-            'disabled:opacity-50 disabled:cursor-not-allowed'
+            'disabled:opacity-50 disabled:cursor-not-allowed',
           )}
         >
-          {isSearching ? (
-            <>
-              <X className="h-4 w-4" />
-              Cancel
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4" />
-              Add POI
-            </>
-          )}
+          {isSearching
+            ? (
+                <>
+                  <X className="h-4 w-4" />
+                  Cancel
+                </>
+              )
+            : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Add POI
+                </>
+              )}
         </button>
       </div>
 
@@ -468,14 +493,14 @@ function DayEditor({
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search POIs..."
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={e => setSelectedCategory(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
               <option value="">All Categories</option>
@@ -489,44 +514,46 @@ function DayEditor({
 
           {/* Results */}
           <div className="max-h-60 overflow-y-auto space-y-2">
-            {pois.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">
-                {cityId ? 'No POIs found' : 'City not specified for itinerary'}
-              </p>
-            ) : (
-              pois.map((poi: PoiOption) => (
-                <button
-                  key={poi.id}
-                  onClick={() => handleAddPoi(poi.id)}
-                  disabled={isSaving}
-                  className="w-full text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all disabled:opacity-50"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm truncate">
-                        {poi.name}
-                      </h4>
-                      <p className="text-xs text-gray-500 capitalize">
-                        {poi.category}
-                      </p>
-                      {poi.address && (
-                        <p className="text-xs text-gray-600 mt-1 truncate">
-                          {poi.address}
-                        </p>
-                      )}
-                    </div>
-                    {poi.rating && (
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-amber-500">★</span>
-                        <span className="font-medium">
-                          {poi.rating.toFixed(1)}
-                        </span>
+            {pois.length === 0
+              ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    {cityId ? 'No POIs found' : 'City not specified for itinerary'}
+                  </p>
+                )
+              : (
+                  pois.map((poi: PoiOption) => (
+                    <button
+                      key={poi.id}
+                      onClick={() => handleAddPoi(poi.id)}
+                      disabled={isSaving}
+                      className="w-full text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all disabled:opacity-50"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 text-sm truncate">
+                            {poi.name}
+                          </h4>
+                          <p className="text-xs text-gray-500 capitalize">
+                            {poi.category}
+                          </p>
+                          {poi.address && (
+                            <p className="text-xs text-gray-600 mt-1 truncate">
+                              {poi.address}
+                            </p>
+                          )}
+                        </div>
+                        {poi.rating && (
+                          <div className="flex items-center gap-1 text-xs">
+                            <span className="text-amber-500">★</span>
+                            <span className="font-medium">
+                              {poi.rating.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </button>
-              ))
-            )}
+                    </button>
+                  ))
+                )}
           </div>
         </div>
       )}
@@ -540,27 +567,29 @@ function DayEditor({
 
       {/* Items List */}
       <div className="space-y-2">
-        {items.length === 0 ? (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-500">
-              No activities planned for this day
-            </p>
-          </div>
-        ) : (
-          items.map((item, index) => (
-            <ItemEditor
-              key={item._id}
-              item={item}
-              onUpdate={(updates) => handleUpdateItem(item._id, updates)}
-              onRemove={() => handleRemoveItem(item._id)}
-              onMoveUp={() => handleMoveUp(item)}
-              onMoveDown={() => handleMoveDown(item)}
-              canMoveUp={index > 0}
-              canMoveDown={index < items.length - 1}
-              isSaving={isSaving}
-            />
-          ))
-        )}
+        {items.length === 0
+          ? (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                <p className="text-sm text-gray-500">
+                  No activities planned for this day
+                </p>
+              </div>
+            )
+          : (
+              items.map((item, index) => (
+                <ItemEditor
+                  key={item._id}
+                  item={item}
+                  onUpdate={updates => handleUpdateItem(item._id, updates)}
+                  onRemove={() => handleRemoveItem(item._id)}
+                  onMoveUp={() => handleMoveUp(item)}
+                  onMoveDown={() => handleMoveDown(item)}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < items.length - 1}
+                  isSaving={isSaving}
+                />
+              ))
+            )}
       </div>
     </div>
   );
@@ -580,11 +609,12 @@ export function ItineraryEditor({
     id: toConvexId<'itineraries'>(itineraryId),
   });
 
-  const handleItemsChange = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
+  const handleItemsChange = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
 
-  if (!isOpen) return null;
+  if (!isOpen)
+    return null;
 
   const cityId = itinerary?.cityId;
   const enrichedDays = itinerary?.days || days;
@@ -611,23 +641,25 @@ export function ItineraryEditor({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          {enrichedDays.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">No days in this itinerary</p>
-            </div>
-          ) : (
-            enrichedDays.map((day: Day) => (
-              <DayEditor
-                key={`${day._id}-${refreshKey}`}
-                day={day}
-                items={day.items || []}
-                userId={userId}
-                cityId={cityId}
-                onItemsChange={handleItemsChange}
-              />
-            ))
-          )}
+          {enrichedDays.length === 0
+            ? (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">No days in this itinerary</p>
+                </div>
+              )
+            : (
+                enrichedDays.map((day: Day) => (
+                  <DayEditor
+                    key={`${day._id}-${refreshKey}`}
+                    day={day}
+                    items={day.items || []}
+                    userId={userId}
+                    cityId={cityId}
+                    onItemsChange={handleItemsChange}
+                  />
+                ))
+              )}
         </div>
 
         {/* Footer */}

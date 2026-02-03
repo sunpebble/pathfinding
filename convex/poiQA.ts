@@ -17,13 +17,13 @@ const reportReasonValidator = v.union(
   v.literal('misleading'),
   v.literal('off_topic'),
   v.literal('harassment'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const questionStatusValidator = v.union(
   v.literal('open'),
   v.literal('closed'),
-  v.literal('resolved')
+  v.literal('resolved'),
 );
 
 /**
@@ -32,7 +32,7 @@ const questionStatusValidator = v.union(
 async function getUserProfile(ctx: QueryCtx | MutationCtx, userId: string) {
   const profile = await ctx.db
     .query('profiles')
-    .withIndex('by_email', (q) => q.eq('email', userId))
+    .withIndex('by_email', q => q.eq('email', userId))
     .first();
 
   return profile;
@@ -43,7 +43,7 @@ async function getUserProfile(ctx: QueryCtx | MutationCtx, userId: string) {
  */
 async function checkPoiExists(
   ctx: QueryCtx | MutationCtx,
-  poiId: Id<'pois'>
+  poiId: Id<'pois'>,
 ): Promise<boolean> {
   const poi = await ctx.db.get(poiId);
   if (!poi) {
@@ -64,7 +64,7 @@ async function createQANotification(
     referenceId: string;
     actorId: string;
     message: string;
-  }
+  },
 ) {
   // Don't notify yourself
   if (params.userId === params.actorId) {
@@ -100,8 +100,8 @@ export const listQuestionsByPoi = query({
         v.literal('newest'),
         v.literal('oldest'),
         v.literal('most_upvoted'),
-        v.literal('most_active')
-      )
+        v.literal('most_active'),
+      ),
     ),
     status: v.optional(questionStatusValidator),
     userId: v.optional(v.string()), // For checking if user voted
@@ -115,16 +115,16 @@ export const listQuestionsByPoi = query({
     // Get all questions for this POI
     let questions = await ctx.db
       .query('poiQuestions')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
       .collect();
 
     // Filter by status if specified
     if (args.status) {
-      questions = questions.filter((q) => q.status === args.status);
+      questions = questions.filter(q => q.status === args.status);
     }
 
     // Filter out deleted/hidden
-    questions = questions.filter((q) => !q.isDeleted && !q.isHidden);
+    questions = questions.filter(q => !q.isDeleted && !q.isHidden);
 
     // Sort
     switch (sortBy) {
@@ -155,9 +155,8 @@ export const listQuestionsByPoi = query({
         if (args.userId) {
           const vote = await ctx.db
             .query('poiQuestionVotes')
-            .withIndex('by_question_user', (q) =>
-              q.eq('questionId', question._id).eq('userId', args.userId!)
-            )
+            .withIndex('by_question_user', q =>
+              q.eq('questionId', question._id).eq('userId', args.userId!))
             .first();
           userVote = vote?.voteType ?? null;
         }
@@ -171,7 +170,7 @@ export const listQuestionsByPoi = query({
           userVote,
           score: (question.upvotesCount ?? 0) - (question.downvotesCount ?? 0),
         };
-      })
+      }),
     );
 
     return {
@@ -205,9 +204,8 @@ export const getQuestionById = query({
     if (args.userId) {
       const vote = await ctx.db
         .query('poiQuestionVotes')
-        .withIndex('by_question_user', (q) =>
-          q.eq('questionId', args.id).eq('userId', args.userId!)
-        )
+        .withIndex('by_question_user', q =>
+          q.eq('questionId', args.id).eq('userId', args.userId!))
         .first();
       userVote = vote?.voteType ?? null;
     }
@@ -265,7 +263,7 @@ export const searchQuestions = query({
           score: (question.upvotesCount ?? 0) - (question.downvotesCount ?? 0),
           poiName: poi?.name,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -280,10 +278,10 @@ export const getQuestionCount = query({
   handler: async (ctx, args) => {
     const questions = await ctx.db
       .query('poiQuestions')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
       .collect();
 
-    return questions.filter((q) => !q.isDeleted && !q.isHidden).length;
+    return questions.filter(q => !q.isDeleted && !q.isHidden).length;
   },
 });
 
@@ -303,11 +301,11 @@ export const getMyQuestions = query({
 
     const questions = await ctx.db
       .query('poiQuestions')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
-    const filtered = questions.filter((q) => !q.isDeleted);
+    const filtered = questions.filter(q => !q.isDeleted);
     const total = filtered.length;
     const paginated = filtered.slice(offset, offset + pageSize);
 
@@ -321,7 +319,7 @@ export const getMyQuestions = query({
           poiName: poi?.name,
           score: (question.upvotesCount ?? 0) - (question.downvotesCount ?? 0),
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -344,8 +342,8 @@ export const listAnswersByQuestion = query({
       v.union(
         v.literal('newest'),
         v.literal('oldest'),
-        v.literal('most_upvoted')
-      )
+        v.literal('most_upvoted'),
+      ),
     ),
     userId: v.optional(v.string()),
   },
@@ -357,15 +355,15 @@ export const listAnswersByQuestion = query({
 
     let answers = await ctx.db
       .query('poiAnswers')
-      .withIndex('by_question', (q) => q.eq('questionId', args.questionId))
+      .withIndex('by_question', q => q.eq('questionId', args.questionId))
       .collect();
 
     // Filter out deleted/hidden
-    answers = answers.filter((a) => !a.isDeleted && !a.isHidden);
+    answers = answers.filter(a => !a.isDeleted && !a.isHidden);
 
     // Always put best answer first, then sort the rest
-    const bestAnswers = answers.filter((a) => a.isBestAnswer);
-    const otherAnswers = answers.filter((a) => !a.isBestAnswer);
+    const bestAnswers = answers.filter(a => a.isBestAnswer);
+    const otherAnswers = answers.filter(a => !a.isBestAnswer);
 
     // Sort non-best answers
     switch (sortBy) {
@@ -393,9 +391,8 @@ export const listAnswersByQuestion = query({
         if (args.userId) {
           const vote = await ctx.db
             .query('poiAnswerVotes')
-            .withIndex('by_answer_user', (q) =>
-              q.eq('answerId', answer._id).eq('userId', args.userId!)
-            )
+            .withIndex('by_answer_user', q =>
+              q.eq('answerId', answer._id).eq('userId', args.userId!))
             .first();
           userVote = vote?.voteType ?? null;
         }
@@ -408,7 +405,7 @@ export const listAnswersByQuestion = query({
           userVote,
           score: answer.upvotesCount - answer.downvotesCount,
         };
-      })
+      }),
     );
 
     return {
@@ -441,9 +438,8 @@ export const getAnswerById = query({
     if (args.userId) {
       const vote = await ctx.db
         .query('poiAnswerVotes')
-        .withIndex('by_answer_user', (q) =>
-          q.eq('answerId', args.id).eq('userId', args.userId!)
-        )
+        .withIndex('by_answer_user', q =>
+          q.eq('answerId', args.id).eq('userId', args.userId!))
         .first();
       userVote = vote?.voteType ?? null;
     }
@@ -475,11 +471,11 @@ export const getMyAnswers = query({
 
     const answers = await ctx.db
       .query('poiAnswers')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
-    const filtered = answers.filter((a) => !a.isDeleted);
+    const filtered = answers.filter(a => !a.isDeleted);
     const total = filtered.length;
     const paginated = filtered.slice(offset, offset + pageSize);
 
@@ -495,7 +491,7 @@ export const getMyAnswers = query({
           poiName: poi && 'name' in poi ? poi.name : undefined,
           score: answer.upvotesCount - answer.downvotesCount,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -525,8 +521,8 @@ export const createQuestion = mutation({
         v.literal('food'),
         v.literal('accommodation'),
         v.literal('safety'),
-        v.literal('other')
-      )
+        v.literal('other'),
+      ),
     ),
     tags: v.optional(v.array(v.string())),
   },
@@ -543,7 +539,7 @@ export const createQuestion = mutation({
     }
     if (title.length > 200) {
       throw new Error(
-        'Question title exceeds maximum length of 200 characters'
+        'Question title exceeds maximum length of 200 characters',
       );
     }
     if (!content) {
@@ -551,7 +547,7 @@ export const createQuestion = mutation({
     }
     if (content.length > 5000) {
       throw new Error(
-        'Question content exceeds maximum length of 5000 characters'
+        'Question content exceeds maximum length of 5000 characters',
       );
     }
 
@@ -625,7 +621,7 @@ export const updateQuestion = mutation({
       }
       if (title.length > 200) {
         throw new Error(
-          'Question title exceeds maximum length of 200 characters'
+          'Question title exceeds maximum length of 200 characters',
         );
       }
       updates.title = title;
@@ -638,7 +634,7 @@ export const updateQuestion = mutation({
       }
       if (content.length > 5000) {
         throw new Error(
-          'Question content exceeds maximum length of 5000 characters'
+          'Question content exceeds maximum length of 5000 characters',
         );
       }
       updates.content = content;
@@ -702,9 +698,8 @@ export const voteQuestion = mutation({
     // Check for existing vote
     const existingVote = await ctx.db
       .query('poiQuestionVotes')
-      .withIndex('by_question_user', (q) =>
-        q.eq('questionId', args.questionId).eq('userId', args.userId)
-      )
+      .withIndex('by_question_user', q =>
+        q.eq('questionId', args.questionId).eq('userId', args.userId))
       .first();
 
     if (existingVote) {
@@ -713,14 +708,15 @@ export const voteQuestion = mutation({
         await ctx.db.delete(existingVote._id);
 
         // Update counts
-        const countUpdate =
-          args.voteType === 'up'
+        const countUpdate
+          = args.voteType === 'up'
             ? { upvotesCount: (question.upvotesCount ?? 0) - 1 }
             : { downvotesCount: (question.downvotesCount ?? 0) - 1 };
         await ctx.db.patch(args.questionId, countUpdate);
 
         return { action: 'removed', voteType: null };
-      } else {
+      }
+      else {
         // Change vote
         await ctx.db.patch(existingVote._id, {
           voteType: args.voteType,
@@ -728,8 +724,8 @@ export const voteQuestion = mutation({
         });
 
         // Update counts (remove old, add new)
-        const countUpdate =
-          args.voteType === 'up'
+        const countUpdate
+          = args.voteType === 'up'
             ? {
                 upvotesCount: (question.upvotesCount ?? 0) + 1,
                 downvotesCount: (question.downvotesCount ?? 0) - 1,
@@ -742,7 +738,8 @@ export const voteQuestion = mutation({
 
         return { action: 'changed', voteType: args.voteType };
       }
-    } else {
+    }
+    else {
       // Create new vote
       await ctx.db.insert('poiQuestionVotes', {
         questionId: args.questionId,
@@ -752,8 +749,8 @@ export const voteQuestion = mutation({
       });
 
       // Update counts
-      const countUpdate =
-        args.voteType === 'up'
+      const countUpdate
+        = args.voteType === 'up'
           ? { upvotesCount: (question.upvotesCount ?? 0) + 1 }
           : { downvotesCount: (question.downvotesCount ?? 0) + 1 };
       await ctx.db.patch(args.questionId, countUpdate);
@@ -878,7 +875,7 @@ export const createAnswer = mutation({
 
     if (question.status === 'closed') {
       throw new Error(
-        'This question is closed and no longer accepting answers'
+        'This question is closed and no longer accepting answers',
       );
     }
 
@@ -889,7 +886,7 @@ export const createAnswer = mutation({
     }
     if (content.length > 10000) {
       throw new Error(
-        'Answer content exceeds maximum length of 10000 characters'
+        'Answer content exceeds maximum length of 10000 characters',
       );
     }
 
@@ -966,7 +963,7 @@ export const updateAnswer = mutation({
     }
     if (content.length > 10000) {
       throw new Error(
-        'Answer content exceeds maximum length of 10000 characters'
+        'Answer content exceeds maximum length of 10000 characters',
       );
     }
 
@@ -1045,9 +1042,8 @@ export const voteAnswer = mutation({
     // Check for existing vote
     const existingVote = await ctx.db
       .query('poiAnswerVotes')
-      .withIndex('by_answer_user', (q) =>
-        q.eq('answerId', args.answerId).eq('userId', args.userId)
-      )
+      .withIndex('by_answer_user', q =>
+        q.eq('answerId', args.answerId).eq('userId', args.userId))
       .first();
 
     if (existingVote) {
@@ -1055,22 +1051,23 @@ export const voteAnswer = mutation({
         // Remove vote (toggle off)
         await ctx.db.delete(existingVote._id);
 
-        const countUpdate =
-          args.voteType === 'up'
+        const countUpdate
+          = args.voteType === 'up'
             ? { upvotesCount: answer.upvotesCount - 1 }
             : { downvotesCount: answer.downvotesCount - 1 };
         await ctx.db.patch(args.answerId, countUpdate);
 
         return { action: 'removed', voteType: null };
-      } else {
+      }
+      else {
         // Change vote
         await ctx.db.patch(existingVote._id, {
           voteType: args.voteType,
           createdAt: Date.now(),
         });
 
-        const countUpdate =
-          args.voteType === 'up'
+        const countUpdate
+          = args.voteType === 'up'
             ? {
                 upvotesCount: answer.upvotesCount + 1,
                 downvotesCount: answer.downvotesCount - 1,
@@ -1083,7 +1080,8 @@ export const voteAnswer = mutation({
 
         return { action: 'changed', voteType: args.voteType };
       }
-    } else {
+    }
+    else {
       // Create new vote
       await ctx.db.insert('poiAnswerVotes', {
         answerId: args.answerId,
@@ -1092,8 +1090,8 @@ export const voteAnswer = mutation({
         createdAt: Date.now(),
       });
 
-      const countUpdate =
-        args.voteType === 'up'
+      const countUpdate
+        = args.voteType === 'up'
           ? { upvotesCount: answer.upvotesCount + 1 }
           : { downvotesCount: answer.downvotesCount + 1 };
       await ctx.db.patch(args.answerId, countUpdate);
@@ -1253,7 +1251,8 @@ export const reportQA = mutation({
       await ctx.db.patch(args.targetId as Id<'poiQuestions'>, {
         reportCount: question.reportCount + 1,
       });
-    } else {
+    }
+    else {
       const answer = await ctx.db.get(args.targetId as Id<'poiAnswers'>);
       if (!answer) {
         throw new Error('Answer not found');
@@ -1267,10 +1266,9 @@ export const reportQA = mutation({
     // Check for duplicate report
     const existingReport = await ctx.db
       .query('poiQAReports')
-      .withIndex('by_target', (q) =>
-        q.eq('targetType', args.targetType).eq('targetId', args.targetId)
-      )
-      .filter((q) => q.eq(q.field('userId'), args.userId))
+      .withIndex('by_target', q =>
+        q.eq('targetType', args.targetType).eq('targetId', args.targetId))
+      .filter(q => q.eq(q.field('userId'), args.userId))
       .first();
 
     if (existingReport) {

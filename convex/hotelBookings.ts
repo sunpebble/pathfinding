@@ -10,12 +10,12 @@ const statusValidator = v.optional(
     v.literal('confirmed'),
     v.literal('pending'),
     v.literal('cancelled'),
-    v.literal('completed')
-  )
+    v.literal('completed'),
+  ),
 );
 
 const importSourceValidator = v.optional(
-  v.union(v.literal('manual'), v.literal('email'), v.literal('import'))
+  v.union(v.literal('manual'), v.literal('email'), v.literal('import')),
 );
 
 // List hotel bookings for a user
@@ -33,13 +33,13 @@ export const listByUser = query({
 
     const bookingsQuery = ctx.db
       .query('hotelBookings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId));
+      .withIndex('by_user', q => q.eq('userId', args.userId));
 
     const allBookings = await bookingsQuery.order('desc').collect();
 
     // Filter by status if provided
     const filtered = args.status
-      ? allBookings.filter((b) => b.status === args.status)
+      ? allBookings.filter(b => b.status === args.status)
       : allBookings;
 
     const total = filtered.length;
@@ -57,14 +57,14 @@ export const listByItinerary = query({
   handler: async (ctx, args) => {
     const bookings = await ctx.db
       .query('hotelBookings')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .order('asc')
       .collect();
 
     // Sort by check-in date
     bookings.sort(
       (a, b) =>
-        new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime()
+        new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime(),
     );
 
     return bookings;
@@ -91,15 +91,15 @@ export const getUpcoming = query({
 
     const allBookings = await ctx.db
       .query('hotelBookings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Filter upcoming (check-in date >= today) and not cancelled
     const upcoming = allBookings
-      .filter((b) => b.checkInDate >= today && b.status !== 'cancelled')
+      .filter(b => b.checkInDate >= today && b.status !== 'cancelled')
       .sort(
         (a, b) =>
-          new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime()
+          new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime(),
       )
       .slice(0, limit);
 
@@ -216,7 +216,7 @@ export const update = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, filteredUpdates);
@@ -303,7 +303,7 @@ export const updateStatus = mutation({
       v.literal('confirmed'),
       v.literal('pending'),
       v.literal('cancelled'),
-      v.literal('completed')
+      v.literal('completed'),
     ),
   },
   handler: async (ctx, args) => {

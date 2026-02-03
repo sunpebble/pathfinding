@@ -47,7 +47,7 @@ function PlatformBadge({ platform }: { platform: string }) {
     <span
       className={cn(
         'px-2 py-0.5 rounded-full text-xs font-medium',
-        colors[platform] || 'bg-gray-100 text-gray-800'
+        colors[platform] || 'bg-gray-100 text-gray-800',
       )}
     >
       {names[platform] || platform}
@@ -57,8 +57,8 @@ function PlatformBadge({ platform }: { platform: string }) {
 
 function QualityScore({ score }: { score: number }) {
   const percentage = Math.round(score * 100);
-  const color =
-    score >= 0.7
+  const color
+    = score >= 0.7
       ? 'text-green-600'
       : score >= 0.4
         ? 'text-yellow-600'
@@ -66,7 +66,10 @@ function QualityScore({ score }: { score: number }) {
   return (
     <div className={cn('flex items-center gap-1', color)}>
       <Star className="h-3.5 w-3.5" />
-      <span className="text-xs font-medium">{percentage}%</span>
+      <span className="text-xs font-medium">
+        {percentage}
+        %
+      </span>
     </div>
   );
 }
@@ -111,7 +114,7 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
           {/* Destinations */}
           {guide.destinations.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
-              {guide.destinations.slice(0, 3).map((dest) => (
+              {guide.destinations.slice(0, 3).map(dest => (
                 <span
                   key={dest}
                   className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs"
@@ -121,7 +124,8 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
               ))}
               {guide.destinations.length > 3 && (
                 <span className="text-xs text-gray-400">
-                  +{guide.destinations.length - 3}
+                  +
+                  {guide.destinations.length - 3}
                 </span>
               )}
             </div>
@@ -191,7 +195,9 @@ export default function ReviewGuidesPage() {
             Guides Review Queue
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {total.toLocaleString()} guides with low confidence scores need
+            {total.toLocaleString()}
+            {' '}
+            guides with low confidence scores need
             review
           </p>
         </div>
@@ -231,7 +237,7 @@ export default function ReviewGuidesPage() {
           }}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         >
-          {PLATFORMS.map((p) => (
+          {PLATFORMS.map(p => (
             <option key={p.value} value={p.value}>
               {p.label}
             </option>
@@ -260,7 +266,7 @@ export default function ReviewGuidesPage() {
         <>
           {/* Guides Grid */}
           <div className="grid gap-4 md:grid-cols-2">
-            {guides.map((guide) => (
+            {guides.map(guide => (
               <Link key={guide.id} href={`/guides/${guide.id}`}>
                 <GuideCard guide={guide} />
               </Link>
@@ -271,8 +277,16 @@ export default function ReviewGuidesPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-gray-200 pt-4">
               <p className="text-sm text-gray-500">
-                Showing {page * pageSize + 1} -{' '}
-                {Math.min((page + 1) * pageSize, total)} of {total}
+                Showing
+                {' '}
+                {page * pageSize + 1}
+                {' '}
+                -
+                {' '}
+                {Math.min((page + 1) * pageSize, total)}
+                {' '}
+                of
+                {total}
               </p>
               <div className="flex gap-2">
                 <button

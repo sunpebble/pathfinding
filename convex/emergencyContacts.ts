@@ -14,13 +14,15 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const contacts = await ctx.db
       .query('emergencyContacts')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by primary first, then by name
     contacts.sort((a, b) => {
-      if (a.isPrimary && !b.isPrimary) return -1;
-      if (!a.isPrimary && b.isPrimary) return 1;
+      if (a.isPrimary && !b.isPrimary)
+        return -1;
+      if (!a.isPrimary && b.isPrimary)
+        return 1;
       return a.name.localeCompare(b.name);
     });
 
@@ -42,9 +44,8 @@ export const getPrimary = query({
   handler: async (ctx, args) => {
     const contacts = await ctx.db
       .query('emergencyContacts')
-      .withIndex('by_user_primary', (q) =>
-        q.eq('userId', args.userId).eq('isPrimary', true)
-      )
+      .withIndex('by_user_primary', q =>
+        q.eq('userId', args.userId).eq('isPrimary', true))
       .first();
 
     return contacts;
@@ -57,10 +58,10 @@ export const getSosContacts = query({
   handler: async (ctx, args) => {
     const contacts = await ctx.db
       .query('emergencyContacts')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
-    return contacts.filter((c) => c.notifyOnSos);
+    return contacts.filter(c => c.notifyOnSos);
   },
 });
 
@@ -83,9 +84,8 @@ export const create = mutation({
     if (args.isPrimary) {
       const existingPrimary = await ctx.db
         .query('emergencyContacts')
-        .withIndex('by_user_primary', (q) =>
-          q.eq('userId', args.userId).eq('isPrimary', true)
-        )
+        .withIndex('by_user_primary', q =>
+          q.eq('userId', args.userId).eq('isPrimary', true))
         .collect();
 
       for (const contact of existingPrimary) {
@@ -134,9 +134,8 @@ export const update = mutation({
     if (updates.isPrimary === true) {
       const existingPrimary = await ctx.db
         .query('emergencyContacts')
-        .withIndex('by_user_primary', (q) =>
-          q.eq('userId', existing.userId).eq('isPrimary', true)
-        )
+        .withIndex('by_user_primary', q =>
+          q.eq('userId', existing.userId).eq('isPrimary', true))
         .collect();
 
       for (const contact of existingPrimary) {
@@ -147,7 +146,7 @@ export const update = mutation({
     }
 
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, { ...filteredUpdates, updatedAt: now });
@@ -175,9 +174,8 @@ export const setPrimary = mutation({
     // Unset all other primary contacts for this user
     const existingPrimary = await ctx.db
       .query('emergencyContacts')
-      .withIndex('by_user_primary', (q) =>
-        q.eq('userId', args.userId).eq('isPrimary', true)
-      )
+      .withIndex('by_user_primary', q =>
+        q.eq('userId', args.userId).eq('isPrimary', true))
       .collect();
 
     for (const contact of existingPrimary) {

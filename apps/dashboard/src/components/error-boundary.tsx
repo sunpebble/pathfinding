@@ -1,7 +1,7 @@
 'use client';
 
-import type {ReactNode} from 'react';
-import { Component  } from 'react';
+import type { ReactNode } from 'react';
+import { Component } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -24,7 +24,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-     
     console.error('ErrorBoundary caught:', error, errorInfo);
     // TODO: Report to error tracking service (Sentry)
   }

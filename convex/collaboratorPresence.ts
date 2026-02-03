@@ -27,14 +27,14 @@ const COLLABORATOR_COLORS = [
  */
 async function getAvailableColor(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>
+  itineraryId: Id<'itineraries'>,
 ): Promise<string> {
   const existingPresences = await ctx.db
     .query('collaboratorPresence')
-    .withIndex('by_itinerary', (q) => q.eq('itineraryId', itineraryId))
+    .withIndex('by_itinerary', q => q.eq('itineraryId', itineraryId))
     .collect();
 
-  const usedColors = new Set(existingPresences.map((p) => p.color));
+  const usedColors = new Set(existingPresences.map(p => p.color));
 
   for (const color of COLLABORATOR_COLORS) {
     if (!usedColors.has(color)) {
@@ -45,7 +45,7 @@ async function getAvailableColor(
   // If all colors are used, return a random one
   return COLLABORATOR_COLORS[
     Math.floor(Math.random() * COLLABORATOR_COLORS.length)
-  ];
+  ]!;
 }
 
 /**
@@ -54,20 +54,21 @@ async function getAvailableColor(
 async function checkAccess(
   ctx: QueryCtx | MutationCtx,
   itineraryId: Id<'itineraries'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
-  if (!itinerary) return false;
+  if (!itinerary)
+    return false;
 
   // Owner has access
-  if (itinerary.userId === userId) return true;
+  if (itinerary.userId === userId)
+    return true;
 
   // Check collaborator access
   const collab = await ctx.db
     .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', (q) =>
-      q.eq('itineraryId', itineraryId).eq('userId', userId)
-    )
+    .withIndex('by_itinerary_user', q =>
+      q.eq('itineraryId', itineraryId).eq('userId', userId))
     .first();
 
   return collab !== null;
@@ -86,13 +87,13 @@ export const getOnlineCollaborators = query({
     // Get all presence records for this itinerary
     const presences = await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Filter to only online users (active in last 30 seconds)
     const thirtySecondsAgo = Date.now() - 30000;
     const onlinePresences = presences.filter(
-      (p) => p.isOnline && p.lastActiveAt > thirtySecondsAgo
+      p => p.isOnline && p.lastActiveAt > thirtySecondsAgo,
     );
 
     return onlinePresences;
@@ -110,9 +111,8 @@ export const getUserPresence = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
   },
 });
@@ -125,21 +125,22 @@ export const getCollaboratorsWithPresence = query({
   handler: async (ctx, args) => {
     // Get itinerary to include owner
     const itinerary = await ctx.db.get(args.itineraryId);
-    if (!itinerary) return [];
+    if (!itinerary)
+      return [];
 
     // Get all collaborators
     const collaborators = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Get all presence records
     const presences = await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
-    const presenceMap = new Map(presences.map((p) => [p.userId, p]));
+    const presenceMap = new Map(presences.map(p => [p.userId, p]));
     const thirtySecondsAgo = Date.now() - 30000;
 
     // Build result including owner
@@ -151,15 +152,16 @@ export const getCollaboratorsWithPresence = query({
       userId: itinerary.userId,
       role: 'owner' as const,
       isOnline: ownerPresence
-        ? ownerPresence.isOnline &&
-          ownerPresence.lastActiveAt > thirtySecondsAgo
+        ? ownerPresence.isOnline
+        && ownerPresence.lastActiveAt > thirtySecondsAgo
         : false,
       presence: ownerPresence || null,
     });
 
     // Add collaborators
     for (const collab of collaborators) {
-      if (collab.userId === itinerary.userId) continue; // Skip owner
+      if (collab.userId === itinerary.userId)
+        continue; // Skip owner
       const presence = presenceMap.get(collab.userId);
       result.push({
         userId: collab.userId,
@@ -199,9 +201,8 @@ export const joinSession = mutation({
     // Check if presence record already exists
     const existing = await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (existing) {
@@ -240,9 +241,8 @@ export const leaveSession = mutation({
   handler: async (ctx, args) => {
     const presence = await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (presence) {
@@ -269,9 +269,8 @@ export const heartbeat = mutation({
   handler: async (ctx, args) => {
     const presence = await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (presence) {
@@ -296,15 +295,14 @@ export const updateCursor = mutation({
       v.object({
         field: v.string(),
         offset: v.optional(v.number()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
     const presence = await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (presence) {
@@ -330,16 +328,15 @@ export const updateSelection = mutation({
         v.object({
           type: v.union(v.literal('day'), v.literal('item'), v.literal('poi')),
           id: v.string(),
-        })
-      )
+        }),
+      ),
     ),
   },
   handler: async (ctx, args) => {
     const presence = await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (presence) {
@@ -362,7 +359,7 @@ export const cleanupStalePresences = mutation({
   handler: async (ctx, args) => {
     const presences = await ctx.db
       .query('collaboratorPresence')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     const oneMinuteAgo = Date.now() - 60000;

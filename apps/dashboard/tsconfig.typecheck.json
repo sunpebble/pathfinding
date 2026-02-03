@@ -8,7 +8,9 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@pathfinding/convex-client/api": ["../../convex/_generated/api"],
+      "@pathfinding/convex-client/dataModel": ["../../convex/_generated/dataModel"]
     },
     "allowJs": true,
     "strict": false,
@@ -28,5 +30,5 @@
     "src/**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "../../convex"]
 }

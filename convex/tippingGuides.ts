@@ -8,24 +8,24 @@ import { mutation, query } from './_generated/server';
  */
 
 // Tipping culture type
-export type TippingCulture =
-  | 'expected'
-  | 'appreciated'
-  | 'optional'
-  | 'not_expected'
-  | 'offensive';
+export type TippingCulture
+  = | 'expected'
+    | 'appreciated'
+    | 'optional'
+    | 'not_expected'
+    | 'offensive';
 
 // Scenario type
-export type TippingScenarioType =
-  | 'restaurant'
-  | 'hotel'
-  | 'taxi'
-  | 'bar'
-  | 'spa'
-  | 'tour'
-  | 'delivery'
-  | 'hairdresser'
-  | 'other';
+export type TippingScenarioType
+  = | 'restaurant'
+    | 'hotel'
+    | 'taxi'
+    | 'bar'
+    | 'spa'
+    | 'tour'
+    | 'delivery'
+    | 'hairdresser'
+    | 'other';
 
 // List all tipping guides
 export const list = query({
@@ -41,9 +41,8 @@ export const getByCountryCode = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('tippingGuides')
-      .withIndex('by_country_code', (q) =>
-        q.eq('countryCode', args.countryCode)
-      )
+      .withIndex('by_country_code', q =>
+        q.eq('countryCode', args.countryCode))
       .first();
   },
 });
@@ -56,15 +55,14 @@ export const getByTippingCulture = query({
       v.literal('appreciated'),
       v.literal('optional'),
       v.literal('not_expected'),
-      v.literal('offensive')
+      v.literal('offensive'),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query('tippingGuides')
-      .withIndex('by_tipping_culture', (q) =>
-        q.eq('tippingCulture', args.culture)
-      )
+      .withIndex('by_tipping_culture', q =>
+        q.eq('tippingCulture', args.culture))
       .collect();
   },
 });
@@ -76,10 +74,10 @@ export const searchByName = query({
     const guides = await ctx.db.query('tippingGuides').collect();
     const searchLower = args.name.toLowerCase();
     return guides.filter(
-      (guide) =>
-        guide.countryName.toLowerCase().includes(searchLower) ||
-        guide.countryNameEn?.toLowerCase().includes(searchLower) ||
-        guide.countryCode.toLowerCase().includes(searchLower)
+      guide =>
+        guide.countryName.toLowerCase().includes(searchLower)
+        || guide.countryNameEn?.toLowerCase().includes(searchLower)
+        || guide.countryCode.toLowerCase().includes(searchLower),
     );
   },
 });
@@ -97,20 +95,20 @@ export const getScenario = query({
       v.literal('tour'),
       v.literal('delivery'),
       v.literal('hairdresser'),
-      v.literal('other')
+      v.literal('other'),
     ),
   },
   handler: async (ctx, args) => {
     const guide = await ctx.db
       .query('tippingGuides')
-      .withIndex('by_country_code', (q) =>
-        q.eq('countryCode', args.countryCode)
-      )
+      .withIndex('by_country_code', q =>
+        q.eq('countryCode', args.countryCode))
       .first();
 
-    if (!guide) return null;
+    if (!guide)
+      return null;
 
-    const scenario = guide.scenarios.find((s) => s.type === args.scenarioType);
+    const scenario = guide.scenarios.find(s => s.type === args.scenarioType);
     return scenario
       ? {
           ...scenario,
@@ -136,7 +134,7 @@ export const create = mutation({
       v.literal('appreciated'),
       v.literal('optional'),
       v.literal('not_expected'),
-      v.literal('offensive')
+      v.literal('offensive'),
     ),
     cultureSummary: v.string(),
     scenarios: v.array(
@@ -150,7 +148,7 @@ export const create = mutation({
           v.literal('tour'),
           v.literal('delivery'),
           v.literal('hairdresser'),
-          v.literal('other')
+          v.literal('other'),
         ),
         typeName: v.string(),
         minPercentage: v.number(),
@@ -158,7 +156,7 @@ export const create = mutation({
         suggestedPercentage: v.number(),
         fixedAmount: v.optional(v.number()),
         notes: v.optional(v.string()),
-      })
+      }),
     ),
     tips: v.optional(v.array(v.string())),
   },
@@ -185,8 +183,8 @@ export const update = mutation({
         v.literal('appreciated'),
         v.literal('optional'),
         v.literal('not_expected'),
-        v.literal('offensive')
-      )
+        v.literal('offensive'),
+      ),
     ),
     cultureSummary: v.optional(v.string()),
     scenarios: v.optional(
@@ -201,7 +199,7 @@ export const update = mutation({
             v.literal('tour'),
             v.literal('delivery'),
             v.literal('hairdresser'),
-            v.literal('other')
+            v.literal('other'),
           ),
           typeName: v.string(),
           minPercentage: v.number(),
@@ -209,15 +207,15 @@ export const update = mutation({
           suggestedPercentage: v.number(),
           fixedAmount: v.optional(v.number()),
           notes: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     tips: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, {
       ...filteredUpdates,

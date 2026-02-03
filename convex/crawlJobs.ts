@@ -1,6 +1,10 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
+import {
+  crawlJobConfigValidator,
+  crawlJobStatisticsValidator,
+} from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 /**
@@ -20,16 +24,18 @@ export const list = query({
     if (args.status) {
       jobs = await ctx.db
         .query('crawlJobs')
-        .withIndex('by_status', (q) => q.eq('status', args.status!))
+        .withIndex('by_status', q => q.eq('status', args.status!))
         .order('desc')
         .collect();
-    } else if (args.platform) {
+    }
+    else if (args.platform) {
       jobs = await ctx.db
         .query('crawlJobs')
-        .withIndex('by_platform', (q) => q.eq('platform', args.platform!))
+        .withIndex('by_platform', q => q.eq('platform', args.platform!))
         .order('desc')
         .collect();
-    } else {
+    }
+    else {
       jobs = await ctx.db.query('crawlJobs').order('desc').collect();
     }
 
@@ -55,7 +61,7 @@ export const getDueJobs = query({
     const jobs = await ctx.db
       .query('crawlJobs')
       .withIndex('by_nextRunAt')
-      .filter((q) => q.lte(q.field('nextRunAt'), now))
+      .filter(q => q.lte(q.field('nextRunAt'), now))
       .collect();
 
     return args.limit ? jobs.slice(0, args.limit) : jobs;
@@ -77,16 +83,16 @@ export const getJobsForIncrementalCrawl = query({
     // Get all completed jobs
     const completedJobs = await ctx.db
       .query('crawlJobs')
-      .withIndex('by_status', (q) => q.eq('status', 'completed'))
+      .withIndex('by_status', q => q.eq('status', 'completed'))
       .collect();
 
     // Filter for stale jobs with schedule (candidates for incremental crawl)
     const staleJobs = completedJobs.filter(
-      (job) =>
-        job.completedAt &&
-        job.completedAt < staleTimestamp &&
-        job.scheduleCron !== undefined &&
-        job.jobType === 'full' // Only full crawls can trigger incremental updates
+      job =>
+        job.completedAt
+        && job.completedAt < staleTimestamp
+        && job.scheduleCron !== undefined
+        && job.jobType === 'full', // Only full crawls can trigger incremental updates
     );
 
     // Sort by completedAt (oldest first) to prioritize most stale jobs
@@ -102,7 +108,7 @@ export const create = mutation({
     name: v.string(),
     platform: v.string(),
     jobType: v.optional(v.string()),
-    config: v.any(),
+    config: crawlJobConfigValidator,
     scheduleCron: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -118,10 +124,14 @@ export const create = mutation({
   },
 });
 
-// Start a crawl job
 export const start = mutation({
   args: { id: v.id('crawlJobs') },
   handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new ConvexError('Crawl job not found');
+    }
+
     await ctx.db.patch(args.id, {
       status: 'running',
       startedAt: Date.now(),
@@ -130,13 +140,17 @@ export const start = mutation({
   },
 });
 
-// Complete a crawl job
 export const complete = mutation({
   args: {
     id: v.id('crawlJobs'),
-    statistics: v.optional(v.any()),
+    statistics: v.optional(crawlJobStatisticsValidator),
   },
   handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new ConvexError('Crawl job not found');
+    }
+
     await ctx.db.patch(args.id, {
       status: 'completed',
       completedAt: Date.now(),
@@ -146,17 +160,16 @@ export const complete = mutation({
   },
 });
 
-// Fail a crawl job
 export const fail = mutation({
   args: {
     id: v.id('crawlJobs'),
     errorMessage: v.string(),
-    statistics: v.optional(v.any()),
+    statistics: v.optional(crawlJobStatisticsValidator),
   },
   handler: async (ctx, args) => {
     const job = await ctx.db.get(args.id);
     if (!job) {
-      throw new Error(`Job ${args.id} not found`);
+      throw new ConvexError('Crawl job not found');
     }
 
     await ctx.db.patch(args.id, {
@@ -171,10 +184,14 @@ export const fail = mutation({
   },
 });
 
-// Cancel a crawl job
 export const cancel = mutation({
   args: { id: v.id('crawlJobs') },
   handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new ConvexError('Crawl job not found');
+    }
+
     await ctx.db.patch(args.id, {
       status: 'cancelled',
       completedAt: Date.now(),
@@ -183,7 +200,6 @@ export const cancel = mutation({
   },
 });
 
-// Update crawl job status (generic status update)
 export const updateStatus = mutation({
   args: {
     id: v.id('crawlJobs'),
@@ -193,6 +209,11 @@ export const updateStatus = mutation({
     errorMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new ConvexError('Crawl job not found');
+    }
+
     const update: Record<string, unknown> = { status: args.status };
 
     if (args.startedAt !== undefined) {
@@ -210,26 +231,34 @@ export const updateStatus = mutation({
   },
 });
 
-// Update crawl job statistics (during running)
 export const updateStatistics = mutation({
   args: {
     id: v.id('crawlJobs'),
-    statistics: v.any(),
+    statistics: crawlJobStatisticsValidator,
   },
   handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new ConvexError('Crawl job not found');
+    }
+
     await ctx.db.patch(args.id, {
       statistics: args.statistics,
     });
   },
 });
 
-// Update next run time for scheduled jobs
 export const updateNextRunAt = mutation({
   args: {
     id: v.id('crawlJobs'),
     nextRunAt: v.number(),
   },
   handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new ConvexError('Crawl job not found');
+    }
+
     await ctx.db.patch(args.id, {
       nextRunAt: args.nextRunAt,
     });
@@ -237,13 +266,12 @@ export const updateNextRunAt = mutation({
   },
 });
 
-// Increment retry count
 export const incrementRetryCount = mutation({
   args: { id: v.id('crawlJobs') },
   handler: async (ctx, args) => {
     const job = await ctx.db.get(args.id);
     if (!job) {
-      throw new Error(`Job ${args.id} not found`);
+      throw new ConvexError('Crawl job not found');
     }
 
     await ctx.db.patch(args.id, {
@@ -253,14 +281,17 @@ export const incrementRetryCount = mutation({
   },
 });
 
-// Delete a crawl job
 export const remove = mutation({
   args: { id: v.id('crawlJobs') },
   handler: async (ctx, args) => {
-    // First delete all raw records for this job
+    const job = await ctx.db.get(args.id);
+    if (!job) {
+      throw new ConvexError('Crawl job not found');
+    }
+
     const records = await ctx.db
       .query('rawCrawlRecords')
-      .withIndex('by_job', (q) => q.eq('jobId', args.id))
+      .withIndex('by_job', q => q.eq('jobId', args.id))
       .collect();
 
     for (const record of records) {

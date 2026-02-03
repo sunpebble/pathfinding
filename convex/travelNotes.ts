@@ -11,7 +11,7 @@ import { mutation, query } from './_generated/server';
 const visibilityValidator = v.union(
   v.literal('private'),
   v.literal('public'),
-  v.literal('followers')
+  v.literal('followers'),
 );
 
 /**
@@ -22,7 +22,7 @@ const visibilityValidator = v.union(
 async function checkEditPermission(
   ctx: QueryCtx | MutationCtx,
   noteId: Id<'travelNotes'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const note = await ctx.db.get(noteId);
   if (!note) {
@@ -40,7 +40,7 @@ async function checkEditPermission(
 async function _checkReadPermission(
   ctx: QueryCtx | MutationCtx,
   noteId: Id<'travelNotes'>,
-  userId?: string
+  userId?: string,
 ): Promise<boolean> {
   const note = await ctx.db.get(noteId);
   if (!note) {
@@ -66,9 +66,8 @@ async function _checkReadPermission(
   if (note.visibility === 'followers' && userId) {
     const following = await ctx.db
       .query('userFollows')
-      .withIndex('by_follower_following', (q) =>
-        q.eq('followerId', userId).eq('followingId', note.authorId)
-      )
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', userId).eq('followingId', note.authorId))
       .first();
 
     if (following) {
@@ -94,13 +93,13 @@ export const listByUser = query({
 
     let notes = await ctx.db
       .query('travelNotes')
-      .withIndex('by_author', (q) => q.eq('authorId', args.userId))
+      .withIndex('by_author', q => q.eq('authorId', args.userId))
       .order('desc')
       .collect();
 
     // 过滤可见性
     if (args.visibility) {
-      notes = notes.filter((n) => n.visibility === args.visibility);
+      notes = notes.filter(n => n.visibility === args.visibility);
     }
 
     const total = notes.length;
@@ -111,29 +110,29 @@ export const listByUser = query({
       data.map(async (note) => {
         const images = await ctx.db
           .query('noteImages')
-          .withIndex('by_note', (q) => q.eq('noteId', note._id))
+          .withIndex('by_note', q => q.eq('noteId', note._id))
           .collect();
 
         const tags = await ctx.db
           .query('noteTags')
-          .withIndex('by_note', (q) => q.eq('noteId', note._id))
+          .withIndex('by_note', q => q.eq('noteId', note._id))
           .collect();
 
         // 获取作者信息
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), note.authorId))
+          .filter(q => q.eq(q.field('email'), note.authorId))
           .first();
 
         return {
           ...note,
           imageCount: images.length,
-          coverImage: images.find((i) => i.isCover)?.url ?? images[0]?.url,
-          tags: tags.map((t) => t.tag),
+          coverImage: images.find(i => i.isCover)?.url ?? images[0]?.url,
+          tags: tags.map(t => t.tag),
           authorName: profile?.displayName,
           authorAvatar: profile?.avatarUrl,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -147,7 +146,7 @@ export const listPublic = query({
     pageSize: v.optional(v.number()),
     tag: v.optional(v.string()),
     sortBy: v.optional(
-      v.union(v.literal('latest'), v.literal('popular'), v.literal('trending'))
+      v.union(v.literal('latest'), v.literal('popular'), v.literal('trending')),
     ),
   },
   handler: async (ctx, args) => {
@@ -158,7 +157,7 @@ export const listPublic = query({
 
     let notes = await ctx.db
       .query('travelNotes')
-      .withIndex('by_visibility', (q) => q.eq('visibility', 'public'))
+      .withIndex('by_visibility', q => q.eq('visibility', 'public'))
       .order('desc')
       .collect();
 
@@ -167,11 +166,11 @@ export const listPublic = query({
       const taggedNoteIds = new Set<string>();
       const tagEntries = await ctx.db
         .query('noteTags')
-        .withIndex('by_tag', (q) => q.eq('tag', args.tag!))
+        .withIndex('by_tag', q => q.eq('tag', args.tag!))
         .collect();
 
-      tagEntries.forEach((t) => taggedNoteIds.add(t.noteId));
-      notes = notes.filter((n) => taggedNoteIds.has(n._id));
+      tagEntries.forEach(t => taggedNoteIds.add(t.noteId));
+      notes = notes.filter(n => taggedNoteIds.has(n._id));
     }
 
     // 排序
@@ -182,16 +181,16 @@ export const listPublic = query({
       case 'trending':
         // 结合时间和热度的排序
         notes.sort((a, b) => {
-          const aScore =
-            a.likesCount * 2 +
-            a.commentsCount +
-            a.viewsCount / 10 -
-            (Date.now() - a.createdAt) / (1000 * 60 * 60 * 24);
-          const bScore =
-            b.likesCount * 2 +
-            b.commentsCount +
-            b.viewsCount / 10 -
-            (Date.now() - b.createdAt) / (1000 * 60 * 60 * 24);
+          const aScore
+            = a.likesCount * 2
+              + a.commentsCount
+              + a.viewsCount / 10
+              - (Date.now() - a.createdAt) / (1000 * 60 * 60 * 24);
+          const bScore
+            = b.likesCount * 2
+              + b.commentsCount
+              + b.viewsCount / 10
+              - (Date.now() - b.createdAt) / (1000 * 60 * 60 * 24);
           return bScore - aScore;
         });
         break;
@@ -209,28 +208,28 @@ export const listPublic = query({
       data.map(async (note) => {
         const images = await ctx.db
           .query('noteImages')
-          .withIndex('by_note', (q) => q.eq('noteId', note._id))
+          .withIndex('by_note', q => q.eq('noteId', note._id))
           .collect();
 
         const tags = await ctx.db
           .query('noteTags')
-          .withIndex('by_note', (q) => q.eq('noteId', note._id))
+          .withIndex('by_note', q => q.eq('noteId', note._id))
           .collect();
 
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), note.authorId))
+          .filter(q => q.eq(q.field('email'), note.authorId))
           .first();
 
         return {
           ...note,
           imageCount: images.length,
-          coverImage: images.find((i) => i.isCover)?.url ?? images[0]?.url,
-          tags: tags.map((t) => t.tag),
+          coverImage: images.find(i => i.isCover)?.url ?? images[0]?.url,
+          tags: tags.map(t => t.tag),
           authorName: profile?.displayName,
           authorAvatar: profile?.avatarUrl,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };
@@ -245,12 +244,13 @@ export const getById = query({
   },
   handler: async (ctx, args) => {
     const note = await ctx.db.get(args.id);
-    if (!note) return null;
+    if (!note)
+      return null;
 
     // 检查权限（公开或作者）
     if (
-      note.visibility !== 'public' &&
-      (!args.userId || note.authorId !== args.userId)
+      note.visibility !== 'public'
+      && (!args.userId || note.authorId !== args.userId)
     ) {
       return null;
     }
@@ -258,20 +258,20 @@ export const getById = query({
     // 获取图片
     const images = await ctx.db
       .query('noteImages')
-      .withIndex('by_note', (q) => q.eq('noteId', args.id))
+      .withIndex('by_note', q => q.eq('noteId', args.id))
       .collect();
     images.sort((a, b) => a.orderIndex - b.orderIndex);
 
     // 获取标签
     const tags = await ctx.db
       .query('noteTags')
-      .withIndex('by_note', (q) => q.eq('noteId', args.id))
+      .withIndex('by_note', q => q.eq('noteId', args.id))
       .collect();
 
     // 获取作者信息
     const profile = await ctx.db
       .query('profiles')
-      .filter((q) => q.eq(q.field('email'), note.authorId))
+      .filter(q => q.eq(q.field('email'), note.authorId))
       .first();
 
     // 获取关联的行程
@@ -283,7 +283,7 @@ export const getById = query({
     // 获取关联的 POIs
     const notePois = await ctx.db
       .query('notePois')
-      .withIndex('by_note', (q) => q.eq('noteId', args.id))
+      .withIndex('by_note', q => q.eq('noteId', args.id))
       .collect();
 
     const pois = await Promise.all(
@@ -296,19 +296,19 @@ export const getById = query({
               mentionIndex: np.mentionIndex,
             }
           : null;
-      })
+      }),
     );
 
     return {
       ...note,
-      images: images.map((i) => ({
+      images: images.map(i => ({
         id: i._id,
         url: i.url,
         caption: i.caption,
         isCover: i.isCover,
         orderIndex: i.orderIndex,
       })),
-      tags: tags.map((t) => t.tag),
+      tags: tags.map(t => t.tag),
       authorName: profile?.displayName,
       authorAvatar: profile?.avatarUrl,
       itinerary: itinerary
@@ -317,7 +317,7 @@ export const getById = query({
             title: itinerary.title,
           }
         : null,
-      pois: pois.filter((p) => p !== null),
+      pois: pois.filter(p => p !== null),
     };
   },
 });
@@ -372,7 +372,7 @@ export const update = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -397,7 +397,7 @@ export const remove = mutation({
     // 删除相关图片记录
     const images = await ctx.db
       .query('noteImages')
-      .withIndex('by_note', (q) => q.eq('noteId', args.id))
+      .withIndex('by_note', q => q.eq('noteId', args.id))
       .collect();
     for (const image of images) {
       await ctx.db.delete(image._id);
@@ -406,7 +406,7 @@ export const remove = mutation({
     // 删除相关标签记录
     const tags = await ctx.db
       .query('noteTags')
-      .withIndex('by_note', (q) => q.eq('noteId', args.id))
+      .withIndex('by_note', q => q.eq('noteId', args.id))
       .collect();
     for (const tag of tags) {
       await ctx.db.delete(tag._id);
@@ -415,7 +415,7 @@ export const remove = mutation({
     // 删除相关 POI 关联
     const pois = await ctx.db
       .query('notePois')
-      .withIndex('by_note', (q) => q.eq('noteId', args.id))
+      .withIndex('by_note', q => q.eq('noteId', args.id))
       .collect();
     for (const poi of pois) {
       await ctx.db.delete(poi._id);
@@ -424,7 +424,7 @@ export const remove = mutation({
     // 删除相关点赞
     const likes = await ctx.db
       .query('noteLikes')
-      .withIndex('by_note', (q) => q.eq('noteId', args.id))
+      .withIndex('by_note', q => q.eq('noteId', args.id))
       .collect();
     for (const like of likes) {
       await ctx.db.delete(like._id);
@@ -433,7 +433,7 @@ export const remove = mutation({
     // 删除相关评论
     const comments = await ctx.db
       .query('noteComments')
-      .withIndex('by_note', (q) => q.eq('noteId', args.id))
+      .withIndex('by_note', q => q.eq('noteId', args.id))
       .collect();
     for (const comment of comments) {
       await ctx.db.delete(comment._id);
@@ -482,7 +482,7 @@ export const addImage = mutation({
     if (args.isCover) {
       const images = await ctx.db
         .query('noteImages')
-        .withIndex('by_note', (q) => q.eq('noteId', args.noteId))
+        .withIndex('by_note', q => q.eq('noteId', args.noteId))
         .collect();
 
       for (const image of images) {
@@ -533,7 +533,7 @@ export const addImages = mutation({
         caption: v.optional(v.string()),
         isCover: v.optional(v.boolean()),
         orderIndex: v.number(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -546,7 +546,7 @@ export const addImages = mutation({
       if (image.isCover) {
         const existingImages = await ctx.db
           .query('noteImages')
-          .withIndex('by_note', (q) => q.eq('noteId', args.noteId))
+          .withIndex('by_note', q => q.eq('noteId', args.noteId))
           .collect();
 
         for (const existing of existingImages) {
@@ -589,8 +589,8 @@ export const addTag = mutation({
     // 检查标签是否已存在
     const existing = await ctx.db
       .query('noteTags')
-      .withIndex('by_note', (q) => q.eq('noteId', args.noteId))
-      .filter((q) => q.eq(q.field('tag'), args.tag))
+      .withIndex('by_note', q => q.eq('noteId', args.noteId))
+      .filter(q => q.eq(q.field('tag'), args.tag))
       .first();
 
     if (existing) {
@@ -619,8 +619,8 @@ export const removeTag = mutation({
 
     const existing = await ctx.db
       .query('noteTags')
-      .withIndex('by_note', (q) => q.eq('noteId', args.noteId))
-      .filter((q) => q.eq(q.field('tag'), args.tag))
+      .withIndex('by_note', q => q.eq('noteId', args.noteId))
+      .filter(q => q.eq(q.field('tag'), args.tag))
       .first();
 
     if (existing) {
@@ -642,7 +642,7 @@ export const setTags = mutation({
     // 删除现有标签
     const existingTags = await ctx.db
       .query('noteTags')
-      .withIndex('by_note', (q) => q.eq('noteId', args.noteId))
+      .withIndex('by_note', q => q.eq('noteId', args.noteId))
       .collect();
 
     for (const tag of existingTags) {
@@ -651,7 +651,7 @@ export const setTags = mutation({
 
     // 添加新标签
     const uniqueTags = [
-      ...new Set(args.tags.map((t) => t.trim().toLowerCase())),
+      ...new Set(args.tags.map(t => t.trim().toLowerCase())),
     ];
 
     for (const tag of uniqueTags) {
@@ -710,8 +710,8 @@ export const addPoi = mutation({
     // 检查是否已关联
     const existing = await ctx.db
       .query('notePois')
-      .withIndex('by_note', (q) => q.eq('noteId', args.noteId))
-      .filter((q) => q.eq(q.field('poiId'), args.poiId))
+      .withIndex('by_note', q => q.eq('noteId', args.noteId))
+      .filter(q => q.eq(q.field('poiId'), args.poiId))
       .first();
 
     if (existing) {
@@ -741,8 +741,8 @@ export const removePoi = mutation({
 
     const existing = await ctx.db
       .query('notePois')
-      .withIndex('by_note', (q) => q.eq('noteId', args.noteId))
-      .filter((q) => q.eq(q.field('poiId'), args.poiId))
+      .withIndex('by_note', q => q.eq('noteId', args.noteId))
+      .filter(q => q.eq(q.field('poiId'), args.poiId))
       .first();
 
     if (existing) {
@@ -771,37 +771,37 @@ export const search = query({
     // 获取所有公开游记
     let notes = await ctx.db
       .query('travelNotes')
-      .withIndex('by_visibility', (q) => q.eq('visibility', 'public'))
+      .withIndex('by_visibility', q => q.eq('visibility', 'public'))
       .collect();
 
     // 搜索标题和内容
     notes = notes.filter(
-      (n) =>
-        n.title.toLowerCase().includes(searchQuery) ||
-        n.content.toLowerCase().includes(searchQuery) ||
-        (n.location && n.location.toLowerCase().includes(searchQuery))
+      n =>
+        n.title.toLowerCase().includes(searchQuery)
+        || n.content.toLowerCase().includes(searchQuery)
+        || (n.location && n.location.toLowerCase().includes(searchQuery)),
     );
 
     // 也搜索标签
     const matchingTags = await ctx.db
       .query('noteTags')
-      .withIndex('by_tag', (q) => q.eq('tag', searchQuery))
+      .withIndex('by_tag', q => q.eq('tag', searchQuery))
       .collect();
 
-    const tagNoteIds = new Set(matchingTags.map((t) => t.noteId as string));
+    const tagNoteIds = new Set(matchingTags.map(t => t.noteId as string));
     notes = [
       ...notes,
       ...(
         await Promise.all(
-          Array.from(tagNoteIds).map((id) =>
-            ctx.db.get(id as Id<'travelNotes'>)
-          )
+          Array.from(tagNoteIds).map(id =>
+            ctx.db.get(id as Id<'travelNotes'>),
+          ),
         )
       ).filter(
-        (n) =>
-          n !== null &&
-          n.visibility === 'public' &&
-          !notes.some((existing) => existing._id === n._id)
+        n =>
+          n !== null
+          && n.visibility === 'public'
+          && !notes.some(existing => existing._id === n._id),
       ),
     ] as typeof notes;
 
@@ -809,7 +809,8 @@ export const search = query({
     notes.sort((a, b) => {
       const aInTitle = a.title.toLowerCase().includes(searchQuery) ? 1 : 0;
       const bInTitle = b.title.toLowerCase().includes(searchQuery) ? 1 : 0;
-      if (aInTitle !== bInTitle) return bInTitle - aInTitle;
+      if (aInTitle !== bInTitle)
+        return bInTitle - aInTitle;
       return b.createdAt - a.createdAt;
     });
 
@@ -821,28 +822,28 @@ export const search = query({
       data.map(async (note) => {
         const images = await ctx.db
           .query('noteImages')
-          .withIndex('by_note', (q) => q.eq('noteId', note._id))
+          .withIndex('by_note', q => q.eq('noteId', note._id))
           .collect();
 
         const tags = await ctx.db
           .query('noteTags')
-          .withIndex('by_note', (q) => q.eq('noteId', note._id))
+          .withIndex('by_note', q => q.eq('noteId', note._id))
           .collect();
 
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), note.authorId))
+          .filter(q => q.eq(q.field('email'), note.authorId))
           .first();
 
         return {
           ...note,
           imageCount: images.length,
-          coverImage: images.find((i) => i.isCover)?.url ?? images[0]?.url,
-          tags: tags.map((t) => t.tag),
+          coverImage: images.find(i => i.isCover)?.url ?? images[0]?.url,
+          tags: tags.map(t => t.tag),
           authorName: profile?.displayName,
           authorAvatar: profile?.avatarUrl,
         };
-      })
+      }),
     );
 
     return { data: enriched, total };

@@ -18,14 +18,14 @@ const ticketTypeValidator = v.union(
   v.literal('family'),
   v.literal('vip'),
   v.literal('free'),
-  v.literal('other')
+  v.literal('other'),
 );
 
 const stockStatusValidator = v.union(
   v.literal('in_stock'),
   v.literal('low_stock'),
   v.literal('sold_out'),
-  v.literal('unknown')
+  v.literal('unknown'),
 );
 
 // ============================================
@@ -46,14 +46,14 @@ export const listByPoi = query({
     if (args.activeOnly) {
       tickets = await ctx.db
         .query('poiTickets')
-        .withIndex('by_poi_active', (q) =>
-          q.eq('poiId', args.poiId).eq('isActive', true)
-        )
+        .withIndex('by_poi_active', q =>
+          q.eq('poiId', args.poiId).eq('isActive', true))
         .collect();
-    } else {
+    }
+    else {
       tickets = await ctx.db
         .query('poiTickets')
-        .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
+        .withIndex('by_poi', q => q.eq('poiId', args.poiId))
         .collect();
     }
 
@@ -83,9 +83,8 @@ export const listByType = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('poiTickets')
-      .withIndex('by_poi_type', (q) =>
-        q.eq('poiId', args.poiId).eq('ticketType', args.ticketType)
-      )
+      .withIndex('by_poi_type', q =>
+        q.eq('poiId', args.poiId).eq('ticketType', args.ticketType))
       .collect();
   },
 });
@@ -101,13 +100,12 @@ export const getRecommended = query({
   handler: async (ctx, args) => {
     const tickets = await ctx.db
       .query('poiTickets')
-      .withIndex('by_poi_active', (q) =>
-        q.eq('poiId', args.poiId).eq('isActive', true)
-      )
+      .withIndex('by_poi_active', q =>
+        q.eq('poiId', args.poiId).eq('isActive', true))
       .collect();
 
     const recommended = tickets
-      .filter((t) => t.isRecommended)
+      .filter(t => t.isRecommended)
       .sort((a, b) => a.sortOrder - b.sortOrder);
 
     const limit = args.limit ?? 5;
@@ -123,23 +121,22 @@ export const getPriceRange = query({
   handler: async (ctx, args) => {
     const tickets = await ctx.db
       .query('poiTickets')
-      .withIndex('by_poi_active', (q) =>
-        q.eq('poiId', args.poiId).eq('isActive', true)
-      )
+      .withIndex('by_poi_active', q =>
+        q.eq('poiId', args.poiId).eq('isActive', true))
       .collect();
 
     if (tickets.length === 0) {
       return null;
     }
 
-    const prices = tickets.map((t) => t.price);
+    const prices = tickets.map(t => t.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const currency = tickets[0].currency ?? 'CNY';
 
     // Check if there are free tickets
     const hasFreeTickets = tickets.some(
-      (t) => t.ticketType === 'free' || t.price === 0
+      t => t.ticketType === 'free' || t.price === 0,
     );
 
     return {
@@ -174,7 +171,7 @@ export const create = mutation({
       v.object({
         minAge: v.optional(v.number()),
         maxAge: v.optional(v.number()),
-      })
+      }),
     ),
     validFrom: v.optional(v.number()),
     validUntil: v.optional(v.number()),
@@ -200,12 +197,12 @@ export const create = mutation({
     // Get max sortOrder for this POI
     const existingTickets = await ctx.db
       .query('poiTickets')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
       .collect();
 
-    const maxSortOrder =
-      existingTickets.length > 0
-        ? Math.max(...existingTickets.map((t) => t.sortOrder))
+    const maxSortOrder
+      = existingTickets.length > 0
+        ? Math.max(...existingTickets.map(t => t.sortOrder))
         : 0;
 
     return await ctx.db.insert('poiTickets', {
@@ -236,7 +233,7 @@ export const update = mutation({
       v.object({
         minAge: v.optional(v.number()),
         maxAge: v.optional(v.number()),
-      })
+      }),
     ),
     validFrom: v.optional(v.number()),
     validUntil: v.optional(v.number()),
@@ -260,7 +257,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -302,7 +299,7 @@ export const bulkCreate = mutation({
           v.object({
             minAge: v.optional(v.number()),
             maxAge: v.optional(v.number()),
-          })
+          }),
         ),
         validFrom: v.optional(v.number()),
         validUntil: v.optional(v.number()),
@@ -321,7 +318,7 @@ export const bulkCreate = mutation({
         sortOrder: v.optional(v.number()),
         isRecommended: v.optional(v.boolean()),
         source: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -353,7 +350,7 @@ export const deactivateByPoi = mutation({
   handler: async (ctx, args) => {
     const tickets = await ctx.db
       .query('poiTickets')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
       .collect();
 
     const now = Date.now();

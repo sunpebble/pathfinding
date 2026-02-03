@@ -18,10 +18,12 @@ export async function GET() {
 
     if (response.ok) {
       checks.aiService = { status: 'ok', latency };
-    } else {
+    }
+    else {
       checks.aiService = { status: 'error' };
     }
-  } catch {
+  }
+  catch {
     checks.aiService = { status: 'error' };
   }
 

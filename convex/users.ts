@@ -21,7 +21,7 @@ export const getCurrentUser = query({
     // Look up profile by email
     const profile = await ctx.db
       .query('profiles')
-      .withIndex('by_email', (q) => q.eq('email', identity.email!))
+      .withIndex('by_email', q => q.eq('email', identity.email!))
       .first();
 
     return {
@@ -49,7 +49,7 @@ export const getUserById = query({
     // Query profiles table - in Convex Auth, user data is spread across auth tables and profiles
     const profile = await ctx.db
       .query('profiles')
-      .filter((q) => q.eq(q.field('email'), args.userId))
+      .filter(q => q.eq(q.field('email'), args.userId))
       .first();
 
     if (!profile) {
@@ -78,7 +78,7 @@ export const getUserProfile = query({
     // Query profiles table
     const profile = await ctx.db
       .query('profiles')
-      .filter((q) => q.eq(q.field('email'), args.userId))
+      .filter(q => q.eq(q.field('email'), args.userId))
       .first();
 
     if (!profile) {
@@ -92,17 +92,15 @@ export const getUserProfile = query({
     if (args.currentUserId && args.currentUserId !== args.userId) {
       const currentUserFollows = await ctx.db
         .query('userFollows')
-        .withIndex('by_follower_following', (q) =>
-          q.eq('followerId', args.currentUserId!).eq('followingId', args.userId)
-        )
+        .withIndex('by_follower_following', q =>
+          q.eq('followerId', args.currentUserId!).eq('followingId', args.userId))
         .first();
       isFollowing = currentUserFollows !== null;
 
       const targetUserFollows = await ctx.db
         .query('userFollows')
-        .withIndex('by_follower_following', (q) =>
-          q.eq('followerId', args.userId).eq('followingId', args.currentUserId!)
-        )
+        .withIndex('by_follower_following', q =>
+          q.eq('followerId', args.userId).eq('followingId', args.currentUserId!))
         .first();
       isFollowedBy = targetUserFollows !== null;
     }
@@ -148,7 +146,7 @@ export const updateProfile = mutation({
     // Check if profile exists
     const existing = await ctx.db
       .query('profiles')
-      .withIndex('by_email', (q) => q.eq('email', identity.email!))
+      .withIndex('by_email', q => q.eq('email', identity.email!))
       .first();
 
     const data: {
@@ -174,7 +172,8 @@ export const updateProfile = mutation({
       // Update existing profile
       await ctx.db.patch(existing._id, data);
       return existing._id;
-    } else {
+    }
+    else {
       // Create new profile
       return await ctx.db.insert('profiles', data);
     }
@@ -193,7 +192,7 @@ export const getOrCreateProfile = mutation({
     // Check if profile exists
     const existing = await ctx.db
       .query('profiles')
-      .withIndex('by_email', (q) => q.eq('email', identity.email!))
+      .withIndex('by_email', q => q.eq('email', identity.email!))
       .first();
 
     if (existing) {

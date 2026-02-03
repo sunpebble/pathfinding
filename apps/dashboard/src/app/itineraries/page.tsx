@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@pathfinding/convex';
+import { api } from '@pathfinding/convex-client';
 import { useQuery } from 'convex/react';
 import { Calendar, Eye, MapPin, Search, Users } from 'lucide-react';
 import Link from 'next/link';
@@ -37,7 +37,7 @@ function VisibilityBadge({ visibility }: { visibility: string }) {
     <span
       className={cn(
         'px-2 py-0.5 rounded-full text-xs font-medium',
-        colors[visibility] || 'bg-gray-100 text-gray-800'
+        colors[visibility] || 'bg-gray-100 text-gray-800',
       )}
     >
       {labels[visibility] || visibility}
@@ -108,7 +108,8 @@ function ItineraryCard({ itinerary }: { itinerary: Itinerary }) {
             <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
               <span className="flex items-center gap-1">
                 <Eye className="h-3.5 w-3.5" />
-                {itinerary.daysCount}{' '}
+                {itinerary.daysCount}
+                {' '}
                 {itinerary.daysCount === 1 ? 'day' : 'days'}
               </span>
             </div>
@@ -137,9 +138,9 @@ export default function ItinerariesPage() {
   // Client-side search filter
   const filteredItineraries = searchQuery
     ? itineraries.filter(
-        (itinerary) =>
-          itinerary.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          itinerary.cityName?.toLowerCase().includes(searchQuery.toLowerCase())
+        itinerary =>
+          itinerary.title.toLowerCase().includes(searchQuery.toLowerCase())
+          || itinerary.cityName?.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : itineraries;
 
@@ -155,7 +156,11 @@ export default function ItinerariesPage() {
             My Itineraries
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {total} {total === 1 ? 'itinerary' : 'itineraries'} total
+            {total}
+            {' '}
+            {total === 1 ? 'itinerary' : 'itineraries'}
+            {' '}
+            total
           </p>
         </div>
 
@@ -176,7 +181,7 @@ export default function ItinerariesPage() {
             type="text"
             placeholder="Search itineraries..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -215,7 +220,7 @@ export default function ItinerariesPage() {
       {/* Itineraries Grid */}
       {!isLoading && filteredItineraries.length > 0 && (
         <div className="space-y-4">
-          {filteredItineraries.map((itinerary) => (
+          {filteredItineraries.map(itinerary => (
             <ItineraryCard key={itinerary._id} itinerary={itinerary} />
           ))}
         </div>
@@ -225,17 +230,23 @@ export default function ItinerariesPage() {
       {!isLoading && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-4">
           <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
           <span className="text-sm text-gray-600">
-            Page {page} of {totalPages}
+            Page
+            {' '}
+            {page}
+            {' '}
+            of
+            {' '}
+            {totalPages}
           </span>
           <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >

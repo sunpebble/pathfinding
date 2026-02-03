@@ -13,7 +13,7 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const reminders = await ctx.db
       .query('reminders')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by reminder time
@@ -29,7 +29,7 @@ export const listByItinerary = query({
   handler: async (ctx, args) => {
     const reminders = await ctx.db
       .query('reminders')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     return reminders;
@@ -53,10 +53,10 @@ export const getByItemId = query({
   handler: async (ctx, args) => {
     const reminders = await ctx.db
       .query('reminders')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
-    return reminders.find((r) => r.itemId === args.itemId) ?? null;
+    return reminders.find(r => r.itemId === args.itemId) ?? null;
   },
 });
 
@@ -91,7 +91,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, filteredUpdates);
     return await ctx.db.get(id);
@@ -127,7 +127,7 @@ export const getPending = query({
       .collect();
 
     return reminders.filter(
-      (r) => !r.isTriggered && r.reminderTime <= args.beforeTime
+      r => !r.isTriggered && r.reminderTime <= args.beforeTime,
     );
   },
 });

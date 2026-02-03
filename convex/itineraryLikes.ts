@@ -25,16 +25,16 @@ export const toggle = mutation({
     // Check if already liked
     const existing = await ctx.db
       .query('itineraryLikes')
-      .withIndex('by_user_itinerary', (q) =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId)
-      )
+      .withIndex('by_user_itinerary', q =>
+        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
       .first();
 
     if (existing) {
       // Unlike - remove the like
       await ctx.db.delete(existing._id);
       return { liked: false };
-    } else {
+    }
+    else {
       // Like - add new like
       await ctx.db.insert('itineraryLikes', {
         userId: args.userId,
@@ -55,9 +55,8 @@ export const isLiked = query({
   handler: async (ctx, args) => {
     const like = await ctx.db
       .query('itineraryLikes')
-      .withIndex('by_user_itinerary', (q) =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId)
-      )
+      .withIndex('by_user_itinerary', q =>
+        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
       .first();
 
     return { liked: !!like };
@@ -72,7 +71,7 @@ export const getCount = query({
   handler: async (ctx, args) => {
     const likes = await ctx.db
       .query('itineraryLikes')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     return { count: likes.length };
@@ -93,7 +92,7 @@ export const listByUser = query({
 
     const likes = await ctx.db
       .query('itineraryLikes')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -104,7 +103,8 @@ export const listByUser = query({
     const enriched = await Promise.all(
       paginatedLikes.map(async (like) => {
         const itinerary = await ctx.db.get(like.itineraryId);
-        if (!itinerary) return null;
+        if (!itinerary)
+          return null;
 
         const city = await ctx.db.get(itinerary.cityId);
         return {
@@ -114,11 +114,11 @@ export const listByUser = query({
             cityName: city?.name,
           },
         };
-      })
+      }),
     );
 
     // Filter out null results (deleted itineraries)
-    const data = enriched.filter((item) => item !== null);
+    const data = enriched.filter(item => item !== null);
 
     return { data, total };
   },
@@ -137,13 +137,12 @@ export const batchCheckLikes = query({
       args.itineraryIds.map(async (itineraryId) => {
         const like = await ctx.db
           .query('itineraryLikes')
-          .withIndex('by_user_itinerary', (q) =>
-            q.eq('userId', args.userId).eq('itineraryId', itineraryId)
-          )
+          .withIndex('by_user_itinerary', q =>
+            q.eq('userId', args.userId).eq('itineraryId', itineraryId))
           .first();
 
         results[itineraryId] = !!like;
-      })
+      }),
     );
 
     return results;
@@ -162,11 +161,11 @@ export const batchGetCounts = query({
       args.itineraryIds.map(async (itineraryId) => {
         const likes = await ctx.db
           .query('itineraryLikes')
-          .withIndex('by_itinerary', (q) => q.eq('itineraryId', itineraryId))
+          .withIndex('by_itinerary', q => q.eq('itineraryId', itineraryId))
           .collect();
 
         results[itineraryId] = likes.length;
-      })
+      }),
     );
 
     return results;

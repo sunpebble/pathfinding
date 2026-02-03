@@ -14,11 +14,11 @@ export const listGlobal = query({
   handler: async (ctx) => {
     const medications = await ctx.db
       .query('recommendedMedications')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .withIndex('by_active', q => q.eq('isActive', true))
       .collect();
 
     // Filter for global recommendations (no destinationId)
-    return medications.filter((m) => !m.destinationId);
+    return medications.filter(m => !m.destinationId);
   },
 });
 
@@ -28,12 +28,12 @@ export const listByDestination = query({
   handler: async (ctx, args) => {
     const allMedications = await ctx.db
       .query('recommendedMedications')
-      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .withIndex('by_active', q => q.eq('isActive', true))
       .collect();
 
     // Include both global and destination-specific medications
     return allMedications.filter(
-      (m) => !m.destinationId || m.destinationId === args.destinationId
+      m => !m.destinationId || m.destinationId === args.destinationId,
     );
   },
 });
@@ -50,14 +50,14 @@ export const listByCategory = query({
       v.literal('cold_flu'),
       v.literal('first_aid'),
       v.literal('prescription'),
-      v.literal('other')
+      v.literal('other'),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query('recommendedMedications')
-      .withIndex('by_category', (q) => q.eq('category', args.category))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_category', q => q.eq('category', args.category))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
   },
 });
@@ -68,14 +68,14 @@ export const listByPriority = query({
     priority: v.union(
       v.literal('essential'),
       v.literal('recommended'),
-      v.literal('optional')
+      v.literal('optional'),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query('recommendedMedications')
-      .withIndex('by_priority', (q) => q.eq('priority', args.priority))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('by_priority', q => q.eq('priority', args.priority))
+      .filter(q => q.eq(q.field('isActive'), true))
       .collect();
   },
 });
@@ -103,7 +103,7 @@ export const create = mutation({
       v.literal('cold_flu'),
       v.literal('first_aid'),
       v.literal('prescription'),
-      v.literal('other')
+      v.literal('other'),
     ),
     description: v.string(),
     usage: v.string(),
@@ -114,7 +114,7 @@ export const create = mutation({
     priority: v.union(
       v.literal('essential'),
       v.literal('recommended'),
-      v.literal('optional')
+      v.literal('optional'),
     ),
     notes: v.optional(v.string()),
   },
@@ -142,8 +142,8 @@ export const update = mutation({
         v.literal('cold_flu'),
         v.literal('first_aid'),
         v.literal('prescription'),
-        v.literal('other')
-      )
+        v.literal('other'),
+      ),
     ),
     description: v.optional(v.string()),
     usage: v.optional(v.string()),
@@ -155,8 +155,8 @@ export const update = mutation({
       v.union(
         v.literal('essential'),
         v.literal('recommended'),
-        v.literal('optional')
-      )
+        v.literal('optional'),
+      ),
     ),
     notes: v.optional(v.string()),
     isActive: v.optional(v.boolean()),
@@ -164,7 +164,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, filteredUpdates);
     return await ctx.db.get(id);

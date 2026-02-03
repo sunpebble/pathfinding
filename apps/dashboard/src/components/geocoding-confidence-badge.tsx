@@ -50,8 +50,8 @@ export function GeocodingConfidenceBadge({
 
   // Get source display name and icon
   const getSourceInfo = () => {
-    const sourceMap: Record<string, { name: string; icon: React.ElementType }> =
-      {
+    const sourceMap: Record<string, { name: string; icon: React.ElementType }>
+      = {
         amap: { name: 'AMap', icon: Map },
         nominatim: { name: 'Nominatim', icon: Globe },
         overpass: { name: 'OSM', icon: Globe },
@@ -83,7 +83,7 @@ export function GeocodingConfidenceBadge({
         'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors',
         confidenceLevel.color,
         onClick && 'cursor-pointer hover:opacity-80',
-        className
+        className,
       )}
       onClick={handleClick}
       title={`${confidenceLevel.label} confidence (${(confidence * 100).toFixed(0)}%) from ${sourceInfo.name}${isManuallyVerified ? ' - Manually verified' : ''}`}

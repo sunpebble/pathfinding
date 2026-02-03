@@ -6,13 +6,18 @@
  */
 
 import { v } from 'convex/values';
+import {
+  trainingGenerationParamsValidator,
+  trainingStatisticsValidator,
+  trainingStoragePathsValidator,
+} from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 const statusValidator = v.union(
   v.literal('pending'),
   v.literal('generating'),
   v.literal('completed'),
-  v.literal('failed')
+  v.literal('failed'),
 );
 
 // List training datasets with filters
@@ -31,13 +36,13 @@ export const list = query({
 
     if (args.name) {
       const nameLower = args.name.toLowerCase();
-      datasets = datasets.filter((d) =>
-        d.name.toLowerCase().includes(nameLower)
+      datasets = datasets.filter(d =>
+        d.name.toLowerCase().includes(nameLower),
       );
     }
 
     if (args.status) {
-      datasets = datasets.filter((d) => d.status === args.status);
+      datasets = datasets.filter(d => d.status === args.status);
     }
 
     const total = datasets.length;
@@ -68,26 +73,26 @@ export const create = mutation({
   args: {
     name: v.string(),
     version: v.string(),
-    generationParams: v.any(),
+    generationParams: trainingGenerationParamsValidator,
     outputFormats: v.array(v.string()),
     status: v.optional(statusValidator),
-    statistics: v.optional(v.any()),
+    statistics: v.optional(trainingStatisticsValidator),
   },
   handler: async (ctx, args) => {
     // Check for duplicate name+version
     const existing = await ctx.db
       .query('trainingDatasets')
-      .filter((q) =>
+      .filter(q =>
         q.and(
           q.eq(q.field('name'), args.name),
-          q.eq(q.field('version'), args.version)
-        )
+          q.eq(q.field('version'), args.version),
+        ),
       )
       .first();
 
     if (existing) {
       throw new Error(
-        `Dataset ${args.name} version ${args.version} already exists`
+        `Dataset ${args.name} version ${args.version} already exists`,
       );
     }
 
@@ -111,8 +116,8 @@ export const update = mutation({
   args: {
     id: v.id('trainingDatasets'),
     status: v.optional(statusValidator),
-    statistics: v.optional(v.any()),
-    storagePaths: v.optional(v.any()),
+    statistics: v.optional(trainingStatisticsValidator),
+    storagePaths: v.optional(trainingStoragePathsValidator),
     generatedAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -138,7 +143,7 @@ export const remove = mutation({
     // Also delete associated quality reports
     const reports = await ctx.db
       .query('dataQualityReports')
-      .filter((q) => q.eq(q.field('datasetId'), args.id))
+      .filter(q => q.eq(q.field('datasetId'), args.id))
       .collect();
 
     for (const report of reports) {
@@ -158,11 +163,11 @@ export const checkExists = query({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('trainingDatasets')
-      .filter((q) =>
+      .filter(q =>
         q.and(
           q.eq(q.field('name'), args.name),
-          q.eq(q.field('version'), args.version)
-        )
+          q.eq(q.field('version'), args.version),
+        ),
       )
       .first();
 

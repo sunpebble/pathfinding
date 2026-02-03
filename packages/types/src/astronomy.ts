@@ -50,28 +50,28 @@ export interface MoonPhase {
   emoji: string;
 }
 
-export type MoonPhaseName =
-  | 'new_moon'
-  | 'waxing_crescent'
-  | 'first_quarter'
-  | 'waxing_gibbous'
-  | 'full_moon'
-  | 'waning_gibbous'
-  | 'last_quarter'
-  | 'waning_crescent';
+export type MoonPhaseName
+  = | 'new_moon'
+    | 'waxing_crescent'
+    | 'first_quarter'
+    | 'waxing_gibbous'
+    | 'full_moon'
+    | 'waning_gibbous'
+    | 'last_quarter'
+    | 'waning_crescent';
 
 /**
  * Astronomical event types
  */
-export type AstronomicalEventType =
-  | 'solar_eclipse'
-  | 'lunar_eclipse'
-  | 'meteor_shower'
-  | 'planet_conjunction'
-  | 'supermoon'
-  | 'blue_moon'
-  | 'equinox'
-  | 'solstice';
+export type AstronomicalEventType
+  = | 'solar_eclipse'
+    | 'lunar_eclipse'
+    | 'meteor_shower'
+    | 'planet_conjunction'
+    | 'supermoon'
+    | 'blue_moon'
+    | 'equinox'
+    | 'solstice';
 
 /**
  * Astronomical event

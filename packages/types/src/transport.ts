@@ -6,14 +6,14 @@
 /**
  * Supported transport modes
  */
-export type TransportMode =
-  | 'walking'
-  | 'cycling'
-  | 'driving'
-  | 'taxi'
-  | 'bus'
-  | 'subway'
-  | 'transit'; // Combined public transit
+export type TransportMode
+  = | 'walking'
+    | 'cycling'
+    | 'driving'
+    | 'taxi'
+    | 'bus'
+    | 'subway'
+    | 'transit'; // Combined public transit
 
 /**
  * Transport mode display information
@@ -215,9 +215,9 @@ export const TRANSPORT_MODES: TransportModeInfo[] = [
  * Get transport mode info by mode
  */
 export function getTransportModeInfo(
-  mode: TransportMode
+  mode: TransportMode,
 ): TransportModeInfo | undefined {
-  return TRANSPORT_MODES.find((m) => m.mode === mode);
+  return TRANSPORT_MODES.find(m => m.mode === mode);
 }
 
 /**
@@ -255,12 +255,14 @@ export function formatDistance(meters: number): string {
  */
 export function formatCost(cost?: number, costRange?: { min: number; max: number }): string {
   if (cost !== undefined) {
-    if (cost === 0) return '免费';
+    if (cost === 0)
+      return '免费';
     return `¥${cost.toFixed(0)}`;
   }
   if (costRange) {
     if (costRange.min === costRange.max) {
-      if (costRange.min === 0) return '免费';
+      if (costRange.min === 0)
+        return '免费';
       return `¥${costRange.min.toFixed(0)}`;
     }
     return `¥${costRange.min.toFixed(0)}-${costRange.max.toFixed(0)}`;

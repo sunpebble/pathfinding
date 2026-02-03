@@ -1,26 +1,26 @@
-import type { NextRequest} from 'next/server';
-import { api } from '@pathfinding/convex/api';
+import type { NextRequest } from 'next/server';
+import { api } from '@pathfinding/convex-client/api';
 import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
 
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const client = new ConvexHttpClient(CONVEX_URL);
 
-type Platform =
-  | 'xiaohongshu'
-  | 'weibo'
-  | 'ctrip'
-  | 'douyin'
-  | 'tripadvisor'
-  | 'qunar'
-  | 'tongcheng'
-  | 'mafengwo';
+type Platform
+  = | 'xiaohongshu'
+    | 'weibo'
+    | 'ctrip'
+    | 'douyin'
+    | 'tripadvisor'
+    | 'qunar'
+    | 'tongcheng'
+    | 'mafengwo';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const limit = Number.parseInt(searchParams.get('limit') || '20');
-  const platform =
-    searchParams.get('platforms') || searchParams.get('platform');
+  const platform
+    = searchParams.get('platforms') || searchParams.get('platform');
   const sort = searchParams.get('sort');
   const order = searchParams.get('order');
 
@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
       'tongcheng',
       'mafengwo',
     ];
-    const validPlatform =
-      platform && validPlatforms.includes(platform as Platform)
+    const validPlatform
+      = platform && validPlatforms.includes(platform as Platform)
         ? (platform as Platform)
         : undefined;
 
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform camelCase to snake_case for frontend compatibility
-    const transformedGuides = sortedGuides.map((guide) => ({
+    const transformedGuides = sortedGuides.map(guide => ({
       id: guide._id,
       source_platform: guide.sourcePlatform,
       source_external_id: guide.sourceExternalId,
@@ -89,11 +89,12 @@ export async function GET(request: NextRequest) {
         offset: 0,
       },
     });
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching guides:', error);
     return NextResponse.json(
       { error: 'Internal server error', message: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -13,7 +13,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import * as React from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   cancelCrawlJob,
   getCrawlJobs,
@@ -76,7 +77,12 @@ export default function JobsPage() {
     },
   });
 
-  const jobs = jobsData?.data || [];
+  const jobs = useMemo(() => jobsData?.data ?? [], [jobsData?.data]);
+
+  const handleRefresh = useCallback(() => {
+    refetch();
+    refetchScheduler();
+  }, [refetch, refetchScheduler]);
 
   return (
     <div className="space-y-6">
@@ -88,10 +94,7 @@ export default function JobsPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => {
-              refetch();
-              refetchScheduler();
-            }}
+            onClick={handleRefresh}
             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <RefreshCw className="h-4 w-4" />
@@ -153,73 +156,78 @@ export default function JobsPage() {
                 <h3 className="mb-3 text-sm font-medium text-gray-700">
                   Scheduled Tasks
                 </h3>
-                {schedulerStatus.tasks.length === 0 ? (
-                  <p className="text-sm text-gray-500">
-                    No scheduled tasks configured
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {schedulerStatus.tasks.map((task) => (
-                      <div
-                        key={task.name}
-                        className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900">
-                              {task.name}
-                            </span>
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                task.enabled
-                                  ? 'bg-emerald-50 text-emerald-600'
-                                  : 'bg-gray-100 text-gray-600'
-                              }`}
-                            >
-                              {task.enabled ? 'Enabled' : 'Disabled'}
-                            </span>
+                {schedulerStatus.tasks.length === 0
+                  ? (
+                      <p className="text-sm text-gray-500">
+                        No scheduled tasks configured
+                      </p>
+                    )
+                  : (
+                      <div className="space-y-2">
+                        {schedulerStatus.tasks.map(task => (
+                          <div
+                            key={task.name}
+                            className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-900">
+                                  {task.name}
+                                </span>
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    task.enabled
+                                      ? 'bg-emerald-50 text-emerald-600'
+                                      : 'bg-gray-100 text-gray-600'
+                                  }`}
+                                >
+                                  {task.enabled ? 'Enabled' : 'Disabled'}
+                                </span>
+                              </div>
+                              <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  {task.cronExpression}
+                                </span>
+                                {task.lastRun && (
+                                  <span>
+                                    Last run:
+                                    {' '}
+                                    {formatDateTime(task.lastRun)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              {task.enabled
+                                ? (
+                                    <button
+                                      onClick={() => stopTaskMutation.mutate(task.name)}
+                                      disabled={stopTaskMutation.isPending}
+                                      className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
+                                      title="Stop task"
+                                    >
+                                      <StopCircle className="h-4 w-4" />
+                                      Stop
+                                    </button>
+                                  )
+                                : (
+                                    <button
+                                      onClick={() =>
+                                        startTaskMutation.mutate(task.name)}
+                                      disabled={startTaskMutation.isPending}
+                                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
+                                      title="Start task"
+                                    >
+                                      <Play className="h-4 w-4" />
+                                      Start
+                                    </button>
+                                  )}
+                            </div>
                           </div>
-                          <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3.5 w-3.5" />
-                              {task.cronExpression}
-                            </span>
-                            {task.lastRun && (
-                              <span>
-                                Last run: {formatDateTime(task.lastRun)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 ml-4">
-                          {task.enabled ? (
-                            <button
-                              onClick={() => stopTaskMutation.mutate(task.name)}
-                              disabled={stopTaskMutation.isPending}
-                              className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
-                              title="Stop task"
-                            >
-                              <StopCircle className="h-4 w-4" />
-                              Stop
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                startTaskMutation.mutate(task.name)
-                              }
-                              disabled={startTaskMutation.isPending}
-                              className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
-                              title="Start task"
-                            >
-                              <Play className="h-4 w-4" />
-                              Start
-                            </button>
-                          )}
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    )}
               </div>
             </div>
           ) : (
@@ -234,7 +242,7 @@ export default function JobsPage() {
       <div className="flex items-center gap-4">
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={e => setStatusFilter(e.target.value)}
           className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
         >
           <option value="">All Status</option>
@@ -245,7 +253,9 @@ export default function JobsPage() {
           <option value="cancelled">Cancelled</option>
         </select>
         <span className="text-sm text-gray-500">
-          {jobsData?.pagination.total ?? 0} jobs total
+          {jobsData?.pagination.total ?? 0}
+          {' '}
+          jobs total
         </span>
       </div>
 
@@ -290,7 +300,8 @@ export default function JobsPage() {
                   colSpan={7}
                   className="px-6 py-12 text-center text-gray-500"
                 >
-                  No jobs found.{' '}
+                  No jobs found.
+                  {' '}
                   <Link
                     href="/jobs/create"
                     className="text-blue-600 hover:underline"
@@ -300,7 +311,7 @@ export default function JobsPage() {
                 </td>
               </tr>
             ) : (
-              jobs.map((job) => (
+              jobs.map(job => (
                 <tr key={job.id} className="hover:bg-gray-50">
                   <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
                     {shortId(job.id)}
@@ -369,31 +380,39 @@ export default function JobsPage() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { icon: React.ReactNode; className: string }> = {
-    pending: {
-      icon: <Clock className="h-3.5 w-3.5" />,
-      className: 'bg-amber-50 text-amber-600 border-amber-200',
-    },
-    running: {
-      icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-      className: 'bg-blue-50 text-blue-600 border-blue-200',
-    },
-    completed: {
-      icon: <CheckCircle className="h-3.5 w-3.5" />,
-      className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-    },
-    failed: {
-      icon: <XCircle className="h-3.5 w-3.5" />,
-      className: 'bg-red-50 text-red-600 border-red-200',
-    },
-    cancelled: {
-      icon: <XCircle className="h-3.5 w-3.5" />,
-      className: 'bg-gray-50 text-gray-600 border-gray-200',
-    },
-  };
+// Status config moved outside component to avoid recreation on each render
+const STATUS_CONFIG: Record<
+  string,
+  { icon: React.ReactNode; className: string }
+> = {
+  pending: {
+    icon: <Clock className="h-3.5 w-3.5" />,
+    className: 'bg-amber-50 text-amber-600 border-amber-200',
+  },
+  running: {
+    icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
+    className: 'bg-blue-50 text-blue-600 border-blue-200',
+  },
+  completed: {
+    icon: <CheckCircle className="h-3.5 w-3.5" />,
+    className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  },
+  failed: {
+    icon: <XCircle className="h-3.5 w-3.5" />,
+    className: 'bg-red-50 text-red-600 border-red-200',
+  },
+  cancelled: {
+    icon: <XCircle className="h-3.5 w-3.5" />,
+    className: 'bg-gray-50 text-gray-600 border-gray-200',
+  },
+};
 
-  const statusConfig = (config[status] || config.cancelled)!;
+const StatusBadge = React.memo(({
+  status,
+}: {
+  status: string;
+}) => {
+  const statusConfig = STATUS_CONFIG[status] ?? STATUS_CONFIG.cancelled!;
   const { icon, className } = statusConfig;
 
   return (
@@ -404,4 +423,4 @@ function StatusBadge({ status }: { status: string }) {
       {status}
     </span>
   );
-}
+});

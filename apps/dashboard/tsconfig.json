@@ -9,8 +9,8 @@
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"],
-      "@pathfinding/convex/api": ["../../convex/_generated/api"],
-      "@pathfinding/convex/dataModel": ["../../convex/_generated/dataModel"]
+      "@pathfinding/convex-client/api": ["../../convex/_generated/api"],
+      "@pathfinding/convex-client/dataModel": ["../../convex/_generated/dataModel"]
     },
     "allowJs": true,
     "noEmit": true,

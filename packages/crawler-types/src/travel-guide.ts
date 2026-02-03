@@ -4,17 +4,25 @@
  */
 
 /**
+ * Data completeness level for travel guides
+ * - complete: All iOS required fields present, content >= 500 chars, no truncation
+ * - usable: Has title + content + at least one image, can be displayed with some missing data
+ * - incomplete: Missing critical fields or truncated content, needs enhancement
+ */
+export type CompletenessLevel = 'complete' | 'usable' | 'incomplete';
+
+/**
  * Supported platforms for travel guide crawling
  */
-export type GuidePlatform =
-  | 'xiaohongshu'
-  | 'weibo'
-  | 'ctrip'
-  | 'douyin'
-  | 'tripadvisor'
-  | 'tongcheng'
-  | 'mafengwo'
-  | 'qunar';
+export type GuidePlatform
+  = | 'xiaohongshu'
+    | 'weibo'
+    | 'ctrip'
+    | 'douyin'
+    | 'tripadvisor'
+    | 'tongcheng'
+    | 'mafengwo'
+    | 'qunar';
 
 /**
  * Raw travel guide data as extracted from source platforms
@@ -66,6 +74,9 @@ export interface TravelGuide {
 
   quality_score: number;
   content_hash?: string;
+  content_truncated?: boolean;
+
+  completeness_level?: CompletenessLevel;
 
   created_at: string;
   updated_at: string;

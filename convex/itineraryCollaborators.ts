@@ -10,7 +10,7 @@ import { mutation, query } from './_generated/server';
 const roleValidator = v.union(
   v.literal('owner'),
   v.literal('editor'),
-  v.literal('viewer')
+  v.literal('viewer'),
 );
 
 // List collaborators for an itinerary
@@ -19,7 +19,7 @@ export const listCollaborators = query({
   handler: async (ctx, args) => {
     const collaborators = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     return collaborators;
@@ -35,9 +35,8 @@ export const getCollaborator = query({
   handler: async (ctx, args) => {
     const collaborators = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     return collaborators;
@@ -50,14 +49,15 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const collaborations = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Enrich with itinerary data
     const enriched = await Promise.all(
       collaborations.map(async (collab) => {
         const itinerary = await ctx.db.get(collab.itineraryId);
-        if (!itinerary) return null;
+        if (!itinerary)
+          return null;
 
         const city = await ctx.db.get(itinerary.cityId);
 
@@ -68,10 +68,10 @@ export const listByUser = query({
             cityName: city?.name,
           },
         };
-      })
+      }),
     );
 
-    return enriched.filter((item) => item !== null);
+    return enriched.filter(item => item !== null);
   },
 });
 
@@ -93,9 +93,8 @@ export const inviteCollaborator = mutation({
     // Check if inviter has permission (must be owner or editor)
     const inviterCollab = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.invitedBy)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.invitedBy))
       .first();
 
     if (!inviterCollab || inviterCollab.role === 'viewer') {
@@ -105,9 +104,8 @@ export const inviteCollaborator = mutation({
     // Check if user is already a collaborator
     const existingCollab = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (existingCollab) {
@@ -140,9 +138,8 @@ export const acceptInvite = mutation({
     // Check if user has a pending invitation
     const collab = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (!collab) {
@@ -165,9 +162,8 @@ export const rejectInvite = mutation({
     // Find the collaboration record
     const collab = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (!collab) {
@@ -192,9 +188,8 @@ export const removeCollaborator = mutation({
     // Check if remover has permission (must be owner)
     const removerCollab = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.removedBy)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.removedBy))
       .first();
 
     if (!removerCollab || removerCollab.role !== 'owner') {
@@ -204,9 +199,8 @@ export const removeCollaborator = mutation({
     // Find the collaborator to remove
     const collab = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (!collab) {
@@ -237,9 +231,8 @@ export const updateRole = mutation({
     // Check if updater has permission (must be owner)
     const updaterCollab = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.updatedBy)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.updatedBy))
       .first();
 
     if (!updaterCollab || updaterCollab.role !== 'owner') {
@@ -249,9 +242,8 @@ export const updateRole = mutation({
     // Find the collaborator to update
     const collab = await ctx.db
       .query('itineraryCollaborators')
-      .withIndex('by_itinerary_user', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId)
-      )
+      .withIndex('by_itinerary_user', q =>
+        q.eq('itineraryId', args.itineraryId).eq('userId', args.userId))
       .first();
 
     if (!collab) {
@@ -260,7 +252,7 @@ export const updateRole = mutation({
 
     // Cannot change the owner's role
     if (collab.role === 'owner') {
-      throw new Error("Cannot change the owner's role");
+      throw new Error('Cannot change the owner\'s role');
     }
 
     // Cannot promote to owner

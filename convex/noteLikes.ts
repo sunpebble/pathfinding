@@ -25,9 +25,8 @@ export const toggle = mutation({
     // 检查是否已点赞
     const existing = await ctx.db
       .query('noteLikes')
-      .withIndex('by_user_note', (q) =>
-        q.eq('userId', args.userId).eq('noteId', args.noteId)
-      )
+      .withIndex('by_user_note', q =>
+        q.eq('userId', args.userId).eq('noteId', args.noteId))
       .first();
 
     if (existing) {
@@ -38,7 +37,8 @@ export const toggle = mutation({
         likesCount: Math.max(0, note.likesCount - 1),
       });
       return { liked: false };
-    } else {
+    }
+    else {
       // 添加点赞
       await ctx.db.insert('noteLikes', {
         userId: args.userId,
@@ -63,9 +63,8 @@ export const isLiked = query({
   handler: async (ctx, args) => {
     const like = await ctx.db
       .query('noteLikes')
-      .withIndex('by_user_note', (q) =>
-        q.eq('userId', args.userId).eq('noteId', args.noteId)
-      )
+      .withIndex('by_user_note', q =>
+        q.eq('userId', args.userId).eq('noteId', args.noteId))
       .first();
 
     return { liked: !!like };
@@ -97,7 +96,7 @@ export const listByUser = query({
 
     const likes = await ctx.db
       .query('noteLikes')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
@@ -108,31 +107,32 @@ export const listByUser = query({
     const enriched = await Promise.all(
       paginatedLikes.map(async (like) => {
         const note = await ctx.db.get(like.noteId);
-        if (!note || note.visibility !== 'public') return null;
+        if (!note || note.visibility !== 'public')
+          return null;
 
         const images = await ctx.db
           .query('noteImages')
-          .withIndex('by_note', (q) => q.eq('noteId', note._id))
+          .withIndex('by_note', q => q.eq('noteId', note._id))
           .collect();
 
         const profile = await ctx.db
           .query('profiles')
-          .filter((q) => q.eq(q.field('email'), note.authorId))
+          .filter(q => q.eq(q.field('email'), note.authorId))
           .first();
 
         return {
           ...like,
           note: {
             ...note,
-            coverImage: images.find((i) => i.isCover)?.url ?? images[0]?.url,
+            coverImage: images.find(i => i.isCover)?.url ?? images[0]?.url,
             authorName: profile?.displayName,
             authorAvatar: profile?.avatarUrl,
           },
         };
-      })
+      }),
     );
 
-    const data = enriched.filter((item) => item !== null);
+    const data = enriched.filter(item => item !== null);
 
     return { data, total };
   },
@@ -151,13 +151,12 @@ export const batchCheckLikes = query({
       args.noteIds.map(async (noteId) => {
         const like = await ctx.db
           .query('noteLikes')
-          .withIndex('by_user_note', (q) =>
-            q.eq('userId', args.userId).eq('noteId', noteId)
-          )
+          .withIndex('by_user_note', q =>
+            q.eq('userId', args.userId).eq('noteId', noteId))
           .first();
 
         results[noteId] = !!like;
-      })
+      }),
     );
 
     return results;

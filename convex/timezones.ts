@@ -17,7 +17,7 @@ export const getUserSettings = query({
   handler: async (ctx, args) => {
     const settings = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
     return settings;
   },
@@ -37,13 +37,13 @@ export const upsertUserSettings = mutation({
         cityId: v.id('cities'),
         label: v.optional(v.string()),
         sortOrder: v.number(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     const now = Date.now();
@@ -54,7 +54,8 @@ export const upsertUserSettings = mutation({
         updatedAt: now,
       });
       return existing._id;
-    } else {
+    }
+    else {
       return await ctx.db.insert('userTimezoneSettings', {
         ...args,
         createdAt: now,
@@ -74,7 +75,7 @@ export const updateHomeTimezone = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     const now = Date.now();
@@ -86,7 +87,8 @@ export const updateHomeTimezone = mutation({
         updatedAt: now,
       });
       return existing._id;
-    } else {
+    }
+    else {
       // Create with defaults
       return await ctx.db.insert('userTimezoneSettings', {
         userId: args.userId,
@@ -113,12 +115,12 @@ export const updateDisplayFormat = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!existing) {
       throw new Error(
-        'User timezone settings not found. Please set home timezone first.'
+        'User timezone settings not found. Please set home timezone first.',
       );
     }
 
@@ -150,18 +152,18 @@ export const addSavedClock = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!existing) {
       throw new Error(
-        'User timezone settings not found. Please set home timezone first.'
+        'User timezone settings not found. Please set home timezone first.',
       );
     }
 
     // Check if city is already saved
     const alreadySaved = existing.savedClocks.some(
-      (clock) => clock.cityId === args.cityId
+      clock => clock.cityId === args.cityId,
     );
     if (alreadySaved) {
       throw new Error('City is already in your world clock.');
@@ -170,7 +172,7 @@ export const addSavedClock = mutation({
     // Add to the end with next sort order
     const maxOrder = existing.savedClocks.reduce(
       (max, clock) => Math.max(max, clock.sortOrder),
-      0
+      0,
     );
 
     const newClock = {
@@ -197,7 +199,7 @@ export const removeSavedClock = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!existing) {
@@ -205,7 +207,7 @@ export const removeSavedClock = mutation({
     }
 
     const filteredClocks = existing.savedClocks.filter(
-      (clock) => clock.cityId !== args.cityId
+      clock => clock.cityId !== args.cityId,
     );
 
     await ctx.db.patch(existing._id, {
@@ -227,15 +229,15 @@ export const updateSavedClockLabel = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!existing) {
       throw new Error('User timezone settings not found.');
     }
 
-    const updatedClocks = existing.savedClocks.map((clock) =>
-      clock.cityId === args.cityId ? { ...clock, label: args.label } : clock
+    const updatedClocks = existing.savedClocks.map(clock =>
+      clock.cityId === args.cityId ? { ...clock, label: args.label } : clock,
     );
 
     await ctx.db.patch(existing._id, {
@@ -256,7 +258,7 @@ export const reorderSavedClocks = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!existing) {
@@ -265,7 +267,7 @@ export const reorderSavedClocks = mutation({
 
     // Rebuild clocks with new order
     const clockMap = new Map(
-      existing.savedClocks.map((clock) => [clock.cityId, clock])
+      existing.savedClocks.map(clock => [clock.cityId, clock]),
     );
 
     const reorderedClocks = args.orderedCityIds
@@ -273,7 +275,7 @@ export const reorderSavedClocks = mutation({
         const clock = clockMap.get(cityId);
         return clock ? { ...clock, sortOrder: index } : null;
       })
-      .filter((clock) => clock !== null);
+      .filter(clock => clock !== null);
 
     await ctx.db.patch(existing._id, {
       savedClocks: reorderedClocks,
@@ -294,7 +296,7 @@ export const getWorldClock = query({
   handler: async (ctx, args) => {
     const settings = await ctx.db
       .query('userTimezoneSettings')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .first();
 
     if (!settings) {
@@ -322,12 +324,12 @@ export const getWorldClock = query({
               sortOrder: clock.sortOrder,
             }
           : null;
-      })
+      }),
     );
 
     // Filter out null results and sort by order
     const validClocks = clockCities
-      .filter((c) => c !== null)
+      .filter(c => c !== null)
       .sort((a, b) => a.sortOrder - b.sortOrder);
 
     return {

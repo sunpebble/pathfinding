@@ -71,11 +71,11 @@ export interface UserSearchResult extends BaseSearchResult {
 }
 
 // Union type for all search results
-export type SearchResult =
-  | PoiSearchResult
-  | ItinerarySearchResult
-  | GuideSearchResult
-  | UserSearchResult;
+export type SearchResult
+  = | PoiSearchResult
+    | ItinerarySearchResult
+    | GuideSearchResult
+    | UserSearchResult;
 
 // Search request
 export interface GlobalSearchRequest {

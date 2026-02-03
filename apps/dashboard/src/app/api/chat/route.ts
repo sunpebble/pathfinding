@@ -29,10 +29,10 @@ export async function POST(req: Request) {
     }
 
     // Extract text from message parts
-    const messageText =
-      lastMessage.parts
-        ?.filter((p) => p.type === 'text')
-        .map((p) => p.text)
+    const messageText
+      = lastMessage.parts
+        ?.filter(p => p.type === 'text')
+        .map(p => p.text)
         .join('\n') || '';
 
     // Generate session ID if not provided
@@ -75,7 +75,8 @@ export async function POST(req: Request) {
         try {
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done)
+              break;
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
@@ -84,7 +85,8 @@ export async function POST(req: Request) {
             for (const line of lines) {
               if (line.startsWith('data:')) {
                 const data = line.slice(5).trim();
-                if (!data) continue;
+                if (!data)
+                  continue;
 
                 try {
                   const event = JSON.parse(data);
@@ -164,7 +166,8 @@ export async function POST(req: Request) {
                       });
                       break;
                   }
-                } catch {
+                }
+                catch {
                   // Skip invalid JSON
                 }
               }
@@ -178,14 +181,16 @@ export async function POST(req: Request) {
               id: textId,
             });
           }
-        } finally {
+        }
+        finally {
           reader.releaseLock();
         }
       },
     });
 
     return createUIMessageStreamResponse({ stream });
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Chat API error:', error);
     return new Response(
       JSON.stringify({
@@ -194,7 +199,7 @@ export async function POST(req: Request) {
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      }
+      },
     );
   }
 }

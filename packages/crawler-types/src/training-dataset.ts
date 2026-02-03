@@ -3,11 +3,11 @@
  * Types for ML training data generation and versioning
  */
 
-export type TrainingDatasetStatus =
-  | 'pending'
-  | 'generating'
-  | 'completed'
-  | 'failed';
+export type TrainingDatasetStatus
+  = | 'pending'
+    | 'generating'
+    | 'completed'
+    | 'failed';
 export type OutputFormat = 'json' | 'csv' | 'parquet';
 export type SamplingMethod = 'random' | 'stratified';
 

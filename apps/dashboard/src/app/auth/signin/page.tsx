@@ -30,13 +30,15 @@ export default function SignInPage() {
     try {
       await signIn('password', { email, password, flow: 'signIn' });
       router.push('/');
-    } catch (err) {
+    }
+    catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to sign in. Please try again.'
+          : 'Failed to sign in. Please try again.',
       );
-    } finally {
+    }
+    finally {
       setIsLoading(false);
     }
   };
@@ -48,11 +50,12 @@ export default function SignInPage() {
     try {
       await signIn(provider);
       // OAuth redirect will happen automatically
-    } catch (err) {
+    }
+    catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : `Failed to sign in with ${provider}`
+          : `Failed to sign in with ${provider}`,
       );
       setIsLoading(false);
     }
@@ -94,7 +97,7 @@ export default function SignInPage() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="you@example.com"
                 disabled={isLoading}
@@ -113,7 +116,7 @@ export default function SignInPage() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="••••••••"
                 disabled={isLoading}
@@ -186,7 +189,8 @@ export default function SignInPage() {
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center text-sm text-gray-600">
-            Don&apos;t have an account?{' '}
+            Don&apos;t have an account?
+            {' '}
             <Link href="/auth/signup" className="text-blue-600 hover:underline">
               Sign up
             </Link>

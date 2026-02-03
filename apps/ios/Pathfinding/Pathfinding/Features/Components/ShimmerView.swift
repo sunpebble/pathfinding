@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Shimmer loading effect for skeleton screens
 struct ShimmerView: View {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var phase: CGFloat = 0
 
   var body: some View {
@@ -17,6 +18,7 @@ struct ShimmerView: View {
       endPoint: .init(x: phase + 1, y: 0.5)
     )
     .onAppear {
+      guard !reduceMotion else { return }
       withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
         phase = 2
       }

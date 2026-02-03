@@ -1,6 +1,6 @@
-import type { Id } from '@pathfinding/convex/dataModel';
-import type { NextRequest} from 'next/server';
-import { api } from '@pathfinding/convex/api';
+import type { Id } from '@pathfinding/convex-client/dataModel';
+import type { NextRequest } from 'next/server';
+import { api } from '@pathfinding/convex-client/api';
 import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
 
@@ -9,7 +9,7 @@ const client = new ConvexHttpClient(CONVEX_URL);
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string[] }> }
+  { params }: { params: Promise<{ slug: string[] }> },
 ) {
   const { slug } = await params;
 
@@ -55,18 +55,19 @@ export async function GET(
     };
 
     return NextResponse.json({ data: transformedJob });
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching crawl job:', error);
     return NextResponse.json(
       { error: 'Internal server error', message: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string[] }> }
+  { params }: { params: Promise<{ slug: string[] }> },
 ) {
   const { slug } = await params;
   const [id, action] = slug;
@@ -80,6 +81,9 @@ export async function POST(
       const job = await client.mutation(api.crawlJobs.start, {
         id: id as Id<'crawlJobs'>,
       });
+      if (!job) {
+        return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+      }
       return NextResponse.json({
         id: job._id,
         status: job.status,
@@ -87,22 +91,28 @@ export async function POST(
           ? new Date(job.startedAt).toISOString()
           : undefined,
       });
-    } else if (action === 'cancel') {
+    }
+    else if (action === 'cancel') {
       const job = await client.mutation(api.crawlJobs.cancel, {
         id: id as Id<'crawlJobs'>,
       });
+      if (!job) {
+        return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+      }
       return NextResponse.json({
         id: job._id,
         status: job.status,
       });
-    } else {
+    }
+    else {
       return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error(`Error ${action} crawl job:`, error);
     return NextResponse.json(
       { error: `Failed to ${action} job`, message: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

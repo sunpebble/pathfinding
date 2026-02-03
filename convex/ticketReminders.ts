@@ -12,7 +12,7 @@ const reminderTypeValidator = v.union(
   v.literal('booking_reminder'),
   v.literal('visit_reminder'),
   v.literal('price_drop'),
-  v.literal('stock_available')
+  v.literal('stock_available'),
 );
 
 // ============================================
@@ -31,11 +31,11 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     let reminders = await ctx.db
       .query('ticketReminders')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     if (!args.includeTriggered) {
-      reminders = reminders.filter((r) => !r.isTriggered);
+      reminders = reminders.filter(r => !r.isTriggered);
     }
 
     // Sort by reminder time ascending
@@ -68,15 +68,14 @@ export const listByPoi = query({
     if (args.userId) {
       return await ctx.db
         .query('ticketReminders')
-        .withIndex('by_user_poi', (q) =>
-          q.eq('userId', args.userId!).eq('poiId', args.poiId)
-        )
+        .withIndex('by_user_poi', q =>
+          q.eq('userId', args.userId!).eq('poiId', args.poiId))
         .collect();
     }
 
     return await ctx.db
       .query('ticketReminders')
-      .withIndex('by_poi', (q) => q.eq('poiId', args.poiId))
+      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
       .collect();
   },
 });
@@ -92,12 +91,12 @@ export const getPendingReminders = query({
   handler: async (ctx, args) => {
     const reminders = await ctx.db
       .query('ticketReminders')
-      .withIndex('by_triggered', (q) => q.eq('isTriggered', false))
+      .withIndex('by_triggered', q => q.eq('isTriggered', false))
       .collect();
 
     // Filter by reminder time
     const pending = reminders
-      .filter((r) => r.reminderTime <= args.beforeTime)
+      .filter(r => r.reminderTime <= args.beforeTime)
       .sort((a, b) => a.reminderTime - b.reminderTime);
 
     const limit = args.limit ?? 100;
@@ -113,10 +112,10 @@ export const getUnreadCount = query({
   handler: async (ctx, args) => {
     const reminders = await ctx.db
       .query('ticketReminders')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
-    return reminders.filter((r) => r.isTriggered && !r.isRead).length;
+    return reminders.filter(r => r.isTriggered && !r.isRead).length;
   },
 });
 
@@ -135,15 +134,15 @@ export const getUpcoming = query({
 
     const reminders = await ctx.db
       .query('ticketReminders')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     return reminders
       .filter(
-        (r) =>
-          !r.isTriggered &&
-          r.reminderTime >= now &&
-          r.reminderTime <= futureTime
+        r =>
+          !r.isTriggered
+          && r.reminderTime >= now
+          && r.reminderTime <= futureTime,
       )
       .sort((a, b) => a.reminderTime - b.reminderTime);
   },
@@ -172,16 +171,15 @@ export const create = mutation({
     // Check for duplicate reminder
     const existingReminders = await ctx.db
       .query('ticketReminders')
-      .withIndex('by_user_poi', (q) =>
-        q.eq('userId', args.userId).eq('poiId', args.poiId)
-      )
+      .withIndex('by_user_poi', q =>
+        q.eq('userId', args.userId).eq('poiId', args.poiId))
       .collect();
 
     const duplicate = existingReminders.find(
-      (r) =>
-        r.reminderType === args.reminderType &&
-        !r.isTriggered &&
-        Math.abs(r.reminderTime - args.reminderTime) < 60 * 60 * 1000 // Within 1 hour
+      r =>
+        r.reminderType === args.reminderType
+        && !r.isTriggered
+        && Math.abs(r.reminderTime - args.reminderTime) < 60 * 60 * 1000, // Within 1 hour
     );
 
     if (duplicate) {
@@ -211,7 +209,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -263,7 +261,7 @@ export const markAllRead = mutation({
   handler: async (ctx, args) => {
     const reminders = await ctx.db
       .query('ticketReminders')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const now = Date.now();
@@ -305,9 +303,8 @@ export const removeByPoi = mutation({
   handler: async (ctx, args) => {
     const reminders = await ctx.db
       .query('ticketReminders')
-      .withIndex('by_user_poi', (q) =>
-        q.eq('userId', args.userId).eq('poiId', args.poiId)
-      )
+      .withIndex('by_user_poi', q =>
+        q.eq('userId', args.userId).eq('poiId', args.poiId))
       .collect();
 
     for (const reminder of reminders) {

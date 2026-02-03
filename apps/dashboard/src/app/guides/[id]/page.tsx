@@ -17,11 +17,19 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import * as React from 'react';
 import { useState } from 'react';
 import { GeocodingConfidenceBadge } from '@/components/geocoding-confidence-badge';
 import { PoiEditor } from '@/components/poi-editor';
 import { getTravelGuide } from '@/lib/api';
 import { cn } from '@/lib/utils';
+
+const FALLBACK_IMAGE_SRC
+  = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
+
+function handleImageError(e: React.SyntheticEvent<HTMLImageElement>) {
+  e.currentTarget.src = FALLBACK_IMAGE_SRC;
+}
 
 function PlatformBadge({ platform }: { platform: string }) {
   const colors: Record<string, string> = {
@@ -44,7 +52,7 @@ function PlatformBadge({ platform }: { platform: string }) {
     <span
       className={cn(
         'px-3 py-1 rounded-full text-sm font-medium border',
-        colors[platform] || 'bg-gray-100 text-gray-800 border-gray-200'
+        colors[platform] || 'bg-gray-100 text-gray-800 border-gray-200',
       )}
     >
       {names[platform] || platform}
@@ -75,14 +83,16 @@ function StatCard({
 }
 
 function formatDate(dateString?: string) {
-  if (!dateString) return 'Unknown';
+  if (!dateString)
+    return 'Unknown';
   try {
     return new Date(dateString).toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
-  } catch {
+  }
+  catch {
     return dateString;
   }
 }
@@ -155,7 +165,8 @@ export default function GuideDetailPage() {
               <div className="flex items-center gap-1 text-amber-500">
                 <Star className="h-4 w-4 fill-current" />
                 <span className="text-sm font-medium">
-                  {qualityPercent}% Quality
+                  {qualityPercent}
+                  % Quality
                 </span>
               </div>
             </div>
@@ -255,19 +266,20 @@ export default function GuideDetailPage() {
                   key={tag}
                   className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
                 >
-                  #{tag}
+                  #
+                  {tag}
                 </span>
               ))}
             </div>
           </div>
         )}
 
-        {(!guide.destinations || guide.destinations.length === 0) &&
-          (!guide.tags || guide.tags.length === 0) && (
-            <p className="text-gray-500 text-sm">
-              No destinations or tags available
-            </p>
-          )}
+        {(!guide.destinations || guide.destinations.length === 0)
+          && (!guide.tags || guide.tags.length === 0) && (
+          <p className="text-gray-500 text-sm">
+            No destinations or tags available
+          </p>
+        )}
       </div>
 
       {/* Content */}
@@ -277,6 +289,7 @@ export default function GuideDetailPage() {
           // Render rich text HTML content
           <div
             className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
+            // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
             dangerouslySetInnerHTML={{ __html: guide.content_html }}
           />
         ) : (
@@ -293,12 +306,14 @@ export default function GuideDetailPage() {
       {guide.image_urls && guide.image_urls.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Images ({guide.image_urls.length})
+            Images (
+            {guide.image_urls.length}
+            )
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {guide.image_urls.slice(0, 9).map((url: string, index: number) => (
+            {guide.image_urls.slice(0, 9).map((url: string) => (
               <a
-                key={index}
+                key={url}
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -306,19 +321,19 @@ export default function GuideDetailPage() {
               >
                 <img
                   src={url}
-                  alt={`Image ${index + 1}`}
+                  alt="Guide image"
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
-                  }}
+                  onError={handleImageError}
                 />
               </a>
             ))}
           </div>
           {guide.image_urls.length > 9 && (
             <p className="text-sm text-gray-500 mt-3 text-center">
-              +{guide.image_urls.length - 9} more images
+              +
+              {guide.image_urls.length - 9}
+              {' '}
+              more images
             </p>
           )}
         </div>
@@ -335,12 +350,17 @@ export default function GuideDetailPage() {
               </h2>
               {guide.geocoding_metrics && (
                 <p className="text-sm text-gray-500 mt-1">
-                  {guide.geocoding_metrics.total_pois} POIs •{' '}
+                  {guide.geocoding_metrics.total_pois}
+                  {' '}
+                  POIs •
+                  {' '}
                   {Math.round(guide.geocoding_metrics.average_confidence * 100)}
                   % avg confidence
                   {guide.geocoding_metrics.low_confidence_count > 0 && (
                     <span className="text-amber-600 font-medium ml-2">
-                      {guide.geocoding_metrics.low_confidence_count} need review
+                      {guide.geocoding_metrics.low_confidence_count}
+                      {' '}
+                      need review
                     </span>
                   )}
                 </p>
@@ -356,7 +376,9 @@ export default function GuideDetailPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <div className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-lg text-sm">
-                    Day {day.dayNumber}
+                    Day
+                    {' '}
+                    {day.dayNumber}
                   </div>
                   {day.theme && (
                     <span className="text-sm text-gray-600">{day.theme}</span>
@@ -365,18 +387,19 @@ export default function GuideDetailPage() {
 
                 <div className="space-y-2">
                   {day.pois.map((poi: AiPoi, poiIndex: number) => {
-                    const isLowConfidence =
-                      poi.geocodeConfidence !== undefined &&
-                      poi.geocodeConfidence < 0.5;
+                    const isLowConfidence
+                      = poi.geocodeConfidence !== undefined
+                        && poi.geocodeConfidence < 0.5;
 
                     return (
                       <div
-                        key={poiIndex}
+                        // eslint-disable-next-line react/no-array-index-key
+                        key={`poi-${day.dayNumber}-${poiIndex}`}
                         className={cn(
                           'flex items-start gap-3 p-3 rounded-lg border transition-colors',
                           isLowConfidence && !poi.isManuallyVerified
                             ? 'border-amber-200 bg-amber-50'
-                            : 'border-gray-200 bg-gray-50'
+                            : 'border-gray-200 bg-gray-50',
                         )}
                       >
                         <div className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
@@ -404,7 +427,9 @@ export default function GuideDetailPage() {
                                 </p>
                               )}
                               <p className="text-xs text-gray-400 mt-1 font-mono">
-                                {poi.latitude.toFixed(6)},{' '}
+                                {poi.latitude.toFixed(6)}
+                                ,
+                                {' '}
                                 {poi.longitude.toFixed(6)}
                               </p>
                             </div>
@@ -420,8 +445,7 @@ export default function GuideDetailPage() {
                                       dayNumber: day.dayNumber,
                                       poiIndex,
                                       poi,
-                                    })
-                                  }
+                                    })}
                                 />
                               )}
                             </div>
@@ -461,13 +485,15 @@ export default function GuideDetailPage() {
           <div>
             <dt className="text-gray-500">Guide ID</dt>
             <dd className="font-mono text-gray-900">
-              {(guide.id || guide._id).slice(0, 8)}...
+              {(guide.id || guide._id).slice(0, 8)}
+              ...
             </dd>
           </div>
           <div>
             <dt className="text-gray-500">External ID</dt>
             <dd className="font-mono text-gray-900">
-              {guide.source_external_id?.slice(0, 20) || 'N/A'}...
+              {guide.source_external_id?.slice(0, 20) || 'N/A'}
+              ...
             </dd>
           </div>
           <div>

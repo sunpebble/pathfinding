@@ -6,6 +6,7 @@ import SwiftUI
 struct ExplorerFeaturedCard: View {
   let guide: BlogPost
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isPressed = false
   @State private var isVisible = false
 
@@ -149,10 +150,14 @@ struct ExplorerFeaturedCard: View {
       y: 6
     )
     .scaleEffect(isPressed ? 0.97 : 1)
-    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+    .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
     .opacity(isVisible ? 1 : 0)
-    .offset(y: isVisible ? 0 : 20)
+    .offset(y: isVisible ? 0 : (reduceMotion ? 0 : 20))
     .onAppear {
+      guard !reduceMotion else {
+        isVisible = true
+        return
+      }
       withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
         isVisible = true
       }
@@ -203,6 +208,7 @@ private struct ExplorerDataBadge: View {
 
 private struct ExplorerAIBadge: View {
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var glowOpacity: Double = 0.4
   @State private var shimmerPhase: CGFloat = 0
 
@@ -248,6 +254,7 @@ private struct ExplorerAIBadge: View {
     .shadow(color: .purple.opacity(glowOpacity), radius: colorScheme == .dark ? 12 : 8, y: 2)
     .shadow(color: .indigo.opacity(glowOpacity * 0.5), radius: colorScheme == .dark ? 20 : 12, y: 4)
     .onAppear {
+      guard !reduceMotion else { return }
       withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
         glowOpacity = colorScheme == .dark ? 0.8 : 0.5
       }
@@ -459,6 +466,7 @@ struct ExplorerHeroHeader: View {
   let accentColor: Color
 
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isVisible = false
 
   init(title: String, subtitle: String? = nil, accentColor: Color = DesignTokens.Colors.accent) {
@@ -493,14 +501,14 @@ struct ExplorerHeroHeader: View {
           .font(DesignTokens.Typography.Display.hero)
           .foregroundStyle(.primary)
           .opacity(isVisible ? 1 : 0)
-          .offset(y: isVisible ? 0 : 20)
+          .offset(y: isVisible ? 0 : (reduceMotion ? 0 : 20))
 
         if let subtitle = subtitle {
           Text(subtitle)
             .font(.title3)
             .foregroundStyle(.secondary)
             .opacity(isVisible ? 1 : 0)
-            .offset(y: isVisible ? 0 : 15)
+            .offset(y: isVisible ? 0 : (reduceMotion ? 0 : 15))
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
@@ -509,6 +517,10 @@ struct ExplorerHeroHeader: View {
     .frame(height: 200)
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xl))
     .onAppear {
+      guard !reduceMotion else {
+        isVisible = true
+        return
+      }
       withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
         isVisible = true
       }
@@ -564,6 +576,7 @@ struct ExplorerFeaturedCardCarousel: View {
 }
 
 private struct SwipeHintIndicator: View {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var offset: CGFloat = 0
 
   var body: some View {
@@ -576,6 +589,7 @@ private struct SwipeHintIndicator: View {
     }
     .offset(x: offset)
     .onAppear {
+      guard !reduceMotion else { return }
       withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
         offset = 6
       }
@@ -587,6 +601,7 @@ private struct SwipeHintIndicator: View {
 
 struct ExplorerFeaturedCardSkeleton: View {
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var shimmerPhase: CGFloat = 0
 
   var body: some View {
@@ -635,6 +650,7 @@ struct ExplorerFeaturedCardSkeleton: View {
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
     .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
     .onAppear {
+      guard !reduceMotion else { return }
       withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
         shimmerPhase = 1
       }

@@ -1,6 +1,7 @@
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
+import { editOperationChangesValidator } from '../packages/convex-client/src/validators/index.js';
 import { mutation, query } from './_generated/server';
 
 /**
@@ -13,26 +14,26 @@ const operationTypeValidator = v.union(
   v.literal('create'),
   v.literal('update'),
   v.literal('delete'),
-  v.literal('reorder')
+  v.literal('reorder'),
 );
 
 const targetTypeValidator = v.union(
   v.literal('itinerary'),
   v.literal('day'),
-  v.literal('item')
+  v.literal('item'),
 );
 
 const _statusValidator = v.union(
   v.literal('pending'),
   v.literal('applied'),
   v.literal('conflicted'),
-  v.literal('rejected')
+  v.literal('rejected'),
 );
 
 const resolutionValidator = v.union(
   v.literal('accept_mine'),
   v.literal('accept_theirs'),
-  v.literal('merge')
+  v.literal('merge'),
 );
 
 /**
@@ -42,20 +43,19 @@ async function getCurrentVersion(
   ctx: QueryCtx | MutationCtx,
   itineraryId: Id<'itineraries'>,
   targetType: string,
-  targetId: string
+  targetId: string,
 ): Promise<number> {
   const lastOperation = await ctx.db
     .query('editOperations')
-    .withIndex('by_itinerary_timestamp', (q) =>
-      q.eq('itineraryId', itineraryId)
-    )
+    .withIndex('by_itinerary_timestamp', q =>
+      q.eq('itineraryId', itineraryId))
     .order('desc')
-    .filter((q) =>
+    .filter(q =>
       q.and(
         q.eq(q.field('targetType'), targetType),
         q.eq(q.field('targetId'), targetId),
-        q.eq(q.field('status'), 'applied')
-      )
+        q.eq(q.field('status'), 'applied'),
+      ),
     )
     .first();
 
@@ -71,21 +71,20 @@ async function checkForConflicts(
   targetType: string,
   targetId: string,
   baseVersion: number,
-  excludeUserId: string
+  excludeUserId: string,
 ): Promise<boolean> {
   const conflictingOps = await ctx.db
     .query('editOperations')
-    .withIndex('by_itinerary_timestamp', (q) =>
-      q.eq('itineraryId', itineraryId)
-    )
-    .filter((q) =>
+    .withIndex('by_itinerary_timestamp', q =>
+      q.eq('itineraryId', itineraryId))
+    .filter(q =>
       q.and(
         q.eq(q.field('targetType'), targetType),
         q.eq(q.field('targetId'), targetId),
         q.gte(q.field('version'), baseVersion),
         q.neq(q.field('userId'), excludeUserId),
-        q.eq(q.field('status'), 'applied')
-      )
+        q.eq(q.field('status'), 'applied'),
+      ),
     )
     .collect();
 
@@ -109,9 +108,8 @@ export const getRecentOperations = query({
 
     const operations = await ctx.db
       .query('editOperations')
-      .withIndex('by_itinerary_timestamp', (q) =>
-        q.eq('itineraryId', args.itineraryId)
-      )
+      .withIndex('by_itinerary_timestamp', q =>
+        q.eq('itineraryId', args.itineraryId))
       .order('desc')
       .take(limit);
 
@@ -127,9 +125,8 @@ export const getPendingOperations = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('editOperations')
-      .withIndex('by_itinerary_status', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('status', 'pending')
-      )
+      .withIndex('by_itinerary_status', q =>
+        q.eq('itineraryId', args.itineraryId).eq('status', 'pending'))
       .collect();
   },
 });
@@ -142,9 +139,8 @@ export const getConflictedOperations = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('editOperations')
-      .withIndex('by_itinerary_status', (q) =>
-        q.eq('itineraryId', args.itineraryId).eq('status', 'conflicted')
-      )
+      .withIndex('by_itinerary_status', q =>
+        q.eq('itineraryId', args.itineraryId).eq('status', 'conflicted'))
       .collect();
   },
 });
@@ -163,11 +159,10 @@ export const getOperationsByUser = query({
 
     const operations = await ctx.db
       .query('editOperations')
-      .withIndex('by_itinerary_timestamp', (q) =>
-        q.eq('itineraryId', args.itineraryId)
-      )
+      .withIndex('by_itinerary_timestamp', q =>
+        q.eq('itineraryId', args.itineraryId))
       .order('desc')
-      .filter((q) => q.eq(q.field('userId'), args.userId))
+      .filter(q => q.eq(q.field('userId'), args.userId))
       .take(limit);
 
     return operations;
@@ -188,7 +183,7 @@ export const recordOperation = mutation({
     operationType: operationTypeValidator,
     targetType: targetTypeValidator,
     targetId: v.string(),
-    changes: v.any(),
+    changes: editOperationChangesValidator,
     baseVersion: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -202,7 +197,7 @@ export const recordOperation = mutation({
       args.targetType,
       args.targetId,
       baseVersion,
-      args.userId
+      args.userId,
     );
 
     // Get the next version
@@ -210,7 +205,7 @@ export const recordOperation = mutation({
       ctx,
       args.itineraryId,
       args.targetType,
-      args.targetId
+      args.targetId,
     );
 
     // Determine initial status
@@ -252,7 +247,7 @@ export const applyOperation = mutation({
 
     if (operation.status !== 'pending') {
       throw new Error(
-        `Cannot apply operation with status: ${operation.status}`
+        `Cannot apply operation with status: ${operation.status}`,
       );
     }
 
@@ -307,8 +302,8 @@ export const resolveConflict = mutation({
     }
 
     const now = Date.now();
-    const newStatus =
-      args.resolution === 'accept_theirs' ? 'rejected' : 'applied';
+    const newStatus
+      = args.resolution === 'accept_theirs' ? 'rejected' : 'applied';
 
     await ctx.db.patch(args.operationId, {
       status: newStatus,
@@ -337,10 +332,9 @@ export const cleanupOldOperations = mutation({
 
     const oldOperations = await ctx.db
       .query('editOperations')
-      .withIndex('by_itinerary_timestamp', (q) =>
-        q.eq('itineraryId', args.itineraryId)
-      )
-      .filter((q) => q.lt(q.field('timestamp'), cutoffTime))
+      .withIndex('by_itinerary_timestamp', q =>
+        q.eq('itineraryId', args.itineraryId))
+      .filter(q => q.lt(q.field('timestamp'), cutoffTime))
       .collect();
 
     let deletedCount = 0;

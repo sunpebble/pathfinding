@@ -1,5 +1,4 @@
 import type { Id } from './_generated/dataModel';
-// @ts-nocheck
 import { httpRouter } from 'convex/server';
 import { api } from './_generated/api';
 import { httpAction } from './_generated/server';
@@ -37,7 +36,7 @@ http.route({
           {
             status: 400,
             headers: { 'Content-Type': 'application/json' },
-          }
+          },
         );
       }
 
@@ -80,7 +79,7 @@ http.route({
           {
             status: result.started ? 200 : 401,
             headers: { 'Content-Type': 'application/json' },
-          }
+          },
         );
       }
 
@@ -91,11 +90,12 @@ http.route({
           'Set-Cookie': `convex-auth-token=${result.tokens.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
         },
       });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Authentication failed';
-      const status =
-        message.includes('Invalid') || message.includes('not found')
+    }
+    catch (error) {
+      const message
+        = error instanceof Error ? error.message : 'Authentication failed';
+      const status
+        = message.includes('Invalid') || message.includes('not found')
           ? 401
           : 500;
 
@@ -131,7 +131,8 @@ http.route({
             'convex-auth-token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0',
         },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : 'Sign out failed',
@@ -139,7 +140,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -162,7 +163,8 @@ async function getUserIdFromAuth(request: Request): Promise<string | null> {
   try {
     // Decode JWT payload (base64url encoded)
     const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3)
+      return null;
 
     const payload = parts[1];
     // Convert base64url to base64
@@ -172,7 +174,8 @@ async function getUserIdFromAuth(request: Request): Promise<string | null> {
 
     // Convex Auth uses 'sub' for the user ID
     return json.sub || null;
-  } catch {
+  }
+  catch {
     return null;
   }
 }
@@ -221,9 +224,10 @@ http.route({
         {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '请求失败',
@@ -231,7 +235,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -260,13 +264,6 @@ http.route({
 
       const body = await request.json();
       const { itineraryId, content, parentId } = body;
-
-      console.log('📝 Create comment request:', {
-        itineraryId,
-        contentLength: content?.length,
-        parentId,
-        parentIdType: typeof parentId,
-      });
 
       if (!itineraryId || !content) {
         return new Response(JSON.stringify({ error: '缺少必要参数' }), {
@@ -308,9 +305,10 @@ http.route({
         {
           status: 201,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Create comment error:', error);
       return new Response(
         JSON.stringify({
@@ -319,7 +317,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -355,7 +353,7 @@ http.route({
       }
 
       const comment = await ctx.runMutation(api.itineraryComments.update, {
-        id: id as any,
+        id: id as Id<'itineraryComments'>,
         userId,
         content,
       });
@@ -364,7 +362,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '更新评论失败',
@@ -372,7 +371,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -416,7 +415,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '删除评论失败',
@@ -424,7 +424,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -459,7 +459,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '获取回复失败',
@@ -467,7 +468,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -485,7 +486,6 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const userId = await getUserIdFromAuth(request);
-      console.log('[Like API] userId from auth:', userId);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
@@ -495,7 +495,6 @@ http.route({
 
       const body = await request.json();
       const { commentId } = body;
-      console.log('[Like API] commentId from body:', commentId);
 
       if (!commentId) {
         return new Response(JSON.stringify({ error: '缺少commentId参数' }), {
@@ -504,12 +503,10 @@ http.route({
         });
       }
 
-      console.log('[Like API] Calling toggleLike mutation...');
       const result = await ctx.runMutation(api.guideComments.toggleLike, {
         commentId: commentId as Id<'guideComments'>,
         userId,
       });
-      console.log('[Like API] Result:', result);
 
       // Convert to snake_case for iOS compatibility
       return new Response(
@@ -523,9 +520,10 @@ http.route({
         {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '操作失败',
@@ -533,7 +531,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -569,9 +567,14 @@ http.route({
       }
 
       const result = await ctx.runMutation(api.itineraryComments.report, {
-        commentId: commentId as any,
+        commentId: commentId as Id<'itineraryComments'>,
         userId,
-        reason: reason as any,
+        reason: reason as
+        | 'spam'
+        | 'harassment'
+        | 'inappropriate'
+        | 'misinformation'
+        | 'other',
         description,
       });
 
@@ -579,7 +582,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '举报失败',
@@ -587,7 +591,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -607,8 +611,9 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
     const userId = url.searchParams.get('userId');
-    const page = Number.parseInt(url.searchParams.get('page') ?? '1');
-    const pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '20');
+    // Note: pagination not yet supported by listByUser
+    const _page = Number.parseInt(url.searchParams.get('page') ?? '1');
+    const _pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '20');
 
     if (!userId) {
       return new Response(JSON.stringify({ error: '缺少userId参数' }), {
@@ -620,15 +625,14 @@ http.route({
     try {
       const result = await ctx.runQuery(api.favoriteCollections.listByUser, {
         userId,
-        page,
-        pageSize,
       });
 
       return new Response(JSON.stringify(result), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '请求失败',
@@ -636,7 +640,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -670,7 +674,9 @@ http.route({
     try {
       const result = await ctx.runQuery(api.itineraryFavorites.listByUser, {
         userId,
-        collectionId: collectionId as any,
+        collectionId: collectionId
+          ? (collectionId as Id<'favoriteCollections'>)
+          : undefined,
         page,
         pageSize,
       });
@@ -679,7 +685,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '请求失败',
@@ -687,7 +694,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -728,7 +735,8 @@ http.route({
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return new Response(
         JSON.stringify({
           error: error instanceof Error ? error.message : '请求失败',
@@ -736,7 +744,7 @@ http.route({
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
-        }
+        },
       );
     }
   }),
@@ -750,13 +758,13 @@ http.route({
  * Convert camelCase keys to snake_case for API compatibility with iOS
  */
 function toSnakeCase(str: string): string {
-  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
 /**
  * Convert object keys from camelCase to snake_case recursively
  */
-function convertKeysToSnakeCase(obj: any): any {
+function convertKeysToSnakeCase(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -764,20 +772,24 @@ function convertKeysToSnakeCase(obj: any): any {
     return obj.map(convertKeysToSnakeCase);
   }
   if (typeof obj === 'object' && !(obj instanceof Date)) {
-    const converted: any = {};
+    const converted: Record<string, unknown> = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         let newKey: string;
         if (key === '_id') {
           // Convert Convex _id to standard id for iOS compatibility
           newKey = 'id';
-        } else if (key.startsWith('_')) {
+        }
+        else if (key.startsWith('_')) {
           // Skip other internal Convex fields like _creationTime
           continue;
-        } else {
+        }
+        else {
           newKey = toSnakeCase(key);
         }
-        converted[newKey] = convertKeysToSnakeCase(obj[key]);
+        converted[newKey] = convertKeysToSnakeCase(
+          (obj as Record<string, unknown>)[key],
+        );
       }
     }
     return converted;
@@ -788,7 +800,7 @@ function convertKeysToSnakeCase(obj: any): any {
 /**
  * Helper to create JSON response
  */
-function jsonResponse(data: any, status = 200) {
+function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -822,7 +834,7 @@ http.route({
     const url = new URL(request.url);
     const platform = url.searchParams.get('platform');
     const minQuality = Number.parseFloat(
-      url.searchParams.get('min_quality') ?? '0'
+      url.searchParams.get('min_quality') ?? '0',
     );
     const limit = Number.parseInt(url.searchParams.get('limit') ?? '20');
     const offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
@@ -838,9 +850,9 @@ http.route({
         'tongcheng',
         'mafengwo',
       ] as const;
-      const validPlatform =
-        platform &&
-        validPlatforms.includes(platform as (typeof validPlatforms)[number])
+      const validPlatform
+        = platform
+          && validPlatforms.includes(platform as (typeof validPlatforms)[number])
           ? (platform as (typeof validPlatforms)[number])
           : undefined;
 
@@ -861,9 +873,10 @@ http.route({
           total: guides.length,
         },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取指南列表失败'
+        error instanceof Error ? error.message : '获取指南列表失败',
       );
     }
   }),
@@ -907,10 +920,11 @@ http.route({
           offset: 0,
         },
       });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : '搜索失败',
-        500
+        500,
       );
     }
   }),
@@ -939,7 +953,7 @@ http.route({
       while (!isDone) {
         const batch = await ctx.runQuery(
           api.travelGuides.listDestinationsBatch,
-          { cursor, batchSize: 50 }
+          { cursor, batchSize: 50 },
         );
         allDestinations.push(...batch.destinations);
         cursor = batch.cursor ?? undefined;
@@ -958,10 +972,11 @@ http.route({
         .map(([name, count]) => ({ name, count }));
 
       return jsonResponse({ data: topDestinations });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : '获取目的地失败',
-        500
+        500,
       );
     }
   }),
@@ -984,7 +999,7 @@ http.route({
 
     try {
       const guide = await ctx.runQuery(api.travelGuides.getById, {
-        id: id as any,
+        id: id as Id<'travelGuides'>,
       });
 
       if (!guide) {
@@ -993,9 +1008,10 @@ http.route({
 
       // Convert to snake_case for iOS compatibility
       return jsonResponse(convertKeysToSnakeCase(guide));
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取指南失败'
+        error instanceof Error ? error.message : '获取指南失败',
       );
     }
   }),
@@ -1014,17 +1030,18 @@ http.route({
 
       const platformCounts: Record<string, number> = {};
       for (const guide of guides) {
-        platformCounts[guide.sourcePlatform] =
-          (platformCounts[guide.sourcePlatform] || 0) + 1;
+        platformCounts[guide.sourcePlatform]
+          = (platformCounts[guide.sourcePlatform] || 0) + 1;
       }
 
       return jsonResponse({
         total: guides.length,
         by_platform: platformCounts,
       });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取统计失败'
+        error instanceof Error ? error.message : '获取统计失败',
       );
     }
   }),
@@ -1059,9 +1076,10 @@ http.route({
       });
 
       return jsonResponse({ data: sessions });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取会话列表失败'
+        error instanceof Error ? error.message : '获取会话列表失败',
       );
     }
   }),
@@ -1090,13 +1108,14 @@ http.route({
       });
 
       const session = await ctx.runQuery(api.chat.getSession, {
-        sessionId,
+        id: sessionId,
       });
 
       return jsonResponse({ data: session }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建会话失败'
+        error instanceof Error ? error.message : '创建会话失败',
       );
     }
   }),
@@ -1119,15 +1138,16 @@ http.route({
     }
 
     try {
-      const messages = await ctx.runQuery(api.chat.getMessages, {
-        sessionId: sessionId as any,
+      const messages = await ctx.runQuery(api.chat.listMessages, {
+        sessionId: sessionId as Id<'chatSessions'>,
         limit,
       });
 
       return jsonResponse({ data: messages });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取消息失败'
+        error instanceof Error ? error.message : '获取消息失败',
       );
     }
   }),
@@ -1150,15 +1170,16 @@ http.route({
       }
 
       const messageId = await ctx.runMutation(api.chat.addMessage, {
-        sessionId: sessionId as any,
+        sessionId: sessionId as Id<'chatSessions'>,
         role,
         content,
       });
 
       return jsonResponse({ id: messageId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '添加消息失败'
+        error instanceof Error ? error.message : '添加消息失败',
       );
     }
   }),
@@ -1193,9 +1214,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取粉丝列表失败'
+        error instanceof Error ? error.message : '获取粉丝列表失败',
       );
     }
   }),
@@ -1226,9 +1248,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取关注列表失败'
+        error instanceof Error ? error.message : '获取关注列表失败',
       );
     }
   }),
@@ -1256,7 +1279,8 @@ http.route({
       });
 
       return jsonResponse({ success: true }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(error instanceof Error ? error.message : '关注失败');
     }
   }),
@@ -1284,9 +1308,10 @@ http.route({
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '取消关注失败'
+        error instanceof Error ? error.message : '取消关注失败',
       );
     }
   }),
@@ -1315,9 +1340,10 @@ http.route({
       });
 
       return jsonResponse({ isFollowing });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '查询关注状态失败'
+        error instanceof Error ? error.message : '查询关注状态失败',
       );
     }
   }),
@@ -1339,14 +1365,15 @@ http.route({
     }
 
     try {
-      const stats = await ctx.runQuery(api.userFollows.getStats, {
+      const stats = await ctx.runQuery(api.userFollows.getFollowStats, {
         userId,
       });
 
       return jsonResponse(stats);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取统计失败'
+        error instanceof Error ? error.message : '获取统计失败',
       );
     }
   }),
@@ -1375,17 +1402,18 @@ http.route({
     }
 
     try {
-      const result = await ctx.runQuery(api.poiQA.listQuestions, {
-        poiId: poiId as any,
+      const result = await ctx.runQuery(api.poiQA.listQuestionsByPoi, {
+        poiId: poiId as Id<'pois'>,
         page,
         pageSize,
-        sortBy: sortBy as any,
+        sortBy: sortBy as 'newest' | 'oldest' | 'most_upvoted' | 'most_active',
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取问题列表失败'
+        error instanceof Error ? error.message : '获取问题列表失败',
       );
     }
   }),
@@ -1408,7 +1436,7 @@ http.route({
       }
 
       const questionId = await ctx.runMutation(api.poiQA.createQuestion, {
-        poiId: poiId as any,
+        poiId: poiId as Id<'pois'>,
         userId,
         title,
         content,
@@ -1416,9 +1444,10 @@ http.route({
       });
 
       return jsonResponse({ id: questionId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建问题失败'
+        error instanceof Error ? error.message : '创建问题失败',
       );
     }
   }),
@@ -1442,16 +1471,17 @@ http.route({
     }
 
     try {
-      const result = await ctx.runQuery(api.poiQA.listAnswers, {
-        questionId: questionId as any,
+      const result = await ctx.runQuery(api.poiQA.listAnswersByQuestion, {
+        questionId: questionId as Id<'poiQuestions'>,
         page,
         pageSize,
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取回答列表失败'
+        error instanceof Error ? error.message : '获取回答列表失败',
       );
     }
   }),
@@ -1474,15 +1504,16 @@ http.route({
       }
 
       const answerId = await ctx.runMutation(api.poiQA.createAnswer, {
-        questionId: questionId as any,
+        questionId: questionId as Id<'poiQuestions'>,
         userId,
         content,
       });
 
       return jsonResponse({ id: answerId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建回答失败'
+        error instanceof Error ? error.message : '创建回答失败',
       );
     }
   }),
@@ -1507,17 +1538,23 @@ http.route({
     const visibility = url.searchParams.get('visibility') ?? 'public';
 
     try {
-      const result = await ctx.runQuery(api.travelNotes.list, {
-        userId: userId ?? undefined,
-        page,
-        pageSize,
-        visibility: visibility as any,
-      });
+      const result = userId
+        ? await ctx.runQuery(api.travelNotes.listByUser, {
+            userId,
+            page,
+            pageSize,
+            visibility: visibility as 'public' | 'followers' | 'private',
+          })
+        : await ctx.runQuery(api.travelNotes.listPublic, {
+            page,
+            pageSize,
+          });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取笔记列表失败'
+        error instanceof Error ? error.message : '获取笔记列表失败',
       );
     }
   }),
@@ -1533,36 +1570,26 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const {
-        userId,
-        title,
-        content,
-        tags,
-        visibility,
-        coverImageUrl,
-        imageUrls,
-        destination,
-      } = body;
+      const { userId, title, content, visibility, destination } = body;
 
       if (!userId || !title || !content) {
         return errorResponse('缺少必要参数', 400);
       }
 
       const noteId = await ctx.runMutation(api.travelNotes.create, {
-        userId,
+        authorId: userId,
         title,
         content,
-        tags,
         visibility: visibility ?? 'public',
-        coverImageUrl,
-        imageUrls,
-        destination,
+        location: destination,
+        travelDate: undefined,
       });
 
       return jsonResponse({ id: noteId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建笔记失败'
+        error instanceof Error ? error.message : '创建笔记失败',
       );
     }
   }),
@@ -1588,14 +1615,15 @@ http.route({
     }
 
     try {
-      const budget = await ctx.runQuery(api.budgets.getByItinerary, {
-        itineraryId: itineraryId as any,
+      const budget = await ctx.runQuery(api.budgets.getBudget, {
+        itineraryId: itineraryId as Id<'itineraries'>,
       });
 
       return jsonResponse({ data: budget });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取预算失败'
+        error instanceof Error ? error.message : '获取预算失败',
       );
     }
   }),
@@ -1611,23 +1639,26 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { itineraryId, totalBudget, currency, categories } = body;
+      const { itineraryId, userId, totalBudget, currency, categoryBudgets }
+        = body;
 
-      if (!itineraryId || totalBudget === undefined) {
+      if (!itineraryId || totalBudget === undefined || !userId) {
         return errorResponse('缺少必要参数', 400);
       }
 
-      const budgetId = await ctx.runMutation(api.budgets.upsert, {
-        itineraryId: itineraryId as any,
+      const budgetId = await ctx.runMutation(api.budgets.upsertBudget, {
+        itineraryId: itineraryId as Id<'itineraries'>,
+        userId,
         totalBudget,
         currency: currency ?? 'CNY',
-        categories,
+        categoryBudgets: categoryBudgets ?? [],
       });
 
       return jsonResponse({ id: budgetId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建预算失败'
+        error instanceof Error ? error.message : '创建预算失败',
       );
     }
   }),
@@ -1643,8 +1674,9 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
     const itineraryId = url.searchParams.get('itineraryId');
-    const page = Number.parseInt(url.searchParams.get('page') ?? '1');
-    const pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '50');
+    // Note: pagination not yet supported by listExpenses
+    const _page = Number.parseInt(url.searchParams.get('page') ?? '1');
+    const _pageSize = Number.parseInt(url.searchParams.get('pageSize') ?? '50');
 
     if (!itineraryId) {
       return errorResponse('缺少itineraryId参数', 400);
@@ -1652,15 +1684,14 @@ http.route({
 
     try {
       const result = await ctx.runQuery(api.budgets.listExpenses, {
-        itineraryId: itineraryId as any,
-        page,
-        pageSize,
+        itineraryId: itineraryId as Id<'itineraries'>,
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取支出列表失败'
+        error instanceof Error ? error.message : '获取支出列表失败',
       );
     }
   }),
@@ -1676,26 +1707,28 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { itineraryId, amount, category, description, date, currency } =
-        body;
+      const { itineraryId, amount, category, description, date, currency }
+        = body;
 
       if (!itineraryId || amount === undefined || !category) {
         return errorResponse('缺少必要参数', 400);
       }
 
-      const expenseId = await ctx.runMutation(api.budgets.addExpense, {
-        itineraryId: itineraryId as any,
+      const expenseId = await ctx.runMutation(api.budgets.createExpense, {
+        itineraryId: itineraryId as Id<'itineraries'>,
+        userId: '',
+        categoryId: category as Id<'expenseCategories'>,
         amount,
-        category,
-        description,
-        date,
+        description: description ?? '',
+        date: date ?? new Date().toISOString().split('T')[0],
         currency: currency ?? 'CNY',
       });
 
       return jsonResponse({ id: expenseId }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '添加支出失败'
+        error instanceof Error ? error.message : '添加支出失败',
       );
     }
   }),
@@ -1724,7 +1757,7 @@ http.route({
     }
 
     try {
-      const result = await ctx.runQuery(api.notifications.list, {
+      const result = await ctx.runQuery(api.notifications.listByUser, {
         userId,
         page,
         pageSize,
@@ -1732,9 +1765,10 @@ http.route({
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取通知失败'
+        error instanceof Error ? error.message : '获取通知失败',
       );
     }
   }),
@@ -1750,21 +1784,22 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { notificationIds, userId } = body;
+      const { notificationId, userId } = body;
 
-      if (!userId) {
-        return errorResponse('缺少userId参数', 400);
+      if (!userId || !notificationId) {
+        return errorResponse('缺少userId或notificationId参数', 400);
       }
 
-      await ctx.runMutation(api.notifications.markAsRead, {
-        notificationIds,
+      await ctx.runMutation(api.notifications.markRead, {
+        id: notificationId as Id<'notifications'>,
         userId,
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '标记已读失败'
+        error instanceof Error ? error.message : '标记已读失败',
       );
     }
   }),
@@ -1791,9 +1826,10 @@ http.route({
       });
 
       return jsonResponse({ count });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取未读数量失败'
+        error instanceof Error ? error.message : '获取未读数量失败',
       );
     }
   }),
@@ -1816,21 +1852,29 @@ http.route({
     const cityId = url.searchParams.get('cityId');
     const category = url.searchParams.get('category');
     const limit = Number.parseInt(url.searchParams.get('limit') ?? '20');
-    const offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
+    // Note: offset not yet supported by pois.search
+    const _offset = Number.parseInt(url.searchParams.get('offset') ?? '0');
 
     try {
       const result = await ctx.runQuery(api.pois.search, {
-        query: query ?? undefined,
-        cityId: cityId as any,
-        category: category as any,
+        query: query ?? '',
+        cityId: cityId ? (cityId as Id<'cities'>) : undefined,
+        category: category
+          ? (category as
+          | 'attraction'
+          | 'restaurant'
+          | 'hotel'
+          | 'shopping'
+          | 'other')
+          : undefined,
         limit,
-        offset,
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '搜索POI失败'
+        error instanceof Error ? error.message : '搜索POI失败',
       );
     }
   }),
@@ -1859,14 +1903,15 @@ http.route({
       const result = await ctx.runMutation(api.shareEvents.createShareLink, {
         resourceType,
         resourceId,
-        userId,
+        ownerId: userId ?? '',
         platform,
       });
 
       return jsonResponse(result, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建分享链接失败'
+        error instanceof Error ? error.message : '创建分享链接失败',
       );
     }
   }),
@@ -1882,7 +1927,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const { shareCode, eventType, metadata } = body;
+      const { shareCode, eventType } = body;
 
       if (!shareCode || !eventType) {
         return errorResponse('缺少必要参数', 400);
@@ -1891,13 +1936,13 @@ http.route({
       await ctx.runMutation(api.shareEvents.trackEvent, {
         shareCode,
         eventType,
-        metadata,
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '记录事件失败'
+        error instanceof Error ? error.message : '记录事件失败',
       );
     }
   }),
@@ -1914,19 +1959,26 @@ http.route({
     const url = new URL(request.url);
     const resourceId = url.searchParams.get('resourceId');
 
-    if (!resourceId) {
-      return errorResponse('缺少resourceId参数', 400);
+    const resourceType = url.searchParams.get('resourceType');
+
+    if (!resourceId || !resourceType) {
+      return errorResponse('缺少resourceId或resourceType参数', 400);
     }
 
     try {
       const stats = await ctx.runQuery(api.shareEvents.getStats, {
         resourceId,
+        resourceType: resourceType as
+        | 'itinerary'
+        | 'travelGuide'
+        | 'travelNote',
       });
 
       return jsonResponse(stats);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取统计失败'
+        error instanceof Error ? error.message : '获取统计失败',
       );
     }
   }),
@@ -1953,9 +2005,10 @@ http.route({
       });
 
       return jsonResponse({ data: categories });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取分类失败'
+        error instanceof Error ? error.message : '获取分类失败',
       );
     }
   }),
@@ -1982,16 +2035,27 @@ http.route({
       const phrases = await ctx.runQuery(
         api.translations.listPhrasesByCategory,
         {
-          category: category as any,
+          category: category as
+          | 'greeting'
+          | 'dining'
+          | 'transportation'
+          | 'shopping'
+          | 'emergency'
+          | 'accommodation'
+          | 'directions'
+          | 'numbers'
+          | 'time'
+          | 'common',
           sourceLang: sourceLang ?? undefined,
           limit,
-        }
+        },
       );
 
       return jsonResponse({ data: phrases });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取短语失败'
+        error instanceof Error ? error.message : '获取短语失败',
       );
     }
   }),
@@ -2018,13 +2082,26 @@ http.route({
     try {
       const phrases = await ctx.runQuery(api.translations.searchPhrases, {
         query,
-        category: category as any,
+        category: category
+          ? (category as
+          | 'greeting'
+          | 'dining'
+          | 'transportation'
+          | 'shopping'
+          | 'emergency'
+          | 'accommodation'
+          | 'directions'
+          | 'numbers'
+          | 'time'
+          | 'common')
+          : undefined,
         sourceLang: sourceLang ?? undefined,
         limit,
       });
 
       return jsonResponse({ data: phrases });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(error instanceof Error ? error.message : '搜索失败');
     }
   }),
@@ -2054,17 +2131,20 @@ http.route({
         api.translations.listSavedTranslations,
         {
           userId,
-          translationType: translationType as any,
+          translationType: translationType
+            ? (translationType as 'text' | 'photo' | 'voice')
+            : undefined,
           favoritesOnly,
           limit,
           offset,
-        }
+        },
       );
 
       return jsonResponse({ data: translations });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取保存的翻译失败'
+        error instanceof Error ? error.message : '获取保存的翻译失败',
       );
     }
   }),
@@ -2093,12 +2173,12 @@ http.route({
       } = body;
 
       if (
-        !userId ||
-        !sourceText ||
-        !sourceLang ||
-        !targetText ||
-        !targetLang ||
-        !translationType
+        !userId
+        || !sourceText
+        || !sourceLang
+        || !targetText
+        || !targetLang
+        || !translationType
       ) {
         return errorResponse('缺少必要参数', 400);
       }
@@ -2116,9 +2196,10 @@ http.route({
       });
 
       return jsonResponse({ id }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '保存翻译失败'
+        error instanceof Error ? error.message : '保存翻译失败',
       );
     }
   }),
@@ -2141,13 +2222,14 @@ http.route({
       }
 
       await ctx.runMutation(api.translations.deleteSavedTranslation, {
-        id: id as any,
+        id: id as Id<'savedTranslations'>,
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '删除翻译失败'
+        error instanceof Error ? error.message : '删除翻译失败',
       );
     }
   }),
@@ -2172,12 +2254,13 @@ http.route({
       const isFavorite = await ctx.runMutation(
         api.translations.toggleFavorite,
         {
-          id: id as any,
-        }
+          id: id as Id<'savedTranslations'>,
+        },
       );
 
       return jsonResponse({ isFavorite });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(error instanceof Error ? error.message : '操作失败');
     }
   }),
@@ -2202,9 +2285,10 @@ http.route({
       });
 
       return jsonResponse({ data: packs });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取离线包失败'
+        error instanceof Error ? error.message : '获取离线包失败',
       );
     }
   }),
@@ -2262,9 +2346,10 @@ http.route({
       });
 
       return jsonResponse({ data: jobs });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取任务列表失败'
+        error instanceof Error ? error.message : '获取任务列表失败',
       );
     }
   }),
@@ -2297,9 +2382,10 @@ http.route({
       const job = await ctx.runQuery(api.crawlJobs.getById, { id: jobId });
 
       return jsonResponse({ data: job }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建任务失败'
+        error instanceof Error ? error.message : '创建任务失败',
       );
     }
   }),
@@ -2322,7 +2408,7 @@ http.route({
 
     try {
       const job = await ctx.runQuery(api.crawlJobs.getById, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
       });
 
       if (!job) {
@@ -2330,9 +2416,10 @@ http.route({
       }
 
       return jsonResponse({ data: job });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取任务失败'
+        error instanceof Error ? error.message : '获取任务失败',
       );
     }
   }),
@@ -2355,13 +2442,14 @@ http.route({
       }
 
       await ctx.runMutation(api.crawlJobs.remove, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '删除任务失败'
+        error instanceof Error ? error.message : '删除任务失败',
       );
     }
   }),
@@ -2384,13 +2472,14 @@ http.route({
       }
 
       const job = await ctx.runMutation(api.crawlJobs.start, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
       });
 
       return jsonResponse({ data: job });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '启动任务失败'
+        error instanceof Error ? error.message : '启动任务失败',
       );
     }
   }),
@@ -2413,14 +2502,15 @@ http.route({
       }
 
       const job = await ctx.runMutation(api.crawlJobs.complete, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
         statistics,
       });
 
       return jsonResponse({ data: job });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '完成任务失败'
+        error instanceof Error ? error.message : '完成任务失败',
       );
     }
   }),
@@ -2443,13 +2533,14 @@ http.route({
       }
 
       const job = await ctx.runMutation(api.crawlJobs.fail, {
-        id: id as any,
+        id: id as Id<'crawlJobs'>,
         errorMessage,
         statistics,
       });
 
       return jsonResponse({ data: job });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(error instanceof Error ? error.message : '操作失败');
     }
   }),
@@ -2475,16 +2566,19 @@ http.route({
 
     try {
       const result = await ctx.runQuery(api.dataQualityReports.list, {
-        datasetId: datasetId as any,
+        datasetId: datasetId
+          ? (datasetId as Id<'trainingDatasets'>)
+          : undefined,
         reportType: reportType ?? undefined,
         limit,
         offset,
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取报告列表失败'
+        error instanceof Error ? error.message : '获取报告列表失败',
       );
     }
   }),
@@ -2507,16 +2601,19 @@ http.route({
       }
 
       const report = await ctx.runMutation(api.dataQualityReports.create, {
-        datasetId: datasetId as any,
+        datasetId: datasetId
+          ? (datasetId as Id<'trainingDatasets'>)
+          : undefined,
         reportType,
         metrics,
         issues,
       });
 
       return jsonResponse({ data: report }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建报告失败'
+        error instanceof Error ? error.message : '创建报告失败',
       );
     }
   }),
@@ -2539,7 +2636,7 @@ http.route({
 
     try {
       const report = await ctx.runQuery(api.dataQualityReports.getById, {
-        id: id as any,
+        id: id as Id<'dataQualityReports'>,
       });
 
       if (!report) {
@@ -2547,9 +2644,10 @@ http.route({
       }
 
       return jsonResponse({ data: report });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取报告失败'
+        error instanceof Error ? error.message : '获取报告失败',
       );
     }
   }),
@@ -2572,13 +2670,14 @@ http.route({
       }
 
       await ctx.runMutation(api.dataQualityReports.remove, {
-        id: id as any,
+        id: id as Id<'dataQualityReports'>,
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '删除报告失败'
+        error instanceof Error ? error.message : '删除报告失败',
       );
     }
   }),
@@ -2596,9 +2695,10 @@ http.route({
       const summary = await ctx.runQuery(api.dataQualityReports.getSummary, {});
 
       return jsonResponse({ data: summary });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取摘要失败'
+        error instanceof Error ? error.message : '获取摘要失败',
       );
     }
   }),
@@ -2625,15 +2725,18 @@ http.route({
     try {
       const result = await ctx.runQuery(api.trainingDatasets.list, {
         name: name ?? undefined,
-        status: status as any,
+        status: status
+          ? (status as 'pending' | 'generating' | 'completed' | 'failed')
+          : undefined,
         limit,
         offset,
       });
 
       return jsonResponse(result);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取数据集列表失败'
+        error instanceof Error ? error.message : '获取数据集列表失败',
       );
     }
   }),
@@ -2672,9 +2775,10 @@ http.route({
       });
 
       return jsonResponse({ data: dataset }, 201);
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '创建数据集失败'
+        error instanceof Error ? error.message : '创建数据集失败',
       );
     }
   }),
@@ -2697,7 +2801,7 @@ http.route({
 
     try {
       const dataset = await ctx.runQuery(api.trainingDatasets.getById, {
-        id: id as any,
+        id: id as Id<'trainingDatasets'>,
       });
 
       if (!dataset) {
@@ -2705,9 +2809,10 @@ http.route({
       }
 
       return jsonResponse({ data: dataset });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取数据集失败'
+        error instanceof Error ? error.message : '获取数据集失败',
       );
     }
   }),
@@ -2730,13 +2835,14 @@ http.route({
       }
 
       await ctx.runMutation(api.trainingDatasets.remove, {
-        id: id as any,
+        id: id as Id<'trainingDatasets'>,
       });
 
       return jsonResponse({ success: true });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '删除数据集失败'
+        error instanceof Error ? error.message : '删除数据集失败',
       );
     }
   }),
@@ -2759,7 +2865,7 @@ http.route({
       }
 
       const dataset = await ctx.runMutation(api.trainingDatasets.update, {
-        id: id as any,
+        id: id as Id<'trainingDatasets'>,
         status,
         statistics,
         storagePaths,
@@ -2767,9 +2873,10 @@ http.route({
       });
 
       return jsonResponse({ data: dataset });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '更新数据集失败'
+        error instanceof Error ? error.message : '更新数据集失败',
       );
     }
   }),
@@ -2796,9 +2903,10 @@ http.route({
       });
 
       return jsonResponse({ data: rates });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取汇率失败'
+        error instanceof Error ? error.message : '获取汇率失败',
       );
     }
   }),
@@ -2825,9 +2933,10 @@ http.route({
       });
 
       return jsonResponse({ data: history });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取汇率历史失败'
+        error instanceof Error ? error.message : '获取汇率历史失败',
       );
     }
   }),
@@ -2845,9 +2954,10 @@ http.route({
       const stats = await ctx.runQuery(api.currencyRates.stats, {});
 
       return jsonResponse({ data: stats });
-    } catch (error) {
+    }
+    catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取统计失败'
+        error instanceof Error ? error.message : '获取统计失败',
       );
     }
   }),

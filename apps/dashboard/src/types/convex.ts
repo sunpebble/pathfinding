@@ -1,4 +1,4 @@
-import type { Id, TableNames } from '@pathfinding/convex';
+import type { Id, TableNames } from '@pathfinding/convex-client';
 
 /**
  * Helper to safely convert string to Convex ID

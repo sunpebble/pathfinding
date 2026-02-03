@@ -1,6 +1,5 @@
-/* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
-import type { Id } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -14,14 +13,14 @@ const signalQualityValidator = v.union(
   v.literal('good'),
   v.literal('average'),
   v.literal('poor'),
-  v.literal('very_poor')
+  v.literal('very_poor'),
 );
 
 // Review status validator
 const reviewStatusValidator = v.union(
   v.literal('pending'),
   v.literal('approved'),
-  v.literal('rejected')
+  v.literal('rejected'),
 );
 
 // List reviews for a SIM card product
@@ -35,12 +34,12 @@ export const listBySimCard = query({
   handler: async (ctx, args) => {
     let reviews = await ctx.db
       .query('simCardReviews')
-      .withIndex('by_sim_card', (q) => q.eq('simCardId', args.simCardId))
+      .withIndex('by_sim_card', q => q.eq('simCardId', args.simCardId))
       .collect();
 
     // Filter by status (default to approved)
     const status = args.status ?? 'approved';
-    reviews = reviews.filter((r) => r.status === status);
+    reviews = reviews.filter(r => r.status === status);
 
     // Sort by helpful count and creation date
     reviews.sort((a, b) => {
@@ -64,7 +63,7 @@ export const listByUser = query({
   handler: async (ctx, args) => {
     const reviews = await ctx.db
       .query('simCardReviews')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     // Sort by creation date (newest first)
@@ -91,8 +90,8 @@ export const getUserReview = query({
   handler: async (ctx, args) => {
     const reviews = await ctx.db
       .query('simCardReviews')
-      .withIndex('by_sim_card', (q) => q.eq('simCardId', args.simCardId))
-      .filter((q) => q.eq(q.field('userId'), args.userId))
+      .withIndex('by_sim_card', q => q.eq('simCardId', args.simCardId))
+      .filter(q => q.eq(q.field('userId'), args.userId))
       .collect();
 
     return reviews[0] ?? null;
@@ -108,16 +107,16 @@ export const getTopReviews = query({
   handler: async (ctx, args) => {
     let reviews = await ctx.db
       .query('simCardReviews')
-      .withIndex('by_helpful', (q) => q)
+      .withIndex('by_helpful', q => q)
       .collect();
 
     // Filter by SIM card if provided
     if (args.simCardId) {
-      reviews = reviews.filter((r) => r.simCardId === args.simCardId);
+      reviews = reviews.filter(r => r.simCardId === args.simCardId);
     }
 
     // Only approved reviews
-    reviews = reviews.filter((r) => r.status === 'approved');
+    reviews = reviews.filter(r => r.status === 'approved');
 
     // Sort by helpful count
     reviews.sort((a, b) => b.helpfulCount - a.helpfulCount);
@@ -164,8 +163,8 @@ export const create = mutation({
     if (args.userId) {
       const existingReviews = await ctx.db
         .query('simCardReviews')
-        .withIndex('by_sim_card', (q) => q.eq('simCardId', args.simCardId))
-        .filter((q) => q.eq(q.field('userId'), args.userId))
+        .withIndex('by_sim_card', q => q.eq('simCardId', args.simCardId))
+        .filter(q => q.eq(q.field('userId'), args.userId))
         .collect();
 
       if (existingReviews.length > 0) {
@@ -221,7 +220,7 @@ export const update = mutation({
     }
 
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, {
@@ -233,11 +232,11 @@ export const update = mutation({
 
     // Update SIM card average rating if rating changed
     if (
-      updates.overallRating ||
-      updates.signalRating ||
-      updates.speedRating ||
-      updates.valueRating ||
-      updates.serviceRating
+      updates.overallRating
+      || updates.signalRating
+      || updates.speedRating
+      || updates.valueRating
+      || updates.serviceRating
     ) {
       await updateSimCardRating(ctx, review.simCardId);
     }
@@ -286,9 +285,8 @@ export const vote = mutation({
     // Check if user already voted
     const existingVotes = await ctx.db
       .query('simCardReviewVotes')
-      .withIndex('by_review_user', (q) =>
-        q.eq('reviewId', args.reviewId).eq('userId', args.userId)
-      )
+      .withIndex('by_review_user', q =>
+        q.eq('reviewId', args.reviewId).eq('userId', args.userId))
       .collect();
 
     if (existingVotes.length > 0) {
@@ -304,7 +302,8 @@ export const vote = mutation({
             helpfulCount: Math.max(0, review.helpfulCount - 1),
           });
         }
-      } else {
+      }
+      else {
         // Change vote type
         await ctx.db.patch(existingVote._id, {
           voteType: args.voteType,
@@ -316,13 +315,15 @@ export const vote = mutation({
           await ctx.db.patch(args.reviewId, {
             helpfulCount: review.helpfulCount + 1,
           });
-        } else {
+        }
+        else {
           await ctx.db.patch(args.reviewId, {
             helpfulCount: Math.max(0, review.helpfulCount - 1),
           });
         }
       }
-    } else {
+    }
+    else {
       // Create new vote
       await ctx.db.insert('simCardReviewVotes', {
         reviewId: args.reviewId,
@@ -352,9 +353,8 @@ export const getUserVote = query({
   handler: async (ctx, args) => {
     const votes = await ctx.db
       .query('simCardReviewVotes')
-      .withIndex('by_review_user', (q) =>
-        q.eq('reviewId', args.reviewId).eq('userId', args.userId)
-      )
+      .withIndex('by_review_user', q =>
+        q.eq('reviewId', args.reviewId).eq('userId', args.userId))
       .collect();
 
     return votes[0] ?? null;
@@ -394,7 +394,7 @@ export const remove = mutation({
     // Delete votes for this review
     const votes = await ctx.db
       .query('simCardReviewVotes')
-      .withIndex('by_review', (q) => q.eq('reviewId', args.id))
+      .withIndex('by_review', q => q.eq('reviewId', args.id))
       .collect();
 
     for (const vote of votes) {
@@ -410,14 +410,19 @@ export const remove = mutation({
 });
 
 // Helper function to update SIM card rating
-async function updateSimCardRating(ctx: any, simCardId: Id<'simCards'>) {
+async function updateSimCardRating(
+  ctx: MutationCtx,
+  simCardId: Id<'simCards'>,
+) {
   const reviews = await ctx.db
     .query('simCardReviews')
-    .withIndex('by_sim_card', (q: any) => q.eq('simCardId', simCardId))
+    .withIndex('by_sim_card', q => q.eq('simCardId', simCardId))
     .collect();
 
   // Only count approved reviews
-  const approvedReviews = reviews.filter((r: any) => r.status === 'approved');
+  const approvedReviews = reviews.filter(
+    (r: Doc<'simCardReviews'>) => r.status === 'approved',
+  );
 
   if (approvedReviews.length === 0) {
     await ctx.db.patch(simCardId, {
@@ -429,8 +434,8 @@ async function updateSimCardRating(ctx: any, simCardId: Id<'simCards'>) {
   }
 
   const totalRating = approvedReviews.reduce(
-    (sum: number, review: any) => sum + review.overallRating,
-    0
+    (sum: number, review: Doc<'simCardReviews'>) => sum + review.overallRating,
+    0,
   );
   const averageRating = totalRating / approvedReviews.length;
 

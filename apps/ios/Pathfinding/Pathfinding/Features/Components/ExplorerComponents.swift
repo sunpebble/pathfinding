@@ -359,6 +359,7 @@ struct ExplorerEmptyState: View {
   let action: (() -> Void)?
 
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isAnimating = false
 
   init(
@@ -392,6 +393,7 @@ struct ExplorerEmptyState: View {
           .offset(y: isAnimating ? -4 : 4)
       }
       .onAppear {
+        guard !reduceMotion else { return }
         withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
           isAnimating = true
         }
@@ -432,6 +434,7 @@ struct FloatingActionButton: View {
   let action: () -> Void
 
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isPressed = false
   @State private var glowOpacity: Double = 0.3
 
@@ -476,10 +479,9 @@ struct FloatingActionButton: View {
         }
     )
     .onAppear {
-      if colorScheme == .dark {
-        withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-          glowOpacity = 0.5
-        }
+      guard !reduceMotion, colorScheme == .dark else { return }
+      withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+        glowOpacity = 0.5
       }
     }
   }
@@ -491,6 +493,7 @@ struct ExplorerLoadingIndicator: View {
   let message: String?
   let size: CGFloat
 
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var rotation: Double = 0
 
   init(message: String? = nil, size: CGFloat = 40) {
@@ -503,6 +506,7 @@ struct ExplorerLoadingIndicator: View {
       CompassRoseDecoration(size: size, color: DesignTokens.Colors.accent, opacity: 0.6)
         .rotationEffect(.degrees(rotation))
         .onAppear {
+          guard !reduceMotion else { return }
           withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
             rotation = 360
           }
@@ -521,6 +525,7 @@ struct ExplorerLoadingIndicator: View {
 
 struct ExplorerSkeletonCard: View {
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var shimmerPhase: CGFloat = 0
 
   var body: some View {
@@ -557,6 +562,7 @@ struct ExplorerSkeletonCard: View {
     .background(DesignTokens.Colors.cardBackground)
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
     .onAppear {
+      guard !reduceMotion else { return }
       withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
         shimmerPhase = 1
       }
@@ -579,6 +585,7 @@ struct ExplorerSkeletonCard: View {
 
 struct SwipeHintView: View {
   let direction: Direction
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var offset: CGFloat = 0
 
   enum Direction {
@@ -607,6 +614,7 @@ struct SwipeHintView: View {
       }
     }
     .onAppear {
+      guard !reduceMotion else { return }
       withAnimation(.easeInOut(duration: 1).repeatForever(autoreverses: true)) {
         offset = direction == .right ? 8 : -8
       }

@@ -16,7 +16,7 @@ const luggageStatusValidator = v.union(
   v.literal('delayed'),
   v.literal('lost'),
   v.literal('found'),
-  v.literal('damaged')
+  v.literal('damaged'),
 );
 
 // Luggage size enum
@@ -24,7 +24,7 @@ const luggageSizeValidator = v.union(
   v.literal('cabin'),
   v.literal('medium'),
   v.literal('large'),
-  v.literal('oversized')
+  v.literal('oversized'),
 );
 
 /**
@@ -33,7 +33,7 @@ const luggageSizeValidator = v.union(
 async function checkLuggageOwnership(
   ctx: QueryCtx | MutationCtx,
   luggageId: Id<'luggage'>,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const luggage = await ctx.db.get(luggageId);
   if (!luggage) {
@@ -68,24 +68,24 @@ export const list = query({
 
     let luggageItems = await ctx.db
       .query('luggage')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
     // Apply filters
     if (args.status) {
-      luggageItems = luggageItems.filter((l) => l.status === args.status);
+      luggageItems = luggageItems.filter(l => l.status === args.status);
     }
 
     if (args.flightBookingId) {
       luggageItems = luggageItems.filter(
-        (l) => l.flightBookingId === args.flightBookingId
+        l => l.flightBookingId === args.flightBookingId,
       );
     }
 
     if (args.itineraryId) {
       luggageItems = luggageItems.filter(
-        (l) => l.itineraryId === args.itineraryId
+        l => l.itineraryId === args.itineraryId,
       );
     }
 
@@ -103,7 +103,8 @@ export const getById = query({
   args: { id: v.id('luggage') },
   handler: async (ctx, args) => {
     const luggage = await ctx.db.get(args.id);
-    if (!luggage) return null;
+    if (!luggage)
+      return null;
 
     // If linked to a flight booking, fetch flight info
     let flightBooking = null;
@@ -129,9 +130,8 @@ export const getByTagNumber = query({
   handler: async (ctx, args) => {
     const luggage = await ctx.db
       .query('luggage')
-      .withIndex('by_tag_number', (q) =>
-        q.eq('tagNumber', args.tagNumber.toUpperCase())
-      )
+      .withIndex('by_tag_number', q =>
+        q.eq('tagNumber', args.tagNumber.toUpperCase()))
       .first();
 
     if (!luggage || luggage.userId !== args.userId) {
@@ -153,13 +153,12 @@ export const getByFlightBooking = query({
   handler: async (ctx, args) => {
     const luggageItems = await ctx.db
       .query('luggage')
-      .withIndex('by_flight_booking', (q) =>
-        q.eq('flightBookingId', args.flightBookingId)
-      )
+      .withIndex('by_flight_booking', q =>
+        q.eq('flightBookingId', args.flightBookingId))
       .collect();
 
     // Filter by user
-    return luggageItems.filter((l) => l.userId === args.userId);
+    return luggageItems.filter(l => l.userId === args.userId);
   },
 });
 
@@ -174,11 +173,11 @@ export const getByItinerary = query({
   handler: async (ctx, args) => {
     const luggageItems = await ctx.db
       .query('luggage')
-      .withIndex('by_itinerary', (q) => q.eq('itineraryId', args.itineraryId))
+      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
       .collect();
 
     // Filter by user
-    return luggageItems.filter((l) => l.userId === args.userId);
+    return luggageItems.filter(l => l.userId === args.userId);
   },
 });
 
@@ -195,12 +194,12 @@ export const getActive = query({
 
     const luggageItems = await ctx.db
       .query('luggage')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .order('desc')
       .collect();
 
     // Filter active items (not claimed)
-    const active = luggageItems.filter((l) => l.status !== 'claimed');
+    const active = luggageItems.filter(l => l.status !== 'claimed');
 
     return active.slice(0, limit);
   },
@@ -216,7 +215,7 @@ export const getStats = query({
   handler: async (ctx, args) => {
     const luggageItems = await ctx.db
       .query('luggage')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
     const stats = {
@@ -362,7 +361,7 @@ export const update = mutation({
 
     const { id, userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     // Normalize tag number and airline code
@@ -652,9 +651,8 @@ export const getLossReportTemplate = query({
   handler: async (ctx, args) => {
     const template = await ctx.db
       .query('luggageLossReportTemplates')
-      .withIndex('by_airline_code', (q) =>
-        q.eq('airlineCode', args.airlineCode.toUpperCase())
-      )
+      .withIndex('by_airline_code', q =>
+        q.eq('airlineCode', args.airlineCode.toUpperCase()))
       .first();
 
     return template;
@@ -705,7 +703,7 @@ export const upsertLossReportTemplate = mutation({
 
     const existing = await ctx.db
       .query('luggageLossReportTemplates')
-      .withIndex('by_airline_code', (q) => q.eq('airlineCode', airlineCode))
+      .withIndex('by_airline_code', q => q.eq('airlineCode', airlineCode))
       .first();
 
     if (existing) {

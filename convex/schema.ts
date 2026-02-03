@@ -57,7 +57,7 @@ export default defineSchema({
       v.literal('like_itinerary'), // Liked an itinerary
       v.literal('comment_itinerary'), // Commented on an itinerary
       v.literal('copy_itinerary'), // Copied an itinerary
-      v.literal('follow_user') // Followed another user
+      v.literal('follow_user'), // Followed another user
     ),
 
     // Target resource
@@ -77,7 +77,7 @@ export default defineSchema({
     // Visibility
     visibility: v.union(
       v.literal('public'), // Anyone can see
-      v.literal('followers') // Only followers can see
+      v.literal('followers'), // Only followers can see
     ),
 
     // Timestamps
@@ -129,7 +129,7 @@ export default defineSchema({
         mottoEn: v.optional(v.string()),
         nicknames: v.optional(v.array(v.string())),
         nicknamesEn: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     // History and Culture
     history: v.optional(
@@ -143,7 +143,7 @@ export default defineSchema({
         famousFor: v.array(v.string()),
         famousForEn: v.optional(v.array(v.string())),
         worldHeritageSites: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     // Best Travel Time
     bestTravelTime: v.optional(
@@ -154,20 +154,20 @@ export default defineSchema({
             v.literal('summer'),
             v.literal('autumn'),
             v.literal('winter'),
-            v.literal('all_year')
-          )
+            v.literal('all_year'),
+          ),
         ),
         months: v.array(v.number()), // 1-12
         description: v.string(),
         descriptionEn: v.optional(v.string()),
         weatherNotes: v.optional(v.string()),
         crowdLevel: v.optional(
-          v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+          v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
         ),
         priceLevel: v.optional(
-          v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+          v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
         ),
-      })
+      }),
     ),
     // Local Customs and Taboos
     customs: v.array(
@@ -179,7 +179,7 @@ export default defineSchema({
           v.literal('dress'),
           v.literal('gift'),
           v.literal('gesture'),
-          v.literal('general')
+          v.literal('general'),
         ),
         title: v.string(),
         titleEn: v.optional(v.string()),
@@ -189,9 +189,9 @@ export default defineSchema({
         importance: v.union(
           v.literal('low'),
           v.literal('medium'),
-          v.literal('high')
+          v.literal('high'),
         ),
-      })
+      }),
     ),
     // Practical Information
     practicalInfo: v.optional(
@@ -207,7 +207,7 @@ export default defineSchema({
         waterSafety: v.union(
           v.literal('safe'),
           v.literal('boil'),
-          v.literal('bottled')
+          v.literal('bottled'),
         ),
         waterSafetyNote: v.optional(v.string()),
         visaRequired: v.optional(v.boolean()),
@@ -218,7 +218,7 @@ export default defineSchema({
         ambulanceNumber: v.string(),
         fireNumber: v.string(),
         touristHotline: v.optional(v.string()),
-      })
+      }),
     ),
     // Metadata
     sources: v.optional(v.array(v.string())),
@@ -241,7 +241,7 @@ export default defineSchema({
         cityId: v.id('cities'),
         label: v.optional(v.string()), // Custom label (e.g., "Office", "Parents")
         sortOrder: v.number(),
-      })
+      }),
     ),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -259,7 +259,7 @@ export default defineSchema({
       v.literal('restaurant'),
       v.literal('hotel'),
       v.literal('shopping'),
-      v.literal('other')
+      v.literal('other'),
     ),
     cityId: v.id('cities'),
     address: v.optional(v.string()),
@@ -271,29 +271,29 @@ export default defineSchema({
     businessHours: v.optional(
       v.object({
         monday: v.optional(
-          v.array(v.object({ open: v.string(), close: v.string() }))
+          v.array(v.object({ open: v.string(), close: v.string() })),
         ),
         tuesday: v.optional(
-          v.array(v.object({ open: v.string(), close: v.string() }))
+          v.array(v.object({ open: v.string(), close: v.string() })),
         ),
         wednesday: v.optional(
-          v.array(v.object({ open: v.string(), close: v.string() }))
+          v.array(v.object({ open: v.string(), close: v.string() })),
         ),
         thursday: v.optional(
-          v.array(v.object({ open: v.string(), close: v.string() }))
+          v.array(v.object({ open: v.string(), close: v.string() })),
         ),
         friday: v.optional(
-          v.array(v.object({ open: v.string(), close: v.string() }))
+          v.array(v.object({ open: v.string(), close: v.string() })),
         ),
         saturday: v.optional(
-          v.array(v.object({ open: v.string(), close: v.string() }))
+          v.array(v.object({ open: v.string(), close: v.string() })),
         ),
         sunday: v.optional(
-          v.array(v.object({ open: v.string(), close: v.string() }))
+          v.array(v.object({ open: v.string(), close: v.string() })),
         ),
         timezone: v.optional(v.string()), // IANA timezone identifier
         notes: v.optional(v.string()), // Additional notes about hours
-      })
+      }),
     ),
     bestVisitTime: v.optional(
       v.object({
@@ -302,7 +302,7 @@ export default defineSchema({
         avoidTimes: v.optional(v.array(v.string())), // Times to avoid
         peakHours: v.optional(v.array(v.string())), // Peak crowd hours
         seasonalNotes: v.optional(v.string()), // Seasonal considerations
-      })
+      }),
     ),
     phone: v.optional(v.string()),
     imageUrls: v.optional(v.array(v.string())),
@@ -320,7 +320,7 @@ export default defineSchema({
         bestTimeToVisit: v.optional(v.string()), // Best time recommended by locals
         localSecrets: v.optional(v.array(v.string())), // Local secrets/tips
         recommendedBy: v.optional(v.string()), // Who recommended (e.g., "local guide", "resident")
-      })
+      }),
     ),
     popularityLevel: v.optional(
       v.union(
@@ -328,8 +328,8 @@ export default defineSchema({
         v.literal('emerging'), // Starting to gain popularity
         v.literal('moderate'), // Well-known locally but not to tourists
         v.literal('popular'), // Popular among tourists
-        v.literal('crowded') // Very crowded, mainstream tourist spot
-      )
+        v.literal('crowded'), // Very crowded, mainstream tourist spot
+      ),
     ),
 
     // Food-specific fields (for restaurant POIs)
@@ -362,7 +362,7 @@ export default defineSchema({
       v.literal('restaurant'),
       v.literal('hotel'),
       v.literal('shopping'),
-      v.literal('other')
+      v.literal('other'),
     ),
     cityId: v.id('cities'),
     address: v.optional(v.string()),
@@ -386,7 +386,7 @@ export default defineSchema({
       v.literal('pending'), // Awaiting review
       v.literal('approved'), // Approved and visible
       v.literal('rejected'), // Rejected by moderator
-      v.literal('merged') // Merged into main POI table
+      v.literal('merged'), // Merged into main POI table
     ),
     moderatorNotes: v.optional(v.string()),
     reviewedBy: v.optional(v.string()),
@@ -457,8 +457,8 @@ export default defineSchema({
         v.object({
           open: v.string(), // HH:MM format
           close: v.string(), // HH:MM format
-        })
-      )
+        }),
+      ),
     ), // Special hours if not closed
     notes: v.optional(v.string()), // Additional notes
     isRecurring: v.boolean(), // Whether this repeats yearly
@@ -479,7 +479,7 @@ export default defineSchema({
     reminderType: v.union(
       v.literal('opening'), // Remind when POI opens
       v.literal('closing'), // Remind before POI closes
-      v.literal('best_time') // Remind at best visit time
+      v.literal('best_time'), // Remind at best visit time
     ),
     minutesBefore: v.number(), // Minutes before the event to trigger reminder
     scheduledTime: v.number(), // Unix timestamp when reminder should trigger
@@ -505,7 +505,7 @@ export default defineSchema({
     visibility: v.union(
       v.literal('private'),
       v.literal('team'),
-      v.literal('public')
+      v.literal('public'),
     ),
     coverImageUrl: v.optional(v.string()),
     copiedFromId: v.optional(v.id('itineraries')),
@@ -546,7 +546,7 @@ export default defineSchema({
       v.object({
         field: v.string(), // Which field is being edited
         offset: v.optional(v.number()), // Cursor position in text
-      })
+      }),
     ),
     // Selection state for conflict detection
     selectedElements: v.optional(
@@ -554,8 +554,8 @@ export default defineSchema({
         v.object({
           type: v.union(v.literal('day'), v.literal('item'), v.literal('poi')),
           id: v.string(),
-        })
-      )
+        }),
+      ),
     ),
   })
     .index('by_itinerary', ['itineraryId'])
@@ -573,12 +573,12 @@ export default defineSchema({
       v.literal('create'),
       v.literal('update'),
       v.literal('delete'),
-      v.literal('reorder')
+      v.literal('reorder'),
     ),
     targetType: v.union(
       v.literal('itinerary'),
       v.literal('day'),
-      v.literal('item')
+      v.literal('item'),
     ),
     targetId: v.string(),
     changes: v.any(), // The actual changes made
@@ -588,7 +588,7 @@ export default defineSchema({
       v.literal('pending'),
       v.literal('applied'),
       v.literal('conflicted'),
-      v.literal('rejected')
+      v.literal('rejected'),
     ),
     conflictResolution: v.optional(
       v.object({
@@ -597,9 +597,9 @@ export default defineSchema({
         resolution: v.union(
           v.literal('accept_mine'),
           v.literal('accept_theirs'),
-          v.literal('merge')
+          v.literal('merge'),
         ),
-      })
+      }),
     ),
   })
     .index('by_itinerary', ['itineraryId'])
@@ -615,7 +615,7 @@ export default defineSchema({
     userId: v.string(), // User who performed the copy
     copyType: v.union(
       v.literal('full'), // Full copy of all days
-      v.literal('partial') // Partial copy of selected days
+      v.literal('partial'), // Partial copy of selected days
     ),
     selectedDays: v.optional(v.array(v.number())), // Day numbers if partial copy
     originalStartDate: v.string(), // Original itinerary start date
@@ -651,7 +651,7 @@ export default defineSchema({
       v.literal('driving'),
       v.literal('transit'),
       v.literal('cycling'),
-      v.literal('taxi')
+      v.literal('taxi'),
     ),
     notes: v.optional(v.string()),
   }).index('by_day', ['dayId']),
@@ -748,7 +748,7 @@ export default defineSchema({
       v.literal('family'), // 家庭票
       v.literal('vip'), // VIP票
       v.literal('free'), // 免费
-      v.literal('other') // 其他
+      v.literal('other'), // 其他
     ),
     // 价格信息
     price: v.number(), // 价格（人民币）
@@ -763,7 +763,7 @@ export default defineSchema({
       v.object({
         minAge: v.optional(v.number()), // 最小年龄
         maxAge: v.optional(v.number()), // 最大年龄
-      })
+      }),
     ),
     // 有效期
     validFrom: v.optional(v.number()), // 开始生效时间 (Unix timestamp)
@@ -788,8 +788,8 @@ export default defineSchema({
         v.literal('in_stock'), // 有票
         v.literal('low_stock'), // 少量
         v.literal('sold_out'), // 售罄
-        v.literal('unknown') // 未知
-      )
+        v.literal('unknown'), // 未知
+      ),
     ),
     // 排序和展示
     sortOrder: v.number(), // 排序顺序
@@ -820,7 +820,7 @@ export default defineSchema({
       v.literal('booking_reminder'), // 购票提醒
       v.literal('visit_reminder'), // 参观提醒
       v.literal('price_drop'), // 降价提醒
-      v.literal('stock_available') // 有票提醒
+      v.literal('stock_available'), // 有票提醒
     ),
     reminderTime: v.number(), // 提醒时间 (Unix timestamp)
     message: v.optional(v.string()), // 自定义提醒消息
@@ -907,7 +907,8 @@ export default defineSchema({
       v.literal('tripadvisor'),
       v.literal('qunar'),
       v.literal('tongcheng'),
-      v.literal('mafengwo')
+      v.literal('mafengwo'),
+      v.literal('qyer'),
     ),
     sourceExternalId: v.string(),
     sourceUrl: v.optional(v.string()),
@@ -929,14 +930,24 @@ export default defineSchema({
     qualityScore: v.number(), // 0-1
     contentHash: v.optional(v.string()),
 
+    // Content completeness tracking
+    contentTruncated: v.optional(v.boolean()),
+    completenessLevel: v.optional(
+      v.union(
+        v.literal('complete'),
+        v.literal('usable'),
+        v.literal('incomplete'),
+      ),
+    ),
+
     // AI Enrichment Status (for LangGraph pipeline)
     enrichmentStatus: v.optional(
       v.union(
         v.literal('pending'),
         v.literal('processing'),
         v.literal('completed'),
-        v.literal('failed')
-      )
+        v.literal('failed'),
+      ),
     ),
     enrichmentError: v.optional(v.string()),
     enrichmentStartedAt: v.optional(v.number()),
@@ -979,7 +990,7 @@ export default defineSchema({
                   duration: v.optional(v.string()), // 如 "步行10分钟"
                   distance: v.optional(v.string()), // 如 "800米"
                   notes: v.optional(v.string()), // 交通备注
-                })
+                }),
               ),
 
               // Geocoding metadata (for enhanced geocoding accuracy)
@@ -988,10 +999,10 @@ export default defineSchema({
               isManuallyVerified: v.optional(v.boolean()), // true if manually corrected
               verifiedAt: v.optional(v.number()), // Unix timestamp of verification
               verifiedBy: v.optional(v.string()), // User ID who verified
-            })
+            }),
           ),
-        })
-      )
+        }),
+      ),
     ),
 
     // Geocoding aggregate metrics for this guide
@@ -1008,15 +1019,16 @@ export default defineSchema({
             overpass: v.optional(v.number()),
             consensus: v.optional(v.number()),
             manual: v.optional(v.number()),
-          })
+          }),
         ),
         lastUpdated: v.optional(v.number()), // Unix timestamp
-      })
+      }),
     ),
   })
     .index('by_platform', ['sourcePlatform'])
     .index('by_platform_external', ['sourcePlatform', 'sourceExternalId'])
     .index('by_quality', ['qualityScore'])
+    .index('by_completeness', ['completenessLevel'])
     .index('by_destinations', ['destinations'])
     .searchIndex('search_content', {
       searchField: 'content',
@@ -1026,6 +1038,120 @@ export default defineSchema({
       searchField: 'title',
       filterFields: ['destinations', 'aiProcessedAt'],
     }),
+
+  // ============================================
+  // Guide Destinations (Auxiliary table for indexed destination lookup)
+  // ============================================
+  guideDestinations: defineTable({
+    guideId: v.id('travelGuides'),
+    destination: v.string(), // Normalized destination name
+    createdAt: v.number(),
+  })
+    .index('by_destination', ['destination'])
+    .index('by_guide', ['guideId'])
+    .index('by_destination_guide', ['destination', 'guideId']),
+
+  // ============================================
+  // Content Refetch Tasks (For truncated content recovery)
+  // ============================================
+  refetchTasks: defineTable({
+    guideId: v.id('travelGuides'),
+    sourceUrl: v.string(),
+    sourceExternalId: v.string(),
+    sourcePlatform: v.string(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('running'),
+      v.literal('completed'),
+      v.literal('failed'),
+    ),
+    retryCount: v.number(),
+    maxRetries: v.number(),
+    lastError: v.optional(v.string()),
+    createdAt: v.number(),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    nextRetryAt: v.optional(v.number()),
+  })
+    .index('by_status', ['status'])
+    .index('by_guide', ['guideId'])
+    .index('by_next_retry', ['status', 'nextRetryAt']),
+
+  // ============================================
+  // Travel Guide AI Data (Separated AI processing results)
+  // ============================================
+  travelGuideAiData: defineTable({
+    guideId: v.id('travelGuides'),
+    version: v.number(), // Processing version for versioning
+    // AI Enhanced Fields
+    aiSummary: v.optional(v.string()),
+    aiTips: v.optional(v.array(v.string())),
+    aiBestTime: v.optional(v.string()),
+    aiDuration: v.optional(v.string()),
+    aiBudget: v.optional(v.string()),
+    // Day-based Itinerary Structure
+    aiDays: v.optional(
+      v.array(
+        v.object({
+          dayNumber: v.number(),
+          theme: v.optional(v.string()),
+          pois: v.array(
+            v.object({
+              name: v.string(),
+              type: v.string(),
+              description: v.optional(v.string()),
+              latitude: v.number(),
+              longitude: v.number(),
+              address: v.optional(v.string()),
+              duration: v.optional(v.string()),
+              priceInfo: v.optional(v.string()),
+              openingHours: v.optional(v.string()),
+              tips: v.optional(v.string()),
+              rating: v.optional(v.number()),
+              highlights: v.optional(v.array(v.string())),
+              transportToNext: v.optional(
+                v.object({
+                  mode: v.optional(v.string()),
+                  duration: v.optional(v.string()),
+                  distance: v.optional(v.string()),
+                  notes: v.optional(v.string()),
+                }),
+              ),
+              geocodeConfidence: v.optional(v.number()),
+              geocodeSource: v.optional(v.string()),
+              isManuallyVerified: v.optional(v.boolean()),
+              verifiedAt: v.optional(v.number()),
+              verifiedBy: v.optional(v.string()),
+            }),
+          ),
+        }),
+      ),
+    ),
+    // Geocoding metrics
+    geocodingMetrics: v.optional(
+      v.object({
+        totalPois: v.number(),
+        averageConfidence: v.number(),
+        lowConfidenceCount: v.number(),
+        manuallyVerifiedCount: v.number(),
+        sourceDistribution: v.optional(
+          v.object({
+            amap: v.optional(v.number()),
+            nominatim: v.optional(v.number()),
+            overpass: v.optional(v.number()),
+            consensus: v.optional(v.number()),
+            manual: v.optional(v.number()),
+          }),
+        ),
+        lastUpdated: v.optional(v.number()),
+      }),
+    ),
+    // Metadata
+    processedAt: v.number(),
+    modelVersion: v.optional(v.string()),
+  })
+    .index('by_guide', ['guideId'])
+    .index('by_guide_version', ['guideId', 'version']),
 
   // ============================================
   // Itinerary Comments
@@ -1103,14 +1229,14 @@ export default defineSchema({
       v.literal('harassment'),
       v.literal('inappropriate'),
       v.literal('misinformation'),
-      v.literal('other')
+      v.literal('other'),
     ),
     description: v.optional(v.string()),
     status: v.union(
       v.literal('pending'),
       v.literal('reviewed'),
       v.literal('resolved'),
-      v.literal('dismissed')
+      v.literal('dismissed'),
     ),
     createdAt: v.number(),
     reviewedAt: v.optional(v.number()),
@@ -1137,14 +1263,14 @@ export default defineSchema({
       v.literal('itinerary_reminder'), // Itinerary start reminder
       v.literal('flight_status'), // Flight status update
       v.literal('weather_alert'), // Weather warning for destination
-      v.literal('social_interaction') // Generic social notification
+      v.literal('social_interaction'), // Generic social notification
     ),
     referenceType: v.union(
       v.literal('itinerary'),
       v.literal('comment'),
       v.literal('user'),
       v.literal('flight'),
-      v.literal('weather')
+      v.literal('weather'),
     ),
     referenceId: v.string(), // ID of the itinerary, comment, user, or flight
     actorId: v.optional(v.string()), // User who triggered the notification (optional for system notifications)
@@ -1156,7 +1282,7 @@ export default defineSchema({
     isPushSent: v.optional(v.boolean()), // Whether push notification was sent
     pushSentAt: v.optional(v.number()), // When push was sent
     priority: v.optional(
-      v.union(v.literal('low'), v.literal('normal'), v.literal('high'))
+      v.union(v.literal('low'), v.literal('normal'), v.literal('high')),
     ),
     createdAt: v.number(),
     readAt: v.optional(v.number()),
@@ -1238,7 +1364,7 @@ export default defineSchema({
       v.literal('flight_checkin'),
       v.literal('flight_boarding'),
       v.literal('weather_check'),
-      v.literal('custom')
+      v.literal('custom'),
     ),
     referenceType: v.optional(v.string()),
     referenceId: v.optional(v.string()),
@@ -1246,11 +1372,14 @@ export default defineSchema({
     title: v.string(),
     body: v.string(),
     data: v.optional(v.any()), // Additional payload
+    priority: v.optional(
+      v.union(v.literal('low'), v.literal('normal'), v.literal('high')),
+    ),
     status: v.union(
       v.literal('pending'),
       v.literal('sent'),
       v.literal('cancelled'),
-      v.literal('failed')
+      v.literal('failed'),
     ),
     sentAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
@@ -1261,6 +1390,32 @@ export default defineSchema({
     .index('by_status', ['status'])
     .index('by_scheduled', ['scheduledFor'])
     .index('by_status_scheduled', ['status', 'scheduledFor']),
+
+  // ============================================
+  // Search History
+  // ============================================
+  searchHistory: defineTable({
+    userId: v.string(),
+    query: v.string(),
+    resultType: v.optional(v.string()),
+    resultId: v.optional(v.string()),
+    searchedAt: v.number(),
+  })
+    .index('by_user_query', ['userId', 'query'])
+    .index('by_user_searched', ['userId', 'searchedAt']),
+
+  // ============================================
+  // Search Trends (Aggregated search statistics)
+  // ============================================
+  searchTrends: defineTable({
+    query: v.string(), // Normalized search query
+    date: v.string(), // Date string YYYY-MM-DD
+    searchCount: v.number(), // Number of searches
+    resultType: v.optional(v.string()), // Type of search result
+  })
+    .index('by_query_date', ['query', 'date'])
+    .index('by_date', ['date'])
+    .index('by_count', ['searchCount']),
 
   // ============================================
   // Itinerary Likes
@@ -1329,7 +1484,7 @@ export default defineSchema({
     messageType: v.union(
       v.literal('text'),
       v.literal('image'),
-      v.literal('itinerary_share')
+      v.literal('itinerary_share'),
     ),
     // Optional reference for shared content
     sharedItineraryId: v.optional(v.id('itineraries')),
@@ -1399,7 +1554,7 @@ export default defineSchema({
 
     // Import source (for email parsing)
     importSource: v.optional(
-      v.union(v.literal('manual'), v.literal('email'), v.literal('import'))
+      v.union(v.literal('manual'), v.literal('email'), v.literal('import')),
     ),
     rawEmailContent: v.optional(v.string()), // Original email content if imported
 
@@ -1409,8 +1564,8 @@ export default defineSchema({
         v.literal('confirmed'),
         v.literal('pending'),
         v.literal('cancelled'),
-        v.literal('completed')
-      )
+        v.literal('completed'),
+      ),
     ),
   })
     .index('by_user', ['userId'])
@@ -1442,7 +1597,7 @@ export default defineSchema({
       v.object({
         categoryId: v.id('expenseCategories'),
         amount: v.number(),
-      })
+      }),
     ),
     notes: v.optional(v.string()),
     createdAt: v.number(), // Unix timestamp
@@ -1491,7 +1646,7 @@ export default defineSchema({
       v.literal('pending'),
       v.literal('synced'),
       v.literal('failed'),
-      v.literal('deleted')
+      v.literal('deleted'),
     ),
     lastSyncedAt: v.optional(v.number()), // Unix timestamp
     syncError: v.optional(v.string()),
@@ -1584,13 +1739,13 @@ export default defineSchema({
       v.object({
         name: v.string(),
         count: v.number(),
-      })
+      }),
     ),
     mostVisitedCountry: v.optional(
       v.object({
         name: v.string(),
         count: v.number(),
-      })
+      }),
     ),
     firstTripDate: v.optional(v.number()),
     lastTripDate: v.optional(v.number()),
@@ -1605,7 +1760,7 @@ export default defineSchema({
         longitude: v.number(),
         plannedDate: v.optional(v.number()),
         notes: v.optional(v.string()),
-      })
+      }),
     ),
     yearlyStats: v.optional(v.any()), // { "2024": { cities: 5, countries: 2 } }
     createdAt: v.optional(v.number()),
@@ -1630,7 +1785,7 @@ export default defineSchema({
       v.literal('flight_delay'), // 航班延误险
       v.literal('luggage'), // 行李险
       v.literal('cancellation'), // 取消险
-      v.literal('emergency_evacuation') // 紧急救援险
+      v.literal('emergency_evacuation'), // 紧急救援险
     ),
 
     // Coverage details
@@ -1640,7 +1795,7 @@ export default defineSchema({
         item: v.string(), // Coverage item name
         amount: v.number(), // Coverage amount in CNY
         description: v.optional(v.string()),
-      })
+      }),
     ),
 
     // Pricing
@@ -1658,8 +1813,8 @@ export default defineSchema({
         v.literal('low'), // Safe destinations
         v.literal('medium'), // Standard destinations
         v.literal('high'), // Adventure/high-risk activities
-        v.literal('extreme') // Extreme sports/war zones
-      )
+        v.literal('extreme'), // Extreme sports/war zones
+      ),
     ),
 
     // Features
@@ -1712,7 +1867,7 @@ export default defineSchema({
         idType: v.union(
           v.literal('id_card'), // 身份证
           v.literal('passport'), // 护照
-          v.literal('other')
+          v.literal('other'),
         ),
         idNumber: v.string(),
         phone: v.optional(v.string()),
@@ -1721,9 +1876,9 @@ export default defineSchema({
           v.literal('spouse'), // 配偶
           v.literal('child'), // 子女
           v.literal('parent'), // 父母
-          v.literal('other')
+          v.literal('other'),
         ),
-      })
+      }),
     ),
 
     // Order details
@@ -1734,7 +1889,7 @@ export default defineSchema({
       v.literal('pending'),
       v.literal('paid'),
       v.literal('refunded'),
-      v.literal('failed')
+      v.literal('failed'),
     ),
 
     // Status
@@ -1743,7 +1898,7 @@ export default defineSchema({
       v.literal('active'), // Currently covered
       v.literal('expired'), // Coverage ended
       v.literal('cancelled'), // User cancelled
-      v.literal('claimed') // Claim filed
+      v.literal('claimed'), // Claim filed
     ),
 
     // Claim info
@@ -1759,11 +1914,11 @@ export default defineSchema({
             v.literal('processing'),
             v.literal('approved'),
             v.literal('rejected'),
-            v.literal('paid')
+            v.literal('paid'),
           ),
           notes: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
 
     // Notes
@@ -1790,7 +1945,7 @@ export default defineSchema({
       v.literal('low'),
       v.literal('medium'),
       v.literal('high'),
-      v.literal('extreme')
+      v.literal('extreme'),
     ),
     riskFactors: v.array(v.string()), // Risk factors description
     recommendedInsuranceTypes: v.array(
@@ -1801,8 +1956,8 @@ export default defineSchema({
         v.literal('flight_delay'),
         v.literal('luggage'),
         v.literal('cancellation'),
-        v.literal('emergency_evacuation')
-      )
+        v.literal('emergency_evacuation'),
+      ),
     ),
     travelAdvisory: v.optional(v.string()), // Travel advisory notes
     lastUpdated: v.number(),
@@ -1823,7 +1978,7 @@ export default defineSchema({
       v.literal('luggage_loss'), // 行李丢失理赔
       v.literal('trip_cancellation'), // 行程取消理赔
       v.literal('emergency_evacuation'), // 紧急救援理赔
-      v.literal('other')
+      v.literal('other'),
     ),
     content: v.string(), // Markdown content
     steps: v.array(
@@ -1833,7 +1988,7 @@ export default defineSchema({
         description: v.string(),
         requiredDocuments: v.optional(v.array(v.string())),
         tips: v.optional(v.string()),
-      })
+      }),
     ),
     requiredDocuments: v.array(v.string()), // Required documents list
     timeLimit: v.optional(v.string()), // Time limit for filing claim
@@ -1842,15 +1997,15 @@ export default defineSchema({
         phone: v.optional(v.string()),
         email: v.optional(v.string()),
         website: v.optional(v.string()),
-      })
+      }),
     ),
     faqs: v.optional(
       v.array(
         v.object({
           question: v.string(),
           answer: v.string(),
-        })
-      )
+        }),
+      ),
     ),
     isActive: v.boolean(),
     priority: v.number(), // For sorting
@@ -1888,7 +2043,7 @@ export default defineSchema({
     role: v.union(
       v.literal('user'),
       v.literal('assistant'),
-      v.literal('system')
+      v.literal('system'),
     ),
     content: v.string(),
     // Structured data for rich responses
@@ -1906,8 +2061,8 @@ export default defineSchema({
               address: v.optional(v.string()),
               rating: v.optional(v.number()),
               priceInfo: v.optional(v.string()),
-            })
-          )
+            }),
+          ),
         ),
         // Itinerary modification suggestions
         itineraryChanges: v.optional(
@@ -1917,8 +2072,8 @@ export default defineSchema({
               dayNumber: v.optional(v.number()),
               poiName: v.optional(v.string()),
               details: v.optional(v.string()),
-            })
-          )
+            }),
+          ),
         ),
         // Quick action buttons
         quickActions: v.optional(
@@ -1927,12 +2082,12 @@ export default defineSchema({
               label: v.string(),
               action: v.string(), // 'search_poi', 'modify_itinerary', 'get_tips', etc.
               payload: v.optional(v.string()),
-            })
-          )
+            }),
+          ),
         ),
         // Source references
         sources: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     createdAt: v.number(),
   })
@@ -1953,7 +2108,7 @@ export default defineSchema({
       v.literal('appreciated'), // 小费受欢迎但非必须
       v.literal('optional'), // 可给可不给
       v.literal('not_expected'), // 不期待小费
-      v.literal('offensive') // 给小费可能被视为冒犯
+      v.literal('offensive'), // 给小费可能被视为冒犯
     ),
     cultureSummary: v.string(), // 小费文化简要说明
     scenarios: v.array(
@@ -1967,7 +2122,7 @@ export default defineSchema({
           v.literal('tour'), // 旅游向导
           v.literal('delivery'), // 外卖/快递
           v.literal('hairdresser'), // 理发店
-          v.literal('other') // 其他
+          v.literal('other'), // 其他
         ),
         typeName: v.string(), // 场景中文名称 (e.g., '餐厅')
         minPercentage: v.number(), // 最低小费百分比
@@ -1975,7 +2130,7 @@ export default defineSchema({
         suggestedPercentage: v.number(), // 建议小费百分比
         fixedAmount: v.optional(v.number()), // 固定金额（适用于某些场景）
         notes: v.optional(v.string()), // 特别说明
-      })
+      }),
     ),
     tips: v.optional(v.array(v.string())), // 小费相关的旅行提示
     lastUpdated: v.number(), // Unix timestamp
@@ -2040,8 +2195,8 @@ export default defineSchema({
           city: v.string(),
           phone: v.string(),
           address: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ), // List of consulates
     // Additional services
     touristPoliceNumber: v.optional(v.string()), // Tourist police if available
@@ -2104,7 +2259,7 @@ export default defineSchema({
       v.literal('emergency'),
       v.literal('medical'),
       v.literal('safety'),
-      v.literal('other')
+      v.literal('other'),
     ),
     message: v.optional(v.string()), // Optional user message
     // Status tracking
@@ -2112,7 +2267,7 @@ export default defineSchema({
       v.literal('sent'),
       v.literal('received'),
       v.literal('resolved'),
-      v.literal('cancelled')
+      v.literal('cancelled'),
     ),
     // Notifications
     notifiedContacts: v.array(v.id('emergencyContacts')), // Contacts who were notified
@@ -2156,7 +2311,7 @@ export default defineSchema({
         ambulance: v.optional(v.string()),
         fire: v.optional(v.string()),
         touristHotline: v.optional(v.string()),
-      })
+      }),
     ),
 
     // Data source and metadata
@@ -2193,7 +2348,7 @@ export default defineSchema({
       v.literal('terrorism'), // Terrorism threat
       v.literal('crime_spike'), // Increased crime activity
       v.literal('scam_warning'), // Tourist scam alerts
-      v.literal('other')
+      v.literal('other'),
     ),
 
     // Severity levels
@@ -2202,7 +2357,7 @@ export default defineSchema({
       v.literal('low'), // Exercise normal precautions
       v.literal('medium'), // Exercise increased caution
       v.literal('high'), // Reconsider travel
-      v.literal('critical') // Do not travel
+      v.literal('critical'), // Do not travel
     ),
 
     // Content
@@ -2258,8 +2413,8 @@ export default defineSchema({
         v.object({
           lat: v.number(),
           lng: v.number(),
-        })
-      )
+        }),
+      ),
     ), // For complex shapes
 
     // Danger classification
@@ -2268,7 +2423,7 @@ export default defineSchema({
       v.literal('avoid_night'), // Avoid at night
       v.literal('avoid_alone'), // Don't go alone
       v.literal('high_risk'), // High risk area
-      v.literal('no_go') // Do not enter
+      v.literal('no_go'), // Do not enter
     ),
 
     dangerTypes: v.array(
@@ -2279,8 +2434,8 @@ export default defineSchema({
         v.literal('natural_hazard'),
         v.literal('political'),
         v.literal('health'),
-        v.literal('other')
-      )
+        v.literal('other'),
+      ),
     ),
 
     // Description
@@ -2295,7 +2450,7 @@ export default defineSchema({
         nightOnly: v.optional(v.boolean()), // After dark
         specificHours: v.optional(v.string()), // e.g., "22:00-06:00"
         specificDays: v.optional(v.array(v.string())), // e.g., ["Friday", "Saturday"]
-      })
+      }),
     ),
 
     // Source and verification
@@ -2334,7 +2489,7 @@ export default defineSchema({
       v.literal('library'),
       v.literal('coworking'),
       v.literal('public'),
-      v.literal('other')
+      v.literal('other'),
     ),
 
     // Location
@@ -2398,8 +2553,8 @@ export default defineSchema({
         v.literal('wpa'),
         v.literal('wpa2'),
         v.literal('wpa3'),
-        v.literal('unknown')
-      )
+        v.literal('unknown'),
+      ),
     ),
 
     // Location (for standalone credentials not linked to a spot)
@@ -2494,14 +2649,14 @@ export default defineSchema({
       v.literal('natural_disaster'),
       v.literal('health_issue'),
       v.literal('police_issue'),
-      v.literal('other')
+      v.literal('other'),
     ),
 
     severity: v.union(
       v.literal('minor'), // Inconvenience
       v.literal('moderate'), // Significant impact
       v.literal('severe'), // Serious harm
-      v.literal('critical') // Life-threatening
+      v.literal('critical'), // Life-threatening
     ),
 
     // Content
@@ -2519,7 +2674,7 @@ export default defineSchema({
       v.literal('pending'), // Awaiting review
       v.literal('verified'), // Verified by admin
       v.literal('rejected'), // Rejected as invalid
-      v.literal('resolved') // Issue has been resolved
+      v.literal('resolved'), // Issue has been resolved
     ),
     moderatorNotes: v.optional(v.string()),
     reviewedBy: v.optional(v.string()),
@@ -2563,7 +2718,7 @@ export default defineSchema({
       v.literal('public'), // 公共充电站
       v.literal('private'), // 私人充电站
       v.literal('destination'), // 目的地充电站 (商场、酒店等)
-      v.literal('highway') // 高速服务区充电站
+      v.literal('highway'), // 高速服务区充电站
     ),
     totalPorts: v.number(), // 总充电桩数量
     availablePorts: v.number(), // 可用充电桩数量
@@ -2575,13 +2730,13 @@ export default defineSchema({
           v.literal('ac_slow'), // 交流慢充 (7kW)
           v.literal('ac_fast'), // 交流快充 (22kW)
           v.literal('dc_fast'), // 直流快充 (50-150kW)
-          v.literal('dc_superfast') // 直流超快充 (150kW+)
+          v.literal('dc_superfast'), // 直流超快充 (150kW+)
         ),
         powerKw: v.number(), // 功率 (kW)
         count: v.number(), // 该类型数量
         available: v.number(), // 该类型可用数量
         connectorType: v.optional(v.string()), // 接口类型 (GB/T, CCS, CHAdeMO, Tesla)
-      })
+      }),
     ),
 
     // Pricing
@@ -2594,7 +2749,7 @@ export default defineSchema({
         valleyPrice: v.optional(v.number()), // 谷时电价
         flatPrice: v.optional(v.number()), // 平时电价
         pricingNotes: v.optional(v.string()), // 价格说明
-      })
+      }),
     ),
 
     // Operating Hours
@@ -2613,9 +2768,9 @@ export default defineSchema({
           v.literal('car_wash'), // 洗车
           v.literal('covered'), // 有顶棚
           v.literal('lighting'), // 照明
-          v.literal('security') // 安保
-        )
-      )
+          v.literal('security'), // 安保
+        ),
+      ),
     ),
 
     // Status
@@ -2623,7 +2778,7 @@ export default defineSchema({
       v.literal('operational'), // 正常运营
       v.literal('maintenance'), // 维护中
       v.literal('offline'), // 离线
-      v.literal('coming_soon') // 即将开放
+      v.literal('coming_soon'), // 即将开放
     ),
     lastStatusUpdate: v.optional(v.number()), // 状态更新时间
 
@@ -2653,9 +2808,9 @@ export default defineSchema({
           v.literal('wechat'), // 微信支付
           v.literal('alipay'), // 支付宝
           v.literal('card'), // 刷卡
-          v.literal('membership') // 会员卡
-        )
-      )
+          v.literal('membership'), // 会员卡
+        ),
+      ),
     ),
 
     // Supported Vehicle Brands (if applicable)
@@ -2722,7 +2877,7 @@ export default defineSchema({
     cardType: v.union(
       v.literal('physical'), // 实体SIM卡
       v.literal('esim'), // eSIM
-      v.literal('wifi_device') // 随身WiFi设备
+      v.literal('wifi_device'), // 随身WiFi设备
     ),
 
     // Coverage
@@ -2731,7 +2886,7 @@ export default defineSchema({
     coverageType: v.union(
       v.literal('single_country'), // 单国
       v.literal('regional'), // 区域 (e.g., 东南亚, 欧洲)
-      v.literal('global') // 全球
+      v.literal('global'), // 全球
     ),
     regionName: v.optional(v.string()), // 区域名称 (e.g., "东南亚10国", "欧洲35国")
 
@@ -2748,7 +2903,7 @@ export default defineSchema({
         currency: v.string(), // 货币代码 (e.g., "CNY", "USD")
         pricePerDay: v.optional(v.number()), // 每日均价
         pricePerGB: v.optional(v.number()), // 每GB价格
-      })
+      }),
     ),
 
     // Network Details
@@ -2763,7 +2918,7 @@ export default defineSchema({
         activationInstructions: v.optional(v.string()), // 激活说明
         compatibleDevices: v.optional(v.array(v.string())), // 兼容设备列表
         requiresUnlockedPhone: v.boolean(), // 是否需要解锁手机
-      })
+      }),
     ),
 
     // Physical SIM Specific
@@ -2777,11 +2932,11 @@ export default defineSchema({
               estimatedDays: v.optional(v.number()), // 预计配送天数
               fee: v.optional(v.number()), // 配送费用
               description: v.optional(v.string()),
-            })
-          )
+            }),
+          ),
         ),
         pickupLocations: v.optional(v.array(v.string())), // 自取地点
-      })
+      }),
     ),
 
     // Voice & SMS
@@ -2860,8 +3015,8 @@ export default defineSchema({
         v.literal('good'), // 良好
         v.literal('average'), // 一般
         v.literal('poor'), // 较差
-        v.literal('very_poor') // 很差
-      )
+        v.literal('very_poor'), // 很差
+      ),
     ),
     speedTestResult: v.optional(v.string()), // 测速结果
 
@@ -2883,7 +3038,7 @@ export default defineSchema({
     status: v.union(
       v.literal('pending'), // 待审核
       v.literal('approved'), // 已通过
-      v.literal('rejected') // 已拒绝
+      v.literal('rejected'), // 已拒绝
     ),
 
     // Timestamps
@@ -2935,7 +3090,7 @@ export default defineSchema({
     visibility: v.union(
       v.literal('private'),
       v.literal('public'),
-      v.literal('followers')
+      v.literal('followers'),
     ),
     itineraryId: v.optional(v.id('itineraries')), // 关联的行程
     location: v.optional(v.string()), // 旅行地点
@@ -3071,7 +3226,7 @@ export default defineSchema({
         days: v.number(),
         startDate: v.string(),
         endDate: v.string(),
-      })
+      }),
     ),
     shortestTrip: v.optional(
       v.object({
@@ -3080,7 +3235,7 @@ export default defineSchema({
         days: v.number(),
         startDate: v.string(),
         endDate: v.string(),
-      })
+      }),
     ),
 
     // Expense statistics
@@ -3091,7 +3246,7 @@ export default defineSchema({
         categoryName: v.string(),
         amount: v.number(),
         percentage: v.number(), // 0-100
-      })
+      }),
     ),
     averageExpensePerDay: v.number(),
     averageExpensePerTrip: v.number(),
@@ -3103,7 +3258,7 @@ export default defineSchema({
         cityName: v.string(),
         visitCount: v.number(),
         totalDays: v.number(),
-      })
+      }),
     ),
 
     // Travel patterns
@@ -3112,14 +3267,14 @@ export default defineSchema({
         mode: v.string(), // walking, driving, transit, etc.
         count: v.number(),
         percentage: v.number(),
-      })
+      }),
     ),
     preferredPoiCategories: v.array(
       v.object({
         category: v.string(), // attraction, restaurant, hotel, etc.
         count: v.number(),
         percentage: v.number(),
-      })
+      }),
     ),
 
     // Monthly distribution
@@ -3127,7 +3282,7 @@ export default defineSchema({
       v.object({
         month: v.number(), // 1-12
         count: v.number(),
-      })
+      }),
     ),
 
     // Timestamps
@@ -3163,7 +3318,7 @@ export default defineSchema({
         icon: v.optional(v.string()),
         amount: v.number(),
         percentage: v.number(),
-      })
+      }),
     ),
     averagePerTrip: v.number(),
     averagePerDay: v.number(),
@@ -3172,7 +3327,7 @@ export default defineSchema({
         itineraryId: v.id('itineraries'),
         title: v.string(),
         amount: v.number(),
-      })
+      }),
     ),
 
     // Highlights
@@ -3182,7 +3337,7 @@ export default defineSchema({
         title: v.string(),
         cityName: v.string(),
         startDate: v.string(),
-      })
+      }),
     ),
     lastTripOfYear: v.optional(
       v.object({
@@ -3190,7 +3345,7 @@ export default defineSchema({
         title: v.string(),
         cityName: v.string(),
         startDate: v.string(),
-      })
+      }),
     ),
     longestTrip: v.optional(
       v.object({
@@ -3198,7 +3353,7 @@ export default defineSchema({
         title: v.string(),
         cityName: v.string(),
         days: v.number(),
-      })
+      }),
     ),
 
     // Top destinations this year
@@ -3209,7 +3364,7 @@ export default defineSchema({
         visitCount: v.number(),
         totalDays: v.number(),
         imageUrl: v.optional(v.string()),
-      })
+      }),
     ),
 
     // Monthly activity heatmap
@@ -3219,7 +3374,7 @@ export default defineSchema({
         tripsCount: v.number(),
         daysCount: v.number(),
         expenses: v.number(),
-      })
+      }),
     ),
 
     // Achievement badges
@@ -3230,7 +3385,7 @@ export default defineSchema({
         description: v.string(),
         icon: v.string(), // SF Symbol name
         earnedAt: v.optional(v.number()),
-      })
+      }),
     ),
 
     // Comparison with previous year
@@ -3240,7 +3395,7 @@ export default defineSchema({
         expensesChange: v.number(),
         distanceChange: v.number(),
         citiesChange: v.number(),
-      })
+      }),
     ),
 
     // Travel quotes / memories (user can add)
@@ -3251,15 +3406,15 @@ export default defineSchema({
           itineraryId: v.optional(v.id('itineraries')),
           imageUrl: v.optional(v.string()),
           createdAt: v.number(),
-        })
-      )
+        }),
+      ),
     ),
 
     // Generation metadata
     status: v.union(
       v.literal('generating'),
       v.literal('ready'),
-      v.literal('error')
+      v.literal('error'),
     ),
     generatedAt: v.optional(v.number()),
     error: v.optional(v.string()),
@@ -3281,7 +3436,7 @@ export default defineSchema({
     badgeType: v.union(
       v.literal('travel_expert'), // 旅行达人认证
       v.literal('local_guide'), // 本地向导认证
-      v.literal('official_account') // 官方账号认证
+      v.literal('official_account'), // 官方账号认证
     ),
     // Badge display info
     displayName: v.string(), // 显示名称，如 "旅行达人"
@@ -3318,7 +3473,7 @@ export default defineSchema({
         organizationName: v.optional(v.string()), // 机构名称
         organizationType: v.optional(v.string()), // 机构类型，如 "旅游局", "景区", "酒店"
         officialWebsite: v.optional(v.string()), // 官方网站
-      })
+      }),
     ),
 
     createdAt: v.number(),
@@ -3338,7 +3493,7 @@ export default defineSchema({
     badgeType: v.union(
       v.literal('travel_expert'),
       v.literal('local_guide'),
-      v.literal('official_account')
+      v.literal('official_account'),
     ),
 
     // Application status
@@ -3347,7 +3502,7 @@ export default defineSchema({
       v.literal('under_review'), // 审核中
       v.literal('approved'), // 已通过
       v.literal('rejected'), // 已拒绝
-      v.literal('cancelled') // 已取消
+      v.literal('cancelled'), // 已取消
     ),
 
     // Applicant info
@@ -3355,7 +3510,7 @@ export default defineSchema({
     idType: v.union(
       v.literal('id_card'), // 身份证
       v.literal('passport'), // 护照
-      v.literal('business_license') // 营业执照 (官方账号)
+      v.literal('business_license'), // 营业执照 (官方账号)
     ),
     idNumber: v.string(), // 证件号码 (加密存储)
     phone: v.string(), // 联系电话
@@ -3371,12 +3526,12 @@ export default defineSchema({
             v.literal('work_proof'), // 工作证明
             v.literal('portfolio'), // 作品集
             v.literal('certificate'), // 资质证书
-            v.literal('other') // 其他材料
+            v.literal('other'), // 其他材料
           ),
           url: v.string(), // 材料 URL
           description: v.optional(v.string()), // 材料说明
-        })
-      )
+        }),
+      ),
     ),
 
     // Type-specific application data
@@ -3400,7 +3555,7 @@ export default defineSchema({
         businessLicenseUrl: v.optional(v.string()), // 营业执照 URL
         authorizationLetterUrl: v.optional(v.string()), // 授权书 URL
         officialWebsite: v.optional(v.string()), // 官方网站
-      })
+      }),
     ),
 
     // Review info
@@ -3460,7 +3615,7 @@ export default defineSchema({
           sunset: v.number(),
           cloudiness: v.number(),
           pressure: v.number(),
-        })
+        }),
       ),
       daily: v.array(
         v.object({
@@ -3486,7 +3641,7 @@ export default defineSchema({
           sunset: v.number(),
           cloudiness: v.number(),
           pressure: v.number(),
-        })
+        }),
       ),
       alerts: v.array(
         v.object({
@@ -3496,7 +3651,7 @@ export default defineSchema({
           end: v.number(),
           description: v.string(),
           severity: v.string(),
-        })
+        }),
       ),
       fetchedAt: v.number(),
     }),
@@ -3524,8 +3679,8 @@ export default defineSchema({
         v.literal('ski'), // 滑雪
         v.literal('city'), // 城市
         v.literal('hiking'), // 徒步
-        v.literal('other') // 其他
-      )
+        v.literal('other'), // 其他
+      ),
     ),
     // Weather information for smart suggestions
     weatherInfo: v.optional(
@@ -3534,7 +3689,7 @@ export default defineSchema({
         condition: v.optional(v.string()), // Weather condition (sunny, rainy, etc.)
         humidity: v.optional(v.number()), // Humidity percentage
         fetchedAt: v.optional(v.number()), // When weather was fetched
-      })
+      }),
     ),
     // Sharing
     shareCode: v.optional(v.string()), // Unique code for sharing
@@ -3566,7 +3721,7 @@ export default defineSchema({
       v.literal('accessories'), // 配饰
       v.literal('gear'), // 装备
       v.literal('snacks'), // 零食
-      v.literal('other') // 其他
+      v.literal('other'), // 其他
     ),
     quantity: v.number(), // Number of items
     isPacked: v.boolean(), // Whether item is packed
@@ -3577,8 +3732,8 @@ export default defineSchema({
         v.literal('weather'), // Weather-based suggestion
         v.literal('activity'), // Activity-based suggestion
         v.literal('template'), // From template
-        v.literal('ai') // AI recommendation
-      )
+        v.literal('ai'), // AI recommendation
+      ),
     ),
     notes: v.optional(v.string()), // Additional notes
     orderIndex: v.number(), // Display order within category
@@ -3609,7 +3764,7 @@ export default defineSchema({
       v.literal('ski'),
       v.literal('city'),
       v.literal('hiking'),
-      v.literal('other')
+      v.literal('other'),
     ),
     climate: v.optional(
       v.union(
@@ -3618,8 +3773,8 @@ export default defineSchema({
         v.literal('temperate'), // 温带
         v.literal('cold'), // 寒冷
         v.literal('polar'), // 极地
-        v.literal('any') // 任何气候
-      )
+        v.literal('any'), // 任何气候
+      ),
     ),
     durationDays: v.optional(v.number()), // Suggested trip duration
     // Template items with conditional logic
@@ -3638,9 +3793,9 @@ export default defineSchema({
             activities: v.optional(v.array(v.string())), // Include if activities include
             minDays: v.optional(v.number()), // Include if trip >= days
             maxDays: v.optional(v.number()), // Include if trip <= days
-          })
+          }),
         ),
-      })
+      }),
     ),
     // Metadata
     usageCount: v.number(), // How many times template was used
@@ -3691,13 +3846,13 @@ export default defineSchema({
       v.literal('accommodation'), // 住宿
       v.literal('tickets'), // 门票
       v.literal('shopping'), // 购物
-      v.literal('other') // 其他
+      v.literal('other'), // 其他
     ),
     splitType: v.union(
       v.literal('equal'), // Split equally among participants
       v.literal('exact'), // Exact amounts per person
       v.literal('percentage'), // Percentage-based split
-      v.literal('shares') // Share-based split (e.g., 2 shares vs 1 share)
+      v.literal('shares'), // Share-based split (e.g., 2 shares vs 1 share)
     ),
     date: v.string(), // ISO date string YYYY-MM-DD
     notes: v.optional(v.string()),
@@ -3790,7 +3945,7 @@ export default defineSchema({
               v.literal('hotel'),
               v.literal('transportation'),
               v.literal('activity'),
-              v.literal('shopping')
+              v.literal('shopping'),
             ),
             description: v.optional(v.string()),
             suggestedDuration: v.optional(v.number()), // Minutes
@@ -3800,9 +3955,9 @@ export default defineSchema({
             latitude: v.optional(v.number()),
             longitude: v.optional(v.number()),
             address: v.optional(v.string()),
-          })
+          }),
         ),
-      })
+      }),
     ),
 
     // Metadata
@@ -3813,7 +3968,7 @@ export default defineSchema({
         min: v.number(),
         max: v.number(),
         currency: v.string(),
-      })
+      }),
     ),
     suitableFor: v.optional(v.array(v.string())), // 适合人群：情侣、家庭、独行等
     bestSeasons: v.optional(v.array(v.string())), // 最佳季节：春、夏、秋、冬
@@ -3822,7 +3977,7 @@ export default defineSchema({
     visibility: v.union(
       v.literal('private'),
       v.literal('public'),
-      v.literal('unlisted')
+      v.literal('unlisted'),
     ),
     isPublished: v.boolean(), // Whether publicly discoverable
 
@@ -3883,7 +4038,7 @@ export default defineSchema({
     startDate: v.optional(v.string()), // ISO date string YYYY-MM-DD
     endDate: v.optional(v.string()), // ISO date string YYYY-MM-DD
     visibility: v.optional(
-      v.union(v.literal('private'), v.literal('team'), v.literal('public'))
+      v.union(v.literal('private'), v.literal('team'), v.literal('public')),
     ),
     coverImageUrl: v.optional(v.string()),
 
@@ -3905,8 +4060,8 @@ export default defineSchema({
                   v.literal('driving'),
                   v.literal('transit'),
                   v.literal('cycling'),
-                  v.literal('taxi')
-                )
+                  v.literal('taxi'),
+                ),
               ),
               notes: v.optional(v.string()),
               // Inline POI data for unsaved POIs
@@ -3918,17 +4073,17 @@ export default defineSchema({
                     v.literal('restaurant'),
                     v.literal('hotel'),
                     v.literal('shopping'),
-                    v.literal('other')
+                    v.literal('other'),
                   ),
                   address: v.optional(v.string()),
                   latitude: v.optional(v.number()),
                   longitude: v.optional(v.number()),
-                })
+                }),
               ),
-            })
+            }),
           ),
-        })
-      )
+        }),
+      ),
     ),
 
     // Auto-save metadata
@@ -3960,12 +4115,12 @@ export default defineSchema({
           v.literal('shopping'),
           v.literal('photography'),
           v.literal('budget'),
-          v.literal('luxury')
-        )
-      )
+          v.literal('luxury'),
+        ),
+      ),
     ),
     preferredPace: v.optional(
-      v.union(v.literal('slow'), v.literal('moderate'), v.literal('fast'))
+      v.union(v.literal('slow'), v.literal('moderate'), v.literal('fast')),
     ),
     languages: v.optional(v.array(v.string())),
     ageRange: v.optional(
@@ -3974,19 +4129,19 @@ export default defineSchema({
         v.literal('26-35'),
         v.literal('36-45'),
         v.literal('46-55'),
-        v.literal('55+')
-      )
+        v.literal('55+'),
+      ),
     ),
     gender: v.optional(
-      v.union(v.literal('male'), v.literal('female'), v.literal('other'))
+      v.union(v.literal('male'), v.literal('female'), v.literal('other')),
     ),
     preferredPartnerGender: v.optional(
       v.union(
         v.literal('male'),
         v.literal('female'),
         v.literal('other'),
-        v.literal('any')
-      )
+        v.literal('any'),
+      ),
     ),
     bio: v.optional(v.string()),
     interests: v.optional(v.array(v.string())),
@@ -3994,8 +4149,8 @@ export default defineSchema({
       v.union(
         v.literal('smoker'),
         v.literal('non_smoker'),
-        v.literal('no_preference')
-      )
+        v.literal('no_preference'),
+      ),
     ),
     accommodationPreference: v.optional(
       v.union(
@@ -4003,8 +4158,8 @@ export default defineSchema({
         v.literal('budget_hotel'),
         v.literal('mid_range'),
         v.literal('luxury'),
-        v.literal('no_preference')
-      )
+        v.literal('no_preference'),
+      ),
     ),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -4032,8 +4187,8 @@ export default defineSchema({
         v.literal('male'),
         v.literal('female'),
         v.literal('other'),
-        v.literal('any')
-      )
+        v.literal('any'),
+      ),
     ),
     preferredAgeRange: v.optional(
       v.array(
@@ -4042,9 +4197,9 @@ export default defineSchema({
           v.literal('26-35'),
           v.literal('36-45'),
           v.literal('46-55'),
-          v.literal('55+')
-        )
-      )
+          v.literal('55+'),
+        ),
+      ),
     ),
     travelStyles: v.optional(
       v.array(
@@ -4057,17 +4212,17 @@ export default defineSchema({
           v.literal('shopping'),
           v.literal('photography'),
           v.literal('budget'),
-          v.literal('luxury')
-        )
-      )
+          v.literal('luxury'),
+        ),
+      ),
     ),
     budgetRange: v.optional(
       v.union(
         v.literal('budget'),
         v.literal('moderate'),
         v.literal('comfortable'),
-        v.literal('luxury')
-      )
+        v.literal('luxury'),
+      ),
     ),
     estimatedBudget: v.optional(v.number()),
     itineraryId: v.optional(v.id('itineraries')),
@@ -4078,7 +4233,7 @@ export default defineSchema({
       v.literal('paused'),
       v.literal('fulfilled'),
       v.literal('cancelled'),
-      v.literal('expired')
+      v.literal('expired'),
     ),
     viewCount: v.number(),
     applicationCount: v.number(),
@@ -4110,14 +4265,14 @@ export default defineSchema({
         budgetMatch: v.optional(v.number()),
         languageMatch: v.optional(v.number()),
         interestMatch: v.optional(v.number()),
-      })
+      }),
     ),
     status: v.union(
       v.literal('pending'),
       v.literal('accepted'),
       v.literal('rejected'),
       v.literal('withdrawn'),
-      v.literal('expired')
+      v.literal('expired'),
     ),
     responseMessage: v.optional(v.string()),
     respondedAt: v.optional(v.number()),
@@ -4148,7 +4303,7 @@ export default defineSchema({
     status: v.union(
       v.literal('active'),
       v.literal('completed'),
-      v.literal('cancelled')
+      v.literal('cancelled'),
     ),
     conversationId: v.optional(v.id('conversations')),
     ownerFeedback: v.optional(
@@ -4157,7 +4312,7 @@ export default defineSchema({
         review: v.optional(v.string()),
         wouldTravelAgain: v.boolean(),
         createdAt: v.number(),
-      })
+      }),
     ),
     partnerFeedback: v.optional(
       v.object({
@@ -4165,7 +4320,7 @@ export default defineSchema({
         review: v.optional(v.string()),
         wouldTravelAgain: v.boolean(),
         createdAt: v.number(),
-      })
+      }),
     ),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -4188,13 +4343,13 @@ export default defineSchema({
       v.literal('email'),
       v.literal('social'),
       v.literal('travel_history'),
-      v.literal('reference')
+      v.literal('reference'),
     ),
     status: v.union(
       v.literal('pending'),
       v.literal('verified'),
       v.literal('rejected'),
-      v.literal('expired')
+      v.literal('expired'),
     ),
     verificationData: v.optional(v.string()),
     verificationMethod: v.optional(v.string()),
@@ -4237,9 +4392,9 @@ export default defineSchema({
           v.literal('super_host'),
           v.literal('responsive'),
           v.literal('experienced'),
-          v.literal('top_rated')
-        )
-      )
+          v.literal('top_rated'),
+        ),
+      ),
     ),
     lastCalculatedAt: v.number(),
     createdAt: v.number(),
@@ -4277,7 +4432,7 @@ export default defineSchema({
       v.literal('food'), // 餐饮
       v.literal('accommodation'), // 住宿
       v.literal('safety'), // 安全
-      v.literal('other') // 其他
+      v.literal('other'), // 其他
     ),
     tags: v.optional(v.array(v.string())), // 标签
     imageUrls: v.optional(v.array(v.string())), // 问题附图
@@ -4290,7 +4445,7 @@ export default defineSchema({
       v.literal('open'), // 开放中
       v.literal('answered'), // 已有采纳答案
       v.literal('closed'), // 已关闭
-      v.literal('resolved') // 已解决
+      v.literal('resolved'), // 已解决
     ),
     acceptedAnswerId: v.optional(v.id('poiAnswers')), // 采纳的答案
     bestAnswerId: v.optional(v.id('poiAnswers')), // 最佳答案
@@ -4353,8 +4508,8 @@ export default defineSchema({
       v.union(
         v.literal('travel_expert'),
         v.literal('local_guide'),
-        v.literal('official_account')
-      )
+        v.literal('official_account'),
+      ),
     ),
     // Moderation
     reportCount: v.number(),
@@ -4424,14 +4579,14 @@ export default defineSchema({
       v.literal('inappropriate'),
       v.literal('duplicate'),
       v.literal('off_topic'),
-      v.literal('other')
+      v.literal('other'),
     ),
     description: v.optional(v.string()),
     status: v.union(
       v.literal('pending'),
       v.literal('reviewed'),
       v.literal('resolved'),
-      v.literal('dismissed')
+      v.literal('dismissed'),
     ),
     createdAt: v.number(),
     reviewedAt: v.optional(v.number()),
@@ -4453,14 +4608,14 @@ export default defineSchema({
       v.literal('inappropriate'),
       v.literal('misleading'),
       v.literal('plagiarism'),
-      v.literal('other')
+      v.literal('other'),
     ),
     description: v.optional(v.string()),
     status: v.union(
       v.literal('pending'),
       v.literal('reviewed'),
       v.literal('resolved'),
-      v.literal('dismissed')
+      v.literal('dismissed'),
     ),
     createdAt: v.number(),
     reviewedAt: v.optional(v.number()),
@@ -4486,7 +4641,7 @@ export default defineSchema({
       v.literal('directions'), // 问路
       v.literal('numbers'), // 数字
       v.literal('time'), // 时间
-      v.literal('common') // 常用语
+      v.literal('common'), // 常用语
     ),
 
     // Source text and language
@@ -4500,7 +4655,7 @@ export default defineSchema({
         text: v.string(), // Translated text
         pinyin: v.optional(v.string()), // Pinyin for Chinese
         pronunciation: v.optional(v.string()), // Pronunciation guide
-      })
+      }),
     ),
 
     // Audio URLs for pronunciation
@@ -4509,8 +4664,8 @@ export default defineSchema({
         v.object({
           lang: v.string(),
           url: v.string(),
-        })
-      )
+        }),
+      ),
     ),
 
     // Usage context/examples
@@ -4548,7 +4703,7 @@ export default defineSchema({
     translationType: v.union(
       v.literal('text'), // 文字翻译
       v.literal('photo'), // 拍照翻译
-      v.literal('voice') // 语音翻译
+      v.literal('voice'), // 语音翻译
     ),
 
     // Optional media URLs
@@ -4655,8 +4810,8 @@ export default defineSchema({
         v.literal('scenery'), // Scenic views
         v.literal('activity'), // Activities and experiences
         v.literal('detail'), // Close-up details
-        v.literal('other') // Other/uncategorized
-      )
+        v.literal('other'), // Other/uncategorized
+      ),
     ),
 
     // Photo metadata
@@ -4665,7 +4820,7 @@ export default defineSchema({
       v.object({
         latitude: v.number(),
         longitude: v.number(),
-      })
+      }),
     ), // GPS coordinates from EXIF
 
     // Engagement
@@ -4682,7 +4837,7 @@ export default defineSchema({
       v.literal('pending'), // Awaiting review
       v.literal('approved'), // Approved for display
       v.literal('rejected'), // Rejected (inappropriate)
-      v.literal('hidden') // Hidden by user
+      v.literal('hidden'), // Hidden by user
     ),
     moderatorNotes: v.optional(v.string()),
     reviewedBy: v.optional(v.string()), // Admin user ID
@@ -4748,7 +4903,7 @@ export default defineSchema({
       v.literal('landed'),
       v.literal('arrived'),
       v.literal('cancelled'),
-      v.literal('diverted')
+      v.literal('diverted'),
     ),
     aircraftType: v.optional(v.string()), // e.g., "Boeing 737-800"
     duration: v.optional(v.number()), // Duration in minutes
@@ -4778,7 +4933,7 @@ export default defineSchema({
       v.literal('economy'),
       v.literal('premium_economy'),
       v.literal('business'),
-      v.literal('first')
+      v.literal('first'),
     ),
     status: v.union(
       v.literal('confirmed'),
@@ -4786,7 +4941,7 @@ export default defineSchema({
       v.literal('cancelled'),
       v.literal('checked_in'),
       v.literal('boarded'),
-      v.literal('completed')
+      v.literal('completed'),
     ),
     departureTime: v.number(), // Cached departure time for sorting
     arrivalTime: v.number(), // Cached arrival time
@@ -4831,7 +4986,7 @@ export default defineSchema({
       v.literal('transit_visa'), // 过境签
       v.literal('work_visa'), // 工作签证
       v.literal('student_visa'), // 学生签证
-      v.literal('business_visa') // 商务签证
+      v.literal('business_visa'), // 商务签证
     ),
     visaTypeName: v.string(), // 免签/落地签/电子签证等
     visaTypeNameEn: v.optional(v.string()),
@@ -4842,14 +4997,14 @@ export default defineSchema({
       v.literal('easy'), // 容易（电子签）
       v.literal('moderate'), // 中等
       v.literal('difficult'), // 困难
-      v.literal('very_difficult') // 非常困难
+      v.literal('very_difficult'), // 非常困难
     ),
 
     // Duration and validity
     maxStayDays: v.optional(v.number()), // 最长停留天数
     validityPeriod: v.optional(v.string()), // 有效期，如 "90天" "6个月"
     entryType: v.optional(
-      v.union(v.literal('single'), v.literal('multiple'), v.literal('dual'))
+      v.union(v.literal('single'), v.literal('multiple'), v.literal('dual')),
     ), // 单次/多次入境
 
     // Processing information
@@ -4872,7 +5027,7 @@ export default defineSchema({
         description: v.optional(v.string()), // 详细说明
         isRequired: v.boolean(), // 是否必需
         notes: v.optional(v.string()), // 备注
-      })
+      }),
     ),
 
     // Application methods
@@ -4883,7 +5038,7 @@ export default defineSchema({
           v.literal('embassy'), // 大使馆
           v.literal('consulate'), // 领事馆
           v.literal('visa_center'), // 签证中心
-          v.literal('on_arrival') // 到达时办理
+          v.literal('on_arrival'), // 到达时办理
         ),
         name: v.string(), // 方式名称
         nameEn: v.optional(v.string()),
@@ -4892,7 +5047,7 @@ export default defineSchema({
         phone: v.optional(v.string()), // 电话
         email: v.optional(v.string()), // 邮箱
         notes: v.optional(v.string()), // 备注
-      })
+      }),
     ),
 
     // Entry requirements
@@ -4907,7 +5062,7 @@ export default defineSchema({
         travelInsurance: v.optional(v.boolean()), // 是否需要旅行保险
         returnTicket: v.optional(v.boolean()), // 是否需要回程机票
         additionalRequirements: v.optional(v.array(v.string())), // 其他要求
-      })
+      }),
     ),
 
     // Special notes
@@ -4967,7 +5122,7 @@ export default defineSchema({
       v.literal('transit_visa'),
       v.literal('work_visa'),
       v.literal('student_visa'),
-      v.literal('business_visa')
+      v.literal('business_visa'),
     ),
 
     // Status
@@ -4975,7 +5130,7 @@ export default defineSchema({
       v.literal('pending'), // 待提醒
       v.literal('sent'), // 已发送
       v.literal('dismissed'), // 已忽略
-      v.literal('completed') // 已完成
+      v.literal('completed'), // 已完成
     ),
 
     // Notes
@@ -4988,8 +5143,8 @@ export default defineSchema({
           item: v.string(),
           isCompleted: v.boolean(),
           completedAt: v.optional(v.number()),
-        })
-      )
+        }),
+      ),
     ),
 
     // Timestamps
@@ -5024,7 +5179,7 @@ export default defineSchema({
       v.literal('transit_visa'),
       v.literal('work_visa'),
       v.literal('student_visa'),
-      v.literal('business_visa')
+      v.literal('business_visa'),
     ),
 
     // Application method
@@ -5033,7 +5188,7 @@ export default defineSchema({
       v.literal('embassy'),
       v.literal('consulate'),
       v.literal('visa_center'),
-      v.literal('on_arrival')
+      v.literal('on_arrival'),
     ),
 
     // Dates
@@ -5055,7 +5210,7 @@ export default defineSchema({
       v.literal('processing'), // 处理中
       v.literal('approved'), // 已批准
       v.literal('rejected'), // 已拒绝
-      v.literal('cancelled') // 已取消
+      v.literal('cancelled'), // 已取消
     ),
 
     // Documents tracking
@@ -5066,11 +5221,11 @@ export default defineSchema({
           status: v.union(
             v.literal('not_started'),
             v.literal('in_progress'),
-            v.literal('completed')
+            v.literal('completed'),
           ),
           notes: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
 
     // Notes
@@ -5108,7 +5263,7 @@ export default defineSchema({
       v.literal('embassy'), // 大使馆
       v.literal('consulate'), // 领事馆
       v.literal('visa_center'), // 签证中心
-      v.literal('agency') // 代理机构
+      v.literal('agency'), // 代理机构
     ),
 
     // Contact
@@ -5133,7 +5288,7 @@ export default defineSchema({
         saturday: v.optional(v.string()),
         sunday: v.optional(v.string()),
         notes: v.optional(v.string()),
-      })
+      }),
     ),
 
     // Services
@@ -5163,7 +5318,7 @@ export default defineSchema({
     resourceType: v.union(
       v.literal('itinerary'),
       v.literal('travelGuide'),
-      v.literal('travelNote')
+      v.literal('travelNote'),
     ),
     resourceId: v.string(),
     ownerId: v.string(), // Auth user ID of the owner
@@ -5181,7 +5336,7 @@ export default defineSchema({
       v.literal('douyin'),
       v.literal('copy_link'),
       v.literal('system_share'),
-      v.literal('generic')
+      v.literal('generic'),
     ),
 
     // Access control
@@ -5189,7 +5344,7 @@ export default defineSchema({
       v.literal('public'), // Anyone with link can view
       v.literal('unlisted'), // Only people with link can view (not searchable)
       v.literal('private'), // Only owner and explicitly shared users can view
-      v.literal('password') // Requires password to view
+      v.literal('password'), // Requires password to view
     ),
     password: v.optional(v.string()), // Password for password-protected links
     expiresAt: v.optional(v.number()), // Expiration timestamp
@@ -5227,7 +5382,7 @@ export default defineSchema({
     resourceType: v.union(
       v.literal('itinerary'),
       v.literal('travelGuide'),
-      v.literal('travelNote')
+      v.literal('travelNote'),
     ),
     resourceId: v.string(),
 
@@ -5244,13 +5399,13 @@ export default defineSchema({
       v.literal('douyin'),
       v.literal('copy_link'),
       v.literal('system_share'),
-      v.literal('generic')
+      v.literal('generic'),
     ),
     eventType: v.union(
       v.literal('share'), // Initial share action
       v.literal('click'), // Link clicked
       v.literal('view'), // Content viewed
-      v.literal('save') // Content saved/copied
+      v.literal('save'), // Content saved/copied
     ),
     shareUrl: v.optional(v.string()),
 
@@ -5275,7 +5430,7 @@ export default defineSchema({
     resourceType: v.union(
       v.literal('itinerary'),
       v.literal('travelGuide'),
-      v.literal('travelNote')
+      v.literal('travelNote'),
     ),
     resourceId: v.string(),
 
@@ -5288,13 +5443,13 @@ export default defineSchema({
       v.literal('douyin'),
       v.literal('copy_link'),
       v.literal('system_share'),
-      v.literal('generic')
+      v.literal('generic'),
     ),
     eventType: v.union(
       v.literal('share'),
       v.literal('click'),
       v.literal('view'),
-      v.literal('save')
+      v.literal('save'),
     ),
 
     // Tracking info (anonymized)
@@ -5328,8 +5483,8 @@ export default defineSchema({
         v.literal('cabin'), // 登机箱
         v.literal('medium'), // 中型
         v.literal('large'), // 大型
-        v.literal('oversized') // 超大
-      )
+        v.literal('oversized'), // 超大
+      ),
     ),
     weight: v.optional(v.number()), // Weight in kg
     dimensions: v.optional(v.string()), // e.g., "55x40x20cm"
@@ -5350,7 +5505,7 @@ export default defineSchema({
       v.literal('delayed'), // 延误
       v.literal('lost'), // 丢失
       v.literal('found'), // 已找到
-      v.literal('damaged') // 损坏
+      v.literal('damaged'), // 损坏
     ),
     lastKnownLocation: v.optional(v.string()), // Last known location
 
@@ -5440,7 +5595,7 @@ export default defineSchema({
       v.literal('religious'), // 宗教活动
       v.literal('seasonal'), // 季节性活动 (赏花, 赏月)
       v.literal('local_custom'), // 地方习俗
-      v.literal('other') // 其他
+      v.literal('other'), // 其他
     ),
 
     // Date and Time
@@ -5457,7 +5612,7 @@ export default defineSchema({
         type: v.union(
           v.literal('yearly'), // 每年
           v.literal('monthly'), // 每月
-          v.literal('weekly') // 每周
+          v.literal('weekly'), // 每周
         ),
         // For lunar calendar events (e.g., Chinese New Year)
         isLunarCalendar: v.optional(v.boolean()),
@@ -5468,7 +5623,7 @@ export default defineSchema({
         day: v.optional(v.number()), // 公历日期 (1-31)
         weekOfMonth: v.optional(v.number()), // 每月第几周 (1-5)
         dayOfWeek: v.optional(v.number()), // 星期几 (0=Sunday, 6=Saturday)
-      })
+      }),
     ),
 
     // Ticket Information
@@ -5503,7 +5658,7 @@ export default defineSchema({
       v.literal('upcoming'), // 即将开始
       v.literal('ongoing'), // 进行中
       v.literal('ended'), // 已结束
-      v.literal('cancelled') // 已取消
+      v.literal('cancelled'), // 已取消
     ),
     isVerified: v.boolean(), // 是否经过验证
     isFeatured: v.optional(v.boolean()), // 是否为精选活动
@@ -5552,7 +5707,7 @@ export default defineSchema({
     reminderType: v.union(
       v.literal('event_start'), // 活动开始提醒
       v.literal('booking_open'), // 开放预约提醒
-      v.literal('custom') // 自定义时间提醒
+      v.literal('custom'), // 自定义时间提醒
     ),
     reminderTime: v.number(), // Unix timestamp - 提醒时间
     minutesBefore: v.optional(v.number()), // 提前多少分钟提醒
@@ -5609,7 +5764,7 @@ export default defineSchema({
     status: v.union(
       v.literal('pending'), // 待审核
       v.literal('approved'), // 已通过
-      v.literal('rejected') // 已拒绝
+      v.literal('rejected'), // 已拒绝
     ),
 
     // Timestamps
@@ -5658,8 +5813,8 @@ export default defineSchema({
         v.literal('photography'),
         v.literal('family'),
         v.literal('budget'),
-        v.literal('luxury')
-      )
+        v.literal('luxury'),
+      ),
     ),
 
     // Travel style preferences
@@ -5667,21 +5822,21 @@ export default defineSchema({
       v.literal('adventurous'),
       v.literal('relaxed'),
       v.literal('cultural'),
-      v.literal('balanced')
+      v.literal('balanced'),
     ),
 
     // Budget preference
     budgetLevel: v.union(
       v.literal('budget'),
       v.literal('moderate'),
-      v.literal('luxury')
+      v.literal('luxury'),
     ),
 
     // Pace preference
     pacePreference: v.union(
       v.literal('slow'),
       v.literal('moderate'),
-      v.literal('fast')
+      v.literal('fast'),
     ),
 
     // Additional preferences
@@ -5714,7 +5869,7 @@ export default defineSchema({
       v.literal('unlike'),
       v.literal('search'),
       v.literal('poi_click'),
-      v.literal('poi_add')
+      v.literal('poi_add'),
     ),
 
     // Target information
@@ -5723,7 +5878,7 @@ export default defineSchema({
       v.literal('itinerary'),
       v.literal('poi'),
       v.literal('city'),
-      v.literal('search')
+      v.literal('search'),
     ),
     targetId: v.string(),
 
@@ -5740,8 +5895,8 @@ export default defineSchema({
         v.literal('photography'),
         v.literal('family'),
         v.literal('budget'),
-        v.literal('luxury')
-      )
+        v.literal('luxury'),
+      ),
     ),
 
     // Additional metadata
@@ -5775,7 +5930,7 @@ export default defineSchema({
       visibility: v.union(
         v.literal('private'),
         v.literal('team'),
-        v.literal('public')
+        v.literal('public'),
       ),
       coverImageUrl: v.optional(v.string()),
       // Days snapshot with items
@@ -5794,12 +5949,12 @@ export default defineSchema({
                 v.literal('driving'),
                 v.literal('transit'),
                 v.literal('cycling'),
-                v.literal('taxi')
+                v.literal('taxi'),
               ),
               notes: v.optional(v.string()),
-            })
+            }),
           ),
-        })
+        }),
       ),
     }),
 
@@ -5812,7 +5967,7 @@ export default defineSchema({
         itemsAdded: v.number(),
         itemsRemoved: v.number(),
         itemsModified: v.number(),
-      })
+      }),
     ),
 
     // Timestamps
@@ -5857,7 +6012,7 @@ export default defineSchema({
     status: v.union(
       v.literal('open'), // Accepting answers
       v.literal('closed'), // No longer accepting answers
-      v.literal('resolved') // Has a best answer
+      v.literal('resolved'), // Has a best answer
     ),
     isEdited: v.boolean(),
     isDeleted: v.boolean(),
@@ -5973,7 +6128,7 @@ export default defineSchema({
       v.literal('misleading'),
       v.literal('off_topic'),
       v.literal('harassment'),
-      v.literal('other')
+      v.literal('other'),
     ),
     description: v.optional(v.string()),
 
@@ -5982,7 +6137,7 @@ export default defineSchema({
       v.literal('pending'),
       v.literal('reviewed'),
       v.literal('dismissed'),
-      v.literal('actioned')
+      v.literal('actioned'),
     ),
     reviewedBy: v.optional(v.string()), // Admin user ID
     reviewedAt: v.optional(v.number()),
@@ -6145,7 +6300,7 @@ export default defineSchema({
         v.object({
           date: v.string(), // ISO date string YYYY-MM-DD
           rate: v.number(),
-        })
+        }),
       ),
       change: v.number(), // Percentage change over the period
       trend: v.union(v.literal('up'), v.literal('down'), v.literal('stable')),
@@ -6165,13 +6320,13 @@ export default defineSchema({
     sessionType: v.union(
       v.literal('chat'), // General chat
       v.literal('travel_plan'), // Travel planning session
-      v.literal('enrichment') // Content enrichment task
+      v.literal('enrichment'), // Content enrichment task
     ),
     status: v.union(
       v.literal('active'),
       v.literal('paused'), // Waiting for user input (interrupt)
       v.literal('completed'),
-      v.literal('expired')
+      v.literal('expired'),
     ),
     messages: v.array(
       v.object({
@@ -6179,13 +6334,13 @@ export default defineSchema({
           v.literal('human'),
           v.literal('ai'),
           v.literal('system'),
-          v.literal('tool')
+          v.literal('tool'),
         ),
         content: v.string(),
         toolCalls: v.optional(v.any()), // Tool call info if role is 'tool'
         toolName: v.optional(v.string()),
         timestamp: v.number(),
-      })
+      }),
     ),
     // Session metadata
     metadata: v.optional(v.any()), // Custom metadata (destination, dates, etc.)

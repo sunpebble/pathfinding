@@ -3,12 +3,12 @@
  * Types for crawl job configuration and execution
  */
 
-export type CrawlJobStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+export type CrawlJobStatus
+  = | 'pending'
+    | 'running'
+    | 'completed'
+    | 'failed'
+    | 'cancelled';
 export type CrawlJobType = 'full' | 'incremental';
 
 export interface GeographicBounds {
