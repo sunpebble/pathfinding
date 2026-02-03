@@ -108,7 +108,8 @@ async function verifyE2E() {
 
     const rawGuide: MafengwoRawGuide = await page.evaluate(() => {
       const title = document.querySelector('h1, .title, [class*="title"]')?.textContent?.trim() || '';
-      const content = document.querySelector('.content, .article, [class*="content"], main')?.textContent?.trim() || '';
+      // 优先使用马蜂窝特定选择器
+      const content = document.querySelector('.note-content, .note-body, [class*="note-content"], .article-content')?.textContent?.trim() || '';
       const author = document.querySelector('.author, [class*="author"], .user-name')?.textContent?.trim() || '';
 
       const pageText = document.body.textContent || '';

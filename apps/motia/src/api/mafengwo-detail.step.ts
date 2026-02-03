@@ -65,9 +65,9 @@ async function extractGuideDetail(
         || document.querySelector('meta[property="og:title"]')?.getAttribute('content')
         || '';
 
-    // 提取内容
+    // 提取内容 - 优先使用马蜂窝特定选择器
     const contentEl = document.querySelector(
-      '.content, .article, [class*="content"], [class*="article"], main',
+      '.note-content, .note-body, [class*="note-content"], .article-content, .content, .article, main',
     );
     const content = contentEl?.textContent?.trim() || '';
 

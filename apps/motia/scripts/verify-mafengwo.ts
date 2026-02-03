@@ -157,15 +157,17 @@ async function verify() {
 
       const detail = await page.evaluate(() => {
         const title = document.querySelector('h1, .title, [class*="title"]')?.textContent?.trim() || '';
-        const content = document.querySelector('.content, .article, [class*="content"], main')?.textContent?.trim() || '';
+        // 优先使用马蜂窝特定选择器
+        const content = document.querySelector('.note-content, .note-body, [class*="note-content"], .article-content')?.textContent?.trim() || '';
         const author = document.querySelector('.author, [class*="author"], .user')?.textContent?.trim() || '';
-        return { title, contentLength: content.length, author };
+        return { title, contentLength: content.length, author, contentPreview: content.slice(0, 200) };
       });
 
       console.log(`   ✅ 详情提取成功:`);
       console.log(`      标题: ${detail.title.slice(0, 50)}...`);
       console.log(`      作者: ${detail.author}`);
       console.log(`      内容长度: ${detail.contentLength} 字符`);
+      console.log(`      内容预览: ${detail.contentPreview.slice(0, 100)}...`);
     }
 
     console.log(`\n${'='.repeat(50)}`);
