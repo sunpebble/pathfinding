@@ -9,6 +9,9 @@
     "generate-types": "motia generate-types"
   },
   "dependencies": {
+    "@browserbasehq/stagehand": "^3.0.0",
+    "@onkernel/sdk": "^0.29.0",
+    "convex": "^1.21.0",
     "motia": "^0.17.14-beta.196",
     "zod": "^3.24.2"
   }
