@@ -336,7 +336,7 @@ export abstract class AICrawlerBase {
         return true;
 
       // Extract visible text content
-      const textContent = await page.evaluate(() => {
+      const textContent = await page.evaluate<string>(() => {
         return document.body?.textContent || '';
       });
 
@@ -370,7 +370,7 @@ export abstract class AICrawlerBase {
       // and check for actual page structure
       if (content.length < 100) {
         // Check if page has any meaningful elements
-        const hasContent = await page.evaluate(() => {
+        const hasContent = await page.evaluate<boolean>(() => {
           const links = document.querySelectorAll('a[href]');
           const images = document.querySelectorAll('img');
           return links.length > 5 || images.length > 2;

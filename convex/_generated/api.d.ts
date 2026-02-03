@@ -66,6 +66,7 @@ import type * as poiTickets from "../poiTickets.js";
 import type * as pois from "../pois.js";
 import type * as rawCrawlRecords from "../rawCrawlRecords.js";
 import type * as recommendedMedications from "../recommendedMedications.js";
+import type * as refetchTasks from "../refetchTasks.js";
 import type * as reminders from "../reminders.js";
 import type * as safety from "../safety.js";
 import type * as search from "../search.js";
@@ -164,6 +165,7 @@ declare const fullApi: ApiFromModules<{
   pois: typeof pois;
   rawCrawlRecords: typeof rawCrawlRecords;
   recommendedMedications: typeof recommendedMedications;
+  refetchTasks: typeof refetchTasks;
   reminders: typeof reminders;
   safety: typeof safety;
   search: typeof search;

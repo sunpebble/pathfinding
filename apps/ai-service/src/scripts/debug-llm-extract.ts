@@ -85,7 +85,7 @@ ${textContent.substring(0, 30000)}`;
     console.error('LLM 调用失败:', error);
   }
 
-  browser.disconnect();
+  await browser.close();
   console.log('\n完成');
 }
 
