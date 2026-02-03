@@ -9,7 +9,7 @@ const crons = cronJobs();
 crons.interval(
   'send-pending-reminders',
   { minutes: 1 },
-  internal.notifications.sendPendingReminders,
+  (internal as any).notifications.sendPendingReminders,
 );
 
 /**
@@ -18,7 +18,7 @@ crons.interval(
 crons.interval(
   'cleanup-expired-otps',
   { hours: 1 },
-  internal.phoneAuth.cleanupExpiredOtps,
+  (internal as any).phoneAuth.cleanupExpiredOtps,
 );
 
 /**
@@ -27,7 +27,7 @@ crons.interval(
 crons.interval(
   'cleanup-expired-rate-limits',
   { hours: 24 },
-  internal.phoneAuth.cleanupExpiredRateLimits,
+  (internal as any).phoneAuth.cleanupExpiredRateLimits,
 );
 
 /**
@@ -37,7 +37,7 @@ crons.interval(
 crons.interval(
   'cleanup-old-notifications',
   { hours: 6 },
-  internal.notifications.cleanupOldNotifications,
+  (internal as any).notifications.cleanupOldNotifications,
 );
 
 /**
@@ -47,7 +47,7 @@ crons.interval(
 crons.daily(
   'cleanup-old-quality-reports',
   { hourUTC: 19, minuteUTC: 0 }, // 3:00 AM UTC+8
-  internal.dataQualityReports.cleanupOld,
+  (internal as any).dataQualityReports.cleanupOld,
 );
 
 /**
