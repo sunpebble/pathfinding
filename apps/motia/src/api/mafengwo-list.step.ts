@@ -68,11 +68,10 @@ export async function handler(
   try {
     logger.info('Creating browser session', { city });
 
-    // 创建浏览器会话（使用非 headless + 移动设备模拟绕过 WAF）
+    // 创建浏览器会话（使用非 headless 绕过 WAF）
     session = await createKernelBrowser({
       stealth: true,
       headless: false,
-      mobile: true,
     });
 
     logger.info('Browser created', {
@@ -85,8 +84,8 @@ export async function handler(
     logger.info('Navigating to', { url });
 
     await session.page.goto(url, {
-      waitUntil: 'networkidle',
-      timeout: 30000,
+      waitUntil: 'domcontentloaded',
+      timeoutMs: 30000,
     });
 
     // 等待页面加载

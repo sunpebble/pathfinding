@@ -2,16 +2,17 @@
  * 马蜂窝游记详情爬取 API
  * POST /api/crawler/mafengwo/detail
  *
- * 使用 Kernel.sh 云浏览器爬取单篇游记详情
+ * 使用 Kernel.sh 云浏览器爬取游记详情
+ * 支持 DOM 选择器提取（默认）和 AI 提取（可选）
  */
 
-import type { Page } from 'playwright';
 import type { KernelBrowserSession } from '../lib/kernel-browser.js';
 import { z } from 'zod';
 import {
   closeKernelBrowser,
   createKernelBrowser,
-
+  extractGuideWithAI,
+  extractGuideWithSelectors,
 } from '../lib/kernel-browser.js';
 
 const bodySchema = z.object({
@@ -20,6 +21,7 @@ const bodySchema = z.object({
     'Must be a mafengwo.cn URL',
   ),
   maxRetries: z.number().min(1).max(5).optional().default(3),
+  useAI: z.boolean().optional().default(false), // 是否使用 AI 提取
 });
 
 export const config = {
@@ -41,7 +43,8 @@ interface GuideData {
   likes?: string;
   coverImage?: string;
   images: string[];
-  publishedAt?: string;
+  destination?: string;
+  highlights?: string[];
 }
 
 interface HandlerContext {
@@ -50,67 +53,6 @@ interface HandlerContext {
     info: (msg: string, data?: unknown) => void;
     error: (msg: string, data?: unknown) => void;
   };
-}
-
-/**
- * 从页面提取游记详情
- */
-async function extractGuideDetail(
-  page: Page,
-): Promise<GuideData> {
-  return page.evaluate(() => {
-    // 提取标题
-    const title
-      = document.querySelector('h1, .title, [class*="title"]')?.textContent?.trim()
-        || document.querySelector('meta[property="og:title"]')?.getAttribute('content')
-        || '';
-
-    // 提取内容 - 优先使用马蜂窝特定选择器
-    const contentEl = document.querySelector(
-      '.note-content, .note-body, [class*="note-content"], .article-content, .content, .article, main',
-    );
-    const content = contentEl?.textContent?.trim() || '';
-
-    // 提取作者
-    const author
-      = document.querySelector('.author, [class*="author"], .user-name, [class*="user"]')
-        ?.textContent
-        ?.trim() || undefined;
-
-    // 提取浏览量
-    const pageText = document.body.textContent || '';
-    const viewsMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读|次)/i);
-    const views = viewsMatch?.[1] || undefined;
-
-    // 提取点赞
-    const likesMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:赞|喜欢|收藏)/i);
-    const likes = likesMatch?.[1] || undefined;
-
-    // 提取图片
-    const images: string[] = [];
-    document.querySelectorAll('img[src*="mafengwo"], img[data-src*="mafengwo"]').forEach((img) => {
-      const src = (img as HTMLImageElement).src || img.getAttribute('data-src');
-      if (src && !src.includes('avatar') && !src.includes('icon')) {
-        images.push(src);
-      }
-    });
-
-    // 提取封面图
-    const coverImage
-      = document.querySelector('meta[property="og:image"]')?.getAttribute('content')
-        || images[0]
-        || undefined;
-
-    return {
-      title,
-      content,
-      author,
-      views,
-      likes,
-      coverImage,
-      images,
-    };
-  });
 }
 
 export async function handler(
@@ -126,7 +68,7 @@ export async function handler(
     };
   }
 
-  const { url, maxRetries } = parseResult.data;
+  const { url, maxRetries, useAI } = parseResult.data;
 
   // 检查环境变量
   if (!process.env.KERNEL_API_KEY) {
@@ -137,36 +79,71 @@ export async function handler(
     };
   }
 
+  // 如果使用 AI 提取，检查 OpenAI 配置
+  if (useAI && !process.env.OPENAI_API_KEY) {
+    logger.error('OPENAI_API_KEY not configured for AI extraction');
+    return {
+      status: 503,
+      body: { success: false, error: 'AI extraction requires OPENAI_API_KEY' },
+    };
+  }
+
   let session: KernelBrowserSession | null = null;
   let lastError: string = '';
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      logger.info('Crawling guide detail', { url, attempt });
+      logger.info('Crawling guide detail', { url, attempt, useAI });
 
-      // 创建浏览器会话（使用非 headless + 移动设备模拟绕过 WAF）
+      // 创建浏览器会话
       session = await createKernelBrowser({
         stealth: true,
         headless: false,
-        mobile: true,
       });
 
       // 转换为移动版 URL
       const mobileUrl = url.replace('www.mafengwo.cn', 'm.mafengwo.cn');
 
-      // 访问页面（使用 domcontentloaded 代替 networkidle 避免超时）
+      // 访问页面
       await session.page.goto(mobileUrl, {
         waitUntil: 'domcontentloaded',
-        timeout: 30000,
+        timeoutMs: 30000,
       });
 
       // 等待内容加载
-      await session.page.waitForTimeout(3000);
+      await session.page.waitForTimeout(5000);
 
-      // 提取详情
-      const data = await extractGuideDetail(session.page);
+      let data: GuideData;
 
-      // 检查内容是否过短（可能被 WAF 拦截）
+      if (useAI) {
+        // 使用 AI 提取
+        logger.info('Using AI extraction');
+        const aiData = await extractGuideWithAI(session.stagehand);
+        const selectorData = await extractGuideWithSelectors(session.page);
+
+        data = {
+          title: aiData.title,
+          content: aiData.content,
+          author: aiData.author,
+          views: selectorData.views,
+          likes: selectorData.likes,
+          coverImage: selectorData.coverImage,
+          images: selectorData.images,
+          destination: aiData.destination,
+          highlights: aiData.highlights,
+        };
+      }
+      else {
+        // 使用 DOM 选择器提取（默认）
+        const selectorData = await extractGuideWithSelectors(session.page);
+        data = {
+          ...selectorData,
+          destination: undefined,
+          highlights: undefined,
+        };
+      }
+
+      // 检查内容是否过短
       if (data.content.length < 100) {
         lastError = 'Content too short, possible WAF block';
         logger.info('Content too short, retrying', { attempt, length: data.content.length });
@@ -179,6 +156,7 @@ export async function handler(
         title: data.title?.slice(0, 50),
         contentLength: data.content.length,
         imagesCount: data.images.length,
+        method: useAI ? 'AI' : 'selectors',
       });
 
       // 发送完成事件
@@ -210,7 +188,6 @@ export async function handler(
   // 所有重试都失败
   logger.error('All retries failed', { url, lastError });
 
-  // 检查是否是 404
   if (lastError.includes('404') || lastError.includes('not found')) {
     return {
       status: 404,
