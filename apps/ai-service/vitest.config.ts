@@ -8,8 +8,14 @@ export default defineConfig({
     exclude: ['node_modules', 'dist'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: ['text', 'json', 'html'],
       exclude: ['node_modules', 'dist', '**/*.test.ts'],
+      thresholds: {
+        lines: 60,
+        functions: 60,
+        branches: 60,
+        statements: 60,
+      },
     },
     testTimeout: 30000,
   },

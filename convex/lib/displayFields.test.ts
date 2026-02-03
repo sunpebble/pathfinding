@@ -309,3 +309,111 @@ describe('fillMissingDisplayFields', () => {
     expect(result.savesCount).toBe(0); // Default
   });
 });
+
+// ============================================================
+// Edge Case Tests
+// ============================================================
+
+describe('fillMissingDisplayFields - Edge Cases', () => {
+  it('should handle null values correctly', () => {
+    const guide = {
+      title: null as unknown as string,
+      authorName: null as unknown as string,
+    };
+
+    const result = fillMissingDisplayFields(guide);
+    expect(result.title).toBe('无标题攻略');
+    expect(result.authorName).toBe('匿名用户');
+  });
+
+  it('should handle undefined imageUrls', () => {
+    const guide = {
+      imageUrls: undefined,
+      sourcePlatform: 'weibo' as const,
+    };
+
+    const result = fillMissingDisplayFields(guide);
+    expect(result.coverImageUrl).toBeDefined();
+  });
+
+  it('should handle empty string coverImageUrl', () => {
+    const guide = {
+      coverImageUrl: '',
+      imageUrls: ['https://example.com/fallback.jpg'],
+    };
+
+    const result = fillMissingDisplayFields(guide);
+    // Should use imageUrls fallback when coverImageUrl is empty
+    expect(result.coverImageUrl).toBe('https://example.com/fallback.jpg');
+  });
+
+  it('should handle whitespace-only authorName', () => {
+    const guide = {
+      authorName: '   ',
+    };
+
+    const result = fillMissingDisplayFields(guide);
+    expect(result.authorName).toBe('匿名用户');
+  });
+
+  it('should handle very long content for title generation', () => {
+    const guide = {
+      content: 'A'.repeat(1000),
+    };
+
+    const result = fillMissingDisplayFields(guide);
+    expect(result.title!.length).toBeLessThanOrEqual(35);
+    expect(result.title!.endsWith('...')).toBe(true);
+  });
+
+  it('should handle content with only whitespace', () => {
+    const guide = {
+      content: '   \n\t   ',
+    };
+
+    const result = fillMissingDisplayFields(guide);
+    expect(result.title).toBe('无标题攻略');
+  });
+
+  it('should handle zero count values (should NOT replace with default)', () => {
+    const guide = {
+      likesCount: 0,
+      savesCount: 0,
+      commentsCount: 0,
+      viewsCount: 0,
+      qualityScore: 0,
+    };
+
+    const result = fillMissingDisplayFields(guide);
+    expect(result.likesCount).toBe(0);
+    expect(result.savesCount).toBe(0);
+    expect(result.commentsCount).toBe(0);
+    expect(result.viewsCount).toBe(0);
+    expect(result.qualityScore).toBe(0);
+  });
+
+  it('should handle negative count values (edge case)', () => {
+    const guide = {
+      likesCount: -5,
+    };
+
+    const result = fillMissingDisplayFields(guide);
+    // Should preserve the value even if negative (validation is separate)
+    expect(result.likesCount).toBe(-5);
+  });
+
+  it('should handle all platforms for default images', () => {
+    const platforms = ['xiaohongshu', 'weibo', 'ctrip', 'douyin', 'tripadvisor', 'mafengwo', 'qunar', 'qyer', 'tongcheng'] as const;
+
+    for (const platform of platforms) {
+      const guide = {
+        sourcePlatform: platform,
+        imageUrls: [],
+      };
+
+      const result = fillMissingDisplayFields(guide);
+      expect(result.coverImageUrl).toBeDefined();
+      expect(result.coverImageUrl!.length).toBeGreaterThan(0);
+    }
+  });
+});

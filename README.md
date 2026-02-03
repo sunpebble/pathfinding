@@ -1,5 +1,8 @@
 # 探路 Pathfinding - Travel Itinerary Platform
 
+[![CI](https://github.com/kunish-homelab/pathfinding/actions/workflows/ci.yml/badge.svg)](https://github.com/kunish-homelab/pathfinding/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-60%25-yellow.svg)](https://github.com/kunish-homelab/pathfinding)
+
 A mobile-first travel itinerary planning application with offline support, POI recommendations, and community sharing features.
 
 ## 📱 Features
