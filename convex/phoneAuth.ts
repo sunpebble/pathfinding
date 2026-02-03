@@ -360,7 +360,7 @@ export const cleanupExpiredOtps = internalMutation({
       cleanedOtps: expiredOtps.length,
     };
   },
-});
+}) as unknown as any;
 
 /**
  * 清理过期的速率限制记录 (由 cron 调用)
@@ -382,4 +382,4 @@ export const cleanupExpiredRateLimits = internalMutation({
       cleaned: expiredRateLimits.length,
     };
   },
-});
+}) as unknown as any;

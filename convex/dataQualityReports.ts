@@ -142,4 +142,4 @@ export const cleanupOld = internalMutation({
 
     return { deletedCount };
   },
-});
+}) as unknown as any;

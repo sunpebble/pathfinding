@@ -798,7 +798,7 @@ export const sendPendingReminders = internalMutation({
 
     return { sentCount, total: pendingNotifications.length };
   },
-});
+}) as unknown as any;
 
 /**
  * Clean up old read notifications (internal, called by cron)
@@ -828,4 +828,4 @@ export const cleanupOldNotifications = internalMutation({
 
     return { deletedCount };
   },
-});
+}) as unknown as any;

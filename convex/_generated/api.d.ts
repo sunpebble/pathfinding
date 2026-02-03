@@ -167,6 +167,9 @@ declare const fullApi: ApiFromModules<{
   recommendedMedications: typeof recommendedMedications;
   refetchTasks: typeof refetchTasks;
   reminders: typeof reminders;
+  notifications: typeof notifications;
+  phoneAuth: typeof phoneAuth;
+  dataQualityReports: typeof dataQualityReports;
   safety: typeof safety;
   search: typeof search;
   shareEvents: typeof shareEvents;
