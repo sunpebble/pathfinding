@@ -336,9 +336,9 @@ export abstract class AICrawlerBase {
         return true;
 
       // Extract visible text content
-      const textContent = await page.evaluate<string>(() => {
+      const textContent = await (page.evaluate as any)(() => {
         return document.body?.textContent || '';
-      });
+      }) as string;
 
       const content = textContent.toLowerCase();
 
@@ -370,11 +370,11 @@ export abstract class AICrawlerBase {
       // and check for actual page structure
       if (content.length < 100) {
         // Check if page has any meaningful elements
-        const hasContent = await page.evaluate<boolean>(() => {
+        const hasContent = await (page.evaluate as any)(() => {
           const links = document.querySelectorAll('a[href]');
           const images = document.querySelectorAll('img');
           return links.length > 5 || images.length > 2;
-        });
+        }) as boolean;
 
         if (!hasContent) {
           this.log.debug({ contentLength: content.length }, 'Content too short and no meaningful elements');

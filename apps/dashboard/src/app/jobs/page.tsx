@@ -118,11 +118,19 @@ export default function JobsPage() {
           </h2>
         </div>
         <div className="p-6">
-          {isLoadingScheduler ? (
+          {isLoadingScheduler && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             </div>
-          ) : schedulerStatus ? (
+          )}
+
+          {!isLoadingScheduler && !schedulerStatus && (
+            <div className="text-center text-sm text-gray-500">
+              Failed to load scheduler status
+            </div>
+          )}
+
+          {!isLoadingScheduler && schedulerStatus && (
             <div className="space-y-6">
               {/* Worker Status */}
               <div>
@@ -199,40 +207,34 @@ export default function JobsPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 ml-4">
-                              {task.enabled
-                                ? (
-                                    <button
-                                      onClick={() => stopTaskMutation.mutate(task.name)}
-                                      disabled={stopTaskMutation.isPending}
-                                      className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Stop task"
-                                    >
-                                      <StopCircle className="h-4 w-4" />
-                                      Stop
-                                    </button>
-                                  )
-                                : (
-                                    <button
-                                      onClick={() =>
-                                        startTaskMutation.mutate(task.name)}
-                                      disabled={startTaskMutation.isPending}
-                                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Start task"
-                                    >
-                                      <Play className="h-4 w-4" />
-                                      Start
-                                    </button>
-                                  )}
+                              {task.enabled && (
+                                <button
+                                  onClick={() => stopTaskMutation.mutate(task.name)}
+                                  disabled={stopTaskMutation.isPending}
+                                  className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
+                                  title="Stop task"
+                                >
+                                  <StopCircle className="h-4 w-4" />
+                                  Stop
+                                </button>
+                              )}
+                              {!task.enabled && (
+                                <button
+                                  onClick={() => startTaskMutation.mutate(task.name)}
+                                  disabled={startTaskMutation.isPending}
+                                  className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
+                                  title="Start task"
+                                >
+                                  <Play className="h-4 w-4" />
+                                  Start
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
               </div>
-            </div>
-          ) : (
-            <div className="text-center text-sm text-gray-500">
-              Failed to load scheduler status
             </div>
           )}
         </div>

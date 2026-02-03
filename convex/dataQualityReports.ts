@@ -124,7 +124,7 @@ export const getSummary = query({
  * Clean up old quality reports (internal, called by cron)
  * Deletes reports older than 90 days
  */
-export const cleanupOld: FunctionReference<'mutation', 'internal', any, { deletedCount: number }> = internalMutation({
+export const cleanupOld = internalMutation({
   handler: async (ctx): Promise<{ deletedCount: number }> => {
     const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
 
@@ -143,4 +143,4 @@ export const cleanupOld: FunctionReference<'mutation', 'internal', any, { delete
 
     return { deletedCount };
   },
-});
+}) as unknown as FunctionReference<'mutation', 'internal', any, { deletedCount: number }>;

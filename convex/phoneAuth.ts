@@ -343,7 +343,7 @@ export const updatePushToken = mutation({
 /**
  * 清理过期的 OTP 记录 (由 cron 调用)
  */
-export const cleanupExpiredOtps: FunctionReference<'mutation', 'internal', any, { cleanedOtps: number }> = internalMutation({
+export const cleanupExpiredOtps = internalMutation({
   handler: async (ctx): Promise<{ cleanedOtps: number }> => {
     const now = Date.now();
 
@@ -361,12 +361,12 @@ export const cleanupExpiredOtps: FunctionReference<'mutation', 'internal', any, 
       cleanedOtps: expiredOtps.length,
     };
   },
-});
+}) as unknown as FunctionReference<'mutation', 'internal', any, { cleanedOtps: number }>;
 
 /**
  * 清理过期的速率限制记录 (由 cron 调用)
  */
-export const cleanupExpiredRateLimits: FunctionReference<'mutation', 'internal', any, { cleaned: number }> = internalMutation({
+export const cleanupExpiredRateLimits = internalMutation({
   handler: async (ctx): Promise<{ cleaned: number }> => {
     const now = Date.now();
 
@@ -383,4 +383,4 @@ export const cleanupExpiredRateLimits: FunctionReference<'mutation', 'internal',
       cleaned: expiredRateLimits.length,
     };
   },
-});
+}) as unknown as FunctionReference<'mutation', 'internal', any, { cleaned: number }>;
