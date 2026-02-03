@@ -5,6 +5,7 @@
  * 使用 Kernel.sh 云浏览器爬取单篇游记详情
  */
 
+import type { Page } from 'playwright';
 import type { KernelBrowserSession } from '../lib/kernel-browser.js';
 import { z } from 'zod';
 import {
@@ -55,7 +56,7 @@ interface HandlerContext {
  * 从页面提取游记详情
  */
 async function extractGuideDetail(
-  page: KernelBrowserSession['page'],
+  page: Page,
 ): Promise<GuideData> {
   return page.evaluate(() => {
     // 提取标题
@@ -143,19 +144,20 @@ export async function handler(
     try {
       logger.info('Crawling guide detail', { url, attempt });
 
-      // 创建浏览器会话
+      // 创建浏览器会话（使用非 headless + 移动设备模拟绕过 WAF）
       session = await createKernelBrowser({
         stealth: true,
-        headless: true,
+        headless: false,
+        mobile: true,
       });
 
       // 转换为移动版 URL
       const mobileUrl = url.replace('www.mafengwo.cn', 'm.mafengwo.cn');
 
-      // 访问页面
+      // 访问页面（使用 domcontentloaded 代替 networkidle 避免超时）
       await session.page.goto(mobileUrl, {
-        waitUntil: 'networkidle',
-        timeoutMs: 30000,
+        waitUntil: 'domcontentloaded',
+        timeout: 30000,
       });
 
       // 等待内容加载

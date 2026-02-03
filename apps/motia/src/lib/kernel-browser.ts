@@ -1,10 +1,21 @@
 /**
  * Kernel.sh 云浏览器工具模块
  * 提供 Stealth 模式浏览器的创建和管理
+ * 使用原生 Playwright 以支持移动设备模拟绕过 WAF
  */
 
-import { Stagehand } from '@browserbasehq/stagehand';
+import type { Browser, BrowserContext, Page } from 'playwright';
 import Kernel from '@onkernel/sdk';
+import { chromium } from 'playwright';
+
+// iPhone 设备配置 - 用于绕过 WAF
+const IPHONE_DEVICE = {
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+  viewport: { width: 390, height: 844 },
+  deviceScaleFactor: 3,
+  isMobile: true,
+  hasTouch: true,
+};
 
 export interface KernelBrowserSession {
   kernel: InstanceType<typeof Kernel>;
@@ -13,13 +24,15 @@ export interface KernelBrowserSession {
     cdp_ws_url: string;
     browser_live_view_url?: string;
   };
-  stagehand: Stagehand;
-  page: Awaited<ReturnType<Stagehand['context']['pages']>>[0];
+  playwrightBrowser: Browser;
+  context: BrowserContext;
+  page: Page;
 }
 
 export interface CreateBrowserOptions {
   stealth?: boolean;
   headless?: boolean;
+  mobile?: boolean;
 }
 
 /**
@@ -28,7 +41,8 @@ export interface CreateBrowserOptions {
 export async function createKernelBrowser(
   options: CreateBrowserOptions = {},
 ): Promise<KernelBrowserSession> {
-  const { stealth = true, headless = false } = options;
+  // 默认使用非 headless 模式和移动设备模拟来绕过 WAF
+  const { stealth = true, headless = false, mobile = true } = options;
 
   // 检查环境变量
   if (!process.env.KERNEL_API_KEY) {
@@ -43,23 +57,33 @@ export async function createKernelBrowser(
     headless,
   });
 
-  // 连接 Stagehand
-  const stagehand = new Stagehand({
-    env: 'LOCAL',
-    localBrowserLaunchOptions: {
-      cdpUrl: browser.cdp_ws_url,
-    },
-    verbose: 0,
-    domSettleTimeout: 30000,
-  });
+  // 使用 Playwright 直接连接
+  const playwrightBrowser = await chromium.connectOverCDP(browser.cdp_ws_url);
 
-  await stagehand.init();
-  const page = stagehand.context.pages()[0];
+  // 创建上下文，可选移动设备模拟
+  const contextOptions = mobile
+    ? {
+        ...IPHONE_DEVICE,
+        locale: 'zh-CN',
+        extraHTTPHeaders: {
+          'Accept-Language': 'zh-CN,zh;q=0.9',
+        },
+      }
+    : {
+        locale: 'zh-CN',
+        extraHTTPHeaders: {
+          'Accept-Language': 'zh-CN,zh;q=0.9',
+        },
+      };
+
+  const context = await playwrightBrowser.newContext(contextOptions);
+  const page = await context.newPage();
 
   return {
     kernel,
     browser,
-    stagehand,
+    playwrightBrowser,
+    context,
     page,
   };
 }
@@ -71,7 +95,7 @@ export async function closeKernelBrowser(
   session: KernelBrowserSession,
 ): Promise<void> {
   try {
-    await session.stagehand.close();
+    await session.playwrightBrowser.close();
   }
   catch {
     // ignore close errors
@@ -89,7 +113,7 @@ export async function closeKernelBrowser(
  * 在页面上滚动加载更多内容
  */
 export async function scrollToLoadMore(
-  page: KernelBrowserSession['page'],
+  page: Page,
   scrollCount: number = 5,
   delayMs: number = 2000,
 ): Promise<void> {
@@ -105,7 +129,7 @@ export async function scrollToLoadMore(
  * 提取页面上的游记链接
  */
 export async function extractGuideUrls(
-  page: KernelBrowserSession['page'],
+  page: Page,
 ): Promise<string[]> {
   const urls = await page.evaluate(() => {
     const links = new Set<string>();
