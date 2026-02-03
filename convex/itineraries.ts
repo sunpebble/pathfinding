@@ -84,6 +84,9 @@ export const listByUser = query({
     pageSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const isMe = identity && identity.subject === args.userId;
+
     const page = args.page ?? 1;
     const pageSize = args.pageSize ?? 10;
     const offset = (page - 1) * pageSize;
@@ -94,8 +97,13 @@ export const listByUser = query({
       .order('desc')
       .collect();
 
-    const total = itineraries.length;
-    const data = itineraries.slice(offset, offset + pageSize);
+    // 🛡️ Security Fix: Filter out private/team itineraries if not the owner
+    const filteredItineraries = isMe
+      ? itineraries
+      : itineraries.filter(i => i.visibility === 'public');
+
+    const total = filteredItineraries.length;
+    const data = filteredItineraries.slice(offset, offset + pageSize);
 
     // Enrich with city data
     const enriched = await Promise.all(
@@ -164,6 +172,28 @@ export const getById = query({
     const itinerary = await ctx.db.get(args.id);
     if (!itinerary)
       return null;
+
+    // 🛡️ Security Fix: Check access permissions
+    if (itinerary.visibility !== 'public') {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
+        return null;
+      }
+      const userId = identity.subject;
+      if (itinerary.userId !== userId) {
+        // Check collaborator status
+        const collab = await ctx.db
+          .query('itineraryCollaborators')
+          .withIndex('by_itinerary_user', q =>
+            q.eq('itineraryId', args.id).eq('userId', userId))
+          .first();
+
+        // If not owner and not collaborator, deny access
+        if (!collab) {
+          return null;
+        }
+      }
+    }
 
     const city = await ctx.db.get(itinerary.cityId);
 
@@ -247,7 +277,7 @@ export const getById = query({
 // Create a new itinerary with auto-generated days
 export const create = mutation({
   args: {
-    userId: v.string(),
+    userId: v.string(), // Kept for backward compatibility, but ignored for auth
     title: v.string(),
     cityId: v.id('cities'),
     startDate: v.string(),
@@ -256,9 +286,16 @@ export const create = mutation({
     coverImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // 🛡️ Security Fix: Use authenticated user ID
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+    const userId = identity.subject;
+
     // Create itinerary
     const itineraryId = await ctx.db.insert('itineraries', {
-      userId: args.userId,
+      userId, // Use verified userId
       title: args.title,
       cityId: args.cityId,
       startDate: args.startDate,
@@ -285,7 +322,7 @@ export const create = mutation({
 export const update = mutation({
   args: {
     id: v.id('itineraries'),
-    userId: v.string(),
+    userId: v.string(), // Kept for backward compatibility, but ignored for auth
     title: v.optional(v.string()),
     cityId: v.optional(v.id('cities')),
     startDate: v.optional(v.string()),
@@ -294,10 +331,17 @@ export const update = mutation({
     coverImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Check edit permission
-    await checkEditPermission(ctx, args.id, args.userId);
+    // 🛡️ Security Fix: Use authenticated user ID
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+    const userId = identity.subject;
 
-    const { id, userId, ...updates } = args;
+    // Check edit permission using verified userId
+    await checkEditPermission(ctx, args.id, userId);
+
+    const { id, userId: _, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );
@@ -310,11 +354,18 @@ export const update = mutation({
 export const remove = mutation({
   args: {
     id: v.id('itineraries'),
-    userId: v.string(),
+    userId: v.string(), // Kept for backward compatibility, but ignored for auth
   },
   handler: async (ctx, args) => {
+    // 🛡️ Security Fix: Use authenticated user ID
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+    const userId = identity.subject;
+
     // Check owner permission (only owner can delete)
-    await checkOwnerPermission(ctx, args.id, args.userId);
+    await checkOwnerPermission(ctx, args.id, userId);
 
     // Get all days
     const days = await ctx.db
@@ -352,16 +403,25 @@ export const remove = mutation({
 export const copy = mutation({
   args: {
     itineraryId: v.id('itineraries'),
-    userId: v.string(),
+    userId: v.string(), // Kept for backward compatibility
     newStartDate: v.string(),
   },
   handler: async (ctx, args) => {
+    // 🛡️ Security Fix: Use authenticated user ID
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+    const userId = identity.subject;
+
     const original = await ctx.db.get(args.itineraryId);
     if (!original) {
       throw new ConvexError('Itinerary not found');
     }
 
-    if (original.userId !== args.userId && original.visibility !== 'public') {
+    // Check access to original (User must be owner OR it must be public)
+    // NOTE: This logic mimics original code but uses verified userId
+    if (original.userId !== userId && original.visibility !== 'public') {
       throw new ConvexError('You do not have access to copy this itinerary');
     }
 
@@ -379,7 +439,7 @@ export const copy = mutation({
 
     // Create new itinerary
     const newItineraryId = await ctx.db.insert('itineraries', {
-      userId: args.userId,
+      userId, // Use verified userId
       title: original.title,
       cityId: original.cityId,
       startDate: args.newStartDate,
@@ -430,7 +490,7 @@ export const copy = mutation({
     await ctx.db.insert('itineraryCopyHistory', {
       originalItineraryId: args.itineraryId,
       copiedItineraryId: newItineraryId,
-      userId: args.userId,
+      userId, // Use verified userId
       copyType: 'full',
       originalStartDate: original.startDate,
       newStartDate: args.newStartDate,
@@ -446,18 +506,25 @@ export const copy = mutation({
 export const copyPartial = mutation({
   args: {
     itineraryId: v.id('itineraries'),
-    userId: v.string(),
+    userId: v.string(), // Kept for backward compatibility
     newStartDate: v.string(),
     selectedDays: v.array(v.number()),
     newTitle: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // 🛡️ Security Fix: Use authenticated user ID
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+    const userId = identity.subject;
+
     const original = await ctx.db.get(args.itineraryId);
     if (!original) {
       throw new ConvexError('Itinerary not found');
     }
 
-    if (original.userId !== args.userId && original.visibility !== 'public') {
+    if (original.userId !== userId && original.visibility !== 'public') {
       throw new ConvexError('You do not have access to copy this itinerary');
     }
 
@@ -481,7 +548,7 @@ export const copyPartial = mutation({
 
     // Create new itinerary
     const newItineraryId = await ctx.db.insert('itineraries', {
-      userId: args.userId,
+      userId, // Use verified userId
       title: args.newTitle || original.title,
       cityId: original.cityId,
       startDate: args.newStartDate,
@@ -536,7 +603,7 @@ export const copyPartial = mutation({
     await ctx.db.insert('itineraryCopyHistory', {
       originalItineraryId: args.itineraryId,
       copiedItineraryId: newItineraryId,
-      userId: args.userId,
+      userId, // Use verified userId
       copyType: 'partial',
       selectedDays: sortedDays,
       originalStartDate: original.startDate,
@@ -557,6 +624,12 @@ export const getCopyHistory = query({
     pageSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // 🛡️ Security Fix: Only allow viewing own copy history
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== args.userId) {
+      throw new ConvexError('Unauthorized');
+    }
+
     const page = args.page ?? 1;
     const pageSize = args.pageSize ?? 10;
     const offset = (page - 1) * pageSize;
