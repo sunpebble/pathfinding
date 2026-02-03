@@ -1,0 +1,15 @@
+{
+  "name": "@pathfinding/motia",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "motia dev",
+    "start": "motia start",
+    "generate-types": "motia generate-types"
+  },
+  "dependencies": {
+    "motia": "^0.17.14-beta.196",
+    "zod": "^3.24.2"
+  }
+}
