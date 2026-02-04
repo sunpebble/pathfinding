@@ -285,21 +285,23 @@ export default function GuideDetailPage() {
       {/* Content */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Content</h2>
-        {guide.content_html ? (
-          // Render rich text HTML content
-          <div
-            className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
-            // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
-            dangerouslySetInnerHTML={{ __html: guide.content_html }}
-          />
-        ) : (
-          // Fallback to plain text
-          <div className="prose prose-gray max-w-none">
-            <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-              {guide.content || 'No content available'}
-            </p>
-          </div>
-        )}
+        {guide.content_html
+          ? (
+              // Render rich text HTML content
+              <div
+                className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
+                // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
+                dangerouslySetInnerHTML={{ __html: guide.content_html }}
+              />
+            )
+          : (
+              // Fallback to plain text
+              <div className="prose prose-gray max-w-none">
+                <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                  {guide.content || 'No content available'}
+                </p>
+              </div>
+            )}
       </div>
 
       {/* Images */}
