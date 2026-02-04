@@ -208,6 +208,24 @@ export const count = query({
   },
 });
 
+// Get a guide by platform and external ID
+export const getByPlatformAndExternalId = query({
+  args: {
+    sourcePlatform: platformValidator,
+    sourceExternalId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const guide = await ctx.db
+      .query('travelGuides')
+      .withIndex('by_platform_external', q =>
+        q.eq('sourcePlatform', args.sourcePlatform).eq('sourceExternalId', args.sourceExternalId))
+      .first();
+    if (!guide)
+      return null;
+    return ensureDisplayFields(guide);
+  },
+});
+
 // Get a guide by ID (with display fields guaranteed)
 export const getById = query({
   args: { id: v.id('travelGuides') },
