@@ -350,14 +350,12 @@ export const followUser = mutation({
     // Update follower/following counts on profiles
     const followerProfile = await ctx.db
       .query('profiles')
-      .withIndex('by_email')
-      .filter(q => q.eq(q.field('email'), args.followerId))
+      .withIndex('by_email', q => q.eq('email', args.followerId))
       .first();
 
     const followingProfile = await ctx.db
       .query('profiles')
-      .withIndex('by_email')
-      .filter(q => q.eq(q.field('email'), args.followingId))
+      .withIndex('by_email', q => q.eq('email', args.followingId))
       .first();
 
     if (followerProfile) {
@@ -427,14 +425,12 @@ export const unfollowUser = mutation({
     // Update follower/following counts on profiles
     const followerProfile = await ctx.db
       .query('profiles')
-      .withIndex('by_email')
-      .filter(q => q.eq(q.field('email'), args.followerId))
+      .withIndex('by_email', q => q.eq('email', args.followerId))
       .first();
 
     const followingProfile = await ctx.db
       .query('profiles')
-      .withIndex('by_email')
-      .filter(q => q.eq(q.field('email'), args.followingId))
+      .withIndex('by_email', q => q.eq('email', args.followingId))
       .first();
 
     if (followerProfile && (followerProfile.followingCount || 0) > 0) {
@@ -500,7 +496,7 @@ export const getFollowers = query({
       data.map(async (follow) => {
         const profile = await ctx.db
           .query('profiles')
-          .filter(q => q.eq(q.field('email'), follow.followerId))
+          .withIndex('by_email', q => q.eq('email', follow.followerId))
           .first();
 
         return {
@@ -552,7 +548,7 @@ export const getFollowing = query({
       data.map(async (follow) => {
         const profile = await ctx.db
           .query('profiles')
-          .filter(q => q.eq(q.field('email'), follow.followingId))
+          .withIndex('by_email', q => q.eq('email', follow.followingId))
           .first();
 
         return {
