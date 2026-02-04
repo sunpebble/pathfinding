@@ -119,7 +119,6 @@ export default function JobsPage() {
           </h2>
         </div>
         <div className="p-6">
-          {/* eslint-disable-next-line style/multiline-ternary */}
           {isLoadingScheduler
             ? (
                 <div className="flex items-center justify-center py-8">
@@ -293,7 +292,6 @@ export default function JobsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {/* eslint-disable-next-line style/multiline-ternary */}
             {isLoading
               ? (
                   <tr>
