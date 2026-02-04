@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Loader2,
   MapPin,
   Plus,
   Save,
@@ -87,7 +88,7 @@ function ItemEditor({
   isSaving,
 }: {
   item: Item;
-  onUpdate: (updates: Partial<Item>) => void;
+  onUpdate: (updates: Partial<Item>) => Promise<void> | void;
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -113,8 +114,8 @@ function ItemEditor({
     );
   }
 
-  const handleSaveChanges = () => {
-    onUpdate({
+  const handleSaveChanges = async () => {
+    await onUpdate({
       startTime: localStartTime || undefined,
       endTime: localEndTime || undefined,
       notes: localNotes || undefined,
@@ -168,7 +169,7 @@ function ItemEditor({
             onClick={onRemove}
             disabled={isSaving}
             className="p-1 text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
-            aria-label="Remove"
+            aria-label={`Remove ${poi.name}`}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -259,14 +260,26 @@ function ItemEditor({
             <button
               onClick={handleSaveChanges}
               disabled={isSaving}
+              aria-busy={isSaving}
               className={cn(
                 'px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium transition-all',
                 'hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed',
                 'flex items-center gap-2',
               )}
             >
-              <Save className="h-4 w-4" />
-              Save Changes
+              {isSaving
+                ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  )
+                : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
             </button>
           </div>
         </div>
