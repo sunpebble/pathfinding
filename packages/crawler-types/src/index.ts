@@ -10,6 +10,9 @@ export * from './converters.js';
 
 // Bronze Layer
 export * from './crawl-job.js';
+// Mafengwo Types
+export * from './mafengwo.js';
+
 // Silver Layer
 export * from './normalized-poi.js';
 

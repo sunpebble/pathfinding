@@ -6378,4 +6378,333 @@ export default defineSchema({
     .index('by_thread_ns', ['threadId', 'checkpointNs'])
     .index('by_thread_ns_id', ['threadId', 'checkpointNs', 'checkpointId'])
     .index('by_created', ['createdAt']),
+
+  // ============================================
+  // Mafengwo Destinations (马蜂窝目的地)
+  // ============================================
+  mafengwoDestinations: defineTable({
+    // External identifiers
+    mddId: v.string(), // 马蜂窝目的地 ID
+    sourceUrl: v.string(),
+    // Basic info
+    name: v.string(),
+    nameEn: v.optional(v.string()),
+    country: v.optional(v.string()),
+    province: v.optional(v.string()),
+    description: v.optional(v.string()),
+    // Images
+    coverImageUrl: v.optional(v.string()),
+    imageUrls: v.array(v.string()),
+    // Location
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    timezone: v.optional(v.string()),
+    // Travel info
+    bestTravelTime: v.optional(v.string()),
+    avgStayDays: v.optional(v.string()),
+    climate: v.optional(v.string()),
+    language: v.optional(v.string()),
+    currency: v.optional(v.string()),
+    visa: v.optional(v.string()),
+    // Statistics
+    travelNotesCount: v.number(),
+    poisCount: v.number(),
+    questionsCount: v.number(),
+    guidesCount: v.optional(v.number()),
+    // Metadata
+    crawledAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_mdd_id', ['mddId'])
+    .index('by_name', ['name'])
+    .index('by_country', ['country']),
+
+  // ============================================
+  // Mafengwo POIs (马蜂窝景点/餐厅/酒店)
+  // ============================================
+  mafengwoPois: defineTable({
+    // External identifiers
+    poiId: v.string(), // 马蜂窝 POI ID
+    sourceUrl: v.string(),
+    // Basic info
+    name: v.string(),
+    nameEn: v.optional(v.string()),
+    category: v.union(
+      v.literal('attraction'),
+      v.literal('restaurant'),
+      v.literal('hotel'),
+      v.literal('shopping'),
+      v.literal('entertainment'),
+      v.literal('transport'),
+    ),
+    // Destination reference
+    destinationId: v.optional(v.string()),
+    destinationName: v.optional(v.string()),
+    // Location
+    address: v.optional(v.string()),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    // Rating
+    rating: v.optional(v.number()),
+    ratingCount: v.number(),
+    // Price
+    priceLevel: v.optional(v.number()),
+    priceRange: v.optional(v.string()),
+    ticketPrice: v.optional(v.string()),
+    // Operating info
+    openingHours: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    website: v.optional(v.string()),
+    // Content
+    description: v.optional(v.string()),
+    tips: v.array(v.string()),
+    highlights: v.array(v.string()),
+    // Images
+    coverImageUrl: v.optional(v.string()),
+    imageUrls: v.array(v.string()),
+    // Statistics
+    reviewsCount: v.number(),
+    savesCount: v.number(),
+    // Tags
+    tags: v.array(v.string()),
+    // Restaurant specific
+    cuisineType: v.optional(v.string()),
+    signatureDishes: v.array(v.string()),
+    // Hotel specific
+    starRating: v.optional(v.number()),
+    amenities: v.array(v.string()),
+    checkInTime: v.optional(v.string()),
+    checkOutTime: v.optional(v.string()),
+    // Quality
+    qualityScore: v.number(),
+    // Metadata
+    crawledAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_poi_id', ['poiId'])
+    .index('by_name', ['name'])
+    .index('by_category', ['category'])
+    .index('by_destination', ['destinationId'])
+    .index('by_destination_category', ['destinationId', 'category'])
+    .index('by_rating', ['rating']),
+
+  // ============================================
+  // Mafengwo Guides (马蜂窝攻略)
+  // ============================================
+  mafengwoGuides: defineTable({
+    // External identifiers
+    guideId: v.string(),
+    sourceUrl: v.string(),
+    // Basic info
+    title: v.string(),
+    // Destination reference
+    destinationId: v.optional(v.string()),
+    destinationName: v.optional(v.string()),
+    // Author
+    authorName: v.optional(v.string()),
+    authorId: v.optional(v.string()),
+    // Content
+    summary: v.optional(v.string()),
+    content: v.string(),
+    contentHtml: v.optional(v.string()),
+    sections: v.array(
+      v.object({
+        title: v.string(),
+        content: v.string(),
+        order: v.number(),
+      }),
+    ),
+    // Images
+    coverImageUrl: v.optional(v.string()),
+    imageUrls: v.array(v.string()),
+    // Statistics
+    viewsCount: v.number(),
+    likesCount: v.number(),
+    savesCount: v.number(),
+    commentsCount: v.number(),
+    // Tags
+    tags: v.array(v.string()),
+    // Dates
+    publishedAt: v.optional(v.number()),
+    // Quality
+    qualityScore: v.number(),
+    // Metadata
+    crawledAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_guide_id', ['guideId'])
+    .index('by_destination', ['destinationId'])
+    .index('by_quality', ['qualityScore'])
+    .index('by_views', ['viewsCount']),
+
+  // ============================================
+  // Mafengwo Q&A (马蜂窝问答)
+  // ============================================
+  mafengwoQa: defineTable({
+    // External identifiers
+    questionId: v.string(),
+    sourceUrl: v.string(),
+    // Question
+    title: v.string(),
+    content: v.string(),
+    // Destination reference
+    destinationId: v.optional(v.string()),
+    destinationName: v.optional(v.string()),
+    // Author
+    authorName: v.optional(v.string()),
+    authorId: v.optional(v.string()),
+    // Statistics
+    answersCount: v.number(),
+    viewsCount: v.number(),
+    // Tags
+    tags: v.array(v.string()),
+    // Best answer
+    bestAnswer: v.optional(
+      v.object({
+        content: v.string(),
+        authorName: v.optional(v.string()),
+        authorId: v.optional(v.string()),
+        likesCount: v.number(),
+        createdAt: v.optional(v.number()),
+      }),
+    ),
+    // Dates
+    createdAt: v.optional(v.number()),
+    // Metadata
+    crawledAt: v.number(),
+  })
+    .index('by_question_id', ['questionId'])
+    .index('by_destination', ['destinationId'])
+    .index('by_answers', ['answersCount']),
+
+  // ============================================
+  // Mafengwo Reviews (马蜂窝评论)
+  // ============================================
+  mafengwoReviews: defineTable({
+    // External identifiers
+    reviewId: v.string(),
+    // POI reference
+    poiExternalId: v.string(),
+    poiName: v.optional(v.string()),
+    // Author
+    authorName: v.optional(v.string()),
+    authorId: v.optional(v.string()),
+    authorAvatarUrl: v.optional(v.string()),
+    // Content
+    rating: v.optional(v.number()),
+    content: v.string(),
+    imageUrls: v.array(v.string()),
+    // Statistics
+    likesCount: v.number(),
+    // Tags
+    tags: v.array(v.string()),
+    // Dates
+    visitDate: v.optional(v.string()),
+    createdAt: v.optional(v.number()),
+    // Metadata
+    crawledAt: v.number(),
+  })
+    .index('by_review_id', ['reviewId'])
+    .index('by_poi', ['poiExternalId'])
+    .index('by_rating', ['rating']),
+
+  // ============================================
+  // Mafengwo Rankings (马蜂窝榜单)
+  // ============================================
+  mafengwoRankings: defineTable({
+    // External identifiers
+    rankingId: v.string(),
+    sourceUrl: v.string(),
+    // Type
+    rankingType: v.union(
+      v.literal('must_visit'),
+      v.literal('food'),
+      v.literal('hotel'),
+      v.literal('shopping'),
+      v.literal('hidden_gem'),
+    ),
+    title: v.string(),
+    // Destination reference
+    destinationId: v.optional(v.string()),
+    destinationName: v.optional(v.string()),
+    description: v.optional(v.string()),
+    // Items
+    items: v.array(
+      v.object({
+        rank: v.number(),
+        poiExternalId: v.string(),
+        name: v.string(),
+        category: v.optional(v.string()),
+        rating: v.optional(v.number()),
+        reviewsCount: v.number(),
+        coverImageUrl: v.optional(v.string()),
+        reason: v.optional(v.string()),
+      }),
+    ),
+    // Metadata
+    crawledAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_ranking_id', ['rankingId'])
+    .index('by_destination', ['destinationId'])
+    .index('by_type', ['rankingType'])
+    .index('by_destination_type', ['destinationId', 'rankingType']),
+
+  // ============================================
+  // Mafengwo Crawl Tasks (马蜂窝爬取任务)
+  // ============================================
+  mafengwoCrawlTasks: defineTable({
+    // Task type
+    taskType: v.union(
+      v.literal('destination_list'),
+      v.literal('destination_detail'),
+      v.literal('poi_list'),
+      v.literal('poi_detail'),
+      v.literal('guide_list'),
+      v.literal('guide_detail'),
+      v.literal('travel_note_list'),
+      v.literal('travel_note_detail'),
+      v.literal('qa_list'),
+      v.literal('qa_detail'),
+      v.literal('ranking'),
+      v.literal('review_list'),
+    ),
+    // Task config
+    config: v.object({
+      destinationId: v.optional(v.string()),
+      destinationName: v.optional(v.string()),
+      poiCategory: v.optional(v.string()),
+      rankingType: v.optional(v.string()),
+      targetUrl: v.optional(v.string()),
+      page: v.optional(v.number()),
+      pageSize: v.optional(v.number()),
+      scrollCount: v.optional(v.number()),
+      useAI: v.optional(v.boolean()),
+    }),
+    // Status
+    status: v.union(
+      v.literal('pending'),
+      v.literal('running'),
+      v.literal('completed'),
+      v.literal('failed'),
+      v.literal('cancelled'),
+    ),
+    priority: v.number(),
+    // Results
+    itemsCollected: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+    // Retry
+    retryCount: v.number(),
+    maxRetries: v.number(),
+    nextRetryAt: v.optional(v.number()),
+    // Timestamps
+    createdAt: v.number(),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_status', ['status'])
+    .index('by_type', ['taskType'])
+    .index('by_priority', ['priority'])
+    .index('by_status_priority', ['status', 'priority'])
+    .index('by_next_retry', ['status', 'nextRetryAt']),
 });

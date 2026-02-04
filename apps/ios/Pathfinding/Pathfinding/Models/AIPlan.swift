@@ -21,7 +21,7 @@ struct AIPlanStartResponse: Codable {
     let success: Bool
     let sessionId: String
     let response: String
-    let plan: AIPlanDraft?
+    var plan: AIPlanDraft?
     let waitingForFeedback: Bool
 }
 
@@ -30,7 +30,7 @@ struct AIPlanFeedbackResponse: Codable {
     let success: Bool
     let sessionId: String
     let response: String
-    let plan: AIPlanDraft?
+    var plan: AIPlanDraft?
     let completed: Bool
 }
 
@@ -50,7 +50,7 @@ struct AIPlanStatusResponse: Codable {
 struct AIPlanResultResponse: Codable {
     let success: Bool
     let sessionId: String
-    let plan: AIPlanDraft
+    var plan: AIPlanDraft
     let completed: Bool
 }
 

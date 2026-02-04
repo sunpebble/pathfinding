@@ -10,7 +10,7 @@ struct AIPlannerSheet: View {
     @State private var startDate = Date()
     @State private var endDate = Date().addingTimeInterval(3 * 24 * 60 * 60)
     @State private var travelersCount = 2
-    @State private var travelStyle: TravelStyle = .moderate
+    @State private var travelStyle: PlannerTravelStyle = .moderate
     @State private var budgetRange: BudgetRange = .moderate
     @State private var selectedPreferences: Set<TravelPreference> = []
 
@@ -139,7 +139,7 @@ struct AIPlannerSheet: View {
                     .font(.headline)
 
                 Picker("Travel Style", selection: $travelStyle) {
-                    ForEach(TravelStyle.allCases, id: \.self) { style in
+                    ForEach(PlannerTravelStyle.allCases, id: \.self) { style in
                         Text(style.displayName).tag(style)
                     }
                 }
@@ -506,7 +506,7 @@ struct AIPlannerSheet: View {
         startDate: Date,
         endDate: Date,
         travelersCount: Int,
-        travelStyle: TravelStyle,
+        travelStyle: PlannerTravelStyle,
         budgetRange: BudgetRange,
         preferences: [String]
     ) -> String {
@@ -538,7 +538,7 @@ enum PlanningState {
     case error
 }
 
-enum TravelStyle: String, CaseIterable {
+enum PlannerTravelStyle: String, CaseIterable {
     case relaxed = "relaxed"
     case moderate = "moderate"
     case intensive = "intensive"
@@ -613,51 +613,6 @@ struct PreferenceChip: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Flow Layout
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(in: proposal.replacingUnspecifiedDimensions().width, subviews: subviews, spacing: spacing)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x, y: bounds.minY + result.positions[index].y), proposal: .unspecified)
-        }
-    }
-
-    struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-
-        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var lineHeight: CGFloat = 0
-
-            for subview in subviews {
-                let size = subview.sizeThatFits(.unspecified)
-
-                if x + size.width > maxWidth && x > 0 {
-                    x = 0
-                    y += lineHeight + spacing
-                    lineHeight = 0
-                }
-
-                positions.append(CGPoint(x: x, y: y))
-                lineHeight = max(lineHeight, size.height)
-                x += size.width + spacing
-            }
-
-            self.size = CGSize(width: maxWidth, height: y + lineHeight)
-        }
     }
 }
 
