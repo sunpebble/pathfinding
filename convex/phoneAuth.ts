@@ -345,6 +345,7 @@ export const updatePushToken = mutation({
  */
 export const cleanupExpiredOtps: RegisteredMutation<
   'internal',
+  // eslint-disable-next-line ts/no-explicit-any
   any,
   Promise<{ cleanedOtps: number }>
 > = internalMutation({
@@ -372,6 +373,7 @@ export const cleanupExpiredOtps: RegisteredMutation<
  */
 export const cleanupExpiredRateLimits: RegisteredMutation<
   'internal',
+  // eslint-disable-next-line ts/no-explicit-any
   any,
   Promise<{ cleaned: number }>
 > = internalMutation({

@@ -126,6 +126,7 @@ export const getSummary = query({
  */
 export const cleanupOld: RegisteredMutation<
   'internal',
+  // eslint-disable-next-line ts/no-explicit-any
   any,
   Promise<{ deletedCount: number }>
 > = internalMutation({
