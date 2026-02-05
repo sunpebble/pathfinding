@@ -84,6 +84,142 @@ export default function JobsPage() {
     refetchScheduler();
   }, [refetch, refetchScheduler]);
 
+  // eslint-disable-next-line ts/no-explicit-any
+  const renderTaskAction = (task: any) => {
+    if (task.enabled) {
+      return (
+        <button
+          onClick={() => stopTaskMutation.mutate(task.name)}
+          disabled={stopTaskMutation.isPending}
+          className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
+          title="Stop task"
+        >
+          <StopCircle className="h-4 w-4" />
+          Stop
+        </button>
+      );
+    }
+    return (
+      <button
+        onClick={() => startTaskMutation.mutate(task.name)}
+        disabled={startTaskMutation.isPending}
+        className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
+        title="Start task"
+      >
+        <Play className="h-4 w-4" />
+        Start
+      </button>
+    );
+  };
+
+  const renderScheduledTasks = () => {
+    if (schedulerStatus.tasks.length === 0) {
+      return (
+        <p className="text-sm text-gray-500">
+          No scheduled tasks configured
+        </p>
+      );
+    }
+    return (
+      <div className="space-y-2">
+        {/* eslint-disable-next-line ts/no-explicit-any */}
+        {schedulerStatus.tasks.map((task: any) => {
+          const statusClass = task.enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-600';
+          return (
+            <div
+              key={task.name}
+              className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-900">
+                    {task.name}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusClass}`}
+                  >
+                    {task.enabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    {task.cronExpression}
+                  </span>
+                  {task.lastRun && (
+                    <span>
+                      Last run:
+                      {' '}
+                      {formatDateTime(task.lastRun)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 ml-4">
+                {renderTaskAction(task)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderSchedulerSection = () => {
+    if (isLoadingScheduler) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        </div>
+      );
+    }
+    if (!schedulerStatus) {
+      return (
+        <div className="text-center text-sm text-gray-500">
+          Failed to load scheduler status
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-6">
+        {/* Worker Status */}
+        <div>
+          <h3 className="mb-3 text-sm font-medium text-gray-700">
+            Worker Status
+          </h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="rounded-lg bg-blue-50 p-4">
+              <div className="text-2xl font-bold text-blue-600">
+                {schedulerStatus.workerStatus.running}
+              </div>
+              <div className="text-sm text-blue-600">Running</div>
+            </div>
+            <div className="rounded-lg bg-amber-50 p-4">
+              <div className="text-2xl font-bold text-amber-600">
+                {schedulerStatus.workerStatus.pending}
+              </div>
+              <div className="text-sm text-amber-600">Pending</div>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-4">
+              <div className="text-2xl font-bold text-gray-600">
+                {schedulerStatus.workerStatus.maxConcurrent}
+              </div>
+              <div className="text-sm text-gray-600">Max Concurrent</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Active Tasks */}
+        <div>
+          <h3 className="mb-3 text-sm font-medium text-gray-700">
+            Scheduled Tasks
+          </h3>
+          {renderScheduledTasks()}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -118,123 +254,7 @@ export default function JobsPage() {
           </h2>
         </div>
         <div className="p-6">
-          {isLoadingScheduler ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            </div>
-          ) : schedulerStatus ? (
-            <div className="space-y-6">
-              {/* Worker Status */}
-              <div>
-                <h3 className="mb-3 text-sm font-medium text-gray-700">
-                  Worker Status
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="rounded-lg bg-blue-50 p-4">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {schedulerStatus.workerStatus.running}
-                    </div>
-                    <div className="text-sm text-blue-600">Running</div>
-                  </div>
-                  <div className="rounded-lg bg-amber-50 p-4">
-                    <div className="text-2xl font-bold text-amber-600">
-                      {schedulerStatus.workerStatus.pending}
-                    </div>
-                    <div className="text-sm text-amber-600">Pending</div>
-                  </div>
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <div className="text-2xl font-bold text-gray-600">
-                      {schedulerStatus.workerStatus.maxConcurrent}
-                    </div>
-                    <div className="text-sm text-gray-600">Max Concurrent</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Active Tasks */}
-              <div>
-                <h3 className="mb-3 text-sm font-medium text-gray-700">
-                  Scheduled Tasks
-                </h3>
-                {schedulerStatus.tasks.length === 0
-                  ? (
-                      <p className="text-sm text-gray-500">
-                        No scheduled tasks configured
-                      </p>
-                    )
-                  : (
-                      <div className="space-y-2">
-                        {schedulerStatus.tasks.map(task => (
-                          <div
-                            key={task.name}
-                            className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-gray-900">
-                                  {task.name}
-                                </span>
-                                <span
-                                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                    task.enabled
-                                      ? 'bg-emerald-50 text-emerald-600'
-                                      : 'bg-gray-100 text-gray-600'
-                                  }`}
-                                >
-                                  {task.enabled ? 'Enabled' : 'Disabled'}
-                                </span>
-                              </div>
-                              <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  {task.cronExpression}
-                                </span>
-                                {task.lastRun && (
-                                  <span>
-                                    Last run:
-                                    {' '}
-                                    {formatDateTime(task.lastRun)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 ml-4">
-                              {task.enabled
-                                ? (
-                                    <button
-                                      onClick={() => stopTaskMutation.mutate(task.name)}
-                                      disabled={stopTaskMutation.isPending}
-                                      className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Stop task"
-                                    >
-                                      <StopCircle className="h-4 w-4" />
-                                      Stop
-                                    </button>
-                                  )
-                                : (
-                                    <button
-                                      onClick={() =>
-                                        startTaskMutation.mutate(task.name)}
-                                      disabled={startTaskMutation.isPending}
-                                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Start task"
-                                    >
-                                      <Play className="h-4 w-4" />
-                                      Start
-                                    </button>
-                                  )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center text-sm text-gray-500">
-              Failed to load scheduler status
-            </div>
-          )}
+          {renderSchedulerSection()}
         </div>
       </div>
 
@@ -288,13 +308,14 @@ export default function JobsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {isLoading ? (
+            {isLoading && (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center">
                   <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
                 </td>
               </tr>
-            ) : jobs.length === 0 ? (
+            )}
+            {!isLoading && jobs.length === 0 && (
               <tr>
                 <td
                   colSpan={7}
@@ -310,69 +331,68 @@ export default function JobsPage() {
                   </Link>
                 </td>
               </tr>
-            ) : (
-              jobs.map(job => (
-                <tr key={job.id} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
-                    {shortId(job.id)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{job.name}</div>
-                    <div className="text-sm text-gray-500">{job.job_type}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                      {job.platform}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <StatusBadge status={job.status} />
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {job.statistics?.records_extracted ?? 0}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {formatDateTime(job.created_at)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {job.status === 'pending' && (
-                        <button
-                          onClick={() => startMutation.mutate(job.id)}
-                          disabled={startMutation.isPending}
-                          className="rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:opacity-50"
-                          title="Start job"
-                        >
-                          <Play className="h-4 w-4" />
-                        </button>
-                      )}
-                      {job.status === 'running' && (
-                        <button
-                          onClick={() => {
-                            // eslint-disable-next-line no-alert
-                            if (confirm('Cancel this job?')) {
-                              cancelMutation.mutate(job.id);
-                            }
-                          }}
-                          disabled={cancelMutation.isPending}
-                          className="rounded-lg bg-red-500 p-2 text-white hover:bg-red-600 disabled:opacity-50"
-                          title="Cancel job"
-                        >
-                          <StopCircle className="h-4 w-4" />
-                        </button>
-                      )}
-                      <Link
-                        href={`/jobs/${job.id}`}
-                        className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
-                        title="View details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))
             )}
+            {!isLoading && jobs.length > 0 && jobs.map(job => (
+              <tr key={job.id} className="hover:bg-gray-50">
+                <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
+                  {shortId(job.id)}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="font-medium text-gray-900">{job.name}</div>
+                  <div className="text-sm text-gray-500">{job.job_type}</div>
+                </td>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                    {job.platform}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <StatusBadge status={job.status} />
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                  {job.statistics?.records_extracted ?? 0}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                  {formatDateTime(job.created_at)}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    {job.status === 'pending' && (
+                      <button
+                        onClick={() => startMutation.mutate(job.id)}
+                        disabled={startMutation.isPending}
+                        className="rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:opacity-50"
+                        title="Start job"
+                      >
+                        <Play className="h-4 w-4" />
+                      </button>
+                    )}
+                    {job.status === 'running' && (
+                      <button
+                        onClick={() => {
+                          // eslint-disable-next-line no-alert
+                          if (confirm('Cancel this job?')) {
+                            cancelMutation.mutate(job.id);
+                          }
+                        }}
+                        disabled={cancelMutation.isPending}
+                        className="rounded-lg bg-red-500 p-2 text-white hover:bg-red-600 disabled:opacity-50"
+                        title="Cancel job"
+                      >
+                        <StopCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                    <Link
+                      href={`/jobs/${job.id}`}
+                      className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
+                      title="View details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

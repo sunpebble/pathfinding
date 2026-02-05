@@ -12,9 +12,11 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `test-coverage-standards`: 定义测试覆盖率标准和 CI 集成规范
 
 ### Modified Capabilities
+
 （无需修改现有 spec 级别的行为）
 
 ## Impact
