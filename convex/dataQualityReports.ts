@@ -5,6 +5,7 @@
  * CRUD operations for data quality analysis reports
  */
 
+import type { RegisteredMutation } from 'convex/server';
 import { v } from 'convex/values';
 import {
   dataQualityIssueValidator,
@@ -123,7 +124,11 @@ export const getSummary = query({
  * Clean up old quality reports (internal, called by cron)
  * Deletes reports older than 90 days
  */
-export const cleanupOld = internalMutation({
+export const cleanupOld: RegisteredMutation<
+  'internal',
+  any,
+  Promise<{ deletedCount: number }>
+> = internalMutation({
   handler: async (ctx): Promise<{ deletedCount: number }> => {
     const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
 
