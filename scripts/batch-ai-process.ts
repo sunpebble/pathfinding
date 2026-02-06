@@ -79,6 +79,7 @@ interface AIResponse {
   aiDuration?: string;
   aiBudget?: string;
   aiDays?: DayPlan[];
+  contentMarkdown?: string;
 }
 
 // ============================================
@@ -130,6 +131,7 @@ const SYSTEM_PROMPT = `你是一个旅游行程分析专家。根据用户提供
 
 请用 JSON 格式返回以下信息：
 {
+  "contentMarkdown": "将原文内容重新格式化为 Markdown 格式的完整文章",
   "aiSummary": "简洁的游记摘要（100-200字）",
   "aiTips": ["实用旅行建议1", "实用旅行建议2", ...],
   "aiBestTime": "最佳旅行时间（如：3-5月、9-11月）",
@@ -155,6 +157,15 @@ const SYSTEM_PROMPT = `你是一个旅游行程分析专家。根据用户提供
     }
   ]
 }
+
+关于 contentMarkdown 字段的要求：
+1. 保留原文的所有内容，不要删减或编造
+2. 根据内容语义添加合适的段落分隔（空行）
+3. 识别并标记标题（用 ## 或 ###）
+4. 识别列表内容（用 - 或 1. 2. 3.）
+5. 重要信息或关键词可以用 **加粗** 标记
+6. 如果原文有明显的章节结构，用标题层级体现
+7. 保持原文语气和风格，只做格式化，不改写内容
 
 注意：
 1. 如果无法确定某个景点的经纬度，请使用 0.0
@@ -311,6 +322,7 @@ async function processGuide(
     // 保存结果
     await client.mutation(api.migrations.batchAiProcess.updateAiData, {
       guideId: guide._id,
+      contentMarkdown: aiResult.contentMarkdown,
       aiSummary: aiResult.aiSummary,
       aiTips: aiResult.aiTips,
       aiBestTime: aiResult.aiBestTime,

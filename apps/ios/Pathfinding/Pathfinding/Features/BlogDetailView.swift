@@ -20,6 +20,7 @@ struct BlogDetailView: View {
   @State private var mapCameraPosition: MapCameraPosition = .automatic
   @State private var mapCameraInitialized = false
   @State private var selectedMapPoi: AiPoi?
+  @State private var isArticleExpanded = true
 
   private var displayImages: [String] {
     if let images = guide.imageUrls, !images.isEmpty {
@@ -156,6 +157,9 @@ struct BlogDetailView: View {
           if let summary = guide.aiSummary {
             aiSummarySection(summary)
           }
+
+          // Article Content (Rich Text or Plain Text)
+          articleContentSection
 
           // Itinerary Days
           if let days = guide.aiDays, !days.isEmpty {
@@ -559,6 +563,37 @@ struct BlogDetailView: View {
         .fill(DesignTokens.Colors.aiPurple.opacity(0.08))
     )
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+  }
+
+  // MARK: - Article Content Section
+
+  @ViewBuilder
+  private var articleContentSection: some View {
+    if let contentMarkdown = guide.contentMarkdown, !contentMarkdown.isEmpty {
+      DisclosureGroup(isExpanded: $isArticleExpanded) {
+        MarkdownContentView(markdown: contentMarkdown)
+          .padding(.top, DesignTokens.Spacing.sm)
+      } label: {
+        Label("原文内容", systemImage: "doc.richtext")
+          .font(.headline)
+      }
+    } else if let contentHtml = guide.contentHtml, !contentHtml.isEmpty {
+      DisclosureGroup(isExpanded: $isArticleExpanded) {
+        RichTextContentView(html: contentHtml)
+          .padding(.top, DesignTokens.Spacing.sm)
+      } label: {
+        Label("原文内容", systemImage: "doc.richtext")
+          .font(.headline)
+      }
+    } else if let content = guide.content, !content.isEmpty {
+      DisclosureGroup(isExpanded: $isArticleExpanded) {
+        PlainTextContentView(content: content)
+          .padding(.top, DesignTokens.Spacing.sm)
+      } label: {
+        Label("原文内容", systemImage: "doc.text")
+          .font(.headline)
+      }
+    }
   }
 
   // MARK: - Itinerary Section

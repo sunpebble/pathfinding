@@ -126,6 +126,10 @@
 		8BDA30E8CAB03ED419BB5DBE /* RouteOptimization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E4097BC04672C6961404A83 /* RouteOptimization.swift */; };
 		8BF80A1ADD409182F746A829 /* CityAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5130FBEDAD70C0FBA030C7F /* CityAPIClient.swift */; };
 		8C0CA3722560758A7B9E6535 /* CachedAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150DD530C2F4383B398260A8 /* CachedAsyncImage.swift */; };
+		AA1B2C3D4E5F6A7B8C9D0E1F /* HTMLContentParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2C3D4E5F6A7B8C9D0E1F2A /* HTMLContentParser.swift */; };
+		CC3D4E5F6A7B8C9D0E1F2A3B /* RichTextContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD4E5F6A7B8C9D0E1F2A3B4C /* RichTextContentView.swift */; };
+		EE5F6A7B8C9D0E1F2A3B4C5D /* PlainTextContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6A7B8C9D0E1F2A3B4C5D6E /* PlainTextContentView.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* MarkdownContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6071829304A5B6C /* MarkdownContentView.swift */; };
 		8C2C3190E4C3D0F43A855AC0 /* FlightDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 803967AA10840F1EF8418E88 /* FlightDetailView.swift */; };
 		8CA988FFB860EF9BF2BCCB7B /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F67D8AD3CC8EC1D4E50CE8EF /* CarPlaySceneDelegate.swift */; };
 		8CE5C476E802625D1C27E9C6 /* City.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3921B77F7248FB48A110653 /* City.swift */; };
@@ -236,6 +240,10 @@
 		14A422750FF56A7D6F971EFC /* FavoriteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteStore.swift; sourceTree = "<group>"; };
 		150ACBB4B673FAF3D4F3D78F /* QuestionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionDetailView.swift; sourceTree = "<group>"; };
 		150DD530C2F4383B398260A8 /* CachedAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedAsyncImage.swift; sourceTree = "<group>"; };
+		BB2C3D4E5F6A7B8C9D0E1F2A /* HTMLContentParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLContentParser.swift; sourceTree = "<group>"; };
+		DD4E5F6A7B8C9D0E1F2A3B4C /* RichTextContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichTextContentView.swift; sourceTree = "<group>"; };
+		FF6A7B8C9D0E1F2A3B4C5D6E /* PlainTextContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainTextContentView.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6071829304A5B6C /* MarkdownContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownContentView.swift; sourceTree = "<group>"; };
 		16236A02F25138A7D94952FD /* SearchPOIIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPOIIntent.swift; sourceTree = "<group>"; };
 		16461C867C1BD538DDE658FC /* RouteOptimizationAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOptimizationAPIClient.swift; sourceTree = "<group>"; };
 		164BCC480CF0E92EAE19CC1D /* CollaborationModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollaborationModifiers.swift; sourceTree = "<group>"; };
@@ -934,9 +942,13 @@
 				ADCE5553363AC937CD1E2570 /* ExplorerCards.swift */,
 				B759B286F348275629CF6D99 /* ExplorerComponents.swift */,
 				31EDD45876CADDD73FBDB5ED /* GuideComponents.swift */,
+				BB2C3D4E5F6A7B8C9D0E1F2A /* HTMLContentParser.swift */,
 				F177FCC76E9C41E981C00F74 /* ImageViewer.swift */,
+				B2C3D4E5F6071829304A5B6C /* MarkdownContentView.swift */,
 				420C2AFA83EF512A8AB9DBEB /* OfflineTileOverlay.swift */,
 				3FC38137996F361BD88E60A1 /* OptimizedMapView.swift */,
+				FF6A7B8C9D0E1F2A3B4C5D6E /* PlainTextContentView.swift */,
+				DD4E5F6A7B8C9D0E1F2A3B4C /* RichTextContentView.swift */,
 				AF0ECD88FC1A7CA0371A8DB5 /* SafetyComponents.swift */,
 				CA8774193956B0EB84F8EE15 /* ShimmerView.swift */,
 				8EAD231DEED8EEC7BD672564 /* VisualEffects.swift */,
@@ -1047,6 +1059,10 @@
 				C8DB96E828E0E41505D3BCA8 /* BusinessHours.swift in Sources */,
 				D9318168946B3017F55AC29A /* BusinessHoursView.swift in Sources */,
 				8C0CA3722560758A7B9E6535 /* CachedAsyncImage.swift in Sources */,
+				AA1B2C3D4E5F6A7B8C9D0E1F /* HTMLContentParser.swift in Sources */,
+				CC3D4E5F6A7B8C9D0E1F2A3B /* RichTextContentView.swift in Sources */,
+				EE5F6A7B8C9D0E1F2A3B4C5D /* PlainTextContentView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* MarkdownContentView.swift in Sources */,
 				C342128831D9407D16990400 /* CalendarManager.swift in Sources */,
 				E8AFE5CDE10F5789B76CCF99 /* CalendarSyncView.swift in Sources */,
 				125F3F58EC00B3DE939DF6E2 /* CarPlayManager.swift in Sources */,

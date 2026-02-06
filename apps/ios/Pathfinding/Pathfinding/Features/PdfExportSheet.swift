@@ -276,6 +276,8 @@ struct PdfExportSheet: View {
       title: "东京5日深度游攻略",
       authorName: "旅行达人",
       content: nil,
+      contentHtml: nil,
+      contentMarkdown: nil,
       summary: "探索东京的传统与现代",
       coverImageUrl: nil,
       imageUrls: nil,

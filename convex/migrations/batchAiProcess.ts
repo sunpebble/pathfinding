@@ -175,11 +175,84 @@ export const resetFailed = mutation({
 });
 
 /**
+ * Get guides that are processed but missing contentMarkdown
+ */
+export const getMissingMarkdown = query({
+  args: {
+    cursor: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? BATCH_SIZE;
+
+    const result = await ctx.db
+      .query('travelGuides')
+      .paginate({
+        numItems: limit * 10,
+        cursor: args.cursor ? (args.cursor as never) : null,
+      });
+
+    const missing = result.page.filter(g => g.aiProcessedAt && !g.contentMarkdown);
+
+    return {
+      guides: missing.slice(0, limit).map(g => ({
+        _id: g._id,
+        title: g.title,
+        contentLength: g.content?.length ?? 0,
+        destinations: g.destinations,
+        sourcePlatform: g.sourcePlatform,
+      })),
+      totalInBatch: result.page.length,
+      missingInBatch: missing.length,
+      isDone: result.isDone,
+      nextCursor: result.isDone ? undefined : result.continueCursor,
+    };
+  },
+});
+
+/**
+ * Reset aiProcessedAt for guides missing contentMarkdown so they get reprocessed.
+ * Uses small page size to avoid read limits.
+ */
+export const resetMissingMarkdown = mutation({
+  args: {
+    cursor: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const result = await ctx.db
+      .query('travelGuides')
+      .paginate({
+        numItems: 10,
+        cursor: args.cursor ? (args.cursor as never) : null,
+      });
+
+    let reset = 0;
+
+    for (const guide of result.page) {
+      if (guide.aiProcessedAt && !guide.contentMarkdown) {
+        await ctx.db.patch(guide._id, {
+          aiProcessedAt: undefined,
+          enrichmentStatus: 'pending',
+        });
+        reset++;
+      }
+    }
+
+    return {
+      reset,
+      isDone: result.isDone,
+      nextCursor: result.isDone ? undefined : result.continueCursor,
+    };
+  },
+});
+
+/**
  * Direct AI data update (for testing or manual processing)
  */
 export const updateAiData = mutation({
   args: {
     guideId: v.id('travelGuides'),
+    contentMarkdown: v.optional(v.string()),
     aiSummary: v.optional(v.string()),
     aiTips: v.optional(v.array(v.string())),
     aiBestTime: v.optional(v.string()),

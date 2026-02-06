@@ -6,6 +6,8 @@ struct BlogPost: Codable, Identifiable, Hashable {
   let title: String
   let authorName: String?
   let content: String?
+  let contentHtml: String?
+  let contentMarkdown: String?
   let summary: String?
   let coverImageUrl: String?
   let imageUrls: [String]?
@@ -32,6 +34,8 @@ struct BlogPost: Codable, Identifiable, Hashable {
     case title
     case authorName = "author_name"
     case content
+    case contentHtml = "content_html"
+    case contentMarkdown = "content_markdown"
     case summary
     case coverImageUrl = "cover_image_url"
     case imageUrls = "image_urls"

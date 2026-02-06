@@ -676,6 +676,8 @@ private let previewGuide = BlogPost(
   title: "京都赏樱三日游攻略",
   authorName: "旅行达人",
   content: nil,
+  contentHtml: nil,
+  contentMarkdown: nil,
   summary: nil,
   coverImageUrl: nil,
   imageUrls: nil,

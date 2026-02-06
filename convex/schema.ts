@@ -915,6 +915,7 @@ export default defineSchema({
     title: v.optional(v.string()),
     content: v.string(),
     contentHtml: v.optional(v.string()),
+    contentMarkdown: v.optional(v.string()),
     authorName: v.optional(v.string()),
     authorId: v.optional(v.string()),
     destinations: v.array(v.string()),

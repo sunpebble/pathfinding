@@ -719,6 +719,7 @@ export const updateQualityScore = mutation({
 export const updateAiData = mutation({
   args: {
     id: v.id('travelGuides'),
+    contentMarkdown: v.optional(v.string()),
     aiSummary: v.optional(v.string()),
     aiTips: v.optional(v.array(v.string())),
     aiBestTime: v.optional(v.string()),
