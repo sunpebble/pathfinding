@@ -2,6 +2,7 @@
 // @ts-nocheck
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
+import { validateUserProfile } from './lib/validation';
 
 /**
  * Users - Authentication and Profile Management
@@ -137,6 +138,9 @@ export const updateProfile = mutation({
     bio: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Validate input
+    validateUserProfile(args);
+
     // Verify authentication
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
