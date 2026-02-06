@@ -13,9 +13,11 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `ai-crawler-architecture`: 定义基于 Stagehand AI 的统一爬虫架构，包括基类设计、LLM 提取流程和平台适配器模式
 
 ### Modified Capabilities
+
 - 无（这是架构重构，不修改现有 spec 级别的行为要求）
 
 ## Impact

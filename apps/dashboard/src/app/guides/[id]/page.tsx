@@ -136,7 +136,7 @@ export default function GuideDetailPage() {
         <div className="bg-red-50 text-red-700 p-6 rounded-lg text-center">
           <p className="font-medium">Guide not found</p>
           <p className="text-sm mt-1">
-            The guide you're looking for doesn't exist.
+            The guide you&apos;re looking for doesn&apos;t exist.
           </p>
         </div>
       </div>
