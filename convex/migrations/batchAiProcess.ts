@@ -30,8 +30,8 @@ export const getPending = query({
         cursor: args.cursor ? (args.cursor as never) : null,
       });
 
-    // Filter guides with enrichmentStatus === 'pending'
-    const pending = result.page.filter(g => g.enrichmentStatus === 'pending');
+    // Filter guides without aiProcessedAt (not yet AI processed)
+    const pending = result.page.filter(g => !g.aiProcessedAt && g.enrichmentStatus !== 'failed');
 
     return {
       guides: pending.slice(0, limit).map(g => ({

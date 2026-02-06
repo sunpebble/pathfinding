@@ -51,6 +51,7 @@ import type * as mafengwo from "../mafengwo.js";
 import type * as medicalFacilities from "../medicalFacilities.js";
 import type * as messaging from "../messaging.js";
 import type * as migrations_batchAiProcess from "../migrations/batchAiProcess.js";
+import type * as migrations_cleanupBadData from "../migrations/cleanupBadData.js";
 import type * as migrations_cleanupDuplicates from "../migrations/cleanupDuplicates.js";
 import type * as migrations_fillDisplayFields from "../migrations/fillDisplayFields.js";
 import type * as migrations_migrateAiData from "../migrations/migrateAiData.js";
@@ -151,6 +152,7 @@ declare const fullApi: ApiFromModules<{
   medicalFacilities: typeof medicalFacilities;
   messaging: typeof messaging;
   "migrations/batchAiProcess": typeof migrations_batchAiProcess;
+  "migrations/cleanupBadData": typeof migrations_cleanupBadData;
   "migrations/cleanupDuplicates": typeof migrations_cleanupDuplicates;
   "migrations/fillDisplayFields": typeof migrations_fillDisplayFields;
   "migrations/migrateAiData": typeof migrations_migrateAiData;
