@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const inputSchema = z.object({
+const _inputSchema = z.object({
   type: z.enum(['email', 'push', 'webhook']),
   recipient: z.string(),
   subject: z.string().optional(),
@@ -21,8 +21,8 @@ interface HandlerContext {
   logger: { info: (msg: string, data?: unknown) => void; error: (msg: string, data?: unknown) => void };
 }
 
-export async function handler(input: z.infer<typeof inputSchema>, { emit, logger }: HandlerContext) {
-  const { type, recipient, subject, message: _message } = input;
+export async function handler(input: z.infer<typeof _inputSchema>, { emit, logger }: HandlerContext) {
+  const { type, recipient, subject: _subject, message: _message } = input;
 
   try {
     logger.info('Sending notification', { type, recipient });

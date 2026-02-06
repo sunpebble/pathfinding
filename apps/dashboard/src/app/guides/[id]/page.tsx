@@ -285,14 +285,15 @@ export default function GuideDetailPage() {
       {/* Content */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Content</h2>
-        {guide.content_html ? (
+        {guide.content_html && (
           // Render rich text HTML content
           <div
             className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
             // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
             dangerouslySetInnerHTML={{ __html: guide.content_html }}
           />
-        ) : (
+        )}
+        {!guide.content_html && (
           // Fallback to plain text
           <div className="prose prose-gray max-w-none">
             <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">
@@ -391,15 +392,18 @@ export default function GuideDetailPage() {
                       = poi.geocodeConfidence !== undefined
                         && poi.geocodeConfidence < 0.5;
 
+                    let borderClass = 'border-gray-200 bg-gray-50';
+                    if (isLowConfidence && !poi.isManuallyVerified) {
+                      borderClass = 'border-amber-200 bg-amber-50';
+                    }
+
                     return (
                       <div
                         // eslint-disable-next-line react/no-array-index-key
                         key={`poi-${day.dayNumber}-${poiIndex}`}
                         className={cn(
                           'flex items-start gap-3 p-3 rounded-lg border transition-colors',
-                          isLowConfidence && !poi.isManuallyVerified
-                            ? 'border-amber-200 bg-amber-50'
-                            : 'border-gray-200 bg-gray-50',
+                          borderClass,
                         )}
                       >
                         <div className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">

@@ -246,15 +246,19 @@ export default function ReviewGuidesPage() {
       </div>
 
       {/* Content */}
-      {isLoading ? (
+      {isLoading && (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
         </div>
-      ) : error ? (
+      )}
+
+      {error && (
         <div className="bg-red-50 text-red-700 p-4 rounded-lg">
           Failed to load guides. Please try again.
         </div>
-      ) : guides.length === 0 ? (
+      )}
+
+      {!isLoading && !error && guides.length === 0 && (
         <div className="text-center py-12">
           <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500">No guides need review</p>
@@ -262,7 +266,9 @@ export default function ReviewGuidesPage() {
             All guides have acceptable quality scores
           </p>
         </div>
-      ) : (
+      )}
+
+      {!isLoading && !error && guides.length > 0 && (
         <>
           {/* Guides Grid */}
           <div className="grid gap-4 md:grid-cols-2">
