@@ -5,7 +5,7 @@ actor ItineraryAPIClient {
   static let shared = ItineraryAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -21,7 +21,7 @@ actor ItineraryAPIClient {
 
     let body = CopyItineraryRequest(startDate: newStartDate)
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(CopyItineraryResponse.self, from: data)
+    let result = try decoder.decode(CopyItineraryResponse.self, from: data)
     return result.data
   }
 
@@ -40,7 +40,7 @@ actor ItineraryAPIClient {
       title: newTitle
     )
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(CopyItineraryResponse.self, from: data)
+    let result = try decoder.decode(CopyItineraryResponse.self, from: data)
     return result.data
   }
 
@@ -64,7 +64,7 @@ actor ItineraryAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(CopyHistoryResponse.self, from: data)
+    let result = try decoder.decode(CopyHistoryResponse.self, from: data)
     return CopyHistoryResult(data: result.data, total: result.meta.totalCount)
   }
 
@@ -73,7 +73,7 @@ actor ItineraryAPIClient {
     let url = await baseURL.appendingPathComponent("v1/itineraries/\(itineraryId)/copy-stats")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(CopyStatsResponse.self, from: data)
+    let result = try decoder.decode(CopyStatsResponse.self, from: data)
     return result.data
   }
 
@@ -104,7 +104,7 @@ actor ItineraryAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(PublicItinerariesResponse.self, from: data)
+    let result = try decoder.decode(PublicItinerariesResponse.self, from: data)
     return PublicItinerariesResult(data: result.data, total: result.meta.totalCount)
   }
 }

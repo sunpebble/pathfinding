@@ -5,7 +5,7 @@ actor CollaborationAPIClient {
   static let shared = CollaborationAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -22,7 +22,7 @@ actor CollaborationAPIClient {
 
     let body = JoinSessionRequest(displayName: displayName, avatarUrl: avatarUrl)
     let data = try await network.postWithRetry(url: url, body: body)
-    return try await decoder.decode(JoinSessionResponse.self, from: data)
+    return try decoder.decode(JoinSessionResponse.self, from: data)
   }
 
   /// Leave a collaborative editing session
@@ -42,7 +42,7 @@ actor CollaborationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/itineraries/\(itineraryId)/collaboration/presence")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(CollaboratorsResponse.self, from: data)
+    let result = try decoder.decode(CollaboratorsResponse.self, from: data)
     return result.data
   }
 
@@ -51,7 +51,7 @@ actor CollaborationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/itineraries/\(itineraryId)/collaboration/online")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(PresenceListResponse.self, from: data)
+    let result = try decoder.decode(PresenceListResponse.self, from: data)
     return result.data
   }
 
@@ -102,7 +102,7 @@ actor CollaborationAPIClient {
       baseVersion: baseVersion
     )
     let data = try await network.postWithRetry(url: url, body: body)
-    return try await decoder.decode(RecordOperationResponse.self, from: data)
+    return try decoder.decode(RecordOperationResponse.self, from: data)
   }
 
   /// Get recent operations for an itinerary
@@ -121,7 +121,7 @@ actor CollaborationAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(OperationsListResponse.self, from: data)
+    let result = try decoder.decode(OperationsListResponse.self, from: data)
     return result.data
   }
 
@@ -130,7 +130,7 @@ actor CollaborationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/itineraries/\(itineraryId)/collaboration/conflicts")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(OperationsListResponse.self, from: data)
+    let result = try decoder.decode(OperationsListResponse.self, from: data)
     return result.data
   }
 

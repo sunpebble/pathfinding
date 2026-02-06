@@ -6,8 +6,8 @@ actor PDFAPIClient {
   static let shared = PDFAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
-  private var aiServiceURL: URL { get async { await network.aiServiceURL } }
+  private var decoder: JSONDecoder { network.decoder }
+  private var aiServiceURL: URL { network.aiServiceURL }
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "PDFAPIClient")
 
   private init() {}
@@ -17,7 +17,7 @@ actor PDFAPIClient {
   /// Fetch available PDF templates
   func fetchPdfTemplates(language: String = "zh") async throws -> [String: PdfTemplate] {
     var components = URLComponents(
-      url: await aiServiceURL.appendingPathComponent("api/pdf/templates"),
+      url: aiServiceURL.appendingPathComponent("api/pdf/templates"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -30,17 +30,17 @@ actor PDFAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(PdfTemplatesResponse.self, from: data)
+    let result = try decoder.decode(PdfTemplatesResponse.self, from: data)
     return result.data
   }
 
   /// Get PDF preview info for a guide
   func fetchGuidePdfPreview(guideId: String) async throws -> PdfPreviewInfo {
-    let url = await aiServiceURL.appendingPathComponent("api/pdf/guide/\(guideId)/preview")
+    let url = aiServiceURL.appendingPathComponent("api/pdf/guide/\(guideId)/preview")
 
     let body = EmptyBody()
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(PdfPreviewResponse.self, from: data)
+    let result = try decoder.decode(PdfPreviewResponse.self, from: data)
     return result.data
   }
 
@@ -49,7 +49,7 @@ actor PDFAPIClient {
     guideId: String,
     options: PdfExportOptions
   ) async throws -> URL {
-    let url = await aiServiceURL.appendingPathComponent("api/pdf/guide/\(guideId)")
+    let url = aiServiceURL.appendingPathComponent("api/pdf/guide/\(guideId)")
 
     logger.info("Generating PDF for guide \(guideId)")
 

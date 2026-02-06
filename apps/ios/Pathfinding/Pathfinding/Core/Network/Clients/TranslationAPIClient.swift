@@ -5,7 +5,7 @@ actor TranslationAPIClient {
   static let shared = TranslationAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -16,7 +16,7 @@ actor TranslationAPIClient {
   func fetchSupportedLanguages() async throws -> [SupportedLanguage] {
     let url = await baseURL.appendingPathComponent("v1/translation/languages")
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(SupportedLanguagesResponse.self, from: data)
+    let result = try decoder.decode(SupportedLanguagesResponse.self, from: data)
     return result.data
   }
 
@@ -25,7 +25,7 @@ actor TranslationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/translation/text")
     let request = TranslateTextRequest(text: text, targetLang: targetLang, sourceLang: sourceLang)
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(TranslationResultResponse.self, from: data)
+    let result = try decoder.decode(TranslationResultResponse.self, from: data)
     return result.data
   }
 
@@ -34,7 +34,7 @@ actor TranslationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/translation/photo")
     let request = TranslatePhotoRequest(imageBase64: imageBase64, targetLang: targetLang)
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(PhotoTranslationResultResponse.self, from: data)
+    let result = try decoder.decode(PhotoTranslationResultResponse.self, from: data)
     return result.data
   }
 
@@ -43,7 +43,7 @@ actor TranslationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/translation/voice")
     let request = TranslateVoiceRequest(recognizedText: recognizedText, targetLang: targetLang, sourceLang: sourceLang)
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(VoiceTranslationResultResponse.self, from: data)
+    let result = try decoder.decode(VoiceTranslationResultResponse.self, from: data)
     return result.data
   }
 
@@ -52,7 +52,7 @@ actor TranslationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/translation/batch")
     let request = TranslateBatchRequest(texts: texts, targetLang: targetLang, sourceLang: sourceLang)
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(TranslationBatchResponse.self, from: data)
+    let result = try decoder.decode(TranslationBatchResponse.self, from: data)
     return result.data
   }
 
@@ -61,7 +61,7 @@ actor TranslationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/translation/detect")
     let request = DetectLanguageRequest(text: text)
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(DetectLanguageResponse.self, from: data)
+    let result = try decoder.decode(DetectLanguageResponse.self, from: data)
     return result.data.language
   }
 
@@ -70,7 +70,7 @@ actor TranslationAPIClient {
     let url = await baseURL.appendingPathComponent("v1/translation/pinyin")
     let request = GetPinyinRequest(text: text)
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(PinyinResponse.self, from: data)
+    let result = try decoder.decode(PinyinResponse.self, from: data)
     return result.data.pinyin ?? ""
   }
 
@@ -79,7 +79,7 @@ actor TranslationAPIClient {
     var components = URLComponents(url: await baseURL.appendingPathComponent("v1/translation/phrases/categories"), resolvingAgainstBaseURL: false)!
     components.queryItems = [URLQueryItem(name: "source_lang", value: sourceLang)]
     let data = try await network.fetchWithRetry(url: components.url!)
-    let result = try await decoder.decode(PhraseCategoriesResponse.self, from: data)
+    let result = try decoder.decode(PhraseCategoriesResponse.self, from: data)
     return result.data
   }
 
@@ -92,7 +92,7 @@ actor TranslationAPIClient {
       URLQueryItem(name: "target_lang", value: targetLang)
     ]
     let data = try await network.fetchWithRetry(url: components.url!)
-    let result = try await decoder.decode(PhrasesResponse.self, from: data)
+    let result = try decoder.decode(PhrasesResponse.self, from: data)
     return result.data
   }
 
@@ -105,7 +105,7 @@ actor TranslationAPIClient {
       URLQueryItem(name: "target_lang", value: targetLang)
     ]
     let data = try await network.fetchWithRetry(url: components.url!)
-    let result = try await decoder.decode(PhrasesResponse.self, from: data)
+    let result = try decoder.decode(PhrasesResponse.self, from: data)
     return result.data
   }
 
@@ -113,7 +113,7 @@ actor TranslationAPIClient {
   func fetchSavedTranslations(userId: String) async throws -> [SavedTranslation] {
     let url = await baseURL.appendingPathComponent("v1/translation/saved")
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(SavedTranslationsResponse.self, from: data)
+    let result = try decoder.decode(SavedTranslationsResponse.self, from: data)
     return result.data
   }
 
@@ -130,7 +130,7 @@ actor TranslationAPIClient {
       audioUrl: audioUrl
     )
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(SavedTranslationResponse.self, from: data)
+    let result = try decoder.decode(SavedTranslationResponse.self, from: data)
     return result.data
   }
 
@@ -138,7 +138,7 @@ actor TranslationAPIClient {
   func toggleTranslationFavorite(translationId: String) async throws -> SavedTranslation {
     let url = await baseURL.appendingPathComponent("v1/translation/saved/\(translationId)/favorite")
     let data = try await network.postWithRetry(url: url, body: EmptyBody())
-    let result = try await decoder.decode(SavedTranslationResponse.self, from: data)
+    let result = try decoder.decode(SavedTranslationResponse.self, from: data)
     return result.data
   }
 

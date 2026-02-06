@@ -5,7 +5,7 @@ actor FlightAPIClient {
   static let shared = FlightAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -29,7 +29,7 @@ actor FlightAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(FlightLookupResponse.self, from: data)
+    let result = try decoder.decode(FlightLookupResponse.self, from: data)
 
     guard let flightInfo = result.data else {
       throw APIError.notFound
@@ -67,7 +67,7 @@ actor FlightAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(FlightSearchResponse.self, from: data)
+    let result = try decoder.decode(FlightSearchResponse.self, from: data)
     return FlightSearchResult(data: result.data, total: result.meta.totalCount)
   }
 
@@ -104,7 +104,7 @@ actor FlightAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(FlightBookingsListResponse.self, from: data)
+    let result = try decoder.decode(FlightBookingsListResponse.self, from: data)
     return FlightBookingsResult(data: result.data, total: result.meta?.totalCount ?? result.data.count)
   }
 
@@ -124,7 +124,7 @@ actor FlightAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(FlightBookingsListResponse.self, from: data)
+    let result = try decoder.decode(FlightBookingsListResponse.self, from: data)
     return FlightBookingsResult(data: result.data, total: result.data.count)
   }
 
@@ -133,7 +133,7 @@ actor FlightAPIClient {
     let url = await baseURL.appendingPathComponent("v1/flights/bookings")
 
     let data = try await network.postWithRetry(url: url, body: input)
-    return try await decoder.decode(CreateFlightBookingResponse.self, from: data)
+    return try decoder.decode(CreateFlightBookingResponse.self, from: data)
   }
 
   /// Update a flight booking
@@ -141,7 +141,7 @@ actor FlightAPIClient {
     let url = await baseURL.appendingPathComponent("v1/flights/bookings/\(bookingId)")
 
     let data = try await network.patchWithRetry(url: url, body: input)
-    let result = try await decoder.decode(FlightBookingDetailResponse.self, from: data)
+    let result = try decoder.decode(FlightBookingDetailResponse.self, from: data)
     return result.data
   }
 
@@ -157,7 +157,7 @@ actor FlightAPIClient {
 
     let body = LinkFlightItineraryRequest(itineraryId: itineraryId)
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(FlightBookingDetailResponse.self, from: data)
+    let result = try decoder.decode(FlightBookingDetailResponse.self, from: data)
     return result.data
   }
 
@@ -166,7 +166,7 @@ actor FlightAPIClient {
     let url = await baseURL.appendingPathComponent("v1/flights/bookings/\(bookingId)/unlink")
 
     let data = try await network.postWithRetry(url: url, body: EmptyBody())
-    let result = try await decoder.decode(FlightBookingDetailResponse.self, from: data)
+    let result = try decoder.decode(FlightBookingDetailResponse.self, from: data)
     return result.data
   }
 
@@ -176,7 +176,7 @@ actor FlightAPIClient {
 
     let body = CheckInFlightRequest(seatNumber: seatNumber)
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(FlightBookingDetailResponse.self, from: data)
+    let result = try decoder.decode(FlightBookingDetailResponse.self, from: data)
     return result.data
   }
 
@@ -185,7 +185,7 @@ actor FlightAPIClient {
     let url = await baseURL.appendingPathComponent("v1/flights/itinerary/\(itineraryId)/bookings")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(FlightBookingsListResponse.self, from: data)
+    let result = try decoder.decode(FlightBookingsListResponse.self, from: data)
     return result.data
   }
 
@@ -194,7 +194,7 @@ actor FlightAPIClient {
     let url = await baseURL.appendingPathComponent("v1/flights/status/\(bookingId)")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(FlightStatusResponse.self, from: data)
+    let result = try decoder.decode(FlightStatusResponse.self, from: data)
 
     guard let statusData = result.data else {
       throw APIError.notFound

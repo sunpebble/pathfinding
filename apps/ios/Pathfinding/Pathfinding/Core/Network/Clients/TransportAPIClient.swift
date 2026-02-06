@@ -5,9 +5,9 @@ actor TransportAPIClient {
   static let shared = TransportAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
-  private var aiServiceURL: URL { get async { await network.aiServiceURL } }
+  private var aiServiceURL: URL { network.aiServiceURL }
 
   private init() {}
 
@@ -22,7 +22,7 @@ actor TransportAPIClient {
     city: String? = nil,
     modes: [TransportMode]? = nil
   ) async throws -> TransportComparison {
-    let url = await aiServiceURL.appendingPathComponent("api/transport/compare")
+    let url = aiServiceURL.appendingPathComponent("api/transport/compare")
 
     let body = TransportCompareRequest(
       origin: origin,
@@ -33,7 +33,7 @@ actor TransportAPIClient {
       modes: modes
     )
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(TransportComparisonResponse.self, from: data)
+    let result = try decoder.decode(TransportComparisonResponse.self, from: data)
     return result.data
   }
 
@@ -43,7 +43,7 @@ actor TransportAPIClient {
     destination: TransportCoordinate
   ) async throws -> TransportRoute {
     var components = URLComponents(
-      url: await aiServiceURL.appendingPathComponent("api/transport/walking"),
+      url: aiServiceURL.appendingPathComponent("api/transport/walking"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -57,7 +57,7 @@ actor TransportAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(TransportRouteResponse.self, from: data)
+    let result = try decoder.decode(TransportRouteResponse.self, from: data)
     return result.data
   }
 
@@ -67,7 +67,7 @@ actor TransportAPIClient {
     destination: TransportCoordinate
   ) async throws -> TransportRoute {
     var components = URLComponents(
-      url: await aiServiceURL.appendingPathComponent("api/transport/cycling"),
+      url: aiServiceURL.appendingPathComponent("api/transport/cycling"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -81,7 +81,7 @@ actor TransportAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(TransportRouteResponse.self, from: data)
+    let result = try decoder.decode(TransportRouteResponse.self, from: data)
     return result.data
   }
 
@@ -92,7 +92,7 @@ actor TransportAPIClient {
     city: String? = nil
   ) async throws -> DrivingRouteData {
     var components = URLComponents(
-      url: await aiServiceURL.appendingPathComponent("api/transport/driving"),
+      url: aiServiceURL.appendingPathComponent("api/transport/driving"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -110,7 +110,7 @@ actor TransportAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(DrivingRouteResponse.self, from: data)
+    let result = try decoder.decode(DrivingRouteResponse.self, from: data)
     return result.data
   }
 
@@ -121,7 +121,7 @@ actor TransportAPIClient {
     city: String
   ) async throws -> TransportRoute {
     var components = URLComponents(
-      url: await aiServiceURL.appendingPathComponent("api/transport/transit"),
+      url: aiServiceURL.appendingPathComponent("api/transport/transit"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -136,37 +136,37 @@ actor TransportAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(TransportRouteResponse.self, from: data)
+    let result = try decoder.decode(TransportRouteResponse.self, from: data)
     return result.data
   }
 
   /// Get city transit information
   func getCityTransitInfo(cityName: String) async throws -> CityTransitInfo {
     let encodedCity = cityName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? cityName
-    let url = await aiServiceURL.appendingPathComponent("api/transport/city/\(encodedCity)")
+    let url = aiServiceURL.appendingPathComponent("api/transport/city/\(encodedCity)")
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(CityTransitInfoResponse.self, from: data)
+    let result = try decoder.decode(CityTransitInfoResponse.self, from: data)
     return result.data
   }
 
   /// Get transit pass recommendations for a city
   func getTransitPasses(cityName: String) async throws -> [TransitPassRecommendation] {
     let encodedCity = cityName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? cityName
-    let url = await aiServiceURL.appendingPathComponent("api/transport/passes/\(encodedCity)")
+    let url = aiServiceURL.appendingPathComponent("api/transport/passes/\(encodedCity)")
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(TransitPassesResponse.self, from: data)
+    let result = try decoder.decode(TransitPassesResponse.self, from: data)
     return result.data
   }
 
   /// Get transit tips for a city
   func getTransitTips(cityName: String) async throws -> [String] {
     let encodedCity = cityName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? cityName
-    let url = await aiServiceURL.appendingPathComponent("api/transport/tips/\(encodedCity)")
+    let url = aiServiceURL.appendingPathComponent("api/transport/tips/\(encodedCity)")
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(TransitTipsResponse.self, from: data)
+    let result = try decoder.decode(TransitTipsResponse.self, from: data)
     return result.data
   }
 
@@ -175,11 +175,11 @@ actor TransportAPIClient {
     routes: [TransportRouteRequest],
     city: String? = nil
   ) async throws -> [TransportComparison] {
-    let url = await aiServiceURL.appendingPathComponent("api/transport/batch")
+    let url = aiServiceURL.appendingPathComponent("api/transport/batch")
 
     let body = BatchTransportRequest(routes: routes, city: city)
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(BatchTransportResponse.self, from: data)
+    let result = try decoder.decode(BatchTransportResponse.self, from: data)
     return result.data
   }
 }

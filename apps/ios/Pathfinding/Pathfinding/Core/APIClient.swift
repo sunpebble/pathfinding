@@ -19,19 +19,19 @@ actor APIClient {
   // MARK: - Delegate Properties to NetworkClient
 
   var convexURL: URL {
-    get async { await network.convexURL }
+    network.convexURL
   }
 
   var aiServiceURL: URL {
-    get async { await network.aiServiceURL }
+    network.aiServiceURL
   }
 
   var session: URLSession {
-    get async { await network.session }
+    network.session
   }
 
   var decoder: JSONDecoder {
-    get async { await network.decoder }
+    network.decoder
   }
 
   var baseURL: URL {

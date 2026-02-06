@@ -5,7 +5,7 @@ actor PreferencesAPIClient {
   static let shared = PreferencesAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -17,7 +17,7 @@ actor PreferencesAPIClient {
     let url = await baseURL.appendingPathComponent("v1/preferences")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(PreferencesResponse.self, from: data)
+    let result = try decoder.decode(PreferencesResponse.self, from: data)
     return result.data
   }
 
@@ -26,7 +26,7 @@ actor PreferencesAPIClient {
     let url = await baseURL.appendingPathComponent("v1/preferences")
 
     let data = try await network.putWithRetry(url: url, body: request)
-    let result = try await decoder.decode(PreferencesResponse.self, from: data)
+    let result = try decoder.decode(PreferencesResponse.self, from: data)
     return result.data
   }
 
@@ -35,7 +35,7 @@ actor PreferencesAPIClient {
     let url = await baseURL.appendingPathComponent("v1/preferences/behavior")
 
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(RecordBehaviorResponse.self, from: data)
+    let result = try decoder.decode(RecordBehaviorResponse.self, from: data)
     return result.data.eventId
   }
 
@@ -55,7 +55,7 @@ actor PreferencesAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(CategoryScoresResponse.self, from: data)
+    let result = try decoder.decode(CategoryScoresResponse.self, from: data)
     return result.data
   }
 
@@ -64,7 +64,7 @@ actor PreferencesAPIClient {
     let url = await baseURL.appendingPathComponent("v1/preferences/recommendations")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(RecommendationsResponse.self, from: data)
+    let result = try decoder.decode(RecommendationsResponse.self, from: data)
     return result.data
   }
 
@@ -88,7 +88,7 @@ actor PreferencesAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(BehaviorsResponse.self, from: data)
+    let result = try decoder.decode(BehaviorsResponse.self, from: data)
     return result.data
   }
 
@@ -97,7 +97,7 @@ actor PreferencesAPIClient {
     let url = await baseURL.appendingPathComponent("v1/preferences/reset")
 
     let data = try await network.deleteWithRetry(url: url)
-    let result = try await decoder.decode(ResetPreferencesResponse.self, from: data)
+    let result = try decoder.decode(ResetPreferencesResponse.self, from: data)
     return result.data
   }
 }

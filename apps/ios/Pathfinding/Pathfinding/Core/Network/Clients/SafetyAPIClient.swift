@@ -5,7 +5,7 @@ actor SafetyAPIClient {
   static let shared = SafetyAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -30,7 +30,7 @@ actor SafetyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(DestinationSafetyInfoResponse.self, from: data)
+    let result = try decoder.decode(DestinationSafetyInfoResponse.self, from: data)
     return result.data
   }
 
@@ -62,7 +62,7 @@ actor SafetyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(SafetyRatingResponse.self, from: data)
+    let result = try decoder.decode(SafetyRatingResponse.self, from: data)
     return result.data
   }
 
@@ -94,7 +94,7 @@ actor SafetyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(SafetyAlertsResponse.self, from: data)
+    let result = try decoder.decode(SafetyAlertsResponse.self, from: data)
     return result.data
   }
 
@@ -126,7 +126,7 @@ actor SafetyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(DangerZonesResponse.self, from: data)
+    let result = try decoder.decode(DangerZonesResponse.self, from: data)
     return result.data
   }
 
@@ -152,7 +152,7 @@ actor SafetyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(DangerZonesResponse.self, from: data)
+    let result = try decoder.decode(DangerZonesResponse.self, from: data)
     return result.data
   }
 
@@ -187,7 +187,7 @@ actor SafetyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(IncidentReportsResponse.self, from: data)
+    let result = try decoder.decode(IncidentReportsResponse.self, from: data)
     return result.data
   }
 }
