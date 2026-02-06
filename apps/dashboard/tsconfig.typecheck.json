@@ -17,6 +17,8 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
     "skipLibCheck": true,
     "plugins": [
       {
