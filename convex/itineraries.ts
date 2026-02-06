@@ -129,14 +129,23 @@ export const listPublic = query({
     const pageSize = args.pageSize ?? 10;
     const offset = (page - 1) * pageSize;
 
-    let itineraries = await ctx.db
-      .query('itineraries')
-      .withIndex('by_visibility', q => q.eq('visibility', 'public'))
-      .order('desc')
-      .collect();
+    let itineraries;
 
     if (args.cityId) {
-      itineraries = itineraries.filter(i => i.cityId === args.cityId);
+      // Optimize: use compound index to filter by visibility AND city at DB level
+      itineraries = await ctx.db
+        .query('itineraries')
+        .withIndex('by_visibility_city', q =>
+          q.eq('visibility', 'public').eq('cityId', args.cityId!))
+        .order('desc')
+        .collect();
+    }
+    else {
+      itineraries = await ctx.db
+        .query('itineraries')
+        .withIndex('by_visibility', q => q.eq('visibility', 'public'))
+        .order('desc')
+        .collect();
     }
 
     const total = itineraries.length;
