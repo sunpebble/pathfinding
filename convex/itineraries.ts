@@ -1,4 +1,4 @@
-import type { Id } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { ConvexError, v } from 'convex/values';
 import { mutation, query } from './_generated/server';
@@ -153,7 +153,7 @@ export const listPublic = query({
 
     const enriched = await Promise.all(
       data.map(async (itinerary) => {
-        const city = await ctx.db.get(itinerary.cityId);
+        const city = (await ctx.db.get(itinerary.cityId)) as Doc<'cities'> | null;
         return {
           ...itinerary,
           cityName: city?.name,
