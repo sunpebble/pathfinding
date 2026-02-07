@@ -14,9 +14,19 @@ export const listByUser = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Ensure users can only list their own credentials
+    if (args.userId !== identity.subject) {
+      throw new Error('Unauthorized');
+    }
+
     const results = await ctx.db
       .query('wifiCredentials')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', identity.subject))
       .collect();
 
     // Sort by most recently used
@@ -35,10 +45,19 @@ export const getBySpot = query({
     wifiSpotId: v.id('wifiSpots'),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    if (args.userId !== identity.subject) {
+      throw new Error('Unauthorized');
+    }
+
     const results = await ctx.db
       .query('wifiCredentials')
       .withIndex('by_user_spot', q =>
-        q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId))
+        q.eq('userId', identity.subject).eq('wifiSpotId', args.wifiSpotId))
       .first();
 
     return results;
@@ -49,7 +68,23 @@ export const getBySpot = query({
 export const getById = query({
   args: { id: v.id('wifiCredentials') },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    const credential = await ctx.db.get(args.id);
+
+    if (!credential) {
+      return null;
+    }
+
+    // Only allow access if it belongs to user OR is shared
+    if (credential.userId !== identity.subject && !credential.isShared) {
+      throw new Error('Unauthorized');
+    }
+
+    return credential;
   },
 });
 
@@ -61,11 +96,20 @@ export const search = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    if (args.userId !== identity.subject) {
+      throw new Error('Unauthorized');
+    }
+
     const maxResults = args.limit ?? 20;
 
     const credentials = await ctx.db
       .query('wifiCredentials')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .withIndex('by_user', q => q.eq('userId', identity.subject))
       .collect();
 
     const searchLower = args.query.toLowerCase();
@@ -105,12 +149,20 @@ export const create = mutation({
     isShared: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Force userId to match authenticated user
+    const userId = identity.subject;
+
     // Check if credential already exists for this user and spot
     if (args.wifiSpotId) {
       const existing = await ctx.db
         .query('wifiCredentials')
         .withIndex('by_user_spot', q =>
-          q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId))
+          q.eq('userId', userId).eq('wifiSpotId', args.wifiSpotId))
         .first();
 
       if (existing) {
@@ -128,6 +180,7 @@ export const create = mutation({
 
     return await ctx.db.insert('wifiCredentials', {
       ...args,
+      userId, // Override with authenticated user ID
       isShared: args.isShared ?? false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -159,7 +212,22 @@ export const update = mutation({
     isShared: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
     const { id, ...updates } = args;
+
+    const existing = await ctx.db.get(id);
+    if (!existing) {
+      throw new Error('Credential not found');
+    }
+
+    if (existing.userId !== identity.subject) {
+      throw new Error('Unauthorized');
+    }
+
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );
@@ -174,6 +242,20 @@ export const markUsed = mutation({
     id: v.id('wifiCredentials'),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    const existing = await ctx.db.get(args.id);
+    if (!existing) {
+      throw new Error('Credential not found');
+    }
+
+    if (existing.userId !== identity.subject) {
+      throw new Error('Unauthorized');
+    }
+
     await ctx.db.patch(args.id, {
       lastUsedAt: Date.now(),
     });
@@ -185,6 +267,21 @@ export const markUsed = mutation({
 export const remove = mutation({
   args: { id: v.id('wifiCredentials') },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    const existing = await ctx.db.get(args.id);
+    if (!existing) {
+      // Idempotent success if already deleted
+      return;
+    }
+
+    if (existing.userId !== identity.subject) {
+      throw new Error('Unauthorized');
+    }
+
     await ctx.db.delete(args.id);
   },
 });
@@ -196,6 +293,11 @@ export const getSharedBySpot = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
     const results = await ctx.db
       .query('wifiCredentials')
       .withIndex('by_spot_shared', q =>
