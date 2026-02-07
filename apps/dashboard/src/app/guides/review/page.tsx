@@ -57,12 +57,15 @@ function PlatformBadge({ platform }: { platform: string }) {
 
 function QualityScore({ score }: { score: number }) {
   const percentage = Math.round(score * 100);
-  const color
-    = score >= 0.7
-      ? 'text-green-600'
-      : score >= 0.4
-        ? 'text-yellow-600'
-        : 'text-red-600';
+
+  let color = 'text-red-600';
+  if (score >= 0.7) {
+    color = 'text-green-600';
+  }
+  else if (score >= 0.4) {
+    color = 'text-yellow-600';
+  }
+
   return (
     <div className={cn('flex items-center gap-1', color)}>
       <Star className="h-3.5 w-3.5" />
