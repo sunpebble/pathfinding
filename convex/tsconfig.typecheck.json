@@ -5,7 +5,10 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "vitest": ["../node_modules/vitest"]
+    },
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
@@ -22,6 +25,7 @@
     "_generated/**/*",
     "phoneAuth.ts",
     "notifications.ts",
-    "dataQualityReports.ts"
+    "dataQualityReports.ts",
+    "**/*.test.ts"
   ]
 }
