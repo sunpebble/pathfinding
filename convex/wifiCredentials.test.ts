@@ -1,4 +1,5 @@
 /* eslint-disable ts/no-explicit-any */
+import type { Mock } from 'vitest';
 import { describe, expect, it, vi } from 'vitest';
 
 // ============================================================
@@ -12,14 +13,14 @@ interface Identity {
 
 interface MockCtx {
   db: {
-    query: vi.Mock;
-    get: vi.Mock;
-    insert: vi.Mock;
-    patch: vi.Mock;
-    delete: vi.Mock;
+    query: Mock;
+    get: Mock;
+    insert: Mock;
+    patch: Mock;
+    delete: Mock;
   };
   auth: {
-    getUserIdentity: vi.Mock<() => Promise<Identity | null>>;
+    getUserIdentity: Mock<() => Promise<Identity | null>>;
   };
 }
 
