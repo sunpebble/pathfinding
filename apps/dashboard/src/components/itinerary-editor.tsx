@@ -181,14 +181,10 @@ function ItemEditor({
           {/* Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label
-                htmlFor={`start-time-${item._id}`}
-                className="text-xs font-medium text-gray-700 mb-1 block"
-              >
+              <label className="text-xs font-medium text-gray-700 mb-1 block">
                 Start Time
               </label>
               <input
-                id={`start-time-${item._id}`}
                 type="time"
                 value={localStartTime}
                 onChange={e => setLocalStartTime(e.target.value)}
@@ -196,14 +192,10 @@ function ItemEditor({
               />
             </div>
             <div>
-              <label
-                htmlFor={`end-time-${item._id}`}
-                className="text-xs font-medium text-gray-700 mb-1 block"
-              >
+              <label className="text-xs font-medium text-gray-700 mb-1 block">
                 End Time
               </label>
               <input
-                id={`end-time-${item._id}`}
                 type="time"
                 value={localEndTime}
                 onChange={e => setLocalEndTime(e.target.value)}
@@ -214,14 +206,10 @@ function ItemEditor({
 
           {/* Transport Mode */}
           <div>
-            <label
-              htmlFor={`transport-${item._id}`}
-              className="text-xs font-medium text-gray-700 mb-1 block"
-            >
+            <label className="text-xs font-medium text-gray-700 mb-1 block">
               Transport Mode
             </label>
             <select
-              id={`transport-${item._id}`}
               value={localTransportMode}
               onChange={e => setLocalTransportMode(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -238,14 +226,10 @@ function ItemEditor({
 
           {/* Notes */}
           <div>
-            <label
-              htmlFor={`notes-${item._id}`}
-              className="text-xs font-medium text-gray-700 mb-1 block"
-            >
+            <label className="text-xs font-medium text-gray-700 mb-1 block">
               Notes
             </label>
             <textarea
-              id={`notes-${item._id}`}
               value={localNotes}
               onChange={e => setLocalNotes(e.target.value)}
               rows={2}
@@ -511,14 +495,12 @@ function DayEditor({
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search POIs..."
-                aria-label="Search points of interest"
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
             <select
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
-              aria-label="Filter by category"
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
               <option value="">All Categories</option>

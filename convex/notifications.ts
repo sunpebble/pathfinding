@@ -1,6 +1,5 @@
 import type { Doc } from './_generated/dataModel';
 import { ConvexError, v } from 'convex/values';
-import type { RegisteredMutation } from 'convex/server';
 import {
   notificationDataValidator,
   scheduledNotificationDataValidator,
@@ -742,11 +741,7 @@ export const cancelScheduledByReference = mutation({
  * Send pending reminders (called by cron job)
  * Checks for scheduled notifications that are due and sends them
  */
-export const sendPendingReminders: RegisteredMutation<
-  'internal',
-  Record<string, never>,
-  Promise<{ sentCount: number; total: number }>
-> = internalMutation({
+export const sendPendingReminders = internalMutation({
   handler: async (ctx): Promise<{ sentCount: number; total: number }> => {
     const now = Date.now();
 
@@ -809,11 +804,7 @@ export const sendPendingReminders: RegisteredMutation<
  * Clean up old read notifications (internal, called by cron)
  * Deletes read notifications older than 30 days
  */
-export const cleanupOldNotifications: RegisteredMutation<
-  'internal',
-  Record<string, never>,
-  Promise<{ deletedCount: number }>
-> = internalMutation({
+export const cleanupOldNotifications = internalMutation({
   handler: async (ctx): Promise<{ deletedCount: number }> => {
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
