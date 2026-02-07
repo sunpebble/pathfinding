@@ -2,13 +2,13 @@
   "compilerOptions": {
     "target": "ES2021",
     "lib": ["ES2021"],
+    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "baseUrl": ".",
     "paths": {
       "vitest": ["../node_modules/vitest"]
     },
+    "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
