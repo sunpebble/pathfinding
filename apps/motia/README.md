@@ -20,11 +20,11 @@ pnpm start
 cp .env.example .env
 ```
 
-| 变量 | 必需 | 说明 |
-|------|------|------|
+| 变量             | 必需       | 说明                       |
+| ---------------- | ---------- | -------------------------- |
 | `KERNEL_API_KEY` | 马蜂窝爬虫 | Kernel.sh 云浏览器 API Key |
-| `OPENAI_API_KEY` | 可选 | AI 功能增强 |
-| `CONVEX_URL` | 数据存储 | Convex 部署 URL |
+| `OPENAI_API_KEY` | 可选       | AI 功能增强                |
+| `CONVEX_URL`     | 数据存储   | Convex 部署 URL            |
 
 ## API 端点
 
@@ -46,6 +46,7 @@ curl -X POST http://localhost:3000/api/crawler/mafengwo/list \
 ```
 
 响应：
+
 ```json
 {
   "success": true,
@@ -64,6 +65,7 @@ curl -X POST http://localhost:3000/api/crawler/mafengwo/detail \
 ```
 
 响应：
+
 ```json
 {
   "success": true,
@@ -79,11 +81,11 @@ curl -X POST http://localhost:3000/api/crawler/mafengwo/detail \
 
 ## 事件
 
-| 事件 | 触发时机 |
-|------|----------|
-| `crawler.mafengwo.list.completed` | 列表爬取完成 |
+| 事件                                | 触发时机     |
+| ----------------------------------- | ------------ |
+| `crawler.mafengwo.list.completed`   | 列表爬取完成 |
 | `crawler.mafengwo.detail.completed` | 详情爬取完成 |
-| `crawler.mafengwo.saved` | 数据存储完成 |
+| `crawler.mafengwo.saved`            | 数据存储完成 |
 
 ## 测试
 

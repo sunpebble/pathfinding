@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { getUserByIdHandler, getUserProfileHandler } from './users';
 
-describe('User Queries Performance', () => {
+describe('user Queries Performance', () => {
   describe('getUserByIdHandler', () => {
     it('should use by_email index for user lookup', async () => {
       // Mock the query builder chain
@@ -27,7 +27,7 @@ describe('User Queries Performance', () => {
       // Verify it uses the index
       expect(mockQueryBuilder.withIndex).toHaveBeenCalledWith(
         'by_email',
-        expect.any(Function)
+        expect.any(Function),
       );
 
       // Verify it does NOT use full table scan filter
@@ -58,7 +58,7 @@ describe('User Queries Performance', () => {
       // Verify it uses the index
       expect(mockQueryBuilder.withIndex).toHaveBeenCalledWith(
         'by_email',
-        expect.any(Function)
+        expect.any(Function),
       );
 
       // Verify it does NOT use full table scan filter (for the main profile query)

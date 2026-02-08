@@ -48,10 +48,10 @@ describe('ModuleName', () => {
     it('should do something specific', () => {
       // Arrange
       const input = 'test';
-      
+
       // Act
       const result = functionName(input);
-      
+
       // Assert
       expect(result).toBe('expected');
     });
@@ -131,9 +131,9 @@ it('should parse URL correctly', () => {
 ```typescript
 it('should clean content with LLM', async () => {
   mockLLM.invoke.mockResolvedValue({ content: '...' });
-  
+
   const result = await cleanContentWithLLM(rawData);
-  
+
   expect(result.content).toBeDefined();
   expect(mockLLM.invoke).toHaveBeenCalled();
 });
@@ -151,9 +151,9 @@ it('should throw error when API key missing', () => {
 
 it('should handle errors gracefully', async () => {
   mockFetch.mockRejectedValue(new Error('Network error'));
-  
+
   const result = await fetchData();
-  
+
   expect(result).toBeNull();
 });
 ```
@@ -163,9 +163,9 @@ it('should handle errors gracefully', async () => {
 ```typescript
 it('should fetch data successfully', async () => {
   mockFetch.mockResolvedValue({ ok: true, json: async () => data });
-  
+
   const result = await fetchData();
-  
+
   expect(result).toEqual(data);
 });
 ```
