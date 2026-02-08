@@ -55,14 +55,18 @@ function PlatformBadge({ platform }: { platform: string }) {
   );
 }
 
+function getQualityScoreColor(score: number) {
+  if (score >= 0.7)
+    return 'text-green-600';
+  if (score >= 0.4)
+    return 'text-yellow-600';
+  return 'text-red-600';
+}
+
 function QualityScore({ score }: { score: number }) {
   const percentage = Math.round(score * 100);
-  const color
-    = score >= 0.7
-      ? 'text-green-600'
-      : score >= 0.4
-        ? 'text-yellow-600'
-        : 'text-red-600';
+  const color = getQualityScoreColor(score);
+
   return (
     <div className={cn('flex items-center gap-1', color)}>
       <Star className="h-3.5 w-3.5" />
