@@ -14,7 +14,6 @@
   "dependencies": {
     "@ai-sdk/react": "^3.0.44",
     "@convex-dev/auth": "^0.0.90",
-    "@pathfinding/convex-client": "workspace:*",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -42,6 +41,7 @@
     "use-stick-to-bottom": "^1.1.1"
   },
   "devDependencies": {
+    "@pathfinding/convex-client": "workspace:*",
     "@tailwindcss/postcss": "^4.1.10",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
