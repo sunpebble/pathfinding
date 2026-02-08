@@ -1,5 +1,6 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
+import type { QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
@@ -42,31 +43,83 @@ export const getCurrentUser = query({
   },
 });
 
+// Handler for getUserById
+export async function getUserByIdHandler(ctx: QueryCtx, args: { userId: string }) {
+  // Query profiles table - in Convex Auth, user data is spread across auth tables and profiles
+  const profile = await ctx.db
+    .query('profiles')
+    .withIndex('by_email', q => q.eq('email', args.userId))
+    .first();
+
+  if (!profile) {
+    return null;
+  }
+
+  return {
+    id: args.userId,
+    email: profile.email,
+    displayName: profile.displayName,
+    avatarUrl: profile.avatarUrl,
+    bio: profile.bio,
+    followersCount: profile.followersCount ?? 0,
+    followingCount: profile.followingCount ?? 0,
+  };
+}
+
 // Get user by ID (for looking up other users)
 export const getUserById = query({
   args: { userId: v.string() },
-  handler: async (ctx, args) => {
-    // Query profiles table - in Convex Auth, user data is spread across auth tables and profiles
-    const profile = await ctx.db
-      .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
-      .first();
-
-    if (!profile) {
-      return null;
-    }
-
-    return {
-      id: args.userId,
-      email: profile.email,
-      displayName: profile.displayName,
-      avatarUrl: profile.avatarUrl,
-      bio: profile.bio,
-      followersCount: profile.followersCount ?? 0,
-      followingCount: profile.followingCount ?? 0,
-    };
-  },
+  handler: getUserByIdHandler,
 });
+
+// Handler for getUserProfile
+export async function getUserProfileHandler(
+  ctx: QueryCtx,
+  args: { userId: string; currentUserId?: string },
+) {
+  // Query profiles table
+  const profile = await ctx.db
+    .query('profiles')
+    .withIndex('by_email', q => q.eq('email', args.userId))
+    .first();
+
+  if (!profile) {
+    return null;
+  }
+
+  // Check follow status if currentUserId is provided
+  let isFollowing = false;
+  let isFollowedBy = false;
+
+  if (args.currentUserId && args.currentUserId !== args.userId) {
+    const currentUserFollows = await ctx.db
+      .query('userFollows')
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.currentUserId!).eq('followingId', args.userId))
+      .first();
+    isFollowing = currentUserFollows !== null;
+
+    const targetUserFollows = await ctx.db
+      .query('userFollows')
+      .withIndex('by_follower_following', q =>
+        q.eq('followerId', args.userId).eq('followingId', args.currentUserId!))
+      .first();
+    isFollowedBy = targetUserFollows !== null;
+  }
+
+  return {
+    id: args.userId,
+    email: profile.email,
+    displayName: profile.displayName,
+    avatarUrl: profile.avatarUrl,
+    bio: profile.bio,
+    followersCount: profile.followersCount ?? 0,
+    followingCount: profile.followingCount ?? 0,
+    isFollowing,
+    isFollowedBy,
+    isMutual: isFollowing && isFollowedBy,
+  };
+}
 
 // Get user profile with follow status (for viewing other users' profiles)
 export const getUserProfile = query({
@@ -74,50 +127,7 @@ export const getUserProfile = query({
     userId: v.string(),
     currentUserId: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    // Query profiles table
-    const profile = await ctx.db
-      .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
-      .first();
-
-    if (!profile) {
-      return null;
-    }
-
-    // Check follow status if currentUserId is provided
-    let isFollowing = false;
-    let isFollowedBy = false;
-
-    if (args.currentUserId && args.currentUserId !== args.userId) {
-      const currentUserFollows = await ctx.db
-        .query('userFollows')
-        .withIndex('by_follower_following', q =>
-          q.eq('followerId', args.currentUserId!).eq('followingId', args.userId))
-        .first();
-      isFollowing = currentUserFollows !== null;
-
-      const targetUserFollows = await ctx.db
-        .query('userFollows')
-        .withIndex('by_follower_following', q =>
-          q.eq('followerId', args.userId).eq('followingId', args.currentUserId!))
-        .first();
-      isFollowedBy = targetUserFollows !== null;
-    }
-
-    return {
-      id: args.userId,
-      email: profile.email,
-      displayName: profile.displayName,
-      avatarUrl: profile.avatarUrl,
-      bio: profile.bio,
-      followersCount: profile.followersCount ?? 0,
-      followingCount: profile.followingCount ?? 0,
-      isFollowing,
-      isFollowedBy,
-      isMutual: isFollowing && isFollowedBy,
-    };
-  },
+  handler: getUserProfileHandler,
 });
 
 // Check if user is authenticated (returns boolean)
