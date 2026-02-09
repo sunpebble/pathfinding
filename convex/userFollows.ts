@@ -1,125 +1,176 @@
+import type { MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
 
 /**
  * User Follows - Social Relationship Management
  * Handles follow/unfollow operations, follower/following lists, and mutual follow detection
  */
 
-// Follow a user
+// Shared logic for follow
+async function followLogic(ctx: MutationCtx, followerId: string, followingId: string) {
+  // Prevent self-follow
+  if (followerId === followingId) {
+    throw new Error('Cannot follow yourself');
+  }
+
+  // Check if already following
+  const existing = await ctx.db
+    .query('userFollows')
+    .withIndex('by_follower_following', q =>
+      q.eq('followerId', followerId).eq('followingId', followingId))
+    .first();
+
+  if (existing) {
+    throw new Error('Already following this user');
+  }
+
+  // Create follow relationship
+  const followId = await ctx.db.insert('userFollows', {
+    followerId,
+    followingId,
+    createdAt: Date.now(),
+  });
+
+  // Update follower's followingCount
+  const followerProfile = await ctx.db
+    .query('profiles')
+    .withIndex('by_email', q => q.eq('email', followerId))
+    .first();
+
+  if (followerProfile) {
+    await ctx.db.patch(followerProfile._id, {
+      followingCount: (followerProfile.followingCount ?? 0) + 1,
+    });
+  }
+
+  // Update following's followersCount
+  const followingProfile = await ctx.db
+    .query('profiles')
+    .withIndex('by_email', q => q.eq('email', followingId))
+    .first();
+
+  if (followingProfile) {
+    await ctx.db.patch(followingProfile._id, {
+      followersCount: (followingProfile.followersCount ?? 0) + 1,
+    });
+  }
+
+  // Create notification for the followed user
+  await ctx.db.insert('notifications', {
+    userId: followingId,
+    type: 'new_follower',
+    referenceType: 'user',
+    referenceId: followerId,
+    actorId: followerId,
+    message: '关注了你',
+    isRead: false,
+    createdAt: Date.now(),
+  });
+
+  return followId;
+}
+
+// Shared logic for unfollow
+async function unfollowLogic(ctx: MutationCtx, followerId: string, followingId: string) {
+  // Find the follow relationship
+  const existing = await ctx.db
+    .query('userFollows')
+    .withIndex('by_follower_following', q =>
+      q.eq('followerId', followerId).eq('followingId', followingId))
+    .first();
+
+  if (!existing) {
+    throw new Error('Not following this user');
+  }
+
+  // Delete follow relationship
+  await ctx.db.delete(existing._id);
+
+  // Update follower's followingCount
+  const followerProfile = await ctx.db
+    .query('profiles')
+    .withIndex('by_email', q => q.eq('email', followerId))
+    .first();
+
+  if (followerProfile && (followerProfile.followingCount ?? 0) > 0) {
+    await ctx.db.patch(followerProfile._id, {
+      followingCount: (followerProfile.followingCount ?? 1) - 1,
+    });
+  }
+
+  // Update following's followersCount
+  const followingProfile = await ctx.db
+    .query('profiles')
+    .withIndex('by_email', q => q.eq('email', followingId))
+    .first();
+
+  if (followingProfile && (followingProfile.followersCount ?? 0) > 0) {
+    await ctx.db.patch(followingProfile._id, {
+      followersCount: (followingProfile.followersCount ?? 1) - 1,
+    });
+  }
+}
+
+// Internal follow mutation (exposed for HTTP API)
+export const followInternal = internalMutation({
+  args: {
+    followerId: v.string(),
+    followingId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await followLogic(ctx, args.followerId, args.followingId);
+  },
+});
+
+// Secure public follow mutation
 export const follow = mutation({
   args: {
     followerId: v.string(),
     followingId: v.string(),
   },
   handler: async (ctx, args) => {
-    // Prevent self-follow
-    if (args.followerId === args.followingId) {
-      throw new Error('Cannot follow yourself');
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
     }
 
-    // Check if already following
-    const existing = await ctx.db
-      .query('userFollows')
-      .withIndex('by_follower_following', q =>
-        q.eq('followerId', args.followerId).eq('followingId', args.followingId))
-      .first();
-
-    if (existing) {
-      throw new Error('Already following this user');
+    if (identity.email !== args.followerId) {
+      throw new Error('Unauthorized: Cannot follow on behalf of another user');
     }
 
-    // Create follow relationship
-    const followId = await ctx.db.insert('userFollows', {
-      followerId: args.followerId,
-      followingId: args.followingId,
-      createdAt: Date.now(),
-    });
-
-    // Update follower's followingCount
-    const followerProfile = await ctx.db
-      .query('profiles')
-      .withIndex('by_email', q => q.eq('email', args.followerId))
-      .first();
-
-    if (followerProfile) {
-      await ctx.db.patch(followerProfile._id, {
-        followingCount: (followerProfile.followingCount ?? 0) + 1,
-      });
-    }
-
-    // Update following's followersCount
-    const followingProfile = await ctx.db
-      .query('profiles')
-      .withIndex('by_email', q => q.eq('email', args.followingId))
-      .first();
-
-    if (followingProfile) {
-      await ctx.db.patch(followingProfile._id, {
-        followersCount: (followingProfile.followersCount ?? 0) + 1,
-      });
-    }
-
-    // Create notification for the followed user
-    await ctx.db.insert('notifications', {
-      userId: args.followingId,
-      type: 'new_follower',
-      referenceType: 'user',
-      referenceId: args.followerId,
-      actorId: args.followerId,
-      message: '关注了你',
-      isRead: false,
-      createdAt: Date.now(),
-    });
-
-    return followId;
+    return await followLogic(ctx, args.followerId, args.followingId);
   },
 });
 
-// Unfollow a user
+// Internal unfollow mutation (exposed for HTTP API)
+export const unfollowInternal = internalMutation({
+  args: {
+    followerId: v.string(),
+    followingId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await unfollowLogic(ctx, args.followerId, args.followingId);
+  },
+});
+
+// Secure public unfollow mutation
 export const unfollow = mutation({
   args: {
     followerId: v.string(),
     followingId: v.string(),
   },
   handler: async (ctx, args) => {
-    // Find the follow relationship
-    const existing = await ctx.db
-      .query('userFollows')
-      .withIndex('by_follower_following', q =>
-        q.eq('followerId', args.followerId).eq('followingId', args.followingId))
-      .first();
-
-    if (!existing) {
-      throw new Error('Not following this user');
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
     }
 
-    // Delete follow relationship
-    await ctx.db.delete(existing._id);
-
-    // Update follower's followingCount
-    const followerProfile = await ctx.db
-      .query('profiles')
-      .withIndex('by_email', q => q.eq('email', args.followerId))
-      .first();
-
-    if (followerProfile && (followerProfile.followingCount ?? 0) > 0) {
-      await ctx.db.patch(followerProfile._id, {
-        followingCount: (followerProfile.followingCount ?? 1) - 1,
-      });
+    if (identity.email !== args.followerId) {
+      throw new Error('Unauthorized: Cannot unfollow on behalf of another user');
     }
 
-    // Update following's followersCount
-    const followingProfile = await ctx.db
-      .query('profiles')
-      .withIndex('by_email', q => q.eq('email', args.followingId))
-      .first();
-
-    if (followingProfile && (followingProfile.followersCount ?? 0) > 0) {
-      await ctx.db.patch(followingProfile._id, {
-        followersCount: (followingProfile.followersCount ?? 1) - 1,
-      });
-    }
+    return await unfollowLogic(ctx, args.followerId, args.followingId);
   },
 });
 

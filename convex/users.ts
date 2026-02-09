@@ -1,12 +1,29 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
+import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { internalQuery, mutation, query } from './_generated/server';
 
 /**
  * Users - Authentication and Profile Management
  * Handles user sessions and profile data using Convex Auth
  */
+
+// Get email for a user by Auth ID (internal)
+export const getEmailForUser = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      // Cast to Id<"users"> assuming standard Convex Auth users table
+      const user = await ctx.db.get(args.userId as Id<'users'>);
+      return user?.email ? { email: user.email } : null;
+    }
+    catch {
+      // Handle invalid ID format
+      return null;
+    }
+  },
+});
 
 // Get current authenticated user with profile
 export const getCurrentUser = query({
@@ -49,7 +66,7 @@ export const getUserById = query({
     // Query profiles table - in Convex Auth, user data is spread across auth tables and profiles
     const profile = await ctx.db
       .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
+      .withIndex('by_email', q => q.eq('email', args.userId))
       .first();
 
     if (!profile) {
@@ -72,35 +89,38 @@ export const getUserById = query({
 export const getUserProfile = query({
   args: {
     userId: v.string(),
-    currentUserId: v.optional(v.string()),
+    // currentUserId removed to prevent spoofing
   },
   handler: async (ctx, args) => {
     // Query profiles table
     const profile = await ctx.db
       .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
+      .withIndex('by_email', q => q.eq('email', args.userId))
       .first();
 
     if (!profile) {
       return null;
     }
 
-    // Check follow status if currentUserId is provided
+    // Check follow status if authenticated
     let isFollowing = false;
     let isFollowedBy = false;
 
-    if (args.currentUserId && args.currentUserId !== args.userId) {
+    const identity = await ctx.auth.getUserIdentity();
+    const currentUserId = identity?.email;
+
+    if (currentUserId && currentUserId !== args.userId) {
       const currentUserFollows = await ctx.db
         .query('userFollows')
         .withIndex('by_follower_following', q =>
-          q.eq('followerId', args.currentUserId!).eq('followingId', args.userId))
+          q.eq('followerId', currentUserId).eq('followingId', args.userId))
         .first();
       isFollowing = currentUserFollows !== null;
 
       const targetUserFollows = await ctx.db
         .query('userFollows')
         .withIndex('by_follower_following', q =>
-          q.eq('followerId', args.userId).eq('followingId', args.currentUserId!))
+          q.eq('followerId', args.userId).eq('followingId', currentUserId))
         .first();
       isFollowedBy = targetUserFollows !== null;
     }

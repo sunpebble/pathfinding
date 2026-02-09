@@ -1,6 +1,6 @@
 import type { Id } from './_generated/dataModel';
 import { httpRouter } from 'convex/server';
-import { api } from './_generated/api';
+import { api, internal } from './_generated/api';
 import { httpAction } from './_generated/server';
 import { auth } from './auth';
 
@@ -1266,6 +1266,11 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     try {
+      const userId = await getUserIdFromAuth(request);
+      if (!userId) {
+        return errorResponse('未授权，请先登录', 401);
+      }
+
       const body = await request.json();
       const { followerId, followingId } = body;
 
@@ -1273,7 +1278,13 @@ http.route({
         return errorResponse('缺少必要参数', 400);
       }
 
-      await ctx.runMutation(api.userFollows.follow, {
+      // Verify that the authenticated user matches the followerId
+      const user = await ctx.runQuery(internal.users.getEmailForUser, { userId });
+      if (!user || user.email !== followerId) {
+        return errorResponse('无权操作此用户', 403);
+      }
+
+      await ctx.runMutation(internal.userFollows.followInternal, {
         followerId,
         followingId,
       });
@@ -1295,6 +1306,11 @@ http.route({
   method: 'DELETE',
   handler: httpAction(async (ctx, request) => {
     try {
+      const userId = await getUserIdFromAuth(request);
+      if (!userId) {
+        return errorResponse('未授权，请先登录', 401);
+      }
+
       const body = await request.json();
       const { followerId, followingId } = body;
 
@@ -1302,7 +1318,13 @@ http.route({
         return errorResponse('缺少必要参数', 400);
       }
 
-      await ctx.runMutation(api.userFollows.unfollow, {
+      // Verify that the authenticated user matches the followerId
+      const user = await ctx.runQuery(internal.users.getEmailForUser, { userId });
+      if (!user || user.email !== followerId) {
+        return errorResponse('无权操作此用户', 403);
+      }
+
+      await ctx.runMutation(internal.userFollows.unfollowInternal, {
         followerId,
         followingId,
       });
