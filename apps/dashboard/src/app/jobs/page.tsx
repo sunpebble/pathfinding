@@ -199,30 +199,27 @@ export default function JobsPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 ml-4">
-                              {task.enabled
-                                ? (
-                                    <button
-                                      onClick={() => stopTaskMutation.mutate(task.name)}
-                                      disabled={stopTaskMutation.isPending}
-                                      className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Stop task"
-                                    >
-                                      <StopCircle className="h-4 w-4" />
-                                      Stop
-                                    </button>
-                                  )
-                                : (
-                                    <button
-                                      onClick={() =>
-                                        startTaskMutation.mutate(task.name)}
-                                      disabled={startTaskMutation.isPending}
-                                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Start task"
-                                    >
-                                      <Play className="h-4 w-4" />
-                                      Start
-                                    </button>
-                                  )}
+                              {task.enabled ? (
+                                <button
+                                  onClick={() => stopTaskMutation.mutate(task.name)}
+                                  disabled={stopTaskMutation.isPending}
+                                  className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
+                                  title="Stop task"
+                                >
+                                  <StopCircle className="h-4 w-4" />
+                                  Stop
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => startTaskMutation.mutate(task.name)}
+                                  disabled={startTaskMutation.isPending}
+                                  className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
+                                  title="Start task"
+                                >
+                                  <Play className="h-4 w-4" />
+                                  Start
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
