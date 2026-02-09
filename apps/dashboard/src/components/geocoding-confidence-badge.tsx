@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Globe, Map, MapPin, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GeocodingConfidenceBadgeProps {
   confidence: number;
@@ -77,23 +78,34 @@ export function GeocodingConfidenceBadge({
     }
   };
 
+  const tooltipText = `${confidenceLevel.label} confidence (${(confidence * 100).toFixed(0)}%) from ${sourceInfo.name}${isManuallyVerified ? ' - Manually verified' : ''}`;
+
+  const Comp = onClick ? 'button' : 'div';
+
   return (
-    <div
-      className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors',
-        confidenceLevel.color,
-        onClick && 'cursor-pointer hover:opacity-80',
-        className,
-      )}
-      onClick={handleClick}
-      title={`${confidenceLevel.label} confidence (${(confidence * 100).toFixed(0)}%) from ${sourceInfo.name}${isManuallyVerified ? ' - Manually verified' : ''}`}
-    >
-      <Icon className="h-3.5 w-3.5" />
-      <span>{confidenceLevel.label}</span>
-      <span className="text-xs opacity-70">·</span>
-      <SourceIcon className="h-3 w-3 opacity-70" />
-      <span className="text-xs opacity-70">{sourceInfo.name}</span>
-      {onClick && <Pencil className="h-3 w-3 ml-1 opacity-50" />}
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Comp
+          className={cn(
+            'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors',
+            confidenceLevel.color,
+            onClick && 'cursor-pointer hover:opacity-80',
+            className,
+          )}
+          onClick={handleClick}
+          type={onClick ? 'button' : undefined}
+        >
+          <Icon className="h-3.5 w-3.5" />
+          <span>{confidenceLevel.label}</span>
+          <span className="text-xs opacity-70">·</span>
+          <SourceIcon className="h-3 w-3 opacity-70" />
+          <span className="text-xs opacity-70">{sourceInfo.name}</span>
+          {onClick && <Pencil className="h-3 w-3 ml-1 opacity-50" />}
+        </Comp>
+      </TooltipTrigger>
+      <TooltipContent>
+        {tooltipText}
+      </TooltipContent>
+    </Tooltip>
   );
 }
