@@ -1,6 +1,6 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { type RegisteredMutation } from 'convex/server';
+import type { RegisteredMutation } from 'convex/server';
 import { v } from 'convex/values';
 import { internal } from './_generated/api';
 import { internalMutation, mutation, query } from './_generated/server';
@@ -343,6 +343,7 @@ export const updatePushToken = mutation({
 /**
  * 清理过期的 OTP 记录 (由 cron 调用)
  */
+// eslint-disable-next-line ts/no-explicit-any
 export const cleanupExpiredOtps: RegisteredMutation<'internal', any, Promise<{ cleanedOtps: number }>> = internalMutation({
   handler: async (ctx): Promise<{ cleanedOtps: number }> => {
     const now = Date.now();
@@ -366,6 +367,7 @@ export const cleanupExpiredOtps: RegisteredMutation<'internal', any, Promise<{ c
 /**
  * 清理过期的速率限制记录 (由 cron 调用)
  */
+// eslint-disable-next-line ts/no-explicit-any
 export const cleanupExpiredRateLimits: RegisteredMutation<'internal', any, Promise<{ cleaned: number }>> = internalMutation({
   handler: async (ctx): Promise<{ cleaned: number }> => {
     const now = Date.now();
