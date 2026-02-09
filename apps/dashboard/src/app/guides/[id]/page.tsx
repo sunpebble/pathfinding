@@ -390,6 +390,9 @@ export default function GuideDetailPage() {
                     const isLowConfidence
                       = poi.geocodeConfidence !== undefined
                         && poi.geocodeConfidence < 0.5;
+                    const borderClass = isLowConfidence && !poi.isManuallyVerified
+                      ? 'border-amber-200 bg-amber-50'
+                      : 'border-gray-200 bg-gray-50';
 
                     return (
                       <div
@@ -397,7 +400,7 @@ export default function GuideDetailPage() {
                         key={`poi-${day.dayNumber}-${poiIndex}`}
                         className={cn(
                           'flex items-start gap-3 p-3 rounded-lg border transition-colors',
-                          isLowConfidence && !poi.isManuallyVerified ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-gray-50',
+                          borderClass,
                         )}
                       >
                         <div className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
