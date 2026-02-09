@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi, beforeAll } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { GeocodingConfidenceBadge } from './geocoding-confidence-badge';
 
@@ -10,7 +10,7 @@ class ResizeObserver {
   disconnect() {}
 }
 
-describe('GeocodingConfidenceBadge', () => {
+describe('geocodingConfidenceBadge', () => {
   beforeAll(() => {
     window.ResizeObserver = ResizeObserver;
   });
@@ -44,7 +44,8 @@ describe('GeocodingConfidenceBadge', () => {
     render(<GeocodingConfidenceBadge confidence={0.9} source="osm" />);
 
     const trigger = screen.getByText('High').parentElement;
-    if (!trigger) throw new Error('Trigger not found');
+    if (!trigger)
+      throw new Error('Trigger not found');
 
     // Tooltip content should not be visible initially (or accessible name should be different)
     // Actually Radix renders content in a portal, so it might not be in the DOM until triggered.

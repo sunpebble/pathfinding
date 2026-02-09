@@ -1,8 +1,8 @@
 'use client';
 
 import { CheckCircle2, Globe, Map, MapPin, Pencil } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface GeocodingConfidenceBadgeProps {
   confidence: number;
