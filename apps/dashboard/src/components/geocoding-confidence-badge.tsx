@@ -90,7 +90,6 @@ export function GeocodingConfidenceBadge({
         className,
       )}
       onClick={isInteractive ? handleClick : undefined}
-      // @ts-expect-error - type is valid for button but not div, safe to ignore given polymorphic usage
       type={isInteractive ? 'button' : undefined}
       title={titleText}
       aria-label={isInteractive ? `Edit POI - ${titleText}` : undefined}
