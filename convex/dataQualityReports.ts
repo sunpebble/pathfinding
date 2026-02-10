@@ -5,11 +5,17 @@
  * CRUD operations for data quality analysis reports
  */
 
+/**
+ * Clean up old quality reports (internal, called by cron)
+ * Deletes reports older than 90 days
+ */
+import type { RegisteredMutation } from 'convex/server';
 import { v } from 'convex/values';
 import {
   dataQualityIssueValidator,
   dataQualityMetricsValidator,
 } from '../packages/convex-client/src/validators/index.js';
+
 import { internalMutation, mutation, query } from './_generated/server';
 
 // List data quality reports with pagination
@@ -118,12 +124,6 @@ export const getSummary = query({
     };
   },
 });
-
-/**
- * Clean up old quality reports (internal, called by cron)
- * Deletes reports older than 90 days
- */
-import type { RegisteredMutation } from 'convex/server';
 
 export const cleanupOld: RegisteredMutation<'internal', Record<string, never>, Promise<{ deletedCount: number }>> = internalMutation({
   handler: async (ctx): Promise<{ deletedCount: number }> => {

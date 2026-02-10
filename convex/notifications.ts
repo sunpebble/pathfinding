@@ -1,3 +1,4 @@
+import type { RegisteredMutation } from 'convex/server';
 import type { Doc } from './_generated/dataModel';
 import { ConvexError, v } from 'convex/values';
 import {
@@ -5,7 +6,6 @@ import {
   scheduledNotificationDataValidator,
 } from '../packages/convex-client/src/validators/index.js';
 import { internalMutation, mutation, query } from './_generated/server';
-import type { RegisteredMutation } from 'convex/server';
 
 /**
  * Notifications - Push Notification Management
