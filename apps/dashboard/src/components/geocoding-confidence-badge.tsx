@@ -77,23 +77,30 @@ export function GeocodingConfidenceBadge({
     }
   };
 
+  const Comp = onClick ? 'button' : 'div';
+  const isInteractive = !!onClick;
+  const titleText = `${confidenceLevel.label} confidence (${(confidence * 100).toFixed(0)}%) from ${sourceInfo.name}${isManuallyVerified ? ' - Manually verified' : ''}`;
+
   return (
-    <div
+    <Comp
       className={cn(
         'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors',
         confidenceLevel.color,
-        onClick && 'cursor-pointer hover:opacity-80',
+        isInteractive && 'cursor-pointer hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         className,
       )}
-      onClick={handleClick}
-      title={`${confidenceLevel.label} confidence (${(confidence * 100).toFixed(0)}%) from ${sourceInfo.name}${isManuallyVerified ? ' - Manually verified' : ''}`}
+      onClick={isInteractive ? handleClick : undefined}
+      // @ts-expect-error - type is valid for button but not div, safe to ignore given polymorphic usage
+      type={isInteractive ? 'button' : undefined}
+      title={titleText}
+      aria-label={isInteractive ? `Edit POI - ${titleText}` : undefined}
     >
       <Icon className="h-3.5 w-3.5" />
       <span>{confidenceLevel.label}</span>
       <span className="text-xs opacity-70">·</span>
       <SourceIcon className="h-3 w-3 opacity-70" />
       <span className="text-xs opacity-70">{sourceInfo.name}</span>
-      {onClick && <Pencil className="h-3 w-3 ml-1 opacity-50" />}
-    </div>
+      {isInteractive && <Pencil className="h-3 w-3 ml-1 opacity-50" />}
+    </Comp>
   );
 }
