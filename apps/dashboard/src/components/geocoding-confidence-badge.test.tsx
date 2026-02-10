@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { GeocodingConfidenceBadge } from './geocoding-confidence-badge';
+import '@testing-library/jest-dom'; // Ensure jest-dom matchers are available
 
 describe('geocodingConfidenceBadge', () => {
   it('renders as a div when no onClick is provided', () => {
