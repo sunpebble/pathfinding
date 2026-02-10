@@ -49,7 +49,8 @@ export const getUserById = query({
     // Query profiles table - in Convex Auth, user data is spread across auth tables and profiles
     const profile = await ctx.db
       .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
+      // Optimization: Use by_email index instead of filter for O(log N) lookup
+      .withIndex('by_email', q => q.eq('email', args.userId))
       .first();
 
     if (!profile) {
@@ -78,7 +79,8 @@ export const getUserProfile = query({
     // Query profiles table
     const profile = await ctx.db
       .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
+      // Optimization: Use by_email index instead of filter for O(log N) lookup
+      .withIndex('by_email', q => q.eq('email', args.userId))
       .first();
 
     if (!profile) {
