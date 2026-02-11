@@ -18,6 +18,7 @@
     "noImplicitAny": false,
     "noEmit": true,
     "skipLibCheck": true,
+    "types": ["vitest"],
     "plugins": [
       {
         "name": "next"

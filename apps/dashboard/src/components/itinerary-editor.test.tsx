@@ -76,7 +76,7 @@ describe('itineraryEditor', () => {
   });
 
   it('renders correctly with itinerary data', () => {
-    vi.mocked(convexReact.useQuery).mockImplementation((query: unknown) => {
+    vi.mocked(convexReact.useQuery).mockImplementation((query: any) => {
       // Just return the mock itinerary for any query for simplicity in this test
       if (query === 'itineraries:getById')
         return mockItinerary;
@@ -102,7 +102,7 @@ describe('itineraryEditor', () => {
   });
 
   it('renders "No days" when empty', () => {
-    vi.mocked(convexReact.useQuery).mockImplementation((query: unknown) => {
+    vi.mocked(convexReact.useQuery).mockImplementation((query: any) => {
       if (query === 'itineraries:getById')
         return { ...mockItinerary, days: [] };
       return [];
