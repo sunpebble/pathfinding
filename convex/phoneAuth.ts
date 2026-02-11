@@ -1,8 +1,7 @@
-/* eslint-disable ts/ban-ts-comment */
+import type { RegisteredMutation } from 'convex/server';
 // @ts-nocheck
 import { v } from 'convex/values';
 import { internal } from './_generated/api';
-import type { RegisteredMutation } from 'convex/server';
 import { internalMutation, mutation, query } from './_generated/server';
 
 // OTP 配置
