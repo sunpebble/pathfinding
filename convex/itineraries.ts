@@ -129,14 +129,27 @@ export const listPublic = query({
     const pageSize = args.pageSize ?? 10;
     const offset = (page - 1) * pageSize;
 
-    let itineraries = await ctx.db
-      .query('itineraries')
-      .withIndex('by_visibility', q => q.eq('visibility', 'public'))
-      .order('desc')
-      .collect();
+    let itineraries;
+    let cityData = null;
 
     if (args.cityId) {
-      itineraries = itineraries.filter(i => i.cityId === args.cityId);
+      // Optimized query using compound index
+      itineraries = await ctx.db
+        .query('itineraries')
+        .withIndex('by_visibility_city', q =>
+          q.eq('visibility', 'public').eq('cityId', args.cityId!))
+        .order('desc')
+        .collect();
+
+      // Pre-fetch city data once to avoid N+1 queries
+      cityData = await ctx.db.get(args.cityId);
+    }
+    else {
+      itineraries = await ctx.db
+        .query('itineraries')
+        .withIndex('by_visibility', q => q.eq('visibility', 'public'))
+        .order('desc')
+        .collect();
     }
 
     const total = itineraries.length;
@@ -144,7 +157,7 @@ export const listPublic = query({
 
     const enriched = await Promise.all(
       data.map(async (itinerary) => {
-        const city = await ctx.db.get(itinerary.cityId);
+        const city = cityData || (await ctx.db.get(itinerary.cityId));
         return {
           ...itinerary,
           cityName: city?.name,
