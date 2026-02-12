@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useAuthActions } from "@convex-dev/auth/react";
-import { api } from "@pathfinding/convex-client";
-import { useQuery } from "convex/react";
-import { LogOut, User } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAuthActions } from '@convex-dev/auth/react';
+import { api } from '@pathfinding/convex-client';
+import { useQuery } from 'convex/react';
+import { LogOut, User } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +13,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/use-auth";
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/use-auth';
 
 export function AuthButton() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -24,12 +24,12 @@ export function AuthButton() {
   // Get current user data
   const currentUser = useQuery(
     api.users.getCurrentUser,
-    isAuthenticated ? {} : "skip",
+    isAuthenticated ? {} : 'skip',
   );
 
   const handleSignOut = async () => {
     await signOut();
-    router.push("/auth/signin");
+    router.push('/auth/signin');
   };
 
   // Loading state
@@ -50,12 +50,12 @@ export function AuthButton() {
   }
 
   // Authenticated - show user menu
-  const displayName =
-    currentUser?.profile?.displayName ||
-    currentUser?.name ||
-    currentUser?.email?.split("@")[0] ||
-    "User";
-  const userEmail = currentUser?.email || "";
+  const displayName
+    = currentUser?.profile?.displayName
+      || currentUser?.name
+      || currentUser?.email?.split('@')[0]
+      || 'User';
+  const userEmail = currentUser?.email || '';
 
   return (
     <DropdownMenu>
