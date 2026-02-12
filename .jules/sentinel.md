@@ -1,0 +1,4 @@
+## 2025-02-14 - Critical: Insecure JWT Handling in Convex HTTP Actions
+**Vulnerability:** Manual JWT decoding without signature verification in `convex/http.ts`. The `getUserIdFromAuth` function decoded the JWT payload using `atob` to extract the `sub` claim (user ID) but failed to verify the token's signature. This allows an attacker to forge a token with an arbitrary user ID and bypass authentication on sensitive endpoints (e.g., commenting, reporting).
+**Learning:** Developers may be tempted to manually parse JWTs to quickly access claims, especially when porting code or following generic tutorials, overlooking the necessity of signature verification provided by the platform.
+**Prevention:** Always use the framework-provided authentication context. In Convex HTTP actions, rely on `ctx.auth.getUserIdentity()` which performs full validation. Prohibit manual JWT parsing (e.g., `atob`, `jwt-decode`) in backend code via linting rules or code review.
