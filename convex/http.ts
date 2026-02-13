@@ -27,6 +27,31 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     try {
+      // Rate Limit Check
+      const forwardedFor = request.headers.get('x-forwarded-for');
+      const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : 'unknown';
+      const rateLimitKey = `auth:password:${ip}`;
+
+      // 10 attempts per minute
+      // eslint-disable-next-line ts/no-explicit-any
+      const limitResult: any = await ctx.runMutation((api as any).rateLimit.check, {
+        key: rateLimitKey,
+        limit: 10,
+        windowMs: 60 * 1000,
+      });
+
+      if (!limitResult.success) {
+        return new Response(
+          JSON.stringify({
+            error: `Too many requests. Please try again in ${limitResult.retryAfter} seconds.`,
+          }),
+          {
+            status: 429,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+      }
+
       const body = await request.json();
       const { email, password, flow = 'signIn', name } = body;
 
