@@ -102,6 +102,8 @@ struct ProfileView: View {
                 index: 2
               )
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(favoriteStore.totalFavoritesCount) 个收藏，\(favoriteStore.totalLikesCount) 个喜欢，0 个足迹")
 
             ExplorerDivider(style: .topographic, color: .purple.opacity(0.3))
               .padding(.horizontal, DesignTokens.Spacing.md)
@@ -131,6 +133,9 @@ struct ProfileView: View {
               }
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(followStats?.followersCount ?? 0) 个关注者，\(followStats?.followingCount ?? 0) 个关注")
+            .accessibilityHint("双击管理关注")
           }
           .padding(.vertical, DesignTokens.Spacing.xs)
         }

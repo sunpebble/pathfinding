@@ -61,9 +61,13 @@ struct OptimizedMapView: View {
               .foregroundStyle(.white)
           }
           .zIndex(isSelected ? 100 : 1)
+          .minimumTouchTarget()
           .onTapGesture {
             onAnnotationTap?(annotation.poi.id)
           }
+          .accessibilityElement(children: .ignore)
+          .accessibilityLabel("\(annotation.poi.name)，\(annotation.poi.type ?? "景点")")
+          .accessibilityValue(isSelected ? "已选中" : "")
         }
       }
     }

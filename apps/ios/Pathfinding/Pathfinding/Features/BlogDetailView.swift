@@ -199,6 +199,8 @@ struct BlogDetailView: View {
             .foregroundStyle(isLiked ? .red : .secondary)
             .symbolEffect(.bounce, value: isLiked)
         }
+        .accessibilityLabel(isLiked ? "取消喜欢" : "喜欢")
+        .accessibilityHint(isLiked ? "取消喜欢这篇攻略" : "标记喜欢这篇攻略")
 
         Button {
           withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
@@ -209,12 +211,16 @@ struct BlogDetailView: View {
             .foregroundStyle(isSaved ? .orange : .secondary)
             .symbolEffect(.bounce, value: isSaved)
         }
+        .accessibilityLabel(isSaved ? "取消收藏" : "收藏")
+        .accessibilityHint(isSaved ? "取消收藏这篇攻略" : "收藏这篇攻略")
 
         Button {
           showShareSheet = true
         } label: {
           Image(systemName: "square.and.arrow.up")
         }
+        .accessibilityLabel("分享")
+        .accessibilityHint("分享这篇攻略")
 
         // PDF Export button
         if guide.aiDays != nil {
@@ -223,6 +229,8 @@ struct BlogDetailView: View {
           } label: {
             Image(systemName: "doc.richtext")
           }
+          .accessibilityLabel("导出 PDF")
+          .accessibilityHint("将攻略导出为 PDF 文件")
         }
       }
     }

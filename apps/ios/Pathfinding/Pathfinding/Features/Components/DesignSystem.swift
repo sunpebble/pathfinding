@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Design Tokens
 // 探索者设计系统 - Explorer Design System for Travel Planning App
@@ -92,6 +93,18 @@ enum DesignTokens {
     static let smooth = SwiftUI.Animation.easeInOut(duration: 0.35)
     static let spring = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.7)
     static let bouncy = SwiftUI.Animation.spring(response: 0.4, dampingFraction: 0.6)
+
+    // Reduced Motion variants — instant transitions
+    static let quickReduced = SwiftUI.Animation.easeOut(duration: 0)
+    static let standardReduced = SwiftUI.Animation.easeInOut(duration: 0)
+    static let smoothReduced = SwiftUI.Animation.easeInOut(duration: 0)
+    static let springReduced = SwiftUI.Animation.easeOut(duration: 0.1)
+    static let bouncyReduced = SwiftUI.Animation.easeOut(duration: 0.1)
+
+    /// Returns the appropriate animation based on Reduce Motion setting
+    static func adaptive(_ animation: SwiftUI.Animation, reduceMotion: Bool) -> SwiftUI.Animation? {
+      reduceMotion ? nil : animation
+    }
   }
 
   // MARK: - Typography
@@ -109,45 +122,66 @@ enum DesignTokens {
     static let caption: Font = .caption
     static let caption2: Font = .caption2
 
+    /// Scales a custom font size using UIFontMetrics, capped at maxSize
+    private static func scaled(_ baseSize: CGFloat, maxSize: CGFloat) -> CGFloat {
+      min(UIFontMetrics.default.scaledValue(for: baseSize), maxSize)
+    }
+
     // MARK: - Display Fonts (探索者英雄字体)
 
     enum Display {
-      static let hero: Font = .system(size: 48, weight: .bold, design: .rounded)
-      static let jumbo: Font = .system(size: 60, weight: .bold, design: .rounded)
-      static let mega: Font = .system(size: 72, weight: .bold, design: .rounded)
-      static let small: Font = .system(size: 32, weight: .bold, design: .rounded)
-      static let featured: Font = .system(size: 40, weight: .heavy, design: .rounded)
-      static let compact: Font = .system(size: 28, weight: .bold, design: .rounded)
+      static var hero: Font { .system(size: scaled(48, maxSize: 64), weight: .bold, design: .rounded) }
+      static var jumbo: Font { .system(size: scaled(60, maxSize: 80), weight: .bold, design: .rounded) }
+      static var mega: Font { .system(size: scaled(72, maxSize: 96), weight: .bold, design: .rounded) }
+      static var small: Font { .system(size: scaled(32, maxSize: 44), weight: .bold, design: .rounded) }
+      static var featured: Font { .system(size: scaled(40, maxSize: 54), weight: .heavy, design: .rounded) }
+      static var compact: Font { .system(size: scaled(28, maxSize: 38), weight: .bold, design: .rounded) }
+
+      private static func scaled(_ base: CGFloat, maxSize: CGFloat) -> CGFloat {
+        Typography.scaled(base, maxSize: maxSize)
+      }
     }
 
     // MARK: - Numeric Fonts (统计数字字体)
 
     enum Numeric {
-      static let small: Font = .system(size: 28, weight: .medium, design: .rounded)
-      static let medium: Font = .system(size: 36, weight: .light, design: .rounded)
-      static let large: Font = .system(size: 48, weight: .light, design: .monospaced)
-      static let xlarge: Font = .system(size: 56, weight: .light, design: .rounded)
-      static let xxlarge: Font = .system(size: 64, weight: .thin, design: .rounded)
-      static let clock: Font = .system(size: 80, weight: .ultraLight, design: .rounded)
+      static var small: Font { .system(size: scaled(28, maxSize: 38), weight: .medium, design: .rounded) }
+      static var medium: Font { .system(size: scaled(36, maxSize: 48), weight: .light, design: .rounded) }
+      static var large: Font { .system(size: scaled(48, maxSize: 64), weight: .light, design: .monospaced) }
+      static var xlarge: Font { .system(size: scaled(56, maxSize: 72), weight: .light, design: .rounded) }
+      static var xxlarge: Font { .system(size: scaled(64, maxSize: 80), weight: .thin, design: .rounded) }
+      static var clock: Font { .system(size: scaled(80, maxSize: 100), weight: .ultraLight, design: .rounded) }
+
+      private static func scaled(_ base: CGFloat, maxSize: CGFloat) -> CGFloat {
+        Typography.scaled(base, maxSize: maxSize)
+      }
     }
 
     // MARK: - Explorer Card Fonts (探索者卡片字体)
 
     enum Card {
-      static let title: Font = .system(size: 18, weight: .bold, design: .rounded)
-      static let subtitle: Font = .system(size: 14, weight: .semibold, design: .rounded)
-      static let stats: Font = .system(size: 13, weight: .medium, design: .rounded)
-      static let badge: Font = .system(size: 11, weight: .bold, design: .rounded)
-      static let micro: Font = .system(size: 10, weight: .semibold, design: .rounded)
+      static var title: Font { .system(size: scaled(18, maxSize: 27), weight: .bold, design: .rounded) }
+      static var subtitle: Font { .system(size: scaled(14, maxSize: 21), weight: .semibold, design: .rounded) }
+      static var stats: Font { .system(size: scaled(13, maxSize: 20), weight: .medium, design: .rounded) }
+      static var badge: Font { .system(size: scaled(11, maxSize: 17), weight: .bold, design: .rounded) }
+      static var micro: Font { .system(size: scaled(10, maxSize: 15), weight: .semibold, design: .rounded) }
+
+      private static func scaled(_ base: CGFloat, maxSize: CGFloat) -> CGFloat {
+        Typography.scaled(base, maxSize: maxSize)
+      }
     }
 
     // MARK: - Map Legend Fonts (地图图例字体)
 
     enum MapLegend {
-      static let poiLabel: Font = .system(size: 12, weight: .semibold, design: .rounded)
-      static let distance: Font = .system(size: 11, weight: .medium, design: .monospaced)
-      static let duration: Font = .system(size: 13, weight: .bold, design: .rounded)
-      static let annotation: Font = .system(size: 10, weight: .regular, design: .default)
+      static var poiLabel: Font { .system(size: scaled(12, maxSize: 18), weight: .semibold, design: .rounded) }
+      static var distance: Font { .system(size: scaled(11, maxSize: 17), weight: .medium, design: .monospaced) }
+      static var duration: Font { .system(size: scaled(13, maxSize: 20), weight: .bold, design: .rounded) }
+      static var annotation: Font { .system(size: scaled(10, maxSize: 15), weight: .regular, design: .default) }
+
+      private static func scaled(_ base: CGFloat, maxSize: CGFloat) -> CGFloat {
+        Typography.scaled(base, maxSize: maxSize)
+      }
     }
   }
 
@@ -810,6 +844,18 @@ extension View {
   func appleShadow(_ level: ShadowLevel = .sm) -> some View {
     modifier(AppleShadowModifier(level: level))
   }
+
+  /// Apply animation that respects Reduce Motion accessibility setting
+  func adaptiveAnimation(_ animation: Animation = DesignTokens.Animation.standard, value: some Equatable) -> some View {
+    modifier(AdaptiveAnimationModifier(animation: animation, trigger: AnyHashableEquatable(value)))
+  }
+
+  /// Ensure minimum 44x44pt touch target for small interactive elements
+  func minimumTouchTarget() -> some View {
+    self
+      .frame(minWidth: 44, minHeight: 44)
+      .contentShape(Rectangle())
+  }
 }
 
 // MARK: - Shadow Level
@@ -840,6 +886,49 @@ struct AppleShadowModifier: ViewModifier {
       shadow = DesignTokens.Shadow.lg(for: colorScheme)
     }
     return content.shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+  }
+}
+
+// MARK: - Adaptive Animation Modifier
+
+private struct AnyHashableEquatable: Equatable {
+  let value: AnyHashable
+  init<T: Hashable>(_ value: T) { self.value = AnyHashable(value) }
+}
+
+struct AdaptiveAnimationModifier: ViewModifier {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  let animation: Animation
+  let trigger: AnyHashableEquatable
+
+  func body(content: Content) -> some View {
+    content.animation(reduceMotion ? nil : animation, value: trigger)
+  }
+}
+
+// MARK: - Focused Field Style
+
+struct FocusedFieldStyle: ViewModifier {
+  let isFocused: Bool
+  let isError: Bool
+
+  func body(content: Content) -> some View {
+    content
+      .overlay(
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+          .stroke(
+            isError ? Color.red : (isFocused ? DesignTokens.Colors.accent : Color(.systemGray4)),
+            lineWidth: isFocused || isError ? 2 : 1
+          )
+      )
+      .animation(DesignTokens.Animation.quick, value: isFocused)
+      .animation(DesignTokens.Animation.quick, value: isError)
+  }
+}
+
+extension View {
+  func focusedFieldStyle(isFocused: Bool, isError: Bool = false) -> some View {
+    modifier(FocusedFieldStyle(isFocused: isFocused, isError: isError))
   }
 }
 
@@ -963,6 +1052,7 @@ struct Badge: View {
     .padding(.vertical, DesignTokens.Spacing.xxs)
     .background(style.backgroundColor.gradient)
     .clipShape(Capsule())
+    .accessibilityLabel("\(text)")
   }
 }
 
@@ -987,6 +1077,7 @@ struct StatLabel: View {
     }
     .font(.caption)
     .foregroundStyle(.secondary)
+    .accessibilityElement(children: .combine)
   }
 }
 
