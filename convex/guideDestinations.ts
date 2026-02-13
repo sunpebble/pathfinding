@@ -76,7 +76,7 @@ export async function deleteDestinationsForGuide(
 /**
  * Normalize destination name for consistent indexing
  */
-function normalizeDestination(destination: string): string {
+export function normalizeDestination(destination: string): string {
   return destination.trim().toLowerCase();
 }
 

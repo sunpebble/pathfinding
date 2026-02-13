@@ -2,7 +2,7 @@ import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { deleteGuideFromAggregates, insertGuideToAggregates, replaceGuideInAggregates } from './guideAggregates';
-import { deleteDestinationsForGuide, syncDestinationsInternal } from './guideDestinations';
+import { deleteDestinationsForGuide, normalizeDestination, syncDestinationsInternal } from './guideDestinations';
 import { ensureDisplayFields, fillMissingDisplayFields } from './lib/displayFields';
 
 /**
@@ -386,17 +386,28 @@ export const getByDestination = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const guides = await ctx.db.query('travelGuides').collect();
+    const normalizedDest = normalizeDestination(args.destination);
 
-    const destLower = args.destination.toLowerCase();
-    const filtered = guides.filter(g =>
-      g.destinations.some(d => d.toLowerCase().includes(destLower)),
+    // Use guideDestinations index for efficient lookup (O(1) instead of O(N))
+    const destRecords = await ctx.db
+      .query('guideDestinations')
+      .withIndex('by_destination', q => q.eq('destination', normalizedDest))
+      .collect();
+
+    // Fetch the actual guides
+    const guides = await Promise.all(
+      destRecords.map(d => ctx.db.get(d.guideId)),
     );
 
-    // Sort by quality score
-    filtered.sort((a, b) => b.qualityScore - a.qualityScore);
+    // Filter out nulls (orphaned records)
+    const validGuides = guides.filter((g): g is NonNullable<typeof g> => g !== null);
 
-    return args.limit ? filtered.slice(0, args.limit) : filtered;
+    // Sort by quality score
+    validGuides.sort((a, b) => b.qualityScore - a.qualityScore);
+
+    const result = args.limit ? validGuides.slice(0, args.limit) : validGuides;
+
+    return result.map(ensureDisplayFields);
   },
 });
 
