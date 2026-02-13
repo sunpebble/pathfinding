@@ -290,7 +290,7 @@ export default function GuideDetailPage() {
             // Render rich text HTML content
               <div
                 className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
-            // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
+                // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
                 dangerouslySetInnerHTML={{ __html: guide.content_html }}
               />
             )
