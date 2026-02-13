@@ -6,21 +6,15 @@ import { useQuery } from 'convex/react';
 import { ChevronDown, LogOut, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 export function AuthButton() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { signOut } = useAuthActions();
   const router = useRouter();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Get current user data
   const currentUser = useQuery(
@@ -28,7 +22,25 @@ export function AuthButton() {
     isAuthenticated ? {} : 'skip',
   );
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   const handleSignOut = async () => {
+    setIsMenuOpen(false);
     await signOut();
     router.push('/auth/signin');
   };
@@ -41,11 +53,12 @@ export function AuthButton() {
   // Unauthenticated - show Sign In button
   if (!isAuthenticated) {
     return (
-      <Button asChild className="bg-blue-600 text-white hover:bg-blue-700">
-        <Link href="/auth/signin">
-          Sign In
-        </Link>
-      </Button>
+      <Link
+        href="/auth/signin"
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+      >
+        Sign In
+      </Link>
     );
   }
 
@@ -58,35 +71,48 @@ export function AuthButton() {
   const userEmail = currentUser?.email || '';
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
-            {displayName.charAt(0).toUpperCase()}
-          </div>
-          <span className="text-gray-700">{displayName}</span>
-          <ChevronDown className="h-4 w-4 text-gray-500" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>
-          <div className="flex flex-col space-y-1">
+    <div className="relative" ref={menuRef}>
+      {/* User Button */}
+      <button
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50"
+      >
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
+          {displayName.charAt(0).toUpperCase()}
+        </div>
+        <span className="text-gray-700">{displayName}</span>
+        <ChevronDown className="h-4 w-4 text-gray-500" />
+      </button>
+
+      {/* Dropdown Menu */}
+      {isMenuOpen && (
+        <div className="absolute right-0 mt-2 w-64 rounded-lg border border-gray-200 bg-white shadow-lg">
+          {/* User Info */}
+          <div className="border-b border-gray-200 px-4 py-3">
             <p className="text-sm font-medium text-gray-900">{displayName}</p>
             <p className="text-xs text-gray-500">{userEmail}</p>
           </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/profile" className="flex w-full cursor-pointer items-center gap-2">
-            <User className="h-4 w-4" />
-            Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer gap-2">
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+
+          {/* Menu Items */}
+          <div className="py-1">
+            <Link
+              href="/profile"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <User className="h-4 w-4" />
+              Profile
+            </Link>
+            <button
+              onClick={handleSignOut}
+              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
