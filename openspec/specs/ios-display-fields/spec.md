@@ -1,11 +1,21 @@
 ## ADDED Requirements
 
 ### Requirement: iOS Display Fields Definition
-The system SHALL define a canonical list of fields required for iOS App display, including: `title`, `coverImageUrl`, `authorName`, `destinations`, `likesCount`, `savesCount`, `commentsCount`, `viewsCount`, and `qualityScore`.
+The system SHALL define a canonical list of fields required for iOS App display, including: `title`, `coverImageUrl`, `authorName`, `destinations`, `likesCount`, `savesCount`, `commentsCount`, `viewsCount`, `qualityScore`, and `contentHtml`.
 
 #### Scenario: Field list is accessible
 - **WHEN** any component needs to validate display fields
 - **THEN** the canonical field list SHALL be available as a typed constant
+- **THEN** the field list SHALL include `contentHtml` as an optional display field
+
+#### Scenario: Guide with contentHtml present
+- **WHEN** a guide has `contentHtml` as a non-empty string
+- **THEN** validation SHALL treat `contentHtml` as populated
+
+#### Scenario: Guide without contentHtml
+- **WHEN** a guide has `contentHtml` as undefined or empty string
+- **THEN** validation SHALL NOT mark the guide as invalid (contentHtml is optional)
+- **THEN** the guide SHALL still be considered valid if all other required fields are present
 
 ### Requirement: Display Field Validation
 The system SHALL provide a validation function that checks whether a travel guide has all required display fields populated with non-empty values.
@@ -53,6 +63,10 @@ The system SHALL provide an auto-fill function that generates reasonable default
 - **WHEN** `qualityScore` is missing
 - **THEN** system SHALL set qualityScore to 0.5
 
+#### Scenario: contentHtml not auto-filled
+- **WHEN** `contentHtml` is missing
+- **THEN** system SHALL NOT auto-fill contentHtml (it requires original HTML from crawler)
+
 ### Requirement: Upsert Display Field Enforcement
 The system SHALL automatically apply display field auto-fill during upsert operations before persisting to database.
 
@@ -85,3 +99,25 @@ The system SHALL provide a migration function to batch-fix existing guides with 
 #### Scenario: Migration is idempotent
 - **WHEN** migration runs on already-fixed guides
 - **THEN** system SHALL skip guides that already have all display fields
+
+### Requirement: iOS BlogPost Model contentHtml Field
+iOS `BlogPost` 模型 SHALL 包含 `contentHtml` 可选字段，用于接收 API 返回的 HTML 格式文章内容。
+
+#### Scenario: Decode contentHtml from API response
+- **WHEN** API 返回的 JSON 包含 `content_html` 字段
+- **THEN** `BlogPost` SHALL 将其解码到 `contentHtml` 属性
+
+#### Scenario: API response without contentHtml
+- **WHEN** API 返回的 JSON 不包含 `content_html` 字段
+- **THEN** `BlogPost.contentHtml` SHALL 为 nil
+
+### Requirement: Convex API contentHtml Passthrough
+Convex HTTP API SHALL 在返回攻略数据时包含 `contentHtml` 字段（如果存在）。
+
+#### Scenario: Guide with contentHtml in database
+- **WHEN** 查询返回的攻略在数据库中有 `contentHtml` 字段
+- **THEN** API 响应 SHALL 包含 `content_html` 字段（snake_case 格式）
+
+#### Scenario: Guide without contentHtml in database
+- **WHEN** 查询返回的攻略在数据库中无 `contentHtml` 字段
+- **THEN** API 响应 SHALL 不包含 `content_html` 字段（或值为 null）

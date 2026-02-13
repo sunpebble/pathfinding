@@ -191,6 +191,7 @@ export async function extractGuideWithSelectors(
 ): Promise<{
   title: string;
   content: string;
+  contentHtml?: string;
   author?: string;
   views?: string;
   likes?: string;
@@ -204,19 +205,75 @@ export async function extractGuideWithSelectors(
         || document.title.split('，')[0].split('|')[0].trim()
         || '';
 
-    // 提取内容 - 优先使用 .chapter-container (纯正文)
-    let content = '';
+    // === 提取 HTML 内容（图文混排）===
+    let contentHtml: string | undefined;
     const chapterEl = document.querySelector('.chapter-container');
+    const contentContainer = chapterEl || document.querySelector('.note-content, .note-body');
+
+    if (contentContainer) {
+      const clone = contentContainer.cloneNode(true) as HTMLElement;
+      // 移除不需要的元素
+      clone.querySelectorAll('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"], [class*="banner"], [class*="promotion"], [class*="sponsor"], [class*="share-"], [class*="follow"], [class*="comment-input"], [class*="related"], [class*="recommend"], script, style, iframe').forEach((el) => {
+        el.remove();
+      });
+
+      // 清理图片 src（有些用 data-src 懒加载）
+      clone.querySelectorAll('img').forEach((img) => {
+        const dataSrc = img.getAttribute('data-src') || img.getAttribute('data-original');
+        if (dataSrc && (!img.src || img.src.includes('placeholder') || img.src.includes('data:image'))) {
+          img.src = dataSrc;
+        }
+        // 移除无关图片（头像、图标等）
+        const src = img.src || '';
+        if (src.includes('avatar') || src.includes('icon') || src.includes('emoji') || src.includes('recommend') || !src.startsWith('http')) {
+          img.remove();
+          return;
+        }
+        // 简化 img 标签属性
+        const cleanSrc = img.src;
+        // 清除所有属性，只保留 src
+        while (img.attributes.length > 0) {
+          img.removeAttribute(img.attributes[0].name);
+        }
+        img.src = cleanSrc;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.borderRadius = '8px';
+        img.style.margin = '12px 0';
+      });
+
+      // 移除空元素
+      clone.querySelectorAll('div, p, span').forEach((el) => {
+        if (!el.textContent?.trim() && !el.querySelector('img')) {
+          el.remove();
+        }
+      });
+
+      // 移除事件属性
+      clone.querySelectorAll('*').forEach((el) => {
+        Array.from(el.attributes).forEach((attr) => {
+          if (attr.name.startsWith('on') || attr.name.startsWith('data-track') || attr.name.startsWith('data-ad')) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+
+      const html = clone.innerHTML.trim();
+      if (html.length > 50) {
+        contentHtml = html;
+      }
+    }
+
+    // === 提取纯文本内容 ===
+    let content = '';
     if (chapterEl) {
       content = chapterEl.textContent?.trim() || '';
     }
     else {
-      // 回退到 .note-content 但需要清洗
       const noteContent = document.querySelector('.note-content, .note-body');
       if (noteContent) {
         const clone = noteContent.cloneNode(true) as HTMLElement;
-        // 移除不需要的元素
-        clone.querySelectorAll('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"]').forEach((el) => {
+        clone.querySelectorAll('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"], [class*="banner"], [class*="promotion"], [class*="sponsor"], [class*="share-"], [class*="follow"], [class*="comment-input"], [class*="related"], [class*="recommend"]').forEach((el) => {
           el.remove();
         });
         content = clone.textContent?.trim() || '';
@@ -228,6 +285,11 @@ export async function extractGuideWithSelectors(
       .replace(/图片占位符/g, '')
       .replace(/\s+/g, ' ')
       .replace(/加载更多内容/g, '')
+      // 移除常见的平台噪音（浏览器端基础清洗）
+      .replace(/关注\s*\d+\s*粉丝\s*\d+/g, '')
+      .replace(/分享到\s*(?:微信|微博|QQ)/g, '')
+      .replace(/回复\s*\d+/g, '')
+      .replace(/举报/g, '')
       .trim();
 
     // 提取作者
@@ -263,6 +325,7 @@ export async function extractGuideWithSelectors(
     return {
       title,
       content,
+      contentHtml,
       author,
       views,
       likes,

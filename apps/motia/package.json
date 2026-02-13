@@ -6,13 +6,19 @@
   "scripts": {
     "dev": "motia dev",
     "start": "motia start",
-    "generate-types": "motia generate-types"
+    "generate-types": "motia generate-types",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@browserbasehq/stagehand": "^3.0.0",
     "@onkernel/sdk": "^0.29.0",
+    "@pathfinding/crawler-types": "workspace:*",
     "convex": "^1.21.0",
     "motia": "^0.17.14-beta.196",
     "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
   }
 }

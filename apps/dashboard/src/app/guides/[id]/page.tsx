@@ -282,24 +282,85 @@ export default function GuideDetailPage() {
         )}
       </div>
 
+      {/* AI Summary & Tips */}
+      {(guide.aiSummary || guide.ai_summary || guide.aiTips || guide.ai_tips || guide.aiBestTime || guide.ai_best_time) && (
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <span className="text-purple-600">✨</span>
+            AI 分析摘要
+          </h2>
+
+          {(guide.aiSummary || guide.ai_summary) && (
+            <div className="mb-4">
+              <p className="text-gray-700 leading-relaxed">
+                {guide.aiSummary || guide.ai_summary}
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {(guide.aiDuration || guide.ai_duration) && (
+              <div className="bg-white/80 rounded-lg p-3 border border-purple-100">
+                <div className="text-xs text-gray-500 mb-1">⏱ 建议行程</div>
+                <div className="font-medium text-gray-900">{guide.aiDuration || guide.ai_duration}</div>
+              </div>
+            )}
+            {(guide.aiBudget || guide.ai_budget) && (
+              <div className="bg-white/80 rounded-lg p-3 border border-purple-100">
+                <div className="text-xs text-gray-500 mb-1">💰 预算参考</div>
+                <div className="font-medium text-gray-900">{guide.aiBudget || guide.ai_budget}</div>
+              </div>
+            )}
+            {(guide.aiBestTime || guide.ai_best_time) && (
+              <div className="bg-white/80 rounded-lg p-3 border border-purple-100">
+                <div className="text-xs text-gray-500 mb-1">📅 最佳时间</div>
+                <div className="font-medium text-gray-900">{guide.aiBestTime || guide.ai_best_time}</div>
+              </div>
+            )}
+          </div>
+
+          {(guide.aiTips || guide.ai_tips) && (guide.aiTips || guide.ai_tips).length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">💡 实用贴士</h3>
+              <ul className="space-y-1.5">
+                {(guide.aiTips || guide.ai_tips).map((tip: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                    <span className="text-purple-400 mt-0.5 flex-shrink-0">•</span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Content */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Content</h2>
-        {guide.content_html ? (
-          // Render rich text HTML content
-          <div
-            className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
-            // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
-            dangerouslySetInnerHTML={{ __html: guide.content_html }}
-          />
-        ) : (
-          // Fallback to plain text
-          <div className="prose prose-gray max-w-none">
-            <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-              {guide.content || 'No content available'}
-            </p>
-          </div>
-        )}
+        {guide.content_html
+          ? (
+              // Render rich text HTML content
+              <div
+                className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
+                // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
+                dangerouslySetInnerHTML={{ __html: guide.content_html }}
+              />
+            )
+          : guide.content
+            ? (
+                // Plain text with paragraph formatting
+                <div className="prose prose-gray max-w-none">
+                  {guide.content.split(/\n{2,}/).map((paragraph: string, i: number) => (
+                    <p key={i} className="text-gray-700 leading-relaxed mb-4">
+                      {paragraph.trim()}
+                    </p>
+                  ))}
+                </div>
+              )
+            : (
+                <p className="text-gray-400 italic">暂无内容</p>
+              )}
       </div>
 
       {/* Images */}

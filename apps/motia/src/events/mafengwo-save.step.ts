@@ -17,6 +17,7 @@ const eventDataSchema = z.object({
   guide: z.object({
     title: z.string(),
     content: z.string(),
+    contentHtml: z.string().optional(),
     author: z.string().optional(),
     views: z.string().optional(),
     likes: z.string().optional(),
@@ -83,6 +84,7 @@ export async function handler(
       sourceUrl: convexData.sourceUrl,
       title: convexData.title,
       content: convexData.content,
+      contentHtml: guide.contentHtml,
       authorName: convexData.authorName,
       destinations: convexData.destinations,
       tags: convexData.tags,

@@ -14,7 +14,8 @@ type Platform
     | 'tripadvisor'
     | 'qunar'
     | 'tongcheng'
-    | 'mafengwo';
+    | 'mafengwo'
+    | 'qyer';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
       'qunar',
       'tongcheng',
       'mafengwo',
+      'qyer',
     ];
     const validPlatform
       = platform && validPlatforms.includes(platform as Platform)
@@ -61,10 +63,10 @@ export async function GET(request: NextRequest) {
       source_platform: guide.sourcePlatform,
       source_external_id: guide.sourceExternalId,
       source_url: guide.sourceUrl,
-      title: guide.title,
+      title: guide.title || '无标题攻略',
       content: guide.content,
       content_html: guide.contentHtml,
-      author_name: guide.authorName,
+      author_name: guide.authorName || '匿名用户',
       author_id: guide.authorId,
       destinations: guide.destinations || [],
       tags: guide.tags || [],
@@ -77,8 +79,23 @@ export async function GET(request: NextRequest) {
       published_at: guide.publishedAt,
       crawled_at: guide.crawledAt,
       quality_score: guide.qualityScore ?? 0,
+      // eslint-disable-next-line ts/no-explicit-any
+      completeness_level: (guide as any).completenessLevel,
+      // eslint-disable-next-line ts/no-explicit-any
+      content_truncated: (guide as any).contentTruncated,
       created_at: guide._creationTime,
       updated_at: guide._creationTime,
+      // AI fields from guide (backward compat)
+      // eslint-disable-next-line ts/no-explicit-any
+      ai_summary: (guide as any).aiSummary,
+      // eslint-disable-next-line ts/no-explicit-any
+      ai_duration: (guide as any).aiDuration,
+      // eslint-disable-next-line ts/no-explicit-any
+      ai_budget: (guide as any).aiBudget,
+      // eslint-disable-next-line ts/no-explicit-any
+      ai_best_time: (guide as any).aiBestTime,
+      // eslint-disable-next-line ts/no-explicit-any
+      ai_processed_at: (guide as any).aiProcessedAt,
     }));
 
     return NextResponse.json({
