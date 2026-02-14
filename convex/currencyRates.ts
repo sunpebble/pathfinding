@@ -157,8 +157,7 @@ export const cleanup = mutation({
     // Clean up rates cache
     const oldRates = await ctx.db
       .query('currencyRates')
-      .withIndex('by_fetched_at')
-      .filter(q => q.lt(q.field('fetchedAt'), cutoffTime))
+      .withIndex('by_fetched_at', q => q.lt('fetchedAt', cutoffTime))
       .collect();
 
     let deletedRates = 0;
@@ -170,8 +169,7 @@ export const cleanup = mutation({
     // Clean up history cache
     const oldHistory = await ctx.db
       .query('currencyHistory')
-      .withIndex('by_fetched_at')
-      .filter(q => q.lt(q.field('fetchedAt'), cutoffTime))
+      .withIndex('by_fetched_at', q => q.lt('fetchedAt', cutoffTime))
       .collect();
 
     let deletedHistory = 0;
@@ -190,17 +188,16 @@ export const cleanup = mutation({
 export const stats = query({
   args: {},
   handler: async (ctx) => {
-    const ratesEntries = await ctx.db.query('currencyRates').collect();
-    const historyEntries = await ctx.db.query('currencyHistory').collect();
-
     const now = Date.now();
     const oneHourAgo = now - 60 * 60 * 1000;
     const oneDayAgo = now - 24 * 60 * 60 * 1000;
 
+    let ratesTotal = 0;
     let recentRatesCount = 0;
     let staleRatesCount = 0;
 
-    for (const entry of ratesEntries) {
+    for await (const entry of ctx.db.query('currencyRates').withIndex('by_fetched_at')) {
+      ratesTotal++;
       if (entry.fetchedAt > oneHourAgo) {
         recentRatesCount++;
       }
@@ -209,10 +206,12 @@ export const stats = query({
       }
     }
 
+    let historyTotal = 0;
     let recentHistoryCount = 0;
     let staleHistoryCount = 0;
 
-    for (const entry of historyEntries) {
+    for await (const entry of ctx.db.query('currencyHistory').withIndex('by_fetched_at')) {
+      historyTotal++;
       if (entry.fetchedAt > oneHourAgo) {
         recentHistoryCount++;
       }
@@ -223,12 +222,12 @@ export const stats = query({
 
     return {
       rates: {
-        total: ratesEntries.length,
+        total: ratesTotal,
         recent: recentRatesCount,
         stale: staleRatesCount,
       },
       history: {
-        total: historyEntries.length,
+        total: historyTotal,
         recent: recentHistoryCount,
         stale: staleHistoryCount,
       },
