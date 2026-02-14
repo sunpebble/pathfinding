@@ -1,7 +1,6 @@
-/* eslint-disable ts/ban-ts-comment */
+import type { MutationCtx } from './_generated/server';
 // @ts-nocheck
 import { v } from 'convex/values';
-import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 
 /**

@@ -54,7 +54,8 @@ describe('updateProfile', () => {
     mockAuth.getUserIdentity.mockResolvedValue(null);
 
     await expect(updateProfileHandler(mockCtx, {}))
-      .rejects.toThrow('Not authenticated');
+      .rejects
+      .toThrow('Not authenticated');
   });
 
   it('should throw error if displayName exceeds 50 characters', async () => {
@@ -72,7 +73,8 @@ describe('updateProfile', () => {
     };
 
     await expect(updateProfileHandler(mockCtx, args))
-      .rejects.toThrow('Display name must be 50 characters or less');
+      .rejects
+      .toThrow('Display name must be 50 characters or less');
   });
 
   it('should throw error if bio exceeds 500 characters', async () => {
@@ -90,6 +92,7 @@ describe('updateProfile', () => {
     };
 
     await expect(updateProfileHandler(mockCtx, args))
-      .rejects.toThrow('Bio must be 500 characters or less');
+      .rejects
+      .toThrow('Bio must be 500 characters or less');
   });
 });
