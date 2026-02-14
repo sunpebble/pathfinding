@@ -2,12 +2,6 @@ import { z } from 'zod';
 
 type TransportMode = 'walking' | 'driving' | 'transit';
 
-interface POI {
-  name: string;
-  latitude: number;
-  longitude: number;
-}
-
 function toRad(deg: number): number {
   return deg * (Math.PI / 180);
 }
@@ -80,11 +74,18 @@ export async function handler(req: { body?: unknown }, { logger }: HandlerContex
     return { status: 200, body: { optimizedOrder: [0], segments: [], savings: { distanceKm: 0, durationMinutes: 0 } } };
   }
 
-  const matrix = pois.map((p1, i) => pois.map((p2, j) => i === j ? 0 : (calculateDistance(p1.latitude, p1.longitude, p2.latitude, p2.longitude) / speeds[transportMode]) * 60));
+  const matrix = pois.map((p1, i) =>
+    pois.map((p2, j) =>
+      i === j
+        ? 0
+        : (calculateDistance(p1.latitude, p1.longitude, p2.latitude, p2.longitude) / speeds[transportMode]) * 60,
+    ),
+  );
   const optimizedOrder = nearestNeighborTSP(matrix);
 
   const segments = optimizedOrder.slice(0, -1).map((idx, i) => {
-    const from = pois[idx]; const to = pois[optimizedOrder[i + 1]];
+    const from = pois[idx];
+    const to = pois[optimizedOrder[i + 1]];
     const dist = calculateDistance(from.latitude, from.longitude, to.latitude, to.longitude);
     const dur = (dist / speeds[transportMode]) * 60;
     return { from: from.name, to: to.name, distance: dist, duration: dur };

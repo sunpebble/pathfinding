@@ -22,7 +22,7 @@ describe('updateProfile', () => {
   const mockCtx = {
     db: mockDb,
     auth: mockAuth,
-  } as any;
+  } as unknown as any;
 
   it('should update profile successfully with valid input', async () => {
     mockAuth.getUserIdentity.mockResolvedValue(mockIdentity);
