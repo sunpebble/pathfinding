@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Loader2,
   MapPin,
   Plus,
   Save,
@@ -332,6 +333,8 @@ function DayEditor({
     [poisQuery],
   );
 
+  const isLoading = isSearching && cityId && poisQuery === undefined;
+
   const handleAddPoi = async (poiId: string) => {
     setIsSaving(true);
     setError('');
@@ -495,13 +498,28 @@ function DayEditor({
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search POIs..."
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className={cn(
+                  'w-full pl-9 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500',
+                  searchQuery ? 'pr-8' : 'pr-3',
+                )}
+                aria-label="Search points of interest"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <select
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              aria-label="Filter by category"
             >
               <option value="">All Categories</option>
               <option value="attraction">Attraction</option>
@@ -514,46 +532,52 @@ function DayEditor({
 
           {/* Results */}
           <div className="max-h-60 overflow-y-auto space-y-2">
-            {pois.length === 0
+            {isLoading
               ? (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    {cityId ? 'No POIs found' : 'City not specified for itinerary'}
-                  </p>
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
+                  </div>
                 )
-              : (
-                  pois.map((poi: PoiOption) => (
-                    <button
-                      key={poi.id}
-                      onClick={() => handleAddPoi(poi.id)}
-                      disabled={isSaving}
-                      className="w-full text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all disabled:opacity-50"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 text-sm truncate">
-                            {poi.name}
-                          </h4>
-                          <p className="text-xs text-gray-500 capitalize">
-                            {poi.category}
-                          </p>
-                          {poi.address && (
-                            <p className="text-xs text-gray-600 mt-1 truncate">
-                              {poi.address}
+              : pois.length === 0
+                ? (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      {cityId ? 'No POIs found' : 'City not specified for itinerary'}
+                    </p>
+                  )
+                : (
+                    pois.map((poi: PoiOption) => (
+                      <button
+                        key={poi.id}
+                        onClick={() => handleAddPoi(poi.id)}
+                        disabled={isSaving}
+                        className="w-full text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all disabled:opacity-50"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm truncate">
+                              {poi.name}
+                            </h4>
+                            <p className="text-xs text-gray-500 capitalize">
+                              {poi.category}
                             </p>
+                            {poi.address && (
+                              <p className="text-xs text-gray-600 mt-1 truncate">
+                                {poi.address}
+                              </p>
+                            )}
+                          </div>
+                          {poi.rating && (
+                            <div className="flex items-center gap-1 text-xs">
+                              <span className="text-amber-500">★</span>
+                              <span className="font-medium">
+                                {poi.rating.toFixed(1)}
+                              </span>
+                            </div>
                           )}
                         </div>
-                        {poi.rating && (
-                          <div className="flex items-center gap-1 text-xs">
-                            <span className="text-amber-500">★</span>
-                            <span className="font-medium">
-                              {poi.rating.toFixed(1)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  ))
-                )}
+                      </button>
+                    ))
+                  )}
           </div>
         </div>
       )}
