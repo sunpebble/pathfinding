@@ -1,6 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
 import { v } from 'convex/values';
+import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 
 /**
@@ -129,6 +130,63 @@ export const isAuthenticated = query({
   },
 });
 
+// Update user profile handler
+export async function updateProfileHandler(
+  ctx: MutationCtx,
+  args: {
+    displayName?: string;
+    avatarUrl?: string;
+    bio?: string;
+  },
+) {
+  // Verify authentication
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error('Not authenticated');
+  }
+
+  // Check if profile exists
+  const existing = await ctx.db
+    .query('profiles')
+    .withIndex('by_email', q => q.eq('email', identity.email!))
+    .first();
+
+  const data: {
+    email: string;
+    displayName?: string;
+    avatarUrl?: string;
+    bio?: string;
+  } = {
+    email: identity.email!,
+  };
+
+  if (args.displayName !== undefined) {
+    if (args.displayName.length > 50) {
+      throw new Error('Display name must be 50 characters or less');
+    }
+    data.displayName = args.displayName;
+  }
+  if (args.avatarUrl !== undefined) {
+    data.avatarUrl = args.avatarUrl;
+  }
+  if (args.bio !== undefined) {
+    if (args.bio.length > 500) {
+      throw new Error('Bio must be 500 characters or less');
+    }
+    data.bio = args.bio;
+  }
+
+  if (existing) {
+    // Update existing profile
+    await ctx.db.patch(existing._id, data);
+    return existing._id;
+  }
+  else {
+    // Create new profile
+    return await ctx.db.insert('profiles', data);
+  }
+}
+
 // Update user profile
 export const updateProfile = mutation({
   args: {
@@ -136,48 +194,7 @@ export const updateProfile = mutation({
     avatarUrl: v.optional(v.string()),
     bio: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    // Verify authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
-
-    // Check if profile exists
-    const existing = await ctx.db
-      .query('profiles')
-      .withIndex('by_email', q => q.eq('email', identity.email!))
-      .first();
-
-    const data: {
-      email: string;
-      displayName?: string;
-      avatarUrl?: string;
-      bio?: string;
-    } = {
-      email: identity.email!,
-    };
-
-    if (args.displayName !== undefined) {
-      data.displayName = args.displayName;
-    }
-    if (args.avatarUrl !== undefined) {
-      data.avatarUrl = args.avatarUrl;
-    }
-    if (args.bio !== undefined) {
-      data.bio = args.bio;
-    }
-
-    if (existing) {
-      // Update existing profile
-      await ctx.db.patch(existing._id, data);
-      return existing._id;
-    }
-    else {
-      // Create new profile
-      return await ctx.db.insert('profiles', data);
-    }
-  },
+  handler: updateProfileHandler,
 });
 
 // Get or create user profile (useful for first-time login)
