@@ -63,6 +63,7 @@ function QualityScore({ score }: { score: number }) {
       : score >= 0.4
         ? 'text-yellow-600'
         : 'text-gray-500';
+
   return (
     <div className={cn('flex items-center gap-1', color)}>
       <Star className="h-3.5 w-3.5" />
