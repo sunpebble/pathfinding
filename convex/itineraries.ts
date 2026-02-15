@@ -118,43 +118,54 @@ export const listByUser = query({
 });
 
 // List public itineraries
+export async function listPublicHandler(
+  ctx: QueryCtx,
+  args: {
+    cityId?: Id<'cities'>;
+    page?: number;
+    pageSize?: number;
+  },
+) {
+  const page = args.page ?? 1;
+  const pageSize = args.pageSize ?? 10;
+  const offset = (page - 1) * pageSize;
+
+  const itineraries = args.cityId
+    ? await ctx.db
+        .query('itineraries')
+        .withIndex('by_visibility_city', q => q.eq('visibility', 'public').eq('cityId', args.cityId!))
+        .order('desc')
+        .collect()
+    : await ctx.db
+        .query('itineraries')
+        .withIndex('by_visibility', q => q.eq('visibility', 'public'))
+        .order('desc')
+        .collect();
+
+  const total = itineraries.length;
+  const data = itineraries.slice(offset, offset + pageSize);
+
+  const enriched = await Promise.all(
+    data.map(async (itinerary) => {
+      const city = await ctx.db.get(itinerary.cityId);
+      return {
+        ...itinerary,
+        cityName: city?.name,
+        daysCount: calculateDaysCount(itinerary.startDate, itinerary.endDate),
+      };
+    }),
+  );
+
+  return { data: enriched, total };
+}
+
 export const listPublic = query({
   args: {
     cityId: v.optional(v.id('cities')),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
   },
-  handler: async (ctx, args) => {
-    const page = args.page ?? 1;
-    const pageSize = args.pageSize ?? 10;
-    const offset = (page - 1) * pageSize;
-
-    let itineraries = await ctx.db
-      .query('itineraries')
-      .withIndex('by_visibility', q => q.eq('visibility', 'public'))
-      .order('desc')
-      .collect();
-
-    if (args.cityId) {
-      itineraries = itineraries.filter(i => i.cityId === args.cityId);
-    }
-
-    const total = itineraries.length;
-    const data = itineraries.slice(offset, offset + pageSize);
-
-    const enriched = await Promise.all(
-      data.map(async (itinerary) => {
-        const city = await ctx.db.get(itinerary.cityId);
-        return {
-          ...itinerary,
-          cityName: city?.name,
-          daysCount: calculateDaysCount(itinerary.startDate, itinerary.endDate),
-        };
-      }),
-    );
-
-    return { data: enriched, total };
-  },
+  handler: listPublicHandler,
 });
 
 // Get itinerary by ID with full details (days and items) - optimized to avoid N+1
