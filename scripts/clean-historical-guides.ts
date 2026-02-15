@@ -3,6 +3,7 @@
  * 从 Convex 拉取所有游记，用 content-cleaner 清洗后回写
  */
 
+/* eslint-disable no-console */
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../convex/_generated/api.js';
 import { cleanContent } from '../packages/crawler-types/src/content-cleaner.js';

@@ -1,6 +1,6 @@
+import type { RegisteredMutation } from 'convex/server';
 import type { Doc } from './_generated/dataModel';
 import { ConvexError, v } from 'convex/values';
-import type { RegisteredMutation } from 'convex/server';
 import {
   notificationDataValidator,
   scheduledNotificationDataValidator,

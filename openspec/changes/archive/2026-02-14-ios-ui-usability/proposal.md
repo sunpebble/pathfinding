@@ -15,11 +15,13 @@ iOS App 当前存在多个可用性问题：零 accessibility 支持（VoiceOver
 ## Capabilities
 
 ### New Capabilities
+
 - `ios-accessibility`: 全局辅助功能支持，包括 VoiceOver 标签、动态类型适配、Reduced Motion 支持
 - `ios-interaction-patterns`: 工具栏布局优化、按钮点击区域、swipe action 可发现性、视觉反馈一致性
 - `ios-form-ux`: 表单验证反馈、焦点状态、输入约束提示
 
 ### Modified Capabilities
+
 （无需修改现有 spec 级别的需求）
 
 ## Impact
