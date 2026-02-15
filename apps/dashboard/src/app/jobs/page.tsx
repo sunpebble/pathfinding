@@ -175,11 +175,7 @@ export default function JobsPage() {
                                   {task.name}
                                 </span>
                                 <span
-                                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                    task.enabled
-                                      ? 'bg-emerald-50 text-emerald-600'
-                                      : 'bg-gray-100 text-gray-600'
-                                  }`}
+                                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${task.enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-600'}`}
                                 >
                                   {task.enabled ? 'Enabled' : 'Disabled'}
                                 </span>
