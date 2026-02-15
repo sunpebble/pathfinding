@@ -1,6 +1,6 @@
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { internalMutation, query } from './_generated/server';
 
 /**
  * Guide Comments - Comments on Travel Guides (travelGuides table)
@@ -10,7 +10,7 @@ import { mutation, query } from './_generated/server';
 /**
  * Create a new comment on a guide
  */
-export const create = mutation({
+export const create = internalMutation({
   args: {
     guideId: v.string(), // Travel guide ID (string, not Convex ID)
     userId: v.string(),
@@ -204,7 +204,7 @@ export const getReplies = query({
 /**
  * Toggle like on a comment
  */
-export const toggleLike = mutation({
+export const toggleLike = internalMutation({
   args: {
     commentId: v.id('guideComments'),
     userId: v.string(),
@@ -248,7 +248,7 @@ export const toggleLike = mutation({
 /**
  * Update a comment
  */
-export const update = mutation({
+export const update = internalMutation({
   args: {
     id: v.id('guideComments'),
     userId: v.string(),
@@ -291,7 +291,7 @@ export const update = mutation({
 /**
  * Delete a comment (hard delete)
  */
-export const remove = mutation({
+export const remove = internalMutation({
   args: {
     id: v.id('guideComments'),
     userId: v.string(),
