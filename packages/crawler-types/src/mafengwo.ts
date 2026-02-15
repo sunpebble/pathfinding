@@ -446,16 +446,4 @@ export interface ParsedNumber {
   original: string;
 }
 
-/** 质量评分结果 */
-export interface QualityScoreResult {
-  score: number; // 0-1
-  factors: {
-    hasTitle: boolean;
-    hasContent: boolean;
-    contentLength: number;
-    hasImages: boolean;
-    imageCount: number;
-    hasAuthor: boolean;
-    hasStats: boolean;
-  };
-}
+// QualityScoreResult removed to resolve duplicate export conflict with quality-score.ts
