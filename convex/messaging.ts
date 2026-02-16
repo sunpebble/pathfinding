@@ -19,6 +19,116 @@ const messageTypeValidator = v.union(
 // ============================================
 
 /**
+ * Handler for listConversations query
+ * Exported for testing purposes
+ */
+export async function listConversationsHandler(ctx, args) {
+  const limit = args.limit ?? 50;
+
+  // Optimized: Query messageReadStatus by user ID to get conversations
+  // instead of scanning all conversations table
+  const userReadStatuses = await ctx.db
+    .query('messageReadStatus')
+    .withIndex('by_user', q => q.eq('userId', args.userId))
+    .collect();
+
+  const conversationIds = userReadStatuses.map(s => s.conversationId);
+
+  // Batch fetch conversations
+  const conversations = await Promise.all(conversationIds.map(id => ctx.db.get(id)));
+
+  // Filter out nulls and ensure user is participant
+  const validConversations = conversations.filter(conv =>
+    conv && conv.participantIds && conv.participantIds.includes(args.userId),
+  );
+
+  // Sort by lastMessageAt desc in memory
+  // Since a user typically has < 1000 conversations, this is efficient
+  validConversations.sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
+
+  const limitedConversations = validConversations.slice(0, limit);
+
+  // Enrich with participant profiles and unread counts
+  const enriched = await Promise.all(
+    limitedConversations.map(async (conv) => {
+      // Get the other participant's ID
+      const otherUserId = conv.participantIds.find(
+        id => id !== args.userId,
+      );
+
+      // Get other participant's profile
+      let otherUser = null;
+      if (otherUserId) {
+        const profile = await ctx.db
+          .query('profiles')
+          .withIndex('by_email', q => q.eq('email', otherUserId))
+          .first();
+
+        otherUser = profile
+          ? {
+              id: otherUserId,
+              displayName: profile.displayName,
+              avatarUrl: profile.avatarUrl,
+            }
+          : {
+              id: otherUserId,
+              displayName: null,
+              avatarUrl: null,
+            };
+      }
+
+      // Get unread count
+      // We can use the readStatus we already fetched if we map it correctly,
+      // but strictly speaking we fetched all statuses earlier.
+      // Re-querying here is okay for now, or we could pass it down.
+      // Given we are inside a map, fetching specific status is fine.
+      // Optimization: we could use a Map lookup from userReadStatuses if we wanted to avoid this query,
+      // but let's stick to existing logic structure for simplicity unless critical.
+      // Actually, avoiding N+1 here is good too.
+
+      const readStatus = userReadStatuses.find(s => s.conversationId === conv._id);
+
+      let unreadCount = 0;
+      if (readStatus?.lastReadAt) {
+        // Count messages after lastReadAt that are not from this user
+        // This still queries messages, but it uses an index efficiently
+        const unreadMessages = await ctx.db
+          .query('messages')
+          .withIndex('by_conversation_time', q =>
+            q
+              .eq('conversationId', conv._id)
+              .gt('sentAt', readStatus.lastReadAt))
+          .collect();
+
+        unreadCount = unreadMessages.filter(
+          msg => msg.senderId !== args.userId && !msg.isDeleted,
+        ).length;
+      }
+      else if (conv.lastMessageAt) {
+        // No read status yet (should be rare), count all messages not from this user
+        const allMessages = await ctx.db
+          .query('messages')
+          .withIndex('by_conversation', q =>
+            q.eq('conversationId', conv._id))
+          .collect();
+
+        unreadCount = allMessages.filter(
+          msg => msg.senderId !== args.userId && !msg.isDeleted,
+        ).length;
+      }
+
+      return {
+        ...conv,
+        otherUser,
+        unreadCount,
+      };
+    }),
+  );
+
+  return enriched;
+}
+
+/**
  * List all conversations for a user
  * Returns conversations sorted by last message time
  */
@@ -27,97 +137,7 @@ export const listConversations = query({
     userId: v.string(),
     limit: v.optional(v.number()),
   },
-  handler: async (ctx, args) => {
-    const limit = args.limit ?? 50;
-
-    // Get all conversations where user is a participant
-    const allConversations = await ctx.db
-      .query('conversations')
-      .withIndex('by_last_message')
-      .order('desc')
-      .collect();
-
-    // Filter to only conversations where user is a participant
-    const userConversations = allConversations.filter(conv =>
-      conv.participantIds.includes(args.userId),
-    );
-
-    const limitedConversations = userConversations.slice(0, limit);
-
-    // Enrich with participant profiles and unread counts
-    const enriched = await Promise.all(
-      limitedConversations.map(async (conv) => {
-        // Get the other participant's ID
-        const otherUserId = conv.participantIds.find(
-          id => id !== args.userId,
-        );
-
-        // Get other participant's profile
-        let otherUser = null;
-        if (otherUserId) {
-          const profile = await ctx.db
-            .query('profiles')
-            .withIndex('by_email', q => q.eq('email', otherUserId))
-            .first();
-
-          otherUser = profile
-            ? {
-                id: otherUserId,
-                displayName: profile.displayName,
-                avatarUrl: profile.avatarUrl,
-              }
-            : {
-                id: otherUserId,
-                displayName: null,
-                avatarUrl: null,
-              };
-        }
-
-        // Get unread count
-        const readStatus = await ctx.db
-          .query('messageReadStatus')
-          .withIndex('by_conversation_user', q =>
-            q.eq('conversationId', conv._id).eq('userId', args.userId))
-          .first();
-
-        let unreadCount = 0;
-        if (readStatus?.lastReadAt) {
-          // Count messages after lastReadAt that are not from this user
-          const unreadMessages = await ctx.db
-            .query('messages')
-            .withIndex('by_conversation_time', q =>
-              q
-                .eq('conversationId', conv._id)
-                .gt('sentAt', readStatus.lastReadAt))
-            .collect();
-
-          unreadCount = unreadMessages.filter(
-            msg => msg.senderId !== args.userId && !msg.isDeleted,
-          ).length;
-        }
-        else if (conv.lastMessageAt) {
-          // No read status yet, count all messages not from this user
-          const allMessages = await ctx.db
-            .query('messages')
-            .withIndex('by_conversation', q =>
-              q.eq('conversationId', conv._id))
-            .collect();
-
-          unreadCount = allMessages.filter(
-            msg => msg.senderId !== args.userId && !msg.isDeleted,
-          ).length;
-        }
-
-        return {
-          ...conv,
-          otherUser,
-          unreadCount,
-        };
-      }),
-    );
-
-    return enriched;
-  },
+  handler: listConversationsHandler,
 });
 
 /**
@@ -497,54 +517,66 @@ export const markAsRead = mutation({
 });
 
 /**
+ * Handler for getUnreadCount query
+ * Exported for testing purposes
+ */
+export async function getUnreadCountHandler(ctx, args) {
+  // Optimized: Query messageReadStatus by user ID to get conversations
+  // instead of scanning all conversations table
+  const userReadStatuses = await ctx.db
+    .query('messageReadStatus')
+    .withIndex('by_user', q => q.eq('userId', args.userId))
+    .collect();
+
+  let totalUnread = 0;
+
+  // We need conversation details to check lastMessageAt and participantIds
+  const conversationIds = userReadStatuses.map(s => s.conversationId);
+  const conversations = await Promise.all(conversationIds.map(id => ctx.db.get(id)));
+
+  for (let i = 0; i < userReadStatuses.length; i++) {
+    const readStatus = userReadStatuses[i];
+    const conv = conversations[i];
+
+    // Safety check: conversation might be deleted or user removed (though handled by logic)
+    // Also verify user is still a participant
+    if (!conv || !conv.participantIds.includes(args.userId))
+      continue;
+
+    if (readStatus?.lastReadAt) {
+      const unreadMessages = await ctx.db
+        .query('messages')
+        .withIndex('by_conversation_time', q =>
+          q.eq('conversationId', conv._id).gt('sentAt', readStatus.lastReadAt))
+        .collect();
+
+      totalUnread += unreadMessages.filter(
+        msg => msg.senderId !== args.userId && !msg.isDeleted,
+      ).length;
+    }
+    else if (conv.lastMessageAt) {
+      const allMessages = await ctx.db
+        .query('messages')
+        .withIndex('by_conversation', q => q.eq('conversationId', conv._id))
+        .collect();
+
+      totalUnread += allMessages.filter(
+        msg => msg.senderId !== args.userId && !msg.isDeleted,
+      ).length;
+    }
+  }
+
+  return totalUnread;
+}
+
+/**
  * Get total unread message count for a user
  */
 export const getUnreadCount = query({
   args: {
     userId: v.string(),
   },
-  handler: async (ctx, args) => {
-    // Get all conversations for user
-    const allConversations = await ctx.db.query('conversations').collect();
-
-    const userConversations = allConversations.filter(conv =>
-      conv.participantIds.includes(args.userId),
-    );
-
-    let totalUnread = 0;
-
-    for (const conv of userConversations) {
-      const readStatus = await ctx.db
-        .query('messageReadStatus')
-        .withIndex('by_conversation_user', q =>
-          q.eq('conversationId', conv._id).eq('userId', args.userId))
-        .first();
-
-      if (readStatus?.lastReadAt) {
-        const unreadMessages = await ctx.db
-          .query('messages')
-          .withIndex('by_conversation_time', q =>
-            q.eq('conversationId', conv._id).gt('sentAt', readStatus.lastReadAt))
-          .collect();
-
-        totalUnread += unreadMessages.filter(
-          msg => msg.senderId !== args.userId && !msg.isDeleted,
-        ).length;
-      }
-      else if (conv.lastMessageAt) {
-        const allMessages = await ctx.db
-          .query('messages')
-          .withIndex('by_conversation', q => q.eq('conversationId', conv._id))
-          .collect();
-
-        totalUnread += allMessages.filter(
-          msg => msg.senderId !== args.userId && !msg.isDeleted,
-        ).length;
-      }
-    }
-
-    return totalUnread;
-  },
+  handler: getUnreadCountHandler,
 });
 
 /**
