@@ -1,6 +1,6 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { type RegisteredMutation } from 'convex/server';
+import type { RegisteredMutation } from 'convex/server';
 import { v } from 'convex/values';
 import { internal } from './_generated/api';
 import { internalMutation, mutation, query } from './_generated/server';

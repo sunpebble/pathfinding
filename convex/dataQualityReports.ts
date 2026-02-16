@@ -5,12 +5,12 @@
  * CRUD operations for data quality analysis reports
  */
 
+import type { RegisteredMutation } from 'convex/server';
 import { v } from 'convex/values';
 import {
   dataQualityIssueValidator,
   dataQualityMetricsValidator,
 } from '../packages/convex-client/src/validators/index.js';
-import { type RegisteredMutation } from 'convex/server';
 import { internalMutation, mutation, query } from './_generated/server';
 
 // List data quality reports with pagination
