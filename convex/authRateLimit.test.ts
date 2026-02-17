@@ -12,7 +12,8 @@ describe('authRateLimit', () => {
 
   const mockCtx = {
     db: mockDb,
-  };
+    // eslint-disable-next-line ts/no-explicit-any
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -50,9 +51,8 @@ describe('authRateLimit', () => {
       });
 
       const result = await checkHandler(mockCtx, { identifier: 'test@example.com' });
-      // @ts-expect-error - result type is inferred
       expect(result.allowed).toBe(false);
-      // @ts-expect-error - result type is inferred
+      // @ts-expect-error - result type union
       expect(result.retryAfter).toBeGreaterThan(0);
     });
 

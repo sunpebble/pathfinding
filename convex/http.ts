@@ -41,7 +41,8 @@ http.route({
       }
 
       // Check rate limit
-      const rateLimit = await ctx.runQuery(internal.authRateLimit.check, {
+      // eslint-disable-next-line ts/no-explicit-any
+      const rateLimit = await ctx.runQuery((internal as any).authRateLimit.check, {
         identifier: email,
       });
 
@@ -92,7 +93,8 @@ http.route({
           // If result.started is true, it means 2FA/verification started, not a failure.
           // If result.started is false/undefined, it's a failure.
           if (!result.started) {
-            await ctx.runMutation(internal.authRateLimit.recordFailure, {
+            // eslint-disable-next-line ts/no-explicit-any
+            await ctx.runMutation((internal as any).authRateLimit.recordFailure, {
               identifier: email,
             });
           }
@@ -114,7 +116,8 @@ http.route({
         }
 
         // Reset rate limit on success
-        await ctx.runMutation(internal.authRateLimit.reset, {
+        // eslint-disable-next-line ts/no-explicit-any
+        await ctx.runMutation((internal as any).authRateLimit.reset, {
           identifier: email,
         });
 
@@ -128,7 +131,8 @@ http.route({
       }
       catch (error) {
         // Record failure
-        await ctx.runMutation(internal.authRateLimit.recordFailure, {
+        // eslint-disable-next-line ts/no-explicit-any
+        await ctx.runMutation((internal as any).authRateLimit.recordFailure, {
           identifier: email,
         });
         throw error;
