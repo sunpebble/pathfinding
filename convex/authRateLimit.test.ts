@@ -1,3 +1,4 @@
+// eslint-disable-next-line ts/ban-ts-comment
 // @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { checkHandler, recordFailureHandler, resetHandler } from './authRateLimit';
