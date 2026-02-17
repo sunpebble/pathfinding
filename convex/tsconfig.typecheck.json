@@ -6,6 +6,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "types": ["node"],
+    "types": ["node", "vitest/globals"],
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
@@ -15,8 +16,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "types": ["node", "vitest/globals"]
+    "skipLibCheck": true
   },
   "include": ["*.ts"],
   "exclude": [

@@ -2,7 +2,7 @@ import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { deleteGuideFromAggregates, insertGuideToAggregates, replaceGuideInAggregates } from './guideAggregates';
-import { deleteDestinationsForGuide, syncDestinationsInternal, normalizeDestination } from './guideDestinations';
+import { deleteDestinationsForGuide, normalizeDestination, syncDestinationsInternal } from './guideDestinations';
 import { ensureDisplayFields, fillMissingDisplayFields } from './lib/displayFields';
 
 /**
