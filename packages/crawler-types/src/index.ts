@@ -25,7 +25,9 @@ export * from './poi-review.js';
 export * from './quality-report.js';
 
 // Quality Score
-export * from './quality-score.js';
+// Export all except QualityScoreResult which is also exported by mafengwo.ts
+export type { QualityScoreInput, QualityBreakdown } from './quality-score.js';
+export { calculateQualityScoreUnified } from './quality-score.js';
 
 export * from './raw-record.js';
 
