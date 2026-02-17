@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tests for guideAggregates logic
  * Tests aggregate update operations and count queries

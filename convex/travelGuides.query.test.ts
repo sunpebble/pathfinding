@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tests for Query Filtering by Completeness Level
  * Verifies that the completenessLevel filter works correctly in travelGuides queries

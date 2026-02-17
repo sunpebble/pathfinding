@@ -5,6 +5,7 @@
  * CRUD operations for data quality analysis reports
  */
 
+import type { RegisteredMutation } from 'convex/server';
 import { v } from 'convex/values';
 import {
   dataQualityIssueValidator,
@@ -142,4 +143,4 @@ export const cleanupOld = internalMutation({
 
     return { deletedCount };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, Promise<{ deletedCount: number }>>;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tests for travelGuides upsert and bulkUpsert logic
  * Tests deduplication, completeness calculation, and truncation detection

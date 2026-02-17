@@ -342,6 +342,11 @@ export const updatePushToken = mutation({
 /**
  * 清理过期的 OTP 记录 (由 cron 调用)
  */
+import type { RegisteredMutation } from 'convex/server';
+
+/**
+ * 清理过期的 OTP 记录 (由 cron 调用)
+ */
 export const cleanupExpiredOtps = internalMutation({
   handler: async (ctx): Promise<{ cleanedOtps: number }> => {
     const now = Date.now();
@@ -360,7 +365,7 @@ export const cleanupExpiredOtps = internalMutation({
       cleanedOtps: expiredOtps.length,
     };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, Promise<{ cleanedOtps: number }>>;
 
 /**
  * 清理过期的速率限制记录 (由 cron 调用)
@@ -382,4 +387,4 @@ export const cleanupExpiredRateLimits = internalMutation({
       cleaned: expiredRateLimits.length,
     };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, Promise<{ cleaned: number }>>;

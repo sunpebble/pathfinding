@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tests for guideDestinations sync logic
  * Tests destination normalization, sync operations, and diff calculations

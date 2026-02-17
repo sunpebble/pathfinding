@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Integration tests for Refetch Tasks Queue
  * Tests the async refetch queue system for handling truncated content

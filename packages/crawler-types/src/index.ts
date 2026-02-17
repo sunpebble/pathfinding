@@ -25,7 +25,10 @@ export * from './poi-review.js';
 export * from './quality-report.js';
 
 // Quality Score
-export * from './quality-score.js';
+// QualityScoreResult is already exported by mafengwo.ts (likely due to a copy/paste or shared interface definition)
+// We export other members from quality-score.js but exclude QualityScoreResult to avoid ambiguity
+export type { QualityScoreResult as QualityScoreResultType } from './quality-score.js';
+export { calculateQualityScoreUnified as calculateQualityScore } from './quality-score.js';
 
 export * from './raw-record.js';
 

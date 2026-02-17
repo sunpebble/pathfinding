@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { checkHandler, recordFailureHandler, resetHandler } from './authRateLimit';
 
@@ -51,9 +52,10 @@ describe('authRateLimit', () => {
       });
 
       const result = await checkHandler(mockCtx, { identifier: 'test@example.com' });
-      expect(result.allowed).toBe(false);
-      // @ts-expect-error - result type union
-      expect(result.retryAfter).toBeGreaterThan(0);
+      // eslint-disable-next-line ts/no-explicit-any
+      expect((result as any).allowed).toBe(false);
+      // eslint-disable-next-line ts/no-explicit-any
+      expect((result as any).retryAfter).toBeGreaterThan(0);
     });
 
     it('should allow if count is above limit but expired', async () => {

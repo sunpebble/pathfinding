@@ -1,5 +1,6 @@
-import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
+import type { RegisteredMutation, RegisteredQuery } from 'convex/server';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import {
   internalMutation,
   internalQuery,
@@ -36,7 +37,7 @@ export async function checkHandler(
 export const check = internalQuery({
   args: { identifier: v.string() },
   handler: checkHandler,
-});
+}) as RegisteredQuery<'internal', { identifier: string }, Promise<{ allowed: boolean; retryAfter?: number }>>;
 
 export async function recordFailureHandler(
   ctx: MutationCtx,
@@ -78,7 +79,7 @@ export async function recordFailureHandler(
 export const recordFailure = internalMutation({
   args: { identifier: v.string() },
   handler: recordFailureHandler,
-});
+}) as RegisteredMutation<'internal', { identifier: string }, Promise<void>>;
 
 export async function resetHandler(
   ctx: MutationCtx,
@@ -98,4 +99,4 @@ export async function resetHandler(
 export const reset = internalMutation({
   args: { identifier: v.string() },
   handler: resetHandler,
-});
+}) as RegisteredMutation<'internal', { identifier: string }, Promise<void>>;
