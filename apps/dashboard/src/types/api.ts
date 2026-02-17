@@ -30,7 +30,13 @@ export interface GuideWithAI {
   aiDuration?: string;
   aiBudget?: string;
   aiDays?: AiDay[];
-  ai_days?: AiDay[]; // Duplicate for snake_case compatibility
+  // Duplicate for snake_case compatibility
+  ai_summary?: string;
+  ai_tips?: string[];
+  ai_best_time?: string;
+  ai_duration?: string;
+  ai_budget?: string;
+  ai_days?: AiDay[];
   aiProcessedAt?: number;
   geocoding_metrics?: {
     total_pois: number;
