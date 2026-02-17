@@ -1,6 +1,6 @@
 import type { Id } from './_generated/dataModel';
 import { httpRouter } from 'convex/server';
-import { api } from './_generated/api';
+import { api, internal } from './_generated/api';
 import { httpAction } from './_generated/server';
 import { auth } from './auth';
 
@@ -40,6 +40,26 @@ http.route({
         );
       }
 
+      // Check rate limit
+      const rateLimit = await ctx.runQuery(internal.authRateLimit.check, {
+        identifier: email,
+      });
+
+      if (!rateLimit.allowed) {
+        return new Response(
+          JSON.stringify({
+            error: `Too many failed attempts. Please try again in ${rateLimit.retryAfter} seconds.`,
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': String(rateLimit.retryAfter),
+            },
+          },
+        );
+      }
+
       // Call the signIn action with password provider
       const params: Record<string, string> = {
         email,
@@ -50,46 +70,69 @@ http.route({
         params.name = name;
       }
 
-      const result = await ctx.runAction(api.auth.signIn, {
-        provider: 'password',
-        params,
-      });
+      try {
+        const result = await ctx.runAction(api.auth.signIn, {
+          provider: 'password',
+          params,
+        });
 
-      // Transform response to iOS expected format
-      // Convex Auth returns: { tokens?: { token, refreshToken }, started?, redirect?, verifier? }
-      // iOS expects: { token, refreshToken?, userId?, email? }
-      const iosResponse = {
-        token: result.tokens?.token ?? '',
-        refreshToken: result.tokens?.refreshToken,
-        userId: null, // User ID is obtained via authenticated queries
-        email,
-      };
+        // Transform response to iOS expected format
+        // Convex Auth returns: { tokens?: { token, refreshToken }, started?, redirect?, verifier? }
+        // iOS expects: { token, refreshToken?, userId?, email? }
+        const iosResponse = {
+          token: result.tokens?.token ?? '',
+          refreshToken: result.tokens?.refreshToken,
+          userId: null, // User ID is obtained via authenticated queries
+          email,
+        };
 
-      // Check if authentication was successful
-      if (!result.tokens?.token) {
-        // This might be email verification flow
-        return new Response(
-          JSON.stringify({
-            error:
-              flow === 'signUp'
-                ? 'Registration successful, please login'
-                : 'Invalid email or password',
-            needsVerification: result.started,
-          }),
-          {
-            status: result.started ? 200 : 401,
-            headers: { 'Content-Type': 'application/json' },
+        // Check if authentication was successful
+        if (!result.tokens?.token) {
+          // Record failure for invalid login attempts (but not if it's just a signup flow needing verification)
+          // If result.started is true, it means 2FA/verification started, not a failure.
+          // If result.started is false/undefined, it's a failure.
+          if (!result.started) {
+            await ctx.runMutation(internal.authRateLimit.recordFailure, {
+              identifier: email,
+            });
+          }
+
+          // This might be email verification flow
+          return new Response(
+            JSON.stringify({
+              error:
+                flow === 'signUp'
+                  ? 'Registration successful, please login'
+                  : 'Invalid email or password',
+              needsVerification: result.started,
+            }),
+            {
+              status: result.started ? 200 : 401,
+              headers: { 'Content-Type': 'application/json' },
+            },
+          );
+        }
+
+        // Reset rate limit on success
+        await ctx.runMutation(internal.authRateLimit.reset, {
+          identifier: email,
+        });
+
+        return new Response(JSON.stringify(iosResponse), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Set-Cookie': `convex-auth-token=${result.tokens.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
           },
-        );
+        });
       }
-
-      return new Response(JSON.stringify(iosResponse), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': `convex-auth-token=${result.tokens.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
-        },
-      });
+      catch (error) {
+        // Record failure
+        await ctx.runMutation(internal.authRateLimit.recordFailure, {
+          identifier: email,
+        });
+        throw error;
+      }
     }
     catch (error) {
       const message
