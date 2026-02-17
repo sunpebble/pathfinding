@@ -1,0 +1,42 @@
+
+> pathfinding@1.0.0 lint /app
+> eslint .
+
+
+/app/apps/dashboard/src/app/guides/[id]/page.tsx
+  327:51  warning  Do not use item index in the array as its key  react/no-array-index-key
+  355:29  warning  Do not use item index in the array as its key  react/no-array-index-key
+  457:54  warning  Do not use item index in the array as its key  react/no-array-index-key
+
+/app/apps/dashboard/src/app/guides/page.tsx
+  238:8   error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  238:20  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  242:11  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  242:19  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  246:11  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  246:33  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+
+/app/apps/dashboard/src/app/guides/review/page.tsx
+  248:8   error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  248:20  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  252:11  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  252:19  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  256:11  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  256:33  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+
+/app/apps/dashboard/src/app/jobs/page.tsx
+  121:12  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  121:33  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  125:15  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  125:33  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  291:14  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  291:26  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  297:17  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  297:37  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+
+/app/apps/motia/src/events/notification.step.ts
+  3:7  error  'inputSchema' is assigned a value but only used as a type. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+✖ 24 problems (21 errors, 3 warnings)
+
+ ELIFECYCLE  Command failed with exit code 1.
