@@ -2,6 +2,7 @@
 // @ts-nocheck
 import { v } from 'convex/values';
 import { internal } from './_generated/api';
+import type { RegisteredMutation } from 'convex/server';
 import { internalMutation, mutation, query } from './_generated/server';
 
 // OTP 配置
@@ -360,7 +361,7 @@ export const cleanupExpiredOtps = internalMutation({
       cleanedOtps: expiredOtps.length,
     };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, Promise<{ cleanedOtps: number }>>;
 
 /**
  * 清理过期的速率限制记录 (由 cron 调用)
@@ -382,4 +383,4 @@ export const cleanupExpiredRateLimits = internalMutation({
       cleaned: expiredRateLimits.length,
     };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, Promise<{ cleaned: number }>>;

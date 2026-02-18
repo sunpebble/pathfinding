@@ -4,6 +4,7 @@ import {
   notificationDataValidator,
   scheduledNotificationDataValidator,
 } from '../packages/convex-client/src/validators/index.js';
+import type { RegisteredMutation } from 'convex/server';
 import { internalMutation, mutation, query } from './_generated/server';
 
 /**
@@ -798,7 +799,7 @@ export const sendPendingReminders = internalMutation({
 
     return { sentCount, total: pendingNotifications.length };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, Promise<{ sentCount: number; total: number }>>;
 
 /**
  * Clean up old read notifications (internal, called by cron)
@@ -828,4 +829,4 @@ export const cleanupOldNotifications = internalMutation({
 
     return { deletedCount };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, Promise<{ deletedCount: number }>>;

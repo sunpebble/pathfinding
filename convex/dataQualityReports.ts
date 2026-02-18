@@ -6,6 +6,7 @@
  */
 
 import { v } from 'convex/values';
+import type { RegisteredMutation } from 'convex/server';
 import {
   dataQualityIssueValidator,
   dataQualityMetricsValidator,
@@ -142,4 +143,4 @@ export const cleanupOld = internalMutation({
 
     return { deletedCount };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, Promise<{ deletedCount: number }>>;
