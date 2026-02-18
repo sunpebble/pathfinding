@@ -30,19 +30,34 @@ export const listConversations = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
 
-    // Get all conversations where user is a participant
-    const allConversations = await ctx.db
-      .query('conversations')
-      .withIndex('by_last_message')
-      .order('desc')
+    // Optimization: Use messageReadStatus index to find conversations for this user
+    // instead of scanning all conversations.
+    const userStatuses = await ctx.db
+      .query('messageReadStatus')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
       .collect();
 
-    // Filter to only conversations where user is a participant
-    const userConversations = allConversations.filter(conv =>
-      conv.participantIds.includes(args.userId),
+    const conversationIds = userStatuses.map(s => s.conversationId);
+
+    // Fetch conversation documents
+    const conversations = await Promise.all(
+      conversationIds.map(id => ctx.db.get(id)),
     );
 
-    const limitedConversations = userConversations.slice(0, limit);
+    // Filter out nulls and ensure user is still participant (safety check)
+    const validConversations = conversations.filter(
+      (conv): conv is NonNullable<typeof conv> =>
+        conv !== null && conv.participantIds.includes(args.userId),
+    );
+
+    // Sort by lastMessageAt desc
+    validConversations.sort((a, b) => {
+      const timeA = a.lastMessageAt ?? 0;
+      const timeB = b.lastMessageAt ?? 0;
+      return timeB - timeA;
+    });
+
+    const limitedConversations = validConversations.slice(0, limit);
 
     // Enrich with participant profiles and unread counts
     const enriched = await Promise.all(
@@ -74,11 +89,10 @@ export const listConversations = query({
         }
 
         // Get unread count
-        const readStatus = await ctx.db
-          .query('messageReadStatus')
-          .withIndex('by_conversation_user', q =>
-            q.eq('conversationId', conv._id).eq('userId', args.userId))
-          .first();
+        // Optimization: Use pre-fetched status
+        const readStatus = userStatuses.find(
+          s => s.conversationId === conv._id,
+        );
 
         let unreadCount = 0;
         if (readStatus?.lastReadAt) {
@@ -504,27 +518,39 @@ export const getUnreadCount = query({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
-    // Get all conversations for user
-    const allConversations = await ctx.db.query('conversations').collect();
-
-    const userConversations = allConversations.filter(conv =>
-      conv.participantIds.includes(args.userId),
-    );
+    // Optimization: Use messageReadStatus index to find conversations for this user
+    // instead of scanning all conversations.
+    const userStatuses = await ctx.db
+      .query('messageReadStatus')
+      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .collect();
 
     let totalUnread = 0;
 
-    for (const conv of userConversations) {
-      const readStatus = await ctx.db
-        .query('messageReadStatus')
-        .withIndex('by_conversation_user', q =>
-          q.eq('conversationId', conv._id).eq('userId', args.userId))
-        .first();
+    // Fetch conversations in parallel to get lastMessageAt
+    const conversations = await Promise.all(
+      userStatuses.map(s => ctx.db.get(s.conversationId)),
+    );
+
+    for (let i = 0; i < userStatuses.length; i++) {
+      const readStatus = userStatuses[i];
+      const conv = conversations[i];
+
+      if (!conv)
+        continue;
 
       if (readStatus?.lastReadAt) {
+        // Optimization: check if there are potentially new messages before querying
+        if (conv.lastMessageAt && conv.lastMessageAt <= readStatus.lastReadAt) {
+          continue;
+        }
+
         const unreadMessages = await ctx.db
           .query('messages')
           .withIndex('by_conversation_time', q =>
-            q.eq('conversationId', conv._id).gt('sentAt', readStatus.lastReadAt))
+            q
+              .eq('conversationId', conv._id)
+              .gt('sentAt', readStatus.lastReadAt))
           .collect();
 
         totalUnread += unreadMessages.filter(
