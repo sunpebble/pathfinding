@@ -1,0 +1,3 @@
+## 2025-02-18 - Modal Accessibility Refactor
+**Learning:** Custom `div`-based modals (using `fixed inset-0`) often lack critical accessibility features like focus trapping, `Escape` key handling, and proper ARIA attributes. `apps/dashboard` had several instances of this pattern (e.g., `InviteDialog`, `PoiEditor`).
+**Action:** When encountering custom modals, prioritize refactoring them to use the design system's `Dialog` component (Radix UI based), which handles these accessibility concerns out-of-the-box. Ensure to adapt the `DialogContent` layout (e.g., `p-0`, `max-h`) to match the original design if needed.

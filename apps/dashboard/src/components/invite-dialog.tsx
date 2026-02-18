@@ -2,8 +2,16 @@
 
 import { api } from '@pathfinding/convex-client';
 import { useMutation } from 'convex/react';
-import { Check, Copy, Link2, Mail, UserPlus, X } from 'lucide-react';
+import { Check, Copy, Link2, Mail, UserPlus } from 'lucide-react';
 import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { toConvexId } from '@/types/convex';
 
@@ -79,8 +87,10 @@ export function InviteDialog({
 
   const generateShareableLink = () => {
     // Generate a shareable link with itinerary ID and role
-    const baseUrl = window.location.origin;
-    const shareToken = btoa(`${itineraryId}:${role}:${Date.now()}`);
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const shareToken = typeof btoa !== 'undefined'
+      ? btoa(`${itineraryId}:${role}:${Date.now()}`)
+      : '';
     return `${baseUrl}/itineraries/accept?token=${shareToken}`;
   };
 
@@ -96,34 +106,20 @@ export function InviteDialog({
     }
   };
 
-  if (!isOpen)
-    return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-emerald-600" />
-              Invite Collaborator
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Add people to collaborate on this itinerary
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Close"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogHeader className="p-6 pb-2 border-b bg-white">
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-emerald-600" />
+            Invite Collaborator
+          </DialogTitle>
+          <DialogDescription>
+            Add people to collaborate on this itinerary
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Success Message */}
           {success && (
             <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
@@ -282,16 +278,15 @@ export function InviteDialog({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-xl">
+        <DialogFooter className="p-6 pt-4 bg-gray-50 border-t sm:justify-between">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            className="w-full sm:w-auto px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
           >
             Close
           </button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
