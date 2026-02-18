@@ -24,9 +24,6 @@ export * from './poi-review.js';
 // Quality Reports
 export * from './quality-report.js';
 
-// Quality Score
-export * from './quality-score.js';
-
 export * from './raw-record.js';
 
 // Gold Layer
