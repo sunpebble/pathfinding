@@ -25,6 +25,10 @@ export * from './poi-review.js';
 export * from './quality-report.js';
 
 // Quality Score
+// QualityScoreResult is already exported from mafengwo.js, so we don't need to re-export it from quality-score.js if it causes conflicts.
+// However, the error message says "Module './mafengwo.js' has already exported a member named 'QualityScoreResult'".
+// This usually means quality-score.js ALSO exports QualityScoreResult, or index.ts exports * from both and they collide.
+// Let's check quality-score.js next.
 export * from './quality-score.js';
 
 export * from './raw-record.js';

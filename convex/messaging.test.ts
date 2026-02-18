@@ -41,7 +41,7 @@ describe('messaging Optimization', () => {
   });
 
   it('listConversations should query messageReadStatus instead of full conversations scan', async () => {
-    await listConversations(ctx, { userId: 'user1' });
+    await (listConversations as any)(ctx, { userId: 'user1' });
 
     // Optimized behavior:
     // Should query 'messageReadStatus' by user index first
@@ -52,7 +52,7 @@ describe('messaging Optimization', () => {
   });
 
   it('getUnreadCount should query messageReadStatus instead of full conversations scan', async () => {
-    await getUnreadCount(ctx, { userId: 'user1' });
+    await (getUnreadCount as any)(ctx, { userId: 'user1' });
 
     // Optimized behavior:
     expect(mockDb.query).toHaveBeenCalledWith('messageReadStatus');

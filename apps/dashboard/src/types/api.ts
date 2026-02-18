@@ -25,10 +25,15 @@ export interface GuideWithAI {
   tags?: string[];
   // AI enriched fields
   aiSummary?: string;
+  ai_summary?: string; // Duplicate for snake_case compatibility
   aiTips?: string[];
+  ai_tips?: string[]; // Duplicate for snake_case compatibility
   aiBestTime?: string;
+  ai_best_time?: string; // Duplicate for snake_case compatibility
   aiDuration?: string;
+  ai_duration?: string; // Duplicate for snake_case compatibility
   aiBudget?: string;
+  ai_budget?: string; // Duplicate for snake_case compatibility
   aiDays?: AiDay[];
   ai_days?: AiDay[]; // Duplicate for snake_case compatibility
   aiProcessedAt?: number;
