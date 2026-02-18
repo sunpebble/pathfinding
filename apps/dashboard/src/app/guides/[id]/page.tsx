@@ -331,6 +331,7 @@ export default function GuideDetailPage() {
               <ul className="space-y-1.5">
                 {guide.aiTips.map((tip: string, i: number) => (
                   <li
+                    // eslint-disable-next-line react/no-array-index-key
                     key={i}
                     className="flex items-start gap-2 text-sm text-gray-600"
                   >
@@ -363,7 +364,11 @@ export default function GuideDetailPage() {
                 // Plain text with paragraph formatting
                 <div className="prose prose-gray max-w-none">
                   {guide.content.split(/\n{2,}/).map((paragraph: string, i: number) => (
-                    <p key={i} className="text-gray-700 leading-relaxed mb-4">
+                    <p
+                      // eslint-disable-next-line react/no-array-index-key
+                      key={i}
+                      className="text-gray-700 leading-relaxed mb-4"
+                    >
                       {paragraph.trim()}
                     </p>
                   ))}
