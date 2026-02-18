@@ -1,3 +1,4 @@
+
 ## 2024-05-22 - [CRITICAL] Manual JWT Decoding Bypasses Signature Verification
 **Vulnerability:** The `getUserIdFromAuth` function in `convex/http.ts` manually decoded JWT tokens from the `Authorization` header using `atob()` and `JSON.parse()`. This completely bypassed cryptographic signature verification, allowing attackers to forge tokens with arbitrary `sub` (user ID) claims and impersonate any user.
 **Learning:** Developers might manually decode JWTs to extract claims (like `sub` or `exp`) without realizing that decoding != verifying. In `convex/http.ts`, `ctx.auth` was available but overlooked in favor of a custom helper.
