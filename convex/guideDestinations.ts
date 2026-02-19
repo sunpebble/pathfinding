@@ -1,7 +1,7 @@
-import type { Id } from './_generated/dataModel';
-import type { MutationCtx } from './_generated/server';
-import { v } from 'convex/values';
-import { internalMutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
+import { v } from "convex/values";
+import { internalMutation, query } from "./_generated/server";
 
 /**
  * Guide Destinations - Auxiliary table for O(1) destination lookups
@@ -20,21 +20,21 @@ import { internalMutation, query } from './_generated/server';
  */
 export async function syncDestinationsInternal(
   ctx: MutationCtx,
-  guideId: Id<'travelGuides'>,
+  guideId: Id<"travelGuides">,
   newDestinations: string[],
 ): Promise<{ added: number; removed: number }> {
   // Get existing destination records for this guide
   const existing = await ctx.db
-    .query('guideDestinations')
-    .withIndex('by_guide', q => q.eq('guideId', guideId))
+    .query("guideDestinations")
+    .withIndex("by_guide", (q) => q.eq("guideId", guideId))
     .collect();
 
-  const existingSet = new Set(existing.map(d => d.destination));
-  const newSet = new Set(newDestinations.map(d => normalizeDestination(d)));
+  const existingSet = new Set(existing.map((d) => d.destination));
+  const newSet = new Set(newDestinations.map((d) => normalizeDestination(d)));
 
   // Find destinations to add and remove
-  const toAdd = [...newSet].filter(d => !existingSet.has(d));
-  const toRemove = existing.filter(d => !newSet.has(d.destination));
+  const toAdd = [...newSet].filter((d) => !existingSet.has(d));
+  const toRemove = existing.filter((d) => !newSet.has(d.destination));
 
   // Remove old destinations
   for (const dest of toRemove) {
@@ -44,7 +44,7 @@ export async function syncDestinationsInternal(
   // Add new destinations
   const now = Date.now();
   for (const destination of toAdd) {
-    await ctx.db.insert('guideDestinations', {
+    await ctx.db.insert("guideDestinations", {
       guideId,
       destination,
       createdAt: now,
@@ -59,11 +59,11 @@ export async function syncDestinationsInternal(
  */
 export async function deleteDestinationsForGuide(
   ctx: MutationCtx,
-  guideId: Id<'travelGuides'>,
+  guideId: Id<"travelGuides">,
 ): Promise<number> {
   const destinations = await ctx.db
-    .query('guideDestinations')
-    .withIndex('by_guide', q => q.eq('guideId', guideId))
+    .query("guideDestinations")
+    .withIndex("by_guide", (q) => q.eq("guideId", guideId))
     .collect();
 
   for (const dest of destinations) {
@@ -99,8 +99,8 @@ export const getByDestination = query({
 
     // Use paginate for efficient cursor-based pagination
     const result = await ctx.db
-      .query('guideDestinations')
-      .withIndex('by_destination', q => q.eq('destination', normalizedDest))
+      .query("guideDestinations")
+      .withIndex("by_destination", (q) => q.eq("destination", normalizedDest))
       .paginate({ numItems: limit, cursor: args.cursor ?? null });
 
     // Fetch the actual guides
@@ -112,7 +112,9 @@ export const getByDestination = query({
     );
 
     // Filter out any null guides (in case of orphaned records)
-    const validGuides = guides.filter((g): g is NonNullable<typeof g> => g !== null);
+    const validGuides = guides.filter(
+      (g): g is NonNullable<typeof g> => g !== null,
+    );
 
     return {
       guides: validGuides,
@@ -136,12 +138,12 @@ export const getGuideIdsByDestination = query({
     const limit = args.limit ?? 100;
 
     const result = await ctx.db
-      .query('guideDestinations')
-      .withIndex('by_destination', q => q.eq('destination', normalizedDest))
+      .query("guideDestinations")
+      .withIndex("by_destination", (q) => q.eq("destination", normalizedDest))
       .paginate({ numItems: limit, cursor: args.cursor ?? null });
 
     return {
-      guideIds: result.page.map(d => d.guideId),
+      guideIds: result.page.map((d) => d.guideId),
       cursor: result.continueCursor,
       isDone: result.isDone,
     };
@@ -165,8 +167,8 @@ export const searchDestinations = query({
 
     // Use the destination index to iterate efficiently
     const allDests = await ctx.db
-      .query('guideDestinations')
-      .withIndex('by_destination')
+      .query("guideDestinations")
+      .withIndex("by_destination")
       .collect();
 
     // Group by destination and filter by prefix
@@ -198,8 +200,8 @@ export const countByDestination = query({
 
     let count = 0;
     const iter = ctx.db
-      .query('guideDestinations')
-      .withIndex('by_destination', q => q.eq('destination', normalizedDest));
+      .query("guideDestinations")
+      .withIndex("by_destination", (q) => q.eq("destination", normalizedDest));
 
     for await (const _ of iter) {
       count++;
@@ -219,7 +221,7 @@ export const getAllDestinations = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 100;
 
-    const allDests = await ctx.db.query('guideDestinations').collect();
+    const allDests = await ctx.db.query("guideDestinations").collect();
 
     // Count occurrences
     const destCounts = new Map<string, number>();
@@ -244,7 +246,7 @@ export const getAllDestinations = query({
  */
 export const syncDestinations = internalMutation({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     destinations: v.array(v.string()),
   },
   handler: async (ctx, args) => {
@@ -265,7 +267,7 @@ export const rebuildAll = internalMutation({
     const batchSize = args.batchSize ?? 50;
 
     const result = await ctx.db
-      .query('travelGuides')
+      .query("travelGuides")
       .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
 
     let synced = 0;
@@ -296,7 +298,7 @@ export const rebuildAll = internalMutation({
 export const clearAll = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query('guideDestinations').collect();
+    const all = await ctx.db.query("guideDestinations").collect();
 
     for (const dest of all) {
       await ctx.db.delete(dest._id);

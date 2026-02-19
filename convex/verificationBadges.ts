@@ -1,5 +1,5 @@
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Verification Badges - User certification management
@@ -8,48 +8,48 @@ import { mutation, query } from './_generated/server';
 
 // Badge type validator
 const badgeTypeValidator = v.union(
-  v.literal('travel_expert'),
-  v.literal('local_guide'),
-  v.literal('official_account'),
+  v.literal("travel_expert"),
+  v.literal("local_guide"),
+  v.literal("official_account"),
 );
 
 // Application status validator
 const applicationStatusValidator = v.union(
-  v.literal('pending'),
-  v.literal('under_review'),
-  v.literal('approved'),
-  v.literal('rejected'),
-  v.literal('cancelled'),
+  v.literal("pending"),
+  v.literal("under_review"),
+  v.literal("approved"),
+  v.literal("rejected"),
+  v.literal("cancelled"),
 );
 
 // ID type validator
 const idTypeValidator = v.union(
-  v.literal('id_card'),
-  v.literal('passport'),
-  v.literal('business_license'),
+  v.literal("id_card"),
+  v.literal("passport"),
+  v.literal("business_license"),
 );
 
 // Supporting material type validator
 const materialTypeValidator = v.union(
-  v.literal('id_photo'),
-  v.literal('work_proof'),
-  v.literal('portfolio'),
-  v.literal('certificate'),
-  v.literal('other'),
+  v.literal("id_photo"),
+  v.literal("work_proof"),
+  v.literal("portfolio"),
+  v.literal("certificate"),
+  v.literal("other"),
 );
 
 // Badge display names
 const BADGE_DISPLAY_NAMES: Record<string, string> = {
-  travel_expert: '旅行达人',
-  local_guide: '本地向导',
-  official_account: '官方账号',
+  travel_expert: "旅行达人",
+  local_guide: "本地向导",
+  official_account: "官方账号",
 };
 
 // Badge colors
 const BADGE_COLORS: Record<string, string> = {
-  travel_expert: '#FF6B6B',
-  local_guide: '#4ECDC4',
-  official_account: '#45B7D1',
+  travel_expert: "#FF6B6B",
+  local_guide: "#4ECDC4",
+  official_account: "#45B7D1",
 };
 
 // ============================================
@@ -61,20 +61,21 @@ export const getUserBadges = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const badges = await ctx.db
-      .query('verificationBadges')
-      .withIndex('by_user_active', q =>
-        q.eq('userId', args.userId).eq('isActive', true))
+      .query("verificationBadges")
+      .withIndex("by_user_active", (q) =>
+        q.eq("userId", args.userId).eq("isActive", true),
+      )
       .collect();
 
     // Filter out expired badges
     const now = Date.now();
-    return badges.filter(badge => !badge.expiresAt || badge.expiresAt > now);
+    return badges.filter((badge) => !badge.expiresAt || badge.expiresAt > now);
   },
 });
 
 // Get a specific badge by ID
 export const getBadgeById = query({
-  args: { id: v.id('verificationBadges') },
+  args: { id: v.id("verificationBadges") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -88,9 +89,10 @@ export const hasBadge = query({
   },
   handler: async (ctx, args) => {
     const badge = await ctx.db
-      .query('verificationBadges')
-      .withIndex('by_user_type', q =>
-        q.eq('userId', args.userId).eq('badgeType', args.badgeType))
+      .query("verificationBadges")
+      .withIndex("by_user_type", (q) =>
+        q.eq("userId", args.userId).eq("badgeType", args.badgeType),
+      )
       .first();
 
     if (!badge || !badge.isActive) {
@@ -115,8 +117,8 @@ export const listBadgesByType = query({
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
     return await ctx.db
-      .query('verificationBadges')
-      .withIndex('by_type', q => q.eq('badgeType', args.badgeType))
+      .query("verificationBadges")
+      .withIndex("by_type", (q) => q.eq("badgeType", args.badgeType))
       .take(limit);
   },
 });
@@ -141,7 +143,7 @@ export const createBadge = mutation({
         totalGuides: v.optional(v.number()),
         totalLikes: v.optional(v.number()),
         localCity: v.optional(v.string()),
-        localCityId: v.optional(v.id('cities')),
+        localCityId: v.optional(v.id("cities")),
         yearsOfResidence: v.optional(v.number()),
         languages: v.optional(v.array(v.string())),
         organizationName: v.optional(v.string()),
@@ -153,17 +155,18 @@ export const createBadge = mutation({
   handler: async (ctx, args) => {
     // Check if user already has this badge type
     const existing = await ctx.db
-      .query('verificationBadges')
-      .withIndex('by_user_type', q =>
-        q.eq('userId', args.userId).eq('badgeType', args.badgeType))
+      .query("verificationBadges")
+      .withIndex("by_user_type", (q) =>
+        q.eq("userId", args.userId).eq("badgeType", args.badgeType),
+      )
       .first();
 
     if (existing && existing.isActive) {
-      throw new Error('用户已拥有此类型的认证徽章');
+      throw new Error("用户已拥有此类型的认证徽章");
     }
 
     const now = Date.now();
-    const badgeId = await ctx.db.insert('verificationBadges', {
+    const badgeId = await ctx.db.insert("verificationBadges", {
       userId: args.userId,
       badgeType: args.badgeType,
       displayName: BADGE_DISPLAY_NAMES[args.badgeType],
@@ -186,18 +189,18 @@ export const createBadge = mutation({
 // Revoke a badge
 export const revokeBadge = mutation({
   args: {
-    badgeId: v.id('verificationBadges'),
+    badgeId: v.id("verificationBadges"),
     reason: v.string(),
     revokedBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const badge = await ctx.db.get(args.badgeId);
     if (!badge) {
-      throw new Error('徽章不存在');
+      throw new Error("徽章不存在");
     }
 
     if (!badge.isActive) {
-      throw new Error('徽章已被撤销');
+      throw new Error("徽章已被撤销");
     }
 
     const now = Date.now();
@@ -213,13 +216,13 @@ export const revokeBadge = mutation({
 // Reactivate a revoked badge
 export const reactivateBadge = mutation({
   args: {
-    badgeId: v.id('verificationBadges'),
+    badgeId: v.id("verificationBadges"),
     newExpiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const badge = await ctx.db.get(args.badgeId);
     if (!badge) {
-      throw new Error('徽章不存在');
+      throw new Error("徽章不存在");
     }
 
     const now = Date.now();
@@ -236,14 +239,14 @@ export const reactivateBadge = mutation({
 // Update badge metadata
 export const updateBadgeMetadata = mutation({
   args: {
-    badgeId: v.id('verificationBadges'),
+    badgeId: v.id("verificationBadges"),
     metadata: v.object({
       travelExpertLevel: v.optional(v.number()),
       specialties: v.optional(v.array(v.string())),
       totalGuides: v.optional(v.number()),
       totalLikes: v.optional(v.number()),
       localCity: v.optional(v.string()),
-      localCityId: v.optional(v.id('cities')),
+      localCityId: v.optional(v.id("cities")),
       yearsOfResidence: v.optional(v.number()),
       languages: v.optional(v.array(v.string())),
       organizationName: v.optional(v.string()),
@@ -254,7 +257,7 @@ export const updateBadgeMetadata = mutation({
   handler: async (ctx, args) => {
     const badge = await ctx.db.get(args.badgeId);
     if (!badge) {
-      throw new Error('徽章不存在');
+      throw new Error("徽章不存在");
     }
 
     await ctx.db.patch(args.badgeId, {
@@ -277,22 +280,23 @@ export const getUserApplications = query({
   handler: async (ctx, args) => {
     if (args.status) {
       return await ctx.db
-        .query('verificationApplications')
-        .withIndex('by_user_status', q =>
-          q.eq('userId', args.userId).eq('status', args.status!))
+        .query("verificationApplications")
+        .withIndex("by_user_status", (q) =>
+          q.eq("userId", args.userId).eq("status", args.status!),
+        )
         .collect();
     }
 
     return await ctx.db
-      .query('verificationApplications')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("verificationApplications")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
   },
 });
 
 // Get application by ID
 export const getApplicationById = query({
-  args: { id: v.id('verificationApplications') },
+  args: { id: v.id("verificationApplications") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -310,26 +314,25 @@ export const listPendingApplications = query({
     let applications;
     if (args.badgeType) {
       applications = await ctx.db
-        .query('verificationApplications')
-        .withIndex('by_type', q => q.eq('badgeType', args.badgeType!))
-        .filter(q =>
+        .query("verificationApplications")
+        .withIndex("by_type", (q) => q.eq("badgeType", args.badgeType!))
+        .filter((q) =>
           q.or(
-            q.eq(q.field('status'), 'pending'),
-            q.eq(q.field('status'), 'under_review'),
+            q.eq(q.field("status"), "pending"),
+            q.eq(q.field("status"), "under_review"),
           ),
         )
         .take(limit);
-    }
-    else {
+    } else {
       applications = await ctx.db
-        .query('verificationApplications')
-        .withIndex('by_status', q => q.eq('status', 'pending'))
+        .query("verificationApplications")
+        .withIndex("by_status", (q) => q.eq("status", "pending"))
         .take(limit);
 
       // Also get under_review
       const underReview = await ctx.db
-        .query('verificationApplications')
-        .withIndex('by_status', q => q.eq('status', 'under_review'))
+        .query("verificationApplications")
+        .withIndex("by_status", (q) => q.eq("status", "under_review"))
         .take(limit);
 
       applications = [...applications, ...underReview].slice(0, limit);
@@ -384,37 +387,39 @@ export const submitApplication = mutation({
   handler: async (ctx, args) => {
     // Check if user already has an active badge of this type
     const existingBadge = await ctx.db
-      .query('verificationBadges')
-      .withIndex('by_user_type', q =>
-        q.eq('userId', args.userId).eq('badgeType', args.badgeType))
+      .query("verificationBadges")
+      .withIndex("by_user_type", (q) =>
+        q.eq("userId", args.userId).eq("badgeType", args.badgeType),
+      )
       .first();
 
     if (existingBadge && existingBadge.isActive) {
-      throw new Error('您已拥有此类型的认证徽章');
+      throw new Error("您已拥有此类型的认证徽章");
     }
 
     // Check if user has a pending application
     const existingApplication = await ctx.db
-      .query('verificationApplications')
-      .withIndex('by_user_type', q =>
-        q.eq('userId', args.userId).eq('badgeType', args.badgeType))
-      .filter(q =>
+      .query("verificationApplications")
+      .withIndex("by_user_type", (q) =>
+        q.eq("userId", args.userId).eq("badgeType", args.badgeType),
+      )
+      .filter((q) =>
         q.or(
-          q.eq(q.field('status'), 'pending'),
-          q.eq(q.field('status'), 'under_review'),
+          q.eq(q.field("status"), "pending"),
+          q.eq(q.field("status"), "under_review"),
         ),
       )
       .first();
 
     if (existingApplication) {
-      throw new Error('您已有一个待审核的申请');
+      throw new Error("您已有一个待审核的申请");
     }
 
     const now = Date.now();
-    const applicationId = await ctx.db.insert('verificationApplications', {
+    const applicationId = await ctx.db.insert("verificationApplications", {
       userId: args.userId,
       badgeType: args.badgeType,
-      status: 'pending',
+      status: "pending",
       realName: args.realName,
       idType: args.idType,
       idNumber: args.idNumber,
@@ -434,25 +439,25 @@ export const submitApplication = mutation({
 // Cancel an application
 export const cancelApplication = mutation({
   args: {
-    applicationId: v.id('verificationApplications'),
+    applicationId: v.id("verificationApplications"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const application = await ctx.db.get(args.applicationId);
     if (!application) {
-      throw new Error('申请不存在');
+      throw new Error("申请不存在");
     }
 
     if (application.userId !== args.userId) {
-      throw new Error('无权取消此申请');
+      throw new Error("无权取消此申请");
     }
 
-    if (application.status !== 'pending') {
-      throw new Error('只能取消待审核的申请');
+    if (application.status !== "pending") {
+      throw new Error("只能取消待审核的申请");
     }
 
     await ctx.db.patch(args.applicationId, {
-      status: 'cancelled',
+      status: "cancelled",
       updatedAt: Date.now(),
     });
   },
@@ -461,21 +466,21 @@ export const cancelApplication = mutation({
 // Start reviewing an application (admin)
 export const startReview = mutation({
   args: {
-    applicationId: v.id('verificationApplications'),
+    applicationId: v.id("verificationApplications"),
     reviewerId: v.string(),
   },
   handler: async (ctx, args) => {
     const application = await ctx.db.get(args.applicationId);
     if (!application) {
-      throw new Error('申请不存在');
+      throw new Error("申请不存在");
     }
 
-    if (application.status !== 'pending') {
-      throw new Error('申请已被处理');
+    if (application.status !== "pending") {
+      throw new Error("申请已被处理");
     }
 
     await ctx.db.patch(args.applicationId, {
-      status: 'under_review',
+      status: "under_review",
       reviewedBy: args.reviewerId,
       updatedAt: Date.now(),
     });
@@ -485,7 +490,7 @@ export const startReview = mutation({
 // Approve an application (admin)
 export const approveApplication = mutation({
   args: {
-    applicationId: v.id('verificationApplications'),
+    applicationId: v.id("verificationApplications"),
     reviewerId: v.string(),
     reviewNotes: v.optional(v.string()),
     expiresInDays: v.optional(v.number()),
@@ -496,7 +501,7 @@ export const approveApplication = mutation({
         totalGuides: v.optional(v.number()),
         totalLikes: v.optional(v.number()),
         localCity: v.optional(v.string()),
-        localCityId: v.optional(v.id('cities')),
+        localCityId: v.optional(v.id("cities")),
         yearsOfResidence: v.optional(v.number()),
         languages: v.optional(v.array(v.string())),
         organizationName: v.optional(v.string()),
@@ -508,15 +513,15 @@ export const approveApplication = mutation({
   handler: async (ctx, args) => {
     const application = await ctx.db.get(args.applicationId);
     if (!application) {
-      throw new Error('申请不存在');
+      throw new Error("申请不存在");
     }
 
-    if (application.status === 'approved') {
-      throw new Error('申请已通过');
+    if (application.status === "approved") {
+      throw new Error("申请已通过");
     }
 
-    if (application.status === 'cancelled') {
-      throw new Error('申请已被取消');
+    if (application.status === "cancelled") {
+      throw new Error("申请已被取消");
     }
 
     const now = Date.now();
@@ -534,35 +539,35 @@ export const approveApplication = mutation({
 
     // Merge application data for specific badge types
     if (
-      application.badgeType === 'local_guide'
-      && application.applicationData
+      application.badgeType === "local_guide" &&
+      application.applicationData
     ) {
-      finalMetadata.localCity
-        = args.metadata?.localCity || application.applicationData.localCity;
-      finalMetadata.yearsOfResidence
-        = args.metadata?.yearsOfResidence
-          || application.applicationData.yearsOfResidence;
-      finalMetadata.languages
-        = args.metadata?.languages || application.applicationData.languages;
+      finalMetadata.localCity =
+        args.metadata?.localCity || application.applicationData.localCity;
+      finalMetadata.yearsOfResidence =
+        args.metadata?.yearsOfResidence ||
+        application.applicationData.yearsOfResidence;
+      finalMetadata.languages =
+        args.metadata?.languages || application.applicationData.languages;
     }
 
     if (
-      application.badgeType === 'official_account'
-      && application.applicationData
+      application.badgeType === "official_account" &&
+      application.applicationData
     ) {
-      finalMetadata.organizationName
-        = args.metadata?.organizationName
-          || application.applicationData.organizationName;
-      finalMetadata.organizationType
-        = args.metadata?.organizationType
-          || application.applicationData.organizationType;
-      finalMetadata.officialWebsite
-        = args.metadata?.officialWebsite
-          || application.applicationData.officialWebsite;
+      finalMetadata.organizationName =
+        args.metadata?.organizationName ||
+        application.applicationData.organizationName;
+      finalMetadata.organizationType =
+        args.metadata?.organizationType ||
+        application.applicationData.organizationType;
+      finalMetadata.officialWebsite =
+        args.metadata?.officialWebsite ||
+        application.applicationData.officialWebsite;
     }
 
     // Create the badge
-    const badgeId = await ctx.db.insert('verificationBadges', {
+    const badgeId = await ctx.db.insert("verificationBadges", {
       userId: application.userId,
       badgeType: application.badgeType,
       displayName: BADGE_DISPLAY_NAMES[application.badgeType],
@@ -578,7 +583,7 @@ export const approveApplication = mutation({
 
     // Update application
     await ctx.db.patch(args.applicationId, {
-      status: 'approved',
+      status: "approved",
       reviewedBy: args.reviewerId,
       reviewedAt: now,
       reviewNotes: args.reviewNotes,
@@ -593,7 +598,7 @@ export const approveApplication = mutation({
 // Reject an application (admin)
 export const rejectApplication = mutation({
   args: {
-    applicationId: v.id('verificationApplications'),
+    applicationId: v.id("verificationApplications"),
     reviewerId: v.string(),
     rejectionReason: v.string(),
     reviewNotes: v.optional(v.string()),
@@ -601,20 +606,20 @@ export const rejectApplication = mutation({
   handler: async (ctx, args) => {
     const application = await ctx.db.get(args.applicationId);
     if (!application) {
-      throw new Error('申请不存在');
+      throw new Error("申请不存在");
     }
 
-    if (application.status === 'approved') {
-      throw new Error('申请已通过，无法拒绝');
+    if (application.status === "approved") {
+      throw new Error("申请已通过，无法拒绝");
     }
 
-    if (application.status === 'cancelled') {
-      throw new Error('申请已被取消');
+    if (application.status === "cancelled") {
+      throw new Error("申请已被取消");
     }
 
     const now = Date.now();
     await ctx.db.patch(args.applicationId, {
-      status: 'rejected',
+      status: "rejected",
       reviewedBy: args.reviewerId,
       reviewedAt: now,
       rejectionReason: args.rejectionReason,
@@ -632,7 +637,7 @@ export const rejectApplication = mutation({
 export const getBadgeStatistics = query({
   args: {},
   handler: async (ctx) => {
-    const allBadges = await ctx.db.query('verificationBadges').collect();
+    const allBadges = await ctx.db.query("verificationBadges").collect();
 
     const stats = {
       total: allBadges.length,
@@ -650,11 +655,9 @@ export const getBadgeStatistics = query({
     for (const badge of allBadges) {
       if (!badge.isActive) {
         stats.revoked++;
-      }
-      else if (badge.expiresAt && badge.expiresAt < now) {
+      } else if (badge.expiresAt && badge.expiresAt < now) {
         stats.expired++;
-      }
-      else {
+      } else {
         stats.active++;
         stats.byType[badge.badgeType]++;
       }
@@ -669,7 +672,7 @@ export const getApplicationStatistics = query({
   args: {},
   handler: async (ctx) => {
     const allApplications = await ctx.db
-      .query('verificationApplications')
+      .query("verificationApplications")
       .collect();
 
     const stats = {
@@ -688,7 +691,7 @@ export const getApplicationStatistics = query({
 
     for (const app of allApplications) {
       stats[app.status]++;
-      if (app.status === 'pending' || app.status === 'under_review') {
+      if (app.status === "pending" || app.status === "under_review") {
         stats.byType[app.badgeType]++;
       }
     }

@@ -4,7 +4,7 @@
  */
 
 // Search result types
-export type SearchResultType = 'poi' | 'itinerary' | 'guide' | 'user';
+export type SearchResultType = "poi" | "itinerary" | "guide" | "user";
 
 // Base search result interface
 export interface BaseSearchResult {
@@ -16,10 +16,10 @@ export interface BaseSearchResult {
 
 // POI search result
 export interface PoiSearchResult extends BaseSearchResult {
-  type: 'poi';
+  type: "poi";
   name: string;
   nameEn?: string;
-  category: 'attraction' | 'restaurant' | 'hotel' | 'shopping' | 'other';
+  category: "attraction" | "restaurant" | "hotel" | "shopping" | "other";
   cityId: string;
   cityName?: string;
   address?: string;
@@ -31,7 +31,7 @@ export interface PoiSearchResult extends BaseSearchResult {
 
 // Itinerary search result
 export interface ItinerarySearchResult extends BaseSearchResult {
-  type: 'itinerary';
+  type: "itinerary";
   title: string;
   cityId: string;
   cityName?: string;
@@ -39,14 +39,14 @@ export interface ItinerarySearchResult extends BaseSearchResult {
   endDate: string;
   daysCount: number;
   coverImageUrl?: string;
-  visibility: 'private' | 'team' | 'public';
+  visibility: "private" | "team" | "public";
   userId: string;
   userName?: string;
 }
 
 // Travel guide search result
 export interface GuideSearchResult extends BaseSearchResult {
-  type: 'guide';
+  type: "guide";
   title: string;
   authorName?: string;
   summary?: string;
@@ -61,7 +61,7 @@ export interface GuideSearchResult extends BaseSearchResult {
 
 // User search result
 export interface UserSearchResult extends BaseSearchResult {
-  type: 'user';
+  type: "user";
   email: string;
   displayName?: string;
   avatarUrl?: string;
@@ -71,11 +71,11 @@ export interface UserSearchResult extends BaseSearchResult {
 }
 
 // Union type for all search results
-export type SearchResult
-  = | PoiSearchResult
-    | ItinerarySearchResult
-    | GuideSearchResult
-    | UserSearchResult;
+export type SearchResult =
+  | PoiSearchResult
+  | ItinerarySearchResult
+  | GuideSearchResult
+  | UserSearchResult;
 
 // Search request
 export interface GlobalSearchRequest {
@@ -105,7 +105,7 @@ export interface GlobalSearchResponse {
 export interface SearchSuggestion {
   id: string;
   text: string;
-  type: 'recent' | 'popular' | 'suggestion';
+  type: "recent" | "popular" | "suggestion";
   resultType?: SearchResultType;
   iconName?: string;
   metadata?: {
@@ -139,7 +139,7 @@ export interface TrendingSearch {
   id: string;
   query: string;
   searchCount: number;
-  trend: 'rising' | 'stable' | 'falling';
+  trend: "rising" | "stable" | "falling";
   category?: string;
 }
 

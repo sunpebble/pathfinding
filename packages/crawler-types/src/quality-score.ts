@@ -103,44 +103,36 @@ export function calculateQualityScoreUnified(
     const titleLen = input.title.trim().length;
     if (titleLen >= 10) {
       breakdown.title = WEIGHTS.title; // 完整标题
-    }
-    else if (titleLen >= 5) {
+    } else if (titleLen >= 5) {
       breakdown.title = WEIGHTS.title * 0.7; // 短标题
-    }
-    else {
+    } else {
       breakdown.title = WEIGHTS.title * 0.3; // 很短的标题
-      suggestions.push('标题过短，建议至少10个字');
+      suggestions.push("标题过短，建议至少10个字");
     }
-  }
-  else {
-    suggestions.push('缺少标题');
+  } else {
+    suggestions.push("缺少标题");
   }
 
   // === 内容评分 ===
   const contentLength = input.content?.length || 0;
   if (contentLength >= 1000) {
     breakdown.content = WEIGHTS.content;
-  }
-  else if (contentLength >= 500) {
+  } else if (contentLength >= 500) {
     breakdown.content = WEIGHTS.content * 0.85;
-  }
-  else if (contentLength >= 200) {
+  } else if (contentLength >= 200) {
     breakdown.content = WEIGHTS.content * 0.6;
-  }
-  else if (contentLength >= 100) {
+  } else if (contentLength >= 100) {
     breakdown.content = WEIGHTS.content * 0.3;
-    suggestions.push('内容较短，建议至少200字');
-  }
-  else {
-    suggestions.push('内容过短或缺失');
+    suggestions.push("内容较短，建议至少200字");
+  } else {
+    suggestions.push("内容过短或缺失");
   }
 
   // === 作者评分 ===
   if (input.authorName && input.authorName.trim().length > 0) {
     breakdown.author = WEIGHTS.author;
-  }
-  else {
-    suggestions.push('缺少作者信息');
+  } else {
+    suggestions.push("缺少作者信息");
   }
 
   // === 图片评分 ===
@@ -148,15 +140,12 @@ export function calculateQualityScoreUnified(
   const hasCover = !!input.coverImage;
   if (imageCount >= 5 && hasCover) {
     breakdown.images = WEIGHTS.images;
-  }
-  else if (imageCount >= 5 || (imageCount >= 3 && hasCover)) {
+  } else if (imageCount >= 5 || (imageCount >= 3 && hasCover)) {
     breakdown.images = WEIGHTS.images * 0.8;
-  }
-  else if (imageCount >= 1 || hasCover) {
+  } else if (imageCount >= 1 || hasCover) {
     breakdown.images = WEIGHTS.images * 0.5;
-  }
-  else {
-    suggestions.push('缺少图片');
+  } else {
+    suggestions.push("缺少图片");
   }
 
   // === 互动数据评分 ===
@@ -164,24 +153,26 @@ export function calculateQualityScoreUnified(
   const hasLikes = (input.likes ?? 0) > 0;
   const hasSaves = (input.saves ?? 0) > 0;
   const hasComments = (input.comments ?? 0) > 0;
-  const engagementCount = [hasViews, hasLikes, hasSaves, hasComments].filter(Boolean).length;
+  const engagementCount = [hasViews, hasLikes, hasSaves, hasComments].filter(
+    Boolean,
+  ).length;
 
   if (engagementCount >= 3) {
     breakdown.engagement = WEIGHTS.engagement;
-  }
-  else if (engagementCount >= 2) {
+  } else if (engagementCount >= 2) {
     breakdown.engagement = WEIGHTS.engagement * 0.7;
-  }
-  else if (engagementCount >= 1) {
+  } else if (engagementCount >= 1) {
     breakdown.engagement = WEIGHTS.engagement * 0.4;
-  }
-  else {
-    suggestions.push('缺少互动数据');
+  } else {
+    suggestions.push("缺少互动数据");
   }
 
   // 高互动额外加分
   if ((input.likes ?? 0) >= 100 || (input.views ?? 0) >= 10000) {
-    breakdown.engagement = Math.min(WEIGHTS.engagement, breakdown.engagement * 1.2);
+    breakdown.engagement = Math.min(
+      WEIGHTS.engagement,
+      breakdown.engagement * 1.2,
+    );
   }
 
   // === 元数据评分 ===
@@ -189,24 +180,28 @@ export function calculateQualityScoreUnified(
   const hasTags = (input.tags?.length ?? 0) > 0;
   const hasRating = (input.rating ?? 0) > 0;
 
-  const metaCount = [hasDestinations, hasTags, hasRating].filter(Boolean).length;
+  const metaCount = [hasDestinations, hasTags, hasRating].filter(
+    Boolean,
+  ).length;
   if (metaCount >= 2) {
     breakdown.metadata = WEIGHTS.metadata;
-  }
-  else if (metaCount >= 1) {
+  } else if (metaCount >= 1) {
     breakdown.metadata = WEIGHTS.metadata * 0.5;
-  }
-  else {
-    suggestions.push('缺少目的地和标签信息');
+  } else {
+    suggestions.push("缺少目的地和标签信息");
   }
 
   // === 总分 ===
   const score = Math.min(
     1,
     Math.round(
-      (breakdown.title + breakdown.content + breakdown.author
-        + breakdown.images + breakdown.engagement + breakdown.metadata)
-      * 100,
+      (breakdown.title +
+        breakdown.content +
+        breakdown.author +
+        breakdown.images +
+        breakdown.engagement +
+        breakdown.metadata) *
+        100,
     ) / 100,
   );
 

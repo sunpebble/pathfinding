@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type { ReactNode } from 'react';
-import { Component } from 'react';
+import type { ReactNode } from "react";
+import { Component } from "react";
 
 interface Props {
   children: ReactNode;
@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    console.error("ErrorBoundary caught:", error, errorInfo);
     // TODO: Report to error tracking service (Sentry)
   }
 
@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Something went wrong
             </h2>
             <p className="mt-2 text-gray-600">
-              {this.state.error?.message || 'An unexpected error occurred'}
+              {this.state.error?.message || "An unexpected error occurred"}
             </p>
             <button
               onClick={() => this.setState({ hasError: false })}

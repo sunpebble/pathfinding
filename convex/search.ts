@@ -1,6 +1,6 @@
-import type { Doc } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Doc } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Search - Global search queries and mutations for smart search functionality
@@ -8,10 +8,10 @@ import { mutation, query } from './_generated/server';
 
 // Search result type validator
 const searchResultTypeValidator = v.union(
-  v.literal('poi'),
-  v.literal('itinerary'),
-  v.literal('guide'),
-  v.literal('user'),
+  v.literal("poi"),
+  v.literal("itinerary"),
+  v.literal("guide"),
+  v.literal("user"),
 );
 
 /**
@@ -21,32 +21,32 @@ export const globalSearch = query({
   args: {
     query: v.string(),
     types: v.optional(v.array(searchResultTypeValidator)),
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const searchQuery = args.query.toLowerCase().trim();
     const limit = args.limit ?? 20;
-    const types = args.types ?? ['poi', 'itinerary', 'guide', 'user'];
+    const types = args.types ?? ["poi", "itinerary", "guide", "user"];
 
     const results: Array<{
       id: string;
-      type: 'poi' | 'itinerary' | 'guide' | 'user';
+      type: "poi" | "itinerary" | "guide" | "user";
       score: number;
       data:
-        | Doc<'pois'>
-        | Doc<'itineraries'>
-        | Doc<'travelGuides'>
-        | Doc<'profiles'>
+        | Doc<"pois">
+        | Doc<"itineraries">
+        | Doc<"travelGuides">
+        | Doc<"profiles">
         | Record<string, unknown>;
     }> = [];
 
     // Search POIs
-    if (types.includes('poi')) {
-      let pois = await ctx.db.query('pois').take(500);
+    if (types.includes("poi")) {
+      let pois = await ctx.db.query("pois").take(500);
 
       if (args.cityId) {
-        pois = pois.filter(p => p.cityId === args.cityId);
+        pois = pois.filter((p) => p.cityId === args.cityId);
       }
 
       for (const poi of pois) {
@@ -55,16 +55,16 @@ export const globalSearch = query({
 
         // Name match (highest priority)
         if (poi.name.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('name');
+          matchedFields.push("name");
           score += poi.name.toLowerCase() === searchQuery ? 1.0 : 0.8;
         }
         if (poi.nameEn?.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('nameEn');
+          matchedFields.push("nameEn");
           score += 0.7;
         }
         // Address match
         if (poi.address?.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('address');
+          matchedFields.push("address");
           score += 0.4;
         }
 
@@ -76,7 +76,7 @@ export const globalSearch = query({
 
           results.push({
             id: poi._id,
-            type: 'poi',
+            type: "poi",
             score: Math.min(score, 1.0),
             data: {
               name: poi.name,
@@ -96,14 +96,14 @@ export const globalSearch = query({
     }
 
     // Search Itineraries
-    if (types.includes('itinerary')) {
+    if (types.includes("itinerary")) {
       let itineraries = await ctx.db
-        .query('itineraries')
-        .withIndex('by_visibility', q => q.eq('visibility', 'public'))
+        .query("itineraries")
+        .withIndex("by_visibility", (q) => q.eq("visibility", "public"))
         .take(200);
 
       if (args.cityId) {
-        itineraries = itineraries.filter(i => i.cityId === args.cityId);
+        itineraries = itineraries.filter((i) => i.cityId === args.cityId);
       }
 
       for (const itinerary of itineraries) {
@@ -111,7 +111,7 @@ export const globalSearch = query({
         let score = 0;
 
         if (itinerary.title.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('title');
+          matchedFields.push("title");
           score += itinerary.title.toLowerCase() === searchQuery ? 1.0 : 0.8;
         }
 
@@ -124,7 +124,7 @@ export const globalSearch = query({
 
           results.push({
             id: itinerary._id,
-            type: 'itinerary',
+            type: "itinerary",
             score: Math.min(score, 1.0),
             data: {
               title: itinerary.title,
@@ -144,29 +144,29 @@ export const globalSearch = query({
     }
 
     // Search Travel Guides
-    if (types.includes('guide')) {
-      const guides = await ctx.db.query('travelGuides').take(300);
+    if (types.includes("guide")) {
+      const guides = await ctx.db.query("travelGuides").take(300);
 
       for (const guide of guides) {
         const matchedFields: string[] = [];
         let score = 0;
 
         if (guide.title?.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('title');
+          matchedFields.push("title");
           score += guide.title.toLowerCase() === searchQuery ? 1.0 : 0.8;
         }
         if (
-          guide.destinations.some(d => d.toLowerCase().includes(searchQuery))
+          guide.destinations.some((d) => d.toLowerCase().includes(searchQuery))
         ) {
-          matchedFields.push('destinations');
+          matchedFields.push("destinations");
           score += 0.7;
         }
-        if (guide.tags.some(t => t.toLowerCase().includes(searchQuery))) {
-          matchedFields.push('tags');
+        if (guide.tags.some((t) => t.toLowerCase().includes(searchQuery))) {
+          matchedFields.push("tags");
           score += 0.5;
         }
         if (guide.authorName?.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('authorName');
+          matchedFields.push("authorName");
           score += 0.3;
         }
 
@@ -177,7 +177,7 @@ export const globalSearch = query({
 
           results.push({
             id: guide._id,
-            type: 'guide',
+            type: "guide",
             score: Math.min(score, 1.0),
             data: {
               title: guide.title,
@@ -198,24 +198,24 @@ export const globalSearch = query({
     }
 
     // Search Users
-    if (types.includes('user')) {
-      const profiles = await ctx.db.query('profiles').take(200);
+    if (types.includes("user")) {
+      const profiles = await ctx.db.query("profiles").take(200);
 
       for (const profile of profiles) {
         const matchedFields: string[] = [];
         let score = 0;
 
         if (profile.displayName?.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('displayName');
-          score
-            += profile.displayName.toLowerCase() === searchQuery ? 1.0 : 0.8;
+          matchedFields.push("displayName");
+          score +=
+            profile.displayName.toLowerCase() === searchQuery ? 1.0 : 0.8;
         }
         if (profile.email.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('email');
+          matchedFields.push("email");
           score += 0.5;
         }
         if (profile.bio?.toLowerCase().includes(searchQuery)) {
-          matchedFields.push('bio');
+          matchedFields.push("bio");
           score += 0.3;
         }
 
@@ -225,7 +225,7 @@ export const globalSearch = query({
 
           results.push({
             id: profile._id,
-            type: 'user',
+            type: "user",
             score: Math.min(score, 1.0),
             data: {
               email: profile.email,
@@ -282,8 +282,8 @@ export const getSuggestions = query({
     const suggestions: Array<{
       id: string;
       text: string;
-      type: 'suggestion';
-      resultType: 'poi' | 'itinerary' | 'guide' | 'user';
+      type: "suggestion";
+      resultType: "poi" | "itinerary" | "guide" | "user";
       metadata?: {
         resultId: string;
         category?: string;
@@ -292,14 +292,14 @@ export const getSuggestions = query({
     }> = [];
 
     // Get matching POI names
-    const pois = await ctx.db.query('pois').take(100);
+    const pois = await ctx.db.query("pois").take(100);
     for (const poi of pois) {
       if (poi.name.toLowerCase().startsWith(searchQuery)) {
         suggestions.push({
           id: `poi-${poi._id}`,
           text: poi.name,
-          type: 'suggestion',
-          resultType: 'poi',
+          type: "suggestion",
+          resultType: "poi",
           metadata: {
             resultId: poi._id,
             category: poi.category,
@@ -309,20 +309,20 @@ export const getSuggestions = query({
     }
 
     // Get matching destination names from guides
-    const guides = await ctx.db.query('travelGuides').take(100);
+    const guides = await ctx.db.query("travelGuides").take(100);
     const seenDestinations = new Set<string>();
     for (const guide of guides) {
       for (const dest of guide.destinations) {
         if (
-          dest.toLowerCase().startsWith(searchQuery)
-          && !seenDestinations.has(dest.toLowerCase())
+          dest.toLowerCase().startsWith(searchQuery) &&
+          !seenDestinations.has(dest.toLowerCase())
         ) {
           seenDestinations.add(dest.toLowerCase());
           suggestions.push({
             id: `dest-${dest}`,
             text: dest,
-            type: 'suggestion',
-            resultType: 'guide',
+            type: "suggestion",
+            resultType: "guide",
           });
         }
       }
@@ -347,9 +347,10 @@ export const recordSearchHistory = mutation({
   handler: async (ctx, args) => {
     // Check if this query already exists for the user
     const existing = await ctx.db
-      .query('searchHistory')
-      .withIndex('by_user_query', q =>
-        q.eq('userId', args.userId).eq('query', args.query))
+      .query("searchHistory")
+      .withIndex("by_user_query", (q) =>
+        q.eq("userId", args.userId).eq("query", args.query),
+      )
       .first();
 
     if (existing) {
@@ -363,7 +364,7 @@ export const recordSearchHistory = mutation({
     }
 
     // Create new history entry
-    return await ctx.db.insert('searchHistory', {
+    return await ctx.db.insert("searchHistory", {
       userId: args.userId,
       query: args.query,
       resultType: args.resultType,
@@ -385,13 +386,13 @@ export const getSearchHistory = query({
     const limit = args.limit ?? 20;
 
     const history = await ctx.db
-      .query('searchHistory')
-      .withIndex('by_user_searched', q => q.eq('userId', args.userId))
-      .order('desc')
+      .query("searchHistory")
+      .withIndex("by_user_searched", (q) => q.eq("userId", args.userId))
+      .order("desc")
       .take(limit);
 
     return {
-      history: history.map(h => ({
+      history: history.map((h) => ({
         id: h._id,
         query: h.query,
         resultType: h.resultType,
@@ -411,8 +412,8 @@ export const clearSearchHistory = mutation({
   },
   handler: async (ctx, args) => {
     const history = await ctx.db
-      .query('searchHistory')
-      .withIndex('by_user_searched', q => q.eq('userId', args.userId))
+      .query("searchHistory")
+      .withIndex("by_user_searched", (q) => q.eq("userId", args.userId))
       .collect();
 
     for (const h of history) {
@@ -428,13 +429,13 @@ export const clearSearchHistory = mutation({
  */
 export const deleteSearchHistoryItem = mutation({
   args: {
-    id: v.id('searchHistory'),
+    id: v.id("searchHistory"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.id);
     if (!item || item.userId !== args.userId) {
-      throw new Error('Search history item not found');
+      throw new Error("Search history item not found");
     }
 
     await ctx.db.delete(args.id);
@@ -451,13 +452,14 @@ export const recordSearchTrend = mutation({
   },
   handler: async (ctx, args) => {
     const normalizedQuery = args.query.toLowerCase().trim();
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     // Find existing trend record for today
     const existing = await ctx.db
-      .query('searchTrends')
-      .withIndex('by_query_date', q =>
-        q.eq('query', normalizedQuery).eq('date', today))
+      .query("searchTrends")
+      .withIndex("by_query_date", (q) =>
+        q.eq("query", normalizedQuery).eq("date", today),
+      )
       .first();
 
     if (existing) {
@@ -467,7 +469,7 @@ export const recordSearchTrend = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert('searchTrends', {
+    return await ctx.db.insert("searchTrends", {
       query: normalizedQuery,
       date: today,
       searchCount: 1,
@@ -491,12 +493,12 @@ export const getTrendingSearches = query({
     // Calculate date range
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysBack);
-    const startDateStr = startDate.toISOString().split('T')[0];
+    const startDateStr = startDate.toISOString().split("T")[0];
 
     // Get all trends in date range
     const trends = await ctx.db
-      .query('searchTrends')
-      .withIndex('by_date', q => q.gte('date', startDateStr))
+      .query("searchTrends")
+      .withIndex("by_date", (q) => q.gte("date", startDateStr))
       .collect();
 
     // Aggregate by query
@@ -508,8 +510,7 @@ export const getTrendingSearches = query({
       const existing = aggregated.get(t.query);
       if (existing) {
         existing.searchCount += t.searchCount;
-      }
-      else {
+      } else {
         aggregated.set(t.query, {
           query: t.query,
           searchCount: t.searchCount,
@@ -528,7 +529,7 @@ export const getTrendingSearches = query({
         id: `trend-${i}`,
         query: t.query,
         searchCount: t.searchCount,
-        trend: 'stable' as const,
+        trend: "stable" as const,
         category: t.resultType,
       })),
       updatedAt: Date.now(),

@@ -1,18 +1,18 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Ticket Reminders - Manage ticket booking and visit reminders
  */
 
 const reminderTypeValidator = v.union(
-  v.literal('reservation_open'),
-  v.literal('booking_reminder'),
-  v.literal('visit_reminder'),
-  v.literal('price_drop'),
-  v.literal('stock_available'),
+  v.literal("reservation_open"),
+  v.literal("booking_reminder"),
+  v.literal("visit_reminder"),
+  v.literal("price_drop"),
+  v.literal("stock_available"),
 );
 
 // ============================================
@@ -30,12 +30,12 @@ export const listByUser = query({
   },
   handler: async (ctx, args) => {
     let reminders = await ctx.db
-      .query('ticketReminders')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("ticketReminders")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     if (!args.includeTriggered) {
-      reminders = reminders.filter(r => !r.isTriggered);
+      reminders = reminders.filter((r) => !r.isTriggered);
     }
 
     // Sort by reminder time ascending
@@ -50,7 +50,7 @@ export const listByUser = query({
  * Get a reminder by ID
  */
 export const getById = query({
-  args: { id: v.id('ticketReminders') },
+  args: { id: v.id("ticketReminders") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -61,21 +61,22 @@ export const getById = query({
  */
 export const listByPoi = query({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     if (args.userId) {
       return await ctx.db
-        .query('ticketReminders')
-        .withIndex('by_user_poi', q =>
-          q.eq('userId', args.userId!).eq('poiId', args.poiId))
+        .query("ticketReminders")
+        .withIndex("by_user_poi", (q) =>
+          q.eq("userId", args.userId!).eq("poiId", args.poiId),
+        )
         .collect();
     }
 
     return await ctx.db
-      .query('ticketReminders')
-      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
+      .query("ticketReminders")
+      .withIndex("by_poi", (q) => q.eq("poiId", args.poiId))
       .collect();
   },
 });
@@ -90,13 +91,13 @@ export const getPendingReminders = query({
   },
   handler: async (ctx, args) => {
     const reminders = await ctx.db
-      .query('ticketReminders')
-      .withIndex('by_triggered', q => q.eq('isTriggered', false))
+      .query("ticketReminders")
+      .withIndex("by_triggered", (q) => q.eq("isTriggered", false))
       .collect();
 
     // Filter by reminder time
     const pending = reminders
-      .filter(r => r.reminderTime <= args.beforeTime)
+      .filter((r) => r.reminderTime <= args.beforeTime)
       .sort((a, b) => a.reminderTime - b.reminderTime);
 
     const limit = args.limit ?? 100;
@@ -111,11 +112,11 @@ export const getUnreadCount = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const reminders = await ctx.db
-      .query('ticketReminders')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("ticketReminders")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    return reminders.filter(r => r.isTriggered && !r.isRead).length;
+    return reminders.filter((r) => r.isTriggered && !r.isRead).length;
   },
 });
 
@@ -133,16 +134,16 @@ export const getUpcoming = query({
     const futureTime = now + daysAhead * 24 * 60 * 60 * 1000;
 
     const reminders = await ctx.db
-      .query('ticketReminders')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("ticketReminders")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     return reminders
       .filter(
-        r =>
-          !r.isTriggered
-          && r.reminderTime >= now
-          && r.reminderTime <= futureTime,
+        (r) =>
+          !r.isTriggered &&
+          r.reminderTime >= now &&
+          r.reminderTime <= futureTime,
       )
       .sort((a, b) => a.reminderTime - b.reminderTime);
   },
@@ -158,9 +159,9 @@ export const getUpcoming = query({
 export const create = mutation({
   args: {
     userId: v.string(),
-    poiId: v.id('pois'),
-    ticketId: v.optional(v.id('poiTickets')),
-    itineraryId: v.optional(v.id('itineraries')),
+    poiId: v.id("pois"),
+    ticketId: v.optional(v.id("poiTickets")),
+    itineraryId: v.optional(v.id("itineraries")),
     reminderType: reminderTypeValidator,
     reminderTime: v.number(),
     message: v.optional(v.string()),
@@ -170,23 +171,24 @@ export const create = mutation({
 
     // Check for duplicate reminder
     const existingReminders = await ctx.db
-      .query('ticketReminders')
-      .withIndex('by_user_poi', q =>
-        q.eq('userId', args.userId).eq('poiId', args.poiId))
+      .query("ticketReminders")
+      .withIndex("by_user_poi", (q) =>
+        q.eq("userId", args.userId).eq("poiId", args.poiId),
+      )
       .collect();
 
     const duplicate = existingReminders.find(
-      r =>
-        r.reminderType === args.reminderType
-        && !r.isTriggered
-        && Math.abs(r.reminderTime - args.reminderTime) < 60 * 60 * 1000, // Within 1 hour
+      (r) =>
+        r.reminderType === args.reminderType &&
+        !r.isTriggered &&
+        Math.abs(r.reminderTime - args.reminderTime) < 60 * 60 * 1000, // Within 1 hour
     );
 
     if (duplicate) {
       return duplicate._id;
     }
 
-    return await ctx.db.insert('ticketReminders', {
+    return await ctx.db.insert("ticketReminders", {
       ...args,
       isTriggered: false,
       isRead: false,
@@ -201,7 +203,7 @@ export const create = mutation({
  */
 export const update = mutation({
   args: {
-    id: v.id('ticketReminders'),
+    id: v.id("ticketReminders"),
     reminderTime: v.optional(v.number()),
     message: v.optional(v.string()),
     reminderType: v.optional(reminderTypeValidator),
@@ -225,7 +227,7 @@ export const update = mutation({
  * Mark a reminder as triggered
  */
 export const markTriggered = mutation({
-  args: { id: v.id('ticketReminders') },
+  args: { id: v.id("ticketReminders") },
   handler: async (ctx, args) => {
     const now = Date.now();
     await ctx.db.patch(args.id, {
@@ -241,7 +243,7 @@ export const markTriggered = mutation({
  * Mark a reminder as read
  */
 export const markRead = mutation({
-  args: { id: v.id('ticketReminders') },
+  args: { id: v.id("ticketReminders") },
   handler: async (ctx, args) => {
     const now = Date.now();
     await ctx.db.patch(args.id, {
@@ -260,8 +262,8 @@ export const markAllRead = mutation({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const reminders = await ctx.db
-      .query('ticketReminders')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("ticketReminders")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     const now = Date.now();
@@ -286,7 +288,7 @@ export const markAllRead = mutation({
  * Delete a reminder
  */
 export const remove = mutation({
-  args: { id: v.id('ticketReminders') },
+  args: { id: v.id("ticketReminders") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -298,13 +300,14 @@ export const remove = mutation({
 export const removeByPoi = mutation({
   args: {
     userId: v.string(),
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
   },
   handler: async (ctx, args) => {
     const reminders = await ctx.db
-      .query('ticketReminders')
-      .withIndex('by_user_poi', q =>
-        q.eq('userId', args.userId).eq('poiId', args.poiId))
+      .query("ticketReminders")
+      .withIndex("by_user_poi", (q) =>
+        q.eq("userId", args.userId).eq("poiId", args.poiId),
+      )
       .collect();
 
     for (const reminder of reminders) {
@@ -320,7 +323,7 @@ export const removeByPoi = mutation({
  */
 export const batchTrigger = mutation({
   args: {
-    ids: v.array(v.id('ticketReminders')),
+    ids: v.array(v.id("ticketReminders")),
   },
   handler: async (ctx, args) => {
     const now = Date.now();

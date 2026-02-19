@@ -4,28 +4,28 @@
  * Now references the unified /convex directory at project root
  */
 
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../../../convex/_generated/api.js';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../convex/_generated/api.js";
 
 // Re-export generated API
 export { api };
-export { internal } from '../../../convex/_generated/api.js';
+export { internal } from "../../../convex/_generated/api.js";
 
 // Re-export types
 export type {
   Doc,
   Id,
   TableNames,
-} from '../../../convex/_generated/dataModel.js';
+} from "../../../convex/_generated/dataModel.js";
 
 // Environment-aware client factory
 export function createConvexClient(url?: string): ConvexHttpClient {
-  const convexUrl
-    = url || process.env.CONVEX_URL || process.env.CONVEX_SELF_HOSTED_URL;
+  const convexUrl =
+    url || process.env.CONVEX_URL || process.env.CONVEX_SELF_HOSTED_URL;
 
   if (!convexUrl) {
     throw new Error(
-      'Missing Convex URL. Set CONVEX_URL or CONVEX_SELF_HOSTED_URL environment variable.',
+      "Missing Convex URL. Set CONVEX_URL or CONVEX_SELF_HOSTED_URL environment variable.",
     );
   }
 

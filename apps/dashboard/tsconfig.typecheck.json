@@ -10,7 +10,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@pathfinding/convex-client/api": ["../../convex/_generated/api"],
-      "@pathfinding/convex-client/dataModel": ["../../convex/_generated/dataModel"]
+      "@pathfinding/convex-client/dataModel": [
+        "../../convex/_generated/dataModel"
+      ]
     },
     "allowJs": true,
     "strict": false,

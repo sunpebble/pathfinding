@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
-import { ErrorBoundary } from '@/components/error-boundary';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { Providers } from './providers';
-import './globals.css';
+import type { Metadata } from "next";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { Providers } from "./providers";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'Pathfinding Crawler Dashboard',
-  description: 'Manage and monitor data crawling jobs',
+  title: "Pathfinding Crawler Dashboard",
+  description: "Manage and monitor data crawling jobs",
 };
 
 export default function RootLayout({

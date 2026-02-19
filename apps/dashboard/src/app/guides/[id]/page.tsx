@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type { AiDay, AiPoi, GuideWithAI } from '@/types/api';
-import { useQuery } from '@tanstack/react-query';
+import type { AiDay, AiPoi, GuideWithAI } from "@/types/api";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Bookmark,
@@ -14,18 +14,18 @@ import {
   Route,
   Star,
   User,
-} from 'lucide-react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import * as React from 'react';
-import { useState } from 'react';
-import { GeocodingConfidenceBadge } from '@/components/geocoding-confidence-badge';
-import { PoiEditor } from '@/components/poi-editor';
-import { getTravelGuide } from '@/lib/api';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import * as React from "react";
+import { useState } from "react";
+import { GeocodingConfidenceBadge } from "@/components/geocoding-confidence-badge";
+import { PoiEditor } from "@/components/poi-editor";
+import { getTravelGuide } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
-const FALLBACK_IMAGE_SRC
-  = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
+const FALLBACK_IMAGE_SRC =
+  'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
 
 function handleImageError(e: React.SyntheticEvent<HTMLImageElement>) {
   e.currentTarget.src = FALLBACK_IMAGE_SRC;
@@ -33,26 +33,26 @@ function handleImageError(e: React.SyntheticEvent<HTMLImageElement>) {
 
 function PlatformBadge({ platform }: { platform: string }) {
   const colors: Record<string, string> = {
-    ctrip: 'bg-blue-100 text-blue-800 border-blue-200',
-    xiaohongshu: 'bg-red-100 text-red-800 border-red-200',
-    weibo: 'bg-orange-100 text-orange-800 border-orange-200',
-    tongcheng: 'bg-purple-100 text-purple-800 border-purple-200',
-    mafengwo: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    qunar: 'bg-green-100 text-green-800 border-green-200',
+    ctrip: "bg-blue-100 text-blue-800 border-blue-200",
+    xiaohongshu: "bg-red-100 text-red-800 border-red-200",
+    weibo: "bg-orange-100 text-orange-800 border-orange-200",
+    tongcheng: "bg-purple-100 text-purple-800 border-purple-200",
+    mafengwo: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    qunar: "bg-green-100 text-green-800 border-green-200",
   };
   const names: Record<string, string> = {
-    ctrip: '携程',
-    xiaohongshu: '小红书',
-    weibo: '微博',
-    tongcheng: '同程旅行',
-    mafengwo: '马蜂窝',
-    qunar: '去哪儿',
+    ctrip: "携程",
+    xiaohongshu: "小红书",
+    weibo: "微博",
+    tongcheng: "同程旅行",
+    mafengwo: "马蜂窝",
+    qunar: "去哪儿",
   };
   return (
     <span
       className={cn(
-        'px-3 py-1 rounded-full text-sm font-medium border',
-        colors[platform] || 'bg-gray-100 text-gray-800 border-gray-200',
+        "px-3 py-1 rounded-full text-sm font-medium border",
+        colors[platform] || "bg-gray-100 text-gray-800 border-gray-200",
       )}
     >
       {names[platform] || platform}
@@ -73,7 +73,7 @@ function StatCard({
 }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-      <Icon className={cn('h-6 w-6 mx-auto mb-2', color)} />
+      <Icon className={cn("h-6 w-6 mx-auto mb-2", color)} />
       <div className="text-2xl font-bold text-gray-900">
         {value.toLocaleString()}
       </div>
@@ -83,16 +83,14 @@ function StatCard({
 }
 
 function formatDate(dateString?: string) {
-  if (!dateString)
-    return 'Unknown';
+  if (!dateString) return "Unknown";
   try {
-    return new Date(dateString).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
-  }
-  catch {
+  } catch {
     return dateString;
   }
 }
@@ -108,7 +106,7 @@ export default function GuideDetailPage() {
   } | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['guide', id],
+    queryKey: ["guide", id],
     queryFn: () => getTravelGuide(id),
     enabled: !!id,
   });
@@ -165,13 +163,12 @@ export default function GuideDetailPage() {
               <div className="flex items-center gap-1 text-amber-500">
                 <Star className="h-4 w-4 fill-current" />
                 <span className="text-sm font-medium">
-                  {qualityPercent}
-                  % Quality
+                  {qualityPercent}% Quality
                 </span>
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              {guide.title || 'Untitled Guide'}
+              {guide.title || "Untitled Guide"}
             </h1>
             <div className="flex items-center gap-4 text-sm text-gray-500">
               {guide.author_name && (
@@ -266,20 +263,19 @@ export default function GuideDetailPage() {
                   key={tag}
                   className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
                 >
-                  #
-                  {tag}
+                  #{tag}
                 </span>
               ))}
             </div>
           </div>
         )}
 
-        {(!guide.destinations || guide.destinations.length === 0)
-          && (!guide.tags || guide.tags.length === 0) && (
-          <p className="text-gray-500 text-sm">
-            No destinations or tags available
-          </p>
-        )}
+        {(!guide.destinations || guide.destinations.length === 0) &&
+          (!guide.tags || guide.tags.length === 0) && (
+            <p className="text-gray-500 text-sm">
+              No destinations or tags available
+            </p>
+          )}
       </div>
 
       {/* AI Summary & Tips */}
@@ -331,6 +327,7 @@ export default function GuideDetailPage() {
               <ul className="space-y-1.5">
                 {guide.aiTips.map((tip: string, i: number) => (
                   <li
+                    // eslint-disable-next-line react/no-array-index-key
                     key={i}
                     className="flex items-start gap-2 text-sm text-gray-600"
                   >
@@ -349,38 +346,38 @@ export default function GuideDetailPage() {
       {/* Content */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Content</h2>
-        {guide.content_html
-          ? (
-              // Render rich text HTML content
-              <div
-                className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
-                // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
-                dangerouslySetInnerHTML={{ __html: guide.content_html }}
-              />
-            )
-          : guide.content
-            ? (
-                // Plain text with paragraph formatting
-                <div className="prose prose-gray max-w-none">
-                  {guide.content.split(/\n{2,}/).map((paragraph: string, i: number) => (
-                    <p key={i} className="text-gray-700 leading-relaxed mb-4">
-                      {paragraph.trim()}
-                    </p>
-                  ))}
-                </div>
-              )
-            : (
-                <p className="text-gray-400 italic">暂无内容</p>
-              )}
+        {guide.content_html ? (
+          // Render rich text HTML content
+          <div
+            className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
+            // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
+            dangerouslySetInnerHTML={{ __html: guide.content_html }}
+          />
+        ) : guide.content ? (
+          // Plain text with paragraph formatting
+          <div className="prose prose-gray max-w-none">
+            {guide.content
+              .split(/\n{2,}/)
+              .map((paragraph: string, i: number) => (
+                <p
+                  // eslint-disable-next-line react/no-array-index-key
+                  key={i}
+                  className="text-gray-700 leading-relaxed mb-4"
+                >
+                  {paragraph.trim()}
+                </p>
+              ))}
+          </div>
+        ) : (
+          <p className="text-gray-400 italic">暂无内容</p>
+        )}
       </div>
 
       {/* Images */}
       {guide.image_urls && guide.image_urls.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Images (
-            {guide.image_urls.length}
-            )
+            Images ({guide.image_urls.length})
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {guide.image_urls.slice(0, 9).map((url: string) => (
@@ -402,10 +399,7 @@ export default function GuideDetailPage() {
           </div>
           {guide.image_urls.length > 9 && (
             <p className="text-sm text-gray-500 mt-3 text-center">
-              +
-              {guide.image_urls.length - 9}
-              {' '}
-              more images
+              +{guide.image_urls.length - 9} more images
             </p>
           )}
         </div>
@@ -422,17 +416,12 @@ export default function GuideDetailPage() {
               </h2>
               {guide.geocoding_metrics && (
                 <p className="text-sm text-gray-500 mt-1">
-                  {guide.geocoding_metrics.total_pois}
-                  {' '}
-                  POIs •
-                  {' '}
+                  {guide.geocoding_metrics.total_pois} POIs •{" "}
                   {Math.round(guide.geocoding_metrics.average_confidence * 100)}
                   % avg confidence
                   {guide.geocoding_metrics.low_confidence_count > 0 && (
                     <span className="text-amber-600 font-medium ml-2">
-                      {guide.geocoding_metrics.low_confidence_count}
-                      {' '}
-                      need review
+                      {guide.geocoding_metrics.low_confidence_count} need review
                     </span>
                   )}
                 </p>
@@ -448,9 +437,7 @@ export default function GuideDetailPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <div className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-lg text-sm">
-                    Day
-                    {' '}
-                    {day.dayNumber}
+                    Day {day.dayNumber}
                   </div>
                   {day.theme && (
                     <span className="text-sm text-gray-600">{day.theme}</span>
@@ -459,19 +446,19 @@ export default function GuideDetailPage() {
 
                 <div className="space-y-2">
                   {day.pois.map((poi: AiPoi, poiIndex: number) => {
-                    const isLowConfidence
-                      = poi.geocodeConfidence !== undefined
-                        && poi.geocodeConfidence < 0.5;
+                    const isLowConfidence =
+                      poi.geocodeConfidence !== undefined &&
+                      poi.geocodeConfidence < 0.5;
 
                     return (
                       <div
                         // eslint-disable-next-line react/no-array-index-key
                         key={`poi-${day.dayNumber}-${poiIndex}`}
                         className={cn(
-                          'flex items-start gap-3 p-3 rounded-lg border transition-colors',
+                          "flex items-start gap-3 p-3 rounded-lg border transition-colors",
                           isLowConfidence && !poi.isManuallyVerified
-                            ? 'border-amber-200 bg-amber-50'
-                            : 'border-gray-200 bg-gray-50',
+                            ? "border-amber-200 bg-amber-50"
+                            : "border-gray-200 bg-gray-50",
                         )}
                       >
                         <div className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
@@ -499,9 +486,7 @@ export default function GuideDetailPage() {
                                 </p>
                               )}
                               <p className="text-xs text-gray-400 mt-1 font-mono">
-                                {poi.latitude.toFixed(6)}
-                                ,
-                                {' '}
+                                {poi.latitude.toFixed(6)},{" "}
                                 {poi.longitude.toFixed(6)}
                               </p>
                             </div>
@@ -517,7 +502,8 @@ export default function GuideDetailPage() {
                                       dayNumber: day.dayNumber,
                                       poiIndex,
                                       poi,
-                                    })}
+                                    })
+                                  }
                                 />
                               )}
                             </div>
@@ -564,20 +550,20 @@ export default function GuideDetailPage() {
           <div>
             <dt className="text-gray-500">External ID</dt>
             <dd className="font-mono text-gray-900">
-              {guide.source_external_id?.slice(0, 20) || 'N/A'}
+              {guide.source_external_id?.slice(0, 20) || "N/A"}
               ...
             </dd>
           </div>
           <div>
             <dt className="text-gray-500">Crawled At</dt>
             <dd className="text-gray-900">
-              {guide.crawled_at ? formatDate(guide.crawled_at) : 'N/A'}
+              {guide.crawled_at ? formatDate(guide.crawled_at) : "N/A"}
             </dd>
           </div>
           <div>
             <dt className="text-gray-500">Last Updated</dt>
             <dd className="text-gray-900">
-              {guide.updated_at ? formatDate(guide.updated_at) : 'N/A'}
+              {guide.updated_at ? formatDate(guide.updated_at) : "N/A"}
             </dd>
           </div>
         </dl>

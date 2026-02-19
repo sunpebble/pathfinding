@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * User Health Checklists - Personal Health Preparation Tracking
@@ -12,13 +12,14 @@ import { mutation, query } from './_generated/server';
 export const getByUserAndDestination = query({
   args: {
     userId: v.string(),
-    destinationId: v.id('cities'),
+    destinationId: v.id("cities"),
   },
   handler: async (ctx, args) => {
     const checklists = await ctx.db
-      .query('userHealthChecklists')
-      .withIndex('by_user_destination', q =>
-        q.eq('userId', args.userId).eq('destinationId', args.destinationId))
+      .query("userHealthChecklists")
+      .withIndex("by_user_destination", (q) =>
+        q.eq("userId", args.userId).eq("destinationId", args.destinationId),
+      )
       .collect();
 
     return checklists[0] ?? null;
@@ -29,15 +30,15 @@ export const getByUserAndDestination = query({
 export const getByItinerary = query({
   args: {
     userId: v.string(),
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     const checklists = await ctx.db
-      .query('userHealthChecklists')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("userHealthChecklists")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
-    return checklists.find(c => c.userId === args.userId) ?? null;
+    return checklists.find((c) => c.userId === args.userId) ?? null;
   },
 });
 
@@ -46,15 +47,15 @@ export const listByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('userHealthChecklists')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userHealthChecklists")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
   },
 });
 
 // Get a single checklist by ID
 export const getById = query({
-  args: { id: v.id('userHealthChecklists') },
+  args: { id: v.id("userHealthChecklists") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -64,10 +65,10 @@ export const getById = query({
 export const create = mutation({
   args: {
     userId: v.string(),
-    itineraryId: v.optional(v.id('itineraries')),
-    destinationId: v.id('cities'),
-    completedVaccines: v.optional(v.array(v.id('vaccineRequirements'))),
-    packedMedications: v.optional(v.array(v.id('recommendedMedications'))),
+    itineraryId: v.optional(v.id("itineraries")),
+    destinationId: v.id("cities"),
+    completedVaccines: v.optional(v.array(v.id("vaccineRequirements"))),
+    packedMedications: v.optional(v.array(v.id("recommendedMedications"))),
     customItems: v.optional(
       v.array(
         v.object({
@@ -81,7 +82,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert('userHealthChecklists', {
+    return await ctx.db.insert("userHealthChecklists", {
       userId: args.userId,
       itineraryId: args.itineraryId,
       destinationId: args.destinationId,
@@ -98,9 +99,9 @@ export const create = mutation({
 // Update a health checklist
 export const update = mutation({
   args: {
-    id: v.id('userHealthChecklists'),
-    completedVaccines: v.optional(v.array(v.id('vaccineRequirements'))),
-    packedMedications: v.optional(v.array(v.id('recommendedMedications'))),
+    id: v.id("userHealthChecklists"),
+    completedVaccines: v.optional(v.array(v.id("vaccineRequirements"))),
+    packedMedications: v.optional(v.array(v.id("recommendedMedications"))),
     customItems: v.optional(
       v.array(
         v.object({
@@ -128,20 +129,20 @@ export const update = mutation({
 // Toggle vaccine completion status
 export const toggleVaccine = mutation({
   args: {
-    id: v.id('userHealthChecklists'),
-    vaccineId: v.id('vaccineRequirements'),
+    id: v.id("userHealthChecklists"),
+    vaccineId: v.id("vaccineRequirements"),
   },
   handler: async (ctx, args) => {
     const checklist = await ctx.db.get(args.id);
     if (!checklist) {
-      throw new Error('Checklist not found');
+      throw new Error("Checklist not found");
     }
 
     const currentVaccines = checklist.completedVaccines ?? [];
     const isCompleted = currentVaccines.includes(args.vaccineId);
 
     const updatedVaccines = isCompleted
-      ? currentVaccines.filter(v => v !== args.vaccineId)
+      ? currentVaccines.filter((v) => v !== args.vaccineId)
       : [...currentVaccines, args.vaccineId];
 
     await ctx.db.patch(args.id, {
@@ -156,20 +157,20 @@ export const toggleVaccine = mutation({
 // Toggle medication packed status
 export const toggleMedication = mutation({
   args: {
-    id: v.id('userHealthChecklists'),
-    medicationId: v.id('recommendedMedications'),
+    id: v.id("userHealthChecklists"),
+    medicationId: v.id("recommendedMedications"),
   },
   handler: async (ctx, args) => {
     const checklist = await ctx.db.get(args.id);
     if (!checklist) {
-      throw new Error('Checklist not found');
+      throw new Error("Checklist not found");
     }
 
     const currentMedications = checklist.packedMedications ?? [];
     const isPacked = currentMedications.includes(args.medicationId);
 
     const updatedMedications = isPacked
-      ? currentMedications.filter(m => m !== args.medicationId)
+      ? currentMedications.filter((m) => m !== args.medicationId)
       : [...currentMedications, args.medicationId];
 
     await ctx.db.patch(args.id, {
@@ -184,14 +185,14 @@ export const toggleMedication = mutation({
 // Add custom item
 export const addCustomItem = mutation({
   args: {
-    id: v.id('userHealthChecklists'),
+    id: v.id("userHealthChecklists"),
     name: v.string(),
     category: v.string(),
   },
   handler: async (ctx, args) => {
     const checklist = await ctx.db.get(args.id);
     if (!checklist) {
-      throw new Error('Checklist not found');
+      throw new Error("Checklist not found");
     }
 
     const currentItems = checklist.customItems ?? [];
@@ -213,17 +214,17 @@ export const addCustomItem = mutation({
 // Toggle custom item completion
 export const toggleCustomItem = mutation({
   args: {
-    id: v.id('userHealthChecklists'),
+    id: v.id("userHealthChecklists"),
     itemName: v.string(),
   },
   handler: async (ctx, args) => {
     const checklist = await ctx.db.get(args.id);
     if (!checklist) {
-      throw new Error('Checklist not found');
+      throw new Error("Checklist not found");
     }
 
     const currentItems = checklist.customItems ?? [];
-    const updatedItems = currentItems.map(item =>
+    const updatedItems = currentItems.map((item) =>
       item.name === args.itemName
         ? { ...item, isCompleted: !item.isCompleted }
         : item,
@@ -241,18 +242,18 @@ export const toggleCustomItem = mutation({
 // Remove custom item
 export const removeCustomItem = mutation({
   args: {
-    id: v.id('userHealthChecklists'),
+    id: v.id("userHealthChecklists"),
     itemName: v.string(),
   },
   handler: async (ctx, args) => {
     const checklist = await ctx.db.get(args.id);
     if (!checklist) {
-      throw new Error('Checklist not found');
+      throw new Error("Checklist not found");
     }
 
     const currentItems = checklist.customItems ?? [];
     const updatedItems = currentItems.filter(
-      item => item.name !== args.itemName,
+      (item) => item.name !== args.itemName,
     );
 
     await ctx.db.patch(args.id, {
@@ -266,7 +267,7 @@ export const removeCustomItem = mutation({
 
 // Delete a health checklist
 export const remove = mutation({
-  args: { id: v.id('userHealthChecklists') },
+  args: { id: v.id("userHealthChecklists") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },

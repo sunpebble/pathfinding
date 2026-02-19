@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * WiFi Credentials - User-saved WiFi passwords and credentials
@@ -15,8 +15,8 @@ export const listByUser = query({
   },
   handler: async (ctx, args) => {
     const results = await ctx.db
-      .query('wifiCredentials')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("wifiCredentials")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     // Sort by most recently used
@@ -32,13 +32,14 @@ export const listByUser = query({
 export const getBySpot = query({
   args: {
     userId: v.string(),
-    wifiSpotId: v.id('wifiSpots'),
+    wifiSpotId: v.id("wifiSpots"),
   },
   handler: async (ctx, args) => {
     const results = await ctx.db
-      .query('wifiCredentials')
-      .withIndex('by_user_spot', q =>
-        q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId))
+      .query("wifiCredentials")
+      .withIndex("by_user_spot", (q) =>
+        q.eq("userId", args.userId).eq("wifiSpotId", args.wifiSpotId),
+      )
       .first();
 
     return results;
@@ -47,7 +48,7 @@ export const getBySpot = query({
 
 // Get a credential by ID
 export const getById = query({
-  args: { id: v.id('wifiCredentials') },
+  args: { id: v.id("wifiCredentials") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -64,16 +65,16 @@ export const search = query({
     const maxResults = args.limit ?? 20;
 
     const credentials = await ctx.db
-      .query('wifiCredentials')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("wifiCredentials")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     const searchLower = args.query.toLowerCase();
     const filtered = credentials.filter(
-      cred =>
-        cred.name.toLowerCase().includes(searchLower)
-        || cred.ssid.toLowerCase().includes(searchLower)
-        || cred.locationName?.toLowerCase().includes(searchLower),
+      (cred) =>
+        cred.name.toLowerCase().includes(searchLower) ||
+        cred.ssid.toLowerCase().includes(searchLower) ||
+        cred.locationName?.toLowerCase().includes(searchLower),
     );
 
     return filtered.slice(0, maxResults);
@@ -84,18 +85,18 @@ export const search = query({
 export const create = mutation({
   args: {
     userId: v.string(),
-    wifiSpotId: v.optional(v.id('wifiSpots')),
+    wifiSpotId: v.optional(v.id("wifiSpots")),
     name: v.string(),
     ssid: v.string(),
     password: v.string(),
     securityType: v.optional(
       v.union(
-        v.literal('open'),
-        v.literal('wep'),
-        v.literal('wpa'),
-        v.literal('wpa2'),
-        v.literal('wpa3'),
-        v.literal('unknown'),
+        v.literal("open"),
+        v.literal("wep"),
+        v.literal("wpa"),
+        v.literal("wpa2"),
+        v.literal("wpa3"),
+        v.literal("unknown"),
       ),
     ),
     locationName: v.optional(v.string()),
@@ -108,9 +109,10 @@ export const create = mutation({
     // Check if credential already exists for this user and spot
     if (args.wifiSpotId) {
       const existing = await ctx.db
-        .query('wifiCredentials')
-        .withIndex('by_user_spot', q =>
-          q.eq('userId', args.userId).eq('wifiSpotId', args.wifiSpotId))
+        .query("wifiCredentials")
+        .withIndex("by_user_spot", (q) =>
+          q.eq("userId", args.userId).eq("wifiSpotId", args.wifiSpotId),
+        )
         .first();
 
       if (existing) {
@@ -126,7 +128,7 @@ export const create = mutation({
       }
     }
 
-    return await ctx.db.insert('wifiCredentials', {
+    return await ctx.db.insert("wifiCredentials", {
       ...args,
       isShared: args.isShared ?? false,
       createdAt: Date.now(),
@@ -138,18 +140,18 @@ export const create = mutation({
 // Update a WiFi credential
 export const update = mutation({
   args: {
-    id: v.id('wifiCredentials'),
+    id: v.id("wifiCredentials"),
     name: v.optional(v.string()),
     ssid: v.optional(v.string()),
     password: v.optional(v.string()),
     securityType: v.optional(
       v.union(
-        v.literal('open'),
-        v.literal('wep'),
-        v.literal('wpa'),
-        v.literal('wpa2'),
-        v.literal('wpa3'),
-        v.literal('unknown'),
+        v.literal("open"),
+        v.literal("wep"),
+        v.literal("wpa"),
+        v.literal("wpa2"),
+        v.literal("wpa3"),
+        v.literal("unknown"),
       ),
     ),
     locationName: v.optional(v.string()),
@@ -171,7 +173,7 @@ export const update = mutation({
 // Mark credential as recently used
 export const markUsed = mutation({
   args: {
-    id: v.id('wifiCredentials'),
+    id: v.id("wifiCredentials"),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
@@ -183,7 +185,7 @@ export const markUsed = mutation({
 
 // Delete a WiFi credential
 export const remove = mutation({
-  args: { id: v.id('wifiCredentials') },
+  args: { id: v.id("wifiCredentials") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -192,14 +194,15 @@ export const remove = mutation({
 // Get shared credentials for a WiFi spot (community passwords)
 export const getSharedBySpot = query({
   args: {
-    wifiSpotId: v.id('wifiSpots'),
+    wifiSpotId: v.id("wifiSpots"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const results = await ctx.db
-      .query('wifiCredentials')
-      .withIndex('by_spot_shared', q =>
-        q.eq('wifiSpotId', args.wifiSpotId).eq('isShared', true))
+      .query("wifiCredentials")
+      .withIndex("by_spot_shared", (q) =>
+        q.eq("wifiSpotId", args.wifiSpotId).eq("isShared", true),
+      )
       .collect();
 
     // Sort by most recently updated

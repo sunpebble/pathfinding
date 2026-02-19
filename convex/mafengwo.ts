@@ -3,8 +3,8 @@
  * 处理各类马蜂窝爬取数据的存储
  */
 
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 // ============================================
 // 目的地存储
@@ -41,8 +41,8 @@ export const upsertDestination = mutation({
   handler: async (ctx, args) => {
     // 检查是否已存在
     const existing = await ctx.db
-      .query('mafengwoDestinations')
-      .withIndex('by_mdd_id', q => q.eq('mddId', args.mddId))
+      .query("mafengwoDestinations")
+      .withIndex("by_mdd_id", (q) => q.eq("mddId", args.mddId))
       .first();
 
     const now = Date.now();
@@ -54,10 +54,9 @@ export const upsertDestination = mutation({
         updatedAt: now,
       });
       return existing._id;
-    }
-    else {
+    } else {
       // 插入
-      return await ctx.db.insert('mafengwoDestinations', {
+      return await ctx.db.insert("mafengwoDestinations", {
         ...args,
         crawledAt: now,
       });
@@ -79,12 +78,12 @@ export const upsertPoi = mutation({
     name: v.string(),
     nameEn: v.optional(v.string()),
     category: v.union(
-      v.literal('attraction'),
-      v.literal('restaurant'),
-      v.literal('hotel'),
-      v.literal('shopping'),
-      v.literal('entertainment'),
-      v.literal('transport'),
+      v.literal("attraction"),
+      v.literal("restaurant"),
+      v.literal("hotel"),
+      v.literal("shopping"),
+      v.literal("entertainment"),
+      v.literal("transport"),
     ),
     destinationId: v.optional(v.string()),
     destinationName: v.optional(v.string()),
@@ -118,8 +117,8 @@ export const upsertPoi = mutation({
   handler: async (ctx, args) => {
     // 检查是否已存在
     const existing = await ctx.db
-      .query('mafengwoPois')
-      .withIndex('by_poi_id', q => q.eq('poiId', args.poiId))
+      .query("mafengwoPois")
+      .withIndex("by_poi_id", (q) => q.eq("poiId", args.poiId))
       .first();
 
     const now = Date.now();
@@ -131,10 +130,9 @@ export const upsertPoi = mutation({
         updatedAt: now,
       });
       return existing._id;
-    }
-    else {
+    } else {
       // 插入
-      return await ctx.db.insert('mafengwoPois', {
+      return await ctx.db.insert("mafengwoPois", {
         ...args,
         crawledAt: now,
       });
@@ -147,17 +145,19 @@ export const upsertPoi = mutation({
  */
 export const batchInsertPois = mutation({
   args: {
-    pois: v.array(v.object({
-      poiId: v.string(),
-      sourceUrl: v.string(),
-      name: v.string(),
-      category: v.string(),
-      destinationId: v.optional(v.string()),
-      destinationName: v.optional(v.string()),
-      rating: v.optional(v.number()),
-      coverImageUrl: v.optional(v.string()),
-      address: v.optional(v.string()),
-    })),
+    pois: v.array(
+      v.object({
+        poiId: v.string(),
+        sourceUrl: v.string(),
+        name: v.string(),
+        category: v.string(),
+        destinationId: v.optional(v.string()),
+        destinationName: v.optional(v.string()),
+        rating: v.optional(v.number()),
+        coverImageUrl: v.optional(v.string()),
+        address: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -166,8 +166,8 @@ export const batchInsertPois = mutation({
 
     for (const poi of args.pois) {
       const existing = await ctx.db
-        .query('mafengwoPois')
-        .withIndex('by_poi_id', q => q.eq('poiId', poi.poiId))
+        .query("mafengwoPois")
+        .withIndex("by_poi_id", (q) => q.eq("poiId", poi.poiId))
         .first();
 
       if (existing) {
@@ -180,14 +180,19 @@ export const batchInsertPois = mutation({
           updatedAt: now,
         });
         updated++;
-      }
-      else {
+      } else {
         // 插入新记录
-        await ctx.db.insert('mafengwoPois', {
+        await ctx.db.insert("mafengwoPois", {
           poiId: poi.poiId,
           sourceUrl: poi.sourceUrl,
           name: poi.name,
-          category: poi.category as 'attraction' | 'restaurant' | 'hotel' | 'shopping' | 'entertainment' | 'transport',
+          category: poi.category as
+            | "attraction"
+            | "restaurant"
+            | "hotel"
+            | "shopping"
+            | "entertainment"
+            | "transport",
           destinationId: poi.destinationId,
           destinationName: poi.destinationName,
           rating: poi.rating,
@@ -232,11 +237,13 @@ export const upsertGuide = mutation({
     summary: v.optional(v.string()),
     content: v.string(),
     contentHtml: v.optional(v.string()),
-    sections: v.array(v.object({
-      title: v.string(),
-      content: v.string(),
-      order: v.number(),
-    })),
+    sections: v.array(
+      v.object({
+        title: v.string(),
+        content: v.string(),
+        order: v.number(),
+      }),
+    ),
     coverImageUrl: v.optional(v.string()),
     imageUrls: v.array(v.string()),
     viewsCount: v.number(),
@@ -250,8 +257,8 @@ export const upsertGuide = mutation({
   handler: async (ctx, args) => {
     // 检查是否已存在
     const existing = await ctx.db
-      .query('mafengwoGuides')
-      .withIndex('by_guide_id', q => q.eq('guideId', args.guideId))
+      .query("mafengwoGuides")
+      .withIndex("by_guide_id", (q) => q.eq("guideId", args.guideId))
       .first();
 
     const now = Date.now();
@@ -263,10 +270,9 @@ export const upsertGuide = mutation({
         updatedAt: now,
       });
       return existing._id;
-    }
-    else {
+    } else {
       // 插入
-      return await ctx.db.insert('mafengwoGuides', {
+      return await ctx.db.insert("mafengwoGuides", {
         ...args,
         crawledAt: now,
       });
@@ -295,19 +301,21 @@ export const upsertQa = mutation({
     viewsCount: v.number(),
     tags: v.array(v.string()),
     createdAt: v.optional(v.number()),
-    bestAnswer: v.optional(v.object({
-      content: v.string(),
-      authorName: v.optional(v.string()),
-      authorId: v.optional(v.string()),
-      likesCount: v.number(),
-      createdAt: v.optional(v.number()),
-    })),
+    bestAnswer: v.optional(
+      v.object({
+        content: v.string(),
+        authorName: v.optional(v.string()),
+        authorId: v.optional(v.string()),
+        likesCount: v.number(),
+        createdAt: v.optional(v.number()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     // 检查是否已存在
     const existing = await ctx.db
-      .query('mafengwoQa')
-      .withIndex('by_question_id', q => q.eq('questionId', args.questionId))
+      .query("mafengwoQa")
+      .withIndex("by_question_id", (q) => q.eq("questionId", args.questionId))
       .first();
 
     const now = Date.now();
@@ -318,10 +326,9 @@ export const upsertQa = mutation({
         ...args,
       });
       return existing._id;
-    }
-    else {
+    } else {
       // 插入
-      return await ctx.db.insert('mafengwoQa', {
+      return await ctx.db.insert("mafengwoQa", {
         ...args,
         crawledAt: now,
       });
@@ -355,8 +362,8 @@ export const upsertReview = mutation({
   handler: async (ctx, args) => {
     // 检查是否已存在
     const existing = await ctx.db
-      .query('mafengwoReviews')
-      .withIndex('by_review_id', q => q.eq('reviewId', args.reviewId))
+      .query("mafengwoReviews")
+      .withIndex("by_review_id", (q) => q.eq("reviewId", args.reviewId))
       .first();
 
     const now = Date.now();
@@ -367,10 +374,9 @@ export const upsertReview = mutation({
         ...args,
       });
       return existing._id;
-    }
-    else {
+    } else {
       // 插入
-      return await ctx.db.insert('mafengwoReviews', {
+      return await ctx.db.insert("mafengwoReviews", {
         ...args,
         crawledAt: now,
       });
@@ -390,32 +396,34 @@ export const upsertRanking = mutation({
     rankingId: v.string(),
     sourceUrl: v.string(),
     rankingType: v.union(
-      v.literal('must_visit'),
-      v.literal('food'),
-      v.literal('hotel'),
-      v.literal('shopping'),
-      v.literal('hidden_gem'),
+      v.literal("must_visit"),
+      v.literal("food"),
+      v.literal("hotel"),
+      v.literal("shopping"),
+      v.literal("hidden_gem"),
     ),
     title: v.string(),
     destinationId: v.optional(v.string()),
     destinationName: v.optional(v.string()),
     description: v.optional(v.string()),
-    items: v.array(v.object({
-      rank: v.number(),
-      poiExternalId: v.string(),
-      name: v.string(),
-      category: v.optional(v.string()),
-      rating: v.optional(v.number()),
-      reviewsCount: v.number(),
-      coverImageUrl: v.optional(v.string()),
-      reason: v.optional(v.string()),
-    })),
+    items: v.array(
+      v.object({
+        rank: v.number(),
+        poiExternalId: v.string(),
+        name: v.string(),
+        category: v.optional(v.string()),
+        rating: v.optional(v.number()),
+        reviewsCount: v.number(),
+        coverImageUrl: v.optional(v.string()),
+        reason: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     // 检查是否已存在
     const existing = await ctx.db
-      .query('mafengwoRankings')
-      .withIndex('by_ranking_id', q => q.eq('rankingId', args.rankingId))
+      .query("mafengwoRankings")
+      .withIndex("by_ranking_id", (q) => q.eq("rankingId", args.rankingId))
       .first();
 
     const now = Date.now();
@@ -427,10 +435,9 @@ export const upsertRanking = mutation({
         updatedAt: now,
       });
       return existing._id;
-    }
-    else {
+    } else {
       // 插入
-      return await ctx.db.insert('mafengwoRankings', {
+      return await ctx.db.insert("mafengwoRankings", {
         ...args,
         crawledAt: now,
       });
@@ -448,18 +455,18 @@ export const upsertRanking = mutation({
 export const createCrawlTask = mutation({
   args: {
     taskType: v.union(
-      v.literal('destination_list'),
-      v.literal('destination_detail'),
-      v.literal('poi_list'),
-      v.literal('poi_detail'),
-      v.literal('guide_list'),
-      v.literal('guide_detail'),
-      v.literal('travel_note_list'),
-      v.literal('travel_note_detail'),
-      v.literal('qa_list'),
-      v.literal('qa_detail'),
-      v.literal('ranking'),
-      v.literal('review_list'),
+      v.literal("destination_list"),
+      v.literal("destination_detail"),
+      v.literal("poi_list"),
+      v.literal("poi_detail"),
+      v.literal("guide_list"),
+      v.literal("guide_detail"),
+      v.literal("travel_note_list"),
+      v.literal("travel_note_detail"),
+      v.literal("qa_list"),
+      v.literal("qa_detail"),
+      v.literal("ranking"),
+      v.literal("review_list"),
     ),
     config: v.object({
       destinationId: v.optional(v.string()),
@@ -477,11 +484,11 @@ export const createCrawlTask = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    return await ctx.db.insert('mafengwoCrawlTasks', {
+    return await ctx.db.insert("mafengwoCrawlTasks", {
       taskType: args.taskType,
       config: args.config,
       priority: args.priority,
-      status: 'pending',
+      status: "pending",
       retryCount: 0,
       maxRetries: 3,
       createdAt: now,
@@ -494,13 +501,13 @@ export const createCrawlTask = mutation({
  */
 export const updateCrawlTaskStatus = mutation({
   args: {
-    taskId: v.id('mafengwoCrawlTasks'),
+    taskId: v.id("mafengwoCrawlTasks"),
     status: v.union(
-      v.literal('pending'),
-      v.literal('running'),
-      v.literal('completed'),
-      v.literal('failed'),
-      v.literal('cancelled'),
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("cancelled"),
     ),
     itemsCollected: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
@@ -512,10 +519,9 @@ export const updateCrawlTaskStatus = mutation({
       status: args.status,
     };
 
-    if (args.status === 'running') {
+    if (args.status === "running") {
       updates.startedAt = now;
-    }
-    else if (args.status === 'completed' || args.status === 'failed') {
+    } else if (args.status === "completed" || args.status === "failed") {
       updates.completedAt = now;
     }
 
@@ -542,9 +548,9 @@ export const getPendingTasks = query({
     const limit = args.limit || 10;
 
     return await ctx.db
-      .query('mafengwoCrawlTasks')
-      .withIndex('by_status_priority', q => q.eq('status', 'pending'))
-      .order('desc')
+      .query("mafengwoCrawlTasks")
+      .withIndex("by_status_priority", (q) => q.eq("status", "pending"))
+      .order("desc")
       .take(limit);
   },
 });
@@ -566,15 +572,12 @@ export const listDestinations = query({
 
     if (args.country) {
       return await ctx.db
-        .query('mafengwoDestinations')
-        .withIndex('by_country', q => q.eq('country', args.country))
+        .query("mafengwoDestinations")
+        .withIndex("by_country", (q) => q.eq("country", args.country))
         .take(limit);
     }
 
-    return await ctx.db
-      .query('mafengwoDestinations')
-      .order('desc')
-      .take(limit);
+    return await ctx.db.query("mafengwoDestinations").order("desc").take(limit);
   },
 });
 
@@ -587,8 +590,8 @@ export const getDestination = query({
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('mafengwoDestinations')
-      .withIndex('by_mdd_id', q => q.eq('mddId', args.mddId))
+      .query("mafengwoDestinations")
+      .withIndex("by_mdd_id", (q) => q.eq("mddId", args.mddId))
       .first();
   },
 });
@@ -607,30 +610,34 @@ export const listPois = query({
 
     if (args.destinationId && args.category) {
       return await ctx.db
-        .query('mafengwoPois')
-        .withIndex('by_destination_category', q =>
-          q.eq('destinationId', args.destinationId).eq('category', args.category as 'attraction'))
+        .query("mafengwoPois")
+        .withIndex("by_destination_category", (q) =>
+          q
+            .eq("destinationId", args.destinationId)
+            .eq("category", args.category as "attraction"),
+        )
         .take(limit);
     }
 
     if (args.destinationId) {
       return await ctx.db
-        .query('mafengwoPois')
-        .withIndex('by_destination', q => q.eq('destinationId', args.destinationId))
+        .query("mafengwoPois")
+        .withIndex("by_destination", (q) =>
+          q.eq("destinationId", args.destinationId),
+        )
         .take(limit);
     }
 
     if (args.category) {
       return await ctx.db
-        .query('mafengwoPois')
-        .withIndex('by_category', q => q.eq('category', args.category as 'attraction'))
+        .query("mafengwoPois")
+        .withIndex("by_category", (q) =>
+          q.eq("category", args.category as "attraction"),
+        )
         .take(limit);
     }
 
-    return await ctx.db
-      .query('mafengwoPois')
-      .order('desc')
-      .take(limit);
+    return await ctx.db.query("mafengwoPois").order("desc").take(limit);
   },
 });
 
@@ -647,15 +654,17 @@ export const listGuides = query({
 
     if (args.destinationId) {
       return await ctx.db
-        .query('mafengwoGuides')
-        .withIndex('by_destination', q => q.eq('destinationId', args.destinationId))
+        .query("mafengwoGuides")
+        .withIndex("by_destination", (q) =>
+          q.eq("destinationId", args.destinationId),
+        )
         .take(limit);
     }
 
     return await ctx.db
-      .query('mafengwoGuides')
-      .withIndex('by_views')
-      .order('desc')
+      .query("mafengwoGuides")
+      .withIndex("by_views")
+      .order("desc")
       .take(limit);
   },
 });
@@ -670,9 +679,12 @@ export const getRanking = query({
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('mafengwoRankings')
-      .withIndex('by_destination_type', q =>
-        q.eq('destinationId', args.destinationId).eq('rankingType', args.rankingType as 'must_visit'))
+      .query("mafengwoRankings")
+      .withIndex("by_destination_type", (q) =>
+        q
+          .eq("destinationId", args.destinationId)
+          .eq("rankingType", args.rankingType as "must_visit"),
+      )
       .first();
   },
 });
@@ -683,18 +695,18 @@ export const getRanking = query({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    const destinations = await ctx.db.query('mafengwoDestinations').collect();
-    const pois = await ctx.db.query('mafengwoPois').collect();
-    const guides = await ctx.db.query('mafengwoGuides').collect();
-    const qa = await ctx.db.query('mafengwoQa').collect();
-    const reviews = await ctx.db.query('mafengwoReviews').collect();
-    const rankings = await ctx.db.query('mafengwoRankings').collect();
-    const tasks = await ctx.db.query('mafengwoCrawlTasks').collect();
+    const destinations = await ctx.db.query("mafengwoDestinations").collect();
+    const pois = await ctx.db.query("mafengwoPois").collect();
+    const guides = await ctx.db.query("mafengwoGuides").collect();
+    const qa = await ctx.db.query("mafengwoQa").collect();
+    const reviews = await ctx.db.query("mafengwoReviews").collect();
+    const rankings = await ctx.db.query("mafengwoRankings").collect();
+    const tasks = await ctx.db.query("mafengwoCrawlTasks").collect();
 
-    const pendingTasks = tasks.filter(t => t.status === 'pending').length;
-    const runningTasks = tasks.filter(t => t.status === 'running').length;
-    const completedTasks = tasks.filter(t => t.status === 'completed').length;
-    const failedTasks = tasks.filter(t => t.status === 'failed').length;
+    const pendingTasks = tasks.filter((t) => t.status === "pending").length;
+    const runningTasks = tasks.filter((t) => t.status === "running").length;
+    const completedTasks = tasks.filter((t) => t.status === "completed").length;
+    const failedTasks = tasks.filter((t) => t.status === "failed").length;
 
     return {
       destinations: destinations.length,

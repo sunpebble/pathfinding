@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useAuthToken } from '@convex-dev/auth/react';
+import { useAuthToken } from "@convex-dev/auth/react";
 
 /**
  * Custom hook for accessing authentication state

@@ -3,14 +3,14 @@
  * Proxies requests to AI Service and converts SSE format to Vercel AI SDK compatible format
  */
 
-import { createUIMessageStream, createUIMessageStreamResponse } from 'ai';
+import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:3001';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:3001";
 
 export const maxDuration = 60;
 
 interface RequestUIMessage {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   parts: Array<{ type: string; text?: string }>;
 }
 
@@ -21,28 +21,28 @@ export async function POST(req: Request) {
 
     // Get the last user message
     const lastMessage = messages[messages.length - 1] as RequestUIMessage;
-    if (!lastMessage || lastMessage.role !== 'user') {
-      return new Response(JSON.stringify({ error: 'No user message found' }), {
+    if (!lastMessage || lastMessage.role !== "user") {
+      return new Response(JSON.stringify({ error: "No user message found" }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
     // Extract text from message parts
-    const messageText
-      = lastMessage.parts
-        ?.filter(p => p.type === 'text')
-        .map(p => p.text)
-        .join('\n') || '';
+    const messageText =
+      lastMessage.parts
+        ?.filter((p) => p.type === "text")
+        .map((p) => p.text)
+        .join("\n") || "";
 
     // Generate session ID if not provided
     const chatSessionId = sessionId || `chat-${Date.now()}`;
 
     // Call AI Service SSE endpoint
     const response = await fetch(`${AI_SERVICE_URL}/api/agent/chat/stream`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         sessionId: chatSessionId,
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       const error = await response.text();
       return new Response(JSON.stringify({ error }), {
         status: response.status,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -63,11 +63,11 @@ export async function POST(req: Request) {
       execute: async ({ writer }) => {
         const reader = response.body?.getReader();
         if (!reader) {
-          throw new Error('No response body');
+          throw new Error("No response body");
         }
 
         const decoder = new TextDecoder();
-        let buffer = '';
+        let buffer = "";
         const textId = `text-${Date.now()}`;
         const reasoningId = `reasoning-${Date.now()}`;
         let textStarted = false;
@@ -75,59 +75,57 @@ export async function POST(req: Request) {
         try {
           while (true) {
             const { done, value } = await reader.read();
-            if (done)
-              break;
+            if (done) break;
 
             buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
 
             for (const line of lines) {
-              if (line.startsWith('data:')) {
+              if (line.startsWith("data:")) {
                 const data = line.slice(5).trim();
-                if (!data)
-                  continue;
+                if (!data) continue;
 
                 try {
                   const event = JSON.parse(data);
 
                   switch (event.type) {
-                    case 'token':
+                    case "token":
                       if (event.content) {
                         // Start text block if not started
                         if (!textStarted) {
                           writer.write({
-                            type: 'text-start',
+                            type: "text-start",
                             id: textId,
                           });
                           textStarted = true;
                         }
                         writer.write({
-                          type: 'text-delta',
+                          type: "text-delta",
                           id: textId,
                           delta: event.content,
                         });
                       }
                       break;
 
-                    case 'reasoning':
+                    case "reasoning":
                       // Handle reasoning/thinking content from AI
                       if (event.content) {
                         writer.write({
-                          type: 'reasoning-delta',
+                          type: "reasoning-delta",
                           id: reasoningId,
                           delta: event.content,
                         });
                       }
                       break;
 
-                    case 'tool_start':
+                    case "tool_start":
                       if (event.tool) {
                         writer.write({
-                          type: 'data-tool',
+                          type: "data-tool",
                           id: `tool-${Date.now()}`,
                           data: {
-                            status: 'start',
+                            status: "start",
                             name: event.tool.name,
                             args: event.tool.args,
                           },
@@ -135,13 +133,13 @@ export async function POST(req: Request) {
                       }
                       break;
 
-                    case 'tool_end':
+                    case "tool_end":
                       if (event.tool) {
                         writer.write({
-                          type: 'data-tool',
+                          type: "data-tool",
                           id: `tool-${Date.now()}`,
                           data: {
-                            status: 'end',
+                            status: "end",
                             name: event.tool.name,
                             result: event.tool.result,
                           },
@@ -149,25 +147,24 @@ export async function POST(req: Request) {
                       }
                       break;
 
-                    case 'done':
+                    case "done":
                       // End text block if started
                       if (textStarted) {
                         writer.write({
-                          type: 'text-end',
+                          type: "text-end",
                           id: textId,
                         });
                       }
                       break;
 
-                    case 'error':
+                    case "error":
                       writer.write({
-                        type: 'error',
-                        errorText: event.error || 'Unknown error',
+                        type: "error",
+                        errorText: event.error || "Unknown error",
                       });
                       break;
                   }
-                }
-                catch {
+                } catch {
                   // Skip invalid JSON
                 }
               }
@@ -177,28 +174,26 @@ export async function POST(req: Request) {
           // Ensure text block is closed
           if (textStarted) {
             writer.write({
-              type: 'text-end',
+              type: "text-end",
               id: textId,
             });
           }
-        }
-        finally {
+        } finally {
           reader.releaseLock();
         }
       },
     });
 
     return createUIMessageStreamResponse({ stream });
-  }
-  catch (error) {
-    console.error('Chat API error:', error);
+  } catch (error) {
+    console.error("Chat API error:", error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Internal server error',
+        error: error instanceof Error ? error.message : "Internal server error",
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       },
     );
   }

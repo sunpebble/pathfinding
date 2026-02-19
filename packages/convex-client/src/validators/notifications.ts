@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { v } from "convex/values";
 
 /**
  * Deep link target for notification
@@ -18,7 +18,7 @@ export const deepLinkTargetValidator = v.object({
  * Itinerary-related notification data
  */
 export const itineraryNotificationDataValidator = v.object({
-  notificationType: v.literal('itinerary'),
+  notificationType: v.literal("itinerary"),
   /** Itinerary ID */
   itineraryId: v.optional(v.string()),
   /** Itinerary title */
@@ -41,7 +41,7 @@ export const itineraryNotificationDataValidator = v.object({
  * Social interaction notification data
  */
 export const socialNotificationDataValidator = v.object({
-  notificationType: v.literal('social'),
+  notificationType: v.literal("social"),
   /** Actor user ID */
   actorId: v.optional(v.string()),
   /** Actor display name */
@@ -64,7 +64,7 @@ export const socialNotificationDataValidator = v.object({
  * Flight status notification data
  */
 export const flightNotificationDataValidator = v.object({
-  notificationType: v.literal('flight'),
+  notificationType: v.literal("flight"),
   /** Flight number */
   flightNumber: v.optional(v.string()),
   /** Airline name */
@@ -93,7 +93,7 @@ export const flightNotificationDataValidator = v.object({
  * Weather alert notification data
  */
 export const weatherNotificationDataValidator = v.object({
-  notificationType: v.literal('weather'),
+  notificationType: v.literal("weather"),
   /** City or location name */
   location: v.optional(v.string()),
   /** Weather condition */
@@ -120,7 +120,7 @@ export const weatherNotificationDataValidator = v.object({
  * Generic notification data (for custom/other types)
  */
 export const genericNotificationDataValidator = v.object({
-  notificationType: v.optional(v.literal('generic')),
+  notificationType: v.optional(v.literal("generic")),
   /** Custom data payload */
   payload: v.optional(v.any()),
   /** Deep link info */

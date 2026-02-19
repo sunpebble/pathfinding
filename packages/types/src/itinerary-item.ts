@@ -1,8 +1,8 @@
-import type { Poi } from './poi';
-import type { TransportMode } from './transport';
+import type { Poi } from "./poi";
+import type { TransportMode } from "./transport";
 
 // Re-export TransportMode for backward compatibility
-export type { TransportMode } from './transport';
+export type { TransportMode } from "./transport";
 
 /**
  * ItineraryItem entity - single activity/POI on a day (matches Convex schema)

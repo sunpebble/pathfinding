@@ -6,14 +6,14 @@
 /**
  * Supported transport modes
  */
-export type TransportMode
-  = | 'walking'
-    | 'cycling'
-    | 'driving'
-    | 'taxi'
-    | 'bus'
-    | 'subway'
-    | 'transit'; // Combined public transit
+export type TransportMode =
+  | "walking"
+  | "cycling"
+  | "driving"
+  | "taxi"
+  | "bus"
+  | "subway"
+  | "transit"; // Combined public transit
 
 /**
  * Transport mode display information
@@ -76,7 +76,7 @@ export interface TransportRoute {
   costRange?: { min: number; max: number };
   steps?: TransitStep[];
   polyline?: string; // encoded polyline for the entire route
-  trafficCondition?: 'smooth' | 'slow' | 'congested';
+  trafficCondition?: "smooth" | "slow" | "congested";
   // For transit routes
   walkingDistance?: number; // total walking distance in meters
   transfers?: number; // number of transfers
@@ -102,7 +102,7 @@ export interface TransportComparison {
 export interface TransitPassRecommendation {
   name: string;
   nameZh: string;
-  type: 'day_pass' | 'multi_day_pass' | 'stored_value' | 'tourist_card';
+  type: "day_pass" | "multi_day_pass" | "stored_value" | "tourist_card";
   price: number;
   currency: string;
   validDays?: number;
@@ -161,53 +161,53 @@ export interface TransportSegment {
  */
 export const TRANSPORT_MODES: TransportModeInfo[] = [
   {
-    mode: 'walking',
-    name: 'Walking',
-    nameZh: '步行',
-    icon: 'figure.walk',
-    color: '#34C759',
+    mode: "walking",
+    name: "Walking",
+    nameZh: "步行",
+    icon: "figure.walk",
+    color: "#34C759",
   },
   {
-    mode: 'cycling',
-    name: 'Cycling',
-    nameZh: '骑行',
-    icon: 'bicycle',
-    color: '#5AC8FA',
+    mode: "cycling",
+    name: "Cycling",
+    nameZh: "骑行",
+    icon: "bicycle",
+    color: "#5AC8FA",
   },
   {
-    mode: 'bus',
-    name: 'Bus',
-    nameZh: '公交',
-    icon: 'bus.fill',
-    color: '#FF9500',
+    mode: "bus",
+    name: "Bus",
+    nameZh: "公交",
+    icon: "bus.fill",
+    color: "#FF9500",
   },
   {
-    mode: 'subway',
-    name: 'Subway',
-    nameZh: '地铁',
-    icon: 'tram.fill',
-    color: '#007AFF',
+    mode: "subway",
+    name: "Subway",
+    nameZh: "地铁",
+    icon: "tram.fill",
+    color: "#007AFF",
   },
   {
-    mode: 'transit',
-    name: 'Transit',
-    nameZh: '公共交通',
-    icon: 'tram.fill',
-    color: '#5856D6',
+    mode: "transit",
+    name: "Transit",
+    nameZh: "公共交通",
+    icon: "tram.fill",
+    color: "#5856D6",
   },
   {
-    mode: 'taxi',
-    name: 'Taxi',
-    nameZh: '出租车',
-    icon: 'car.fill',
-    color: '#FF3B30',
+    mode: "taxi",
+    name: "Taxi",
+    nameZh: "出租车",
+    icon: "car.fill",
+    color: "#FF3B30",
   },
   {
-    mode: 'driving',
-    name: 'Driving',
-    nameZh: '自驾',
-    icon: 'car.fill',
-    color: '#8E8E93',
+    mode: "driving",
+    name: "Driving",
+    nameZh: "自驾",
+    icon: "car.fill",
+    color: "#8E8E93",
   },
 ];
 
@@ -217,7 +217,7 @@ export const TRANSPORT_MODES: TransportModeInfo[] = [
 export function getTransportModeInfo(
   mode: TransportMode,
 ): TransportModeInfo | undefined {
-  return TRANSPORT_MODES.find(m => m.mode === mode);
+  return TRANSPORT_MODES.find((m) => m.mode === mode);
 }
 
 /**
@@ -253,19 +253,20 @@ export function formatDistance(meters: number): string {
 /**
  * Format cost range
  */
-export function formatCost(cost?: number, costRange?: { min: number; max: number }): string {
+export function formatCost(
+  cost?: number,
+  costRange?: { min: number; max: number },
+): string {
   if (cost !== undefined) {
-    if (cost === 0)
-      return '免费';
+    if (cost === 0) return "免费";
     return `¥${cost.toFixed(0)}`;
   }
   if (costRange) {
     if (costRange.min === costRange.max) {
-      if (costRange.min === 0)
-        return '免费';
+      if (costRange.min === 0) return "免费";
       return `¥${costRange.min.toFixed(0)}`;
     }
     return `¥${costRange.min.toFixed(0)}-${costRange.max.toFixed(0)}`;
   }
-  return '-';
+  return "-";
 }

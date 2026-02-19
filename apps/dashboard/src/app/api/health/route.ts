@@ -3,7 +3,7 @@
  * Returns the health status of the Dashboard and its dependent services
  */
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:3001';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:3001";
 
 export async function GET() {
   const checks: Record<string, { status: string; latency?: number }> = {};
@@ -17,18 +17,16 @@ export async function GET() {
     const latency = Date.now() - start;
 
     if (response.ok) {
-      checks.aiService = { status: 'ok', latency };
+      checks.aiService = { status: "ok", latency };
+    } else {
+      checks.aiService = { status: "error" };
     }
-    else {
-      checks.aiService = { status: 'error' };
-    }
-  }
-  catch {
-    checks.aiService = { status: 'error' };
+  } catch {
+    checks.aiService = { status: "error" };
   }
 
   // Overall status is ok if AI Service is healthy
-  const overallStatus = checks.aiService?.status === 'ok' ? 'ok' : 'degraded';
+  const overallStatus = checks.aiService?.status === "ok" ? "ok" : "degraded";
 
   return Response.json({
     status: overallStatus,

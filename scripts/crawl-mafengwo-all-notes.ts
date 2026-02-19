@@ -10,10 +10,10 @@
  * - CONVEX_URL: Convex 部署 URL
  */
 
-import { Stagehand } from '@browserbasehq/stagehand';
-import Kernel from '@onkernel/sdk';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api.js';
+import { Stagehand } from "@browserbasehq/stagehand";
+import Kernel from "@onkernel/sdk";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../convex/_generated/api.js";
 
 // ============================================
 // 配置
@@ -70,8 +70,7 @@ function log(message: string, data?: unknown) {
   const timestamp = new Date().toISOString();
   if (data) {
     console.warn(`[${timestamp}] ${message}`, JSON.stringify(data, null, 2));
-  }
-  else {
+  } else {
     console.warn(`[${timestamp}] ${message}`);
   }
 }
@@ -82,46 +81,34 @@ function extractExternalId(url: string): string | null {
 }
 
 function parseChineseNumber(str: string | undefined): number {
-  if (!str)
-    return 0;
+  if (!str) return 0;
   const cleaned = str.trim();
   const match = cleaned.match(/^([\d.]+)\s*([万k])?/i);
-  if (!match)
-    return 0;
+  if (!match) return 0;
   const num = Number.parseFloat(match[1]);
   const unit = match[2]?.toLowerCase();
-  if (unit === '万')
-    return Math.round(num * 10000);
-  if (unit === 'k')
-    return Math.round(num * 1000);
+  if (unit === "万") return Math.round(num * 10000);
+  if (unit === "k") return Math.round(num * 1000);
   return Math.round(num);
 }
 
 function calculateQualityScore(data: GuideDetail): number {
   let score = 0;
-  if (data.title && data.title.length >= 5)
-    score += 0.2;
+  if (data.title && data.title.length >= 5) score += 0.2;
   const contentLength = data.content?.length || 0;
-  if (contentLength >= 500)
-    score += 0.4;
-  else if (contentLength >= 200)
-    score += 0.3;
-  else if (contentLength >= 100)
-    score += 0.2;
-  if (data.author)
-    score += 0.1;
+  if (contentLength >= 500) score += 0.4;
+  else if (contentLength >= 200) score += 0.3;
+  else if (contentLength >= 100) score += 0.2;
+  if (data.author) score += 0.1;
   const imageCount = data.images?.length || 0;
-  if (imageCount >= 5)
-    score += 0.2;
-  else if (imageCount >= 1)
-    score += 0.1;
-  if (data.views || data.likes)
-    score += 0.1;
+  if (imageCount >= 5) score += 0.2;
+  else if (imageCount >= 1) score += 0.1;
+  if (data.views || data.likes) score += 0.1;
   return Math.min(1, Math.round(score * 100) / 100);
 }
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // ============================================
@@ -136,12 +123,12 @@ interface BrowserSession {
     browser_live_view_url?: string;
   };
   stagehand: Stagehand;
-  page: ReturnType<Stagehand['context']['pages']>[0];
+  page: ReturnType<Stagehand["context"]["pages"]>[0];
 }
 
 async function createBrowser(): Promise<BrowserSession> {
   if (!process.env.KERNEL_API_KEY) {
-    throw new Error('KERNEL_API_KEY environment variable is not set');
+    throw new Error("KERNEL_API_KEY environment variable is not set");
   }
 
   const kernel = new Kernel();
@@ -150,13 +137,13 @@ async function createBrowser(): Promise<BrowserSession> {
     headless: false,
   });
 
-  log('Browser created', {
+  log("Browser created", {
     sessionId: browser.session_id,
     liveView: browser.browser_live_view_url,
   });
 
   const stagehandOptions: Record<string, unknown> = {
-    env: 'LOCAL',
+    env: "LOCAL",
     localBrowserLaunchOptions: {
       cdpUrl: browser.cdp_ws_url,
     },
@@ -174,12 +161,10 @@ async function createBrowser(): Promise<BrowserSession> {
 async function closeBrowser(session: BrowserSession): Promise<void> {
   try {
     await session.stagehand.close();
-  }
-  catch {}
+  } catch {}
   try {
     await session.kernel.browsers.deleteByID(session.browser.session_id);
-  }
-  catch {}
+  } catch {}
 }
 
 // ============================================
@@ -189,16 +174,19 @@ async function closeBrowser(session: BrowserSession): Promise<void> {
 /**
  * 爬取游记列表页，获取所有游记 URL
  */
-async function crawlNoteList(session: BrowserSession, stats: CrawlStats): Promise<GuideListItem[]> {
+async function crawlNoteList(
+  session: BrowserSession,
+  stats: CrawlStats,
+): Promise<GuideListItem[]> {
   const allUrls: GuideListItem[] = [];
   const seenIds = new Set<string>();
 
-  log('Starting note list crawl...');
+  log("Starting note list crawl...");
 
   // 访问马蜂窝游记首页
-  const listUrl = 'https://m.mafengwo.cn/note/';
+  const listUrl = "https://m.mafengwo.cn/note/";
   await session.page.goto(listUrl, {
-    waitUntil: 'domcontentloaded',
+    waitUntil: "domcontentloaded",
     timeoutMs: 30000,
   });
 
@@ -209,7 +197,10 @@ async function crawlNoteList(session: BrowserSession, stats: CrawlStats): Promis
   let scrollCount = 0;
   const maxNoNewContent = 5; // 连续 5 次没有新内容就停止
 
-  while (noNewContentCount < maxNoNewContent && scrollCount < CONFIG.maxPages * CONFIG.scrollsPerPage) {
+  while (
+    noNewContentCount < maxNoNewContent &&
+    scrollCount < CONFIG.maxPages * CONFIG.scrollsPerPage
+  ) {
     // 滚动到页面底部
     await session.page.evaluate(() => {
       window.scrollTo(0, document.body.scrollHeight);
@@ -244,16 +235,19 @@ async function crawlNoteList(session: BrowserSession, stats: CrawlStats): Promis
 
     if (newCount === 0) {
       noNewContentCount++;
-    }
-    else {
+    } else {
       noNewContentCount = 0;
     }
 
-    log(`Scroll ${scrollCount}: Found ${urls.length} links, ${newCount} new, total ${allUrls.length}`);
+    log(
+      `Scroll ${scrollCount}: Found ${urls.length} links, ${newCount} new, total ${allUrls.length}`,
+    );
 
     // 每 50 次滚动输出一次统计
     if (scrollCount % 50 === 0) {
-      log(`Progress: ${allUrls.length} unique URLs collected after ${scrollCount} scrolls`);
+      log(
+        `Progress: ${allUrls.length} unique URLs collected after ${scrollCount} scrolls`,
+      );
     }
   }
 
@@ -273,10 +267,10 @@ async function crawlNoteDetail(
   for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
     try {
       // 转换为移动版 URL
-      const mobileUrl = item.url.replace('www.mafengwo.cn', 'm.mafengwo.cn');
+      const mobileUrl = item.url.replace("www.mafengwo.cn", "m.mafengwo.cn");
 
       await session.page.goto(mobileUrl, {
-        waitUntil: 'domcontentloaded',
+        waitUntil: "domcontentloaded",
         timeoutMs: 30000,
       });
 
@@ -285,62 +279,90 @@ async function crawlNoteDetail(
       // 提取详情
       const data = await session.page.evaluate(() => {
         // 提取标题
-        const title
-          = document.querySelector('meta[property="og:title"]')?.getAttribute('content')
-            || document.title.split('，')[0].split('|')[0].trim()
-            || '';
+        const title =
+          document
+            .querySelector('meta[property="og:title"]')
+            ?.getAttribute("content") ||
+          document.title.split("，")[0].split("|")[0].trim() ||
+          "";
 
         // 提取内容
-        let content = '';
-        const chapterEl = document.querySelector('.chapter-container');
+        let content = "";
+        const chapterEl = document.querySelector(".chapter-container");
         if (chapterEl) {
-          content = chapterEl.textContent?.trim() || '';
-        }
-        else {
-          const noteContent = document.querySelector('.note-content, .note-body');
+          content = chapterEl.textContent?.trim() || "";
+        } else {
+          const noteContent = document.querySelector(
+            ".note-content, .note-body",
+          );
           if (noteContent) {
             const clone = noteContent.cloneNode(true) as HTMLElement;
-            clone.querySelectorAll('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"]').forEach((el) => {
-              el.remove();
-            });
-            content = clone.textContent?.trim() || '';
+            clone
+              .querySelectorAll(
+                '.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"]',
+              )
+              .forEach((el) => {
+                el.remove();
+              });
+            content = clone.textContent?.trim() || "";
           }
         }
 
         content = content
-          .replace(/图片占位符/g, '')
-          .replace(/\s+/g, ' ')
-          .replace(/加载更多内容/g, '')
+          .replace(/图片占位符/g, "")
+          .replace(/\s+/g, " ")
+          .replace(/加载更多内容/g, "")
           .trim();
 
         // 提取作者
-        const author
-          = document.querySelector('.note-content > div:first-child p')?.textContent?.trim().split('\n')[0]
-            || document.querySelector('meta[name="author"]')?.getAttribute('content')
-            || undefined;
+        const author =
+          document
+            .querySelector(".note-content > div:first-child p")
+            ?.textContent?.trim()
+            .split("\n")[0] ||
+          document
+            .querySelector('meta[name="author"]')
+            ?.getAttribute("content") ||
+          undefined;
 
         // 提取浏览量
-        const pageText = document.body.textContent || '';
-        const viewsMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读)/i);
+        const pageText = document.body.textContent || "";
+        const viewsMatch = pageText.match(
+          /(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读)/i,
+        );
         const views = viewsMatch?.[1] || undefined;
 
         // 提取点赞
-        const likesMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:赞|喜欢)/i);
+        const likesMatch = pageText.match(
+          /(\d+(?:\.\d+)?[万k]?)\s*(?:赞|喜欢)/i,
+        );
         const likes = likesMatch?.[1] || undefined;
 
         // 提取图片
         const images: string[] = [];
-        document.querySelectorAll('.chapter-container img[src*="mafengwo"], .note-content img[src*="mafengwo"]').forEach((img) => {
-          const src = (img as HTMLImageElement).src || img.getAttribute('data-src');
-          if (src && !src.includes('avatar') && !src.includes('icon') && !src.includes('recommend')) {
-            images.push(src);
-          }
-        });
+        document
+          .querySelectorAll(
+            '.chapter-container img[src*="mafengwo"], .note-content img[src*="mafengwo"]',
+          )
+          .forEach((img) => {
+            const src =
+              (img as HTMLImageElement).src || img.getAttribute("data-src");
+            if (
+              src &&
+              !src.includes("avatar") &&
+              !src.includes("icon") &&
+              !src.includes("recommend")
+            ) {
+              images.push(src);
+            }
+          });
 
-        const coverImage
-          = document.querySelector('meta[property="og:image"]')?.getAttribute('content')
-            || images[0]
-            || undefined;
+        const coverImage =
+          document
+            .querySelector('meta[property="og:image"]')
+            ?.getAttribute("content") ||
+          images[0] ||
+          undefined;
 
         return {
           title,
@@ -360,9 +382,8 @@ async function crawlNoteDetail(
       }
 
       return data;
-    }
-    catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
       log(`Error crawling ${item.externalId} (attempt ${attempt}): ${message}`);
 
       if (attempt < CONFIG.maxRetries) {
@@ -387,7 +408,7 @@ async function saveToConvex(
     const qualityScore = calculateQualityScore(detail);
 
     await client.mutation(api.travelGuides.upsert, {
-      sourcePlatform: 'mafengwo',
+      sourcePlatform: "mafengwo",
       sourceExternalId: item.externalId,
       sourceUrl: item.url,
       title: detail.title,
@@ -405,9 +426,8 @@ async function saveToConvex(
     });
 
     return true;
-  }
-  catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     log(`Error saving ${item.externalId}: ${message}`);
     return false;
   }
@@ -418,18 +438,18 @@ async function saveToConvex(
 // ============================================
 
 async function main() {
-  log('='.repeat(60));
-  log('马蜂窝全量游记爬取开始');
-  log('='.repeat(60));
+  log("=".repeat(60));
+  log("马蜂窝全量游记爬取开始");
+  log("=".repeat(60));
 
   // 检查环境变量
   if (!process.env.KERNEL_API_KEY) {
-    console.error('ERROR: KERNEL_API_KEY environment variable is required');
+    console.error("ERROR: KERNEL_API_KEY environment variable is required");
     process.exit(1);
   }
 
   if (!process.env.CONVEX_URL) {
-    console.error('ERROR: CONVEX_URL environment variable is required');
+    console.error("ERROR: CONVEX_URL environment variable is required");
     process.exit(1);
   }
 
@@ -450,16 +470,16 @@ async function main() {
     session = await createBrowser();
 
     // 1. 爬取游记列表
-    log('\n--- Phase 1: Crawling note list ---');
+    log("\n--- Phase 1: Crawling note list ---");
     const noteList = await crawlNoteList(session, stats);
 
     if (noteList.length === 0) {
-      log('No notes found, exiting.');
+      log("No notes found, exiting.");
       return;
     }
 
     // 2. 爬取游记详情
-    log('\n--- Phase 2: Crawling note details ---');
+    log("\n--- Phase 2: Crawling note details ---");
     log(`Total notes to crawl: ${noteList.length}`);
 
     for (let i = 0; i < noteList.length; i++) {
@@ -469,17 +489,19 @@ async function main() {
 
       // 检查是否已存在
       try {
-        const existing = await convexClient.query(api.travelGuides.getByPlatformAndExternalId, {
-          sourcePlatform: 'mafengwo',
-          sourceExternalId: item.externalId,
-        });
+        const existing = await convexClient.query(
+          api.travelGuides.getByPlatformAndExternalId,
+          {
+            sourcePlatform: "mafengwo",
+            sourceExternalId: item.externalId,
+          },
+        );
 
         if (existing) {
           log(`  -> Already exists, skipping`);
           continue;
         }
-      }
-      catch {
+      } catch {
         // 查询失败，继续爬取
       }
 
@@ -493,13 +515,13 @@ async function main() {
         const saved = await saveToConvex(convexClient, item, detail);
         if (saved) {
           stats.detailsSaved++;
-          log(`  -> Saved: ${detail.title?.slice(0, 50)}... (${detail.content.length} chars)`);
-        }
-        else {
+          log(
+            `  -> Saved: ${detail.title?.slice(0, 50)}... (${detail.content.length} chars)`,
+          );
+        } else {
           stats.errors++;
         }
-      }
-      else {
+      } else {
         stats.errors++;
         log(`  -> Failed to crawl`);
       }
@@ -520,19 +542,17 @@ async function main() {
 
       // 每 50 条重新创建浏览器（避免内存泄漏）
       if ((i + 1) % 50 === 0 && i + 1 < noteList.length) {
-        log('\nRecreating browser session...');
+        log("\nRecreating browser session...");
         await closeBrowser(session);
         await sleep(5000);
         session = await createBrowser();
       }
     }
-  }
-  catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     log(`Fatal error: ${message}`);
     stats.errors++;
-  }
-  finally {
+  } finally {
     if (session) {
       await closeBrowser(session);
     }
@@ -541,20 +561,20 @@ async function main() {
   // 输出最终统计
   const totalTime = (Date.now() - stats.startTime) / 1000 / 60;
 
-  log(`\n${'='.repeat(60)}`);
-  log('爬取完成！最终统计：');
-  log('='.repeat(60));
+  log(`\n${"=".repeat(60)}`);
+  log("爬取完成！最终统计：");
+  log("=".repeat(60));
   log(`  发现游记 URL: ${stats.totalUrlsFound}`);
   log(`  爬取详情: ${stats.detailsCrawled}`);
   log(`  保存成功: ${stats.detailsSaved}`);
   log(`  错误数: ${stats.errors}`);
   log(`  总耗时: ${totalTime.toFixed(1)} 分钟`);
   log(`  平均速度: ${(stats.detailsSaved / totalTime).toFixed(1)} 条/分钟`);
-  log('='.repeat(60));
+  log("=".repeat(60));
 }
 
 // 运行
 main().catch((error) => {
-  console.error('Unhandled error:', error);
+  console.error("Unhandled error:", error);
   process.exit(1);
 });

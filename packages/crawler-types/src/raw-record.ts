@@ -3,8 +3,8 @@
  * Types for storing original crawled data
  */
 
-export type ParseStatus = 'pending' | 'success' | 'failed' | 'skipped';
-export type ContentType = 'html' | 'json' | 'xml';
+export type ParseStatus = "pending" | "success" | "failed" | "skipped";
+export type ContentType = "html" | "json" | "xml";
 
 export interface RawCrawlRecord {
   id: string;
@@ -55,4 +55,4 @@ export interface ParseResult {
   error?: string;
 }
 
-export const CRAWLER_VERSION = '1.0.0';
+export const CRAWLER_VERSION = "1.0.0";

@@ -7,9 +7,9 @@
  * Run with: npx convex run migrations/migrateDestinations:run
  */
 
-import { v } from 'convex/values';
-import { internalMutation, mutation } from '../_generated/server';
-import { syncDestinationsInternal } from '../guideDestinations';
+import { v } from "convex/values";
+import { internalMutation, mutation } from "../_generated/server";
+import { syncDestinationsInternal } from "../guideDestinations";
 
 /**
  * Migrate destinations for a batch of guides
@@ -23,7 +23,7 @@ export const migrateBatch = internalMutation({
     const batchSize = args.batchSize ?? 100;
 
     const result = await ctx.db
-      .query('travelGuides')
+      .query("travelGuides")
       .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
 
     let synced = 0;
@@ -62,7 +62,7 @@ export const run = mutation({
     const batchSize = 50;
 
     const result = await ctx.db
-      .query('travelGuides')
+      .query("travelGuides")
       .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
 
     let synced = 0;
@@ -86,7 +86,7 @@ export const run = mutation({
       nextCursor: result.continueCursor,
       isDone: result.isDone,
       message: result.isDone
-        ? 'Migration complete!'
+        ? "Migration complete!"
         : `Processed ${synced} guides. Run again with cursor to continue.`,
     };
   },
@@ -102,7 +102,7 @@ export const verify = mutation({
     let guidesWithDestinations = 0;
     let totalDestinationsInGuides = 0;
 
-    const guides = await ctx.db.query('travelGuides').collect();
+    const guides = await ctx.db.query("travelGuides").collect();
     for (const guide of guides) {
       if (guide.destinations && guide.destinations.length > 0) {
         guidesWithDestinations++;
@@ -111,10 +111,12 @@ export const verify = mutation({
     }
 
     // Count records in guideDestinations
-    const destinationRecords = await ctx.db.query('guideDestinations').collect();
+    const destinationRecords = await ctx.db
+      .query("guideDestinations")
+      .collect();
 
     // Get unique guide IDs in guideDestinations
-    const uniqueGuideIds = new Set(destinationRecords.map(d => d.guideId));
+    const uniqueGuideIds = new Set(destinationRecords.map((d) => d.guideId));
 
     return {
       guidesWithDestinations,
@@ -124,7 +126,7 @@ export const verify = mutation({
       isComplete: uniqueGuideIds.size === guidesWithDestinations,
       message:
         uniqueGuideIds.size === guidesWithDestinations
-          ? '✓ Migration verified successfully!'
+          ? "✓ Migration verified successfully!"
           : `⚠ Mismatch: ${guidesWithDestinations} guides have destinations, but only ${uniqueGuideIds.size} are in guideDestinations table.`,
     };
   },
@@ -136,7 +138,7 @@ export const verify = mutation({
 export const reset = mutation({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query('guideDestinations').collect();
+    const all = await ctx.db.query("guideDestinations").collect();
 
     for (const dest of all) {
       await ctx.db.delete(dest._id);

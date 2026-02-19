@@ -27,12 +27,12 @@ export function calculateDistance(
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
 
-  const a
-    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-      + Math.cos(toRadians(lat1))
-      * Math.cos(toRadians(lat2))
-      * Math.sin(dLon / 2)
-      * Math.sin(dLon / 2);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -44,14 +44,14 @@ export function calculateDistance(
  */
 export function formatDistance(
   distanceKm: number,
-  locale: 'zh' | 'en' = 'zh',
+  locale: "zh" | "en" = "zh",
 ): string {
   if (distanceKm < 1) {
     const meters = Math.round(distanceKm * 1000);
-    return locale === 'zh' ? `${meters}米` : `${meters}m`;
+    return locale === "zh" ? `${meters}米` : `${meters}m`;
   }
   const formatted = distanceKm.toFixed(1);
-  return locale === 'zh' ? `${formatted}公里` : `${formatted}km`;
+  return locale === "zh" ? `${formatted}公里` : `${formatted}km`;
 }
 
 /**
@@ -98,13 +98,13 @@ export function calculateCenter(
   lon: number;
 } {
   if (coordinates.length === 0) {
-    throw new Error('Cannot calculate center of empty coordinates array');
+    throw new Error("Cannot calculate center of empty coordinates array");
   }
 
   if (coordinates.length === 1) {
     const coord = coordinates[0];
     if (!coord) {
-      throw new Error('Invalid coordinate at index 0');
+      throw new Error("Invalid coordinate at index 0");
     }
     return { lat: coord.lat, lon: coord.lon };
   }
@@ -156,7 +156,7 @@ export function sortByDistance<
 export function filterByRadius<
   T extends { latitude: number; longitude: number },
 >(items: T[], centerLat: number, centerLon: number, radiusKm: number): T[] {
-  return items.filter(item =>
+  return items.filter((item) =>
     isWithinRadius(
       item.latitude,
       item.longitude,

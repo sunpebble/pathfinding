@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * SIM Cards - International SIM card recommendations for travelers
@@ -9,16 +9,16 @@ import { mutation, query } from './_generated/server';
 
 // Card type validator
 const cardTypeValidator = v.union(
-  v.literal('physical'), // Physical SIM card
-  v.literal('esim'), // eSIM
-  v.literal('wifi_device'), // Portable WiFi device
+  v.literal("physical"), // Physical SIM card
+  v.literal("esim"), // eSIM
+  v.literal("wifi_device"), // Portable WiFi device
 );
 
 // Coverage type validator
 const coverageTypeValidator = v.union(
-  v.literal('single_country'), // Single country
-  v.literal('regional'), // Regional (e.g., Southeast Asia, Europe)
-  v.literal('global'), // Global
+  v.literal("single_country"), // Single country
+  v.literal("regional"), // Regional (e.g., Southeast Asia, Europe)
+  v.literal("global"), // Global
 );
 
 // List SIM card products with optional filters
@@ -35,17 +35,17 @@ export const list = query({
     offset: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let results = await ctx.db.query('simCards').collect();
+    let results = await ctx.db.query("simCards").collect();
 
     // Filter only active products
-    results = results.filter(card => card.isActive);
+    results = results.filter((card) => card.isActive);
 
     // Filter by destination
     if (args.destination) {
       results = results.filter(
-        card =>
-          card.destinations.includes(args.destination!)
-          || card.destinationNames?.some(name =>
+        (card) =>
+          card.destinations.includes(args.destination!) ||
+          card.destinationNames?.some((name) =>
             name.toLowerCase().includes(args.destination!.toLowerCase()),
           ),
       );
@@ -53,58 +53,55 @@ export const list = query({
 
     // Filter by card type
     if (args.cardType) {
-      results = results.filter(card => card.cardType === args.cardType);
+      results = results.filter((card) => card.cardType === args.cardType);
     }
 
     // Filter by coverage type
     if (args.coverageType) {
       results = results.filter(
-        card => card.coverageType === args.coverageType,
+        (card) => card.coverageType === args.coverageType,
       );
     }
 
     // Filter by minimum data
     if (args.minData) {
-      results = results.filter(card =>
+      results = results.filter((card) =>
         card.dataPlans.some(
-          plan =>
-            plan.isUnlimited
-            || (plan.dataAmountBytes && plan.dataAmountBytes >= args.minData!),
+          (plan) =>
+            plan.isUnlimited ||
+            (plan.dataAmountBytes && plan.dataAmountBytes >= args.minData!),
         ),
       );
     }
 
     // Filter by max price
     if (args.maxPrice) {
-      results = results.filter(card =>
-        card.dataPlans.some(plan => plan.price <= args.maxPrice!),
+      results = results.filter((card) =>
+        card.dataPlans.some((plan) => plan.price <= args.maxPrice!),
       );
     }
 
     // Filter by minimum validity days
     if (args.minDays) {
-      results = results.filter(card =>
-        card.dataPlans.some(plan => plan.validityDays >= args.minDays!),
+      results = results.filter((card) =>
+        card.dataPlans.some((plan) => plan.validityDays >= args.minDays!),
       );
     }
 
     // Filter by voice support
     if (args.includesVoice !== undefined) {
       results = results.filter(
-        card => card.includesVoice === args.includesVoice,
+        (card) => card.includesVoice === args.includesVoice,
       );
     }
 
     // Sort by priority and rating
     results.sort((a, b) => {
       // Promoted items first
-      if (a.isPromoted && !b.isPromoted)
-        return -1;
-      if (!a.isPromoted && b.isPromoted)
-        return 1;
+      if (a.isPromoted && !b.isPromoted) return -1;
+      if (!a.isPromoted && b.isPromoted) return 1;
       // Then by priority
-      if (a.priority !== b.priority)
-        return b.priority - a.priority;
+      if (a.priority !== b.priority) return b.priority - a.priority;
       // Then by rating
       return (b.rating ?? 0) - (a.rating ?? 0);
     });
@@ -117,7 +114,7 @@ export const list = query({
 
 // Get a SIM card product by ID
 export const getById = query({
-  args: { id: v.id('simCards') },
+  args: { id: v.id("simCards") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -133,30 +130,30 @@ export const getRecommended = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let results = await ctx.db.query('simCards').collect();
+    let results = await ctx.db.query("simCards").collect();
 
     // Filter only active products
-    results = results.filter(card => card.isActive);
+    results = results.filter((card) => card.isActive);
 
     // Filter by destination
     results = results.filter(
-      card =>
-        card.destinations.includes(args.destination)
-        || card.destinationNames?.some(name =>
+      (card) =>
+        card.destinations.includes(args.destination) ||
+        card.destinationNames?.some((name) =>
           name.toLowerCase().includes(args.destination.toLowerCase()),
         ),
     );
 
     // Filter by voice requirement
     if (args.needsVoice) {
-      results = results.filter(card => card.includesVoice);
+      results = results.filter((card) => card.includesVoice);
     }
 
     // Filter by trip duration (find plans that cover the duration)
     if (args.tripDurationDays) {
-      results = results.filter(card =>
+      results = results.filter((card) =>
         card.dataPlans.some(
-          plan => plan.validityDays >= args.tripDurationDays!,
+          (plan) => plan.validityDays >= args.tripDurationDays!,
         ),
       );
     }
@@ -168,10 +165,8 @@ export const getRecommended = query({
 
       // Prefer eSIM if requested
       if (args.preferEsim) {
-        if (a.cardType === 'esim')
-          scoreA += 10;
-        if (b.cardType === 'esim')
-          scoreB += 10;
+        if (a.cardType === "esim") scoreA += 10;
+        if (b.cardType === "esim") scoreB += 10;
       }
 
       // Add rating score
@@ -179,10 +174,8 @@ export const getRecommended = query({
       scoreB += (b.rating ?? 0) * 2;
 
       // Promoted items get bonus
-      if (a.isPromoted)
-        scoreA += 5;
-      if (b.isPromoted)
-        scoreB += 5;
+      if (a.isPromoted) scoreA += 5;
+      if (b.isPromoted) scoreB += 5;
 
       // Priority score
       scoreA += a.priority;
@@ -205,17 +198,17 @@ export const search = query({
   },
   handler: async (ctx, args) => {
     const maxResults = args.limit ?? 50;
-    let results = await ctx.db.query('simCards').take(maxResults * 5);
+    let results = await ctx.db.query("simCards").take(maxResults * 5);
 
     // Filter only active products
-    results = results.filter(card => card.isActive);
+    results = results.filter((card) => card.isActive);
 
     // Filter by destination if provided
     if (args.destination) {
       results = results.filter(
-        card =>
-          card.destinations.includes(args.destination!)
-          || card.destinationNames?.some(name =>
+        (card) =>
+          card.destinations.includes(args.destination!) ||
+          card.destinationNames?.some((name) =>
             name.toLowerCase().includes(args.destination!.toLowerCase()),
           ),
       );
@@ -224,11 +217,11 @@ export const search = query({
     // Search by name or provider
     const searchLower = args.query.toLowerCase();
     results = results.filter(
-      card =>
-        card.name.toLowerCase().includes(searchLower)
-        || card.nameEn?.toLowerCase().includes(searchLower)
-        || card.provider.toLowerCase().includes(searchLower)
-        || card.regionName?.toLowerCase().includes(searchLower),
+      (card) =>
+        card.name.toLowerCase().includes(searchLower) ||
+        card.nameEn?.toLowerCase().includes(searchLower) ||
+        card.provider.toLowerCase().includes(searchLower) ||
+        card.regionName?.toLowerCase().includes(searchLower),
     );
 
     // Sort by rating
@@ -241,11 +234,11 @@ export const search = query({
 // Compare SIM card products
 export const compare = query({
   args: {
-    ids: v.array(v.id('simCards')),
+    ids: v.array(v.id("simCards")),
   },
   handler: async (ctx, args) => {
-    const cards = await Promise.all(args.ids.map(id => ctx.db.get(id)));
-    return cards.filter(card => card !== null);
+    const cards = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
+    return cards.filter((card) => card !== null);
   },
 });
 
@@ -256,17 +249,17 @@ export const getPopular = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let results = await ctx.db.query('simCards').collect();
+    let results = await ctx.db.query("simCards").collect();
 
     // Filter only active products
-    results = results.filter(card => card.isActive);
+    results = results.filter((card) => card.isActive);
 
     // Filter by destination if provided
     if (args.destination) {
       results = results.filter(
-        card =>
-          card.destinations.includes(args.destination!)
-          || card.destinationNames?.some(name =>
+        (card) =>
+          card.destinations.includes(args.destination!) ||
+          card.destinationNames?.some((name) =>
             name.toLowerCase().includes(args.destination!.toLowerCase()),
           ),
       );
@@ -291,16 +284,16 @@ export const getByRegion = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let results = await ctx.db.query('simCards').collect();
+    let results = await ctx.db.query("simCards").collect();
 
     // Filter only active products
-    results = results.filter(card => card.isActive);
+    results = results.filter((card) => card.isActive);
 
     // Filter by region
     results = results.filter(
-      card =>
-        card.coverageType === 'regional'
-        && card.regionName?.toLowerCase().includes(args.region.toLowerCase()),
+      (card) =>
+        card.coverageType === "regional" &&
+        card.regionName?.toLowerCase().includes(args.region.toLowerCase()),
     );
 
     // Sort by rating
@@ -319,19 +312,19 @@ export const getEsimProducts = query({
   },
   handler: async (ctx, args) => {
     let results = await ctx.db
-      .query('simCards')
-      .withIndex('by_card_type', q => q.eq('cardType', 'esim'))
+      .query("simCards")
+      .withIndex("by_card_type", (q) => q.eq("cardType", "esim"))
       .collect();
 
     // Filter only active products
-    results = results.filter(card => card.isActive);
+    results = results.filter((card) => card.isActive);
 
     // Filter by destination if provided
     if (args.destination) {
       results = results.filter(
-        card =>
-          card.destinations.includes(args.destination!)
-          || card.destinationNames?.some(name =>
+        (card) =>
+          card.destinations.includes(args.destination!) ||
+          card.destinationNames?.some((name) =>
             name.toLowerCase().includes(args.destination!.toLowerCase()),
           ),
       );
@@ -413,7 +406,7 @@ export const create = mutation({
     priority: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('simCards', {
+    return await ctx.db.insert("simCards", {
       ...args,
       rating: undefined,
       reviewCount: 0,
@@ -429,7 +422,7 @@ export const create = mutation({
 // Update a SIM card product (admin)
 export const update = mutation({
   args: {
-    id: v.id('simCards'),
+    id: v.id("simCards"),
     name: v.optional(v.string()),
     nameEn: v.optional(v.string()),
     provider: v.optional(v.string()),
@@ -509,7 +502,7 @@ export const update = mutation({
 
 // Delete a SIM card product (admin)
 export const remove = mutation({
-  args: { id: v.id('simCards') },
+  args: { id: v.id("simCards") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -518,7 +511,7 @@ export const remove = mutation({
 // Update rating (called internally after review is added/updated)
 export const updateRating = mutation({
   args: {
-    id: v.id('simCards'),
+    id: v.id("simCards"),
     rating: v.number(),
     reviewCount: v.number(),
   },

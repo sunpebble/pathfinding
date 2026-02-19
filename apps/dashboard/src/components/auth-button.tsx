@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useAuthActions } from '@convex-dev/auth/react';
-import { api } from '@pathfinding/convex-client';
-import { useQuery } from 'convex/react';
-import { ChevronDown, LogOut, User } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthActions } from "@convex-dev/auth/react";
+import { api } from "@pathfinding/convex-client";
+import { useQuery } from "convex/react";
+import { ChevronDown, LogOut, User } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export function AuthButton() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -19,7 +19,7 @@ export function AuthButton() {
   // Get current user data
   const currentUser = useQuery(
     api.users.getCurrentUser,
-    isAuthenticated ? {} : 'skip',
+    isAuthenticated ? {} : "skip",
   );
 
   // Close dropdown when clicking outside
@@ -31,18 +31,18 @@ export function AuthButton() {
     }
 
     if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
 
   const handleSignOut = async () => {
     setIsMenuOpen(false);
     await signOut();
-    router.push('/auth/signin');
+    router.push("/auth/signin");
   };
 
   // Loading state
@@ -63,12 +63,12 @@ export function AuthButton() {
   }
 
   // Authenticated - show user menu
-  const displayName
-    = currentUser?.profile?.displayName
-      || currentUser?.name
-      || currentUser?.email?.split('@')[0]
-      || 'User';
-  const userEmail = currentUser?.email || '';
+  const displayName =
+    currentUser?.profile?.displayName ||
+    currentUser?.name ||
+    currentUser?.email?.split("@")[0] ||
+    "User";
+  const userEmail = currentUser?.email || "";
 
   return (
     <div className="relative" ref={menuRef}>

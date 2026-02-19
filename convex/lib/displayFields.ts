@@ -4,7 +4,7 @@
  * Ensures all travel guides have the required fields for iOS App display.
  */
 
-import type { Doc } from '../_generated/dataModel';
+import type { Doc } from "../_generated/dataModel";
 
 // ============================================
 // Constants
@@ -14,15 +14,15 @@ import type { Doc } from '../_generated/dataModel';
  * Fields required for iOS App display
  */
 export const IOS_REQUIRED_DISPLAY_FIELDS = [
-  'title',
-  'coverImageUrl',
-  'authorName',
-  'destinations',
-  'likesCount',
-  'savesCount',
-  'commentsCount',
-  'viewsCount',
-  'qualityScore',
+  "title",
+  "coverImageUrl",
+  "authorName",
+  "destinations",
+  "likesCount",
+  "savesCount",
+  "commentsCount",
+  "viewsCount",
+  "qualityScore",
 ] as const;
 
 export type IosDisplayField = (typeof IOS_REQUIRED_DISPLAY_FIELDS)[number];
@@ -31,16 +31,16 @@ export type IosDisplayField = (typeof IOS_REQUIRED_DISPLAY_FIELDS)[number];
  * Platform-specific default cover images
  */
 export const PLATFORM_DEFAULT_IMAGES: Record<string, string> = {
-  xiaohongshu: 'https://cdn.pathfinding.ai/defaults/cover-xiaohongshu.jpg',
-  weibo: 'https://cdn.pathfinding.ai/defaults/cover-weibo.jpg',
-  ctrip: 'https://cdn.pathfinding.ai/defaults/cover-ctrip.jpg',
-  douyin: 'https://cdn.pathfinding.ai/defaults/cover-douyin.jpg',
-  tripadvisor: 'https://cdn.pathfinding.ai/defaults/cover-tripadvisor.jpg',
-  qunar: 'https://cdn.pathfinding.ai/defaults/cover-qunar.jpg',
-  tongcheng: 'https://cdn.pathfinding.ai/defaults/cover-tongcheng.jpg',
-  mafengwo: 'https://cdn.pathfinding.ai/defaults/cover-mafengwo.jpg',
-  qyer: 'https://cdn.pathfinding.ai/defaults/cover-qyer.jpg',
-  default: 'https://cdn.pathfinding.ai/defaults/cover-default.jpg',
+  xiaohongshu: "https://cdn.pathfinding.ai/defaults/cover-xiaohongshu.jpg",
+  weibo: "https://cdn.pathfinding.ai/defaults/cover-weibo.jpg",
+  ctrip: "https://cdn.pathfinding.ai/defaults/cover-ctrip.jpg",
+  douyin: "https://cdn.pathfinding.ai/defaults/cover-douyin.jpg",
+  tripadvisor: "https://cdn.pathfinding.ai/defaults/cover-tripadvisor.jpg",
+  qunar: "https://cdn.pathfinding.ai/defaults/cover-qunar.jpg",
+  tongcheng: "https://cdn.pathfinding.ai/defaults/cover-tongcheng.jpg",
+  mafengwo: "https://cdn.pathfinding.ai/defaults/cover-mafengwo.jpg",
+  qyer: "https://cdn.pathfinding.ai/defaults/cover-qyer.jpg",
+  default: "https://cdn.pathfinding.ai/defaults/cover-default.jpg",
 };
 
 // ============================================
@@ -55,7 +55,7 @@ export interface DisplayFieldValidationResult {
 /**
  * Partial guide type for validation/fill operations
  */
-export type PartialGuide = Partial<Doc<'travelGuides'>> & {
+export type PartialGuide = Partial<Doc<"travelGuides">> & {
   sourcePlatform?: string;
   content?: string;
   imageUrls?: string[];
@@ -64,7 +64,7 @@ export type PartialGuide = Partial<Doc<'travelGuides'>> & {
 /**
  * Guide with guaranteed display fields
  */
-export type GuideWithDisplayFields = Doc<'travelGuides'> & {
+export type GuideWithDisplayFields = Doc<"travelGuides"> & {
   title: string;
   coverImageUrl: string;
   authorName: string;
@@ -83,46 +83,51 @@ export type GuideWithDisplayFields = Doc<'travelGuides'> & {
 /**
  * Validates whether a guide has all required display fields populated
  */
-export function validateDisplayFields(guide: PartialGuide): DisplayFieldValidationResult {
+export function validateDisplayFields(
+  guide: PartialGuide,
+): DisplayFieldValidationResult {
   const missingFields: IosDisplayField[] = [];
 
   // Check title
-  if (!guide.title || guide.title.trim() === '') {
-    missingFields.push('title');
+  if (!guide.title || guide.title.trim() === "") {
+    missingFields.push("title");
   }
 
   // Check coverImageUrl - also check imageUrls as fallback source
-  if (!guide.coverImageUrl && (!guide.imageUrls || guide.imageUrls.length === 0)) {
-    missingFields.push('coverImageUrl');
+  if (
+    !guide.coverImageUrl &&
+    (!guide.imageUrls || guide.imageUrls.length === 0)
+  ) {
+    missingFields.push("coverImageUrl");
   }
 
   // Check authorName
-  if (!guide.authorName || guide.authorName.trim() === '') {
-    missingFields.push('authorName');
+  if (!guide.authorName || guide.authorName.trim() === "") {
+    missingFields.push("authorName");
   }
 
   // Check destinations (allowed to be empty, but must exist)
   if (!guide.destinations) {
-    missingFields.push('destinations');
+    missingFields.push("destinations");
   }
 
   // Check count fields
   if (guide.likesCount === undefined || guide.likesCount === null) {
-    missingFields.push('likesCount');
+    missingFields.push("likesCount");
   }
   if (guide.savesCount === undefined || guide.savesCount === null) {
-    missingFields.push('savesCount');
+    missingFields.push("savesCount");
   }
   if (guide.commentsCount === undefined || guide.commentsCount === null) {
-    missingFields.push('commentsCount');
+    missingFields.push("commentsCount");
   }
   if (guide.viewsCount === undefined || guide.viewsCount === null) {
-    missingFields.push('viewsCount');
+    missingFields.push("viewsCount");
   }
 
   // Check qualityScore
   if (guide.qualityScore === undefined || guide.qualityScore === null) {
-    missingFields.push('qualityScore');
+    missingFields.push("qualityScore");
   }
 
   return {
@@ -160,7 +165,9 @@ function getDefaultCoverImage(platform?: string): string {
  * Fills missing display fields with reasonable defaults
  * Does NOT overwrite existing non-empty values
  */
-export function fillMissingDisplayFields<T extends PartialGuide>(guide: T): T & {
+export function fillMissingDisplayFields<T extends PartialGuide>(
+  guide: T,
+): T & {
   title: string;
   coverImageUrl: string;
   authorName: string;
@@ -174,12 +181,11 @@ export function fillMissingDisplayFields<T extends PartialGuide>(guide: T): T & 
   const result = { ...guide };
 
   // Fill title
-  if (!result.title || result.title.trim() === '') {
-    if (result.content && result.content.trim() !== '') {
+  if (!result.title || result.title.trim() === "") {
+    if (result.content && result.content.trim() !== "") {
       result.title = generateTitleFromContent(result.content);
-    }
-    else {
-      result.title = '无标题攻略';
+    } else {
+      result.title = "无标题攻略";
     }
   }
 
@@ -187,15 +193,14 @@ export function fillMissingDisplayFields<T extends PartialGuide>(guide: T): T & 
   if (!result.coverImageUrl) {
     if (result.imageUrls && result.imageUrls.length > 0) {
       result.coverImageUrl = result.imageUrls[0];
-    }
-    else {
+    } else {
       result.coverImageUrl = getDefaultCoverImage(result.sourcePlatform);
     }
   }
 
   // Fill authorName
-  if (!result.authorName || result.authorName.trim() === '') {
-    result.authorName = '匿名用户';
+  if (!result.authorName || result.authorName.trim() === "") {
+    result.authorName = "匿名用户";
   }
 
   // Fill destinations (ensure array exists)
@@ -243,13 +248,17 @@ export function fillMissingDisplayFields<T extends PartialGuide>(guide: T): T & 
  * Ensures a guide has all display fields populated (for query results)
  * This is a read-only operation - it returns a new object with filled fields
  */
-export function ensureDisplayFields(guide: Doc<'travelGuides'>): GuideWithDisplayFields {
+export function ensureDisplayFields(
+  guide: Doc<"travelGuides">,
+): GuideWithDisplayFields {
   return fillMissingDisplayFields(guide) as GuideWithDisplayFields;
 }
 
 /**
  * Ensures multiple guides have all display fields populated
  */
-export function ensureDisplayFieldsMany(guides: Doc<'travelGuides'>[]): GuideWithDisplayFields[] {
+export function ensureDisplayFieldsMany(
+  guides: Doc<"travelGuides">[],
+): GuideWithDisplayFields[] {
   return guides.map(ensureDisplayFields);
 }

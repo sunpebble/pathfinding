@@ -13,10 +13,12 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `mafengwo-crawler-service`: Motia 服务层，提供 API 端点和事件驱动的爬取流程
 - `mafengwo-data-converter`: 将爬取的原始数据转换为 TravelGuide 格式并存储到 Convex
 
 ### Modified Capabilities
+
 _无需修改现有规格_
 
 ## Impact

@@ -2,39 +2,39 @@
  * Share Events - Track share actions, manage share links, and control permissions
  */
 
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 // Validators
 const platformValidator = v.union(
-  v.literal('wechat'),
-  v.literal('weibo'),
-  v.literal('xiaohongshu'),
-  v.literal('qq'),
-  v.literal('douyin'),
-  v.literal('copy_link'),
-  v.literal('system_share'),
-  v.literal('generic'),
+  v.literal("wechat"),
+  v.literal("weibo"),
+  v.literal("xiaohongshu"),
+  v.literal("qq"),
+  v.literal("douyin"),
+  v.literal("copy_link"),
+  v.literal("system_share"),
+  v.literal("generic"),
 );
 
 const eventTypeValidator = v.union(
-  v.literal('share'),
-  v.literal('click'),
-  v.literal('view'),
-  v.literal('save'),
+  v.literal("share"),
+  v.literal("click"),
+  v.literal("view"),
+  v.literal("save"),
 );
 
 const permissionValidator = v.union(
-  v.literal('public'), // Anyone with link can view
-  v.literal('unlisted'), // Only people with link can view (not searchable)
-  v.literal('private'), // Only owner and explicitly shared users can view
-  v.literal('password'), // Requires password to view
+  v.literal("public"), // Anyone with link can view
+  v.literal("unlisted"), // Only people with link can view (not searchable)
+  v.literal("private"), // Only owner and explicitly shared users can view
+  v.literal("password"), // Requires password to view
 );
 
 const resourceTypeValidator = v.union(
-  v.literal('itinerary'),
-  v.literal('travelGuide'),
-  v.literal('travelNote'),
+  v.literal("itinerary"),
+  v.literal("travelGuide"),
+  v.literal("travelNote"),
 );
 
 /**
@@ -58,14 +58,14 @@ export const createShareLink = mutation({
     const shareCode = generateShareCode();
     const shareUrl = `https://pathfinding.app/s/${shareCode}`;
 
-    const id = await ctx.db.insert('shareLinks', {
+    const id = await ctx.db.insert("shareLinks", {
       resourceType: args.resourceType,
       resourceId: args.resourceId,
       ownerId: args.ownerId,
       shareCode,
       shareUrl,
       platform: args.platform,
-      permission: args.permission || 'public',
+      permission: args.permission || "public",
       password: args.password,
       expiresAt: args.expiresAt,
       maxViews: args.maxViews,
@@ -80,13 +80,13 @@ export const createShareLink = mutation({
     });
 
     // Record the share event
-    await ctx.db.insert('shareEvents', {
+    await ctx.db.insert("shareEvents", {
       resourceType: args.resourceType,
       resourceId: args.resourceId,
       sharerId: args.ownerId,
       shareLinkId: id,
       platform: args.platform,
-      eventType: 'share',
+      eventType: "share",
       createdAt: Date.now(),
     });
 
@@ -110,12 +110,12 @@ export const create = mutation({
     shareUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const id = await ctx.db.insert('shareEvents', {
-      resourceType: args.resourceType || 'travelGuide',
+    const id = await ctx.db.insert("shareEvents", {
+      resourceType: args.resourceType || "travelGuide",
       resourceId: args.resourceId,
       sharerId: args.sharerId,
       platform: args.platform,
-      eventType: 'share',
+      eventType: "share",
       shareUrl: args.shareUrl,
       createdAt: Date.now(),
     });
@@ -130,7 +130,7 @@ export const create = mutation({
 export const trackEvent = mutation({
   args: {
     shareCode: v.optional(v.string()),
-    shareLinkId: v.optional(v.id('shareLinks')),
+    shareLinkId: v.optional(v.id("shareLinks")),
     resourceType: v.optional(resourceTypeValidator),
     resourceId: v.optional(v.string()),
     platform: v.optional(platformValidator),
@@ -145,24 +145,23 @@ export const trackEvent = mutation({
     // Find the share link by code or ID
     if (args.shareCode) {
       shareLink = await ctx.db
-        .query('shareLinks')
-        .withIndex('by_share_code', q => q.eq('shareCode', args.shareCode!))
+        .query("shareLinks")
+        .withIndex("by_share_code", (q) => q.eq("shareCode", args.shareCode!))
         .first();
-    }
-    else if (args.shareLinkId) {
+    } else if (args.shareLinkId) {
       shareLink = await ctx.db.get(args.shareLinkId);
     }
 
     if (shareLink) {
       // Check if link is still valid
       if (!shareLink.isActive) {
-        throw new Error('Share link is no longer active');
+        throw new Error("Share link is no longer active");
       }
       if (shareLink.expiresAt && shareLink.expiresAt < Date.now()) {
-        throw new Error('Share link has expired');
+        throw new Error("Share link has expired");
       }
       if (shareLink.maxViews && shareLink.viewCount >= shareLink.maxViews) {
-        throw new Error('Share link has reached maximum views');
+        throw new Error("Share link has reached maximum views");
       }
 
       // Update counters on the share link
@@ -178,13 +177,13 @@ export const trackEvent = mutation({
       };
 
       switch (args.eventType) {
-        case 'view':
+        case "view":
           updates.viewCount = (shareLink.viewCount || 0) + 1;
           break;
-        case 'click':
+        case "click":
           updates.clickCount = (shareLink.clickCount || 0) + 1;
           break;
-        case 'save':
+        case "save":
           updates.saveCount = (shareLink.saveCount || 0) + 1;
           break;
       }
@@ -193,12 +192,12 @@ export const trackEvent = mutation({
     }
 
     // Create detailed event log
-    await ctx.db.insert('shareEventLogs', {
+    await ctx.db.insert("shareEventLogs", {
       shareLinkId: shareLink?._id,
       resourceType:
-        shareLink?.resourceType || args.resourceType || 'travelGuide',
-      resourceId: shareLink?.resourceId || args.resourceId || '',
-      platform: shareLink?.platform || args.platform || 'generic',
+        shareLink?.resourceType || args.resourceType || "travelGuide",
+      resourceId: shareLink?.resourceId || args.resourceId || "",
+      platform: shareLink?.platform || args.platform || "generic",
       eventType: args.eventType,
       referrer: args.referrer,
       userAgent: args.userAgent,
@@ -220,38 +219,38 @@ export const verifyAccess = query({
   },
   handler: async (ctx, args) => {
     const shareLink = await ctx.db
-      .query('shareLinks')
-      .withIndex('by_share_code', q => q.eq('shareCode', args.shareCode))
+      .query("shareLinks")
+      .withIndex("by_share_code", (q) => q.eq("shareCode", args.shareCode))
       .first();
 
     if (!shareLink) {
-      return { valid: false, error: 'Share link not found' };
+      return { valid: false, error: "Share link not found" };
     }
 
     if (!shareLink.isActive) {
-      return { valid: false, error: 'Share link is no longer active' };
+      return { valid: false, error: "Share link is no longer active" };
     }
 
     if (shareLink.expiresAt && shareLink.expiresAt < Date.now()) {
-      return { valid: false, error: 'Share link has expired' };
+      return { valid: false, error: "Share link has expired" };
     }
 
     if (shareLink.maxViews && shareLink.viewCount >= shareLink.maxViews) {
-      return { valid: false, error: 'Share link has reached maximum views' };
+      return { valid: false, error: "Share link has reached maximum views" };
     }
 
-    if (shareLink.permission === 'password') {
+    if (shareLink.permission === "password") {
       if (!args.password) {
         return {
           valid: false,
-          error: 'Password required',
+          error: "Password required",
           requiresPassword: true,
         };
       }
       if (shareLink.password !== args.password) {
         return {
           valid: false,
-          error: 'Invalid password',
+          error: "Invalid password",
           requiresPassword: true,
         };
       }
@@ -277,8 +276,8 @@ export const getByCode = query({
   },
   handler: async (ctx, args) => {
     const shareLink = await ctx.db
-      .query('shareLinks')
-      .withIndex('by_share_code', q => q.eq('shareCode', args.shareCode))
+      .query("shareLinks")
+      .withIndex("by_share_code", (q) => q.eq("shareCode", args.shareCode))
       .first();
 
     if (!shareLink) {
@@ -302,20 +301,22 @@ export const getStats = query({
   handler: async (ctx, args) => {
     // Get all share links for this resource
     const shareLinks = await ctx.db
-      .query('shareLinks')
-      .withIndex('by_resource', q =>
+      .query("shareLinks")
+      .withIndex("by_resource", (q) =>
         q
-          .eq('resourceType', args.resourceType)
-          .eq('resourceId', args.resourceId))
+          .eq("resourceType", args.resourceType)
+          .eq("resourceId", args.resourceId),
+      )
       .collect();
 
     // Get all share events for this resource
     const shareEvents = await ctx.db
-      .query('shareEvents')
-      .withIndex('by_resource', q =>
+      .query("shareEvents")
+      .withIndex("by_resource", (q) =>
         q
-          .eq('resourceType', args.resourceType)
-          .eq('resourceId', args.resourceId))
+          .eq("resourceType", args.resourceType)
+          .eq("resourceId", args.resourceId),
+      )
       .collect();
 
     // Aggregate stats by platform
@@ -331,7 +332,7 @@ export const getStats = query({
     > = {};
 
     const totalShares = shareEvents.filter(
-      e => e.eventType === 'share',
+      (e) => e.eventType === "share",
     ).length;
     let totalClicks = 0;
     let totalViews = 0;
@@ -370,7 +371,7 @@ export const getStats = query({
         clicks: totalClicks,
         views: totalViews,
         saves: totalSaves,
-        activeLinks: shareLinks.filter(l => l.isActive).length,
+        activeLinks: shareLinks.filter((l) => l.isActive).length,
       },
       byPlatform: statsByPlatform,
       recentShares: shareEvents.slice(-10).reverse(),
@@ -389,12 +390,13 @@ export const getShareLinks = query({
   },
   handler: async (ctx, args) => {
     const shareLinks = await ctx.db
-      .query('shareLinks')
-      .withIndex('by_resource', q =>
+      .query("shareLinks")
+      .withIndex("by_resource", (q) =>
         q
-          .eq('resourceType', args.resourceType)
-          .eq('resourceId', args.resourceId))
-      .filter(q => q.eq(q.field('ownerId'), args.ownerId))
+          .eq("resourceType", args.resourceType)
+          .eq("resourceId", args.resourceId),
+      )
+      .filter((q) => q.eq(q.field("ownerId"), args.ownerId))
       .collect();
 
     // Don't expose passwords
@@ -418,9 +420,9 @@ export const getShareHistory = query({
     const limit = args.limit || 20;
 
     const shareEvents = await ctx.db
-      .query('shareEvents')
-      .withIndex('by_sharer', q => q.eq('sharerId', args.userId))
-      .order('desc')
+      .query("shareEvents")
+      .withIndex("by_sharer", (q) => q.eq("sharerId", args.userId))
+      .order("desc")
       .take(limit + 1);
 
     const hasMore = shareEvents.length > limit;
@@ -439,7 +441,7 @@ export const getShareHistory = query({
  */
 export const updateShareLink = mutation({
   args: {
-    shareLinkId: v.id('shareLinks'),
+    shareLinkId: v.id("shareLinks"),
     ownerId: v.string(),
     permission: v.optional(permissionValidator),
     password: v.optional(v.string()),
@@ -453,31 +455,25 @@ export const updateShareLink = mutation({
     const shareLink = await ctx.db.get(args.shareLinkId);
 
     if (!shareLink) {
-      throw new Error('Share link not found');
+      throw new Error("Share link not found");
     }
 
     if (shareLink.ownerId !== args.ownerId) {
-      throw new Error('Not authorized to update this share link');
+      throw new Error("Not authorized to update this share link");
     }
 
     const updates: Record<string, unknown> = {
       updatedAt: Date.now(),
     };
 
-    if (args.permission !== undefined)
-      updates.permission = args.permission;
-    if (args.password !== undefined)
-      updates.password = args.password;
-    if (args.expiresAt !== undefined)
-      updates.expiresAt = args.expiresAt;
-    if (args.maxViews !== undefined)
-      updates.maxViews = args.maxViews;
+    if (args.permission !== undefined) updates.permission = args.permission;
+    if (args.password !== undefined) updates.password = args.password;
+    if (args.expiresAt !== undefined) updates.expiresAt = args.expiresAt;
+    if (args.maxViews !== undefined) updates.maxViews = args.maxViews;
     if (args.allowDownload !== undefined)
       updates.allowDownload = args.allowDownload;
-    if (args.allowCopy !== undefined)
-      updates.allowCopy = args.allowCopy;
-    if (args.isActive !== undefined)
-      updates.isActive = args.isActive;
+    if (args.allowCopy !== undefined) updates.allowCopy = args.allowCopy;
+    if (args.isActive !== undefined) updates.isActive = args.isActive;
 
     await ctx.db.patch(args.shareLinkId, updates);
 
@@ -490,18 +486,18 @@ export const updateShareLink = mutation({
  */
 export const revokeShareLink = mutation({
   args: {
-    shareLinkId: v.id('shareLinks'),
+    shareLinkId: v.id("shareLinks"),
     ownerId: v.string(),
   },
   handler: async (ctx, args) => {
     const shareLink = await ctx.db.get(args.shareLinkId);
 
     if (!shareLink) {
-      throw new Error('Share link not found');
+      throw new Error("Share link not found");
     }
 
     if (shareLink.ownerId !== args.ownerId) {
-      throw new Error('Not authorized to revoke this share link');
+      throw new Error("Not authorized to revoke this share link");
     }
 
     await ctx.db.patch(args.shareLinkId, {
@@ -518,18 +514,18 @@ export const revokeShareLink = mutation({
  */
 export const deleteShareLink = mutation({
   args: {
-    shareLinkId: v.id('shareLinks'),
+    shareLinkId: v.id("shareLinks"),
     ownerId: v.string(),
   },
   handler: async (ctx, args) => {
     const shareLink = await ctx.db.get(args.shareLinkId);
 
     if (!shareLink) {
-      throw new Error('Share link not found');
+      throw new Error("Share link not found");
     }
 
     if (shareLink.ownerId !== args.ownerId) {
-      throw new Error('Not authorized to delete this share link');
+      throw new Error("Not authorized to delete this share link");
     }
 
     await ctx.db.delete(args.shareLinkId);
@@ -554,12 +550,12 @@ export const getTopShared = query({
 
     // Get share events within the time range
     let eventsQuery = ctx.db
-      .query('shareEvents')
-      .filter(q => q.gte(q.field('createdAt'), cutoffTime));
+      .query("shareEvents")
+      .filter((q) => q.gte(q.field("createdAt"), cutoffTime));
 
     if (args.resourceType) {
-      eventsQuery = eventsQuery.filter(q =>
-        q.eq(q.field('resourceType'), args.resourceType),
+      eventsQuery = eventsQuery.filter((q) =>
+        q.eq(q.field("resourceType"), args.resourceType),
       );
     }
 
@@ -572,7 +568,7 @@ export const getTopShared = query({
     >();
 
     for (const event of events) {
-      if (event.eventType === 'share') {
+      if (event.eventType === "share") {
         const key = `${event.resourceType}:${event.resourceId}`;
         const current = sharesByResource.get(key) || {
           count: 0,
@@ -591,7 +587,7 @@ export const getTopShared = query({
       .slice(0, limit);
 
     return sortedResources.map(([key, data]) => {
-      const [resourceType, resourceId] = key.split(':');
+      const [resourceType, resourceId] = key.split(":");
       return {
         resourceType,
         resourceId,
@@ -613,8 +609,8 @@ export const cleanupOldLogs = mutation({
     const cutoffTime = Date.now() - days * 24 * 60 * 60 * 1000;
 
     const oldLogs = await ctx.db
-      .query('shareEventLogs')
-      .filter(q => q.lt(q.field('createdAt'), cutoffTime))
+      .query("shareEventLogs")
+      .filter((q) => q.lt(q.field("createdAt"), cutoffTime))
       .take(1000);
 
     let deletedCount = 0;
@@ -639,12 +635,12 @@ export const cleanupExpiredLinks = mutation({
     const now = Date.now();
 
     const expiredLinks = await ctx.db
-      .query('shareLinks')
-      .filter(q =>
+      .query("shareLinks")
+      .filter((q) =>
         q.and(
-          q.eq(q.field('isActive'), true),
-          q.neq(q.field('expiresAt'), undefined),
-          q.lt(q.field('expiresAt'), now),
+          q.eq(q.field("isActive"), true),
+          q.neq(q.field("expiresAt"), undefined),
+          q.lt(q.field("expiresAt"), now),
         ),
       )
       .take(100);
@@ -667,8 +663,8 @@ export const cleanupExpiredLinks = mutation({
 
 // Helper function to generate share code
 function generateShareCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  let code = '';
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  let code = "";
   for (let i = 0; i < 8; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }

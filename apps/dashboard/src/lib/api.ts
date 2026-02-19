@@ -3,7 +3,7 @@
  * Provides functions to interact with the crawler backend API
  */
 
-const API_BASE = '/api/crawler';
+const API_BASE = "/api/crawler";
 
 /**
  * Generic fetch wrapper with error handling
@@ -15,13 +15,13 @@ async function fetchApi<T>(
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options?.headers,
     },
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Request failed' }));
+    const error = await res.json().catch(() => ({ message: "Request failed" }));
     throw new Error(error.message || `HTTP error ${res.status}`);
   }
 
@@ -30,7 +30,7 @@ async function fetchApi<T>(
 
 // Health check
 export async function getHealth(): Promise<{ status: string }> {
-  const res = await fetch('/api/health');
+  const res = await fetch("/api/health");
   return res.json();
 }
 
@@ -40,7 +40,7 @@ export interface CrawlJob {
   name: string;
   platform: string;
   job_type: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
   config: {
     categories?: string[];
     geographic_scope?: {
@@ -93,17 +93,13 @@ export async function getCrawlJobs(params?: {
   offset?: number;
 }): Promise<PaginatedResponse<CrawlJob>> {
   const searchParams = new URLSearchParams();
-  if (params?.status)
-    searchParams.append('status', params.status);
-  if (params?.platform)
-    searchParams.append('platform', params.platform);
-  if (params?.limit)
-    searchParams.append('limit', params.limit.toString());
-  if (params?.offset)
-    searchParams.append('offset', params.offset.toString());
+  if (params?.status) searchParams.append("status", params.status);
+  if (params?.platform) searchParams.append("platform", params.platform);
+  if (params?.limit) searchParams.append("limit", params.limit.toString());
+  if (params?.offset) searchParams.append("offset", params.offset.toString());
 
   const query = searchParams.toString();
-  return fetchApi(`/crawl-jobs${query ? `?${query}` : ''}`);
+  return fetchApi(`/crawl-jobs${query ? `?${query}` : ""}`);
 }
 
 export async function getCrawlJob(id: string): Promise<CrawlJob> {
@@ -116,24 +112,24 @@ export interface CreateCrawlJobInput {
   platform: string;
   job_type?: string;
   schedule_cron?: string;
-  config?: CrawlJob['config'];
+  config?: CrawlJob["config"];
 }
 
 export async function createCrawlJob(
   input: CreateCrawlJobInput,
 ): Promise<CrawlJob> {
-  return fetchApi('/crawl-jobs', {
-    method: 'POST',
+  return fetchApi("/crawl-jobs", {
+    method: "POST",
     body: JSON.stringify(input),
   });
 }
 
 export async function startCrawlJob(id: string): Promise<CrawlJob> {
-  return fetchApi(`/crawl-jobs/${id}/start`, { method: 'POST' });
+  return fetchApi(`/crawl-jobs/${id}/start`, { method: "POST" });
 }
 
 export async function cancelCrawlJob(id: string): Promise<CrawlJob> {
-  return fetchApi(`/crawl-jobs/${id}/cancel`, { method: 'POST' });
+  return fetchApi(`/crawl-jobs/${id}/cancel`, { method: "POST" });
 }
 
 // Scheduler Status API
@@ -155,7 +151,7 @@ export interface SchedulerStatus {
 
 export async function getSchedulerStatus(): Promise<SchedulerStatus> {
   const response = await fetchApi<{ data: SchedulerStatus }>(
-    '/crawl-jobs/scheduler/status',
+    "/crawl-jobs/scheduler/status",
   );
   return response.data;
 }
@@ -164,7 +160,7 @@ export async function startScheduledTask(
   name: string,
 ): Promise<{ message: string }> {
   return fetchApi(`/crawl-jobs/scheduler/tasks/${name}/start`, {
-    method: 'POST',
+    method: "POST",
   });
 }
 
@@ -172,7 +168,7 @@ export async function stopScheduledTask(
   name: string,
 ): Promise<{ message: string }> {
   return fetchApi(`/crawl-jobs/scheduler/tasks/${name}/stop`, {
-    method: 'POST',
+    method: "POST",
   });
 }
 
@@ -227,21 +223,16 @@ export async function getPOIs(params?: {
   offset?: number;
 }): Promise<PaginatedResponse<NormalizedPOI>> {
   const searchParams = new URLSearchParams();
-  if (params?.query)
-    searchParams.append('query', params.query);
-  if (params?.category)
-    searchParams.append('category', params.category);
-  if (params?.city)
-    searchParams.append('city', params.city);
+  if (params?.query) searchParams.append("query", params.query);
+  if (params?.category) searchParams.append("category", params.category);
+  if (params?.city) searchParams.append("city", params.city);
   if (params?.min_quality)
-    searchParams.append('min_quality', params.min_quality.toString());
-  if (params?.limit)
-    searchParams.append('limit', params.limit.toString());
-  if (params?.offset)
-    searchParams.append('offset', params.offset.toString());
+    searchParams.append("min_quality", params.min_quality.toString());
+  if (params?.limit) searchParams.append("limit", params.limit.toString());
+  if (params?.offset) searchParams.append("offset", params.offset.toString());
 
   const query = searchParams.toString();
-  return fetchApi(`/pois${query ? `?${query}` : ''}`);
+  return fetchApi(`/pois${query ? `?${query}` : ""}`);
 }
 
 export async function getPOI(id: string): Promise<NormalizedPOI> {
@@ -252,7 +243,7 @@ export async function normalizePOIs(): Promise<{
   success: boolean;
   stats: { normalized: number; skipped: number; failed: number };
 }> {
-  return fetchApi('/pois/normalize', { method: 'POST' });
+  return fetchApi("/pois/normalize", { method: "POST" });
 }
 
 // Training Datasets API
@@ -260,7 +251,7 @@ export interface TrainingDataset {
   id: string;
   name: string;
   type: string;
-  status: 'pending' | 'generating' | 'completed' | 'failed';
+  status: "pending" | "generating" | "completed" | "failed";
   config?: Record<string, unknown>;
   statistics?: {
     total_records: number;
@@ -278,17 +269,13 @@ export async function getTrainingDatasets(params?: {
   offset?: number;
 }): Promise<PaginatedResponse<TrainingDataset>> {
   const searchParams = new URLSearchParams();
-  if (params?.type)
-    searchParams.append('type', params.type);
-  if (params?.status)
-    searchParams.append('status', params.status);
-  if (params?.limit)
-    searchParams.append('limit', params.limit.toString());
-  if (params?.offset)
-    searchParams.append('offset', params.offset.toString());
+  if (params?.type) searchParams.append("type", params.type);
+  if (params?.status) searchParams.append("status", params.status);
+  if (params?.limit) searchParams.append("limit", params.limit.toString());
+  if (params?.offset) searchParams.append("offset", params.offset.toString());
 
   const query = searchParams.toString();
-  return fetchApi(`/training-datasets${query ? `?${query}` : ''}`);
+  return fetchApi(`/training-datasets${query ? `?${query}` : ""}`);
 }
 
 export async function getTrainingDataset(id: string): Promise<TrainingDataset> {
@@ -298,7 +285,7 @@ export async function getTrainingDataset(id: string): Promise<TrainingDataset> {
 // Travel Guides API
 export interface TravelGuide {
   id: string;
-  source_platform: 'xiaohongshu' | 'weibo' | 'ctrip';
+  source_platform: "xiaohongshu" | "weibo" | "ctrip";
   source_external_id: string;
   source_url?: string;
   title?: string;
@@ -328,26 +315,21 @@ export async function getTravelGuides(params?: {
   limit?: number;
   offset?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
 }): Promise<PaginatedResponse<TravelGuide>> {
   const searchParams = new URLSearchParams();
-  if (params?.platforms)
-    searchParams.append('platforms', params.platforms);
+  if (params?.platforms) searchParams.append("platforms", params.platforms);
   if (params?.destinations)
-    searchParams.append('destinations', params.destinations);
+    searchParams.append("destinations", params.destinations);
   if (params?.min_quality)
-    searchParams.append('min_quality', params.min_quality.toString());
-  if (params?.limit)
-    searchParams.append('limit', params.limit.toString());
-  if (params?.offset)
-    searchParams.append('offset', params.offset.toString());
-  if (params?.sort)
-    searchParams.append('sort', params.sort);
-  if (params?.order)
-    searchParams.append('order', params.order);
+    searchParams.append("min_quality", params.min_quality.toString());
+  if (params?.limit) searchParams.append("limit", params.limit.toString());
+  if (params?.offset) searchParams.append("offset", params.offset.toString());
+  if (params?.sort) searchParams.append("sort", params.sort);
+  if (params?.order) searchParams.append("order", params.order);
 
   const query = searchParams.toString();
-  return fetchApi(`/guides${query ? `?${query}` : ''}`);
+  return fetchApi(`/guides${query ? `?${query}` : ""}`);
 }
 
 export async function getTravelGuide(
@@ -365,18 +347,14 @@ export async function getGuideRecommendations(params?: {
 }): Promise<PaginatedResponse<TravelGuide>> {
   const searchParams = new URLSearchParams();
   if (params?.destinations)
-    searchParams.append('destinations', params.destinations);
-  if (params?.tags)
-    searchParams.append('tags', params.tags);
-  if (params?.platforms)
-    searchParams.append('platforms', params.platforms);
-  if (params?.limit)
-    searchParams.append('limit', params.limit.toString());
-  if (params?.offset)
-    searchParams.append('offset', params.offset.toString());
+    searchParams.append("destinations", params.destinations);
+  if (params?.tags) searchParams.append("tags", params.tags);
+  if (params?.platforms) searchParams.append("platforms", params.platforms);
+  if (params?.limit) searchParams.append("limit", params.limit.toString());
+  if (params?.offset) searchParams.append("offset", params.offset.toString());
 
   const query = searchParams.toString();
-  return fetchApi(`/guides/recommendations${query ? `?${query}` : ''}`);
+  return fetchApi(`/guides/recommendations${query ? `?${query}` : ""}`);
 }
 
 export async function getTrendingGuides(params?: {
@@ -385,15 +363,12 @@ export async function getTrendingGuides(params?: {
   limit?: number;
 }): Promise<{ data: TravelGuide[]; period_days: number }> {
   const searchParams = new URLSearchParams();
-  if (params?.days)
-    searchParams.append('days', params.days.toString());
-  if (params?.platforms)
-    searchParams.append('platforms', params.platforms);
-  if (params?.limit)
-    searchParams.append('limit', params.limit.toString());
+  if (params?.days) searchParams.append("days", params.days.toString());
+  if (params?.platforms) searchParams.append("platforms", params.platforms);
+  if (params?.limit) searchParams.append("limit", params.limit.toString());
 
   const query = searchParams.toString();
-  return fetchApi(`/guides/trending${query ? `?${query}` : ''}`);
+  return fetchApi(`/guides/trending${query ? `?${query}` : ""}`);
 }
 
 export async function searchGuides(params: {
@@ -404,15 +379,12 @@ export async function searchGuides(params: {
   offset?: number;
 }): Promise<PaginatedResponse<TravelGuide>> {
   const searchParams = new URLSearchParams();
-  searchParams.append('q', params.q);
-  if (params.platforms)
-    searchParams.append('platforms', params.platforms);
+  searchParams.append("q", params.q);
+  if (params.platforms) searchParams.append("platforms", params.platforms);
   if (params.destinations)
-    searchParams.append('destinations', params.destinations);
-  if (params.limit)
-    searchParams.append('limit', params.limit.toString());
-  if (params.offset)
-    searchParams.append('offset', params.offset.toString());
+    searchParams.append("destinations", params.destinations);
+  if (params.limit) searchParams.append("limit", params.limit.toString());
+  if (params.offset) searchParams.append("offset", params.offset.toString());
 
   return fetchApi(`/guides/search?${searchParams.toString()}`);
 }

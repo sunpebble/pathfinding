@@ -1,6 +1,6 @@
-import type { Doc } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Doc } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Itinerary Favorites - Save itineraries to collections
@@ -10,19 +10,19 @@ import { mutation, query } from './_generated/server';
 export const add = mutation({
   args: {
     userId: v.string(),
-    itineraryId: v.id('itineraries'),
-    collectionId: v.optional(v.id('favoriteCollections')),
+    itineraryId: v.id("itineraries"),
+    collectionId: v.optional(v.id("favoriteCollections")),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Check if itinerary exists and is accessible
     const itinerary = await ctx.db.get(args.itineraryId);
     if (!itinerary) {
-      throw new Error('Itinerary not found');
+      throw new Error("Itinerary not found");
     }
 
-    if (itinerary.visibility !== 'public' && itinerary.userId !== args.userId) {
-      throw new Error('Cannot favorite a private itinerary');
+    if (itinerary.visibility !== "public" && itinerary.userId !== args.userId) {
+      throw new Error("Cannot favorite a private itinerary");
     }
 
     // Get or create default collection if not specified
@@ -30,41 +30,41 @@ export const add = mutation({
     if (!collectionId) {
       // Find default collection
       const defaultCollection = await ctx.db
-        .query('favoriteCollections')
-        .withIndex('by_user_default', q =>
-          q.eq('userId', args.userId).eq('isDefault', true))
+        .query("favoriteCollections")
+        .withIndex("by_user_default", (q) =>
+          q.eq("userId", args.userId).eq("isDefault", true),
+        )
         .first();
 
       if (defaultCollection) {
         collectionId = defaultCollection._id;
-      }
-      else {
+      } else {
         // Create default collection
         const now = Date.now();
-        collectionId = await ctx.db.insert('favoriteCollections', {
+        collectionId = await ctx.db.insert("favoriteCollections", {
           userId: args.userId,
-          name: '我的收藏',
-          description: '默认收藏夹',
+          name: "我的收藏",
+          description: "默认收藏夹",
           isDefault: true,
           sortOrder: 0,
           createdAt: now,
           updatedAt: now,
         });
       }
-    }
-    else {
+    } else {
       // Verify collection belongs to user
       const collection = await ctx.db.get(collectionId);
       if (!collection || collection.userId !== args.userId) {
-        throw new Error('Collection not found');
+        throw new Error("Collection not found");
       }
     }
 
     // Check if already favorited in this collection
     const existing = await ctx.db
-      .query('itineraryFavorites')
-      .withIndex('by_user_itinerary', q =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
+      .query("itineraryFavorites")
+      .withIndex("by_user_itinerary", (q) =>
+        q.eq("userId", args.userId).eq("itineraryId", args.itineraryId),
+      )
       .first();
 
     if (existing) {
@@ -84,7 +84,7 @@ export const add = mutation({
     }
 
     // Add new favorite
-    const favoriteId = await ctx.db.insert('itineraryFavorites', {
+    const favoriteId = await ctx.db.insert("itineraryFavorites", {
       userId: args.userId,
       itineraryId: args.itineraryId,
       collectionId,
@@ -100,13 +100,14 @@ export const add = mutation({
 export const remove = mutation({
   args: {
     userId: v.string(),
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db
-      .query('itineraryFavorites')
-      .withIndex('by_user_itinerary', q =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
+      .query("itineraryFavorites")
+      .withIndex("by_user_itinerary", (q) =>
+        q.eq("userId", args.userId).eq("itineraryId", args.itineraryId),
+      )
       .first();
 
     if (favorite) {
@@ -122,14 +123,15 @@ export const remove = mutation({
 export const toggle = mutation({
   args: {
     userId: v.string(),
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     // Check if already favorited
     const existing = await ctx.db
-      .query('itineraryFavorites')
-      .withIndex('by_user_itinerary', q =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
+      .query("itineraryFavorites")
+      .withIndex("by_user_itinerary", (q) =>
+        q.eq("userId", args.userId).eq("itineraryId", args.itineraryId),
+      )
       .first();
 
     if (existing) {
@@ -141,26 +143,27 @@ export const toggle = mutation({
     // Check if itinerary exists and is accessible
     const itinerary = await ctx.db.get(args.itineraryId);
     if (!itinerary) {
-      throw new Error('Itinerary not found');
+      throw new Error("Itinerary not found");
     }
 
-    if (itinerary.visibility !== 'public' && itinerary.userId !== args.userId) {
-      throw new Error('Cannot favorite a private itinerary');
+    if (itinerary.visibility !== "public" && itinerary.userId !== args.userId) {
+      throw new Error("Cannot favorite a private itinerary");
     }
 
     // Get or create default collection
     let defaultCollection = await ctx.db
-      .query('favoriteCollections')
-      .withIndex('by_user_default', q =>
-        q.eq('userId', args.userId).eq('isDefault', true))
+      .query("favoriteCollections")
+      .withIndex("by_user_default", (q) =>
+        q.eq("userId", args.userId).eq("isDefault", true),
+      )
       .first();
 
     if (!defaultCollection) {
       const now = Date.now();
-      const collectionId = await ctx.db.insert('favoriteCollections', {
+      const collectionId = await ctx.db.insert("favoriteCollections", {
         userId: args.userId,
-        name: '我的收藏',
-        description: '默认收藏夹',
+        name: "我的收藏",
+        description: "默认收藏夹",
         isDefault: true,
         sortOrder: 0,
         createdAt: now,
@@ -170,7 +173,7 @@ export const toggle = mutation({
     }
 
     // Add favorite
-    await ctx.db.insert('itineraryFavorites', {
+    await ctx.db.insert("itineraryFavorites", {
       userId: args.userId,
       itineraryId: args.itineraryId,
       collectionId: defaultCollection!._id,
@@ -185,13 +188,14 @@ export const toggle = mutation({
 export const isFavorited = query({
   args: {
     userId: v.string(),
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db
-      .query('itineraryFavorites')
-      .withIndex('by_user_itinerary', q =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
+      .query("itineraryFavorites")
+      .withIndex("by_user_itinerary", (q) =>
+        q.eq("userId", args.userId).eq("itineraryId", args.itineraryId),
+      )
       .first();
 
     return {
@@ -204,12 +208,12 @@ export const isFavorited = query({
 // Get favorite count for an itinerary
 export const getCount = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     const favorites = await ctx.db
-      .query('itineraryFavorites')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("itineraryFavorites")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     return { count: favorites.length };
@@ -220,7 +224,7 @@ export const getCount = query({
 export const listByUser = query({
   args: {
     userId: v.string(),
-    collectionId: v.optional(v.id('favoriteCollections')),
+    collectionId: v.optional(v.id("favoriteCollections")),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
   },
@@ -232,17 +236,17 @@ export const listByUser = query({
     let favorites;
     if (args.collectionId) {
       favorites = await ctx.db
-        .query('itineraryFavorites')
-        .withIndex('by_user_collection', q =>
-          q.eq('userId', args.userId).eq('collectionId', args.collectionId))
-        .order('desc')
+        .query("itineraryFavorites")
+        .withIndex("by_user_collection", (q) =>
+          q.eq("userId", args.userId).eq("collectionId", args.collectionId),
+        )
+        .order("desc")
         .collect();
-    }
-    else {
+    } else {
       favorites = await ctx.db
-        .query('itineraryFavorites')
-        .withIndex('by_user', q => q.eq('userId', args.userId))
-        .order('desc')
+        .query("itineraryFavorites")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .order("desc")
         .collect();
     }
 
@@ -254,17 +258,16 @@ export const listByUser = query({
       paginatedFavorites.map(async (fav) => {
         const itinerary = (await ctx.db.get(
           fav.itineraryId,
-        )) as Doc<'itineraries'> | null;
-        if (!itinerary)
-          return null;
+        )) as Doc<"itineraries"> | null;
+        if (!itinerary) return null;
 
         const city = (await ctx.db.get(
           itinerary.cityId,
-        )) as Doc<'cities'> | null;
+        )) as Doc<"cities"> | null;
         const collection = fav.collectionId
           ? ((await ctx.db.get(
               fav.collectionId,
-            )) as Doc<'favoriteCollections'> | null)
+            )) as Doc<"favoriteCollections"> | null)
           : null;
 
         return {
@@ -278,7 +281,7 @@ export const listByUser = query({
       }),
     );
 
-    const data = enriched.filter(item => item !== null);
+    const data = enriched.filter((item) => item !== null);
 
     return { data, total };
   },
@@ -288,23 +291,23 @@ export const listByUser = query({
 export const moveToCollection = mutation({
   args: {
     userId: v.string(),
-    favoriteId: v.id('itineraryFavorites'),
-    newCollectionId: v.id('favoriteCollections'),
+    favoriteId: v.id("itineraryFavorites"),
+    newCollectionId: v.id("favoriteCollections"),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db.get(args.favoriteId);
     if (!favorite) {
-      throw new Error('Favorite not found');
+      throw new Error("Favorite not found");
     }
 
     if (favorite.userId !== args.userId) {
-      throw new Error('Not authorized');
+      throw new Error("Not authorized");
     }
 
     // Verify new collection belongs to user
     const collection = await ctx.db.get(args.newCollectionId);
     if (!collection || collection.userId !== args.userId) {
-      throw new Error('Collection not found');
+      throw new Error("Collection not found");
     }
 
     await ctx.db.patch(args.favoriteId, {
@@ -319,17 +322,17 @@ export const moveToCollection = mutation({
 export const updateNotes = mutation({
   args: {
     userId: v.string(),
-    favoriteId: v.id('itineraryFavorites'),
+    favoriteId: v.id("itineraryFavorites"),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db.get(args.favoriteId);
     if (!favorite) {
-      throw new Error('Favorite not found');
+      throw new Error("Favorite not found");
     }
 
     if (favorite.userId !== args.userId) {
-      throw new Error('Not authorized');
+      throw new Error("Not authorized");
     }
 
     await ctx.db.patch(args.favoriteId, { notes: args.notes });
@@ -341,7 +344,7 @@ export const updateNotes = mutation({
 export const batchCheckFavorites = query({
   args: {
     userId: v.string(),
-    itineraryIds: v.array(v.id('itineraries')),
+    itineraryIds: v.array(v.id("itineraries")),
   },
   handler: async (ctx, args) => {
     const results: Record<string, boolean> = {};
@@ -349,9 +352,10 @@ export const batchCheckFavorites = query({
     await Promise.all(
       args.itineraryIds.map(async (itineraryId) => {
         const favorite = await ctx.db
-          .query('itineraryFavorites')
-          .withIndex('by_user_itinerary', q =>
-            q.eq('userId', args.userId).eq('itineraryId', itineraryId))
+          .query("itineraryFavorites")
+          .withIndex("by_user_itinerary", (q) =>
+            q.eq("userId", args.userId).eq("itineraryId", itineraryId),
+          )
           .first();
 
         results[itineraryId] = !!favorite;
@@ -365,7 +369,7 @@ export const batchCheckFavorites = query({
 // Batch get favorite counts for multiple itineraries
 export const batchGetCounts = query({
   args: {
-    itineraryIds: v.array(v.id('itineraries')),
+    itineraryIds: v.array(v.id("itineraries")),
   },
   handler: async (ctx, args) => {
     const results: Record<string, number> = {};
@@ -373,8 +377,8 @@ export const batchGetCounts = query({
     await Promise.all(
       args.itineraryIds.map(async (itineraryId) => {
         const favorites = await ctx.db
-          .query('itineraryFavorites')
-          .withIndex('by_itinerary', q => q.eq('itineraryId', itineraryId))
+          .query("itineraryFavorites")
+          .withIndex("by_itinerary", (q) => q.eq("itineraryId", itineraryId))
           .collect();
 
         results[itineraryId] = favorites.length;

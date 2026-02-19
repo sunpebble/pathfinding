@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * WiFi Spots - Public WiFi hotspot queries and mutations
@@ -9,16 +9,16 @@ import { mutation, query } from './_generated/server';
 
 // WiFi spot type validator
 const wifiSpotTypeValidator = v.union(
-  v.literal('hotel'),
-  v.literal('restaurant'),
-  v.literal('cafe'),
-  v.literal('airport'),
-  v.literal('train_station'),
-  v.literal('shopping_mall'),
-  v.literal('library'),
-  v.literal('coworking'),
-  v.literal('public'),
-  v.literal('other'),
+  v.literal("hotel"),
+  v.literal("restaurant"),
+  v.literal("cafe"),
+  v.literal("airport"),
+  v.literal("train_station"),
+  v.literal("shopping_mall"),
+  v.literal("library"),
+  v.literal("coworking"),
+  v.literal("public"),
+  v.literal("other"),
 );
 
 // WiFi quality rating validator (1-5)
@@ -27,7 +27,7 @@ const _qualityRatingValidator = v.number();
 // List WiFi spots with optional filters
 export const list = query({
   args: {
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     type: v.optional(wifiSpotTypeValidator),
     limit: v.optional(v.number()),
   },
@@ -36,29 +36,27 @@ export const list = query({
 
     if (args.cityId && args.type) {
       results = await ctx.db
-        .query('wifiSpots')
-        .withIndex('by_city_type', q =>
-          q.eq('cityId', args.cityId!).eq('type', args.type!))
+        .query("wifiSpots")
+        .withIndex("by_city_type", (q) =>
+          q.eq("cityId", args.cityId!).eq("type", args.type!),
+        )
         .collect();
-    }
-    else if (args.cityId) {
+    } else if (args.cityId) {
       results = await ctx.db
-        .query('wifiSpots')
-        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
+        .query("wifiSpots")
+        .withIndex("by_city", (q) => q.eq("cityId", args.cityId!))
         .collect();
-    }
-    else if (args.type) {
+    } else if (args.type) {
       results = await ctx.db
-        .query('wifiSpots')
-        .withIndex('by_type', q => q.eq('type', args.type!))
+        .query("wifiSpots")
+        .withIndex("by_type", (q) => q.eq("type", args.type!))
         .collect();
-    }
-    else {
-      results = await ctx.db.query('wifiSpots').collect();
+    } else {
+      results = await ctx.db.query("wifiSpots").collect();
     }
 
     // Filter only verified spots
-    results = results.filter(spot => spot.isVerified);
+    results = results.filter((spot) => spot.isVerified);
 
     return args.limit ? results.slice(0, args.limit) : results;
   },
@@ -66,7 +64,7 @@ export const list = query({
 
 // Get a WiFi spot by ID
 export const getById = query({
-  args: { id: v.id('wifiSpots') },
+  args: { id: v.id("wifiSpots") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -87,20 +85,19 @@ export const getNearby = query({
     let spots;
     if (args.type) {
       spots = await ctx.db
-        .query('wifiSpots')
-        .withIndex('by_type', q => q.eq('type', args.type!))
+        .query("wifiSpots")
+        .withIndex("by_type", (q) => q.eq("type", args.type!))
         .take(maxFetch);
-    }
-    else {
-      spots = await ctx.db.query('wifiSpots').take(maxFetch);
+    } else {
+      spots = await ctx.db.query("wifiSpots").take(maxFetch);
     }
 
     // Filter only verified spots
-    spots = spots.filter(spot => spot.isVerified);
+    spots = spots.filter((spot) => spot.isVerified);
 
     // Calculate distance and filter
     const spotsWithDistance = spots
-      .map(spot => ({
+      .map((spot) => ({
         ...spot,
         distance: calculateDistanceKm(
           args.latitude,
@@ -109,7 +106,7 @@ export const getNearby = query({
           spot.longitude,
         ),
       }))
-      .filter(spot => spot.distance <= args.radiusKm)
+      .filter((spot) => spot.distance <= args.radiusKm)
       .sort((a, b) => a.distance - b.distance);
 
     const limit = args.limit ?? 50;
@@ -121,7 +118,7 @@ export const getNearby = query({
 export const search = query({
   args: {
     query: v.string(),
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     type: v.optional(wifiSpotTypeValidator),
     limit: v.optional(v.number()),
   },
@@ -133,37 +130,35 @@ export const search = query({
 
     if (args.cityId && args.type) {
       spots = await ctx.db
-        .query('wifiSpots')
-        .withIndex('by_city_type', q =>
-          q.eq('cityId', args.cityId!).eq('type', args.type!))
+        .query("wifiSpots")
+        .withIndex("by_city_type", (q) =>
+          q.eq("cityId", args.cityId!).eq("type", args.type!),
+        )
         .take(fetchLimit);
-    }
-    else if (args.cityId) {
+    } else if (args.cityId) {
       spots = await ctx.db
-        .query('wifiSpots')
-        .withIndex('by_city', q => q.eq('cityId', args.cityId!))
+        .query("wifiSpots")
+        .withIndex("by_city", (q) => q.eq("cityId", args.cityId!))
         .take(fetchLimit);
-    }
-    else if (args.type) {
+    } else if (args.type) {
       spots = await ctx.db
-        .query('wifiSpots')
-        .withIndex('by_type', q => q.eq('type', args.type!))
+        .query("wifiSpots")
+        .withIndex("by_type", (q) => q.eq("type", args.type!))
         .take(fetchLimit);
-    }
-    else {
-      spots = await ctx.db.query('wifiSpots').take(fetchLimit);
+    } else {
+      spots = await ctx.db.query("wifiSpots").take(fetchLimit);
     }
 
     // Filter only verified spots
-    spots = spots.filter(spot => spot.isVerified);
+    spots = spots.filter((spot) => spot.isVerified);
 
     // Search by name
     const searchLower = args.query.toLowerCase();
     spots = spots.filter(
-      spot =>
-        spot.name.toLowerCase().includes(searchLower)
-        || spot.nameEn?.toLowerCase().includes(searchLower)
-        || spot.address?.toLowerCase().includes(searchLower),
+      (spot) =>
+        spot.name.toLowerCase().includes(searchLower) ||
+        spot.nameEn?.toLowerCase().includes(searchLower) ||
+        spot.address?.toLowerCase().includes(searchLower),
     );
 
     // Sort by average rating (descending)
@@ -179,7 +174,7 @@ export const create = mutation({
     name: v.string(),
     nameEn: v.optional(v.string()),
     type: wifiSpotTypeValidator,
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     address: v.optional(v.string()),
     latitude: v.number(),
     longitude: v.number(),
@@ -190,11 +185,11 @@ export const create = mutation({
     openingHours: v.optional(v.string()),
     description: v.optional(v.string()),
     imageUrls: v.optional(v.array(v.string())),
-    poiId: v.optional(v.id('pois')),
+    poiId: v.optional(v.id("pois")),
     submittedBy: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('wifiSpots', {
+    return await ctx.db.insert("wifiSpots", {
       ...args,
       averageRating: 0,
       ratingCount: 0,
@@ -208,7 +203,7 @@ export const create = mutation({
 // Update a WiFi spot
 export const update = mutation({
   args: {
-    id: v.id('wifiSpots'),
+    id: v.id("wifiSpots"),
     name: v.optional(v.string()),
     nameEn: v.optional(v.string()),
     type: v.optional(wifiSpotTypeValidator),
@@ -236,7 +231,7 @@ export const update = mutation({
 // Verify/approve a WiFi spot (admin action)
 export const verify = mutation({
   args: {
-    id: v.id('wifiSpots'),
+    id: v.id("wifiSpots"),
     verifiedBy: v.string(),
   },
   handler: async (ctx, args) => {
@@ -252,7 +247,7 @@ export const verify = mutation({
 
 // Delete a WiFi spot
 export const remove = mutation({
-  args: { id: v.id('wifiSpots') },
+  args: { id: v.id("wifiSpots") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -261,7 +256,7 @@ export const remove = mutation({
 // Rate a WiFi spot (update average rating)
 export const updateRating = mutation({
   args: {
-    id: v.id('wifiSpots'),
+    id: v.id("wifiSpots"),
     averageRating: v.number(),
     ratingCount: v.number(),
   },
@@ -285,12 +280,12 @@ function calculateDistanceKm(
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a
-    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-      + Math.cos((lat1 * Math.PI) / 180)
-      * Math.cos((lat2 * Math.PI) / 180)
-      * Math.sin(dLng / 2)
-      * Math.sin(dLng / 2);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }

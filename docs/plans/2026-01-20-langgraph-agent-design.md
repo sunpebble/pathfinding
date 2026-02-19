@@ -59,7 +59,7 @@ apps/ai-service/src/
 
 ```typescript
 // lib/llm/index.ts
-type LLMProvider = 'ollama' | 'openai' | 'claude';
+type LLMProvider = "ollama" | "openai" | "claude";
 
 interface LLMConfig {
   provider: LLMProvider;

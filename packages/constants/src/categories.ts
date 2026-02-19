@@ -1,4 +1,4 @@
-import type { PoiCategory } from '@pathfinding/types';
+import type { PoiCategory } from "@pathfinding/types";
 
 /**
  * POI category definitions with display labels
@@ -8,59 +8,59 @@ export const POI_CATEGORIES: Record<
   { label: string; labelEn: string; icon: string }
 > = {
   attraction: {
-    label: '景点',
-    labelEn: 'Attraction',
-    icon: 'landmark',
+    label: "景点",
+    labelEn: "Attraction",
+    icon: "landmark",
   },
   restaurant: {
-    label: '餐饮',
-    labelEn: 'Restaurant',
-    icon: 'utensils',
+    label: "餐饮",
+    labelEn: "Restaurant",
+    icon: "utensils",
   },
   hotel: {
-    label: '住宿',
-    labelEn: 'Hotel',
-    icon: 'bed',
+    label: "住宿",
+    labelEn: "Hotel",
+    icon: "bed",
   },
   shopping: {
-    label: '购物',
-    labelEn: 'Shopping',
-    icon: 'shopping-bag',
+    label: "购物",
+    labelEn: "Shopping",
+    icon: "shopping-bag",
   },
   cafe: {
-    label: '咖啡',
-    labelEn: 'Cafe',
-    icon: 'coffee',
+    label: "咖啡",
+    labelEn: "Cafe",
+    icon: "coffee",
   },
   bar: {
-    label: '酒吧',
-    labelEn: 'Bar',
-    icon: 'wine',
+    label: "酒吧",
+    labelEn: "Bar",
+    icon: "wine",
   },
   museum: {
-    label: '博物馆',
-    labelEn: 'Museum',
-    icon: 'building-columns',
+    label: "博物馆",
+    labelEn: "Museum",
+    icon: "building-columns",
   },
   park: {
-    label: '公园',
-    labelEn: 'Park',
-    icon: 'tree',
+    label: "公园",
+    labelEn: "Park",
+    icon: "tree",
   },
   entertainment: {
-    label: '娱乐',
-    labelEn: 'Entertainment',
-    icon: 'theater-masks',
+    label: "娱乐",
+    labelEn: "Entertainment",
+    icon: "theater-masks",
   },
   transport: {
-    label: '交通',
-    labelEn: 'Transport',
-    icon: 'train',
+    label: "交通",
+    labelEn: "Transport",
+    icon: "train",
   },
   other: {
-    label: '其他',
-    labelEn: 'Other',
-    icon: 'map-pin',
+    label: "其他",
+    labelEn: "Other",
+    icon: "map-pin",
   },
 };
 
@@ -68,17 +68,17 @@ export const POI_CATEGORIES: Record<
  * All POI category values
  */
 export const POI_CATEGORY_VALUES: PoiCategory[] = [
-  'attraction',
-  'restaurant',
-  'hotel',
-  'shopping',
-  'cafe',
-  'bar',
-  'museum',
-  'park',
-  'entertainment',
-  'transport',
-  'other',
+  "attraction",
+  "restaurant",
+  "hotel",
+  "shopping",
+  "cafe",
+  "bar",
+  "museum",
+  "park",
+  "entertainment",
+  "transport",
+  "other",
 ];
 
 /**
@@ -86,10 +86,10 @@ export const POI_CATEGORY_VALUES: PoiCategory[] = [
  */
 export function getCategoryLabel(
   category: PoiCategory,
-  locale: 'zh' | 'en' = 'zh',
+  locale: "zh" | "en" = "zh",
 ): string {
   const cat = POI_CATEGORIES[category];
-  return locale === 'zh' ? cat.label : cat.labelEn;
+  return locale === "zh" ? cat.label : cat.labelEn;
 }
 
 /**

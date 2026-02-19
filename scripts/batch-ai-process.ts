@@ -14,19 +14,19 @@
  *   AI_MODEL - 使用的模型 (默认: gemini-3-pro-high)
  */
 
-import type { Id } from '../convex/_generated/dataModel';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api';
+import type { Id } from "../convex/_generated/dataModel";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../convex/_generated/api";
 
 // ============================================
 // 配置
 // ============================================
 
 const config = {
-  convexUrl: process.env.CONVEX_URL || 'https://convex.kunish.org',
-  aiBaseUrl: process.env.AI_BASE_URL || 'https://o.kunish.org',
-  aiApiKey: process.env.AI_API_KEY || '',
-  aiModel: process.env.AI_MODEL || 'gemini-3-pro-high',
+  convexUrl: process.env.CONVEX_URL || "https://convex.kunish.org",
+  aiBaseUrl: process.env.AI_BASE_URL || "https://o.kunish.org",
+  aiApiKey: process.env.AI_API_KEY || "",
+  aiModel: process.env.AI_MODEL || "gemini-3-pro-high",
   batchSize: 10,
   delayBetweenRequests: 2000, // 2 秒
 };
@@ -36,7 +36,7 @@ const config = {
 // ============================================
 
 interface Guide {
-  _id: Id<'travelGuides'>;
+  _id: Id<"travelGuides">;
   title?: string;
   content: string;
   destinations: string[];
@@ -90,14 +90,13 @@ function log(message: string, data?: unknown) {
   const timestamp = new Date().toISOString();
   if (data) {
     console.warn(`[${timestamp}] ${message}`, JSON.stringify(data, null, 2));
-  }
-  else {
+  } else {
     console.warn(`[${timestamp}] ${message}`);
   }
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -108,9 +107,9 @@ function cleanNullValues<T>(obj: T): T {
     return undefined as T;
   }
   if (Array.isArray(obj)) {
-    return obj.map(item => cleanNullValues(item)) as T;
+    return obj.map((item) => cleanNullValues(item)) as T;
   }
-  if (typeof obj === 'object' && obj !== null) {
+  if (typeof obj === "object" && obj !== null) {
     const cleaned: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       const cleanedValue = cleanNullValues(value);
@@ -179,7 +178,7 @@ async function callAI(
 ): Promise<AIResponse | null> {
   const userPrompt = `请分析以下游记并提取结构化信息：
 
-标题：${title || '无标题'}
+标题：${title || "无标题"}
 
 内容：
 ${content.slice(0, 15000)}
@@ -187,16 +186,16 @@ ${content.slice(0, 15000)}
 
   try {
     const response = await fetch(`${config.aiBaseUrl}/v1/chat/completions`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.aiApiKey}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.aiApiKey}`,
       },
       body: JSON.stringify({
         model: config.aiModel,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userPrompt },
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
         ],
         temperature: 0.3,
         max_tokens: 4096,
@@ -212,7 +211,7 @@ ${content.slice(0, 15000)}
     const assistantMessage = data.choices?.[0]?.message?.content;
 
     if (!assistantMessage) {
-      throw new Error('Empty AI response');
+      throw new Error("Empty AI response");
     }
 
     // 尝试解析 JSON
@@ -223,11 +222,10 @@ ${content.slice(0, 15000)}
     const jsonMatch = jsonStr.match(/```(?:json)?\n?([\s\S]*?)```/);
     if (jsonMatch) {
       jsonStr = jsonMatch[1].trim();
-    }
-    else {
+    } else {
       // 尝试直接找第一个 { 到最后一个 } 之间的内容
-      const firstBrace = jsonStr.indexOf('{');
-      const lastBrace = jsonStr.lastIndexOf('}');
+      const firstBrace = jsonStr.indexOf("{");
+      const lastBrace = jsonStr.lastIndexOf("}");
       if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
         jsonStr = jsonStr.slice(firstBrace, lastBrace + 1);
       }
@@ -236,11 +234,11 @@ ${content.slice(0, 15000)}
     // 修复常见 JSON 错误
     jsonStr = jsonStr
       // 移除尾部逗号 (在 ] 或 } 之前)
-      .replace(/,\s*([}\]])/g, '$1')
+      .replace(/,\s*([}\]])/g, "$1")
       // 修复缺失的逗号 (在 } 和 { 之间, 或 " 和 " 之间的换行处)
       .replace(
         /\}[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*\{/g,
-        '},\n{',
+        "},\n{",
       )
       .replace(
         /"[\t\v\f\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]*\n\s*"/g,
@@ -250,16 +248,14 @@ ${content.slice(0, 15000)}
     let parsed: AIResponse;
     try {
       parsed = JSON.parse(jsonStr.trim()) as AIResponse;
-    }
-    catch {
+    } catch {
       // 最后尝试: 截断到最后一个有效的 } 或 ]
       let depth = 0;
       let lastValid = -1;
       for (let i = 0; i < jsonStr.length; i++) {
         const ch = jsonStr[i];
-        if (ch === '{' || ch === '[')
-          depth++;
-        if (ch === '}' || ch === ']') {
+        if (ch === "{" || ch === "[") depth++;
+        if (ch === "}" || ch === "]") {
           depth--;
           if (depth === 0) {
             lastValid = i;
@@ -269,17 +265,15 @@ ${content.slice(0, 15000)}
       }
       if (lastValid > 0) {
         parsed = JSON.parse(jsonStr.slice(0, lastValid + 1)) as AIResponse;
-      }
-      else {
-        throw new Error('Cannot repair JSON');
+      } else {
+        throw new Error("Cannot repair JSON");
       }
     }
 
     // 清理 null 值
     return cleanNullValues(parsed);
-  }
-  catch (error) {
-    log('AI call failed', {
+  } catch (error) {
+    log("AI call failed", {
       error: error instanceof Error ? error.message : error,
     });
     return null;
@@ -302,7 +296,7 @@ async function processGuide(
   // 标记为处理中
   await client.mutation(api.travelGuides.updateEnrichmentStatus, {
     id: guide._id,
-    status: 'processing',
+    status: "processing",
   });
 
   try {
@@ -313,8 +307,8 @@ async function processGuide(
       // 标记为失败
       await client.mutation(api.travelGuides.updateEnrichmentStatus, {
         id: guide._id,
-        status: 'failed',
-        error: 'AI processing returned null',
+        status: "failed",
+        error: "AI processing returned null",
       });
       return false;
     }
@@ -333,8 +327,7 @@ async function processGuide(
 
     log(`Guide processed successfully: ${guide._id}`);
     return true;
-  }
-  catch (error) {
+  } catch (error) {
     log(`Failed to process guide: ${guide._id}`, {
       error: error instanceof Error ? error.message : error,
     });
@@ -342,8 +335,8 @@ async function processGuide(
     // 标记为失败
     await client.mutation(api.travelGuides.updateEnrichmentStatus, {
       id: guide._id,
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      status: "failed",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
 
     return false;
@@ -357,25 +350,24 @@ async function main() {
   let processAll = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--limit' && args[i + 1]) {
+    if (args[i] === "--limit" && args[i + 1]) {
       limit = Number.parseInt(args[i + 1], 10);
       i++;
-    }
-    else if (args[i] === '--all') {
+    } else if (args[i] === "--all") {
       processAll = true;
     }
   }
 
   // 验证配置
   if (!config.aiApiKey) {
-    console.error('Error: AI_API_KEY environment variable is required');
+    console.error("Error: AI_API_KEY environment variable is required");
     process.exit(1);
   }
 
-  log('Starting batch AI processing', {
+  log("Starting batch AI processing", {
     aiBaseUrl: config.aiBaseUrl,
     aiModel: config.aiModel,
-    limit: processAll ? 'all' : limit,
+    limit: processAll ? "all" : limit,
   });
 
   // 创建 Convex 客户端
@@ -403,7 +395,7 @@ async function main() {
 
     if (result.guides.length === 0) {
       if (result.isDone) {
-        log('No more pending guides to process');
+        log("No more pending guides to process");
         break;
       }
       cursor = result.nextCursor;
@@ -431,8 +423,7 @@ async function main() {
 
       if (success) {
         totalProcessed++;
-      }
-      else {
+      } else {
         totalFailed++;
       }
 
@@ -448,7 +439,7 @@ async function main() {
     cursor = result.nextCursor;
   } while (processAll && cursor);
 
-  log('Batch processing complete', {
+  log("Batch processing complete", {
     totalProcessed,
     totalFailed,
   });
@@ -456,6 +447,6 @@ async function main() {
 
 // 运行主程序
 main().catch((error) => {
-  console.error('Fatal error:', error);
+  console.error("Fatal error:", error);
   process.exit(1);
 });

@@ -4,12 +4,12 @@
  * 支持 Stagehand（可选 AI 提取）
  */
 
-import { Stagehand } from '@browserbasehq/stagehand';
-import Kernel from '@onkernel/sdk';
-import { z } from 'zod';
+import { Stagehand } from "@browserbasehq/stagehand";
+import Kernel from "@onkernel/sdk";
+import { z } from "zod";
 
 // 使用 Stagehand 内部的 Page 类型
-type StagehandPage = ReturnType<Stagehand['context']['pages']>[0];
+type StagehandPage = ReturnType<Stagehand["context"]["pages"]>[0];
 
 export interface KernelBrowserSession {
   kernel: InstanceType<typeof Kernel>;
@@ -38,7 +38,7 @@ export async function createKernelBrowser(
 
   // 检查环境变量
   if (!process.env.KERNEL_API_KEY) {
-    throw new Error('KERNEL_API_KEY environment variable is not set');
+    throw new Error("KERNEL_API_KEY environment variable is not set");
   }
 
   const kernel = new Kernel();
@@ -52,7 +52,7 @@ export async function createKernelBrowser(
   // 配置 Stagehand 选项
   // eslint-disable-next-line ts/no-explicit-any
   const stagehandOptions: any = {
-    env: 'LOCAL',
+    env: "LOCAL",
     localBrowserLaunchOptions: {
       cdpUrl: browser.cdp_ws_url,
     },
@@ -90,15 +90,13 @@ export async function closeKernelBrowser(
 ): Promise<void> {
   try {
     await session.stagehand.close();
-  }
-  catch {
+  } catch {
     // ignore close errors
   }
 
   try {
     await session.kernel.browsers.deleteByID(session.browser.session_id);
-  }
-  catch {
+  } catch {
     // ignore delete errors
   }
 }
@@ -122,9 +120,7 @@ export async function scrollToLoadMore(
 /**
  * 提取页面上的游记链接
  */
-export async function extractGuideUrls(
-  page: StagehandPage,
-): Promise<string[]> {
+export async function extractGuideUrls(page: StagehandPage): Promise<string[]> {
   const urls = await page.evaluate(() => {
     const links = new Set<string>();
     const anchors = document.querySelectorAll('a[href*="/i/"]');
@@ -144,12 +140,19 @@ export async function extractGuideUrls(
  * 游记详情的 Schema (用于 AI 提取)
  */
 export const TravelGuideSchema = z.object({
-  title: z.string().describe('游记的完整标题'),
-  content: z.string().describe('游记的完整正文内容，包括所有段落和描述，不要截断，不要包含作者个人信息'),
-  author: z.string().optional().describe('作者名称（仅名称，不含个人简介）'),
-  destination: z.string().optional().describe('主要目的地/旅行地点'),
+  title: z.string().describe("游记的完整标题"),
+  content: z
+    .string()
+    .describe(
+      "游记的完整正文内容，包括所有段落和描述，不要截断，不要包含作者个人信息",
+    ),
+  author: z.string().optional().describe("作者名称（仅名称，不含个人简介）"),
+  destination: z.string().optional().describe("主要目的地/旅行地点"),
   travelDays: z.string().optional().describe('行程天数，如 "7天"'),
-  highlights: z.array(z.string()).optional().describe('游记中提到的主要景点或亮点'),
+  highlights: z
+    .array(z.string())
+    .optional()
+    .describe("游记中提到的主要景点或亮点"),
 });
 
 export type TravelGuideData = z.infer<typeof TravelGuideSchema>;
@@ -186,9 +189,7 @@ export async function extractGuideWithAI(
 /**
  * 使用 DOM 选择器提取游记详情（更稳定，无需 AI）
  */
-export async function extractGuideWithSelectors(
-  page: StagehandPage,
-): Promise<{
+export async function extractGuideWithSelectors(page: StagehandPage): Promise<{
   title: string;
   content: string;
   contentHtml?: string;
@@ -200,32 +201,51 @@ export async function extractGuideWithSelectors(
 }> {
   return page.evaluate(() => {
     // 提取标题 - 从 meta 或页面标题获取
-    const title
-      = document.querySelector('meta[property="og:title"]')?.getAttribute('content')
-        || document.title.split('，')[0].split('|')[0].trim()
-        || '';
+    const title =
+      document
+        .querySelector('meta[property="og:title"]')
+        ?.getAttribute("content") ||
+      document.title.split("，")[0].split("|")[0].trim() ||
+      "";
 
     // === 提取 HTML 内容（图文混排）===
     let contentHtml: string | undefined;
-    const chapterEl = document.querySelector('.chapter-container');
-    const contentContainer = chapterEl || document.querySelector('.note-content, .note-body');
+    const chapterEl = document.querySelector(".chapter-container");
+    const contentContainer =
+      chapterEl || document.querySelector(".note-content, .note-body");
 
     if (contentContainer) {
       const clone = contentContainer.cloneNode(true) as HTMLElement;
       // 移除不需要的元素
-      clone.querySelectorAll('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"], [class*="banner"], [class*="promotion"], [class*="sponsor"], [class*="share-"], [class*="follow"], [class*="comment-input"], [class*="related"], [class*="recommend"], script, style, iframe').forEach((el) => {
-        el.remove();
-      });
+      clone
+        .querySelectorAll(
+          '.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"], [class*="banner"], [class*="promotion"], [class*="sponsor"], [class*="share-"], [class*="follow"], [class*="comment-input"], [class*="related"], [class*="recommend"], script, style, iframe',
+        )
+        .forEach((el) => {
+          el.remove();
+        });
 
       // 清理图片 src（有些用 data-src 懒加载）
-      clone.querySelectorAll('img').forEach((img) => {
-        const dataSrc = img.getAttribute('data-src') || img.getAttribute('data-original');
-        if (dataSrc && (!img.src || img.src.includes('placeholder') || img.src.includes('data:image'))) {
+      clone.querySelectorAll("img").forEach((img) => {
+        const dataSrc =
+          img.getAttribute("data-src") || img.getAttribute("data-original");
+        if (
+          dataSrc &&
+          (!img.src ||
+            img.src.includes("placeholder") ||
+            img.src.includes("data:image"))
+        ) {
           img.src = dataSrc;
         }
         // 移除无关图片（头像、图标等）
-        const src = img.src || '';
-        if (src.includes('avatar') || src.includes('icon') || src.includes('emoji') || src.includes('recommend') || !src.startsWith('http')) {
+        const src = img.src || "";
+        if (
+          src.includes("avatar") ||
+          src.includes("icon") ||
+          src.includes("emoji") ||
+          src.includes("recommend") ||
+          !src.startsWith("http")
+        ) {
           img.remove();
           return;
         }
@@ -236,23 +256,27 @@ export async function extractGuideWithSelectors(
           img.removeAttribute(img.attributes[0].name);
         }
         img.src = cleanSrc;
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-        img.style.borderRadius = '8px';
-        img.style.margin = '12px 0';
+        img.style.maxWidth = "100%";
+        img.style.height = "auto";
+        img.style.borderRadius = "8px";
+        img.style.margin = "12px 0";
       });
 
       // 移除空元素
-      clone.querySelectorAll('div, p, span').forEach((el) => {
-        if (!el.textContent?.trim() && !el.querySelector('img')) {
+      clone.querySelectorAll("div, p, span").forEach((el) => {
+        if (!el.textContent?.trim() && !el.querySelector("img")) {
           el.remove();
         }
       });
 
       // 移除事件属性
-      clone.querySelectorAll('*').forEach((el) => {
+      clone.querySelectorAll("*").forEach((el) => {
         Array.from(el.attributes).forEach((attr) => {
-          if (attr.name.startsWith('on') || attr.name.startsWith('data-track') || attr.name.startsWith('data-ad')) {
+          if (
+            attr.name.startsWith("on") ||
+            attr.name.startsWith("data-track") ||
+            attr.name.startsWith("data-ad")
+          ) {
             el.removeAttribute(attr.name);
           }
         });
@@ -265,41 +289,47 @@ export async function extractGuideWithSelectors(
     }
 
     // === 提取纯文本内容 ===
-    let content = '';
+    let content = "";
     if (chapterEl) {
-      content = chapterEl.textContent?.trim() || '';
-    }
-    else {
-      const noteContent = document.querySelector('.note-content, .note-body');
+      content = chapterEl.textContent?.trim() || "";
+    } else {
+      const noteContent = document.querySelector(".note-content, .note-body");
       if (noteContent) {
         const clone = noteContent.cloneNode(true) as HTMLElement;
-        clone.querySelectorAll('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"], [class*="banner"], [class*="promotion"], [class*="sponsor"], [class*="share-"], [class*="follow"], [class*="comment-input"], [class*="related"], [class*="recommend"]').forEach((el) => {
-          el.remove();
-        });
-        content = clone.textContent?.trim() || '';
+        clone
+          .querySelectorAll(
+            '.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"], [class*="banner"], [class*="promotion"], [class*="sponsor"], [class*="share-"], [class*="follow"], [class*="comment-input"], [class*="related"], [class*="recommend"]',
+          )
+          .forEach((el) => {
+            el.remove();
+          });
+        content = clone.textContent?.trim() || "";
       }
     }
 
     // 清洗内容
     content = content
-      .replace(/图片占位符/g, '')
-      .replace(/\s+/g, ' ')
-      .replace(/加载更多内容/g, '')
+      .replace(/图片占位符/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/加载更多内容/g, "")
       // 移除常见的平台噪音（浏览器端基础清洗）
-      .replace(/关注\s*\d+\s*粉丝\s*\d+/g, '')
-      .replace(/分享到\s*(?:微信|微博|QQ)/g, '')
-      .replace(/回复\s*\d+/g, '')
-      .replace(/举报/g, '')
+      .replace(/关注\s*\d+\s*粉丝\s*\d+/g, "")
+      .replace(/分享到\s*(?:微信|微博|QQ)/g, "")
+      .replace(/回复\s*\d+/g, "")
+      .replace(/举报/g, "")
       .trim();
 
     // 提取作者
-    const author
-      = document.querySelector('.note-content > div:first-child p')?.textContent?.trim().split('\n')[0]
-        || document.querySelector('meta[name="author"]')?.getAttribute('content')
-        || undefined;
+    const author =
+      document
+        .querySelector(".note-content > div:first-child p")
+        ?.textContent?.trim()
+        .split("\n")[0] ||
+      document.querySelector('meta[name="author"]')?.getAttribute("content") ||
+      undefined;
 
     // 提取浏览量
-    const pageText = document.body.textContent || '';
+    const pageText = document.body.textContent || "";
     const viewsMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读)/i);
     const views = viewsMatch?.[1] || undefined;
 
@@ -309,18 +339,30 @@ export async function extractGuideWithSelectors(
 
     // 提取图片
     const images: string[] = [];
-    document.querySelectorAll('.chapter-container img[src*="mafengwo"], .note-content img[src*="mafengwo"]').forEach((img) => {
-      const src = (img as HTMLImageElement).src || img.getAttribute('data-src');
-      if (src && !src.includes('avatar') && !src.includes('icon') && !src.includes('recommend')) {
-        images.push(src);
-      }
-    });
+    document
+      .querySelectorAll(
+        '.chapter-container img[src*="mafengwo"], .note-content img[src*="mafengwo"]',
+      )
+      .forEach((img) => {
+        const src =
+          (img as HTMLImageElement).src || img.getAttribute("data-src");
+        if (
+          src &&
+          !src.includes("avatar") &&
+          !src.includes("icon") &&
+          !src.includes("recommend")
+        ) {
+          images.push(src);
+        }
+      });
 
     // 提取封面图
-    const coverImage
-      = document.querySelector('meta[property="og:image"]')?.getAttribute('content')
-        || images[0]
-        || undefined;
+    const coverImage =
+      document
+        .querySelector('meta[property="og:image"]')
+        ?.getAttribute("content") ||
+      images[0] ||
+      undefined;
 
     return {
       title,

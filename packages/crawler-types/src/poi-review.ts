@@ -3,7 +3,7 @@
  * Types for storing POI review data
  */
 
-export type SentimentLabel = 'positive' | 'neutral' | 'negative';
+export type SentimentLabel = "positive" | "neutral" | "negative";
 
 export interface POIReview {
   id: string;

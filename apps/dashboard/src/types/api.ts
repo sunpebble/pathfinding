@@ -47,7 +47,7 @@ export interface AiDay {
 
 export interface AiPoi {
   name: string;
-  type: 'attraction' | 'restaurant' | 'hotel' | 'transportation';
+  type: "attraction" | "restaurant" | "hotel" | "transportation";
   description?: string;
   latitude: number;
   longitude: number;
@@ -75,7 +75,7 @@ export interface ItineraryItem {
   orderIndex: number;
   startTime?: string;
   endTime?: string;
-  transportMode?: 'walking' | 'driving' | 'transit' | 'cycling' | 'taxi';
+  transportMode?: "walking" | "driving" | "transit" | "cycling" | "taxi";
   notes?: string;
   poi: PoiOption | null;
 }
