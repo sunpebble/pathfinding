@@ -1,3 +1,4 @@
+import type { UseQueryResult } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useHealthStatus } from '@/hooks/use-health-status';
@@ -42,7 +43,7 @@ describe('header', () => {
       data: null,
       isLoading: true,
       refetch: mockRefetch,
-    } as ReturnType<typeof useHealthStatus>);
+    } as unknown as UseQueryResult<{ status: string }, Error>);
 
     render(<Header />);
     const spinningIcon = document.querySelector('.animate-spin');
@@ -54,7 +55,7 @@ describe('header', () => {
       data: { status: 'ok' },
       isLoading: false,
       refetch: mockRefetch,
-    } as ReturnType<typeof useHealthStatus>);
+    } as unknown as UseQueryResult<{ status: string }, Error>);
 
     render(<Header />);
     expect(screen.getByText('Connected')).toBeDefined();
@@ -65,7 +66,7 @@ describe('header', () => {
       data: { status: 'healthy' },
       isLoading: false,
       refetch: mockRefetch,
-    } as ReturnType<typeof useHealthStatus>);
+    } as unknown as UseQueryResult<{ status: string }, Error>);
 
     render(<Header />);
     expect(screen.getByText('Connected')).toBeDefined();
@@ -76,7 +77,7 @@ describe('header', () => {
       data: { status: 'error' },
       isLoading: false,
       refetch: mockRefetch,
-    } as ReturnType<typeof useHealthStatus>);
+    } as unknown as UseQueryResult<{ status: string }, Error>);
 
     render(<Header />);
     expect(screen.getByText('Disconnected')).toBeDefined();
@@ -87,7 +88,7 @@ describe('header', () => {
       data: null,
       isLoading: false,
       refetch: mockRefetch,
-    } as ReturnType<typeof useHealthStatus>);
+    } as unknown as UseQueryResult<{ status: string }, Error>);
 
     render(<Header />);
     expect(screen.getByText('Disconnected')).toBeDefined();
@@ -98,7 +99,7 @@ describe('header', () => {
       data: { status: 'ok' },
       isLoading: false,
       refetch: mockRefetch,
-    } as ReturnType<typeof useHealthStatus>);
+    } as unknown as UseQueryResult<{ status: string }, Error>);
 
     render(<Header />);
     const refreshButton = screen.getByTitle('Refresh status');
