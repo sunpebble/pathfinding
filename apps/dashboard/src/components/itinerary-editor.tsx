@@ -76,7 +76,7 @@ function formatDate(dateString: string) {
   }
 }
 
-function ItemEditor({
+const ItemEditor = React.memo(({
   item,
   onUpdate,
   onRemove,
@@ -87,14 +87,14 @@ function ItemEditor({
   isSaving,
 }: {
   item: Item;
-  onUpdate: (updates: Partial<Item>) => void;
-  onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
+  onUpdate: (id: string, updates: Partial<Item>) => void;
+  onRemove: (id: string) => void;
+  onMoveUp: (item: Item) => void;
+  onMoveDown: (item: Item) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
   isSaving: boolean;
-}) {
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [localStartTime, setLocalStartTime] = useState(item.startTime || '');
   const [localEndTime, setLocalEndTime] = useState(item.endTime || '');
@@ -114,7 +114,7 @@ function ItemEditor({
   }
 
   const handleSaveChanges = () => {
-    onUpdate({
+    onUpdate(item._id, {
       startTime: localStartTime || undefined,
       endTime: localEndTime || undefined,
       notes: localNotes || undefined,
@@ -134,7 +134,7 @@ function ItemEditor({
         <div className="flex items-center gap-1">
           {canMoveUp && (
             <button
-              onClick={onMoveUp}
+              onClick={() => onMoveUp(item)}
               disabled={isSaving}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
               aria-label="Move up"
@@ -144,7 +144,7 @@ function ItemEditor({
           )}
           {canMoveDown && (
             <button
-              onClick={onMoveDown}
+              onClick={() => onMoveDown(item)}
               disabled={isSaving}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
               aria-label="Move down"
@@ -165,7 +165,7 @@ function ItemEditor({
             />
           </button>
           <button
-            onClick={onRemove}
+            onClick={() => onRemove(item._id)}
             disabled={isSaving}
             className="p-1 text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
             aria-label="Remove"
@@ -273,7 +273,7 @@ function ItemEditor({
       )}
     </div>
   );
-}
+});
 
 function DayEditor({
   day,
@@ -353,7 +353,7 @@ function DayEditor({
     }
   };
 
-  const handleUpdateItem = async (itemId: string, updates: Partial<Item>) => {
+  const handleUpdateItem = useCallback(async (itemId: string, updates: Partial<Item>) => {
     setIsSaving(true);
     setError('');
     try {
@@ -379,9 +379,9 @@ function DayEditor({
     finally {
       setIsSaving(false);
     }
-  };
+  }, [updateItem, userId, onItemsChange]);
 
-  const handleRemoveItem = async (itemId: string) => {
+  const handleRemoveItem = useCallback(async (itemId: string) => {
     setIsSaving(true);
     setError('');
     try {
@@ -397,9 +397,9 @@ function DayEditor({
     finally {
       setIsSaving(false);
     }
-  };
+  }, [removeItem, userId, onItemsChange]);
 
-  const handleMoveUp = async (item: Item) => {
+  const handleMoveUp = useCallback(async (item: Item) => {
     if (item.orderIndex === 0)
       return;
 
@@ -419,9 +419,9 @@ function DayEditor({
     finally {
       setIsSaving(false);
     }
-  };
+  }, [reorderItem, userId, onItemsChange]);
 
-  const handleMoveDown = async (item: Item) => {
+  const handleMoveDown = useCallback(async (item: Item) => {
     if (item.orderIndex >= items.length - 1)
       return;
 
@@ -441,7 +441,7 @@ function DayEditor({
     finally {
       setIsSaving(false);
     }
-  };
+  }, [items.length, reorderItem, userId, onItemsChange]);
 
   return (
     <div className="space-y-3">
@@ -580,10 +580,10 @@ function DayEditor({
                 <ItemEditor
                   key={item._id}
                   item={item}
-                  onUpdate={updates => handleUpdateItem(item._id, updates)}
-                  onRemove={() => handleRemoveItem(item._id)}
-                  onMoveUp={() => handleMoveUp(item)}
-                  onMoveDown={() => handleMoveDown(item)}
+                  onUpdate={handleUpdateItem}
+                  onRemove={handleRemoveItem}
+                  onMoveUp={handleMoveUp}
+                  onMoveDown={handleMoveDown}
                   canMoveUp={index > 0}
                   canMoveDown={index < items.length - 1}
                   isSaving={isSaving}
