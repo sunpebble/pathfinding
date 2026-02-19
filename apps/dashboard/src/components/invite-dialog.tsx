@@ -1,11 +1,18 @@
-'use client';
+"use client";
 
-import { api } from '@pathfinding/convex-client';
-import { useMutation } from 'convex/react';
-import { Check, Copy, Link2, Mail, UserPlus, X } from 'lucide-react';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { toConvexId } from '@/types/convex';
+import { api } from "@pathfinding/convex-client";
+import { useMutation } from "convex/react";
+import { Check, Copy, Link2, Mail, UserPlus, X } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { toConvexId } from "@/types/convex";
 
 interface InviteDialogProps {
   isOpen: boolean;
@@ -20,11 +27,11 @@ export function InviteDialog({
   itineraryId,
   currentUserId,
 }: InviteDialogProps) {
-  const [userId, setUserId] = useState('');
-  const [role, setRole] = useState<'editor' | 'viewer'>('editor');
+  const [userId, setUserId] = useState("");
+  const [role, setRole] = useState<"editor" | "viewer">("editor");
   const [isInviting, setIsInviting] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
+  const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<string>("");
   const [shareableLinkCopied, setShareableLinkCopied] = useState(false);
 
   const inviteCollaborator = useMutation(
@@ -36,43 +43,41 @@ export function InviteDialog({
 
     // Validation
     if (!userId.trim()) {
-      setError('Please enter a user ID');
+      setError("Please enter a user ID");
       return;
     }
 
     if (userId === currentUserId) {
-      setError('You cannot invite yourself');
+      setError("You cannot invite yourself");
       return;
     }
 
     setIsInviting(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       await inviteCollaborator({
-        itineraryId: toConvexId<'itineraries'>(itineraryId),
+        itineraryId: toConvexId<"itineraries">(itineraryId),
         userId: userId.trim(),
         role,
         invitedBy: currentUserId,
       });
 
       setSuccess(`Successfully invited ${userId} as ${role}`);
-      setUserId('');
-      setRole('editor');
+      setUserId("");
+      setRole("editor");
 
       // Auto-close after 2 seconds on success
       setTimeout(() => {
         onClose();
-        setSuccess('');
+        setSuccess("");
       }, 2000);
-    }
-    catch (err) {
+    } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to send invitation',
+        err instanceof Error ? err.message : "Failed to send invitation",
       );
-    }
-    finally {
+    } finally {
       setIsInviting(false);
     }
   };
@@ -90,29 +95,33 @@ export function InviteDialog({
       await navigator.clipboard.writeText(link);
       setShareableLinkCopied(true);
       setTimeout(() => setShareableLinkCopied(false), 2000);
-    }
-    catch {
-      setError('Failed to copy link to clipboard');
+    } catch {
+      setError("Failed to copy link to clipboard");
     }
   };
 
-  if (!isOpen)
-    return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col"
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+          <DialogHeader className="text-left space-y-0">
+            <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-emerald-600" />
               Invite Collaborator
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 mt-1">
               Add people to collaborate on this itinerary
-            </p>
-          </div>
+            </DialogDescription>
+          </DialogHeader>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -123,7 +132,7 @@ export function InviteDialog({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto">
           {/* Success Message */}
           {success && (
             <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
@@ -153,7 +162,7 @@ export function InviteDialog({
                 id="userId"
                 type="text"
                 value={userId}
-                onChange={e => setUserId(e.target.value)}
+                onChange={(e) => setUserId(e.target.value)}
                 placeholder="e.g., user-123 or email@example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 disabled={isInviting}
@@ -174,7 +183,7 @@ export function InviteDialog({
               <select
                 id="role"
                 value={role}
-                onChange={e => setRole(e.target.value as 'editor' | 'viewer')}
+                onChange={(e) => setRole(e.target.value as "editor" | "viewer")}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer"
                 disabled={isInviting}
               >
@@ -192,24 +201,22 @@ export function InviteDialog({
               type="submit"
               disabled={isInviting || !userId.trim()}
               className={cn(
-                'w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2',
-                (isInviting || !userId.trim())
-                && 'opacity-50 cursor-not-allowed hover:bg-emerald-600',
+                "w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2",
+                (isInviting || !userId.trim()) &&
+                  "opacity-50 cursor-not-allowed hover:bg-emerald-600",
               )}
             >
-              {isInviting
-                ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Sending invitation...
-                    </>
-                  )
-                : (
-                    <>
-                      <UserPlus className="h-4 w-4" />
-                      Send Invitation
-                    </>
-                  )}
+              {isInviting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Sending invitation...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4" />
+                  Send Invitation
+                </>
+              )}
             </button>
           </form>
 
@@ -230,9 +237,7 @@ export function InviteDialog({
               Shareable Link
             </label>
             <p className="text-xs text-gray-500">
-              Generate a link that anyone can use to join as a
-              {' '}
-              {role}
+              Generate a link that anyone can use to join as a {role}
             </p>
 
             <div className="flex gap-2">
@@ -246,44 +251,38 @@ export function InviteDialog({
                 type="button"
                 onClick={handleCopyLink}
                 className={cn(
-                  'px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2',
+                  "px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
                   shareableLinkCopied
-                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200',
+                    ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                    : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200",
                 )}
               >
-                {shareableLinkCopied
-                  ? (
-                      <>
-                        <Check className="h-4 w-4" />
-                        Copied!
-                      </>
-                    )
-                  : (
-                      <>
-                        <Copy className="h-4 w-4" />
-                        Copy
-                      </>
-                    )}
+                {shareableLinkCopied ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </>
+                )}
               </button>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-xs text-blue-800">
-                <strong>Note:</strong>
-                {' '}
-                Anyone with this link can join your
+                <strong>Note:</strong> Anyone with this link can join your
                 itinerary. The link will grant them
-                {role}
-                {' '}
-                access.
+                {role} access.
               </p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-xl">
+        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 z-10">
           <button
             onClick={onClose}
             className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
@@ -291,7 +290,7 @@ export function InviteDialog({
             Close
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
