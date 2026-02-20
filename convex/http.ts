@@ -1,6 +1,6 @@
 import type { Id } from './_generated/dataModel';
 import { httpRouter } from 'convex/server';
-import { api } from './_generated/api';
+import { api, internal } from './_generated/api';
 import { httpAction } from './_generated/server';
 import { auth } from './auth';
 
@@ -151,36 +151,6 @@ http.route({
 // ============================================
 
 /**
- * Helper to extract userId from Authorization header JWT token
- */
-async function getUserIdFromAuth(request: Request): Promise<string | null> {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    // Decode JWT payload (base64url encoded)
-    const parts = token.split('.');
-    if (parts.length !== 3)
-      return null;
-
-    const payload = parts[1];
-    // Convert base64url to base64
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const decoded = atob(base64);
-    const json = JSON.parse(decoded);
-
-    // Convex Auth uses 'sub' for the user ID
-    return json.sub || null;
-  }
-  catch {
-    return null;
-  }
-}
-
-/**
  * GET /api/comments?itineraryId=<id>&page=1&pageSize=20
  * List comments for a guide (travel guide / blog post)
  */
@@ -253,14 +223,14 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     try {
-      // Extract userId from JWT token
-      const userId = await getUserIdFromAuth(request);
-      if (!userId) {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      const userId = identity.email!;
 
       const body = await request.json();
       const { itineraryId, content, parentId } = body;
@@ -275,7 +245,7 @@ http.route({
       // Store the comment with guide/itinerary ID as string
       // Using a simplified insert that stores reference as string
       const now = Date.now();
-      const commentId = await ctx.runMutation(api.guideComments.create, {
+      const commentId = await ctx.runMutation(internal.guideComments.internalCreate, {
         guideId: itineraryId,
         userId,
         content,
@@ -297,8 +267,8 @@ http.route({
             is_deleted: false,
             created_at: now,
             updated_at: null,
-            author_name: 'User',
-            author_avatar: null,
+            author_name: identity.name || 'User',
+            author_avatar: identity.pictureUrl || null,
             is_liked_by_user: false,
           },
         }),
@@ -334,13 +304,14 @@ http.route({
   method: 'PATCH',
   handler: httpAction(async (ctx, request) => {
     try {
-      const userId = await getUserIdFromAuth(request);
-      if (!userId) {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      const userId = identity.email!;
 
       const body = await request.json();
       const { id, content } = body;
@@ -388,13 +359,14 @@ http.route({
   method: 'DELETE',
   handler: httpAction(async (ctx, request) => {
     try {
-      const userId = await getUserIdFromAuth(request);
-      if (!userId) {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      const userId = identity.email!;
 
       const body = await request.json();
       const { id } = body;
@@ -485,13 +457,14 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     try {
-      const userId = await getUserIdFromAuth(request);
-      if (!userId) {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      const userId = identity.email!;
 
       const body = await request.json();
       const { commentId } = body;
@@ -548,13 +521,14 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     try {
-      const userId = await getUserIdFromAuth(request);
-      if (!userId) {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      const userId = identity.email!;
 
       const body = await request.json();
       const { commentId, reason, description } = body;
