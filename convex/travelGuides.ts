@@ -2,7 +2,7 @@ import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { deleteGuideFromAggregates, insertGuideToAggregates, replaceGuideInAggregates } from './guideAggregates';
-import { deleteDestinationsForGuide, syncDestinationsInternal } from './guideDestinations';
+import { deleteDestinationsForGuide, normalizeDestination, syncDestinationsInternal } from './guideDestinations';
 import { ensureDisplayFields, fillMissingDisplayFields } from './lib/displayFields';
 
 /**
@@ -386,17 +386,33 @@ export const getByDestination = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const guides = await ctx.db.query('travelGuides').collect();
+    // Normalize destination to match index
+    const normalizedDest = normalizeDestination(args.destination);
 
-    const destLower = args.destination.toLowerCase();
-    const filtered = guides.filter(g =>
-      g.destinations.some(d => d.toLowerCase().includes(destLower)),
-    );
+    // Use guideDestinations index for O(1) lookup of guide IDs
+    // This avoids scanning the entire travelGuides table (O(N))
+    const guideDestinations = await ctx.db
+      .query('guideDestinations')
+      .withIndex('by_destination', q => q.eq('destination', normalizedDest))
+      .collect();
 
-    // Sort by quality score
-    filtered.sort((a, b) => b.qualityScore - a.qualityScore);
+    if (guideDestinations.length === 0) {
+      return [];
+    }
 
-    return args.limit ? filtered.slice(0, args.limit) : filtered;
+    const guideIds = guideDestinations.map(gd => gd.guideId);
+
+    // Fetch the actual guides in parallel
+    const guides = await Promise.all(guideIds.map(id => ctx.db.get(id)));
+
+    // Filter out nulls (stale references) and sort by quality score
+    const validGuides = guides
+      .filter((g): g is NonNullable<typeof g> => g !== null)
+      .sort((a, b) => b.qualityScore - a.qualityScore);
+
+    const result = args.limit ? validGuides.slice(0, args.limit) : validGuides;
+
+    return result.map(ensureDisplayFields);
   },
 });
 
