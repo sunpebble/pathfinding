@@ -25,7 +25,8 @@ export * from './poi-review.js';
 export * from './quality-report.js';
 
 // Quality Score
-export * from './quality-score.js';
+export type { QualityScoreResult as GenericQualityScoreResult } from './quality-score.js';
+export { calculateQualityScoreUnified } from './quality-score.js';
 
 export * from './raw-record.js';
 
