@@ -181,10 +181,14 @@ function ItemEditor({
           {/* Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">
+              <label
+                htmlFor={`start-time-${item._id}`}
+                className="text-xs font-medium text-gray-700 mb-1 block"
+              >
                 Start Time
               </label>
               <input
+                id={`start-time-${item._id}`}
                 type="time"
                 value={localStartTime}
                 onChange={e => setLocalStartTime(e.target.value)}
@@ -192,10 +196,14 @@ function ItemEditor({
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">
+              <label
+                htmlFor={`end-time-${item._id}`}
+                className="text-xs font-medium text-gray-700 mb-1 block"
+              >
                 End Time
               </label>
               <input
+                id={`end-time-${item._id}`}
                 type="time"
                 value={localEndTime}
                 onChange={e => setLocalEndTime(e.target.value)}
@@ -206,10 +214,14 @@ function ItemEditor({
 
           {/* Transport Mode */}
           <div>
-            <label className="text-xs font-medium text-gray-700 mb-1 block">
+            <label
+              htmlFor={`transport-mode-${item._id}`}
+              className="text-xs font-medium text-gray-700 mb-1 block"
+            >
               Transport Mode
             </label>
             <select
+              id={`transport-mode-${item._id}`}
               value={localTransportMode}
               onChange={e => setLocalTransportMode(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -226,10 +238,14 @@ function ItemEditor({
 
           {/* Notes */}
           <div>
-            <label className="text-xs font-medium text-gray-700 mb-1 block">
+            <label
+              htmlFor={`notes-${item._id}`}
+              className="text-xs font-medium text-gray-700 mb-1 block"
+            >
               Notes
             </label>
             <textarea
+              id={`notes-${item._id}`}
               value={localNotes}
               onChange={e => setLocalNotes(e.target.value)}
               rows={2}
@@ -495,6 +511,8 @@ function DayEditor({
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search POIs..."
+                autoFocus
+                aria-label="Search points of interest"
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
@@ -502,6 +520,7 @@ function DayEditor({
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              aria-label="Filter by category"
             >
               <option value="">All Categories</option>
               <option value="attraction">Attraction</option>
@@ -516,7 +535,7 @@ function DayEditor({
           <div className="max-h-60 overflow-y-auto space-y-2">
             {pois.length === 0
               ? (
-                  <p className="text-sm text-gray-500 text-center py-4">
+                  <p role="status" className="text-sm text-gray-500 text-center py-4">
                     {cityId ? 'No POIs found' : 'City not specified for itinerary'}
                   </p>
                 )
