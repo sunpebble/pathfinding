@@ -1,3 +1,4 @@
+import type { RegisteredMutation } from 'convex/server';
 import type { Doc } from './_generated/dataModel';
 import { ConvexError, v } from 'convex/values';
 import {
@@ -798,7 +799,7 @@ export const sendPendingReminders = internalMutation({
 
     return { sentCount, total: pendingNotifications.length };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, { sentCount: number; total: number }>;
 
 /**
  * Clean up old read notifications (internal, called by cron)
@@ -828,4 +829,4 @@ export const cleanupOldNotifications = internalMutation({
 
     return { deletedCount };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, { deletedCount: number }>;
