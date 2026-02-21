@@ -1,10 +1,10 @@
 /* eslint-disable ts/ban-ts-comment */
-// @ts-nocheck
 /**
  * Data Quality Reports - Convex Functions
  * CRUD operations for data quality analysis reports
  */
 
+import type { RegisteredMutation } from 'convex/server';
 import { v } from 'convex/values';
 import {
   dataQualityIssueValidator,
@@ -124,6 +124,7 @@ export const getSummary = query({
  * Deletes reports older than 90 days
  */
 export const cleanupOld = internalMutation({
+  args: {},
   handler: async (ctx): Promise<{ deletedCount: number }> => {
     const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
 
@@ -142,4 +143,4 @@ export const cleanupOld = internalMutation({
 
     return { deletedCount };
   },
-});
+}) as RegisteredMutation<'internal', Record<string, never>, { deletedCount: number }>;
