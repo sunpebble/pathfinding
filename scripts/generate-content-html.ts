@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * 为历史游记生成图文混排 HTML
  * 将纯文本 content + imageUrls 合并为 contentHtml
