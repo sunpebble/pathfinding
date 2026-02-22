@@ -386,17 +386,33 @@ export const getByDestination = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const guides = await ctx.db.query('travelGuides').collect();
+    const limit = args.limit || 50;
+    const destLower = args.destination.trim().toLowerCase();
 
-    const destLower = args.destination.toLowerCase();
-    const filtered = guides.filter(g =>
-      g.destinations.some(d => d.toLowerCase().includes(destLower)),
+    // Optimization: Use guideDestinations auxiliary table for O(1) lookup
+    // This replaces the previous O(N) full table scan of travelGuides.
+    // Note: This changes behavior from substring match to exact match on normalized destination.
+    const guideDestinations = await ctx.db
+      .query('guideDestinations')
+      .withIndex('by_destination', q => q.eq('destination', destLower))
+      .collect();
+
+    if (guideDestinations.length === 0) {
+      return [];
+    }
+
+    // Fetch the actual guides in parallel
+    const guides = await Promise.all(
+      guideDestinations.map(gd => ctx.db.get(gd.guideId)),
     );
 
-    // Sort by quality score
-    filtered.sort((a, b) => b.qualityScore - a.qualityScore);
+    const validGuides = guides.filter((g): g is NonNullable<typeof g> => g !== null);
 
-    return args.limit ? filtered.slice(0, args.limit) : filtered;
+    // Sort by quality score
+    validGuides.sort((a, b) => b.qualityScore - a.qualityScore);
+
+    // Apply display field guarantee
+    return validGuides.slice(0, limit).map(ensureDisplayFields);
   },
 });
 
