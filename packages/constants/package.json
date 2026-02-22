@@ -1,32 +1,21 @@
 {
   "name": "@pathfinding/constants",
+  "version": "0.0.1",
+  "private": true,
   "type": "module",
-  "version": "1.0.0",
-  "description": "Shared constants for Pathfinding app",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
-    }
-  },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "scripts": {
     "build": "tsdown",
+    "dev": "tsdown --watch",
     "typecheck": "tsc --noEmit",
-    "dev": "tsdown --watch"
+    "test": "vitest run"
   },
-  "dependencies": {
-    "@pathfinding/types": "workspace:*"
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "tsdown": "^0.9.0",
-    "typescript": "^5.9.3"
+    "tsdown": "^0.5.5",
+    "vitest": "^2.1.9"
   }
 }
