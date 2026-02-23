@@ -1,3 +1,4 @@
+
 /* eslint-disable ts/no-explicit-any */
 /* eslint-disable unused-imports/no-unused-vars */
 import { describe, expect, it, vi } from 'vitest';
@@ -38,11 +39,11 @@ describe('travelGuides getByDestination Performance Optimization', () => {
 
     const ctx = {
       db: {
-        query: vi.fn((table) => {
+        query: vi.fn((table: any) => {
           if (table === 'guideDestinations') {
             return {
               collect: vi.fn().mockResolvedValue(mockGuideDestinations),
-              withIndex: vi.fn((indexName, q) => {
+              withIndex: vi.fn((indexName: any, q: any) => {
                 // Verify index usage
                 expect(indexName).toBe('by_destination');
                 return {
@@ -55,7 +56,7 @@ describe('travelGuides getByDestination Performance Optimization', () => {
             collect: vi.fn().mockResolvedValue([]),
           };
         }),
-        get: vi.fn((id) => {
+        get: vi.fn((id: any) => {
           if (id === 'guide1')
             return Promise.resolve(mockGuides[0]);
           return Promise.resolve(null);
@@ -63,7 +64,7 @@ describe('travelGuides getByDestination Performance Optimization', () => {
       },
     };
 
-    const result = await getByDestination.handler(ctx as any, { destination: 'New York' });
+    const result = await (getByDestination as any).handler(ctx, { destination: 'New York' });
 
     expect(result).toHaveLength(1);
     expect(result[0]._id).toBe('guide1');
@@ -92,7 +93,7 @@ describe('travelGuides getByDestination Performance Optimization', () => {
 
     const ctx = {
       db: {
-        query: vi.fn((table) => {
+        query: vi.fn((table: any) => {
           if (table === 'guideDestinations') {
             return {
               collect: vi.fn().mockResolvedValue(mockGuideDestinations),
@@ -100,7 +101,7 @@ describe('travelGuides getByDestination Performance Optimization', () => {
           }
           return {};
         }),
-        get: vi.fn((id) => {
+        get: vi.fn((id: any) => {
           if (id === 'guide1')
             return Promise.resolve(mockGuides[0]);
           return Promise.resolve(null);
@@ -108,7 +109,7 @@ describe('travelGuides getByDestination Performance Optimization', () => {
       },
     };
 
-    const result = await getByDestination.handler(ctx as any, { destination: 'York' });
+    const result = await (getByDestination as any).handler(ctx, { destination: 'York' });
 
     expect(result).toHaveLength(1);
     expect(result[0]._id).toBe('guide1');
