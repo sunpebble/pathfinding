@@ -1,6 +1,6 @@
 import type { Id } from './_generated/dataModel';
 import { httpRouter } from 'convex/server';
-import { api } from './_generated/api';
+import { api, internal } from './_generated/api';
 import { httpAction } from './_generated/server';
 import { auth } from './auth';
 
@@ -275,7 +275,7 @@ http.route({
       // Store the comment with guide/itinerary ID as string
       // Using a simplified insert that stores reference as string
       const now = Date.now();
-      const commentId = await ctx.runMutation(api.guideComments.create, {
+      const commentId = await ctx.runMutation(internal.guideComments.internalCreate, {
         guideId: itineraryId,
         userId,
         content,
@@ -352,8 +352,8 @@ http.route({
         });
       }
 
-      const comment = await ctx.runMutation(api.itineraryComments.update, {
-        id: id as Id<'itineraryComments'>,
+      const comment = await ctx.runMutation(internal.guideComments.internalUpdate, {
+        id: id as Id<'guideComments'>,
         userId,
         content,
       });
@@ -406,7 +406,7 @@ http.route({
         });
       }
 
-      await ctx.runMutation(api.guideComments.remove, {
+      await ctx.runMutation(internal.guideComments.internalRemove, {
         id: id as Id<'guideComments'>,
         userId,
       });
@@ -503,7 +503,7 @@ http.route({
         });
       }
 
-      const result = await ctx.runMutation(api.guideComments.toggleLike, {
+      const result = await ctx.runMutation(internal.guideComments.internalToggleLike, {
         commentId: commentId as Id<'guideComments'>,
         userId,
       });

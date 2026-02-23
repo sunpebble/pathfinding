@@ -1,6 +1,7 @@
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { internal } from './_generated/api';
+import { internalMutation, mutation, query } from './_generated/server';
 
 /**
  * Guide Comments - Comments on Travel Guides (travelGuides table)
@@ -8,9 +9,10 @@ import { mutation, query } from './_generated/server';
  */
 
 /**
- * Create a new comment on a guide
+ * Internal: Create a new comment on a guide
+ * (Used by HTTP API and public wrapper)
  */
-export const create = mutation({
+export const internalCreate = internalMutation({
   args: {
     guideId: v.string(), // Travel guide ID (string, not Convex ID)
     userId: v.string(),
@@ -65,6 +67,36 @@ export const create = mutation({
 
     // Return the comment ID as a string for client use
     return commentId.toString();
+  },
+});
+
+/**
+ * Public: Create a new comment on a guide
+ * Authenticates user and calls internal implementation
+ */
+export const create = mutation({
+  args: {
+    guideId: v.string(),
+    content: v.string(),
+    parentId: v.optional(v.string()),
+    // userId is NOT accepted here - derived from auth
+  },
+  handler: async (ctx, args): Promise<string> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Unauthenticated');
+    }
+
+    // Use email as userId to match profile lookup behavior in listByGuide
+    // Fallback to subject if email is missing (though profiles use email)
+    const userId = identity.email ?? identity.subject;
+
+    return await ctx.runMutation(internal.guideComments.internalCreate, {
+      guideId: args.guideId,
+      userId,
+      content: args.content,
+      parentId: args.parentId,
+    });
   },
 });
 
@@ -202,9 +234,9 @@ export const getReplies = query({
 });
 
 /**
- * Toggle like on a comment
+ * Internal: Toggle like on a comment
  */
-export const toggleLike = mutation({
+export const internalToggleLike = internalMutation({
   args: {
     commentId: v.id('guideComments'),
     userId: v.string(),
@@ -246,9 +278,31 @@ export const toggleLike = mutation({
 });
 
 /**
- * Update a comment
+ * Public: Toggle like on a comment
  */
-export const update = mutation({
+export const toggleLike = mutation({
+  args: {
+    commentId: v.id('guideComments'),
+    // userId derived from auth
+  },
+  handler: async (ctx, args): Promise<{ liked: boolean; likesCount: number }> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Unauthenticated');
+    }
+    const userId = identity.email ?? identity.subject;
+
+    return await ctx.runMutation(internal.guideComments.internalToggleLike, {
+      commentId: args.commentId,
+      userId,
+    });
+  },
+});
+
+/**
+ * Internal: Update a comment
+ */
+export const internalUpdate = internalMutation({
   args: {
     id: v.id('guideComments'),
     userId: v.string(),
@@ -289,9 +343,34 @@ export const update = mutation({
 });
 
 /**
- * Delete a comment (hard delete)
+ * Public: Update a comment
  */
-export const remove = mutation({
+export const update = mutation({
+  args: {
+    id: v.id('guideComments'),
+    content: v.string(),
+    // userId derived from auth
+  },
+  // eslint-disable-next-line ts/no-explicit-any
+  handler: async (ctx, args): Promise<any> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Unauthenticated');
+    }
+    const userId = identity.email ?? identity.subject;
+
+    return await ctx.runMutation(internal.guideComments.internalUpdate, {
+      id: args.id,
+      userId,
+      content: args.content,
+    });
+  },
+});
+
+/**
+ * Internal: Delete a comment (hard delete)
+ */
+export const internalRemove = internalMutation({
   args: {
     id: v.id('guideComments'),
     userId: v.string(),
@@ -329,5 +408,27 @@ export const remove = mutation({
 
     // Hard delete - actually remove from database
     await ctx.db.delete(args.id);
+  },
+});
+
+/**
+ * Public: Delete a comment (hard delete)
+ */
+export const remove = mutation({
+  args: {
+    id: v.id('guideComments'),
+    // userId derived from auth
+  },
+  handler: async (ctx, args): Promise<void> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Unauthenticated');
+    }
+    const userId = identity.email ?? identity.subject;
+
+    await ctx.runMutation(internal.guideComments.internalRemove, {
+      id: args.id,
+      userId,
+    });
   },
 });
