@@ -324,6 +324,7 @@ export default function GuideDetailPage() {
               <h3 className="text-sm font-medium text-gray-700 mb-2">💡 实用贴士</h3>
               <ul className="space-y-1.5">
                 {guide.aiTips.map((tip: string, i: number) => (
+                  // eslint-disable-next-line react/no-array-index-key
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                     <span className="text-purple-400 mt-0.5 flex-shrink-0">•</span>
                     {tip}
@@ -352,6 +353,7 @@ export default function GuideDetailPage() {
                 // Plain text with paragraph formatting
                 <div className="prose prose-gray max-w-none">
                   {guide.content.split(/\n{2,}/).map((paragraph: string, i: number) => (
+                    // eslint-disable-next-line react/no-array-index-key
                     <p key={i} className="text-gray-700 leading-relaxed mb-4">
                       {paragraph.trim()}
                     </p>

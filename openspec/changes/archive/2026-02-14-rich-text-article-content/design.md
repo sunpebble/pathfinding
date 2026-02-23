@@ -3,6 +3,7 @@
 当前 iOS App 的 `BlogDetailView` 展示攻略文章时，只显示 AI 处理后的结构化数据（摘要、行程、贴士等），完全没有展示原始文章内容。`travelGuides` 表中已有 `contentHtml` 字段（马蜂窝爬虫已抓取 HTML），以及 `content` 纯文本字段，但 iOS 端的 `BlogPost` 模型未解析这些字段用于展示。
 
 现状：
+
 - **数据层**：`contentHtml` 已在 schema 中定义，马蜂窝爬虫已存储 HTML 内容
 - **API 层**：`convertKeysToSnakeCase` 会自动将 `contentHtml` 转为 `content_html` 传给 iOS
 - **iOS 模型**：`BlogPost.swift` 有 `content` 字段但无 `contentHtml`
@@ -11,6 +12,7 @@
 ## Goals / Non-Goals
 
 **Goals:**
+
 - iOS App 能展示格式化的文章原始内容（HTML 渲染）
 - 优先使用 `contentHtml`，fallback 到纯文本 `content`
 - 支持常见 HTML 标签：段落、标题、图片、列表、加粗/斜体、链接
@@ -18,6 +20,7 @@
 - 与现有 AI 结构化内容（摘要、行程等）共存，放在合适的位置
 
 **Non-Goals:**
+
 - 不实现完整的 Web 浏览器级 HTML 渲染（不需要支持 CSS、JavaScript）
 - 不为缺少 `contentHtml` 的旧数据做 AI 生成富文本（后续迭代）
 - 不修改爬虫逻辑（已有 HTML 抓取能力）
@@ -30,6 +33,7 @@
 **选择**：将 HTML 转换为 `AttributedString`，用 SwiftUI `Text` 渲染。
 
 **备选方案**：
+
 - **WKWebView**：完整 HTML 渲染，但高度计算复杂、与 SwiftUI ScrollView 集成困难、内存开销大
 - **第三方库（如 SwiftSoup + 自定义渲染）**：灵活但引入外部依赖
 - **AttributedString（选择）**：iOS 15+ 原生支持从 HTML 初始化，无外部依赖，与 SwiftUI 集成好
@@ -39,6 +43,7 @@
 ### Decision 2: 图片处理策略 — HTML 中提取图片单独渲染
 
 HTML 中的 `<img>` 标签无法通过 `AttributedString` 渲染。方案：
+
 1. 解析 HTML，提取 `<img>` 标签的 `src` 属性和位置
 2. 将 HTML 按图片位置分割为多个文本段
 3. 在 SwiftUI 中交替渲染文本段和图片（`CachedAsyncImage`）
@@ -48,6 +53,7 @@ HTML 中的 `<img>` 标签无法通过 `AttributedString` 渲染。方案：
 ### Decision 3: 内容展示位置 — AI 摘要之后、行程之前
 
 在 `BlogDetailView` 中，原始文章内容放在：
+
 - AI 摘要（aiSummarySection）之后
 - 行程安排（itinerarySection）之前
 

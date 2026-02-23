@@ -1,0 +1,43 @@
+
+> pathfinding@1.0.0 lint /app
+> eslint .
+
+
+/app/apps/dashboard/src/app/guides/page.tsx
+  239:8   error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  239:20  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  243:11  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  243:19  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  247:11  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  247:33  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+
+/app/apps/dashboard/src/app/guides/review/page.tsx
+  249:8   error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  249:20  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  253:11  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  253:19  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  257:11  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  257:33  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+
+/app/apps/dashboard/src/app/jobs/page.tsx
+  121:12  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  121:33  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  125:15  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  125:33  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  291:14  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  291:26  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+  297:17  error  Expected newline between test and consequent of ternary expression       style/multiline-ternary
+  297:37  error  Expected newline between consequent and alternate of ternary expression  style/multiline-ternary
+
+/app/apps/motia/src/api/transport.step.ts
+   5:11  error  'POI' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  32:23  error  This line has 2 statements. Maximum allowed is 1                       style/max-statements-per-line
+  87:29  error  This line has 2 statements. Maximum allowed is 1                       style/max-statements-per-line
+
+/app/apps/motia/src/events/notification.step.ts
+   3:7   error  'inputSchema' is assigned a value but only used as a type. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  25:28  error  'subject' is assigned a value but never used. Allowed unused vars must match /^_/u               unused-imports/no-unused-vars
+
+✖ 25 problems (25 errors, 0 warnings)
+
+ ELIFECYCLE  Command failed with exit code 1.
