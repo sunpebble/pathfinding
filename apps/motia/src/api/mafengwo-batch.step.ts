@@ -9,34 +9,39 @@ import { z } from 'zod';
 
 const bodySchema = z.object({
   // 目的地配置
-  destinations: z.array(z.object({
-    id: z.string().optional(),
-    name: z.string(),
-  })).min(1).max(50),
+  destinations: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        name: z.string(),
+      }),
+    )
+    .min(1)
+    .max(50),
   // 要爬取的数据类型
-  dataTypes: z.array(z.enum([
-    'destination', // 目的地信息
-    'travel_notes', // 游记
-    'pois', // POI（景点/餐厅/酒店）
-    'guides', // 攻略
-    'qa', // 问答
-    'rankings', // 榜单
-  ])).optional().default(['destination', 'travel_notes', 'pois', 'guides']),
+  dataTypes: z
+    .array(
+      z.enum([
+        'destination', // 目的地信息
+        'travel_notes', // 游记
+        'pois', // POI（景点/餐厅/酒店）
+        'guides', // 攻略
+        'qa', // 问答
+        'rankings', // 榜单
+      ]),
+    )
+    .optional()
+    .default(['destination', 'travel_notes', 'pois', 'guides']),
   // POI 类别
-  poiCategories: z.array(z.enum([
-    'attraction',
-    'restaurant',
-    'hotel',
-    'shopping',
-  ])).optional().default(['attraction', 'restaurant']),
+  poiCategories: z
+    .array(z.enum(['attraction', 'restaurant', 'hotel', 'shopping']))
+    .optional()
+    .default(['attraction', 'restaurant']),
   // 榜单类型
-  rankingTypes: z.array(z.enum([
-    'must_visit',
-    'food',
-    'hotel',
-    'shopping',
-    'hidden_gem',
-  ])).optional().default(['must_visit', 'food']),
+  rankingTypes: z
+    .array(z.enum(['must_visit', 'food', 'hotel', 'shopping', 'hidden_gem']))
+    .optional()
+    .default(['must_visit', 'food']),
   // 每种类型的列表爬取数量
   scrollCount: z.number().min(1).max(20).optional().default(5),
   // 是否爬取详情
@@ -53,7 +58,10 @@ export const config = {
   description: '马蜂窝批量爬取调度器',
   path: '/api/crawler/mafengwo/batch',
   method: 'POST',
-  emits: ['crawler.mafengwo.batch.started', 'crawler.mafengwo.batch.task.created'],
+  emits: [
+    'crawler.mafengwo.batch.started',
+    'crawler.mafengwo.batch.task.created',
+  ],
   flows: ['crawler'],
   bodySchema,
 };

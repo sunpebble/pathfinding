@@ -168,7 +168,15 @@ export function cleanContent(
   options: CleaningOptions = {},
 ): CleaningResult {
   const {
-    categories = ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+    categories = [
+      'ad',
+      'promotion',
+      'personal',
+      'platform',
+      'copyright',
+      'boilerplate',
+      'whitespace',
+    ],
     preserveParagraphs = true,
     customPatterns = [],
   } = options;
@@ -242,8 +250,14 @@ export function cleanHtmlContent(html: string): string {
   let cleaned = html;
 
   // 移除 script/style/iframe 标签
-  cleaned = cleaned.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  cleaned = cleaned.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+  cleaned = cleaned.replace(
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    '',
+  );
+  cleaned = cleaned.replace(
+    /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+    '',
+  );
   cleaned = cleaned.replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, '');
   cleaned = cleaned.replace(/<object\b[^>]*>.*?<\/object>/gi, '');
   cleaned = cleaned.replace(/<embed\b[^>]*>/gi, '');
@@ -265,7 +279,10 @@ export function cleanHtmlContent(html: string): string {
   cleaned = cleaned.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '');
 
   // 移除 data-track 等跟踪属性
-  cleaned = cleaned.replace(/\s+data-(?:track|ad|click|monitor)[\w-]*\s*=\s*["'][^"']*["']/gi, '');
+  cleaned = cleaned.replace(
+    /\s+data-(?:track|ad|click|monitor)[\w-]*\s*=\s*["'][^"']*["']/gi,
+    '',
+  );
 
   // 移除 display:none 的元素
   cleaned = cleaned.replace(
@@ -350,7 +367,15 @@ export function detectAdDensity(content: string): number {
  */
 export function extractPureContent(content: string): string {
   const result = cleanContent(content, {
-    categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+    categories: [
+      'ad',
+      'promotion',
+      'personal',
+      'platform',
+      'copyright',
+      'boilerplate',
+      'whitespace',
+    ],
     preserveParagraphs: true,
   });
 

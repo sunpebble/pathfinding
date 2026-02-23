@@ -186,7 +186,8 @@ describe('validateDisplayFields', () => {
 describe('fillMissingDisplayFields', () => {
   it('should fill missing title from content', () => {
     const guide = {
-      content: 'This is a test content for the travel guide that is quite long.',
+      content:
+        'This is a test content for the travel guide that is quite long.',
     };
 
     const result = fillMissingDisplayFields(guide);
@@ -211,7 +212,10 @@ describe('fillMissingDisplayFields', () => {
 
   it('should fill coverImageUrl from imageUrls', () => {
     const guide = {
-      imageUrls: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+      imageUrls: [
+        'https://example.com/image1.jpg',
+        'https://example.com/image2.jpg',
+      ],
     };
 
     const result = fillMissingDisplayFields(guide);
@@ -403,7 +407,17 @@ describe('fillMissingDisplayFields - Edge Cases', () => {
   });
 
   it('should handle all platforms for default images', () => {
-    const platforms = ['xiaohongshu', 'weibo', 'ctrip', 'douyin', 'tripadvisor', 'mafengwo', 'qunar', 'qyer', 'tongcheng'] as const;
+    const platforms = [
+      'xiaohongshu',
+      'weibo',
+      'ctrip',
+      'douyin',
+      'tripadvisor',
+      'mafengwo',
+      'qunar',
+      'qyer',
+      'tongcheng',
+    ] as const;
 
     for (const platform of platforms) {
       const guide = {

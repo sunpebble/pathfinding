@@ -3,6 +3,7 @@
  * 从 Convex 拉取所有游记，用 content-cleaner 清洗后回写
  */
 
+/* eslint-disable no-console */
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../convex/_generated/api.js';
 import { cleanContent } from '../packages/crawler-types/src/content-cleaner.js';
@@ -47,7 +48,15 @@ async function main() {
 
         // 清洗内容
         const cleanResult = cleanContent(guide.content, {
-          categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+          categories: [
+            'ad',
+            'promotion',
+            'personal',
+            'platform',
+            'copyright',
+            'boilerplate',
+            'whitespace',
+          ],
           preserveParagraphs: true,
         });
 
@@ -59,7 +68,9 @@ async function main() {
           });
 
           totalCleaned++;
-          const pct = Math.round((1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100);
+          const pct = Math.round(
+            (1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100,
+          );
           console.log(
             `✅ [${totalProcessed}] ${item.title?.slice(0, 30) || item.sourceExternalId} — 清除 ${pct}% 噪音 (${cleanResult.originalLength} → ${cleanResult.cleanedLength}) [${cleanResult.removedTypes.join(', ')}]`,
           );

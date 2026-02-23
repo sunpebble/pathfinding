@@ -93,14 +93,18 @@ export const getUserProfile = query({
       const currentUserFollows = await ctx.db
         .query('userFollows')
         .withIndex('by_follower_following', q =>
-          q.eq('followerId', args.currentUserId!).eq('followingId', args.userId))
+          q
+            .eq('followerId', args.currentUserId!)
+            .eq('followingId', args.userId))
         .first();
       isFollowing = currentUserFollows !== null;
 
       const targetUserFollows = await ctx.db
         .query('userFollows')
         .withIndex('by_follower_following', q =>
-          q.eq('followerId', args.userId).eq('followingId', args.currentUserId!))
+          q
+            .eq('followerId', args.userId)
+            .eq('followingId', args.currentUserId!))
         .first();
       isFollowedBy = targetUserFollows !== null;
     }

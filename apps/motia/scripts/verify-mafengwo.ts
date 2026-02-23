@@ -100,7 +100,10 @@ async function verify() {
     console.log('='.repeat(50));
   }
   catch (error) {
-    console.error('\n❌ 验证失败:', error instanceof Error ? error.message : error);
+    console.error(
+      '\n❌ 验证失败:',
+      error instanceof Error ? error.message : error,
+    );
     process.exit(1);
   }
   finally {

@@ -83,7 +83,9 @@ export type GuideWithDisplayFields = Doc<'travelGuides'> & {
 /**
  * Validates whether a guide has all required display fields populated
  */
-export function validateDisplayFields(guide: PartialGuide): DisplayFieldValidationResult {
+export function validateDisplayFields(
+  guide: PartialGuide,
+): DisplayFieldValidationResult {
   const missingFields: IosDisplayField[] = [];
 
   // Check title
@@ -92,7 +94,10 @@ export function validateDisplayFields(guide: PartialGuide): DisplayFieldValidati
   }
 
   // Check coverImageUrl - also check imageUrls as fallback source
-  if (!guide.coverImageUrl && (!guide.imageUrls || guide.imageUrls.length === 0)) {
+  if (
+    !guide.coverImageUrl
+    && (!guide.imageUrls || guide.imageUrls.length === 0)
+  ) {
     missingFields.push('coverImageUrl');
   }
 
@@ -160,7 +165,9 @@ function getDefaultCoverImage(platform?: string): string {
  * Fills missing display fields with reasonable defaults
  * Does NOT overwrite existing non-empty values
  */
-export function fillMissingDisplayFields<T extends PartialGuide>(guide: T): T & {
+export function fillMissingDisplayFields<T extends PartialGuide>(
+  guide: T,
+): T & {
   title: string;
   coverImageUrl: string;
   authorName: string;
@@ -243,13 +250,17 @@ export function fillMissingDisplayFields<T extends PartialGuide>(guide: T): T & 
  * Ensures a guide has all display fields populated (for query results)
  * This is a read-only operation - it returns a new object with filled fields
  */
-export function ensureDisplayFields(guide: Doc<'travelGuides'>): GuideWithDisplayFields {
+export function ensureDisplayFields(
+  guide: Doc<'travelGuides'>,
+): GuideWithDisplayFields {
   return fillMissingDisplayFields(guide) as GuideWithDisplayFields;
 }
 
 /**
  * Ensures multiple guides have all display fields populated
  */
-export function ensureDisplayFieldsMany(guides: Doc<'travelGuides'>[]): GuideWithDisplayFields[] {
+export function ensureDisplayFieldsMany(
+  guides: Doc<'travelGuides'>[],
+): GuideWithDisplayFields[] {
   return guides.map(ensureDisplayFields);
 }

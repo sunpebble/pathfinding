@@ -112,7 +112,9 @@ export const getByDestination = query({
     );
 
     // Filter out any null guides (in case of orphaned records)
-    const validGuides = guides.filter((g): g is NonNullable<typeof g> => g !== null);
+    const validGuides = guides.filter(
+      (g): g is NonNullable<typeof g> => g !== null,
+    );
 
     return {
       guides: validGuides,

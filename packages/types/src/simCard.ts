@@ -15,7 +15,12 @@ export type SimCardCoverageType = 'single_country' | 'regional' | 'global';
 /**
  * Signal quality rating for reviews
  */
-export type SignalQuality = 'excellent' | 'good' | 'average' | 'poor' | 'very_poor';
+export type SignalQuality
+  = | 'excellent'
+    | 'good'
+    | 'average'
+    | 'poor'
+    | 'very_poor';
 
 /**
  * Review moderation status
@@ -180,22 +185,51 @@ export interface FavoriteSimCardWithDetails extends FavoriteSimCard {
 /**
  * Create SIM card input
  */
-export type CreateSimCardInput = Omit<SimCard, 'id' | 'rating' | 'reviewCount' | 'salesCount' | 'createdAt' | 'updatedAt'>;
+export type CreateSimCardInput = Omit<
+  SimCard,
+  'id' | 'rating' | 'reviewCount' | 'salesCount' | 'createdAt' | 'updatedAt'
+>;
 
 /**
  * Update SIM card input
  */
-export type UpdateSimCardInput = Partial<Omit<SimCard, 'id' | 'createdAt' | 'updatedAt'>>;
+export type UpdateSimCardInput = Partial<
+  Omit<SimCard, 'id' | 'createdAt' | 'updatedAt'>
+>;
 
 /**
  * Create review input
  */
-export type CreateSimCardReviewInput = Omit<SimCardReview, 'id' | 'helpfulCount' | 'reportCount' | 'isVerified' | 'purchaseVerified' | 'status' | 'createdAt' | 'updatedAt'>;
+export type CreateSimCardReviewInput = Omit<
+  SimCardReview,
+  | 'id'
+  | 'helpfulCount'
+  | 'reportCount'
+  | 'isVerified'
+  | 'purchaseVerified'
+  | 'status'
+  | 'createdAt'
+  | 'updatedAt'
+>;
 
 /**
  * Update review input
  */
-export type UpdateSimCardReviewInput = Partial<Omit<SimCardReview, 'id' | 'simCardId' | 'userId' | 'helpfulCount' | 'reportCount' | 'isVerified' | 'purchaseVerified' | 'status' | 'createdAt' | 'updatedAt'>>;
+export type UpdateSimCardReviewInput = Partial<
+  Omit<
+    SimCardReview,
+    | 'id'
+    | 'simCardId'
+    | 'userId'
+    | 'helpfulCount'
+    | 'reportCount'
+    | 'isVerified'
+    | 'purchaseVerified'
+    | 'status'
+    | 'createdAt'
+    | 'updatedAt'
+  >
+>;
 
 /**
  * SIM card search filters

@@ -11,7 +11,6 @@ import {
   closeKernelBrowser,
   createKernelBrowser,
   extractGuideUrls,
-
   scrollToLoadMore,
 } from '../lib/kernel-browser.js';
 

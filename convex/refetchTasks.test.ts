@@ -57,7 +57,8 @@ function calculateCompletenessLevel(input: {
     qualityScore,
   } = input;
 
-  const isTruncated = contentTruncated || (content ? isContentTruncated(content) : false);
+  const isTruncated
+    = contentTruncated || (content ? isContentTruncated(content) : false);
   const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
   const hasTitle = !!(title && title.trim().length > 0);
   const hasAuthor = !!(authorName && authorName.trim().length > 0);
@@ -65,13 +66,22 @@ function calculateCompletenessLevel(input: {
   const contentLength = content?.length ?? 0;
 
   const hasAllCounts
-    = likesCount !== undefined && savesCount !== undefined
-      && commentsCount !== undefined && viewsCount !== undefined;
+    = likesCount !== undefined
+      && savesCount !== undefined
+      && commentsCount !== undefined
+      && viewsCount !== undefined;
   const hasQualityScore = qualityScore !== undefined;
 
-  if (hasTitle && hasImages && hasAuthor && hasDestinations
-    && hasAllCounts && hasQualityScore
-    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE && !isTruncated) {
+  if (
+    hasTitle
+    && hasImages
+    && hasAuthor
+    && hasDestinations
+    && hasAllCounts
+    && hasQualityScore
+    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE
+    && !isTruncated
+  ) {
     return 'complete';
   }
 
@@ -117,7 +127,9 @@ describe('refetchTasks - Truncation Detection', () => {
     });
 
     it('should NOT detect content with ... in middle as truncated', () => {
-      expect(isContentTruncated('Some content... and more content here.')).toBe(false);
+      expect(isContentTruncated('Some content... and more content here.')).toBe(
+        false,
+      );
     });
 
     it('should handle empty content', () => {
@@ -362,8 +374,14 @@ describe('refetchTasks - Merge Result Logic', () => {
 
   describe('image URL merging', () => {
     it('should merge image URLs without duplicates', () => {
-      const existingUrls = ['https://example.com/1.jpg', 'https://example.com/2.jpg'];
-      const newUrls = ['https://example.com/2.jpg', 'https://example.com/3.jpg'];
+      const existingUrls = [
+        'https://example.com/1.jpg',
+        'https://example.com/2.jpg',
+      ];
+      const newUrls = [
+        'https://example.com/2.jpg',
+        'https://example.com/3.jpg',
+      ];
 
       const existingSet = new Set(existingUrls);
       const uniqueNewUrls = newUrls.filter(url => !existingSet.has(url));
@@ -377,7 +395,10 @@ describe('refetchTasks - Merge Result Logic', () => {
 
     it('should set coverImageUrl from first image if missing', () => {
       const existingCoverUrl = undefined;
-      const newImageUrls = ['https://example.com/new1.jpg', 'https://example.com/new2.jpg'];
+      const newImageUrls = [
+        'https://example.com/new1.jpg',
+        'https://example.com/new2.jpg',
+      ];
 
       const coverImageUrl = existingCoverUrl ?? newImageUrls[0];
 

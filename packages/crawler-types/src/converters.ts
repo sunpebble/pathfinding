@@ -26,24 +26,30 @@ type CamelToSnake<S extends string> = S extends `${infer T}${infer U}`
 /**
  * Recursively convert object keys from snake_case to camelCase
  */
-export type SnakeToCamelObject<T> = T extends Array<infer U>
-  ? Array<SnakeToCamelObject<U>>
-  : T extends object
-    ? {
-        [K in keyof T as K extends string ? SnakeToCamel<K> : K]: SnakeToCamelObject<T[K]>;
-      }
-    : T;
+export type SnakeToCamelObject<T>
+  = T extends Array<infer U>
+    ? Array<SnakeToCamelObject<U>>
+    : T extends object
+      ? {
+          [K in keyof T as K extends string
+            ? SnakeToCamel<K>
+            : K]: SnakeToCamelObject<T[K]>;
+        }
+      : T;
 
 /**
  * Recursively convert object keys from camelCase to snake_case
  */
-export type CamelToSnakeObject<T> = T extends Array<infer U>
-  ? Array<CamelToSnakeObject<U>>
-  : T extends object
-    ? {
-        [K in keyof T as K extends string ? CamelToSnake<K> : K]: CamelToSnakeObject<T[K]>;
-      }
-    : T;
+export type CamelToSnakeObject<T>
+  = T extends Array<infer U>
+    ? Array<CamelToSnakeObject<U>>
+    : T extends object
+      ? {
+          [K in keyof T as K extends string
+            ? CamelToSnake<K>
+            : K]: CamelToSnakeObject<T[K]>;
+        }
+      : T;
 
 // ============================================================================
 // Runtime Conversion Functions

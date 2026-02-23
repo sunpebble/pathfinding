@@ -18,10 +18,13 @@ export async function GET(
 
   try {
     // 获取 guide + 最新 AI 数据
-    const result = await client.query(api.travelGuideAiData.getGuideWithAiData, {
-      // eslint-disable-next-line ts/no-explicit-any
-      guideId: id as any,
-    });
+    const result = await client.query(
+      api.travelGuideAiData.getGuideWithAiData,
+      {
+        // eslint-disable-next-line ts/no-explicit-any
+        guideId: id as any,
+      },
+    );
 
     if (!result || !result.guide) {
       // fallback: 直接查 guide
@@ -30,10 +33,7 @@ export async function GET(
         id: id as any,
       });
       if (!guide) {
-        return NextResponse.json(
-          { error: 'Guide not found' },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: 'Guide not found' }, { status: 404 });
       }
       return NextResponse.json({
         data: transformGuide(guide, null),
@@ -56,8 +56,11 @@ export async function GET(
 /**
  * 转换 guide 数据为 snake_case API 格式，合并 AI 数据
  */
-// eslint-disable-next-line ts/no-explicit-any
-function transformGuide(guide: Record<string, any>, aiData: Record<string, any> | null) {
+
+function transformGuide(
+  guide: Record<string, any>,
+  aiData: Record<string, any> | null,
+) {
   return {
     id: guide._id,
     _id: guide._id,
@@ -101,14 +104,16 @@ function transformGuide(guide: Record<string, any>, aiData: Record<string, any> 
           total_pois: aiData.geocodingMetrics.totalPois,
           average_confidence: aiData.geocodingMetrics.averageConfidence,
           low_confidence_count: aiData.geocodingMetrics.lowConfidenceCount,
-          manually_verified_count: aiData.geocodingMetrics.manuallyVerifiedCount,
+          manually_verified_count:
+            aiData.geocodingMetrics.manuallyVerifiedCount,
         }
       : guide.geocodingMetrics
         ? {
             total_pois: guide.geocodingMetrics.totalPois,
             average_confidence: guide.geocodingMetrics.averageConfidence,
             low_confidence_count: guide.geocodingMetrics.lowConfidenceCount,
-            manually_verified_count: guide.geocodingMetrics.manuallyVerifiedCount,
+            manually_verified_count:
+              guide.geocodingMetrics.manuallyVerifiedCount,
           }
         : undefined,
   };

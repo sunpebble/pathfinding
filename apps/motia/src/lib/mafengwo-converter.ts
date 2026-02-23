@@ -150,7 +150,13 @@ export function determineCompletenessLevel(
   const hasAuthor = Boolean(data.author);
 
   // complete: 所有 iOS 必需字段, content >= 500
-  if (hasTitle && contentLength >= 500 && hasImages && hasAuthor && qualityScore >= 0.8) {
+  if (
+    hasTitle
+    && contentLength >= 500
+    && hasImages
+    && hasAuthor
+    && qualityScore >= 0.8
+  ) {
     return 'complete';
   }
 
@@ -175,7 +181,15 @@ export function convertToConvexFormat(
 
   // 清洗内容：去除广告、推广、个人信息、平台噪音
   const cleanResult = cleanContent(rawData.content || '', {
-    categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+    categories: [
+      'ad',
+      'promotion',
+      'personal',
+      'platform',
+      'copyright',
+      'boilerplate',
+      'whitespace',
+    ],
     preserveParagraphs: true,
   });
   const cleanedContent = cleanResult.content;
@@ -183,7 +197,10 @@ export function convertToConvexFormat(
   // 使用清洗后的内容计算质量分数
   const cleanedRawData = { ...rawData, content: cleanedContent };
   const qualityScore = calculateQualityScore(cleanedRawData);
-  const completenessLevel = determineCompletenessLevel(cleanedRawData, qualityScore);
+  const completenessLevel = determineCompletenessLevel(
+    cleanedRawData,
+    qualityScore,
+  );
 
   return {
     sourcePlatform: 'mafengwo',

@@ -151,7 +151,11 @@ export function validateGuide(input: GuideValidationInput): ValidationResult {
   // === Required Fields ===
 
   // sourcePlatform
-  const sourcePlatform = getValue<string>(input, 'sourcePlatform', 'source_platform');
+  const sourcePlatform = getValue<string>(
+    input,
+    'sourcePlatform',
+    'source_platform',
+  );
   if (!sourcePlatform) {
     errors.push({
       field: 'sourcePlatform',
@@ -168,7 +172,11 @@ export function validateGuide(input: GuideValidationInput): ValidationResult {
   }
 
   // sourceExternalId
-  const sourceExternalId = getValue<string>(input, 'sourceExternalId', 'source_external_id');
+  const sourceExternalId = getValue<string>(
+    input,
+    'sourceExternalId',
+    'source_external_id',
+  );
   if (!sourceExternalId) {
     errors.push({
       field: 'sourceExternalId',
@@ -204,7 +212,9 @@ export function validateGuide(input: GuideValidationInput): ValidationResult {
     }
 
     // Truncation detection (warning, not error)
-    const isTruncated = TRUNCATION_PATTERNS.some(pattern => pattern.test(content));
+    const isTruncated = TRUNCATION_PATTERNS.some(pattern =>
+      pattern.test(content),
+    );
     if (isTruncated) {
       warnings.push({
         field: 'content',
@@ -279,7 +289,11 @@ export function validateGuide(input: GuideValidationInput): ValidationResult {
   }
 
   // commentsCount
-  const commentsCount = getValue<number>(input, 'commentsCount', 'comments_count');
+  const commentsCount = getValue<number>(
+    input,
+    'commentsCount',
+    'comments_count',
+  );
   if (commentsCount !== undefined && commentsCount !== null) {
     if (typeof commentsCount !== 'number' || !Number.isFinite(commentsCount)) {
       errors.push({
@@ -362,7 +376,10 @@ export function validateGuides(inputs: GuideValidationInput[]): {
   return {
     valid: invalidResults.length === 0,
     results: invalidResults.length > 0 ? invalidResults : results,
-    totalErrors: invalidResults.reduce((sum, r) => sum + r.result.errors.length, 0),
+    totalErrors: invalidResults.reduce(
+      (sum, r) => sum + r.result.errors.length,
+      0,
+    ),
   };
 }
 
@@ -446,21 +463,32 @@ export interface DisplayFieldInput {
  *   console.log('Missing fields:', result.missingFields);
  * }
  */
-export function validateDisplayFields(guide: DisplayFieldInput): DisplayFieldValidationResult {
+export function validateDisplayFields(
+  guide: DisplayFieldInput,
+): DisplayFieldValidationResult {
   const missingFields: IosDisplayField[] = [];
 
   // Check title
-  if (!guide.title || (typeof guide.title === 'string' && guide.title.trim() === '')) {
+  if (
+    !guide.title
+    || (typeof guide.title === 'string' && guide.title.trim() === '')
+  ) {
     missingFields.push('title');
   }
 
   // Check coverImageUrl - also check imageUrls as fallback source
-  if (!guide.coverImageUrl && (!guide.imageUrls || guide.imageUrls.length === 0)) {
+  if (
+    !guide.coverImageUrl
+    && (!guide.imageUrls || guide.imageUrls.length === 0)
+  ) {
     missingFields.push('coverImageUrl');
   }
 
   // Check authorName
-  if (!guide.authorName || (typeof guide.authorName === 'string' && guide.authorName.trim() === '')) {
+  if (
+    !guide.authorName
+    || (typeof guide.authorName === 'string' && guide.authorName.trim() === '')
+  ) {
     missingFields.push('authorName');
   }
 
@@ -539,7 +567,9 @@ export interface CompletenessInput {
  * });
  * // Returns: 'complete'
  */
-export function calculateCompletenessLevel(input: CompletenessInput): CompletenessLevel {
+export function calculateCompletenessLevel(
+  input: CompletenessInput,
+): CompletenessLevel {
   const {
     title,
     content,
@@ -556,7 +586,8 @@ export function calculateCompletenessLevel(input: CompletenessInput): Completene
   } = input;
 
   // Check if content is truncated
-  const isTruncated = contentTruncated || (content ? isContentTruncated(content) : false);
+  const isTruncated
+    = contentTruncated || (content ? isContentTruncated(content) : false);
 
   // Check for images
   const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
@@ -631,7 +662,9 @@ export interface TitleValidationResult {
  * const result = validateTitle('Very long title...');
  * // { title: 'Very long title...', titleTruncated: false }
  */
-export function validateTitle(title: string | undefined | null): TitleValidationResult {
+export function validateTitle(
+  title: string | undefined | null,
+): TitleValidationResult {
   if (!title || title.trim().length === 0) {
     return {
       title: undefined,
@@ -725,7 +758,9 @@ export interface AuthorValidationResult {
  * const result = validateAuthor('');
  * // { authorName: undefined, warning: 'Author is missing...' }
  */
-export function validateAuthor(authorName: string | undefined | null): AuthorValidationResult {
+export function validateAuthor(
+  authorName: string | undefined | null,
+): AuthorValidationResult {
   if (!authorName || authorName.trim().length === 0) {
     return {
       authorName: undefined,
@@ -802,13 +837,19 @@ export interface EnhancedValidationResult {
  *   // Insert with warnings, completenessLevel will be degraded
  * }
  */
-export function validateGuideEnhanced(input: GuideValidationInput): EnhancedValidationResult {
+export function validateGuideEnhanced(
+  input: GuideValidationInput,
+): EnhancedValidationResult {
   const errors: ValidationIssue[] = [];
   const warnings: ValidationIssue[] = [];
 
   // === ERROR-LEVEL: Required fields (blocks insertion) ===
 
-  const sourcePlatform = getValue<string>(input, 'sourcePlatform', 'source_platform');
+  const sourcePlatform = getValue<string>(
+    input,
+    'sourcePlatform',
+    'source_platform',
+  );
   if (!sourcePlatform) {
     errors.push({
       field: 'sourcePlatform',
@@ -826,7 +867,11 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
     });
   }
 
-  const sourceExternalId = getValue<string>(input, 'sourceExternalId', 'source_external_id');
+  const sourceExternalId = getValue<string>(
+    input,
+    'sourceExternalId',
+    'source_external_id',
+  );
   if (!sourceExternalId) {
     errors.push({
       field: 'sourceExternalId',
@@ -903,7 +948,10 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
       field: 'coverImageUrl',
       message: imageResult.warning,
       severity: 'warning',
-      received: { coverImageUrl: input.coverImageUrl, imageUrls: input.imageUrls },
+      received: {
+        coverImageUrl: input.coverImageUrl,
+        imageUrls: input.imageUrls,
+      },
     });
   }
 

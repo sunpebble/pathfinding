@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { useQuery } from 'convex/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -21,8 +27,13 @@ globalThis.DOMRect = class DOMRect {
   right = 0;
   bottom = 0;
   left = 0;
-  toJSON() { return {}; }
-  static fromRect(_other?: DOMRectInit) { return new DOMRect(); }
+  toJSON() {
+    return {};
+  }
+
+  static fromRect(_other?: DOMRectInit) {
+    return new DOMRect();
+  }
 } as unknown as typeof DOMRect;
 
 // Mock pointer capture methods
@@ -58,7 +69,7 @@ vi.mock('@pathfinding/convex-client', () => ({
   },
 }));
 
-describe('AuthButton', () => {
+describe('authButton', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

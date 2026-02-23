@@ -61,33 +61,41 @@ describe('parseChineseNumber', () => {
 
 describe('extractSourceExternalId', () => {
   it('should extract ID from standard mobile URL', () => {
-    expect(extractSourceExternalId('https://m.mafengwo.cn/i/24648165.html'))
-      .toBe('24648165');
+    expect(
+      extractSourceExternalId('https://m.mafengwo.cn/i/24648165.html'),
+    ).toBe('24648165');
   });
 
   it('should extract ID from desktop URL', () => {
-    expect(extractSourceExternalId('https://www.mafengwo.cn/i/12345678.html'))
-      .toBe('12345678');
+    expect(
+      extractSourceExternalId('https://www.mafengwo.cn/i/12345678.html'),
+    ).toBe('12345678');
   });
 
   it('should extract from URL with query params', () => {
-    expect(extractSourceExternalId('https://m.mafengwo.cn/i/24648165.html?from=share'))
-      .toBe('24648165');
+    expect(
+      extractSourceExternalId(
+        'https://m.mafengwo.cn/i/24648165.html?from=share',
+      ),
+    ).toBe('24648165');
   });
 
   it('should fallback to numeric extraction for non-standard URLs', () => {
-    expect(extractSourceExternalId('https://mafengwo.cn/note/24648165'))
-      .toBe('24648165');
+    expect(extractSourceExternalId('https://mafengwo.cn/note/24648165')).toBe(
+      '24648165',
+    );
   });
 
   it('should throw for URLs without any numeric ID', () => {
-    expect(() => extractSourceExternalId('https://mafengwo.cn/about'))
-      .toThrow('Cannot extract external ID');
+    expect(() => extractSourceExternalId('https://mafengwo.cn/about')).toThrow(
+      'Cannot extract external ID',
+    );
   });
 
   it('should handle various path formats', () => {
-    expect(extractSourceExternalId('https://m.mafengwo.cn/i/99999999.html'))
-      .toBe('99999999');
+    expect(
+      extractSourceExternalId('https://m.mafengwo.cn/i/99999999.html'),
+    ).toBe('99999999');
   });
 });
 
@@ -400,7 +408,9 @@ describe('convertToConvexFormat', () => {
 
   it('should determine completenessLevel', () => {
     const result = convertToConvexFormat(sampleUrl, sampleGuide);
-    expect(['complete', 'usable', 'incomplete']).toContain(result.completenessLevel);
+    expect(['complete', 'usable', 'incomplete']).toContain(
+      result.completenessLevel,
+    );
   });
 
   it('should set crawledAt to current timestamp', () => {
@@ -412,7 +422,11 @@ describe('convertToConvexFormat', () => {
   });
 
   it('should handle empty images array', () => {
-    const guide = { ...sampleGuide, images: [] as string[], coverImage: undefined };
+    const guide = {
+      ...sampleGuide,
+      images: [] as string[],
+      coverImage: undefined,
+    };
     const result = convertToConvexFormat(sampleUrl, guide);
     expect(result.imageUrls).toEqual([]);
     expect(result.coverImageUrl).toBeUndefined();

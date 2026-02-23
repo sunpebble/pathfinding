@@ -1,9 +1,19 @@
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { deleteGuideFromAggregates, insertGuideToAggregates, replaceGuideInAggregates } from './guideAggregates';
-import { deleteDestinationsForGuide, syncDestinationsInternal } from './guideDestinations';
-import { ensureDisplayFields, fillMissingDisplayFields } from './lib/displayFields';
+import {
+  deleteGuideFromAggregates,
+  insertGuideToAggregates,
+  replaceGuideInAggregates,
+} from './guideAggregates';
+import {
+  deleteDestinationsForGuide,
+  syncDestinationsInternal,
+} from './guideDestinations';
+import {
+  ensureDisplayFields,
+  fillMissingDisplayFields,
+} from './lib/displayFields';
 
 /**
  * Travel Guides - Crawled Content from Social Platforms
@@ -57,7 +67,8 @@ function calculateCompletenessLevel(input: {
     qualityScore,
   } = input;
 
-  const isTruncated = contentTruncated || (content ? isContentTruncated(content) : false);
+  const isTruncated
+    = contentTruncated || (content ? isContentTruncated(content) : false);
   const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
   const hasTitle = !!(title && title.trim().length > 0);
   const hasAuthor = !!(authorName && authorName.trim().length > 0);
@@ -65,17 +76,26 @@ function calculateCompletenessLevel(input: {
   const contentLength = content?.length ?? 0;
 
   const hasAllCounts
-    = likesCount !== undefined && likesCount !== null
-      && savesCount !== undefined && savesCount !== null
-      && commentsCount !== undefined && commentsCount !== null
-      && viewsCount !== undefined && viewsCount !== null;
+    = likesCount !== undefined
+      && likesCount !== null
+      && savesCount !== undefined
+      && savesCount !== null
+      && commentsCount !== undefined
+      && commentsCount !== null
+      && viewsCount !== undefined
+      && viewsCount !== null;
 
   const hasQualityScore = qualityScore !== undefined && qualityScore !== null;
 
   if (
-    hasTitle && hasImages && hasAuthor && hasDestinations
-    && hasAllCounts && hasQualityScore
-    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE && !isTruncated
+    hasTitle
+    && hasImages
+    && hasAuthor
+    && hasDestinations
+    && hasAllCounts
+    && hasQualityScore
+    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE
+    && !isTruncated
   ) {
     return 'complete';
   }
@@ -129,7 +149,8 @@ export const list = query({
     if (args.completenessLevel) {
       guides = await ctx.db
         .query('travelGuides')
-        .withIndex('by_completeness', q => q.eq('completenessLevel', args.completenessLevel!))
+        .withIndex('by_completeness', q =>
+          q.eq('completenessLevel', args.completenessLevel!))
         .order('desc')
         .take(fetchLimit);
 
@@ -218,7 +239,9 @@ export const getByPlatformAndExternalId = query({
     const guide = await ctx.db
       .query('travelGuides')
       .withIndex('by_platform_external', q =>
-        q.eq('sourcePlatform', args.sourcePlatform).eq('sourceExternalId', args.sourceExternalId))
+        q
+          .eq('sourcePlatform', args.sourcePlatform)
+          .eq('sourceExternalId', args.sourceExternalId))
       .first();
     if (!guide)
       return null;
@@ -544,7 +567,7 @@ export const upsert = mutation({
 
     return {
       id: guideId,
-      action: existing ? 'updated' as const : 'inserted' as const,
+      action: existing ? ('updated' as const) : ('inserted' as const),
       contentTruncated,
       completenessLevel,
     };
@@ -843,14 +866,13 @@ export const getGuidesForEnhancement = query({
     // Get guides at the specified completeness level that haven't been AI processed
     const guides = await ctx.db
       .query('travelGuides')
-      .withIndex('by_completeness', q => q.eq('completenessLevel', priorityLevel))
+      .withIndex('by_completeness', q =>
+        q.eq('completenessLevel', priorityLevel))
       .order('desc')
       .take(limit * 2);
 
     // Filter to guides missing title or without AI summary
-    const needsEnhancement = guides.filter(g =>
-      !g.title || !g.aiSummary,
-    );
+    const needsEnhancement = guides.filter(g => !g.title || !g.aiSummary);
 
     return needsEnhancement.slice(0, limit).map(g => ({
       _id: g._id,

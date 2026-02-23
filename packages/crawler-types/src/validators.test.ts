@@ -48,7 +48,10 @@ describe('validateGuide', () => {
       });
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
-        expect.objectContaining({ field: 'sourceExternalId', error: 'required' }),
+        expect.objectContaining({
+          field: 'sourceExternalId',
+          error: 'required',
+        }),
       );
     });
 
@@ -92,7 +95,10 @@ describe('validateGuide', () => {
   describe('platform validation', () => {
     it('should accept valid platforms', () => {
       for (const platform of VALID_PLATFORMS) {
-        const result = validateGuide({ ...validGuide, sourcePlatform: platform });
+        const result = validateGuide({
+          ...validGuide,
+          sourcePlatform: platform,
+        });
         expect(result.valid).toBe(true);
       }
     });
@@ -292,7 +298,9 @@ describe('isContentTruncated', () => {
   });
 
   it('should not flag normal content', () => {
-    expect(isContentTruncated('Normal content without truncation.')).toBe(false);
+    expect(isContentTruncated('Normal content without truncation.')).toBe(
+      false,
+    );
   });
 });
 
@@ -335,88 +343,110 @@ describe('calculateCompletenessLevel', () => {
     });
 
     it('should NOT return "complete" if content is truncated', () => {
-      expect(calculateCompletenessLevel({
-        ...completeGuide,
-        contentTruncated: true,
-      })).not.toBe('complete');
+      expect(
+        calculateCompletenessLevel({
+          ...completeGuide,
+          contentTruncated: true,
+        }),
+      ).not.toBe('complete');
     });
 
     it('should NOT return "complete" if content < 500 chars', () => {
-      expect(calculateCompletenessLevel({
-        ...completeGuide,
-        content: 'A'.repeat(MIN_CONTENT_LENGTH_COMPLETE - 1),
-      })).not.toBe('complete');
+      expect(
+        calculateCompletenessLevel({
+          ...completeGuide,
+          content: 'A'.repeat(MIN_CONTENT_LENGTH_COMPLETE - 1),
+        }),
+      ).not.toBe('complete');
     });
 
     it('should NOT return "complete" if missing title', () => {
-      expect(calculateCompletenessLevel({
-        ...completeGuide,
-        title: undefined,
-      })).not.toBe('complete');
+      expect(
+        calculateCompletenessLevel({
+          ...completeGuide,
+          title: undefined,
+        }),
+      ).not.toBe('complete');
     });
 
     it('should NOT return "complete" if missing author', () => {
-      expect(calculateCompletenessLevel({
-        ...completeGuide,
-        authorName: undefined,
-      })).not.toBe('complete');
+      expect(
+        calculateCompletenessLevel({
+          ...completeGuide,
+          authorName: undefined,
+        }),
+      ).not.toBe('complete');
     });
 
     it('should NOT return "complete" if missing images', () => {
-      expect(calculateCompletenessLevel({
-        ...completeGuide,
-        coverImageUrl: undefined,
-        imageUrls: [],
-      })).not.toBe('complete');
+      expect(
+        calculateCompletenessLevel({
+          ...completeGuide,
+          coverImageUrl: undefined,
+          imageUrls: [],
+        }),
+      ).not.toBe('complete');
     });
 
     it('should NOT return "complete" if missing counts', () => {
-      expect(calculateCompletenessLevel({
-        ...completeGuide,
-        likesCount: undefined,
-      })).not.toBe('complete');
+      expect(
+        calculateCompletenessLevel({
+          ...completeGuide,
+          likesCount: undefined,
+        }),
+      ).not.toBe('complete');
     });
   });
 
   describe('usable level', () => {
     it('should return "usable" with title + content >= 200 + images', () => {
-      expect(calculateCompletenessLevel({
-        title: 'My Guide',
-        content: 'A'.repeat(MIN_CONTENT_LENGTH),
-        coverImageUrl: 'https://example.com/img.jpg',
-      })).toBe('usable');
+      expect(
+        calculateCompletenessLevel({
+          title: 'My Guide',
+          content: 'A'.repeat(MIN_CONTENT_LENGTH),
+          coverImageUrl: 'https://example.com/img.jpg',
+        }),
+      ).toBe('usable');
     });
 
     it('should return "usable" even without author or counts', () => {
-      expect(calculateCompletenessLevel({
-        title: 'My Guide',
-        content: 'A'.repeat(300),
-        imageUrls: ['https://example.com/img.jpg'],
-      })).toBe('usable');
+      expect(
+        calculateCompletenessLevel({
+          title: 'My Guide',
+          content: 'A'.repeat(300),
+          imageUrls: ['https://example.com/img.jpg'],
+        }),
+      ).toBe('usable');
     });
   });
 
   describe('incomplete level', () => {
     it('should return "incomplete" when missing title', () => {
-      expect(calculateCompletenessLevel({
-        content: 'A'.repeat(300),
-        coverImageUrl: 'https://example.com/img.jpg',
-      })).toBe('incomplete');
+      expect(
+        calculateCompletenessLevel({
+          content: 'A'.repeat(300),
+          coverImageUrl: 'https://example.com/img.jpg',
+        }),
+      ).toBe('incomplete');
     });
 
     it('should return "incomplete" when missing images', () => {
-      expect(calculateCompletenessLevel({
-        title: 'My Guide',
-        content: 'A'.repeat(300),
-      })).toBe('incomplete');
+      expect(
+        calculateCompletenessLevel({
+          title: 'My Guide',
+          content: 'A'.repeat(300),
+        }),
+      ).toBe('incomplete');
     });
 
     it('should return "incomplete" when content < 200 chars', () => {
-      expect(calculateCompletenessLevel({
-        title: 'My Guide',
-        content: 'A'.repeat(100),
-        coverImageUrl: 'https://example.com/img.jpg',
-      })).toBe('incomplete');
+      expect(
+        calculateCompletenessLevel({
+          title: 'My Guide',
+          content: 'A'.repeat(100),
+          coverImageUrl: 'https://example.com/img.jpg',
+        }),
+      ).toBe('incomplete');
     });
 
     it('should return "incomplete" for empty input', () => {
@@ -473,7 +503,10 @@ describe('validateImages', () => {
   });
 
   it('should auto-fill coverImageUrl from imageUrls[0]', () => {
-    const result = validateImages(undefined, ['https://example.com/first.jpg', 'https://example.com/second.jpg']);
+    const result = validateImages(undefined, [
+      'https://example.com/first.jpg',
+      'https://example.com/second.jpg',
+    ]);
     expect(result.coverImageUrl).toBe('https://example.com/first.jpg');
   });
 
@@ -484,7 +517,11 @@ describe('validateImages', () => {
   });
 
   it('should filter empty strings from imageUrls', () => {
-    const result = validateImages(undefined, ['', 'https://example.com/valid.jpg', '']);
+    const result = validateImages(undefined, [
+      '',
+      'https://example.com/valid.jpg',
+      '',
+    ]);
     expect(result.imageUrls).toEqual(['https://example.com/valid.jpg']);
   });
 });
@@ -537,7 +574,9 @@ describe('validateGuideEnhanced', () => {
 
   it('should calculate completenessLevel', () => {
     const result = validateGuideEnhanced(validInput);
-    expect(['complete', 'usable', 'incomplete']).toContain(result.completenessLevel);
+    expect(['complete', 'usable', 'incomplete']).toContain(
+      result.completenessLevel,
+    );
   });
 
   it('should return normalized data', () => {
@@ -547,7 +586,9 @@ describe('validateGuideEnhanced', () => {
       coverImageUrl: 'https://example.com/img.jpg',
     });
     expect(result.normalizedData.title).toBe('Test Title');
-    expect(result.normalizedData.coverImageUrl).toBe('https://example.com/img.jpg');
+    expect(result.normalizedData.coverImageUrl).toBe(
+      'https://example.com/img.jpg',
+    );
   });
 
   it('should detect content truncation as warning', () => {

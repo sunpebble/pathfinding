@@ -79,117 +79,156 @@ async function extractRanking(
   destinationId: string,
 ): Promise<RankingData> {
   const config = { rankingType, destinationId };
-  return page.evaluate((cfg: { rankingType: string; destinationId: string }) => {
-    const type = cfg.rankingType;
-    const destId = cfg.destinationId;
+  return page.evaluate(
+    (cfg: { rankingType: string; destinationId: string }) => {
+      const type = cfg.rankingType;
+      const destId = cfg.destinationId;
 
-    interface RankingItemInner {
-      rank: number;
-      poiId: string;
-      name: string;
-      category?: string;
-      rating?: number;
-      reviewsCount: number;
-      coverImage?: string;
-      reason?: string;
-    }
+      interface RankingItemInner {
+        rank: number;
+        poiId: string;
+        name: string;
+        category?: string;
+        rating?: number;
+        reviewsCount: number;
+        coverImage?: string;
+        reason?: string;
+      }
 
-    // 提取标题
-    const title = document.querySelector('h1.rank-title, .ranking-title, .list-title')?.textContent?.trim()
-      || document.querySelector('meta[property="og:title"]')?.getAttribute('content')?.split('-')[0]?.trim()
-      || `${type} 榜单`;
+      // 提取标题
+      const title
+        = document
+          .querySelector('h1.rank-title, .ranking-title, .list-title')
+          ?.textContent
+          ?.trim()
+          || document
+            .querySelector('meta[property="og:title"]')
+            ?.getAttribute('content')
+            ?.split('-')[0]
+            ?.trim()
+            || `${type} 榜单`;
 
-    // 提取描述
-    const description = document.querySelector('.rank-desc, .ranking-desc')?.textContent?.trim();
+      // 提取描述
+      const description = document
+        .querySelector('.rank-desc, .ranking-desc')
+        ?.textContent
+        ?.trim();
 
-    // 提取目的地名称
-    const destinationName = document.querySelector('.destination-name, .mdd-name')?.textContent?.trim();
+      // 提取目的地名称
+      const destinationName = document
+        .querySelector('.destination-name, .mdd-name')
+        ?.textContent
+        ?.trim();
 
-    // 提取榜单项目
-    const items: RankingItemInner[] = [];
-    const rankingSelectors = [
-      '.rank-item',
-      '.ranking-item',
-      '.list-item',
-      '.poi-item',
-      '[data-rank]',
-    ];
+      // 提取榜单项目
+      const items: RankingItemInner[] = [];
+      const rankingSelectors = [
+        '.rank-item',
+        '.ranking-item',
+        '.list-item',
+        '.poi-item',
+        '[data-rank]',
+      ];
 
-    for (const selector of rankingSelectors) {
-      document.querySelectorAll(selector).forEach((el, index) => {
-        // 提取 POI 链接
-        const link = el.querySelector('a[href*="/poi/"]') as HTMLAnchorElement;
-        if (!link)
-          return;
+      for (const selector of rankingSelectors) {
+        document.querySelectorAll(selector).forEach((el, index) => {
+          // 提取 POI 链接
+          const link = el.querySelector(
+            'a[href*="/poi/"]',
+          ) as HTMLAnchorElement;
+          if (!link)
+            return;
 
-        const poiIdMatch = link.href.match(/\/poi\/(\d+)\.html/);
-        if (!poiIdMatch)
-          return;
+          const poiIdMatch = link.href.match(/\/poi\/(\d+)\.html/);
+          if (!poiIdMatch)
+            return;
 
-        // 提取排名
-        const rankEl = el.querySelector('.rank-num, .ranking-num, [data-rank]');
-        const rankAttr = rankEl?.getAttribute('data-rank');
-        const rankText = rankEl?.textContent?.trim();
-        const rank = rankAttr
-          ? Number.parseInt(rankAttr, 10)
-          : (rankText ? Number.parseInt(rankText, 10) : index + 1);
+          // 提取排名
+          const rankEl = el.querySelector(
+            '.rank-num, .ranking-num, [data-rank]',
+          );
+          const rankAttr = rankEl?.getAttribute('data-rank');
+          const rankText = rankEl?.textContent?.trim();
+          const rank = rankAttr
+            ? Number.parseInt(rankAttr, 10)
+            : rankText
+              ? Number.parseInt(rankText, 10)
+              : index + 1;
 
-        // 提取名称
-        const name = el.querySelector('.name, .title, h3, h4')?.textContent?.trim()
-          || link.textContent?.trim()
-          || '';
+          // 提取名称
+          const name
+            = el.querySelector('.name, .title, h3, h4')?.textContent?.trim()
+              || link.textContent?.trim()
+              || '';
 
-        // 提取类别
-        const category = el.querySelector('.category, .type')?.textContent?.trim();
+          // 提取类别
+          const category = el
+            .querySelector('.category, .type')
+            ?.textContent
+            ?.trim();
 
-        // 提取评分
-        const ratingText = el.querySelector('.score, .rating')?.textContent?.trim();
-        const rating = ratingText ? Number.parseFloat(ratingText) : undefined;
+          // 提取评分
+          const ratingText = el
+            .querySelector('.score, .rating')
+            ?.textContent
+            ?.trim();
+          const rating = ratingText ? Number.parseFloat(ratingText) : undefined;
 
-        // 提取评价数
-        const reviewsText = el.querySelector('.review-count, .comments')?.textContent?.trim();
-        const reviewsMatch = reviewsText?.match(/(\d+)/);
-        const reviewsCount = reviewsMatch ? Number.parseInt(reviewsMatch[1], 10) : 0;
+          // 提取评价数
+          const reviewsText = el
+            .querySelector('.review-count, .comments')
+            ?.textContent
+            ?.trim();
+          const reviewsMatch = reviewsText?.match(/(\d+)/);
+          const reviewsCount = reviewsMatch
+            ? Number.parseInt(reviewsMatch[1], 10)
+            : 0;
 
-        // 提取图片
-        const coverImage = el.querySelector('img')?.getAttribute('src')
-          || el.querySelector('img')?.getAttribute('data-src');
+          // 提取图片
+          const coverImage
+            = el.querySelector('img')?.getAttribute('src')
+              || el.querySelector('img')?.getAttribute('data-src');
 
-        // 提取上榜理由
-        const reason = el.querySelector('.reason, .desc, .summary')?.textContent?.trim();
+          // 提取上榜理由
+          const reason = el
+            .querySelector('.reason, .desc, .summary')
+            ?.textContent
+            ?.trim();
 
-        items.push({
-          rank,
-          poiId: poiIdMatch[1],
-          name,
-          category,
-          rating,
-          reviewsCount,
-          coverImage: coverImage || undefined,
-          reason,
+          items.push({
+            rank,
+            poiId: poiIdMatch[1],
+            name,
+            category,
+            rating,
+            reviewsCount,
+            coverImage: coverImage || undefined,
+            reason,
+          });
         });
-      });
 
-      if (items.length > 0)
-        break;
-    }
+        if (items.length > 0)
+          break;
+      }
 
-    // 排序
-    items.sort((a, b) => a.rank - b.rank);
+      // 排序
+      items.sort((a, b) => a.rank - b.rank);
 
-    // 生成榜单 ID
-    const rankingId = `${destId}_${type}`;
+      // 生成榜单 ID
+      const rankingId = `${destId}_${type}`;
 
-    return {
-      rankingId,
-      rankingType: type,
-      title,
-      destinationId: destId,
-      destinationName,
-      description,
-      items,
-    };
-  }, config);
+      return {
+        rankingId,
+        rankingType: type,
+        title,
+        destinationId: destId,
+        destinationName,
+        description,
+        items,
+      };
+    },
+    config,
+  );
 }
 
 export async function handler(
@@ -205,7 +244,8 @@ export async function handler(
     };
   }
 
-  const { destinationId, destinationName, rankingType, maxRetries } = parseResult.data;
+  const { destinationId, destinationName, rankingType, maxRetries }
+    = parseResult.data;
 
   // 检查环境变量
   if (!process.env.KERNEL_API_KEY) {
@@ -255,7 +295,11 @@ export async function handler(
       await scrollToLoadMore(session.page, 5, 2000);
 
       // 提取榜单数据
-      const data = await extractRanking(session.page, rankingType, destinationId);
+      const data = await extractRanking(
+        session.page,
+        rankingType,
+        destinationId,
+      );
 
       if (data.items.length === 0) {
         lastError = 'No ranking items found';
@@ -300,7 +344,10 @@ export async function handler(
     }
     catch (error) {
       lastError = error instanceof Error ? error.message : 'Crawl failed';
-      logger.error('Ranking crawl attempt failed', { error: lastError, attempt });
+      logger.error('Ranking crawl attempt failed', {
+        error: lastError,
+        attempt,
+      });
     }
     finally {
       if (session) {

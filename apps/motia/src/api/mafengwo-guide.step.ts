@@ -32,7 +32,10 @@ export const config = {
   description: '马蜂窝攻略爬取',
   path: '/api/crawler/mafengwo/guide',
   method: 'POST',
-  emits: ['crawler.mafengwo.guide.list.completed', 'crawler.mafengwo.guide.detail.completed'],
+  emits: [
+    'crawler.mafengwo.guide.list.completed',
+    'crawler.mafengwo.guide.detail.completed',
+  ],
   flows: ['crawler'],
   bodySchema,
 };
@@ -112,22 +115,34 @@ async function extractGuideList(
         if (!href)
           return;
 
-        const guideIdMatch = href.match(/\/gonglve\/(?:ziyouxing\/)?(\d+)\.html/);
+        const guideIdMatch = href.match(
+          /\/gonglve\/(?:ziyouxing\/)?(\d+)\.html/,
+        );
         if (!guideIdMatch)
           return;
 
-        const title = el.querySelector('.title, h3, h4')?.textContent?.trim()
-          || linkEl?.textContent?.trim()
-          || '';
+        const title
+          = el.querySelector('.title, h3, h4')?.textContent?.trim()
+            || linkEl?.textContent?.trim()
+            || '';
 
-        const author = el.querySelector('.author, .user-name')?.textContent?.trim();
+        const author = el
+          .querySelector('.author, .user-name')
+          ?.textContent
+          ?.trim();
 
-        const viewsText = el.querySelector('.views, .read-count')?.textContent?.trim();
+        const viewsText = el
+          .querySelector('.views, .read-count')
+          ?.textContent
+          ?.trim();
         const viewsMatch = viewsText?.match(/(\d+)/);
-        const views = viewsMatch ? Number.parseInt(viewsMatch[1], 10) : undefined;
+        const views = viewsMatch
+          ? Number.parseInt(viewsMatch[1], 10)
+          : undefined;
 
-        const coverImage = el.querySelector('img')?.getAttribute('src')
-          || el.querySelector('img')?.getAttribute('data-src');
+        const coverImage
+          = el.querySelector('img')?.getAttribute('src')
+            || el.querySelector('img')?.getAttribute('data-src');
 
         items.push({
           guideId: guideIdMatch[1],
@@ -162,29 +177,52 @@ async function extractGuideDetail(
 ): Promise<GuideDetail> {
   return page.evaluate(() => {
     // 提取攻略 ID
-    const urlMatch = window.location.href.match(/\/gonglve\/(?:ziyouxing\/)?(\d+)\.html/);
+    const urlMatch = window.location.href.match(
+      /\/gonglve\/(?:ziyouxing\/)?(\d+)\.html/,
+    );
     const guideId = urlMatch?.[1] || '';
 
     // 提取标题
-    const title = document.querySelector('h1.title, .article-title, .guide-title')?.textContent?.trim()
-      || document.querySelector('meta[property="og:title"]')?.getAttribute('content')?.split('-')[0]?.trim()
-      || '';
+    const title
+      = document
+        .querySelector('h1.title, .article-title, .guide-title')
+        ?.textContent
+        ?.trim()
+        || document
+          .querySelector('meta[property="og:title"]')
+          ?.getAttribute('content')
+          ?.split('-')[0]
+          ?.trim()
+          || '';
 
     // 提取目的地
-    const destinationName = document.querySelector('.destination, .mdd-name')?.textContent?.trim();
+    const destinationName = document
+      .querySelector('.destination, .mdd-name')
+      ?.textContent
+      ?.trim();
 
     // 提取作者
-    const authorName = document.querySelector('.author-name, .user-name')?.textContent?.trim();
-    const authorLink = document.querySelector('a[href*="/u/"]') as HTMLAnchorElement;
+    const authorName = document
+      .querySelector('.author-name, .user-name')
+      ?.textContent
+      ?.trim();
+    const authorLink = document.querySelector(
+      'a[href*="/u/"]',
+    ) as HTMLAnchorElement;
     const authorIdMatch = authorLink?.href.match(/\/u\/(\d+)/);
     const authorId = authorIdMatch?.[1];
 
     // 提取摘要
-    const summary = document.querySelector('.summary, .intro, .abstract')?.textContent?.trim();
+    const summary = document
+      .querySelector('.summary, .intro, .abstract')
+      ?.textContent
+      ?.trim();
 
     // 提取正文内容
     let content = '';
-    const contentEl = document.querySelector('.article-content, .guide-content, .content');
+    const contentEl = document.querySelector(
+      '.article-content, .guide-content, .content',
+    );
     if (contentEl) {
       const clone = contentEl.cloneNode(true) as HTMLElement;
       // 移除广告和推荐
@@ -198,11 +236,13 @@ async function extractGuideDetail(
     const contentHtml = contentEl?.innerHTML;
 
     // 提取章节
-    const sections: Array<{ title: string; content: string; order: number }> = [];
+    const sections: Array<{ title: string; content: string; order: number }>
+      = [];
     document.querySelectorAll('.section, .chapter, h2').forEach((el, index) => {
-      const sectionTitle = el.tagName === 'H2'
-        ? el.textContent?.trim()
-        : el.querySelector('h2, h3, .title')?.textContent?.trim();
+      const sectionTitle
+        = el.tagName === 'H2'
+          ? el.textContent?.trim()
+          : el.querySelector('h2, h3, .title')?.textContent?.trim();
 
       if (sectionTitle) {
         let sectionContent = '';
@@ -221,15 +261,19 @@ async function extractGuideDetail(
 
     // 提取图片
     const images: string[] = [];
-    document.querySelectorAll('.article-content img, .guide-content img').forEach((img) => {
-      const src = img.getAttribute('src') || img.getAttribute('data-src');
-      if (src && !src.includes('icon') && !src.includes('avatar')) {
-        images.push(src);
-      }
-    });
+    document
+      .querySelectorAll('.article-content img, .guide-content img')
+      .forEach((img) => {
+        const src = img.getAttribute('src') || img.getAttribute('data-src');
+        if (src && !src.includes('icon') && !src.includes('avatar')) {
+          images.push(src);
+        }
+      });
 
-    const coverImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content')
-      || images[0];
+    const coverImage
+      = document
+        .querySelector('meta[property="og:image"]')
+        ?.getAttribute('content') || images[0];
 
     // 提取统计数据
     const pageText = document.body.textContent || '';
@@ -279,7 +323,9 @@ async function extractGuideDetail(
       }
     }
 
-    const commentsMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:评论|回复)/i);
+    const commentsMatch = pageText.match(
+      /(\d+(?:\.\d+)?[万k]?)\s*(?:评论|回复)/i,
+    );
     let commentsCount = 0;
     if (commentsMatch) {
       const val = commentsMatch[1];
@@ -304,7 +350,10 @@ async function extractGuideDetail(
     });
 
     // 提取发布时间
-    const publishedAt = document.querySelector('.publish-time, .date, time')?.textContent?.trim();
+    const publishedAt = document
+      .querySelector('.publish-time, .date, time')
+      ?.textContent
+      ?.trim();
 
     return {
       guideId,
@@ -341,13 +390,23 @@ export async function handler(
     };
   }
 
-  const { mode, destinationId, destinationName, guideUrl, scrollCount, maxRetries } = parseResult.data;
+  const {
+    mode,
+    destinationId,
+    destinationName,
+    guideUrl,
+    scrollCount,
+    maxRetries,
+  } = parseResult.data;
 
   // 验证参数
   if (mode === 'list' && !destinationId && !destinationName) {
     return {
       status: 400,
-      body: { success: false, error: 'destinationId or destinationName required for list mode' },
+      body: {
+        success: false,
+        error: 'destinationId or destinationName required for list mode',
+      },
     };
   }
 

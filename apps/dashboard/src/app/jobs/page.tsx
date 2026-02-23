@@ -407,11 +407,7 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const StatusBadge = React.memo(({
-  status,
-}: {
-  status: string;
-}) => {
+const StatusBadge = React.memo(({ status }: { status: string }) => {
   const statusConfig = STATUS_CONFIG[status] ?? STATUS_CONFIG.cancelled!;
   const { icon, className } = statusConfig;
 

@@ -56,7 +56,10 @@ function isDisplayable(guide: {
   }
 
   // 2. 封面图检查
-  if (!guide.coverImageUrl && (!guide.imageUrls || guide.imageUrls.length === 0)) {
+  if (
+    !guide.coverImageUrl
+    && (!guide.imageUrls || guide.imageUrls.length === 0)
+  ) {
     reasons.push('no_cover_image');
   }
 
@@ -77,8 +80,11 @@ function isDisplayable(guide: {
   else {
     // 检查是否至少有一个有效的 POI（有名称和合法坐标）
     const hasValidPoi = guide.aiDays.some(day =>
-      day.pois.some(poi =>
-        poi.name && poi.name.trim() !== '' && isValidCoordinate(poi.latitude, poi.longitude),
+      day.pois.some(
+        poi =>
+          poi.name
+          && poi.name.trim() !== ''
+          && isValidCoordinate(poi.latitude, poi.longitude),
       ),
     );
     if (!hasValidPoi) {
@@ -100,12 +106,10 @@ export const analyze = query({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: 100,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query('travelGuides').paginate({
+      numItems: 100,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let displayable = 0;
     let notDisplayable = 0;
@@ -159,16 +163,18 @@ export const cleanup = mutation({
   handler: async (ctx, args) => {
     const dryRun = args.dryRun ?? false;
 
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: 50,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query('travelGuides').paginate({
+      numItems: 50,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let deleted = 0;
     let kept = 0;
-    const deletedGuides: Array<{ _id: string; title?: string; reasons: string[] }> = [];
+    const deletedGuides: Array<{
+      _id: string;
+      title?: string;
+      reasons: string[];
+    }> = [];
 
     for (const guide of result.page) {
       const check = isDisplayable(guide);

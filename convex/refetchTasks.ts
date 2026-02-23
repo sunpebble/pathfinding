@@ -1,5 +1,10 @@
 import { v } from 'convex/values';
-import { internalMutation, internalQuery, mutation, query } from './_generated/server';
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from './_generated/server';
 
 /**
  * Content Refetch Tasks
@@ -69,10 +74,7 @@ export const list = query({
         .take(limit);
     }
 
-    return await ctx.db
-      .query('refetchTasks')
-      .order('desc')
-      .take(limit);
+    return await ctx.db.query('refetchTasks').order('desc').take(limit);
   },
 });
 
@@ -182,7 +184,10 @@ export const markFailed = mutation({
 
     if (shouldRetry) {
       // Exponential backoff: 1min, 5min, 30min
-      const delayMs = Math.min(60000 * 5 ** (newRetryCount - 1), 30 * 60 * 1000);
+      const delayMs = Math.min(
+        60000 * 5 ** (newRetryCount - 1),
+        30 * 60 * 1000,
+      );
       const nextRetryAt = Date.now() + delayMs;
 
       await ctx.db.patch(args.id, {
@@ -274,7 +279,9 @@ export const processRefetchQueue = internalMutation({
       .withIndex('by_status', q => q.eq('status', 'pending'))
       .take(5);
 
-    const readyTasks = tasks.filter(t => !t.nextRetryAt || t.nextRetryAt <= now);
+    const readyTasks = tasks.filter(
+      t => !t.nextRetryAt || t.nextRetryAt <= now,
+    );
 
     if (readyTasks.length === 0) {
       return { processed: 0, message: 'No pending tasks' };
@@ -389,7 +396,8 @@ function calculateCompletenessLevel(input: {
     qualityScore,
   } = input;
 
-  const isTruncated = contentTruncated || (content ? isContentTruncated(content) : false);
+  const isTruncated
+    = contentTruncated || (content ? isContentTruncated(content) : false);
   const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
   const hasTitle = !!(title && title.trim().length > 0);
   const hasAuthor = !!(authorName && authorName.trim().length > 0);
@@ -397,13 +405,22 @@ function calculateCompletenessLevel(input: {
   const contentLength = content?.length ?? 0;
 
   const hasAllCounts
-    = likesCount !== undefined && savesCount !== undefined
-      && commentsCount !== undefined && viewsCount !== undefined;
+    = likesCount !== undefined
+      && savesCount !== undefined
+      && commentsCount !== undefined
+      && viewsCount !== undefined;
   const hasQualityScore = qualityScore !== undefined;
 
-  if (hasTitle && hasImages && hasAuthor && hasDestinations
-    && hasAllCounts && hasQualityScore
-    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE && !isTruncated) {
+  if (
+    hasTitle
+    && hasImages
+    && hasAuthor
+    && hasDestinations
+    && hasAllCounts
+    && hasQualityScore
+    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE
+    && !isTruncated
+  ) {
     return 'complete';
   }
 
@@ -476,7 +493,8 @@ export const mergeRefetchResult = mutation({
     const newCompletenessLevel = calculateCompletenessLevel({
       title: (updatedData.title as string) || guide.title,
       content: args.content,
-      coverImageUrl: (updatedData.coverImageUrl as string) || guide.coverImageUrl,
+      coverImageUrl:
+        (updatedData.coverImageUrl as string) || guide.coverImageUrl,
       imageUrls: (updatedData.imageUrls as string[]) || guide.imageUrls,
       authorName: guide.authorName,
       destinations: guide.destinations,

@@ -76,14 +76,8 @@ describe('toCamelCase', () => {
   });
 
   it('should handle arrays at root level', () => {
-    const input = [
-      { source_id: '1' },
-      { source_id: '2' },
-    ];
-    const expected = [
-      { sourceId: '1' },
-      { sourceId: '2' },
-    ];
+    const input = [{ source_id: '1' }, { source_id: '2' }];
+    const expected = [{ sourceId: '1' }, { sourceId: '2' }];
     expect(toCamelCase(input)).toEqual(expected);
   });
 
@@ -161,14 +155,8 @@ describe('toSnakeCase', () => {
   });
 
   it('should handle arrays at root level', () => {
-    const input = [
-      { sourceId: '1' },
-      { sourceId: '2' },
-    ];
-    const expected = [
-      { source_id: '1' },
-      { source_id: '2' },
-    ];
+    const input = [{ sourceId: '1' }, { sourceId: '2' }];
+    const expected = [{ source_id: '1' }, { source_id: '2' }];
     expect(toSnakeCase(input)).toEqual(expected);
   });
 

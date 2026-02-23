@@ -7,10 +7,7 @@ import type { MafengwoRawGuide } from '../lib/mafengwo-converter.js';
 import { ConvexHttpClient } from 'convex/browser';
 import { z } from 'zod';
 import { api } from '../../../../convex/_generated/api.js';
-import {
-  convertToConvexFormat,
-
-} from '../lib/mafengwo-converter.js';
+import { convertToConvexFormat } from '../lib/mafengwo-converter.js';
 
 const eventDataSchema = z.object({
   url: z.string(),
@@ -162,7 +159,9 @@ export async function saveBatch(
       });
 
       success++;
-      logger.info('Batch: saved guide', { sourceExternalId: convexData.sourceExternalId });
+      logger.info('Batch: saved guide', {
+        sourceExternalId: convexData.sourceExternalId,
+      });
     }
     catch (error) {
       failed++;

@@ -1,5 +1,3 @@
-import { z } from 'zod'
-
 export const config = {
   type: 'api',
   name: 'HealthCheck',
@@ -8,13 +6,16 @@ export const config = {
   method: 'GET',
   emits: [],
   flows: ['system'],
-}
+};
 
-export async function handler(_req: unknown, { logger }: { logger: { info: (msg: string, data?: unknown) => void } }) {
-  const ollamaConfigured = !!process.env.OLLAMA_BASE_URL
-  const convexConfigured = !!process.env.CONVEX_URL
+export async function handler(
+  _req: unknown,
+  { logger }: { logger: { info: (msg: string, data?: unknown) => void } },
+) {
+  const ollamaConfigured = !!process.env.OLLAMA_BASE_URL;
+  const convexConfigured = !!process.env.CONVEX_URL;
 
-  logger.info('Health check', { ollamaConfigured, convexConfigured })
+  logger.info('Health check', { ollamaConfigured, convexConfigured });
 
   return {
     status: convexConfigured ? 200 : 503,
@@ -27,5 +28,5 @@ export async function handler(_req: unknown, { logger }: { logger: { info: (msg:
         ollama: ollamaConfigured ? 'configured' : 'not configured',
       },
     },
-  }
+  };
 }

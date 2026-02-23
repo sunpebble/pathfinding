@@ -139,7 +139,9 @@ describe('query Filtering - Completeness Level', () => {
       const result = filterByCompletenessLevel(mockGuides, 'complete');
 
       expect(result).toHaveLength(2);
-      expect(result.every(g => g.completenessLevel === 'complete')).toBe(true);
+      expect(result.every(g => g.completenessLevel === 'complete')).toBe(
+        true,
+      );
       expect(result.map(g => g._id)).toContain('guide1');
       expect(result.map(g => g._id)).toContain('guide4');
     });
@@ -157,14 +159,21 @@ describe('query Filtering - Completeness Level', () => {
       const result = filterByCompletenessLevel(mockGuides, 'incomplete');
 
       expect(result).toHaveLength(2);
-      expect(result.every(g => g.completenessLevel === 'incomplete')).toBe(true);
+      expect(result.every(g => g.completenessLevel === 'incomplete')).toBe(
+        true,
+      );
       expect(result.map(g => g._id)).toContain('guide3');
       expect(result.map(g => g._id)).toContain('guide6');
     });
 
     it('should return empty array when no guides match the level', () => {
-      const guidesWithoutComplete = mockGuides.filter(g => g.completenessLevel !== 'complete');
-      const result = filterByCompletenessLevel(guidesWithoutComplete, 'complete');
+      const guidesWithoutComplete = mockGuides.filter(
+        g => g.completenessLevel !== 'complete',
+      );
+      const result = filterByCompletenessLevel(
+        guidesWithoutComplete,
+        'complete',
+      );
 
       expect(result).toHaveLength(0);
     });
@@ -274,7 +283,9 @@ describe('query Filtering - Edge Cases', () => {
       );
 
       expect(result1).toHaveLength(result2.length);
-      expect(result1.map(g => g._id).sort()).toEqual(result2.map(g => g._id).sort());
+      expect(result1.map(g => g._id).sort()).toEqual(
+        result2.map(g => g._id).sort(),
+      );
     });
   });
 });
@@ -295,8 +306,9 @@ describe('query Filtering - Index Usage Verification', () => {
       const incompleteGuides = indexedQuery('incomplete');
 
       // Verify index returns correct counts
-      expect(completeGuides.length + usableGuides.length + incompleteGuides.length)
-        .toBeLessThanOrEqual(mockGuides.length);
+      expect(
+        completeGuides.length + usableGuides.length + incompleteGuides.length,
+      ).toBeLessThanOrEqual(mockGuides.length);
     });
   });
 
@@ -310,13 +322,17 @@ describe('query Filtering - Index Usage Verification', () => {
       const platform = 'xiaohongshu';
 
       // Step 1: Index lookup (simulated)
-      const byLevel = mockGuides.filter(g => g.completenessLevel === completenessLevel);
+      const byLevel = mockGuides.filter(
+        g => g.completenessLevel === completenessLevel,
+      );
 
       // Step 2: Memory filter
       const byPlatform = byLevel.filter(g => g.sourcePlatform === platform);
 
       expect(byLevel.length).toBeGreaterThanOrEqual(byPlatform.length);
-      expect(byPlatform.every(g => g.completenessLevel === completenessLevel)).toBe(true);
+      expect(
+        byPlatform.every(g => g.completenessLevel === completenessLevel),
+      ).toBe(true);
       expect(byPlatform.every(g => g.sourcePlatform === platform)).toBe(true);
     });
   });
@@ -329,7 +345,9 @@ describe('query Filtering - getGuidesForEnhancement', () => {
 
       const result = filterByCompletenessLevel(mockGuides, priorityLevel);
 
-      expect(result.every(g => g.completenessLevel === priorityLevel)).toBe(true);
+      expect(result.every(g => g.completenessLevel === priorityLevel)).toBe(
+        true,
+      );
     });
 
     it('should filter to guides missing title or summary', () => {

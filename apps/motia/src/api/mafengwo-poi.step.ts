@@ -41,7 +41,10 @@ export const config = {
   description: '马蜂窝POI爬取',
   path: '/api/crawler/mafengwo/poi',
   method: 'POST',
-  emits: ['crawler.mafengwo.poi.list.completed', 'crawler.mafengwo.poi.detail.completed'],
+  emits: [
+    'crawler.mafengwo.poi.list.completed',
+    'crawler.mafengwo.poi.detail.completed',
+  ],
   flows: ['crawler'],
   bodySchema,
 };
@@ -126,15 +129,20 @@ async function extractPOIList(
         if (!poiIdMatch)
           return;
 
-        const name = el.querySelector('.title, .name, h3, h4')?.textContent?.trim() || '';
+        const name
+          = el.querySelector('.title, .name, h3, h4')?.textContent?.trim() || '';
         const ratingEl = el.querySelector('.score, .rating');
         const ratingText = ratingEl?.textContent?.trim() || '';
         const rating = Number.parseFloat(ratingText) || undefined;
 
-        const coverImage = el.querySelector('img')?.getAttribute('src')
-          || el.querySelector('img')?.getAttribute('data-src');
+        const coverImage
+          = el.querySelector('img')?.getAttribute('src')
+            || el.querySelector('img')?.getAttribute('data-src');
 
-        const address = el.querySelector('.address, .location')?.textContent?.trim();
+        const address = el
+          .querySelector('.address, .location')
+          ?.textContent
+          ?.trim();
 
         items.push({
           poiId: poiIdMatch[1],
@@ -193,19 +201,35 @@ async function extractPOIDetail(
     const poiId = urlMatch?.[1] || '';
 
     // 提取名称
-    const name = document.querySelector('h1.poi-title, .title h1, .poi-name')?.textContent?.trim()
-      || document.querySelector('meta[property="og:title"]')?.getAttribute('content')?.split('-')[0]?.trim()
-      || '';
+    const name
+      = document
+        .querySelector('h1.poi-title, .title h1, .poi-name')
+        ?.textContent
+        ?.trim()
+        || document
+          .querySelector('meta[property="og:title"]')
+          ?.getAttribute('content')
+          ?.split('-')[0]
+          ?.trim()
+          || '';
 
     // 提取英文名
-    const nameEn = document.querySelector('.poi-title-en, .title-en')?.textContent?.trim();
+    const nameEn = document
+      .querySelector('.poi-title-en, .title-en')
+      ?.textContent
+      ?.trim();
 
     // 提取类别
     const categoryEl = document.querySelector('.poi-type, .category');
     const category = categoryEl?.textContent?.trim() || 'attraction';
 
     // 提取地址
-    const address = document.querySelector('.poi-address, .address')?.textContent?.trim()?.replace(/地址[：:]/g, '').trim();
+    const address = document
+      .querySelector('.poi-address, .address')
+      ?.textContent
+      ?.trim()
+      ?.replace(/地址[：:]/g, '')
+      .trim();
 
     // 提取坐标 (from meta or script)
     let latitude: number | undefined;
@@ -222,35 +246,64 @@ async function extractPOIDetail(
     });
 
     // 提取评分
-    const ratingText = document.querySelector('.score, .rating-score, .poi-score')?.textContent?.trim();
+    const ratingText = document
+      .querySelector('.score, .rating-score, .poi-score')
+      ?.textContent
+      ?.trim();
     const rating = ratingText ? Number.parseFloat(ratingText) : undefined;
 
     // 提取评价数
-    const ratingCountText = document.querySelector('.rating-count, .review-count')?.textContent?.trim();
+    const ratingCountText = document
+      .querySelector('.rating-count, .review-count')
+      ?.textContent
+      ?.trim();
     const ratingCountMatch = ratingCountText?.match(/(\d+)/);
-    const ratingCount = ratingCountMatch ? Number.parseInt(ratingCountMatch[1], 10) : 0;
+    const ratingCount = ratingCountMatch
+      ? Number.parseInt(ratingCountMatch[1], 10)
+      : 0;
 
     // 提取价格
-    const priceRange = document.querySelector('.price-range, .average-price')?.textContent?.trim();
-    const ticketPrice = document.querySelector('.ticket-price, .admission')?.textContent?.trim();
+    const priceRange = document
+      .querySelector('.price-range, .average-price')
+      ?.textContent
+      ?.trim();
+    const ticketPrice = document
+      .querySelector('.ticket-price, .admission')
+      ?.textContent
+      ?.trim();
 
     // 提取营业时间
-    const openingHours = document.querySelector('.opening-hours, .business-hours')?.textContent?.trim()?.replace(/营业时间[：:]/g, '').trim();
+    const openingHours = document
+      .querySelector('.opening-hours, .business-hours')
+      ?.textContent
+      ?.trim()
+      ?.replace(/营业时间[：:]/g, '')
+      .trim();
 
     // 提取电话
-    const phone = document.querySelector('.phone, .tel')?.textContent?.trim()?.replace(/电话[：:]/g, '').trim();
+    const phone = document
+      .querySelector('.phone, .tel')
+      ?.textContent
+      ?.trim()
+      ?.replace(/电话[：:]/g, '')
+      .trim();
 
     // 提取简介
-    const description = document.querySelector('.poi-intro, .introduction, .summary')?.textContent?.trim();
+    const description = document
+      .querySelector('.poi-intro, .introduction, .summary')
+      ?.textContent
+      ?.trim();
 
     // 提取贴士
     const tips: string[] = [];
-    document.querySelectorAll('.tips li, .poi-tips p, .travel-tips li').forEach((el) => {
-      const tip = el.textContent?.trim();
-      if (tip && tip.length > 5) {
-        tips.push(tip);
-      }
-    });
+    document
+      .querySelectorAll('.tips li, .poi-tips p, .travel-tips li')
+      .forEach((el) => {
+        const tip = el.textContent?.trim();
+        if (tip && tip.length > 5) {
+          tips.push(tip);
+        }
+      });
 
     // 提取亮点
     const highlights: string[] = [];
@@ -263,25 +316,42 @@ async function extractPOIDetail(
 
     // 提取图片
     const images: string[] = [];
-    document.querySelectorAll('.poi-photos img, .gallery img, .photo-list img').forEach((img) => {
-      const src = img.getAttribute('src') || img.getAttribute('data-src');
-      if (src && !src.includes('icon') && !src.includes('avatar') && !src.includes('logo')) {
-        images.push(src);
-      }
-    });
+    document
+      .querySelectorAll('.poi-photos img, .gallery img, .photo-list img')
+      .forEach((img) => {
+        const src = img.getAttribute('src') || img.getAttribute('data-src');
+        if (
+          src
+          && !src.includes('icon')
+          && !src.includes('avatar')
+          && !src.includes('logo')
+        ) {
+          images.push(src);
+        }
+      });
 
-    const coverImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content')
-      || images[0];
+    const coverImage
+      = document
+        .querySelector('meta[property="og:image"]')
+        ?.getAttribute('content') || images[0];
 
     // 提取收藏数
-    const savesText = document.querySelector('.saves-count, .collect-count')?.textContent?.trim();
+    const savesText = document
+      .querySelector('.saves-count, .collect-count')
+      ?.textContent
+      ?.trim();
     const savesMatch = savesText?.match(/(\d+)/);
     const savesCount = savesMatch ? Number.parseInt(savesMatch[1], 10) : 0;
 
     // 提取评论数
-    const reviewsText = document.querySelector('.reviews-count, .comment-count')?.textContent?.trim();
+    const reviewsText = document
+      .querySelector('.reviews-count, .comment-count')
+      ?.textContent
+      ?.trim();
     const reviewsMatch = reviewsText?.match(/(\d+)/);
-    const reviewsCount = reviewsMatch ? Number.parseInt(reviewsMatch[1], 10) : 0;
+    const reviewsCount = reviewsMatch
+      ? Number.parseInt(reviewsMatch[1], 10)
+      : 0;
 
     // 提取标签
     const tags: string[] = [];
@@ -293,18 +363,24 @@ async function extractPOIDetail(
     });
 
     // 餐厅特有字段
-    const cuisineType = document.querySelector('.cuisine-type, .food-type')?.textContent?.trim();
+    const cuisineType = document
+      .querySelector('.cuisine-type, .food-type')
+      ?.textContent
+      ?.trim();
     const signatureDishes: string[] = [];
-    document.querySelectorAll('.signature-dish, .recommended-dish').forEach((el) => {
-      const dish = el.textContent?.trim();
-      if (dish) {
-        signatureDishes.push(dish);
-      }
-    });
+    document
+      .querySelectorAll('.signature-dish, .recommended-dish')
+      .forEach((el) => {
+        const dish = el.textContent?.trim();
+        if (dish) {
+          signatureDishes.push(dish);
+        }
+      });
 
     // 酒店特有字段
     const starEl = document.querySelector('.hotel-star, .star-rating');
-    const starText = starEl?.textContent?.trim() || starEl?.getAttribute('data-star');
+    const starText
+      = starEl?.textContent?.trim() || starEl?.getAttribute('data-star');
     const starRating = starText ? Number.parseInt(starText, 10) : undefined;
 
     const amenities: string[] = [];
@@ -358,13 +434,24 @@ export async function handler(
     };
   }
 
-  const { mode, destinationId, destinationName, category, poiUrl, scrollCount, maxRetries } = parseResult.data;
+  const {
+    mode,
+    destinationId,
+    destinationName,
+    category,
+    poiUrl,
+    scrollCount,
+    maxRetries,
+  } = parseResult.data;
 
   // 验证参数
   if (mode === 'list' && !destinationId && !destinationName) {
     return {
       status: 400,
-      body: { success: false, error: 'destinationId or destinationName required for list mode' },
+      body: {
+        success: false,
+        error: 'destinationId or destinationName required for list mode',
+      },
     };
   }
 
@@ -389,7 +476,13 @@ export async function handler(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      logger.info('Crawling POI', { mode, category, destinationId, poiUrl, attempt });
+      logger.info('Crawling POI', {
+        mode,
+        category,
+        destinationId,
+        poiUrl,
+        attempt,
+      });
 
       // 创建浏览器会话
       session = await createKernelBrowser({
@@ -399,12 +492,13 @@ export async function handler(
 
       if (mode === 'list') {
         // 列表模式
-        const categoryPath = {
-          attraction: 'jd',
-          restaurant: 'cy',
-          hotel: 'hotel',
-          shopping: 'gw',
-        }[category] || 'jd';
+        const categoryPath
+          = {
+            attraction: 'jd',
+            restaurant: 'cy',
+            hotel: 'hotel',
+            shopping: 'gw',
+          }[category] || 'jd';
 
         let url: string;
         if (destinationId) {

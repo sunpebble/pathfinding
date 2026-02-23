@@ -283,7 +283,13 @@ export const createAiData = mutation({
             manuallyVerifiedCount++;
 
           const source = poi.geocodeSource;
-          if (source === 'amap' || source === 'nominatim' || source === 'overpass' || source === 'consensus' || source === 'manual') {
+          if (
+            source === 'amap'
+            || source === 'nominatim'
+            || source === 'overpass'
+            || source === 'consensus'
+            || source === 'manual'
+          ) {
             sourceDistribution[source] = (sourceDistribution[source] ?? 0) + 1;
           }
         }
@@ -388,7 +394,13 @@ export const updateAiData = mutation({
             manuallyVerifiedCount++;
 
           const source = poi.geocodeSource;
-          if (source === 'amap' || source === 'nominatim' || source === 'overpass' || source === 'consensus' || source === 'manual') {
+          if (
+            source === 'amap'
+            || source === 'nominatim'
+            || source === 'overpass'
+            || source === 'consensus'
+            || source === 'manual'
+          ) {
             sourceDistribution[source] = (sourceDistribution[source] ?? 0) + 1;
           }
         }

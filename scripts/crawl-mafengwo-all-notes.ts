@@ -189,7 +189,10 @@ async function closeBrowser(session: BrowserSession): Promise<void> {
 /**
  * 爬取游记列表页，获取所有游记 URL
  */
-async function crawlNoteList(session: BrowserSession, stats: CrawlStats): Promise<GuideListItem[]> {
+async function crawlNoteList(
+  session: BrowserSession,
+  stats: CrawlStats,
+): Promise<GuideListItem[]> {
   const allUrls: GuideListItem[] = [];
   const seenIds = new Set<string>();
 
@@ -209,7 +212,10 @@ async function crawlNoteList(session: BrowserSession, stats: CrawlStats): Promis
   let scrollCount = 0;
   const maxNoNewContent = 5; // 连续 5 次没有新内容就停止
 
-  while (noNewContentCount < maxNoNewContent && scrollCount < CONFIG.maxPages * CONFIG.scrollsPerPage) {
+  while (
+    noNewContentCount < maxNoNewContent
+    && scrollCount < CONFIG.maxPages * CONFIG.scrollsPerPage
+  ) {
     // 滚动到页面底部
     await session.page.evaluate(() => {
       window.scrollTo(0, document.body.scrollHeight);
@@ -249,11 +255,15 @@ async function crawlNoteList(session: BrowserSession, stats: CrawlStats): Promis
       noNewContentCount = 0;
     }
 
-    log(`Scroll ${scrollCount}: Found ${urls.length} links, ${newCount} new, total ${allUrls.length}`);
+    log(
+      `Scroll ${scrollCount}: Found ${urls.length} links, ${newCount} new, total ${allUrls.length}`,
+    );
 
     // 每 50 次滚动输出一次统计
     if (scrollCount % 50 === 0) {
-      log(`Progress: ${allUrls.length} unique URLs collected after ${scrollCount} scrolls`);
+      log(
+        `Progress: ${allUrls.length} unique URLs collected after ${scrollCount} scrolls`,
+      );
     }
   }
 
@@ -286,7 +296,9 @@ async function crawlNoteDetail(
       const data = await session.page.evaluate(() => {
         // 提取标题
         const title
-          = document.querySelector('meta[property="og:title"]')?.getAttribute('content')
+          = document
+            .querySelector('meta[property="og:title"]')
+            ?.getAttribute('content')
             || document.title.split('，')[0].split('|')[0].trim()
             || '';
 
@@ -297,12 +309,18 @@ async function crawlNoteDetail(
           content = chapterEl.textContent?.trim() || '';
         }
         else {
-          const noteContent = document.querySelector('.note-content, .note-body');
+          const noteContent = document.querySelector(
+            '.note-content, .note-body',
+          );
           if (noteContent) {
             const clone = noteContent.cloneNode(true) as HTMLElement;
-            clone.querySelectorAll('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"]').forEach((el) => {
-              el.remove();
-            });
+            clone
+              .querySelectorAll(
+                '.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"]',
+              )
+              .forEach((el) => {
+                el.remove();
+              });
             content = clone.textContent?.trim() || '';
           }
         }
@@ -315,30 +333,52 @@ async function crawlNoteDetail(
 
         // 提取作者
         const author
-          = document.querySelector('.note-content > div:first-child p')?.textContent?.trim().split('\n')[0]
-            || document.querySelector('meta[name="author"]')?.getAttribute('content')
-            || undefined;
+          = document
+            .querySelector('.note-content > div:first-child p')
+            ?.textContent
+            ?.trim()
+            .split('\n')[0]
+            || document
+              .querySelector('meta[name="author"]')
+              ?.getAttribute('content')
+              || undefined;
 
         // 提取浏览量
         const pageText = document.body.textContent || '';
-        const viewsMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读)/i);
+        const viewsMatch = pageText.match(
+          /(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读)/i,
+        );
         const views = viewsMatch?.[1] || undefined;
 
         // 提取点赞
-        const likesMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:赞|喜欢)/i);
+        const likesMatch = pageText.match(
+          /(\d+(?:\.\d+)?[万k]?)\s*(?:赞|喜欢)/i,
+        );
         const likes = likesMatch?.[1] || undefined;
 
         // 提取图片
         const images: string[] = [];
-        document.querySelectorAll('.chapter-container img[src*="mafengwo"], .note-content img[src*="mafengwo"]').forEach((img) => {
-          const src = (img as HTMLImageElement).src || img.getAttribute('data-src');
-          if (src && !src.includes('avatar') && !src.includes('icon') && !src.includes('recommend')) {
-            images.push(src);
-          }
-        });
+        document
+          .querySelectorAll(
+            '.chapter-container img[src*="mafengwo"], .note-content img[src*="mafengwo"]',
+          )
+          .forEach((img) => {
+            const src
+              = (img as HTMLImageElement).src || img.getAttribute('data-src');
+            if (
+              src
+              && !src.includes('avatar')
+              && !src.includes('icon')
+              && !src.includes('recommend')
+            ) {
+              images.push(src);
+            }
+          });
 
         const coverImage
-          = document.querySelector('meta[property="og:image"]')?.getAttribute('content')
+          = document
+            .querySelector('meta[property="og:image"]')
+            ?.getAttribute('content')
             || images[0]
             || undefined;
 
@@ -469,10 +509,13 @@ async function main() {
 
       // 检查是否已存在
       try {
-        const existing = await convexClient.query(api.travelGuides.getByPlatformAndExternalId, {
-          sourcePlatform: 'mafengwo',
-          sourceExternalId: item.externalId,
-        });
+        const existing = await convexClient.query(
+          api.travelGuides.getByPlatformAndExternalId,
+          {
+            sourcePlatform: 'mafengwo',
+            sourceExternalId: item.externalId,
+          },
+        );
 
         if (existing) {
           log(`  -> Already exists, skipping`);
@@ -493,7 +536,9 @@ async function main() {
         const saved = await saveToConvex(convexClient, item, detail);
         if (saved) {
           stats.detailsSaved++;
-          log(`  -> Saved: ${detail.title?.slice(0, 50)}... (${detail.content.length} chars)`);
+          log(
+            `  -> Saved: ${detail.title?.slice(0, 50)}... (${detail.content.length} chars)`,
+          );
         }
         else {
           stats.errors++;

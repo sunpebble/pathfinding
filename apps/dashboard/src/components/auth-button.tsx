@@ -61,9 +61,7 @@ export function AuthButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-        >
+        <button className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
             {displayName.charAt(0).toUpperCase()}
           </div>
@@ -74,7 +72,9 @@ export function AuthButton() {
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-gray-900">{displayName}</p>
+            <p className="text-sm font-medium leading-none text-gray-900">
+              {displayName}
+            </p>
             <p className="text-xs leading-none text-gray-500">{userEmail}</p>
           </div>
         </DropdownMenuLabel>

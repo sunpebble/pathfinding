@@ -18,10 +18,10 @@ import {
 } from '../lib/kernel-browser.js';
 
 const bodySchema = z.object({
-  url: z.string().url().refine(
-    url => url.includes('mafengwo.cn'),
-    'Must be a mafengwo.cn URL',
-  ),
+  url: z
+    .string()
+    .url()
+    .refine(url => url.includes('mafengwo.cn'), 'Must be a mafengwo.cn URL'),
   maxRetries: z.number().min(1).max(5).optional().default(3),
   useAI: z.boolean().optional().default(false), // 是否使用 AI 提取
 });
@@ -150,7 +150,10 @@ export async function handler(
       // 检查内容是否过短
       if (data.content.length < 100) {
         lastError = 'Content too short, possible WAF block';
-        logger.info('Content too short, retrying', { attempt, length: data.content.length });
+        logger.info('Content too short, retrying', {
+          attempt,
+          length: data.content.length,
+        });
         await closeKernelBrowser(session);
         session = null;
         continue;
@@ -158,7 +161,15 @@ export async function handler(
 
       // 清洗内容：去除广告/推广/个人信息/平台噪音
       const cleanResult = cleanContent(data.content, {
-        categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+        categories: [
+          'ad',
+          'promotion',
+          'personal',
+          'platform',
+          'copyright',
+          'boilerplate',
+          'whitespace',
+        ],
         preserveParagraphs: true,
       });
       data.content = cleanResult.content;
@@ -192,7 +203,10 @@ export async function handler(
     }
     catch (error) {
       lastError = error instanceof Error ? error.message : 'Crawl failed';
-      logger.error('Detail crawl attempt failed', { error: lastError, attempt });
+      logger.error('Detail crawl attempt failed', {
+        error: lastError,
+        attempt,
+      });
     }
     finally {
       if (session) {

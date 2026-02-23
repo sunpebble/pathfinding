@@ -68,49 +68,172 @@ const ENTRY_POINTS = [
   { name: '游记首页', url: 'https://m.mafengwo.cn/note/' },
 
   // 热门国内城市
-  { name: '北京', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10065.html' },
-  { name: '上海', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10099.html' },
-  { name: '成都', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10332.html' },
-  { name: '西安', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10195.html' },
-  { name: '杭州', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10156.html' },
-  { name: '重庆', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10208.html' },
-  { name: '广州', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10088.html' },
-  { name: '深圳', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10392.html' },
-  { name: '南京', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10173.html' },
-  { name: '苏州', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10182.html' },
-  { name: '厦门', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10132.html' },
-  { name: '三亚', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10186.html' },
-  { name: '丽江', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10487.html' },
-  { name: '大理', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10487.html' },
-  { name: '桂林', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10082.html' },
-  { name: '青岛', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10444.html' },
-  { name: '长沙', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10188.html' },
-  { name: '武汉', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10126.html' },
-  { name: '拉萨', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10065.html' },
+  {
+    name: '北京',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10065.html',
+  },
+  {
+    name: '上海',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10099.html',
+  },
+  {
+    name: '成都',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10332.html',
+  },
+  {
+    name: '西安',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10195.html',
+  },
+  {
+    name: '杭州',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10156.html',
+  },
+  {
+    name: '重庆',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10208.html',
+  },
+  {
+    name: '广州',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10088.html',
+  },
+  {
+    name: '深圳',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10392.html',
+  },
+  {
+    name: '南京',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10173.html',
+  },
+  {
+    name: '苏州',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10182.html',
+  },
+  {
+    name: '厦门',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10132.html',
+  },
+  {
+    name: '三亚',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10186.html',
+  },
+  {
+    name: '丽江',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10487.html',
+  },
+  {
+    name: '大理',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10487.html',
+  },
+  {
+    name: '桂林',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10082.html',
+  },
+  {
+    name: '青岛',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10444.html',
+  },
+  {
+    name: '长沙',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10188.html',
+  },
+  {
+    name: '武汉',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10126.html',
+  },
+  {
+    name: '拉萨',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10065.html',
+  },
 
   // 热门境外目的地
-  { name: '日本', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10183.html' },
-  { name: '东京', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10222.html' },
-  { name: '大阪', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10765.html' },
-  { name: '京都', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/11042.html' },
-  { name: '泰国', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10083.html' },
-  { name: '曼谷', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10088.html' },
-  { name: '普吉岛', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10558.html' },
-  { name: '新加坡', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10754.html' },
-  { name: '马尔代夫', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/11327.html' },
-  { name: '巴厘岛', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10460.html' },
-  { name: '韩国', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10180.html' },
-  { name: '首尔', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10073.html' },
-  { name: '越南', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10180.html' },
-  { name: '马来西亚', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10097.html' },
-  { name: '法国', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10168.html' },
-  { name: '巴黎', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10066.html' },
-  { name: '意大利', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10179.html' },
-  { name: '瑞士', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10192.html' },
-  { name: '英国', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10174.html' },
-  { name: '美国', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10062.html' },
-  { name: '澳大利亚', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10181.html' },
-  { name: '新西兰', url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10101.html' },
+  {
+    name: '日本',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10183.html',
+  },
+  {
+    name: '东京',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10222.html',
+  },
+  {
+    name: '大阪',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10765.html',
+  },
+  {
+    name: '京都',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/11042.html',
+  },
+  {
+    name: '泰国',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10083.html',
+  },
+  {
+    name: '曼谷',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10088.html',
+  },
+  {
+    name: '普吉岛',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10558.html',
+  },
+  {
+    name: '新加坡',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10754.html',
+  },
+  {
+    name: '马尔代夫',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/11327.html',
+  },
+  {
+    name: '巴厘岛',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10460.html',
+  },
+  {
+    name: '韩国',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10180.html',
+  },
+  {
+    name: '首尔',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10073.html',
+  },
+  {
+    name: '越南',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10180.html',
+  },
+  {
+    name: '马来西亚',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10097.html',
+  },
+  {
+    name: '法国',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10168.html',
+  },
+  {
+    name: '巴黎',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10066.html',
+  },
+  {
+    name: '意大利',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10179.html',
+  },
+  {
+    name: '瑞士',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10192.html',
+  },
+  {
+    name: '英国',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10174.html',
+  },
+  {
+    name: '美国',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10062.html',
+  },
+  {
+    name: '澳大利亚',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10181.html',
+  },
+  {
+    name: '新西兰',
+    url: 'https://m.mafengwo.cn/travel-scenic-spot/mafengwo/10101.html',
+  },
 ];
 
 // ============================================
@@ -293,7 +416,10 @@ async function crawlNoteListFromEntry(
     let noNewContentCount = 0;
     let scrollCount = 0;
 
-    while (noNewContentCount < CONFIG.maxNoNewContent && scrollCount < CONFIG.maxScrollsPerEntry) {
+    while (
+      noNewContentCount < CONFIG.maxNoNewContent
+      && scrollCount < CONFIG.maxScrollsPerEntry
+    ) {
       // 滚动到页面底部
       await session.page.evaluate(() => {
         window.scrollTo(0, document.body.scrollHeight);
@@ -335,11 +461,15 @@ async function crawlNoteListFromEntry(
 
       // 每 20 次滚动输出一次
       if (scrollCount % 20 === 0) {
-        log(`  Scroll ${scrollCount}: Found ${newUrls.length} new URLs from this entry`);
+        log(
+          `  Scroll ${scrollCount}: Found ${newUrls.length} new URLs from this entry`,
+        );
       }
     }
 
-    log(`  Entry complete: ${newUrls.length} new URLs after ${scrollCount} scrolls`);
+    log(
+      `  Entry complete: ${newUrls.length} new URLs after ${scrollCount} scrolls`,
+    );
   }
   catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -360,7 +490,9 @@ async function crawlNoteListFromAllEntries(
   const seenIds = new Set<string>();
 
   log('Starting multi-entry list crawl...');
-  log(`Total entries: ${ENTRY_POINTS.length}, starting from index ${CONFIG.startEntryIndex}`);
+  log(
+    `Total entries: ${ENTRY_POINTS.length}, starting from index ${CONFIG.startEntryIndex}`,
+  );
 
   for (let i = CONFIG.startEntryIndex; i < ENTRY_POINTS.length; i++) {
     const entry = ENTRY_POINTS[i];
@@ -375,7 +507,9 @@ async function crawlNoteListFromAllEntries(
 
     // 如果达到目标数量，提前结束
     if (CONFIG.targetCount > 0 && allUrls.length >= CONFIG.targetCount) {
-      log(`\nReached target count of ${CONFIG.targetCount}, stopping list crawl`);
+      log(
+        `\nReached target count of ${CONFIG.targetCount}, stopping list crawl`,
+      );
       break;
     }
 
@@ -386,7 +520,9 @@ async function crawlNoteListFromAllEntries(
   }
 
   stats.totalUrlsFound = allUrls.length;
-  log(`\nList crawl complete: ${allUrls.length} unique URLs from ${stats.entriesProcessed} entries`);
+  log(
+    `\nList crawl complete: ${allUrls.length} unique URLs from ${stats.entriesProcessed} entries`,
+  );
 
   return allUrls;
 }
@@ -414,7 +550,9 @@ async function crawlNoteDetail(
       const data = await session.page.evaluate(() => {
         // 提取标题
         const title
-          = document.querySelector('meta[property="og:title"]')?.getAttribute('content')
+          = document
+            .querySelector('meta[property="og:title"]')
+            ?.getAttribute('content')
             || document.title.split('，')[0].split('|')[0].trim()
             || '';
 
@@ -425,12 +563,18 @@ async function crawlNoteDetail(
           content = chapterEl.textContent?.trim() || '';
         }
         else {
-          const noteContent = document.querySelector('.note-content, .note-body');
+          const noteContent = document.querySelector(
+            '.note-content, .note-body',
+          );
           if (noteContent) {
             const clone = noteContent.cloneNode(true) as HTMLElement;
-            clone.querySelectorAll('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"]').forEach((el) => {
-              el.remove();
-            });
+            clone
+              .querySelectorAll(
+                '.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"]',
+              )
+              .forEach((el) => {
+                el.remove();
+              });
             content = clone.textContent?.trim() || '';
           }
         }
@@ -443,29 +587,51 @@ async function crawlNoteDetail(
 
         // 提取作者
         const author
-          = document.querySelector('.note-content > div:first-child p')?.textContent?.trim().split('\n')[0]
-            || document.querySelector('meta[name="author"]')?.getAttribute('content')
-            || undefined;
+          = document
+            .querySelector('.note-content > div:first-child p')
+            ?.textContent
+            ?.trim()
+            .split('\n')[0]
+            || document
+              .querySelector('meta[name="author"]')
+              ?.getAttribute('content')
+              || undefined;
 
         // 提取浏览量和点赞
         const pageText = document.body.textContent || '';
-        const viewsMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读)/i);
+        const viewsMatch = pageText.match(
+          /(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读)/i,
+        );
         const views = viewsMatch?.[1] || undefined;
 
-        const likesMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:赞|喜欢)/i);
+        const likesMatch = pageText.match(
+          /(\d+(?:\.\d+)?[万k]?)\s*(?:赞|喜欢)/i,
+        );
         const likes = likesMatch?.[1] || undefined;
 
         // 提取图片
         const images: string[] = [];
-        document.querySelectorAll('.chapter-container img[src*="mafengwo"], .note-content img[src*="mafengwo"]').forEach((img) => {
-          const src = (img as HTMLImageElement).src || img.getAttribute('data-src');
-          if (src && !src.includes('avatar') && !src.includes('icon') && !src.includes('recommend')) {
-            images.push(src);
-          }
-        });
+        document
+          .querySelectorAll(
+            '.chapter-container img[src*="mafengwo"], .note-content img[src*="mafengwo"]',
+          )
+          .forEach((img) => {
+            const src
+              = (img as HTMLImageElement).src || img.getAttribute('data-src');
+            if (
+              src
+              && !src.includes('avatar')
+              && !src.includes('icon')
+              && !src.includes('recommend')
+            ) {
+              images.push(src);
+            }
+          });
 
         const coverImage
-          = document.querySelector('meta[property="og:image"]')?.getAttribute('content')
+          = document
+            .querySelector('meta[property="og:image"]')
+            ?.getAttribute('content')
             || images[0]
             || undefined;
 
@@ -474,7 +640,9 @@ async function crawlNoteDetail(
 
       // 验证内容
       if (data.content.length < 100) {
-        log(`Content too short for ${item.externalId} (${data.content.length} chars), retrying...`);
+        log(
+          `Content too short for ${item.externalId} (${data.content.length} chars), retrying...`,
+        );
         await sleep(2000);
         continue;
       }
@@ -538,10 +706,13 @@ async function checkExists(
   externalId: string,
 ): Promise<boolean> {
   try {
-    const existing = await client.query(api.travelGuides.getByPlatformAndExternalId, {
-      sourcePlatform: 'mafengwo',
-      sourceExternalId: externalId,
-    });
+    const existing = await client.query(
+      api.travelGuides.getByPlatformAndExternalId,
+      {
+        sourcePlatform: 'mafengwo',
+        sourceExternalId: externalId,
+      },
+    );
     return existing !== null;
   }
   catch {
@@ -627,12 +798,16 @@ async function main() {
       if (exists) {
         stats.skipped++;
         if (stats.skipped % 50 === 0) {
-          log(`[${i + 1}/${noteList.length}] Skipped ${stats.skipped} existing notes`);
+          log(
+            `[${i + 1}/${noteList.length}] Skipped ${stats.skipped} existing notes`,
+          );
         }
         continue;
       }
 
-      log(`[${i + 1}/${noteList.length}] Crawling: ${item.externalId} (from ${item.source})`);
+      log(
+        `[${i + 1}/${noteList.length}] Crawling: ${item.externalId} (from ${item.source})`,
+      );
 
       // 爬取详情
       const detail = await crawlNoteDetail(session, item);
@@ -645,7 +820,9 @@ async function main() {
         const saved = await saveToConvex(convexClient, item, detail);
         if (saved) {
           stats.detailsSaved++;
-          log(`  -> Saved: ${detail.title?.slice(0, 40)}... (${detail.content.length} chars, ${detail.images.length} images)`);
+          log(
+            `  -> Saved: ${detail.title?.slice(0, 40)}... (${detail.content.length} chars, ${detail.images.length} images)`,
+          );
         }
         else {
           stats.errors++;
@@ -664,9 +841,15 @@ async function main() {
         const elapsed = (Date.now() - stats.startTime) / 1000 / 60;
         const processed = stats.detailsCrawled + stats.errors;
         log(`\n--- Progress Report ---`);
-        log(`  Progress: ${i + 1}/${noteList.length} (${((i + 1) / noteList.length * 100).toFixed(1)}%)`);
-        log(`  Saved: ${stats.detailsSaved}, Skipped: ${stats.skipped}, Errors: ${stats.errors}`);
-        log(`  Elapsed: ${elapsed.toFixed(1)} min, Rate: ${(processed / elapsed).toFixed(1)}/min`);
+        log(
+          `  Progress: ${i + 1}/${noteList.length} (${(((i + 1) / noteList.length) * 100).toFixed(1)}%)`,
+        );
+        log(
+          `  Saved: ${stats.detailsSaved}, Skipped: ${stats.skipped}, Errors: ${stats.errors}`,
+        );
+        log(
+          `  Elapsed: ${elapsed.toFixed(1)} min, Rate: ${(processed / elapsed).toFixed(1)}/min`,
+        );
       }
     }
   }

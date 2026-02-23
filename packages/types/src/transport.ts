@@ -253,7 +253,10 @@ export function formatDistance(meters: number): string {
 /**
  * Format cost range
  */
-export function formatCost(cost?: number, costRange?: { min: number; max: number }): string {
+export function formatCost(
+  cost?: number,
+  costRange?: { min: number; max: number },
+): string {
   if (cost !== undefined) {
     if (cost === 0)
       return '免费';

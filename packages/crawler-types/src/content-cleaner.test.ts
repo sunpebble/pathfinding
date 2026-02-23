@@ -294,7 +294,8 @@ describe('cleanContent', () => {
     });
 
     it('should not destroy normal content', () => {
-      const content = '北京故宫是中国明清两代的皇家宫殿，位于北京中轴线的中心。建议游览时间3-4小时，门票60元。';
+      const content
+        = '北京故宫是中国明清两代的皇家宫殿，位于北京中轴线的中心。建议游览时间3-4小时，门票60元。';
       const result = cleanContent(content);
       // Core travel info should be preserved
       expect(result.content).toContain('故宫');
@@ -427,7 +428,8 @@ describe('detectAdDensity', () => {
 
   it('should cap at 1', () => {
     // Mostly ad content
-    const content = '微信号：abc123\n公众号：旅行家\nQQ号：12345678\n抖音号：travel';
+    const content
+      = '微信号：abc123\n公众号：旅行家\nQQ号：12345678\n抖音号：travel';
     expect(detectAdDensity(content)).toBeLessThanOrEqual(1);
   });
 });
@@ -482,8 +484,10 @@ describe('isLowQualityContent', () => {
 
   it('should flag content with high ad density', () => {
     // Construct content that's mostly ads
-    const adContent = Array.from({ length: 20 }, () =>
-      '微信号：test123\n优惠券：SAVE50\nhttps://s.click.taobao.com/xxx').join('\n');
+    const adContent = Array.from(
+      { length: 20 },
+      () => '微信号：test123\n优惠券：SAVE50\nhttps://s.click.taobao.com/xxx',
+    ).join('\n');
     // Might or might not flag depending on density — at least should run
     const result = isLowQualityContent(adContent);
     expect(typeof result).toBe('boolean');

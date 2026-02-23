@@ -55,7 +55,8 @@ function calculateCompletenessLevel(input: {
     qualityScore,
   } = input;
 
-  const isTruncated = contentTruncated || (content ? isContentTruncated(content) : false);
+  const isTruncated
+    = contentTruncated || (content ? isContentTruncated(content) : false);
   const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
   const hasTitle = !!(title && title.trim().length > 0);
   const hasAuthor = !!(authorName && authorName.trim().length > 0);
@@ -63,17 +64,26 @@ function calculateCompletenessLevel(input: {
   const contentLength = content?.length ?? 0;
 
   const hasAllCounts
-    = likesCount !== undefined && likesCount !== null
-      && savesCount !== undefined && savesCount !== null
-      && commentsCount !== undefined && commentsCount !== null
-      && viewsCount !== undefined && viewsCount !== null;
+    = likesCount !== undefined
+      && likesCount !== null
+      && savesCount !== undefined
+      && savesCount !== null
+      && commentsCount !== undefined
+      && commentsCount !== null
+      && viewsCount !== undefined
+      && viewsCount !== null;
 
   const hasQualityScore = qualityScore !== undefined && qualityScore !== null;
 
   if (
-    hasTitle && hasImages && hasAuthor && hasDestinations
-    && hasAllCounts && hasQualityScore
-    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE && !isTruncated
+    hasTitle
+    && hasImages
+    && hasAuthor
+    && hasDestinations
+    && hasAllCounts
+    && hasQualityScore
+    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE
+    && !isTruncated
   ) {
     return 'complete';
   }
@@ -86,7 +96,9 @@ function calculateCompletenessLevel(input: {
 }
 
 // Fill missing display fields with defaults
-function fillMissingDisplayFields<T extends Record<string, unknown>>(data: T): T & {
+function fillMissingDisplayFields<T extends Record<string, unknown>>(
+  data: T,
+): T & {
   likesCount: number;
   savesCount: number;
   commentsCount: number;
@@ -200,7 +212,10 @@ describe('travelGuides - Upsert Logic', () => {
 
     it('should auto-fill coverImageUrl from imageUrls[0]', () => {
       const result = fillMissingDisplayFields({
-        imageUrls: ['https://example.com/first.jpg', 'https://example.com/second.jpg'],
+        imageUrls: [
+          'https://example.com/first.jpg',
+          'https://example.com/second.jpg',
+        ],
       });
       expect(result.coverImageUrl).toBe('https://example.com/first.jpg');
     });
@@ -220,10 +235,14 @@ describe('travelGuides - Upsert Behavior', () => {
         { sourcePlatform: 'weibo', sourceExternalId: 'def456' },
       ];
 
-      const newGuide = { sourcePlatform: 'xiaohongshu', sourceExternalId: 'xyz789' };
+      const newGuide = {
+        sourcePlatform: 'xiaohongshu',
+        sourceExternalId: 'xyz789',
+      };
 
       const exists = existingGuides.some(
-        g => g.sourcePlatform === newGuide.sourcePlatform
+        g =>
+          g.sourcePlatform === newGuide.sourcePlatform
           && g.sourceExternalId === newGuide.sourceExternalId,
       );
 
@@ -236,10 +255,14 @@ describe('travelGuides - Upsert Behavior', () => {
         { sourcePlatform: 'weibo', sourceExternalId: 'def456' },
       ];
 
-      const updateGuide = { sourcePlatform: 'xiaohongshu', sourceExternalId: 'abc123' };
+      const updateGuide = {
+        sourcePlatform: 'xiaohongshu',
+        sourceExternalId: 'abc123',
+      };
 
       const exists = existingGuides.some(
-        g => g.sourcePlatform === updateGuide.sourcePlatform
+        g =>
+          g.sourcePlatform === updateGuide.sourcePlatform
           && g.sourceExternalId === updateGuide.sourceExternalId,
       );
 
@@ -290,9 +313,21 @@ describe('travelGuides - BulkUpsert Deduplication', () => {
   describe('duplicate detection', () => {
     it('should identify duplicates by platform + externalId', () => {
       const guides = [
-        { sourcePlatform: 'xiaohongshu', sourceExternalId: 'abc', title: 'First' },
-        { sourcePlatform: 'xiaohongshu', sourceExternalId: 'def', title: 'Second' },
-        { sourcePlatform: 'xiaohongshu', sourceExternalId: 'abc', title: 'Duplicate of First' },
+        {
+          sourcePlatform: 'xiaohongshu',
+          sourceExternalId: 'abc',
+          title: 'First',
+        },
+        {
+          sourcePlatform: 'xiaohongshu',
+          sourceExternalId: 'def',
+          title: 'Second',
+        },
+        {
+          sourcePlatform: 'xiaohongshu',
+          sourceExternalId: 'abc',
+          title: 'Duplicate of First',
+        },
       ];
 
       const seen = new Map<string, number>();
@@ -313,9 +348,24 @@ describe('travelGuides - BulkUpsert Deduplication', () => {
 
     it('should keep best version when deduplicating', () => {
       const duplicates = [
-        { id: 'a', contentLength: 100, qualityScore: 0.5, aiProcessedAt: undefined },
-        { id: 'b', contentLength: 500, qualityScore: 0.8, aiProcessedAt: undefined },
-        { id: 'c', contentLength: 300, qualityScore: 0.7, aiProcessedAt: Date.now() },
+        {
+          id: 'a',
+          contentLength: 100,
+          qualityScore: 0.5,
+          aiProcessedAt: undefined,
+        },
+        {
+          id: 'b',
+          contentLength: 500,
+          qualityScore: 0.8,
+          aiProcessedAt: undefined,
+        },
+        {
+          id: 'c',
+          contentLength: 300,
+          qualityScore: 0.7,
+          aiProcessedAt: Date.now(),
+        },
       ];
 
       // Sort by: hasAiData (desc), contentLength (desc), qualityScore (desc)

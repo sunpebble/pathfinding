@@ -164,7 +164,9 @@ export function calculateQualityScoreUnified(
   const hasLikes = (input.likes ?? 0) > 0;
   const hasSaves = (input.saves ?? 0) > 0;
   const hasComments = (input.comments ?? 0) > 0;
-  const engagementCount = [hasViews, hasLikes, hasSaves, hasComments].filter(Boolean).length;
+  const engagementCount = [hasViews, hasLikes, hasSaves, hasComments].filter(
+    Boolean,
+  ).length;
 
   if (engagementCount >= 3) {
     breakdown.engagement = WEIGHTS.engagement;
@@ -181,7 +183,10 @@ export function calculateQualityScoreUnified(
 
   // 高互动额外加分
   if ((input.likes ?? 0) >= 100 || (input.views ?? 0) >= 10000) {
-    breakdown.engagement = Math.min(WEIGHTS.engagement, breakdown.engagement * 1.2);
+    breakdown.engagement = Math.min(
+      WEIGHTS.engagement,
+      breakdown.engagement * 1.2,
+    );
   }
 
   // === 元数据评分 ===
@@ -189,7 +194,9 @@ export function calculateQualityScoreUnified(
   const hasTags = (input.tags?.length ?? 0) > 0;
   const hasRating = (input.rating ?? 0) > 0;
 
-  const metaCount = [hasDestinations, hasTags, hasRating].filter(Boolean).length;
+  const metaCount = [hasDestinations, hasTags, hasRating].filter(
+    Boolean,
+  ).length;
   if (metaCount >= 2) {
     breakdown.metadata = WEIGHTS.metadata;
   }
@@ -204,8 +211,12 @@ export function calculateQualityScoreUnified(
   const score = Math.min(
     1,
     Math.round(
-      (breakdown.title + breakdown.content + breakdown.author
-        + breakdown.images + breakdown.engagement + breakdown.metadata)
+      (breakdown.title
+        + breakdown.content
+        + breakdown.author
+        + breakdown.images
+        + breakdown.engagement
+        + breakdown.metadata)
       * 100,
     ) / 100,
   );

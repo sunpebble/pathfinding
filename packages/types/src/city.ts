@@ -104,7 +104,12 @@ export interface TimeDifference {
 /**
  * Season for best travel time
  */
-export type TravelSeason = 'spring' | 'summer' | 'autumn' | 'winter' | 'all_year';
+export type TravelSeason
+  = | 'spring'
+    | 'summer'
+    | 'autumn'
+    | 'winter'
+    | 'all_year';
 
 /**
  * Best travel time information
@@ -123,7 +128,14 @@ export interface BestTravelTime {
  * Local custom or taboo
  */
 export interface LocalCustom {
-  category: 'etiquette' | 'religion' | 'dining' | 'dress' | 'gift' | 'gesture' | 'general';
+  category:
+    | 'etiquette'
+    | 'religion'
+    | 'dining'
+    | 'dress'
+    | 'gift'
+    | 'gesture'
+    | 'general';
   title: string;
   titleEn?: string;
   description: string;

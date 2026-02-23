@@ -524,7 +524,9 @@ export const getUnreadCount = query({
         const unreadMessages = await ctx.db
           .query('messages')
           .withIndex('by_conversation_time', q =>
-            q.eq('conversationId', conv._id).gt('sentAt', readStatus.lastReadAt))
+            q
+              .eq('conversationId', conv._id)
+              .gt('sentAt', readStatus.lastReadAt))
           .collect();
 
         totalUnread += unreadMessages.filter(

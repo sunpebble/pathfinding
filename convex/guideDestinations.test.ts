@@ -18,7 +18,9 @@ function calculateDestinationDiff(
   existingDestinations: string[],
   newDestinations: string[],
 ): { toAdd: string[]; toRemove: string[] } {
-  const existingSet = new Set(existingDestinations.map(d => normalizeDestination(d)));
+  const existingSet = new Set(
+    existingDestinations.map(d => normalizeDestination(d)),
+  );
   const newSet = new Set(newDestinations.map(d => normalizeDestination(d)));
 
   const toAdd = [...newSet].filter(d => !existingSet.has(d));
@@ -194,7 +196,9 @@ describe('guideDestinations - Delete Operations', () => {
       const toDelete = allRecords.filter(r => r.guideId === 'guide1');
 
       expect(toDelete).toHaveLength(3);
-      expect(toDelete.map(r => r.destination).sort()).toEqual(['上海', '北京', '深圳'].sort());
+      expect(toDelete.map(r => r.destination).sort()).toEqual(
+        ['上海', '北京', '深圳'].sort(),
+      );
     });
   });
 });

@@ -17,4 +17,6 @@ export const completenessLevelValidator = v.union(
 /**
  * Optional completeness level validator (for backwards compatibility)
  */
-export const optionalCompletenessLevelValidator = v.optional(completenessLevelValidator);
+export const optionalCompletenessLevelValidator = v.optional(
+  completenessLevelValidator,
+);

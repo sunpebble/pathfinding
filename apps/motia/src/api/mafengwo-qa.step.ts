@@ -32,7 +32,10 @@ export const config = {
   description: '马蜂窝问答爬取',
   path: '/api/crawler/mafengwo/qa',
   method: 'POST',
-  emits: ['crawler.mafengwo.qa.list.completed', 'crawler.mafengwo.qa.detail.completed'],
+  emits: [
+    'crawler.mafengwo.qa.list.completed',
+    'crawler.mafengwo.qa.detail.completed',
+  ],
   flows: ['crawler'],
   bodySchema,
 };
@@ -96,11 +99,19 @@ async function extractQAList(
         return;
 
       const parent = el.closest('.qa-item, .question-item, li, .item');
-      const answersText = parent?.querySelector('.answer-count, .answers')?.textContent?.trim();
+      const answersText = parent
+        ?.querySelector('.answer-count, .answers')
+        ?.textContent
+        ?.trim();
       const answersMatch = answersText?.match(/(\d+)/);
-      const answersCount = answersMatch ? Number.parseInt(answersMatch[1], 10) : 0;
+      const answersCount = answersMatch
+        ? Number.parseInt(answersMatch[1], 10)
+        : 0;
 
-      const author = parent?.querySelector('.author, .user-name')?.textContent?.trim();
+      const author = parent
+        ?.querySelector('.author, .user-name')
+        ?.textContent
+        ?.trim();
 
       items.push({
         questionId: questionIdMatch[1],
@@ -134,29 +145,57 @@ async function extractQADetail(
     const questionId = urlMatch?.[1] || '';
 
     // 提取标题
-    const title = document.querySelector('h1.question-title, .title h1, .qa-title')?.textContent?.trim()
-      || document.querySelector('meta[property="og:title"]')?.getAttribute('content')?.split('-')[0]?.trim()
-      || '';
+    const title
+      = document
+        .querySelector('h1.question-title, .title h1, .qa-title')
+        ?.textContent
+        ?.trim()
+        || document
+          .querySelector('meta[property="og:title"]')
+          ?.getAttribute('content')
+          ?.split('-')[0]
+          ?.trim()
+          || '';
 
     // 提取问题内容
-    const content = document.querySelector('.question-content, .question-detail, .content')?.textContent?.trim() || '';
+    const content
+      = document
+        .querySelector('.question-content, .question-detail, .content')
+        ?.textContent
+        ?.trim() || '';
 
     // 提取目的地
-    const destinationName = document.querySelector('.destination, .mdd-name, .location')?.textContent?.trim();
+    const destinationName = document
+      .querySelector('.destination, .mdd-name, .location')
+      ?.textContent
+      ?.trim();
 
     // 提取提问者
-    const authorName = document.querySelector('.question-author, .asker-name')?.textContent?.trim();
-    const authorLink = document.querySelector('.question-author a[href*="/u/"]') as HTMLAnchorElement;
+    const authorName = document
+      .querySelector('.question-author, .asker-name')
+      ?.textContent
+      ?.trim();
+    const authorLink = document.querySelector(
+      '.question-author a[href*="/u/"]',
+    ) as HTMLAnchorElement;
     const authorIdMatch = authorLink?.href.match(/\/u\/(\d+)/);
     const authorId = authorIdMatch?.[1];
 
     // 提取回答数
-    const answersText = document.querySelector('.answers-count, .answer-num')?.textContent?.trim();
+    const answersText = document
+      .querySelector('.answers-count, .answer-num')
+      ?.textContent
+      ?.trim();
     const answersMatch = answersText?.match(/(\d+)/);
-    const answersCount = answersMatch ? Number.parseInt(answersMatch[1], 10) : 0;
+    const answersCount = answersMatch
+      ? Number.parseInt(answersMatch[1], 10)
+      : 0;
 
     // 提取浏览数
-    const viewsText = document.querySelector('.views-count, .view-num')?.textContent?.trim();
+    const viewsText = document
+      .querySelector('.views-count, .view-num')
+      ?.textContent
+      ?.trim();
     const viewsMatch = viewsText?.match(/(\d+)/);
     const viewsCount = viewsMatch ? Number.parseInt(viewsMatch[1], 10) : 0;
 
@@ -170,25 +209,47 @@ async function extractQADetail(
     });
 
     // 提取创建时间
-    const createdAt = document.querySelector('.question-time, .ask-time, time')?.textContent?.trim();
+    const createdAt = document
+      .querySelector('.question-time, .ask-time, time')
+      ?.textContent
+      ?.trim();
 
     // 提取最佳答案
     let bestAnswer: QADetail['bestAnswer'];
-    const bestAnswerEl = document.querySelector('.best-answer, .accepted-answer, .answer-item.best');
+    const bestAnswerEl = document.querySelector(
+      '.best-answer, .accepted-answer, .answer-item.best',
+    );
     if (bestAnswerEl) {
-      const answerContent = bestAnswerEl.querySelector('.answer-content, .content')?.textContent?.trim() || '';
-      const answerAuthor = bestAnswerEl.querySelector('.author-name, .answerer')?.textContent?.trim();
-      const answerAuthorLink = bestAnswerEl.querySelector('a[href*="/u/"]') as HTMLAnchorElement;
+      const answerContent
+        = bestAnswerEl
+          .querySelector('.answer-content, .content')
+          ?.textContent
+          ?.trim() || '';
+      const answerAuthor = bestAnswerEl
+        .querySelector('.author-name, .answerer')
+        ?.textContent
+        ?.trim();
+      const answerAuthorLink = bestAnswerEl.querySelector(
+        'a[href*="/u/"]',
+      ) as HTMLAnchorElement;
       const answerAuthorIdMatch = answerAuthorLink?.href.match(/\/u\/(\d+)/);
-      const answerLikesText = bestAnswerEl.querySelector('.likes, .like-count')?.textContent?.trim();
+      const answerLikesText = bestAnswerEl
+        .querySelector('.likes, .like-count')
+        ?.textContent
+        ?.trim();
       const answerLikesMatch = answerLikesText?.match(/(\d+)/);
-      const answerCreatedAt = bestAnswerEl.querySelector('.answer-time, time')?.textContent?.trim();
+      const answerCreatedAt = bestAnswerEl
+        .querySelector('.answer-time, time')
+        ?.textContent
+        ?.trim();
 
       bestAnswer = {
         content: answerContent,
         authorName: answerAuthor,
         authorId: answerAuthorIdMatch?.[1],
-        likesCount: answerLikesMatch ? Number.parseInt(answerLikesMatch[1], 10) : 0,
+        likesCount: answerLikesMatch
+          ? Number.parseInt(answerLikesMatch[1], 10)
+          : 0,
         createdAt: answerCreatedAt,
       };
     }
@@ -222,13 +283,23 @@ export async function handler(
     };
   }
 
-  const { mode, destinationId, destinationName, qaUrl, scrollCount, maxRetries } = parseResult.data;
+  const {
+    mode,
+    destinationId,
+    destinationName,
+    qaUrl,
+    scrollCount,
+    maxRetries,
+  } = parseResult.data;
 
   // 验证参数
   if (mode === 'list' && !destinationId && !destinationName) {
     return {
       status: 400,
-      body: { success: false, error: 'destinationId or destinationName required for list mode' },
+      body: {
+        success: false,
+        error: 'destinationId or destinationName required for list mode',
+      },
     };
   }
 

@@ -111,7 +111,9 @@ export const verify = mutation({
     }
 
     // Count records in guideDestinations
-    const destinationRecords = await ctx.db.query('guideDestinations').collect();
+    const destinationRecords = await ctx.db
+      .query('guideDestinations')
+      .collect();
 
     // Get unique guide IDs in guideDestinations
     const uniqueGuideIds = new Set(destinationRecords.map(d => d.guideId));

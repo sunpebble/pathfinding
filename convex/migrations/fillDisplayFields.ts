@@ -10,7 +10,10 @@
 
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
-import { fillMissingDisplayFields, validateDisplayFields } from '../lib/displayFields';
+import {
+  fillMissingDisplayFields,
+  validateDisplayFields,
+} from '../lib/displayFields';
 
 const BATCH_SIZE = 50;
 
@@ -25,12 +28,10 @@ export const run = mutation({
   handler: async (ctx, args) => {
     const dryRun = args.dryRun ?? true;
 
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: BATCH_SIZE,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query('travelGuides').paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let fixed = 0;
     let skipped = 0;
@@ -90,12 +91,10 @@ export const verify = mutation({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: BATCH_SIZE,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query('travelGuides').paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let valid = 0;
     let invalid = 0;
@@ -125,9 +124,10 @@ export const verify = mutation({
       invalidGuides,
       isDone: result.isDone,
       nextCursor: result.isDone ? undefined : result.continueCursor,
-      message: invalid === 0
-        ? `✓ All ${valid} guides in this batch have valid display fields.`
-        : `⚠ Found ${invalid} guides with missing display fields in this batch.`,
+      message:
+        invalid === 0
+          ? `✓ All ${valid} guides in this batch have valid display fields.`
+          : `⚠ Found ${invalid} guides with missing display fields in this batch.`,
     };
   },
 });
@@ -140,12 +140,10 @@ export const stats = mutation({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: BATCH_SIZE,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query('travelGuides').paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     const fieldStats: Record<string, { present: number; missing: number }> = {
       title: { present: 0, missing: 0 },
@@ -169,7 +167,10 @@ export const stats = mutation({
       }
 
       // coverImageUrl
-      if (guide.coverImageUrl || (guide.imageUrls && guide.imageUrls.length > 0)) {
+      if (
+        guide.coverImageUrl
+        || (guide.imageUrls && guide.imageUrls.length > 0)
+      ) {
         fieldStats.coverImageUrl.present++;
       }
       else {

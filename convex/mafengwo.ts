@@ -147,17 +147,19 @@ export const upsertPoi = mutation({
  */
 export const batchInsertPois = mutation({
   args: {
-    pois: v.array(v.object({
-      poiId: v.string(),
-      sourceUrl: v.string(),
-      name: v.string(),
-      category: v.string(),
-      destinationId: v.optional(v.string()),
-      destinationName: v.optional(v.string()),
-      rating: v.optional(v.number()),
-      coverImageUrl: v.optional(v.string()),
-      address: v.optional(v.string()),
-    })),
+    pois: v.array(
+      v.object({
+        poiId: v.string(),
+        sourceUrl: v.string(),
+        name: v.string(),
+        category: v.string(),
+        destinationId: v.optional(v.string()),
+        destinationName: v.optional(v.string()),
+        rating: v.optional(v.number()),
+        coverImageUrl: v.optional(v.string()),
+        address: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -187,7 +189,13 @@ export const batchInsertPois = mutation({
           poiId: poi.poiId,
           sourceUrl: poi.sourceUrl,
           name: poi.name,
-          category: poi.category as 'attraction' | 'restaurant' | 'hotel' | 'shopping' | 'entertainment' | 'transport',
+          category: poi.category as
+          | 'attraction'
+          | 'restaurant'
+          | 'hotel'
+          | 'shopping'
+          | 'entertainment'
+          | 'transport',
           destinationId: poi.destinationId,
           destinationName: poi.destinationName,
           rating: poi.rating,
@@ -232,11 +240,13 @@ export const upsertGuide = mutation({
     summary: v.optional(v.string()),
     content: v.string(),
     contentHtml: v.optional(v.string()),
-    sections: v.array(v.object({
-      title: v.string(),
-      content: v.string(),
-      order: v.number(),
-    })),
+    sections: v.array(
+      v.object({
+        title: v.string(),
+        content: v.string(),
+        order: v.number(),
+      }),
+    ),
     coverImageUrl: v.optional(v.string()),
     imageUrls: v.array(v.string()),
     viewsCount: v.number(),
@@ -295,13 +305,15 @@ export const upsertQa = mutation({
     viewsCount: v.number(),
     tags: v.array(v.string()),
     createdAt: v.optional(v.number()),
-    bestAnswer: v.optional(v.object({
-      content: v.string(),
-      authorName: v.optional(v.string()),
-      authorId: v.optional(v.string()),
-      likesCount: v.number(),
-      createdAt: v.optional(v.number()),
-    })),
+    bestAnswer: v.optional(
+      v.object({
+        content: v.string(),
+        authorName: v.optional(v.string()),
+        authorId: v.optional(v.string()),
+        likesCount: v.number(),
+        createdAt: v.optional(v.number()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     // 检查是否已存在
@@ -400,16 +412,18 @@ export const upsertRanking = mutation({
     destinationId: v.optional(v.string()),
     destinationName: v.optional(v.string()),
     description: v.optional(v.string()),
-    items: v.array(v.object({
-      rank: v.number(),
-      poiExternalId: v.string(),
-      name: v.string(),
-      category: v.optional(v.string()),
-      rating: v.optional(v.number()),
-      reviewsCount: v.number(),
-      coverImageUrl: v.optional(v.string()),
-      reason: v.optional(v.string()),
-    })),
+    items: v.array(
+      v.object({
+        rank: v.number(),
+        poiExternalId: v.string(),
+        name: v.string(),
+        category: v.optional(v.string()),
+        rating: v.optional(v.number()),
+        reviewsCount: v.number(),
+        coverImageUrl: v.optional(v.string()),
+        reason: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     // 检查是否已存在
@@ -571,10 +585,7 @@ export const listDestinations = query({
         .take(limit);
     }
 
-    return await ctx.db
-      .query('mafengwoDestinations')
-      .order('desc')
-      .take(limit);
+    return await ctx.db.query('mafengwoDestinations').order('desc').take(limit);
   },
 });
 
@@ -609,28 +620,29 @@ export const listPois = query({
       return await ctx.db
         .query('mafengwoPois')
         .withIndex('by_destination_category', q =>
-          q.eq('destinationId', args.destinationId).eq('category', args.category as 'attraction'))
+          q
+            .eq('destinationId', args.destinationId)
+            .eq('category', args.category as 'attraction'))
         .take(limit);
     }
 
     if (args.destinationId) {
       return await ctx.db
         .query('mafengwoPois')
-        .withIndex('by_destination', q => q.eq('destinationId', args.destinationId))
+        .withIndex('by_destination', q =>
+          q.eq('destinationId', args.destinationId))
         .take(limit);
     }
 
     if (args.category) {
       return await ctx.db
         .query('mafengwoPois')
-        .withIndex('by_category', q => q.eq('category', args.category as 'attraction'))
+        .withIndex('by_category', q =>
+          q.eq('category', args.category as 'attraction'))
         .take(limit);
     }
 
-    return await ctx.db
-      .query('mafengwoPois')
-      .order('desc')
-      .take(limit);
+    return await ctx.db.query('mafengwoPois').order('desc').take(limit);
   },
 });
 
@@ -648,7 +660,8 @@ export const listGuides = query({
     if (args.destinationId) {
       return await ctx.db
         .query('mafengwoGuides')
-        .withIndex('by_destination', q => q.eq('destinationId', args.destinationId))
+        .withIndex('by_destination', q =>
+          q.eq('destinationId', args.destinationId))
         .take(limit);
     }
 
@@ -672,7 +685,9 @@ export const getRanking = query({
     return await ctx.db
       .query('mafengwoRankings')
       .withIndex('by_destination_type', q =>
-        q.eq('destinationId', args.destinationId).eq('rankingType', args.rankingType as 'must_visit'))
+        q
+          .eq('destinationId', args.destinationId)
+          .eq('rankingType', args.rankingType as 'must_visit'))
       .first();
   },
 });

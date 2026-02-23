@@ -92,7 +92,11 @@ export interface AstronomicalEvent {
   tipsZh?: string[];
 }
 
-export type EventVisibility = 'global' | 'northern_hemisphere' | 'southern_hemisphere' | 'regional';
+export type EventVisibility
+  = | 'global'
+    | 'northern_hemisphere'
+    | 'southern_hemisphere'
+    | 'regional';
 
 /**
  * Stargazing location recommendation
@@ -123,7 +127,13 @@ export type LightPollutionLevel = 'excellent' | 'good' | 'moderate' | 'poor';
  */
 export interface PhotographyReminder {
   id: string;
-  type: 'golden_hour_morning' | 'golden_hour_evening' | 'blue_hour_morning' | 'blue_hour_evening' | 'sunrise' | 'sunset';
+  type:
+    | 'golden_hour_morning'
+    | 'golden_hour_evening'
+    | 'blue_hour_morning'
+    | 'blue_hour_evening'
+    | 'sunrise'
+    | 'sunset';
   locationName: string;
   latitude: number;
   longitude: number;

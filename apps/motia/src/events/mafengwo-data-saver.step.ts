@@ -66,11 +66,13 @@ const guideDataSchema = z.object({
   summary: z.string().optional(),
   content: z.string(),
   contentHtml: z.string().optional(),
-  sections: z.array(z.object({
-    title: z.string(),
-    content: z.string(),
-    order: z.number(),
-  })),
+  sections: z.array(
+    z.object({
+      title: z.string(),
+      content: z.string(),
+      order: z.number(),
+    }),
+  ),
   coverImage: z.string().optional(),
   images: z.array(z.string()),
   viewsCount: z.number(),
@@ -92,13 +94,15 @@ const qaDataSchema = z.object({
   viewsCount: z.number(),
   tags: z.array(z.string()),
   createdAt: z.string().optional(),
-  bestAnswer: z.object({
-    content: z.string(),
-    authorName: z.string().optional(),
-    authorId: z.string().optional(),
-    likesCount: z.number(),
-    createdAt: z.string().optional(),
-  }).optional(),
+  bestAnswer: z
+    .object({
+      content: z.string(),
+      authorName: z.string().optional(),
+      authorId: z.string().optional(),
+      likesCount: z.number(),
+      createdAt: z.string().optional(),
+    })
+    .optional(),
 });
 
 const rankingDataSchema = z.object({
@@ -108,16 +112,18 @@ const rankingDataSchema = z.object({
   destinationId: z.string(),
   destinationName: z.string().optional(),
   description: z.string().optional(),
-  items: z.array(z.object({
-    rank: z.number(),
-    poiId: z.string(),
-    name: z.string(),
-    category: z.string().optional(),
-    rating: z.number().optional(),
-    reviewsCount: z.number(),
-    coverImage: z.string().optional(),
-    reason: z.string().optional(),
-  })),
+  items: z.array(
+    z.object({
+      rank: z.number(),
+      poiId: z.string(),
+      name: z.string(),
+      category: z.string().optional(),
+      rating: z.number().optional(),
+      reviewsCount: z.number(),
+      coverImage: z.string().optional(),
+      reason: z.string().optional(),
+    }),
+  ),
 });
 
 // ============================================
@@ -218,9 +224,13 @@ export async function handler(
 
     switch (topic) {
       case 'crawler.mafengwo.destination.completed': {
-        const parsed = z.object({ destination: destinationDataSchema }).safeParse(data);
+        const parsed = z
+          .object({ destination: destinationDataSchema })
+          .safeParse(data);
         if (!parsed.success) {
-          logger.error('Invalid destination data', { error: parsed.error.message });
+          logger.error('Invalid destination data', {
+            error: parsed.error.message,
+          });
           return;
         }
 
@@ -247,10 +257,12 @@ export async function handler(
       }
 
       case 'crawler.mafengwo.poi.detail.completed': {
-        const parsed = z.object({
-          sourceUrl: z.string(),
-          poi: poiDetailDataSchema,
-        }).safeParse(data);
+        const parsed = z
+          .object({
+            sourceUrl: z.string(),
+            poi: poiDetailDataSchema,
+          })
+          .safeParse(data);
 
         if (!parsed.success) {
           logger.error('Invalid POI data', { error: parsed.error.message });
@@ -270,7 +282,13 @@ export async function handler(
           sourceUrl: parsed.data.sourceUrl,
           name: poi.name,
           nameEn: poi.nameEn,
-          category: poi.category as 'attraction' | 'restaurant' | 'hotel' | 'shopping' | 'entertainment' | 'transport',
+          category: poi.category as
+          | 'attraction'
+          | 'restaurant'
+          | 'hotel'
+          | 'shopping'
+          | 'entertainment'
+          | 'transport',
           address: poi.address,
           latitude: poi.latitude,
           longitude: poi.longitude,
@@ -299,10 +317,12 @@ export async function handler(
       }
 
       case 'crawler.mafengwo.guide.detail.completed': {
-        const parsed = z.object({
-          sourceUrl: z.string(),
-          guide: guideDataSchema,
-        }).safeParse(data);
+        const parsed = z
+          .object({
+            sourceUrl: z.string(),
+            guide: guideDataSchema,
+          })
+          .safeParse(data);
 
         if (!parsed.success) {
           logger.error('Invalid guide data', { error: parsed.error.message });
@@ -341,10 +361,12 @@ export async function handler(
       }
 
       case 'crawler.mafengwo.qa.detail.completed': {
-        const parsed = z.object({
-          sourceUrl: z.string(),
-          qa: qaDataSchema,
-        }).safeParse(data);
+        const parsed = z
+          .object({
+            sourceUrl: z.string(),
+            qa: qaDataSchema,
+          })
+          .safeParse(data);
 
         if (!parsed.success) {
           logger.error('Invalid Q&A data', { error: parsed.error.message });
@@ -377,10 +399,12 @@ export async function handler(
       }
 
       case 'crawler.mafengwo.ranking.completed': {
-        const parsed = z.object({
-          sourceUrl: z.string(),
-          ranking: rankingDataSchema,
-        }).safeParse(data);
+        const parsed = z
+          .object({
+            sourceUrl: z.string(),
+            ranking: rankingDataSchema,
+          })
+          .safeParse(data);
 
         if (!parsed.success) {
           logger.error('Invalid ranking data', { error: parsed.error.message });
@@ -391,7 +415,12 @@ export async function handler(
         savedId = await client.mutation(api.mafengwo.upsertRanking, {
           rankingId: ranking.rankingId,
           sourceUrl: parsed.data.sourceUrl,
-          rankingType: ranking.rankingType as 'must_visit' | 'food' | 'hotel' | 'shopping' | 'hidden_gem',
+          rankingType: ranking.rankingType as
+          | 'must_visit'
+          | 'food'
+          | 'hotel'
+          | 'shopping'
+          | 'hidden_gem',
           title: ranking.title,
           destinationId: ranking.destinationId,
           destinationName: ranking.destinationName,

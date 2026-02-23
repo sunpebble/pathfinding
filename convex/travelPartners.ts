@@ -1212,7 +1212,12 @@ async function updateTrustScore(ctx: MutationCtx, userId: string) {
       cancelledMatches: cancelledMatches.length,
       averageRating: averageRating > 0 ? averageRating : undefined,
       totalRatings: ratings.length,
-      badges: badges as ('verified_identity' | 'experienced' | 'top_rated' | 'trusted_traveler')[],
+      badges: badges as (
+        | 'verified_identity'
+        | 'experienced'
+        | 'top_rated'
+        | 'trusted_traveler'
+      )[],
       lastCalculatedAt: now,
       updatedAt: now,
     });
@@ -1230,7 +1235,12 @@ async function updateTrustScore(ctx: MutationCtx, userId: string) {
       cancelledMatches: cancelledMatches.length,
       averageRating: averageRating > 0 ? averageRating : undefined,
       totalRatings: ratings.length,
-      badges: badges as ('verified_identity' | 'experienced' | 'top_rated' | 'trusted_traveler')[],
+      badges: badges as (
+        | 'verified_identity'
+        | 'experienced'
+        | 'top_rated'
+        | 'trusted_traveler'
+      )[],
       lastCalculatedAt: now,
       createdAt: now,
       updatedAt: now,
