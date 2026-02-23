@@ -386,17 +386,38 @@ export const getByDestination = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const guides = await ctx.db.query('travelGuides').collect();
-
+    // OPTIMIZATION: Scan guideDestinations (smaller docs) instead of travelGuides (large docs)
+    // This preserves substring matching behavior while reducing memory usage significantly.
     const destLower = args.destination.toLowerCase();
-    const filtered = guides.filter(g =>
-      g.destinations.some(d => d.toLowerCase().includes(destLower)),
+
+    // 1. Scan guideDestinations for substring matches
+    // guideDestinations.destination is already normalized (lowercase)
+    const allDestinations = await ctx.db.query('guideDestinations').collect();
+
+    const matchingGuideIds = new Set<Id<'travelGuides'>>();
+    for (const d of allDestinations) {
+      if (d.destination.includes(destLower)) {
+        matchingGuideIds.add(d.guideId);
+      }
+    }
+
+    if (matchingGuideIds.size === 0) {
+      return [];
+    }
+
+    // 2. Fetch the actual guides
+    const guides = await Promise.all(
+      Array.from(matchingGuideIds).map(id => ctx.db.get(id)),
     );
 
-    // Sort by quality score
-    filtered.sort((a, b) => b.qualityScore - a.qualityScore);
+    const validGuides = guides.filter((g): g is NonNullable<typeof g> => g !== null);
 
-    return args.limit ? filtered.slice(0, args.limit) : filtered;
+    // 3. Sort by quality score
+    validGuides.sort((a, b) => b.qualityScore - a.qualityScore);
+
+    const result = args.limit ? validGuides.slice(0, args.limit) : validGuides;
+
+    return result.map(ensureDisplayFields);
   },
 });
 
