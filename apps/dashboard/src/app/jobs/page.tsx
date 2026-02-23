@@ -118,13 +118,16 @@ export default function JobsPage() {
           </h2>
         </div>
         <div className="p-6">
-          {isLoadingScheduler ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            </div>
-          ) : schedulerStatus ? (
-            <div className="space-y-6">
-              {/* Worker Status */}
+          {isLoadingScheduler
+            ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                </div>
+              )
+            : schedulerStatus
+              ? (
+                  <div className="space-y-6">
+                    {/* Worker Status */}
               <div>
                 <h3 className="mb-3 text-sm font-medium text-gray-700">
                   Worker Status
@@ -288,31 +291,35 @@ export default function JobsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {isLoading ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
-                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
-                </td>
-              </tr>
-            ) : jobs.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-12 text-center text-gray-500"
-                >
-                  No jobs found.
-                  {' '}
-                  <Link
-                    href="/jobs/create"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Create one
-                  </Link>
-                </td>
-              </tr>
-            ) : (
-              jobs.map(job => (
-                <tr key={job.id} className="hover:bg-gray-50">
+            {isLoading
+              ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
+                    </td>
+                  </tr>
+                )
+              : jobs.length === 0
+                ? (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-6 py-12 text-center text-gray-500"
+                      >
+                        No jobs found.
+                        {' '}
+                        <Link
+                          href="/jobs/create"
+                          className="text-blue-600 hover:underline"
+                        >
+                          Create one
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                : (
+                    jobs.map(job => (
+                      <tr key={job.id} className="hover:bg-gray-50">
                   <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
                     {shortId(job.id)}
                   </td>
