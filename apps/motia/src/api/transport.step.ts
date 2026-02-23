@@ -2,12 +2,6 @@ import { z } from 'zod';
 
 type TransportMode = 'walking' | 'driving' | 'transit';
 
-interface POI {
-  name: string;
-  latitude: number;
-  longitude: number;
-}
-
 function toRad(deg: number): number {
   return deg * (Math.PI / 180);
 }

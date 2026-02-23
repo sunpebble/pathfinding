@@ -58,7 +58,9 @@ export async function GET(
  */
 
 function transformGuide(
+  // eslint-disable-next-line ts/no-explicit-any
   guide: Record<string, any>,
+  // eslint-disable-next-line ts/no-explicit-any
   aiData: Record<string, any> | null,
 ) {
   return {
