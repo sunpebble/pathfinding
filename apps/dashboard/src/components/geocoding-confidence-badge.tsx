@@ -71,34 +71,52 @@ export function GeocodingConfidenceBadge({
   const SourceIcon = sourceInfo.icon;
 
   const handleClick = (e: React.MouseEvent) => {
-    if (onClick) {
-      e.stopPropagation();
-      onClick();
-    }
+    e.stopPropagation();
+    onClick?.();
   };
 
-  const Component = onClick ? 'button' : 'div';
   const labelText = `${confidenceLevel.label} confidence (${(confidence * 100).toFixed(0)}%) from ${sourceInfo.name}${isManuallyVerified ? ' - Manually verified' : ''}`;
 
-  return (
-    <Component
-      type={onClick ? 'button' : undefined}
-      className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors',
-        confidenceLevel.color,
-        onClick && 'cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500',
-        className,
-      )}
-      onClick={handleClick}
-      title={labelText}
-      aria-label={onClick ? `Edit geocoding details: ${labelText}` : undefined}
-    >
+  const baseClasses = cn(
+    'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors',
+    confidenceLevel.color,
+    className,
+  );
+
+  const content = (
+    <>
       <Icon className="h-3.5 w-3.5" />
       <span>{confidenceLevel.label}</span>
       <span className="text-xs opacity-70">·</span>
       <SourceIcon className="h-3 w-3 opacity-70" />
       <span className="text-xs opacity-70">{sourceInfo.name}</span>
       {onClick && <Pencil className="h-3 w-3 ml-1 opacity-50" />}
-    </Component>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={cn(
+          baseClasses,
+          'cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400',
+        )}
+        onClick={handleClick}
+        title={labelText}
+        aria-label={`Edit geocoding details: ${labelText}`}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className={baseClasses}
+      title={labelText}
+    >
+      {content}
+    </div>
   );
 }
