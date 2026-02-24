@@ -1,90 +1,80 @@
-/**
- * 历史数据清洗脚本
- * 从 Convex 拉取所有游记，用 content-cleaner 清洗后回写
- */
-
-import { ConvexHttpClient } from 'convex/browser';
+/* eslint-disable no-console */
+import { ConvexClient } from 'convex/browser';
+import * as dotenv from 'dotenv';
 import { api } from '../convex/_generated/api.js';
-import { cleanContent } from '../packages/crawler-types/src/content-cleaner.js';
 
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
-const client = new ConvexHttpClient(CONVEX_URL);
+dotenv.config({ path: '.env.local' });
 
-async function main() {
-  console.log('🧹 开始清洗历史游记数据...');
-  console.log(`Convex: ${CONVEX_URL}\n`);
-
-  let cursor: string | undefined;
-  let totalProcessed = 0;
-  let totalCleaned = 0;
-  let totalSkipped = 0;
-
-  // 分页遍历所有游记
-  while (true) {
-    const result = await client.query(api.travelGuides.listIds, {
-      cursor,
-      limit: 50,
-    });
-
-    if (!result.items || result.items.length === 0) {
-      break;
-    }
-
-    // 逐条处理
-    for (const item of result.items) {
-      totalProcessed++;
-
-      try {
-        // 获取完整 guide
-        const guide = await client.query(api.travelGuides.getById, {
-          id: item._id,
-        });
-
-        if (!guide || !guide.content) {
-          totalSkipped++;
-          continue;
-        }
-
-        // 清洗内容
-        const cleanResult = cleanContent(guide.content, {
-          categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
-          preserveParagraphs: true,
-        });
-
-        // 如果清洗后内容有变化，回写
-        if (cleanResult.cleanedLength !== cleanResult.originalLength) {
-          await client.mutation(api.travelGuides.update, {
-            id: item._id,
-            content: cleanResult.content,
-          });
-
-          totalCleaned++;
-          const pct = Math.round((1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100);
-          console.log(
-            `✅ [${totalProcessed}] ${item.title?.slice(0, 30) || item.sourceExternalId} — 清除 ${pct}% 噪音 (${cleanResult.originalLength} → ${cleanResult.cleanedLength}) [${cleanResult.removedTypes.join(', ')}]`,
-          );
-        }
-        else {
-          totalSkipped++;
-          if (totalProcessed % 20 === 0) {
-            console.log(`⏭️  [${totalProcessed}] 已跳过（无需清洗）`);
-          }
-        }
-      }
-      catch (err) {
-        console.error(`❌ [${totalProcessed}] ${item._id}: ${err}`);
-      }
-    }
-
-    if (result.isDone)
-      break;
-    cursor = result.cursor;
-  }
-
-  console.log(`\n🎉 清洗完成！`);
-  console.log(`   总计处理: ${totalProcessed}`);
-  console.log(`   已清洗:   ${totalCleaned}`);
-  console.log(`   已跳过:   ${totalSkipped}`);
+const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL;
+if (!CONVEX_URL) {
+  console.error('Error: NEXT_PUBLIC_CONVEX_URL is not defined');
+  process.exit(1);
 }
 
-main().catch(console.error);
+const client = new ConvexClient(CONVEX_URL);
+
+async function cleanHistoricalGuides() {
+  console.log('Starting cleanup of historical guides...');
+
+  try {
+    // 1. Get all guides
+    const guides = await client.query(api.travelGuides.list, { limit: 1000 });
+    console.log(`Found ${guides.length} guides total`);
+
+    // 2. Identify guides to remove
+    // Remove guides that don't have a platform (old test data)
+    const noPlatform = guides.filter(g => !g.sourcePlatform);
+    console.log(`Found ${noPlatform.length} guides without platform`);
+
+    // Remove guides with very short content (likely test data)
+    const shortContent = guides.filter(g => g.content.length < 50);
+    console.log(`Found ${shortContent.length} guides with short content (<50 chars)`);
+
+    // Remove duplicates (same external ID and platform)
+    const seen = new Set<string>();
+    const duplicates = [];
+    for (const guide of guides) {
+      if (guide.sourcePlatform && guide.sourceExternalId) {
+        const key = `${guide.sourcePlatform}:${guide.sourceExternalId}`;
+        if (seen.has(key)) {
+          duplicates.push(guide);
+        } else {
+          seen.add(key);
+        }
+      }
+    }
+    console.log(`Found ${duplicates.length} duplicate guides`);
+
+    // 3. Delete them
+    const toDelete = [...noPlatform, ...shortContent, ...duplicates];
+    const uniqueIds = new Set(toDelete.map(g => g._id));
+
+    console.log(`Total unique guides to delete: ${uniqueIds.size}`);
+
+    if (uniqueIds.size > 0) {
+      console.log('Deleting...');
+      let deletedCount = 0;
+
+      for (const id of uniqueIds) {
+        try {
+          await client.mutation(api.editOperations.deleteGuide, { id });
+          deletedCount++;
+          if (deletedCount % 10 === 0) {
+            process.stdout.write('.');
+          }
+        } catch (e) {
+          console.error(`Failed to delete guide ${id}:`, e);
+        }
+      }
+      console.log('\nDone!');
+    } else {
+      console.log('No guides to delete');
+    }
+
+  } catch (error) {
+    console.error('Cleanup failed:', error);
+    process.exit(1);
+  }
+}
+
+cleanHistoricalGuides();

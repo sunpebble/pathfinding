@@ -1,8 +1,8 @@
 {
   "name": "@pathfinding/motia",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "motia dev",
     "start": "motia start",

@@ -77,7 +77,9 @@ export function getTransportLabel(
   locale: 'zh' | 'en' = 'zh',
 ): string {
   const transport = TRANSPORT_MODES[mode];
-  if (!transport) return mode;
+  if (!transport)
+    return mode;
+
   return locale === 'zh' ? transport.label : transport.labelEn;
 }
 
