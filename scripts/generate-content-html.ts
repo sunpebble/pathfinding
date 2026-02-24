@@ -24,7 +24,7 @@ async function generateContentHtml() {
     // For this script, we'll fetch batches and process.
 
     let processedCount = 0;
-    let cursor = null;
+    const cursor = null;
     let isDone = false;
 
     while (!isDone) {
@@ -40,7 +40,8 @@ async function generateContentHtml() {
       // Let's assume we can fetch a reasonable number.
 
       const guides = result; // Assuming result is array based on previous logs
-      if (guides.length === 0) break;
+      if (guides.length === 0)
+        break;
 
       console.log(`Processing batch of ${guides.length} guides...`);
 
@@ -62,12 +63,13 @@ async function generateContentHtml() {
 
           await client.mutation(api.travelGuides.update, {
             id: guide._id,
-            contentHtml: html
+            contentHtml: html,
           });
 
           processedCount++;
           process.stdout.write('.');
-        } catch (e) {
+        }
+        catch (e) {
           console.error(`Failed to update guide ${guide._id}:`, e);
         }
       }
@@ -77,8 +79,8 @@ async function generateContentHtml() {
     }
 
     console.log(`\nDone! Processed ${processedCount} guides.`);
-
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Generation failed:', error);
     process.exit(1);
   }

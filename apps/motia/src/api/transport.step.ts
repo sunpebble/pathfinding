@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 type TransportMode = 'walking' | 'driving' | 'transit';
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 interface POI {
   name: string;
   latitude: number;
@@ -29,7 +30,8 @@ function nearestNeighborTSP(matrix: number[][]): number[] {
   let current = 0;
 
   while (visited.size < n) {
-    let nearest = -1; let minDist = Infinity;
+    let nearest = -1;
+    let minDist = Infinity;
     for (let i = 0; i < n; i++) {
       if (!visited.has(i) && matrix[current][i] < minDist) {
         minDist = matrix[current][i];
@@ -84,7 +86,8 @@ export async function handler(req: { body?: unknown }, { logger }: HandlerContex
   const optimizedOrder = nearestNeighborTSP(matrix);
 
   const segments = optimizedOrder.slice(0, -1).map((idx, i) => {
-    const from = pois[idx]; const to = pois[optimizedOrder[i + 1]];
+    const from = pois[idx];
+    const to = pois[optimizedOrder[i + 1]];
     const dist = calculateDistance(from.latitude, from.longitude, to.latitude, to.longitude);
     const dur = (dist / speeds[transportMode]) * 60;
     return { from: from.name, to: to.name, distance: dist, duration: dur };

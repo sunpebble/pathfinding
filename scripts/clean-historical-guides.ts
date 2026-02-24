@@ -38,7 +38,8 @@ async function cleanHistoricalGuides() {
         const key = `${guide.sourcePlatform}:${guide.sourceExternalId}`;
         if (seen.has(key)) {
           duplicates.push(guide);
-        } else {
+        }
+        else {
           seen.add(key);
         }
       }
@@ -62,16 +63,18 @@ async function cleanHistoricalGuides() {
           if (deletedCount % 10 === 0) {
             process.stdout.write('.');
           }
-        } catch (e) {
+        }
+        catch (e) {
           console.error(`Failed to delete guide ${id}:`, e);
         }
       }
       console.log('\nDone!');
-    } else {
+    }
+    else {
       console.log('No guides to delete');
     }
-
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Cleanup failed:', error);
     process.exit(1);
   }
