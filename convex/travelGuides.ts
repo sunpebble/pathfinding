@@ -386,33 +386,17 @@ export const getByDestination = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const guides = await ctx.db.query('travelGuides').collect();
+
     const destLower = args.destination.toLowerCase();
-
-    // Optimization: Scan lightweight guideDestinations table instead of full travelGuides table
-    // guideDestinations table stores normalized destination names and guide IDs only.
-    // This avoids loading heavy guide content into memory for filtering.
-    const guideDestinations = await ctx.db.query('guideDestinations').collect();
-
-    const matchingGuideIds = new Set<Id<'travelGuides'>>();
-
-    for (const gd of guideDestinations) {
-      if (gd.destination.toLowerCase().includes(destLower)) {
-        matchingGuideIds.add(gd.guideId);
-      }
-    }
-
-    // Fetch full guide documents
-    const guides = await Promise.all(
-      Array.from(matchingGuideIds).map(id => ctx.db.get(id)),
+    const filtered = guides.filter(g =>
+      g.destinations.some(d => d.toLowerCase().includes(destLower)),
     );
 
-    // Filter out nulls
-    const validGuides = guides.filter((g): g is NonNullable<typeof g> => g !== null);
-
     // Sort by quality score
-    validGuides.sort((a, b) => b.qualityScore - a.qualityScore);
+    filtered.sort((a, b) => b.qualityScore - a.qualityScore);
 
-    return args.limit ? validGuides.slice(0, args.limit) : validGuides;
+    return args.limit ? filtered.slice(0, args.limit) : filtered;
   },
 });
 
