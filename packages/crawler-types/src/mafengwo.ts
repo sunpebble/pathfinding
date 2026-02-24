@@ -446,4 +446,16 @@ export interface ParsedNumber {
   original: string;
 }
 
-// Note: QualityScoreResult is now imported from './quality-score.js' in the consumer
+/** 质量评分结果 */
+export interface QualityScoreResult {
+  score: number; // 0-1
+  factors: {
+    hasTitle: boolean;
+    hasContent: boolean;
+    contentLength: number;
+    hasImages: boolean;
+    imageCount: number;
+    hasAuthor: boolean;
+    hasStats: boolean;
+  };
+}
