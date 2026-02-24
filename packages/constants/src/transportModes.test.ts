@@ -34,18 +34,18 @@ describe('tRANSPORT_MODES', () => {
   });
 
   it('should have correct default speeds', () => {
-    expect(TRANSPORT_MODES.walking.defaultSpeed).toBe(5);
-    expect(TRANSPORT_MODES.driving.defaultSpeed).toBe(40);
-    expect(TRANSPORT_MODES.transit.defaultSpeed).toBe(25);
-    expect(TRANSPORT_MODES.cycling.defaultSpeed).toBe(15);
-    expect(TRANSPORT_MODES.taxi.defaultSpeed).toBe(35);
-    expect(TRANSPORT_MODES.bus.defaultSpeed).toBe(20);
-    expect(TRANSPORT_MODES.subway.defaultSpeed).toBe(35);
+    expect(TRANSPORT_MODES.walking?.defaultSpeed).toBe(5);
+    expect(TRANSPORT_MODES.driving?.defaultSpeed).toBe(40);
+    expect(TRANSPORT_MODES.transit?.defaultSpeed).toBe(25);
+    expect(TRANSPORT_MODES.cycling?.defaultSpeed).toBe(15);
+    expect(TRANSPORT_MODES.taxi?.defaultSpeed).toBe(35);
+    expect(TRANSPORT_MODES.bus?.defaultSpeed).toBe(20);
+    expect(TRANSPORT_MODES.subway?.defaultSpeed).toBe(35);
   });
 
   it('should have walking as slowest mode', () => {
     const speeds = Object.values(TRANSPORT_MODES).map(m => m.defaultSpeed);
-    expect(Math.min(...speeds)).toBe(TRANSPORT_MODES.walking.defaultSpeed);
+    expect(Math.min(...speeds)).toBe(TRANSPORT_MODES.walking?.defaultSpeed);
   });
 });
 

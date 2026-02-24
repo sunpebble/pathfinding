@@ -33,15 +33,15 @@ describe('pOI_CATEGORIES', () => {
   });
 
   it('should have correct Chinese labels', () => {
-    expect(POI_CATEGORIES.attraction.label).toBe('景点');
-    expect(POI_CATEGORIES.restaurant.label).toBe('餐饮');
-    expect(POI_CATEGORIES.hotel.label).toBe('住宿');
+    expect(POI_CATEGORIES.attraction?.label).toBe('景点');
+    expect(POI_CATEGORIES.restaurant?.label).toBe('餐饮');
+    expect(POI_CATEGORIES.hotel?.label).toBe('住宿');
   });
 
   it('should have correct English labels', () => {
-    expect(POI_CATEGORIES.attraction.labelEn).toBe('Attraction');
-    expect(POI_CATEGORIES.restaurant.labelEn).toBe('Restaurant');
-    expect(POI_CATEGORIES.hotel.labelEn).toBe('Hotel');
+    expect(POI_CATEGORIES.attraction?.labelEn).toBe('Attraction');
+    expect(POI_CATEGORIES.restaurant?.labelEn).toBe('Restaurant');
+    expect(POI_CATEGORIES.hotel?.labelEn).toBe('Hotel');
   });
 });
 
