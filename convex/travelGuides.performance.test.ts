@@ -109,7 +109,7 @@ describe('travelGuides - getByDestination Optimization', () => {
     const args = { destination: 'Tokyo' };
 
     // Call the actual handler
-    const validGuides = await getByDestination.handler(ctx, args);
+    const validGuides = await (getByDestination as any).handler(ctx, args);
 
     // Assertions
     expect(validGuides).toHaveLength(2);
@@ -129,7 +129,7 @@ describe('travelGuides - getByDestination Optimization', () => {
     const ctx: any = createMockContext();
     const args = { destination: 'York' };
 
-    const validGuides = await getByDestination.handler(ctx, args);
+    const validGuides = await (getByDestination as any).handler(ctx, args);
 
     expect(validGuides).toHaveLength(1);
     expect(validGuides[0]._id).toBe('guide4'); // "New York" matches "York"
@@ -139,7 +139,7 @@ describe('travelGuides - getByDestination Optimization', () => {
     const ctx: any = createMockContext();
     const args = { destination: 'Tokyo', limit: 1 };
 
-    const result = await getByDestination.handler(ctx, args);
+    const result = await (getByDestination as any).handler(ctx, args);
 
     expect(result).toHaveLength(1);
     expect(result[0]._id).toBe('guide1');
