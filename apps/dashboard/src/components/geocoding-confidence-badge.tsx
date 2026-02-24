@@ -77,16 +77,21 @@ export function GeocodingConfidenceBadge({
     }
   };
 
+  const Component = onClick ? 'button' : 'div';
+  const labelText = `${confidenceLevel.label} confidence (${(confidence * 100).toFixed(0)}%) from ${sourceInfo.name}${isManuallyVerified ? ' - Manually verified' : ''}`;
+
   return (
-    <div
+    <Component
+      type={onClick ? 'button' : undefined}
       className={cn(
         'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors',
         confidenceLevel.color,
-        onClick && 'cursor-pointer hover:opacity-80',
+        onClick && 'cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500',
         className,
       )}
       onClick={handleClick}
-      title={`${confidenceLevel.label} confidence (${(confidence * 100).toFixed(0)}%) from ${sourceInfo.name}${isManuallyVerified ? ' - Manually verified' : ''}`}
+      title={labelText}
+      aria-label={onClick ? `Edit geocoding details: ${labelText}` : undefined}
     >
       <Icon className="h-3.5 w-3.5" />
       <span>{confidenceLevel.label}</span>
@@ -94,6 +99,6 @@ export function GeocodingConfidenceBadge({
       <SourceIcon className="h-3 w-3 opacity-70" />
       <span className="text-xs opacity-70">{sourceInfo.name}</span>
       {onClick && <Pencil className="h-3 w-3 ml-1 opacity-50" />}
-    </div>
+    </Component>
   );
 }
