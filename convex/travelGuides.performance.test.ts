@@ -5,6 +5,8 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+import { getByDestination } from './travelGuides';
+
 // Mock the Convex server functions to expose the handler directly
 vi.mock('./_generated/server', () => ({
   query: (config: any) => config,
@@ -12,8 +14,6 @@ vi.mock('./_generated/server', () => ({
   internalQuery: (config: any) => config,
   internalMutation: (config: any) => config,
 }));
-
-import { getByDestination } from './travelGuides';
 
 // ============================================================
 // Type Definitions (simplified for testing)
@@ -36,22 +36,22 @@ interface GuideDestination {
 // ============================================================
 
 const mockGuides: Record<string, TravelGuide> = {
-  'guide1': {
+  guide1: {
     _id: 'guide1',
     destinations: ['Tokyo', 'Kyoto'],
     qualityScore: 0.9,
   },
-  'guide2': {
+  guide2: {
     _id: 'guide2',
     destinations: ['Paris'],
     qualityScore: 0.8,
   },
-  'guide3': {
+  guide3: {
     _id: 'guide3',
     destinations: ['Tokyo Disney'],
     qualityScore: 0.7,
   },
-  'guide4': {
+  guide4: {
     _id: 'guide4',
     destinations: ['New York'],
     qualityScore: 0.6,
@@ -70,7 +70,7 @@ const mockGuideDestinations: GuideDestination[] = [
 // Mock Context
 // ============================================================
 
-const createMockContext = () => {
+function createMockContext() {
   return {
     db: {
       query: vi.fn((tableName: string) => {
@@ -97,7 +97,7 @@ const createMockContext = () => {
       get: vi.fn((id: string) => Promise.resolve(mockGuides[id] || null)),
     },
   };
-};
+}
 
 // ============================================================
 // Tests
