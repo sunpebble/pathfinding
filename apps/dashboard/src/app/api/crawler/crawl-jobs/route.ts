@@ -4,9 +4,14 @@ import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
 
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
-const client = new ConvexHttpClient(CONVEX_URL);
 
 export async function GET(request: NextRequest) {
+  const client = new ConvexHttpClient(CONVEX_URL);
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    client.setAuth(authHeader.replace('Bearer ', ''));
+  }
+
   const searchParams = request.nextUrl.searchParams;
   const limit = Number.parseInt(searchParams.get('limit') || '50');
   const status = searchParams.get('status');
@@ -64,6 +69,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const client = new ConvexHttpClient(CONVEX_URL);
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    client.setAuth(authHeader.replace('Bearer ', ''));
+  }
+
   try {
     const body = await request.json();
 

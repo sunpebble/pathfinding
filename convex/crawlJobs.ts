@@ -19,6 +19,11 @@ export const list = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+
     let jobs;
 
     if (args.status) {
@@ -47,6 +52,10 @@ export const list = query({
 export const getById = query({
   args: { id: v.id('crawlJobs') },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
     return await ctx.db.get(args.id);
   },
 });
@@ -112,6 +121,11 @@ export const create = mutation({
     scheduleCron: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+
     return await ctx.db.insert('crawlJobs', {
       name: args.name,
       platform: args.platform,
@@ -127,6 +141,11 @@ export const create = mutation({
 export const start = mutation({
   args: { id: v.id('crawlJobs') },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+
     const job = await ctx.db.get(args.id);
     if (!job) {
       throw new ConvexError('Crawl job not found');
@@ -187,6 +206,11 @@ export const fail = mutation({
 export const cancel = mutation({
   args: { id: v.id('crawlJobs') },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+
     const job = await ctx.db.get(args.id);
     if (!job) {
       throw new ConvexError('Crawl job not found');
@@ -284,6 +308,11 @@ export const incrementRetryCount = mutation({
 export const remove = mutation({
   args: { id: v.id('crawlJobs') },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('Unauthenticated');
+    }
+
     const job = await ctx.db.get(args.id);
     if (!job) {
       throw new ConvexError('Crawl job not found');

@@ -5,12 +5,17 @@ import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
 
 const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
-const client = new ConvexHttpClient(CONVEX_URL);
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
+  const client = new ConvexHttpClient(CONVEX_URL);
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    client.setAuth(authHeader.replace('Bearer ', ''));
+  }
+
   const { slug } = await params;
 
   // Parse slug: [id] or [id, action]
@@ -69,6 +74,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
+  const client = new ConvexHttpClient(CONVEX_URL);
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    client.setAuth(authHeader.replace('Bearer ', ''));
+  }
+
   const { slug } = await params;
   const [id, action] = slug;
 
