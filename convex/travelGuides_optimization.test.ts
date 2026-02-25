@@ -2,19 +2,19 @@ import { describe, it, expect, vi } from 'vitest';
 
 // Mock the query function BEFORE importing the module under test
 vi.mock('./_generated/server', () => ({
-  query: vi.fn((def) => ({
+  query: vi.fn((def: any) => ({
     handler: def.handler,
     args: def.args,
   })),
-  mutation: vi.fn((def) => ({
+  mutation: vi.fn((def: any) => ({
     handler: def.handler,
     args: def.args,
   })),
-  internalMutation: vi.fn((def) => ({
+  internalMutation: vi.fn((def: any) => ({
     handler: def.handler,
     args: def.args,
   })),
-  internalQuery: vi.fn((def) => ({
+  internalQuery: vi.fn((def: any) => ({
     handler: def.handler,
     args: def.args,
   })),
@@ -41,7 +41,7 @@ const mockGuides: Record<string, any> = {
 describe('getByDestination Optimization', () => {
   it('should use guideDestinations table and sort by qualityScore', async () => {
     const mockDb = {
-      query: vi.fn().mockImplementation((table) => {
+      query: vi.fn().mockImplementation((table: string) => {
         if (table === 'guideDestinations') {
           return {
             collect: vi.fn().mockResolvedValue(mockGuideDestinations),
@@ -75,7 +75,7 @@ describe('getByDestination Optimization', () => {
 
   it('should handle partial matches (substring search)', async () => {
     const mockDb = {
-      query: vi.fn().mockImplementation((table) => {
+      query: vi.fn().mockImplementation((table: string) => {
         if (table === 'guideDestinations') {
           return {
             collect: vi.fn().mockResolvedValue(mockGuideDestinations),
