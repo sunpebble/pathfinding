@@ -1,8 +1,8 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import type { Id } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * POI Business Hours - Queries and Mutations
@@ -39,9 +39,9 @@ const bestVisitTimeValidator = v.object({
 });
 
 const reminderTypeValidator = v.union(
-  v.literal('opening'),
-  v.literal('closing'),
-  v.literal('best_time'),
+  v.literal("opening"),
+  v.literal("closing"),
+  v.literal("best_time"),
 );
 
 // ============================================
@@ -53,13 +53,13 @@ const reminderTypeValidator = v.union(
  */
 function getDayOfWeek(date: Date): string {
   const days = [
-    'sunday',
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
   ];
   return days[date.getDay()];
 }
@@ -68,7 +68,7 @@ function getDayOfWeek(date: Date): string {
  * Parse time string (HH:MM) to minutes since midnight
  */
 function parseTimeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 }
 
@@ -99,13 +99,12 @@ function isWithinTimeSlot(
  */
 export const getPoiWithBusinessHours = query({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     timezone: v.optional(v.string()), // Client's timezone for accurate status
   },
   handler: async (ctx, args) => {
     const poi = await ctx.db.get(args.poiId);
-    if (!poi)
-      return null;
+    if (!poi) return null;
 
     // Get today's date in the POI's timezone or client's timezone
     const now = new Date();
@@ -140,14 +139,14 @@ export const getPoiWithBusinessHours = query({
     }
 
     // Check for holiday hours that might override
-    const today = now.toISOString().split('T')[0];
+    const today = now.toISOString().split("T")[0];
     const holidayHours = await ctx.db
-      .query('poiHolidayHours')
-      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
-      .filter(q =>
+      .query("poiHolidayHours")
+      .withIndex("by_poi", (q) => q.eq("poiId", args.poiId))
+      .filter((q) =>
         q.and(
-          q.lte(q.field('startDate'), today),
-          q.gte(q.field('endDate'), today),
+          q.lte(q.field("startDate"), today),
+          q.gte(q.field("endDate"), today),
         ),
       )
       .first();
@@ -167,8 +166,7 @@ export const getPoiWithBusinessHours = query({
         isOpen = false;
         nextOpenTime = null;
         nextCloseTime = null;
-      }
-      else if (holidayHours.hours && holidayHours.hours.length > 0) {
+      } else if (holidayHours.hours && holidayHours.hours.length > 0) {
         isOpen = false;
         for (const slot of holidayHours.hours) {
           if (isWithinTimeSlot(currentMinutes, slot)) {
@@ -200,11 +198,11 @@ export const getPoiWithBusinessHours = query({
  */
 export const getBatchPoiBusinessHours = query({
   args: {
-    poiIds: v.array(v.id('pois')),
+    poiIds: v.array(v.id("pois")),
   },
   handler: async (ctx, args) => {
     const results: Array<{
-      poiId: Id<'pois'>;
+      poiId: Id<"pois">;
       businessHours: unknown;
       bestVisitTime: unknown;
     }> = [];
@@ -233,18 +231,18 @@ export const getBatchPoiBusinessHours = query({
  */
 export const getHolidayHours = query({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     includeExpired: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     let query = ctx.db
-      .query('poiHolidayHours')
-      .withIndex('by_poi', q => q.eq('poiId', args.poiId));
+      .query("poiHolidayHours")
+      .withIndex("by_poi", (q) => q.eq("poiId", args.poiId));
 
     if (!args.includeExpired) {
-      query = query.filter(q => q.gte(q.field('endDate'), today));
+      query = query.filter((q) => q.gte(q.field("endDate"), today));
     }
 
     return await query.collect();
@@ -256,18 +254,19 @@ export const getHolidayHours = query({
  */
 export const getUpcomingHolidays = query({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     startDate: v.string(),
     endDate: v.string(),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('poiHolidayHours')
-      .withIndex('by_poi_dates', q =>
+      .query("poiHolidayHours")
+      .withIndex("by_poi_dates", (q) =>
         q
-          .eq('poiId', args.poiId)
-          .gte('startDate', args.startDate)
-          .lte('startDate', args.endDate))
+          .eq("poiId", args.poiId)
+          .gte("startDate", args.startDate)
+          .lte("startDate", args.endDate),
+      )
       .collect();
   },
 });
@@ -281,7 +280,7 @@ export const getUpcomingHolidays = query({
  */
 export const updateBusinessHours = mutation({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     businessHours: businessHoursValidator,
   },
   handler: async (ctx, args) => {
@@ -297,7 +296,7 @@ export const updateBusinessHours = mutation({
  */
 export const updateBestVisitTime = mutation({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     bestVisitTime: bestVisitTimeValidator,
   },
   handler: async (ctx, args) => {
@@ -317,7 +316,7 @@ export const updateBestVisitTime = mutation({
  */
 export const createHolidayHours = mutation({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     holidayName: v.string(),
     holidayNameEn: v.optional(v.string()),
     startDate: v.string(),
@@ -329,7 +328,7 @@ export const createHolidayHours = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert('poiHolidayHours', {
+    return await ctx.db.insert("poiHolidayHours", {
       poiId: args.poiId,
       holidayName: args.holidayName,
       holidayNameEn: args.holidayNameEn,
@@ -350,7 +349,7 @@ export const createHolidayHours = mutation({
  */
 export const updateHolidayHours = mutation({
   args: {
-    id: v.id('poiHolidayHours'),
+    id: v.id("poiHolidayHours"),
     holidayName: v.optional(v.string()),
     holidayNameEn: v.optional(v.string()),
     startDate: v.optional(v.string()),
@@ -380,7 +379,7 @@ export const updateHolidayHours = mutation({
  */
 export const deleteHolidayHours = mutation({
   args: {
-    id: v.id('poiHolidayHours'),
+    id: v.id("poiHolidayHours"),
   },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
@@ -397,14 +396,14 @@ export const deleteHolidayHours = mutation({
 export const createReminder = mutation({
   args: {
     userId: v.string(),
-    poiId: v.id('pois'),
-    itineraryItemId: v.optional(v.id('itineraryItems')),
+    poiId: v.id("pois"),
+    itineraryItemId: v.optional(v.id("itineraryItems")),
     reminderType: reminderTypeValidator,
     minutesBefore: v.number(),
     scheduledTime: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('poiBusinessHoursReminders', {
+    return await ctx.db.insert("poiBusinessHoursReminders", {
       userId: args.userId,
       poiId: args.poiId,
       itineraryItemId: args.itineraryItemId,
@@ -427,11 +426,11 @@ export const getUserReminders = query({
   },
   handler: async (ctx, args) => {
     let query = ctx.db
-      .query('poiBusinessHoursReminders')
-      .withIndex('by_user', q => q.eq('userId', args.userId));
+      .query("poiBusinessHoursReminders")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId));
 
     if (!args.includeTriggered) {
-      query = query.filter(q => q.eq(q.field('isTriggered'), false));
+      query = query.filter((q) => q.eq(q.field("isTriggered"), false));
     }
 
     const reminders = await query.collect();
@@ -467,12 +466,12 @@ export const getPendingReminders = query({
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('poiBusinessHoursReminders')
-      .withIndex('by_scheduled_time')
-      .filter(q =>
+      .query("poiBusinessHoursReminders")
+      .withIndex("by_scheduled_time")
+      .filter((q) =>
         q.and(
-          q.lte(q.field('scheduledTime'), args.beforeTime),
-          q.eq(q.field('isTriggered'), false),
+          q.lte(q.field("scheduledTime"), args.beforeTime),
+          q.eq(q.field("isTriggered"), false),
         ),
       )
       .collect();
@@ -484,7 +483,7 @@ export const getPendingReminders = query({
  */
 export const triggerReminder = mutation({
   args: {
-    id: v.id('poiBusinessHoursReminders'),
+    id: v.id("poiBusinessHoursReminders"),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
@@ -499,7 +498,7 @@ export const triggerReminder = mutation({
  */
 export const deleteReminder = mutation({
   args: {
-    id: v.id('poiBusinessHoursReminders'),
+    id: v.id("poiBusinessHoursReminders"),
   },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
@@ -512,13 +511,14 @@ export const deleteReminder = mutation({
 export const deletePoiReminders = mutation({
   args: {
     userId: v.string(),
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
   },
   handler: async (ctx, args) => {
     const reminders = await ctx.db
-      .query('poiBusinessHoursReminders')
-      .withIndex('by_user_poi', q =>
-        q.eq('userId', args.userId).eq('poiId', args.poiId))
+      .query("poiBusinessHoursReminders")
+      .withIndex("by_user_poi", (q) =>
+        q.eq("userId", args.userId).eq("poiId", args.poiId),
+      )
       .collect();
 
     for (const reminder of reminders) {

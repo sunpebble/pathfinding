@@ -50,28 +50,28 @@ export interface MoonPhase {
   emoji: string;
 }
 
-export type MoonPhaseName
-  = | 'new_moon'
-    | 'waxing_crescent'
-    | 'first_quarter'
-    | 'waxing_gibbous'
-    | 'full_moon'
-    | 'waning_gibbous'
-    | 'last_quarter'
-    | 'waning_crescent';
+export type MoonPhaseName =
+  | "new_moon"
+  | "waxing_crescent"
+  | "first_quarter"
+  | "waxing_gibbous"
+  | "full_moon"
+  | "waning_gibbous"
+  | "last_quarter"
+  | "waning_crescent";
 
 /**
  * Astronomical event types
  */
-export type AstronomicalEventType
-  = | 'solar_eclipse'
-    | 'lunar_eclipse'
-    | 'meteor_shower'
-    | 'planet_conjunction'
-    | 'supermoon'
-    | 'blue_moon'
-    | 'equinox'
-    | 'solstice';
+export type AstronomicalEventType =
+  | "solar_eclipse"
+  | "lunar_eclipse"
+  | "meteor_shower"
+  | "planet_conjunction"
+  | "supermoon"
+  | "blue_moon"
+  | "equinox"
+  | "solstice";
 
 /**
  * Astronomical event
@@ -92,7 +92,11 @@ export interface AstronomicalEvent {
   tipsZh?: string[];
 }
 
-export type EventVisibility = 'global' | 'northern_hemisphere' | 'southern_hemisphere' | 'regional';
+export type EventVisibility =
+  | "global"
+  | "northern_hemisphere"
+  | "southern_hemisphere"
+  | "regional";
 
 /**
  * Stargazing location recommendation
@@ -116,14 +120,20 @@ export interface StargazingSpot {
   imageUrl?: string;
 }
 
-export type LightPollutionLevel = 'excellent' | 'good' | 'moderate' | 'poor';
+export type LightPollutionLevel = "excellent" | "good" | "moderate" | "poor";
 
 /**
  * Photography reminder for golden hour
  */
 export interface PhotographyReminder {
   id: string;
-  type: 'golden_hour_morning' | 'golden_hour_evening' | 'blue_hour_morning' | 'blue_hour_evening' | 'sunrise' | 'sunset';
+  type:
+    | "golden_hour_morning"
+    | "golden_hour_evening"
+    | "blue_hour_morning"
+    | "blue_hour_evening"
+    | "sunrise"
+    | "sunset";
   locationName: string;
   latitude: number;
   longitude: number;

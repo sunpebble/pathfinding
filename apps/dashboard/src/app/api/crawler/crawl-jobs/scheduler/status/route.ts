@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 // Scheduler status is managed by the AI service, not Convex
 // Return a mock status for now

@@ -7,8 +7,8 @@
  * Check status: npx convex run migrations/batchAiProcess:status
  */
 
-import { v } from 'convex/values';
-import { mutation, query } from '../_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "../_generated/server";
 
 const BATCH_SIZE = 20;
 
@@ -23,18 +23,18 @@ export const getPending = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? BATCH_SIZE;
 
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: limit * 10, // Fetch more to find pending ones
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: limit * 10, // Fetch more to find pending ones
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     // Filter guides without aiProcessedAt (not yet AI processed)
-    const pending = result.page.filter(g => !g.aiProcessedAt && g.enrichmentStatus !== 'failed');
+    const pending = result.page.filter(
+      (g) => !g.aiProcessedAt && g.enrichmentStatus !== "failed",
+    );
 
     return {
-      guides: pending.slice(0, limit).map(g => ({
+      guides: pending.slice(0, limit).map((g) => ({
         _id: g._id,
         title: g.title,
         contentLength: g.content?.length ?? 0,
@@ -57,12 +57,10 @@ export const status = query({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: 100,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: 100,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let processed = 0;
     let pending = 0;
@@ -71,11 +69,9 @@ export const status = query({
     for (const guide of result.page) {
       if (guide.aiProcessedAt) {
         processed++;
-      }
-      else if (guide.enrichmentStatus === 'failed') {
+      } else if (guide.enrichmentStatus === "failed") {
         failed++;
-      }
-      else {
+      } else {
         pending++;
       }
     }
@@ -103,26 +99,24 @@ export const markPending = mutation({
   handler: async (ctx, args) => {
     const limit = args.limit ?? BATCH_SIZE;
 
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: limit,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: limit,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let marked = 0;
     let skipped = 0;
 
     for (const guide of result.page) {
       // Skip if already processed or already pending
-      if (guide.aiProcessedAt || guide.enrichmentStatus === 'pending') {
+      if (guide.aiProcessedAt || guide.enrichmentStatus === "pending") {
         skipped++;
         continue;
       }
 
       // Mark as pending for the enrichment poller
       await ctx.db.patch(guide._id, {
-        enrichmentStatus: 'pending',
+        enrichmentStatus: "pending",
       });
       marked++;
     }
@@ -133,7 +127,7 @@ export const markPending = mutation({
       batchSize: result.page.length,
       isDone: result.isDone,
       nextCursor: result.isDone ? undefined : result.continueCursor,
-      message: `Marked ${marked} guides as pending, skipped ${skipped}. ${result.isDone ? 'Complete!' : 'Run again with cursor to continue.'}`,
+      message: `Marked ${marked} guides as pending, skipped ${skipped}. ${result.isDone ? "Complete!" : "Run again with cursor to continue."}`,
     };
   },
 });
@@ -146,19 +140,17 @@ export const resetFailed = mutation({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: BATCH_SIZE,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let reset = 0;
 
     for (const guide of result.page) {
-      if (guide.enrichmentStatus === 'failed') {
+      if (guide.enrichmentStatus === "failed") {
         await ctx.db.patch(guide._id, {
-          enrichmentStatus: 'pending',
+          enrichmentStatus: "pending",
           enrichmentError: undefined,
         });
         reset++;
@@ -185,17 +177,17 @@ export const getMissingMarkdown = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? BATCH_SIZE;
 
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: limit * 10,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: limit * 10,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
-    const missing = result.page.filter(g => g.aiProcessedAt && !g.contentMarkdown);
+    const missing = result.page.filter(
+      (g) => g.aiProcessedAt && !g.contentMarkdown,
+    );
 
     return {
-      guides: missing.slice(0, limit).map(g => ({
+      guides: missing.slice(0, limit).map((g) => ({
         _id: g._id,
         title: g.title,
         contentLength: g.content?.length ?? 0,
@@ -219,12 +211,10 @@ export const resetMissingMarkdown = mutation({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: 10,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: 10,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let reset = 0;
 
@@ -232,7 +222,7 @@ export const resetMissingMarkdown = mutation({
       if (guide.aiProcessedAt && !guide.contentMarkdown) {
         await ctx.db.patch(guide._id, {
           aiProcessedAt: undefined,
-          enrichmentStatus: 'pending',
+          enrichmentStatus: "pending",
         });
         reset++;
       }
@@ -251,7 +241,7 @@ export const resetMissingMarkdown = mutation({
  */
 export const updateAiData = mutation({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     contentMarkdown: v.optional(v.string()),
     aiSummary: v.optional(v.string()),
     aiTips: v.optional(v.array(v.string())),
@@ -299,7 +289,7 @@ export const updateAiData = mutation({
     await ctx.db.patch(guideId, {
       ...aiData,
       aiProcessedAt: Date.now(),
-      enrichmentStatus: 'completed',
+      enrichmentStatus: "completed",
     });
 
     return { success: true, guideId };

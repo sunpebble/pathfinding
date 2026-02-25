@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Medical Facilities - Hospitals, Clinics, Pharmacies
@@ -10,12 +10,12 @@ import { mutation, query } from './_generated/server';
 
 // List medical facilities for a city
 export const listByCity = query({
-  args: { cityId: v.id('cities') },
+  args: { cityId: v.id("cities") },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('medicalFacilities')
-      .withIndex('by_city', q => q.eq('cityId', args.cityId))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("medicalFacilities")
+      .withIndex("by_city", (q) => q.eq("cityId", args.cityId))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
@@ -23,38 +23,39 @@ export const listByCity = query({
 // List medical facilities by city and type
 export const listByCityAndType = query({
   args: {
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     facilityType: v.union(
-      v.literal('hospital'),
-      v.literal('clinic'),
-      v.literal('pharmacy'),
-      v.literal('emergency'),
-      v.literal('dental'),
-      v.literal('specialist'),
+      v.literal("hospital"),
+      v.literal("clinic"),
+      v.literal("pharmacy"),
+      v.literal("emergency"),
+      v.literal("dental"),
+      v.literal("specialist"),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('medicalFacilities')
-      .withIndex('by_city_type', q =>
-        q.eq('cityId', args.cityId).eq('facilityType', args.facilityType))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("medicalFacilities")
+      .withIndex("by_city_type", (q) =>
+        q.eq("cityId", args.cityId).eq("facilityType", args.facilityType),
+      )
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
 
 // List 24-hour facilities
 export const list24Hour = query({
-  args: { cityId: v.optional(v.id('cities')) },
+  args: { cityId: v.optional(v.id("cities")) },
   handler: async (ctx, args) => {
     let facilities = await ctx.db
-      .query('medicalFacilities')
-      .withIndex('by_24hour', q => q.eq('is24Hour', true))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("medicalFacilities")
+      .withIndex("by_24hour", (q) => q.eq("is24Hour", true))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
 
     if (args.cityId) {
-      facilities = facilities.filter(f => f.cityId === args.cityId);
+      facilities = facilities.filter((f) => f.cityId === args.cityId);
     }
 
     return facilities;
@@ -63,16 +64,16 @@ export const list24Hour = query({
 
 // List facilities with emergency rooms
 export const listWithEmergency = query({
-  args: { cityId: v.optional(v.id('cities')) },
+  args: { cityId: v.optional(v.id("cities")) },
   handler: async (ctx, args) => {
     let facilities = await ctx.db
-      .query('medicalFacilities')
-      .withIndex('by_emergency', q => q.eq('hasEmergencyRoom', true))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("medicalFacilities")
+      .withIndex("by_emergency", (q) => q.eq("hasEmergencyRoom", true))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
 
     if (args.cityId) {
-      facilities = facilities.filter(f => f.cityId === args.cityId);
+      facilities = facilities.filter((f) => f.cityId === args.cityId);
     }
 
     return facilities;
@@ -81,7 +82,7 @@ export const listWithEmergency = query({
 
 // Get a single medical facility by ID
 export const getById = query({
-  args: { id: v.id('medicalFacilities') },
+  args: { id: v.id("medicalFacilities") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -90,18 +91,18 @@ export const getById = query({
 // Search nearby facilities (simple distance filtering)
 export const searchNearby = query({
   args: {
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     latitude: v.number(),
     longitude: v.number(),
     radiusKm: v.optional(v.number()), // Default 5km
     facilityType: v.optional(
       v.union(
-        v.literal('hospital'),
-        v.literal('clinic'),
-        v.literal('pharmacy'),
-        v.literal('emergency'),
-        v.literal('dental'),
-        v.literal('specialist'),
+        v.literal("hospital"),
+        v.literal("clinic"),
+        v.literal("pharmacy"),
+        v.literal("emergency"),
+        v.literal("dental"),
+        v.literal("specialist"),
       ),
     ),
   },
@@ -109,14 +110,14 @@ export const searchNearby = query({
     const radius = args.radiusKm ?? 5;
 
     let facilities = await ctx.db
-      .query('medicalFacilities')
-      .withIndex('by_city', q => q.eq('cityId', args.cityId))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("medicalFacilities")
+      .withIndex("by_city", (q) => q.eq("cityId", args.cityId))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
 
     if (args.facilityType) {
       facilities = facilities.filter(
-        f => f.facilityType === args.facilityType,
+        (f) => f.facilityType === args.facilityType,
       );
     }
 
@@ -131,7 +132,7 @@ export const searchNearby = query({
         );
         return { ...facility, distance };
       })
-      .filter(f => f.distance <= radius)
+      .filter((f) => f.distance <= radius)
       .sort((a, b) => a.distance - b.distance);
 
     return filteredFacilities;
@@ -148,12 +149,12 @@ function calculateDistance(
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a
-    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-      + Math.cos((lat1 * Math.PI) / 180)
-      * Math.cos((lat2 * Math.PI) / 180)
-      * Math.sin(dLon / 2)
-      * Math.sin(dLon / 2);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -161,16 +162,16 @@ function calculateDistance(
 // Create a new medical facility
 export const create = mutation({
   args: {
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     name: v.string(),
     nameEn: v.optional(v.string()),
     facilityType: v.union(
-      v.literal('hospital'),
-      v.literal('clinic'),
-      v.literal('pharmacy'),
-      v.literal('emergency'),
-      v.literal('dental'),
-      v.literal('specialist'),
+      v.literal("hospital"),
+      v.literal("clinic"),
+      v.literal("pharmacy"),
+      v.literal("emergency"),
+      v.literal("dental"),
+      v.literal("specialist"),
     ),
     address: v.string(),
     latitude: v.number(),
@@ -189,7 +190,7 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('medicalFacilities', {
+    return await ctx.db.insert("medicalFacilities", {
       ...args,
       verifiedAt: Date.now(),
       isActive: true,
@@ -200,17 +201,17 @@ export const create = mutation({
 // Update a medical facility
 export const update = mutation({
   args: {
-    id: v.id('medicalFacilities'),
+    id: v.id("medicalFacilities"),
     name: v.optional(v.string()),
     nameEn: v.optional(v.string()),
     facilityType: v.optional(
       v.union(
-        v.literal('hospital'),
-        v.literal('clinic'),
-        v.literal('pharmacy'),
-        v.literal('emergency'),
-        v.literal('dental'),
-        v.literal('specialist'),
+        v.literal("hospital"),
+        v.literal("clinic"),
+        v.literal("pharmacy"),
+        v.literal("emergency"),
+        v.literal("dental"),
+        v.literal("specialist"),
       ),
     ),
     address: v.optional(v.string()),
@@ -245,7 +246,7 @@ export const update = mutation({
 
 // Delete a medical facility (soft delete)
 export const remove = mutation({
-  args: { id: v.id('medicalFacilities') },
+  args: { id: v.id("medicalFacilities") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, { isActive: false });
   },

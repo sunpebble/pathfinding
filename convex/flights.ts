@@ -1,7 +1,7 @@
-import type { Id } from './_generated/dataModel';
-import type { MutationCtx, QueryCtx } from './_generated/server';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Flights - Flight Information and Booking Management
@@ -9,33 +9,33 @@ import { mutation, query } from './_generated/server';
 
 // Flight status enum
 const flightStatusValidator = v.union(
-  v.literal('scheduled'),
-  v.literal('delayed'),
-  v.literal('boarding'),
-  v.literal('departed'),
-  v.literal('in_air'),
-  v.literal('landed'),
-  v.literal('arrived'),
-  v.literal('cancelled'),
-  v.literal('diverted'),
+  v.literal("scheduled"),
+  v.literal("delayed"),
+  v.literal("boarding"),
+  v.literal("departed"),
+  v.literal("in_air"),
+  v.literal("landed"),
+  v.literal("arrived"),
+  v.literal("cancelled"),
+  v.literal("diverted"),
 );
 
 // Booking status enum
 const bookingStatusValidator = v.union(
-  v.literal('confirmed'),
-  v.literal('pending'),
-  v.literal('cancelled'),
-  v.literal('checked_in'),
-  v.literal('boarded'),
-  v.literal('completed'),
+  v.literal("confirmed"),
+  v.literal("pending"),
+  v.literal("cancelled"),
+  v.literal("checked_in"),
+  v.literal("boarded"),
+  v.literal("completed"),
 );
 
 // Cabin class enum
 const cabinClassValidator = v.union(
-  v.literal('economy'),
-  v.literal('premium_economy'),
-  v.literal('business'),
-  v.literal('first'),
+  v.literal("economy"),
+  v.literal("premium_economy"),
+  v.literal("business"),
+  v.literal("first"),
 );
 
 /**
@@ -43,15 +43,15 @@ const cabinClassValidator = v.union(
  */
 async function checkBookingOwnership(
   ctx: QueryCtx | MutationCtx,
-  bookingId: Id<'flightBookings'>,
+  bookingId: Id<"flightBookings">,
   userId: string,
 ): Promise<boolean> {
   const booking = await ctx.db.get(bookingId);
   if (!booking) {
-    throw new Error('Booking not found');
+    throw new Error("Booking not found");
   }
   if (booking.userId !== userId) {
-    throw new Error('You do not have access to this booking');
+    throw new Error("You do not have access to this booking");
   }
   return true;
 }
@@ -70,11 +70,12 @@ export const getByFlightNumber = query({
   },
   handler: async (ctx, args) => {
     const flight = await ctx.db
-      .query('flights')
-      .withIndex('by_flight_number_date', q =>
+      .query("flights")
+      .withIndex("by_flight_number_date", (q) =>
         q
-          .eq('flightNumber', args.flightNumber.toUpperCase())
-          .eq('departureDate', args.date))
+          .eq("flightNumber", args.flightNumber.toUpperCase())
+          .eq("departureDate", args.date),
+      )
       .first();
 
     return flight;
@@ -85,7 +86,7 @@ export const getByFlightNumber = query({
  * Get flight by ID
  */
 export const getById = query({
-  args: { id: v.id('flights') },
+  args: { id: v.id("flights") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -108,15 +109,16 @@ export const searchByRoute = query({
     const offset = (page - 1) * pageSize;
 
     let flights = await ctx.db
-      .query('flights')
-      .withIndex('by_route', q =>
+      .query("flights")
+      .withIndex("by_route", (q) =>
         q
-          .eq('departureAirport', args.departureAirport.toUpperCase())
-          .eq('arrivalAirport', args.arrivalAirport.toUpperCase()))
+          .eq("departureAirport", args.departureAirport.toUpperCase())
+          .eq("arrivalAirport", args.arrivalAirport.toUpperCase()),
+      )
       .collect();
 
     if (args.date) {
-      flights = flights.filter(f => f.departureDate === args.date);
+      flights = flights.filter((f) => f.departureDate === args.date);
     }
 
     const total = flights.length;
@@ -164,11 +166,12 @@ export const upsert = mutation({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query('flights')
-      .withIndex('by_flight_number_date', q =>
+      .query("flights")
+      .withIndex("by_flight_number_date", (q) =>
         q
-          .eq('flightNumber', args.flightNumber.toUpperCase())
-          .eq('departureDate', args.departureDate))
+          .eq("flightNumber", args.flightNumber.toUpperCase())
+          .eq("departureDate", args.departureDate),
+      )
       .first();
 
     const flightData = {
@@ -183,7 +186,7 @@ export const upsert = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert('flights', flightData);
+    return await ctx.db.insert("flights", flightData);
   },
 });
 
@@ -192,7 +195,7 @@ export const upsert = mutation({
  */
 export const updateStatus = mutation({
   args: {
-    id: v.id('flights'),
+    id: v.id("flights"),
     status: flightStatusValidator,
     estimatedDeparture: v.optional(v.number()),
     estimatedArrival: v.optional(v.number()),
@@ -238,18 +241,18 @@ export const listBookings = query({
     const offset = (page - 1) * pageSize;
 
     let bookings = await ctx.db
-      .query('flightBookings')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
-      .order('desc')
+      .query("flightBookings")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
       .collect();
 
     if (args.status) {
-      bookings = bookings.filter(b => b.status === args.status);
+      bookings = bookings.filter((b) => b.status === args.status);
     }
 
     if (args.upcoming) {
       const now = Date.now();
-      bookings = bookings.filter(b => b.departureTime > now);
+      bookings = bookings.filter((b) => b.departureTime > now);
     }
 
     const total = bookings.length;
@@ -274,11 +277,10 @@ export const listBookings = query({
  * Get booking by ID
  */
 export const getBookingById = query({
-  args: { id: v.id('flightBookings') },
+  args: { id: v.id("flightBookings") },
   handler: async (ctx, args) => {
     const booking = await ctx.db.get(args.id);
-    if (!booking)
-      return null;
+    if (!booking) return null;
 
     const flight = await ctx.db.get(booking.flightId);
 
@@ -299,9 +301,10 @@ export const getBookingByConfirmation = query({
   },
   handler: async (ctx, args) => {
     const booking = await ctx.db
-      .query('flightBookings')
-      .withIndex('by_confirmation', q =>
-        q.eq('confirmationCode', args.confirmationCode.toUpperCase()))
+      .query("flightBookings")
+      .withIndex("by_confirmation", (q) =>
+        q.eq("confirmationCode", args.confirmationCode.toUpperCase()),
+      )
       .first();
 
     if (!booking || booking.userId !== args.userId) {
@@ -322,17 +325,17 @@ export const getBookingByConfirmation = query({
  */
 export const getBookingsByItinerary = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const bookings = await ctx.db
-      .query('flightBookings')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("flightBookings")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     // Filter by user and enrich with flight data
-    const userBookings = bookings.filter(b => b.userId === args.userId);
+    const userBookings = bookings.filter((b) => b.userId === args.userId);
 
     const enriched = await Promise.all(
       userBookings.map(async (booking) => {
@@ -358,7 +361,7 @@ export const getBookingsByItinerary = query({
 export const createBooking = mutation({
   args: {
     userId: v.string(),
-    flightId: v.id('flights'),
+    flightId: v.id("flights"),
     confirmationCode: v.string(),
     passengerName: v.string(),
     passengerEmail: v.optional(v.string()),
@@ -373,13 +376,13 @@ export const createBooking = mutation({
     specialRequests: v.optional(v.string()),
     baggageAllowance: v.optional(v.string()),
     frequentFlyerNumber: v.optional(v.string()),
-    itineraryId: v.optional(v.id('itineraries')),
+    itineraryId: v.optional(v.id("itineraries")),
     notes: v.optional(v.string()),
     importedFrom: v.optional(v.string()), // 'manual', 'email', 'api'
     rawEmailContent: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const bookingId = await ctx.db.insert('flightBookings', {
+    const bookingId = await ctx.db.insert("flightBookings", {
       userId: args.userId,
       flightId: args.flightId,
       confirmationCode: args.confirmationCode.toUpperCase(),
@@ -388,7 +391,7 @@ export const createBooking = mutation({
       passengerPhone: args.passengerPhone,
       seatNumber: args.seatNumber,
       cabinClass: args.cabinClass,
-      status: args.status ?? 'confirmed',
+      status: args.status ?? "confirmed",
       departureTime: args.departureTime,
       arrivalTime: args.arrivalTime,
       ticketNumber: args.ticketNumber,
@@ -398,7 +401,7 @@ export const createBooking = mutation({
       frequentFlyerNumber: args.frequentFlyerNumber,
       itineraryId: args.itineraryId,
       notes: args.notes,
-      importedFrom: args.importedFrom ?? 'manual',
+      importedFrom: args.importedFrom ?? "manual",
       rawEmailContent: args.rawEmailContent,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -413,7 +416,7 @@ export const createBooking = mutation({
  */
 export const updateBooking = mutation({
   args: {
-    id: v.id('flightBookings'),
+    id: v.id("flightBookings"),
     userId: v.string(),
     seatNumber: v.optional(v.string()),
     cabinClass: v.optional(cabinClassValidator),
@@ -421,7 +424,7 @@ export const updateBooking = mutation({
     mealPreference: v.optional(v.string()),
     specialRequests: v.optional(v.string()),
     frequentFlyerNumber: v.optional(v.string()),
-    itineraryId: v.optional(v.id('itineraries')),
+    itineraryId: v.optional(v.id("itineraries")),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -446,8 +449,8 @@ export const updateBooking = mutation({
  */
 export const linkToItinerary = mutation({
   args: {
-    bookingId: v.id('flightBookings'),
-    itineraryId: v.id('itineraries'),
+    bookingId: v.id("flightBookings"),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -467,7 +470,7 @@ export const linkToItinerary = mutation({
  */
 export const unlinkFromItinerary = mutation({
   args: {
-    bookingId: v.id('flightBookings'),
+    bookingId: v.id("flightBookings"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -487,7 +490,7 @@ export const unlinkFromItinerary = mutation({
  */
 export const deleteBooking = mutation({
   args: {
-    id: v.id('flightBookings'),
+    id: v.id("flightBookings"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -501,7 +504,7 @@ export const deleteBooking = mutation({
  */
 export const checkIn = mutation({
   args: {
-    bookingId: v.id('flightBookings'),
+    bookingId: v.id("flightBookings"),
     userId: v.string(),
     seatNumber: v.optional(v.string()),
     boardingGroup: v.optional(v.string()),
@@ -511,7 +514,7 @@ export const checkIn = mutation({
     await checkBookingOwnership(ctx, args.bookingId, args.userId);
 
     await ctx.db.patch(args.bookingId, {
-      status: 'checked_in',
+      status: "checked_in",
       seatNumber: args.seatNumber,
       checkInTime: Date.now(),
       updatedAt: Date.now(),

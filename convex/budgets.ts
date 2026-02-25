@@ -3,8 +3,8 @@
  * Handles itinerary budgets, expenses, and expense categories
  */
 
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 // ============================================
 // Expense Categories
@@ -17,8 +17,8 @@ export const listCategories = query({
   args: {},
   handler: async (ctx) => {
     const categories = await ctx.db
-      .query('expenseCategories')
-      .withIndex('by_sort_order')
+      .query("expenseCategories")
+      .withIndex("by_sort_order")
       .collect();
     return categories;
   },
@@ -28,7 +28,7 @@ export const listCategories = query({
  * Get a single expense category by ID
  */
 export const getCategory = query({
-  args: { id: v.id('expenseCategories') },
+  args: { id: v.id("expenseCategories") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -47,7 +47,7 @@ export const createCategory = mutation({
     isSystem: v.boolean(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('expenseCategories', args);
+    return await ctx.db.insert("expenseCategories", args);
   },
 });
 
@@ -58,76 +58,76 @@ export const seedDefaultCategories = mutation({
   args: {},
   handler: async (ctx) => {
     // Check if categories already exist
-    const existing = await ctx.db.query('expenseCategories').first();
+    const existing = await ctx.db.query("expenseCategories").first();
     if (existing) {
-      return { message: 'Categories already seeded' };
+      return { message: "Categories already seeded" };
     }
 
     const defaultCategories = [
       {
-        name: '交通',
-        nameEn: 'Transportation',
-        icon: 'car.fill',
-        color: '#3B82F6',
+        name: "交通",
+        nameEn: "Transportation",
+        icon: "car.fill",
+        color: "#3B82F6",
         sortOrder: 1,
         isSystem: true,
       },
       {
-        name: '住宿',
-        nameEn: 'Accommodation',
-        icon: 'bed.double.fill',
-        color: '#8B5CF6',
+        name: "住宿",
+        nameEn: "Accommodation",
+        icon: "bed.double.fill",
+        color: "#8B5CF6",
         sortOrder: 2,
         isSystem: true,
       },
       {
-        name: '餐饮',
-        nameEn: 'Food & Dining',
-        icon: 'fork.knife',
-        color: '#F59E0B',
+        name: "餐饮",
+        nameEn: "Food & Dining",
+        icon: "fork.knife",
+        color: "#F59E0B",
         sortOrder: 3,
         isSystem: true,
       },
       {
-        name: '门票',
-        nameEn: 'Tickets & Entrance',
-        icon: 'ticket.fill',
-        color: '#10B981',
+        name: "门票",
+        nameEn: "Tickets & Entrance",
+        icon: "ticket.fill",
+        color: "#10B981",
         sortOrder: 4,
         isSystem: true,
       },
       {
-        name: '购物',
-        nameEn: 'Shopping',
-        icon: 'bag.fill',
-        color: '#EC4899',
+        name: "购物",
+        nameEn: "Shopping",
+        icon: "bag.fill",
+        color: "#EC4899",
         sortOrder: 5,
         isSystem: true,
       },
       {
-        name: '娱乐',
-        nameEn: 'Entertainment',
-        icon: 'gamecontroller.fill',
-        color: '#6366F1',
+        name: "娱乐",
+        nameEn: "Entertainment",
+        icon: "gamecontroller.fill",
+        color: "#6366F1",
         sortOrder: 6,
         isSystem: true,
       },
       {
-        name: '其他',
-        nameEn: 'Other',
-        icon: 'ellipsis.circle.fill',
-        color: '#6B7280',
+        name: "其他",
+        nameEn: "Other",
+        icon: "ellipsis.circle.fill",
+        color: "#6B7280",
         sortOrder: 7,
         isSystem: true,
       },
     ];
 
     for (const category of defaultCategories) {
-      await ctx.db.insert('expenseCategories', category);
+      await ctx.db.insert("expenseCategories", category);
     }
 
     return {
-      message: 'Default categories seeded successfully',
+      message: "Default categories seeded successfully",
       count: defaultCategories.length,
     };
   },
@@ -141,11 +141,11 @@ export const seedDefaultCategories = mutation({
  * Get budget for an itinerary
  */
 export const getBudget = query({
-  args: { itineraryId: v.id('itineraries') },
+  args: { itineraryId: v.id("itineraries") },
   handler: async (ctx, args) => {
     const budget = await ctx.db
-      .query('itineraryBudgets')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("itineraryBudgets")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .first();
     return budget;
   },
@@ -155,11 +155,11 @@ export const getBudget = query({
  * Get budget with enriched category data
  */
 export const getBudgetWithCategories = query({
-  args: { itineraryId: v.id('itineraries') },
+  args: { itineraryId: v.id("itineraries") },
   handler: async (ctx, args) => {
     const budget = await ctx.db
-      .query('itineraryBudgets')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("itineraryBudgets")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .first();
 
     if (!budget) {
@@ -189,13 +189,13 @@ export const getBudgetWithCategories = query({
  */
 export const upsertBudget = mutation({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     totalBudget: v.number(),
     currency: v.string(),
     categoryBudgets: v.array(
       v.object({
-        categoryId: v.id('expenseCategories'),
+        categoryId: v.id("expenseCategories"),
         amount: v.number(),
       }),
     ),
@@ -203,8 +203,8 @@ export const upsertBudget = mutation({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query('itineraryBudgets')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("itineraryBudgets")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .first();
 
     const now = Date.now();
@@ -218,9 +218,8 @@ export const upsertBudget = mutation({
         updatedAt: now,
       });
       return existing._id;
-    }
-    else {
-      return await ctx.db.insert('itineraryBudgets', {
+    } else {
+      return await ctx.db.insert("itineraryBudgets", {
         ...args,
         createdAt: now,
         updatedAt: now,
@@ -233,7 +232,7 @@ export const upsertBudget = mutation({
  * Delete budget for an itinerary
  */
 export const deleteBudget = mutation({
-  args: { id: v.id('itineraryBudgets') },
+  args: { id: v.id("itineraryBudgets") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -248,25 +247,25 @@ export const deleteBudget = mutation({
  */
 export const listExpenses = query({
   args: {
-    itineraryId: v.id('itineraries'),
-    categoryId: v.optional(v.id('expenseCategories')),
+    itineraryId: v.id("itineraries"),
+    categoryId: v.optional(v.id("expenseCategories")),
   },
   handler: async (ctx, args) => {
     let expenses;
 
     if (args.categoryId) {
       expenses = await ctx.db
-        .query('expenses')
-        .withIndex('by_itinerary_category', q =>
+        .query("expenses")
+        .withIndex("by_itinerary_category", (q) =>
           q
-            .eq('itineraryId', args.itineraryId)
-            .eq('categoryId', args.categoryId!))
+            .eq("itineraryId", args.itineraryId)
+            .eq("categoryId", args.categoryId!),
+        )
         .collect();
-    }
-    else {
+    } else {
       expenses = await ctx.db
-        .query('expenses')
-        .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+        .query("expenses")
+        .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
         .collect();
     }
 
@@ -279,12 +278,12 @@ export const listExpenses = query({
  */
 export const listExpensesWithCategories = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     const expenses = await ctx.db
-      .query('expenses')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("expenses")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     // Enrich with category details
@@ -312,7 +311,7 @@ export const listExpensesWithCategories = query({
  * Get a single expense by ID
  */
 export const getExpense = query({
-  args: { id: v.id('expenses') },
+  args: { id: v.id("expenses") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -323,15 +322,15 @@ export const getExpense = query({
  */
 export const createExpense = mutation({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
-    categoryId: v.id('expenseCategories'),
+    categoryId: v.id("expenseCategories"),
     amount: v.number(),
     currency: v.string(),
     description: v.string(),
     date: v.string(),
     time: v.optional(v.string()),
-    poiId: v.optional(v.id('pois')),
+    poiId: v.optional(v.id("pois")),
     dayNumber: v.optional(v.number()),
     paymentMethod: v.optional(v.string()),
     receiptImageUrl: v.optional(v.string()),
@@ -339,7 +338,7 @@ export const createExpense = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert('expenses', {
+    return await ctx.db.insert("expenses", {
       ...args,
       createdAt: now,
       updatedAt: now,
@@ -352,14 +351,14 @@ export const createExpense = mutation({
  */
 export const updateExpense = mutation({
   args: {
-    id: v.id('expenses'),
-    categoryId: v.optional(v.id('expenseCategories')),
+    id: v.id("expenses"),
+    categoryId: v.optional(v.id("expenseCategories")),
     amount: v.optional(v.number()),
     currency: v.optional(v.string()),
     description: v.optional(v.string()),
     date: v.optional(v.string()),
     time: v.optional(v.string()),
-    poiId: v.optional(v.id('pois')),
+    poiId: v.optional(v.id("pois")),
     dayNumber: v.optional(v.number()),
     paymentMethod: v.optional(v.string()),
     receiptImageUrl: v.optional(v.string()),
@@ -382,7 +381,7 @@ export const updateExpense = mutation({
  * Delete an expense
  */
 export const deleteExpense = mutation({
-  args: { id: v.id('expenses') },
+  args: { id: v.id("expenses") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -396,24 +395,24 @@ export const deleteExpense = mutation({
  * Get budget summary with spending breakdown for an itinerary
  */
 export const getBudgetSummary = query({
-  args: { itineraryId: v.id('itineraries') },
+  args: { itineraryId: v.id("itineraries") },
   handler: async (ctx, args) => {
     // Get budget
     const budget = await ctx.db
-      .query('itineraryBudgets')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("itineraryBudgets")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .first();
 
     // Get all expenses
     const expenses = await ctx.db
-      .query('expenses')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("expenses")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     // Get all categories
     const categories = await ctx.db
-      .query('expenseCategories')
-      .withIndex('by_sort_order')
+      .query("expenseCategories")
+      .withIndex("by_sort_order")
       .collect();
 
     // Calculate total spent
@@ -422,11 +421,11 @@ export const getBudgetSummary = query({
     // Calculate spending by category
     const spendingByCategory = categories.map((category) => {
       const categoryExpenses = expenses.filter(
-        e => e.categoryId === category._id,
+        (e) => e.categoryId === category._id,
       );
       const spent = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-      const budgetAmount
-        = budget?.categoryBudgets.find(cb => cb.categoryId === category._id)
+      const budgetAmount =
+        budget?.categoryBudgets.find((cb) => cb.categoryId === category._id)
           ?.amount || 0;
 
       return {
@@ -443,8 +442,8 @@ export const getBudgetSummary = query({
     // Calculate daily spending trend
     const spendingByDate: Record<string, number> = {};
     expenses.forEach((expense) => {
-      spendingByDate[expense.date]
-        = (spendingByDate[expense.date] || 0) + expense.amount;
+      spendingByDate[expense.date] =
+        (spendingByDate[expense.date] || 0) + expense.amount;
     });
 
     const dailyTrend = Object.entries(spendingByDate)
@@ -468,7 +467,7 @@ export const getBudgetSummary = query({
       isOverBudget: budget ? totalSpent > budget.totalBudget : false,
       expenseCount: expenses.length,
       spendingByCategory: spendingByCategory.filter(
-        c => c.spent > 0 || c.budgetAmount > 0,
+        (c) => c.spent > 0 || c.budgetAmount > 0,
       ),
       dailyTrend,
     };
@@ -480,23 +479,23 @@ export const getBudgetSummary = query({
  */
 export const getSpendingTrend = query({
   args: {
-    itineraryId: v.id('itineraries'),
-    groupBy: v.optional(v.union(v.literal('day'), v.literal('category'))),
+    itineraryId: v.id("itineraries"),
+    groupBy: v.optional(v.union(v.literal("day"), v.literal("category"))),
   },
   handler: async (ctx, args) => {
     const expenses = await ctx.db
-      .query('expenses')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("expenses")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     const categories = await ctx.db
-      .query('expenseCategories')
-      .withIndex('by_sort_order')
+      .query("expenseCategories")
+      .withIndex("by_sort_order")
       .collect();
 
-    const categoryMap = new Map(categories.map(c => [c._id, c]));
+    const categoryMap = new Map(categories.map((c) => [c._id, c]));
 
-    if (args.groupBy === 'category') {
+    if (args.groupBy === "category") {
       // Group by category for pie chart
       const byCategory = new Map<
         string,
@@ -516,10 +515,9 @@ export const getSpendingTrend = query({
       });
 
       return Array.from(byCategory.values())
-        .filter(item => item.amount > 0)
+        .filter((item) => item.amount > 0)
         .sort((a, b) => b.amount - a.amount);
-    }
-    else {
+    } else {
       // Group by day for line chart
       const byDate = new Map<string, number>();
 

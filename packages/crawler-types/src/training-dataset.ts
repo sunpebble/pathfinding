@@ -3,13 +3,13 @@
  * Types for ML training data generation and versioning
  */
 
-export type TrainingDatasetStatus
-  = | 'pending'
-    | 'generating'
-    | 'completed'
-    | 'failed';
-export type OutputFormat = 'json' | 'csv' | 'parquet';
-export type SamplingMethod = 'random' | 'stratified';
+export type TrainingDatasetStatus =
+  | "pending"
+  | "generating"
+  | "completed"
+  | "failed";
+export type OutputFormat = "json" | "csv" | "parquet";
+export type SamplingMethod = "random" | "stratified";
 
 export interface TimeRange {
   start: Date | string;
@@ -77,7 +77,7 @@ export interface TrainingDatasetListParams {
 }
 
 export const DEFAULT_SAMPLING_CONFIG: SamplingConfig = {
-  method: 'stratified',
+  method: "stratified",
   train_ratio: 0.8,
   val_ratio: 0.1,
   test_ratio: 0.1,
@@ -108,5 +108,5 @@ export interface TrainingRecord {
   price_range?: string;
   quality_score: number;
   features: Record<string, unknown>;
-  split: 'train' | 'val' | 'test';
+  split: "train" | "val" | "test";
 }

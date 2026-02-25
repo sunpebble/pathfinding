@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { v } from "convex/values";
 
 /**
  * Yearly travel statistics

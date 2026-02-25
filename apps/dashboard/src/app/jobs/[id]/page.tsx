@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   BarChart3,
@@ -12,11 +12,11 @@ import {
   Settings,
   StopCircle,
   XCircle,
-} from 'lucide-react';
-import Link from 'next/link';
-import { use } from 'react';
-import { cancelCrawlJob, getCrawlJob, startCrawlJob } from '@/lib/api';
-import { formatDateTime } from '@/lib/utils';
+} from "lucide-react";
+import Link from "next/link";
+import { use } from "react";
+import { cancelCrawlJob, getCrawlJob, startCrawlJob } from "@/lib/api";
+import { formatDateTime } from "@/lib/utils";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -27,23 +27,23 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   const queryClient = useQueryClient();
 
   const { data: job, isLoading } = useQuery({
-    queryKey: ['crawl-job', id],
+    queryKey: ["crawl-job", id],
     queryFn: () => getCrawlJob(id),
-    refetchInterval: query =>
-      query.state.data?.status === 'running' ? 5000 : false,
+    refetchInterval: (query) =>
+      query.state.data?.status === "running" ? 5000 : false,
   });
 
   const startMutation = useMutation({
     mutationFn: startCrawlJob,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crawl-job', id] });
+      queryClient.invalidateQueries({ queryKey: ["crawl-job", id] });
     },
   });
 
   const cancelMutation = useMutation({
     mutationFn: cancelCrawlJob,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crawl-job', id] });
+      queryClient.invalidateQueries({ queryKey: ["crawl-job", id] });
     },
   });
 
@@ -86,7 +86,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {job.status === 'pending' && (
+          {job.status === "pending" && (
             <button
               onClick={() => startMutation.mutate(job.id)}
               disabled={startMutation.isPending}
@@ -96,11 +96,11 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
               Start Job
             </button>
           )}
-          {job.status === 'running' && (
+          {job.status === "running" && (
             <button
               onClick={() => {
                 // eslint-disable-next-line no-alert
-                if (confirm('Cancel this job?')) {
+                if (confirm("Cancel this job?")) {
                   cancelMutation.mutate(job.id);
                 }
               }}
@@ -181,7 +181,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   Categories
                 </dt>
                 <dd className="mt-1 flex flex-wrap gap-2">
-                  {job.config.categories.map(cat => (
+                  {job.config.categories.map((cat) => (
                     <span
                       key={cat}
                       className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700"
@@ -192,35 +192,30 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                 </dd>
               </div>
             )}
-            {job.config?.geographic_scope?.cities
-              && job.config.geographic_scope.cities.length > 0 && (
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Cities</dt>
-                <dd className="mt-1 flex flex-wrap gap-2">
-                  {job.config.geographic_scope.cities.map(city => (
-                    <span
-                      key={city}
-                      className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
-                    >
-                      {city}
-                    </span>
-                  ))}
-                </dd>
-              </div>
-            )}
+            {job.config?.geographic_scope?.cities &&
+              job.config.geographic_scope.cities.length > 0 && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Cities</dt>
+                  <dd className="mt-1 flex flex-wrap gap-2">
+                    {job.config.geographic_scope.cities.map((city) => (
+                      <span
+                        key={city}
+                        className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
+                      >
+                        {city}
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+              )}
             {job.config?.rate_limit && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
                   Rate Limit
                 </dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {job.config.rate_limit.requests_per_second}
-                  {' '}
-                  req/s,
-                  {' '}
-                  {job.config.rate_limit.max_concurrent}
-                  {' '}
-                  concurrent
+                  {job.config.rate_limit.requests_per_second} req/s,{" "}
+                  {job.config.rate_limit.max_concurrent} concurrent
                 </dd>
               </div>
             )}
@@ -245,23 +240,23 @@ function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { icon: React.ReactNode; className: string }> = {
     pending: {
       icon: <Clock className="h-4 w-4" />,
-      className: 'bg-amber-50 text-amber-600 border-amber-200',
+      className: "bg-amber-50 text-amber-600 border-amber-200",
     },
     running: {
       icon: <Loader2 className="h-4 w-4 animate-spin" />,
-      className: 'bg-blue-50 text-blue-600 border-blue-200',
+      className: "bg-blue-50 text-blue-600 border-blue-200",
     },
     completed: {
       icon: <CheckCircle className="h-4 w-4" />,
-      className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+      className: "bg-emerald-50 text-emerald-600 border-emerald-200",
     },
     failed: {
       icon: <XCircle className="h-4 w-4" />,
-      className: 'bg-red-50 text-red-600 border-red-200',
+      className: "bg-red-50 text-red-600 border-red-200",
     },
     cancelled: {
       icon: <XCircle className="h-4 w-4" />,
-      className: 'bg-gray-50 text-gray-600 border-gray-200',
+      className: "bg-gray-50 text-gray-600 border-gray-200",
     },
   };
 
@@ -287,13 +282,13 @@ function StatCard({
   title: string;
   value: number | string;
   icon: React.ReactNode;
-  color: 'blue' | 'red' | 'emerald' | 'purple';
+  color: "blue" | "red" | "emerald" | "purple";
 }) {
   const colors = {
-    blue: 'bg-blue-100 text-blue-600',
-    red: 'bg-red-100 text-red-600',
-    emerald: 'bg-emerald-100 text-emerald-600',
-    purple: 'bg-purple-100 text-purple-600',
+    blue: "bg-blue-100 text-blue-600",
+    red: "bg-red-100 text-red-600",
+    emerald: "bg-emerald-100 text-emerald-600",
+    purple: "bg-purple-100 text-purple-600",
   };
 
   return (
@@ -322,7 +317,7 @@ function InfoRow({
     <div className="flex justify-between gap-4">
       <dt className="text-sm font-medium text-gray-500">{label}</dt>
       <dd
-        className={`text-sm text-gray-900 ${mono ? 'font-mono' : ''} truncate`}
+        className={`text-sm text-gray-900 ${mono ? "font-mono" : ""} truncate`}
       >
         {value}
       </dd>

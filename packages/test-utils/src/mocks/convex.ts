@@ -1,5 +1,5 @@
-import type { Mock } from 'vitest';
-import { vi } from 'vitest';
+import type { Mock } from "vitest";
+import { vi } from "vitest";
 
 interface MockConvexClient {
   query: Mock;
@@ -21,7 +21,7 @@ export function createMockConvexClient(): MockConvexClient {
 /**
  * Create a mock Convex ID
  */
-export function mockId<T extends string>(table: T, id = 'test-id'): string {
+export function mockId<T extends string>(table: T, id = "test-id"): string {
   return `${table}:${id}`;
 }
 
@@ -44,7 +44,7 @@ export function mockFetchResponse<T>(
  * Create a mock fetch error
  */
 export function mockFetchError(error: Error | string): Mock {
-  const err = typeof error === 'string' ? new Error(error) : error;
+  const err = typeof error === "string" ? new Error(error) : error;
   return vi.fn().mockRejectedValue(err);
 }
 
@@ -52,5 +52,5 @@ export function mockFetchError(error: Error | string): Mock {
  * Wait for all promises to resolve (useful for testing async operations)
  */
 export function flushPromises(): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, 0));
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }

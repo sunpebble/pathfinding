@@ -3,9 +3,9 @@
  * 监听各类爬取完成事件，将数据存储到 Convex
  */
 
-import { ConvexHttpClient } from 'convex/browser';
-import { z } from 'zod';
-import { api } from '../../../../convex/_generated/api.js';
+import { ConvexHttpClient } from "convex/browser";
+import { z } from "zod";
+import { api } from "../../../../convex/_generated/api.js";
 
 // ============================================
 // Schema 定义
@@ -66,11 +66,13 @@ const guideDataSchema = z.object({
   summary: z.string().optional(),
   content: z.string(),
   contentHtml: z.string().optional(),
-  sections: z.array(z.object({
-    title: z.string(),
-    content: z.string(),
-    order: z.number(),
-  })),
+  sections: z.array(
+    z.object({
+      title: z.string(),
+      content: z.string(),
+      order: z.number(),
+    }),
+  ),
   coverImage: z.string().optional(),
   images: z.array(z.string()),
   viewsCount: z.number(),
@@ -92,13 +94,15 @@ const qaDataSchema = z.object({
   viewsCount: z.number(),
   tags: z.array(z.string()),
   createdAt: z.string().optional(),
-  bestAnswer: z.object({
-    content: z.string(),
-    authorName: z.string().optional(),
-    authorId: z.string().optional(),
-    likesCount: z.number(),
-    createdAt: z.string().optional(),
-  }).optional(),
+  bestAnswer: z
+    .object({
+      content: z.string(),
+      authorName: z.string().optional(),
+      authorId: z.string().optional(),
+      likesCount: z.number(),
+      createdAt: z.string().optional(),
+    })
+    .optional(),
 });
 
 const rankingDataSchema = z.object({
@@ -108,16 +112,18 @@ const rankingDataSchema = z.object({
   destinationId: z.string(),
   destinationName: z.string().optional(),
   description: z.string().optional(),
-  items: z.array(z.object({
-    rank: z.number(),
-    poiId: z.string(),
-    name: z.string(),
-    category: z.string().optional(),
-    rating: z.number().optional(),
-    reviewsCount: z.number(),
-    coverImage: z.string().optional(),
-    reason: z.string().optional(),
-  })),
+  items: z.array(
+    z.object({
+      rank: z.number(),
+      poiId: z.string(),
+      name: z.string(),
+      category: z.string().optional(),
+      rating: z.number().optional(),
+      reviewsCount: z.number(),
+      coverImage: z.string().optional(),
+      reason: z.string().optional(),
+    }),
+  ),
 });
 
 // ============================================
@@ -125,18 +131,18 @@ const rankingDataSchema = z.object({
 // ============================================
 
 export const config = {
-  type: 'event',
-  name: 'MafengwoDataSaver',
-  description: '保存马蜂窝爬取数据到 Convex',
+  type: "event",
+  name: "MafengwoDataSaver",
+  description: "保存马蜂窝爬取数据到 Convex",
   subscribes: [
-    'crawler.mafengwo.destination.completed',
-    'crawler.mafengwo.poi.detail.completed',
-    'crawler.mafengwo.guide.detail.completed',
-    'crawler.mafengwo.qa.detail.completed',
-    'crawler.mafengwo.ranking.completed',
+    "crawler.mafengwo.destination.completed",
+    "crawler.mafengwo.poi.detail.completed",
+    "crawler.mafengwo.guide.detail.completed",
+    "crawler.mafengwo.qa.detail.completed",
+    "crawler.mafengwo.ranking.completed",
   ],
-  emits: ['crawler.mafengwo.data.saved'],
-  flows: ['crawler'],
+  emits: ["crawler.mafengwo.data.saved"],
+  flows: ["crawler"],
 };
 
 interface HandlerContext {
@@ -153,7 +159,7 @@ interface HandlerContext {
 function getConvexClient(): ConvexHttpClient {
   const url = process.env.CONVEX_URL;
   if (!url) {
-    throw new Error('CONVEX_URL environment variable is not set');
+    throw new Error("CONVEX_URL environment variable is not set");
   }
   return new ConvexHttpClient(url);
 }
@@ -178,11 +184,9 @@ function calculateQualityScore(data: {
   const contentLength = data.content?.length || 0;
   if (contentLength >= 500) {
     score += 0.4;
-  }
-  else if (contentLength >= 200) {
+  } else if (contentLength >= 200) {
     score += 0.3;
-  }
-  else if (contentLength >= 100) {
+  } else if (contentLength >= 100) {
     score += 0.2;
   }
 
@@ -190,8 +194,7 @@ function calculateQualityScore(data: {
   const imageCount = data.images?.length || 0;
   if (imageCount >= 5) {
     score += 0.2;
-  }
-  else if (imageCount >= 1) {
+  } else if (imageCount >= 1) {
     score += 0.1;
   }
 
@@ -209,18 +212,22 @@ export async function handler(
 ) {
   const { topic, data } = event;
 
-  logger.info('Processing crawl event', { topic });
+  logger.info("Processing crawl event", { topic });
 
   try {
     const client = getConvexClient();
     let savedId: string | undefined;
-    let dataType: string = '';
+    let dataType: string = "";
 
     switch (topic) {
-      case 'crawler.mafengwo.destination.completed': {
-        const parsed = z.object({ destination: destinationDataSchema }).safeParse(data);
+      case "crawler.mafengwo.destination.completed": {
+        const parsed = z
+          .object({ destination: destinationDataSchema })
+          .safeParse(data);
         if (!parsed.success) {
-          logger.error('Invalid destination data', { error: parsed.error.message });
+          logger.error("Invalid destination data", {
+            error: parsed.error.message,
+          });
           return;
         }
 
@@ -242,18 +249,20 @@ export async function handler(
           poisCount: dest.poisCount,
           questionsCount: dest.questionsCount,
         });
-        dataType = 'destination';
+        dataType = "destination";
         break;
       }
 
-      case 'crawler.mafengwo.poi.detail.completed': {
-        const parsed = z.object({
-          sourceUrl: z.string(),
-          poi: poiDetailDataSchema,
-        }).safeParse(data);
+      case "crawler.mafengwo.poi.detail.completed": {
+        const parsed = z
+          .object({
+            sourceUrl: z.string(),
+            poi: poiDetailDataSchema,
+          })
+          .safeParse(data);
 
         if (!parsed.success) {
-          logger.error('Invalid POI data', { error: parsed.error.message });
+          logger.error("Invalid POI data", { error: parsed.error.message });
           return;
         }
 
@@ -270,7 +279,13 @@ export async function handler(
           sourceUrl: parsed.data.sourceUrl,
           name: poi.name,
           nameEn: poi.nameEn,
-          category: poi.category as 'attraction' | 'restaurant' | 'hotel' | 'shopping' | 'entertainment' | 'transport',
+          category: poi.category as
+            | "attraction"
+            | "restaurant"
+            | "hotel"
+            | "shopping"
+            | "entertainment"
+            | "transport",
           address: poi.address,
           latitude: poi.latitude,
           longitude: poi.longitude,
@@ -294,18 +309,20 @@ export async function handler(
           amenities: poi.amenities,
           qualityScore,
         });
-        dataType = 'poi';
+        dataType = "poi";
         break;
       }
 
-      case 'crawler.mafengwo.guide.detail.completed': {
-        const parsed = z.object({
-          sourceUrl: z.string(),
-          guide: guideDataSchema,
-        }).safeParse(data);
+      case "crawler.mafengwo.guide.detail.completed": {
+        const parsed = z
+          .object({
+            sourceUrl: z.string(),
+            guide: guideDataSchema,
+          })
+          .safeParse(data);
 
         if (!parsed.success) {
-          logger.error('Invalid guide data', { error: parsed.error.message });
+          logger.error("Invalid guide data", { error: parsed.error.message });
           return;
         }
 
@@ -336,18 +353,20 @@ export async function handler(
           tags: guide.tags,
           qualityScore,
         });
-        dataType = 'guide';
+        dataType = "guide";
         break;
       }
 
-      case 'crawler.mafengwo.qa.detail.completed': {
-        const parsed = z.object({
-          sourceUrl: z.string(),
-          qa: qaDataSchema,
-        }).safeParse(data);
+      case "crawler.mafengwo.qa.detail.completed": {
+        const parsed = z
+          .object({
+            sourceUrl: z.string(),
+            qa: qaDataSchema,
+          })
+          .safeParse(data);
 
         if (!parsed.success) {
-          logger.error('Invalid Q&A data', { error: parsed.error.message });
+          logger.error("Invalid Q&A data", { error: parsed.error.message });
           return;
         }
 
@@ -372,18 +391,20 @@ export async function handler(
               }
             : undefined,
         });
-        dataType = 'qa';
+        dataType = "qa";
         break;
       }
 
-      case 'crawler.mafengwo.ranking.completed': {
-        const parsed = z.object({
-          sourceUrl: z.string(),
-          ranking: rankingDataSchema,
-        }).safeParse(data);
+      case "crawler.mafengwo.ranking.completed": {
+        const parsed = z
+          .object({
+            sourceUrl: z.string(),
+            ranking: rankingDataSchema,
+          })
+          .safeParse(data);
 
         if (!parsed.success) {
-          logger.error('Invalid ranking data', { error: parsed.error.message });
+          logger.error("Invalid ranking data", { error: parsed.error.message });
           return;
         }
 
@@ -391,12 +412,17 @@ export async function handler(
         savedId = await client.mutation(api.mafengwo.upsertRanking, {
           rankingId: ranking.rankingId,
           sourceUrl: parsed.data.sourceUrl,
-          rankingType: ranking.rankingType as 'must_visit' | 'food' | 'hotel' | 'shopping' | 'hidden_gem',
+          rankingType: ranking.rankingType as
+            | "must_visit"
+            | "food"
+            | "hotel"
+            | "shopping"
+            | "hidden_gem",
           title: ranking.title,
           destinationId: ranking.destinationId,
           destinationName: ranking.destinationName,
           description: ranking.description,
-          items: ranking.items.map(item => ({
+          items: ranking.items.map((item) => ({
             rank: item.rank,
             poiExternalId: item.poiId,
             name: item.name,
@@ -407,33 +433,32 @@ export async function handler(
             reason: item.reason,
           })),
         });
-        dataType = 'ranking';
+        dataType = "ranking";
         break;
       }
 
       default:
-        logger.error('Unknown event topic', { topic });
+        logger.error("Unknown event topic", { topic });
         return;
     }
 
-    logger.info('Data saved successfully', { dataType, savedId });
+    logger.info("Data saved successfully", { dataType, savedId });
 
     // 发送保存完成事件
     await emit({
-      topic: 'crawler.mafengwo.data.saved',
+      topic: "crawler.mafengwo.data.saved",
       data: {
         dataType,
         savedId,
         success: true,
       },
     });
-  }
-  catch (error) {
-    const message = error instanceof Error ? error.message : 'Save failed';
-    logger.error('Failed to save data', { error: message, topic });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Save failed";
+    logger.error("Failed to save data", { error: message, topic });
 
     await emit({
-      topic: 'crawler.mafengwo.data.saved',
+      topic: "crawler.mafengwo.data.saved",
       data: {
         topic,
         success: false,

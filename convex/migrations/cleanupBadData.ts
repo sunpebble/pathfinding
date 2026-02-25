@@ -13,10 +13,10 @@
  *   npx convex run migrations/cleanupBadData:cleanup      - 删除不合格数据（每批 20 条）
  */
 
-import { v } from 'convex/values';
-import { mutation, query } from '../_generated/server';
-import { deleteGuideFromAggregates } from '../guideAggregates';
-import { deleteDestinationsForGuide } from '../guideDestinations';
+import { v } from "convex/values";
+import { mutation, query } from "../_generated/server";
+import { deleteGuideFromAggregates } from "../guideAggregates";
+import { deleteDestinationsForGuide } from "../guideDestinations";
 
 const MIN_CONTENT_LENGTH = 200;
 
@@ -25,12 +25,12 @@ const MIN_CONTENT_LENGTH = 200;
  */
 function isValidCoordinate(lat: number, lng: number): boolean {
   return (
-    lat !== 0
-    && lng !== 0
-    && lat >= -90
-    && lat <= 90
-    && lng >= -180
-    && lng <= 180
+    lat !== 0 &&
+    lng !== 0 &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
   );
 }
 
@@ -51,38 +51,43 @@ function isDisplayable(guide: {
   const reasons: string[] = [];
 
   // 1. 标题检查
-  if (!guide.title || guide.title.trim() === '') {
-    reasons.push('no_title');
+  if (!guide.title || guide.title.trim() === "") {
+    reasons.push("no_title");
   }
 
   // 2. 封面图检查
-  if (!guide.coverImageUrl && (!guide.imageUrls || guide.imageUrls.length === 0)) {
-    reasons.push('no_cover_image');
+  if (
+    !guide.coverImageUrl &&
+    (!guide.imageUrls || guide.imageUrls.length === 0)
+  ) {
+    reasons.push("no_cover_image");
   }
 
   // 3. 内容长度检查
   if (!guide.content || guide.content.length < MIN_CONTENT_LENGTH) {
-    reasons.push('short_content');
+    reasons.push("short_content");
   }
 
   // 4. AI 处理检查
   if (!guide.aiProcessedAt) {
-    reasons.push('no_ai_data');
+    reasons.push("no_ai_data");
   }
 
   // 5. AI 行程有效性检查
   if (!guide.aiDays || guide.aiDays.length === 0) {
-    reasons.push('no_ai_days');
-  }
-  else {
+    reasons.push("no_ai_days");
+  } else {
     // 检查是否至少有一个有效的 POI（有名称和合法坐标）
-    const hasValidPoi = guide.aiDays.some(day =>
-      day.pois.some(poi =>
-        poi.name && poi.name.trim() !== '' && isValidCoordinate(poi.latitude, poi.longitude),
+    const hasValidPoi = guide.aiDays.some((day) =>
+      day.pois.some(
+        (poi) =>
+          poi.name &&
+          poi.name.trim() !== "" &&
+          isValidCoordinate(poi.latitude, poi.longitude),
       ),
     );
     if (!hasValidPoi) {
-      reasons.push('no_valid_pois');
+      reasons.push("no_valid_pois");
     }
   }
 
@@ -100,12 +105,10 @@ export const analyze = query({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: 100,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: 100,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let displayable = 0;
     let notDisplayable = 0;
@@ -121,8 +124,7 @@ export const analyze = query({
       const check = isDisplayable(guide);
       if (check.displayable) {
         displayable++;
-      }
-      else {
+      } else {
         notDisplayable++;
         for (const reason of check.reasons) {
           reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
@@ -159,16 +161,18 @@ export const cleanup = mutation({
   handler: async (ctx, args) => {
     const dryRun = args.dryRun ?? false;
 
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: 50,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: 50,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let deleted = 0;
     let kept = 0;
-    const deletedGuides: Array<{ _id: string; title?: string; reasons: string[] }> = [];
+    const deletedGuides: Array<{
+      _id: string;
+      title?: string;
+      reasons: string[];
+    }> = [];
 
     for (const guide of result.page) {
       const check = isDisplayable(guide);
@@ -177,8 +181,8 @@ export const cleanup = mutation({
         if (!dryRun) {
           // 清理关联数据
           const recs = await ctx.db
-            .query('guideRecommendations')
-            .filter(q => q.eq(q.field('guideId'), guide._id))
+            .query("guideRecommendations")
+            .filter((q) => q.eq(q.field("guideId"), guide._id))
             .collect();
           for (const rec of recs) {
             await ctx.db.delete(rec._id);
@@ -187,23 +191,21 @@ export const cleanup = mutation({
           // 清理关联目的地
           try {
             await deleteDestinationsForGuide(ctx, guide._id);
-          }
-          catch {
+          } catch {
             // 忽略目的地清理错误
           }
 
           // 更新聚合数据（可能因数据不一致而失败）
           try {
             await deleteGuideFromAggregates(ctx, guide);
-          }
-          catch {
+          } catch {
             // 忽略聚合更新错误（数据不一致时）
           }
 
           // 清理 AI 数据表
           const aiDataRecords = await ctx.db
-            .query('travelGuideAiData')
-            .withIndex('by_guide', q => q.eq('guideId', guide._id))
+            .query("travelGuideAiData")
+            .withIndex("by_guide", (q) => q.eq("guideId", guide._id))
             .collect();
           for (const record of aiDataRecords) {
             await ctx.db.delete(record._id);
@@ -219,8 +221,7 @@ export const cleanup = mutation({
           reasons: check.reasons,
         });
         deleted++;
-      }
-      else {
+      } else {
         kept++;
       }
     }

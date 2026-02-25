@@ -3,7 +3,7 @@
  * Validation functions for travel guide data
  */
 
-import type { CompletenessLevel, GuidePlatform } from './travel-guide.js';
+import type { CompletenessLevel, GuidePlatform } from "./travel-guide.js";
 
 // ============================================================================
 // Types
@@ -76,14 +76,14 @@ export interface GuideValidationInput {
  * Valid platform values
  */
 export const VALID_PLATFORMS: GuidePlatform[] = [
-  'xiaohongshu',
-  'weibo',
-  'ctrip',
-  'douyin',
-  'tripadvisor',
-  'tongcheng',
-  'mafengwo',
-  'qunar',
+  "xiaohongshu",
+  "weibo",
+  "ctrip",
+  "douyin",
+  "tripadvisor",
+  "tongcheng",
+  "mafengwo",
+  "qunar",
 ];
 
 /**
@@ -151,28 +151,35 @@ export function validateGuide(input: GuideValidationInput): ValidationResult {
   // === Required Fields ===
 
   // sourcePlatform
-  const sourcePlatform = getValue<string>(input, 'sourcePlatform', 'source_platform');
+  const sourcePlatform = getValue<string>(
+    input,
+    "sourcePlatform",
+    "source_platform",
+  );
   if (!sourcePlatform) {
     errors.push({
-      field: 'sourcePlatform',
-      error: 'required',
+      field: "sourcePlatform",
+      error: "required",
       received: sourcePlatform,
     });
-  }
-  else if (!VALID_PLATFORMS.includes(sourcePlatform as GuidePlatform)) {
+  } else if (!VALID_PLATFORMS.includes(sourcePlatform as GuidePlatform)) {
     errors.push({
-      field: 'sourcePlatform',
-      error: `must be one of: ${VALID_PLATFORMS.join(', ')}`,
+      field: "sourcePlatform",
+      error: `must be one of: ${VALID_PLATFORMS.join(", ")}`,
       received: sourcePlatform,
     });
   }
 
   // sourceExternalId
-  const sourceExternalId = getValue<string>(input, 'sourceExternalId', 'source_external_id');
+  const sourceExternalId = getValue<string>(
+    input,
+    "sourceExternalId",
+    "source_external_id",
+  );
   if (!sourceExternalId) {
     errors.push({
-      field: 'sourceExternalId',
-      error: 'required',
+      field: "sourceExternalId",
+      error: "required",
       received: sourceExternalId,
     });
   }
@@ -181,35 +188,35 @@ export function validateGuide(input: GuideValidationInput): ValidationResult {
   const content = input.content;
   if (!content) {
     errors.push({
-      field: 'content',
-      error: 'required',
+      field: "content",
+      error: "required",
       received: content,
     });
-  }
-  else if (typeof content !== 'string') {
+  } else if (typeof content !== "string") {
     errors.push({
-      field: 'content',
-      error: 'must be a string',
+      field: "content",
+      error: "must be a string",
       received: typeof content,
     });
-  }
-  else {
+  } else {
     // Content length validation
     if (content.length < MIN_CONTENT_LENGTH) {
       errors.push({
-        field: 'content',
+        field: "content",
         error: `minimum length is ${MIN_CONTENT_LENGTH} characters`,
         received: content.length,
       });
     }
 
     // Truncation detection (warning, not error)
-    const isTruncated = TRUNCATION_PATTERNS.some(pattern => pattern.test(content));
+    const isTruncated = TRUNCATION_PATTERNS.some((pattern) =>
+      pattern.test(content),
+    );
     if (isTruncated) {
       warnings.push({
-        field: 'content',
-        warning: 'content appears to be truncated',
-        suggestion: 'Consider fetching full content from source',
+        field: "content",
+        warning: "content appears to be truncated",
+        suggestion: "Consider fetching full content from source",
       });
     }
   }
@@ -218,22 +225,20 @@ export function validateGuide(input: GuideValidationInput): ValidationResult {
   const destinations = input.destinations;
   if (!destinations) {
     errors.push({
-      field: 'destinations',
-      error: 'required',
+      field: "destinations",
+      error: "required",
       received: destinations,
     });
-  }
-  else if (!Array.isArray(destinations)) {
+  } else if (!Array.isArray(destinations)) {
     errors.push({
-      field: 'destinations',
-      error: 'must be an array',
+      field: "destinations",
+      error: "must be an array",
       received: typeof destinations,
     });
-  }
-  else if (destinations.length === 0) {
+  } else if (destinations.length === 0) {
     errors.push({
-      field: 'destinations',
-      error: 'must have at least one item',
+      field: "destinations",
+      error: "must have at least one item",
       received: destinations,
     });
   }
@@ -241,95 +246,94 @@ export function validateGuide(input: GuideValidationInput): ValidationResult {
   // === Numeric Fields Validation ===
 
   // likesCount
-  const likesCount = getValue<number>(input, 'likesCount', 'likes_count');
+  const likesCount = getValue<number>(input, "likesCount", "likes_count");
   if (likesCount !== undefined && likesCount !== null) {
-    if (typeof likesCount !== 'number' || !Number.isFinite(likesCount)) {
+    if (typeof likesCount !== "number" || !Number.isFinite(likesCount)) {
       errors.push({
-        field: 'likesCount',
-        error: 'must be a number',
+        field: "likesCount",
+        error: "must be a number",
         received: likesCount,
       });
-    }
-    else if (likesCount < 0) {
+    } else if (likesCount < 0) {
       errors.push({
-        field: 'likesCount',
-        error: 'must be non-negative',
+        field: "likesCount",
+        error: "must be non-negative",
         received: likesCount,
       });
     }
   }
 
   // savesCount
-  const savesCount = getValue<number>(input, 'savesCount', 'saves_count');
+  const savesCount = getValue<number>(input, "savesCount", "saves_count");
   if (savesCount !== undefined && savesCount !== null) {
-    if (typeof savesCount !== 'number' || !Number.isFinite(savesCount)) {
+    if (typeof savesCount !== "number" || !Number.isFinite(savesCount)) {
       errors.push({
-        field: 'savesCount',
-        error: 'must be a number',
+        field: "savesCount",
+        error: "must be a number",
         received: savesCount,
       });
-    }
-    else if (savesCount < 0) {
+    } else if (savesCount < 0) {
       errors.push({
-        field: 'savesCount',
-        error: 'must be non-negative',
+        field: "savesCount",
+        error: "must be non-negative",
         received: savesCount,
       });
     }
   }
 
   // commentsCount
-  const commentsCount = getValue<number>(input, 'commentsCount', 'comments_count');
+  const commentsCount = getValue<number>(
+    input,
+    "commentsCount",
+    "comments_count",
+  );
   if (commentsCount !== undefined && commentsCount !== null) {
-    if (typeof commentsCount !== 'number' || !Number.isFinite(commentsCount)) {
+    if (typeof commentsCount !== "number" || !Number.isFinite(commentsCount)) {
       errors.push({
-        field: 'commentsCount',
-        error: 'must be a number',
+        field: "commentsCount",
+        error: "must be a number",
         received: commentsCount,
       });
-    }
-    else if (commentsCount < 0) {
+    } else if (commentsCount < 0) {
       errors.push({
-        field: 'commentsCount',
-        error: 'must be non-negative',
+        field: "commentsCount",
+        error: "must be non-negative",
         received: commentsCount,
       });
     }
   }
 
   // viewsCount
-  const viewsCount = getValue<number>(input, 'viewsCount', 'views_count');
+  const viewsCount = getValue<number>(input, "viewsCount", "views_count");
   if (viewsCount !== undefined && viewsCount !== null) {
-    if (typeof viewsCount !== 'number' || !Number.isFinite(viewsCount)) {
+    if (typeof viewsCount !== "number" || !Number.isFinite(viewsCount)) {
       errors.push({
-        field: 'viewsCount',
-        error: 'must be a number',
+        field: "viewsCount",
+        error: "must be a number",
         received: viewsCount,
       });
-    }
-    else if (viewsCount < 0) {
+    } else if (viewsCount < 0) {
       errors.push({
-        field: 'viewsCount',
-        error: 'must be non-negative',
+        field: "viewsCount",
+        error: "must be non-negative",
         received: viewsCount,
       });
     }
   }
 
   // qualityScore
-  const qualityScore = getValue<number>(input, 'qualityScore', 'quality_score');
+  const qualityScore = getValue<number>(input, "qualityScore", "quality_score");
   if (qualityScore !== undefined && qualityScore !== null) {
-    if (typeof qualityScore !== 'number' || !Number.isFinite(qualityScore)) {
+    if (typeof qualityScore !== "number" || !Number.isFinite(qualityScore)) {
       errors.push({
-        field: 'qualityScore',
-        error: 'must be a number',
+        field: "qualityScore",
+        error: "must be a number",
         received: qualityScore,
       });
-    }
-    else if (qualityScore < 0 || qualityScore > 1) {
+    } else if (qualityScore < 0 || qualityScore > 1) {
       errors.push({
-        field: 'qualityScore',
-        error: 'must be between 0 and 1',
+        field: "qualityScore",
+        error: "must be between 0 and 1",
         received: qualityScore,
       });
     }
@@ -357,12 +361,15 @@ export function validateGuides(inputs: GuideValidationInput[]): {
     result: validateGuide(input),
   }));
 
-  const invalidResults = results.filter(r => !r.result.valid);
+  const invalidResults = results.filter((r) => !r.result.valid);
 
   return {
     valid: invalidResults.length === 0,
     results: invalidResults.length > 0 ? invalidResults : results,
-    totalErrors: invalidResults.reduce((sum, r) => sum + r.result.errors.length, 0),
+    totalErrors: invalidResults.reduce(
+      (sum, r) => sum + r.result.errors.length,
+      0,
+    ),
   };
 }
 
@@ -370,7 +377,7 @@ export function validateGuides(inputs: GuideValidationInput[]): {
  * Check if content appears to be truncated
  */
 export function isContentTruncated(content: string): boolean {
-  return TRUNCATION_PATTERNS.some(pattern => pattern.test(content));
+  return TRUNCATION_PATTERNS.some((pattern) => pattern.test(content));
 }
 
 /**
@@ -388,15 +395,15 @@ export function isValidPlatform(platform: string): platform is GuidePlatform {
  * Fields required for iOS App display
  */
 export const IOS_REQUIRED_DISPLAY_FIELDS = [
-  'title',
-  'coverImageUrl',
-  'authorName',
-  'destinations',
-  'likesCount',
-  'savesCount',
-  'commentsCount',
-  'viewsCount',
-  'qualityScore',
+  "title",
+  "coverImageUrl",
+  "authorName",
+  "destinations",
+  "likesCount",
+  "savesCount",
+  "commentsCount",
+  "viewsCount",
+  "qualityScore",
 ] as const;
 
 export type IosDisplayField = (typeof IOS_REQUIRED_DISPLAY_FIELDS)[number];
@@ -446,46 +453,57 @@ export interface DisplayFieldInput {
  *   console.log('Missing fields:', result.missingFields);
  * }
  */
-export function validateDisplayFields(guide: DisplayFieldInput): DisplayFieldValidationResult {
+export function validateDisplayFields(
+  guide: DisplayFieldInput,
+): DisplayFieldValidationResult {
   const missingFields: IosDisplayField[] = [];
 
   // Check title
-  if (!guide.title || (typeof guide.title === 'string' && guide.title.trim() === '')) {
-    missingFields.push('title');
+  if (
+    !guide.title ||
+    (typeof guide.title === "string" && guide.title.trim() === "")
+  ) {
+    missingFields.push("title");
   }
 
   // Check coverImageUrl - also check imageUrls as fallback source
-  if (!guide.coverImageUrl && (!guide.imageUrls || guide.imageUrls.length === 0)) {
-    missingFields.push('coverImageUrl');
+  if (
+    !guide.coverImageUrl &&
+    (!guide.imageUrls || guide.imageUrls.length === 0)
+  ) {
+    missingFields.push("coverImageUrl");
   }
 
   // Check authorName
-  if (!guide.authorName || (typeof guide.authorName === 'string' && guide.authorName.trim() === '')) {
-    missingFields.push('authorName');
+  if (
+    !guide.authorName ||
+    (typeof guide.authorName === "string" && guide.authorName.trim() === "")
+  ) {
+    missingFields.push("authorName");
   }
 
   // Check destinations (allowed to be empty, but must exist)
   if (!guide.destinations) {
-    missingFields.push('destinations');
+    missingFields.push("destinations");
   }
 
   // Check count fields
   if (guide.likesCount === undefined || guide.likesCount === null) {
-    missingFields.push('likesCount');
+    missingFields.push("likesCount");
   }
   if (guide.savesCount === undefined || guide.savesCount === null) {
-    missingFields.push('savesCount');
+    missingFields.push("savesCount");
   }
   if (guide.commentsCount === undefined || guide.commentsCount === null) {
-    missingFields.push('commentsCount');
+    missingFields.push("commentsCount");
   }
   if (guide.viewsCount === undefined || guide.viewsCount === null) {
-    missingFields.push('viewsCount');
+    missingFields.push("viewsCount");
   }
 
   // Check qualityScore
   if (guide.qualityScore === undefined || guide.qualityScore === null) {
-    missingFields.push('qualityScore');
+    missingFields.push("qualityScore");
   }
 
   return {
@@ -539,7 +557,9 @@ export interface CompletenessInput {
  * });
  * // Returns: 'complete'
  */
-export function calculateCompletenessLevel(input: CompletenessInput): CompletenessLevel {
+export function calculateCompletenessLevel(
+  input: CompletenessInput,
+): CompletenessLevel {
   const {
     title,
     content,
@@ -556,7 +576,8 @@ export function calculateCompletenessLevel(input: CompletenessInput): Completene
   } = input;
 
   // Check if content is truncated
-  const isTruncated = contentTruncated || (content ? isContentTruncated(content) : false);
+  const isTruncated =
+    contentTruncated || (content ? isContentTruncated(content) : false);
 
   // Check for images
   const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
@@ -574,39 +595,39 @@ export function calculateCompletenessLevel(input: CompletenessInput): Completene
   const contentLength = content?.length ?? 0;
 
   // Check numeric fields
-  const hasAllCounts
-    = likesCount !== undefined
-      && likesCount !== null
-      && savesCount !== undefined
-      && savesCount !== null
-      && commentsCount !== undefined
-      && commentsCount !== null
-      && viewsCount !== undefined
-      && viewsCount !== null;
+  const hasAllCounts =
+    likesCount !== undefined &&
+    likesCount !== null &&
+    savesCount !== undefined &&
+    savesCount !== null &&
+    commentsCount !== undefined &&
+    commentsCount !== null &&
+    viewsCount !== undefined &&
+    viewsCount !== null;
 
   const hasQualityScore = qualityScore !== undefined && qualityScore !== null;
 
   // Complete level: All iOS required fields, content >= 500, no truncation
   if (
-    hasTitle
-    && hasImages
-    && hasAuthor
-    && hasDestinations
-    && hasAllCounts
-    && hasQualityScore
-    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE
-    && !isTruncated
+    hasTitle &&
+    hasImages &&
+    hasAuthor &&
+    hasDestinations &&
+    hasAllCounts &&
+    hasQualityScore &&
+    contentLength >= MIN_CONTENT_LENGTH_COMPLETE &&
+    !isTruncated
   ) {
-    return 'complete';
+    return "complete";
   }
 
   // Usable level: Has title + content >= 200 + at least one image
   if (hasTitle && contentLength >= MIN_CONTENT_LENGTH && hasImages) {
-    return 'usable';
+    return "usable";
   }
 
   // Incomplete: Missing critical fields or truncated
-  return 'incomplete';
+  return "incomplete";
 }
 
 // ============================================================================
@@ -631,12 +652,14 @@ export interface TitleValidationResult {
  * const result = validateTitle('Very long title...');
  * // { title: 'Very long title...', titleTruncated: false }
  */
-export function validateTitle(title: string | undefined | null): TitleValidationResult {
+export function validateTitle(
+  title: string | undefined | null,
+): TitleValidationResult {
   if (!title || title.trim().length === 0) {
     return {
       title: undefined,
       titleTruncated: false,
-      warning: 'Title is missing - completeness level will be degraded',
+      warning: "Title is missing - completeness level will be degraded",
     };
   }
 
@@ -683,7 +706,7 @@ export function validateImages(
   coverImageUrl: string | undefined | null,
   imageUrls: string[] | undefined | null,
 ): ImageValidationResult {
-  const urls = imageUrls?.filter(url => url && url.trim().length > 0) ?? [];
+  const urls = imageUrls?.filter((url) => url && url.trim().length > 0) ?? [];
 
   // No images at all
   if (!coverImageUrl && urls.length === 0) {
@@ -691,7 +714,7 @@ export function validateImages(
       coverImageUrl: undefined,
       imageUrls: [],
       hasImages: false,
-      warning: 'No images provided - completeness level will be degraded',
+      warning: "No images provided - completeness level will be degraded",
     };
   }
 
@@ -725,11 +748,13 @@ export interface AuthorValidationResult {
  * const result = validateAuthor('');
  * // { authorName: undefined, warning: 'Author is missing...' }
  */
-export function validateAuthor(authorName: string | undefined | null): AuthorValidationResult {
+export function validateAuthor(
+  authorName: string | undefined | null,
+): AuthorValidationResult {
   if (!authorName || authorName.trim().length === 0) {
     return {
       authorName: undefined,
-      warning: 'Author is missing - completeness level will be degraded',
+      warning: "Author is missing - completeness level will be degraded",
     };
   }
 
@@ -747,7 +772,7 @@ export function validateAuthor(authorName: string | undefined | null): AuthorVal
  * - error: Blocks data insertion, must be fixed
  * - warning: Allows insertion but degrades completeness level
  */
-export type ValidationSeverity = 'error' | 'warning';
+export type ValidationSeverity = "error" | "warning";
 
 /**
  * Enhanced validation issue with severity
@@ -802,36 +827,45 @@ export interface EnhancedValidationResult {
  *   // Insert with warnings, completenessLevel will be degraded
  * }
  */
-export function validateGuideEnhanced(input: GuideValidationInput): EnhancedValidationResult {
+export function validateGuideEnhanced(
+  input: GuideValidationInput,
+): EnhancedValidationResult {
   const errors: ValidationIssue[] = [];
   const warnings: ValidationIssue[] = [];
 
   // === ERROR-LEVEL: Required fields (blocks insertion) ===
 
-  const sourcePlatform = getValue<string>(input, 'sourcePlatform', 'source_platform');
+  const sourcePlatform = getValue<string>(
+    input,
+    "sourcePlatform",
+    "source_platform",
+  );
   if (!sourcePlatform) {
     errors.push({
-      field: 'sourcePlatform',
-      message: 'required',
-      severity: 'error',
+      field: "sourcePlatform",
+      message: "required",
+      severity: "error",
       received: sourcePlatform,
     });
-  }
-  else if (!VALID_PLATFORMS.includes(sourcePlatform as GuidePlatform)) {
+  } else if (!VALID_PLATFORMS.includes(sourcePlatform as GuidePlatform)) {
     errors.push({
-      field: 'sourcePlatform',
-      message: `must be one of: ${VALID_PLATFORMS.join(', ')}`,
-      severity: 'error',
+      field: "sourcePlatform",
+      message: `must be one of: ${VALID_PLATFORMS.join(", ")}`,
+      severity: "error",
       received: sourcePlatform,
     });
   }
 
-  const sourceExternalId = getValue<string>(input, 'sourceExternalId', 'source_external_id');
+  const sourceExternalId = getValue<string>(
+    input,
+    "sourceExternalId",
+    "source_external_id",
+  );
   if (!sourceExternalId) {
     errors.push({
-      field: 'sourceExternalId',
-      message: 'required',
-      severity: 'error',
+      field: "sourceExternalId",
+      message: "required",
+      severity: "error",
       received: sourceExternalId,
     });
   }
@@ -839,17 +873,16 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
   const content = input.content;
   if (!content) {
     errors.push({
-      field: 'content',
-      message: 'required',
-      severity: 'error',
+      field: "content",
+      message: "required",
+      severity: "error",
       received: content,
     });
-  }
-  else if (typeof content !== 'string') {
+  } else if (typeof content !== "string") {
     errors.push({
-      field: 'content',
-      message: 'must be a string',
-      severity: 'error',
+      field: "content",
+      message: "must be a string",
+      severity: "error",
       received: typeof content,
     });
   }
@@ -857,25 +890,23 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
   const destinations = input.destinations;
   if (!destinations) {
     errors.push({
-      field: 'destinations',
-      message: 'required',
-      severity: 'error',
+      field: "destinations",
+      message: "required",
+      severity: "error",
       received: destinations,
     });
-  }
-  else if (!Array.isArray(destinations)) {
+  } else if (!Array.isArray(destinations)) {
     errors.push({
-      field: 'destinations',
-      message: 'must be an array',
-      severity: 'error',
+      field: "destinations",
+      message: "must be an array",
+      severity: "error",
       received: typeof destinations,
     });
-  }
-  else if (destinations.length === 0) {
+  } else if (destinations.length === 0) {
     errors.push({
-      field: 'destinations',
-      message: 'must have at least one item',
-      severity: 'error',
+      field: "destinations",
+      message: "must have at least one item",
+      severity: "error",
       received: destinations,
     });
   }
@@ -886,9 +917,9 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
   const titleResult = validateTitle(input.title as string | undefined);
   if (titleResult.warning) {
     warnings.push({
-      field: 'title',
+      field: "title",
       message: titleResult.warning,
-      severity: 'warning',
+      severity: "warning",
       received: input.title,
     });
   }
@@ -900,10 +931,13 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
   );
   if (imageResult.warning) {
     warnings.push({
-      field: 'coverImageUrl',
+      field: "coverImageUrl",
       message: imageResult.warning,
-      severity: 'warning',
-      received: { coverImageUrl: input.coverImageUrl, imageUrls: input.imageUrls },
+      severity: "warning",
+      received: {
+        coverImageUrl: input.coverImageUrl,
+        imageUrls: input.imageUrls,
+      },
     });
   }
 
@@ -911,30 +945,30 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
   const authorResult = validateAuthor(input.authorName as string | undefined);
   if (authorResult.warning) {
     warnings.push({
-      field: 'authorName',
+      field: "authorName",
       message: authorResult.warning,
-      severity: 'warning',
+      severity: "warning",
       received: input.authorName,
     });
   }
 
   // Content truncation detection (warning)
   let contentTruncated = false;
-  if (typeof content === 'string' && isContentTruncated(content)) {
+  if (typeof content === "string" && isContentTruncated(content)) {
     contentTruncated = true;
     warnings.push({
-      field: 'content',
-      message: 'Content appears to be truncated - will trigger refetch',
-      severity: 'warning',
+      field: "content",
+      message: "Content appears to be truncated - will trigger refetch",
+      severity: "warning",
     });
   }
 
   // Content length warning (not error - still insertable)
-  if (typeof content === 'string' && content.length < MIN_CONTENT_LENGTH) {
+  if (typeof content === "string" && content.length < MIN_CONTENT_LENGTH) {
     warnings.push({
-      field: 'content',
+      field: "content",
       message: `Content length ${content.length} is below minimum ${MIN_CONTENT_LENGTH} characters`,
-      severity: 'warning',
+      severity: "warning",
       received: content.length,
     });
   }
@@ -942,17 +976,17 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
   // Calculate completeness level
   const completenessLevel = calculateCompletenessLevel({
     title: titleResult.title,
-    content: typeof content === 'string' ? content : undefined,
+    content: typeof content === "string" ? content : undefined,
     coverImageUrl: imageResult.coverImageUrl,
     imageUrls: imageResult.imageUrls,
     authorName: authorResult.authorName,
     destinations: Array.isArray(destinations) ? destinations : undefined,
     contentTruncated,
-    likesCount: getValue<number>(input, 'likesCount', 'likes_count'),
-    savesCount: getValue<number>(input, 'savesCount', 'saves_count'),
-    commentsCount: getValue<number>(input, 'commentsCount', 'comments_count'),
-    viewsCount: getValue<number>(input, 'viewsCount', 'views_count'),
-    qualityScore: getValue<number>(input, 'qualityScore', 'quality_score'),
+    likesCount: getValue<number>(input, "likesCount", "likes_count"),
+    savesCount: getValue<number>(input, "savesCount", "saves_count"),
+    commentsCount: getValue<number>(input, "commentsCount", "comments_count"),
+    viewsCount: getValue<number>(input, "viewsCount", "views_count"),
+    qualityScore: getValue<number>(input, "qualityScore", "quality_score"),
   });
 
   return {

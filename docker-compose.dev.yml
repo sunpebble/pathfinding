@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     ports:
-      - '8000:8000'
+      - "8000:8000"
     environment:
       - NODE_ENV=development
       - CONVEX_URL=${CONVEX_URL}
@@ -15,7 +15,7 @@ services:
         - --no-verbose
         - --tries=1
         - --spider
-        - 'http://localhost:8000/api/health'
+        - "http://localhost:8000/api/health"
 
       interval: 30s
       timeout: 10s
@@ -28,7 +28,7 @@ services:
       context: .
       dockerfile: apps/crawler/Dockerfile
     ports:
-      - '3001:3001'
+      - "3001:3001"
     environment:
       - NODE_ENV=development
       - CONVEX_URL=${CONVEX_URL}
@@ -43,7 +43,7 @@ services:
         - --no-verbose
         - --tries=1
         - --spider
-        - 'http://localhost:3001/health'
+        - "http://localhost:3001/health"
 
       interval: 30s
       timeout: 10s

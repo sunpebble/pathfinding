@@ -26,24 +26,30 @@ type CamelToSnake<S extends string> = S extends `${infer T}${infer U}`
 /**
  * Recursively convert object keys from snake_case to camelCase
  */
-export type SnakeToCamelObject<T> = T extends Array<infer U>
-  ? Array<SnakeToCamelObject<U>>
-  : T extends object
-    ? {
-        [K in keyof T as K extends string ? SnakeToCamel<K> : K]: SnakeToCamelObject<T[K]>;
-      }
-    : T;
+export type SnakeToCamelObject<T> =
+  T extends Array<infer U>
+    ? Array<SnakeToCamelObject<U>>
+    : T extends object
+      ? {
+          [K in keyof T as K extends string
+            ? SnakeToCamel<K>
+            : K]: SnakeToCamelObject<T[K]>;
+        }
+      : T;
 
 /**
  * Recursively convert object keys from camelCase to snake_case
  */
-export type CamelToSnakeObject<T> = T extends Array<infer U>
-  ? Array<CamelToSnakeObject<U>>
-  : T extends object
-    ? {
-        [K in keyof T as K extends string ? CamelToSnake<K> : K]: CamelToSnakeObject<T[K]>;
-      }
-    : T;
+export type CamelToSnakeObject<T> =
+  T extends Array<infer U>
+    ? Array<CamelToSnakeObject<U>>
+    : T extends object
+      ? {
+          [K in keyof T as K extends string
+            ? CamelToSnake<K>
+            : K]: CamelToSnakeObject<T[K]>;
+        }
+      : T;
 
 // ============================================================================
 // Runtime Conversion Functions
@@ -62,7 +68,7 @@ export function snakeToCamel(str: string): string {
  * @example camelToSnake('sourcePlatform') => 'source_platform'
  */
 export function camelToSnake(str: string): string {
-  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
 /**
@@ -70,11 +76,11 @@ export function camelToSnake(str: string): string {
  */
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
-    typeof value === 'object'
-    && value !== null
-    && !Array.isArray(value)
-    && !(value instanceof Date)
-    && !(value instanceof RegExp)
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(value instanceof Date) &&
+    !(value instanceof RegExp)
   );
 }
 
@@ -91,7 +97,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  */
 export function toCamelCase<T>(obj: T): SnakeToCamelObject<T> {
   if (Array.isArray(obj)) {
-    return obj.map(item => toCamelCase(item)) as SnakeToCamelObject<T>;
+    return obj.map((item) => toCamelCase(item)) as SnakeToCamelObject<T>;
   }
 
   if (isPlainObject(obj)) {
@@ -119,7 +125,7 @@ export function toCamelCase<T>(obj: T): SnakeToCamelObject<T> {
  */
 export function toSnakeCase<T>(obj: T): CamelToSnakeObject<T> {
   if (Array.isArray(obj)) {
-    return obj.map(item => toSnakeCase(item)) as CamelToSnakeObject<T>;
+    return obj.map((item) => toSnakeCase(item)) as CamelToSnakeObject<T>;
   }
 
   if (isPlainObject(obj)) {

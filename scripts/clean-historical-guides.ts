@@ -1,17 +1,18 @@
+/* eslint-disable no-console */
 /**
  * 历史数据清洗脚本
  * 从 Convex 拉取所有游记，用 content-cleaner 清洗后回写
  */
 
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api.js';
-import { cleanContent } from '../packages/crawler-types/src/content-cleaner.js';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../convex/_generated/api.js";
+import { cleanContent } from "../packages/crawler-types/src/content-cleaner.js";
 
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
+const CONVEX_URL = process.env.CONVEX_URL || "https://convex.kunish.org";
 const client = new ConvexHttpClient(CONVEX_URL);
 
 async function main() {
-  console.log('🧹 开始清洗历史游记数据...');
+  console.log("🧹 开始清洗历史游记数据...");
   console.log(`Convex: ${CONVEX_URL}\n`);
 
   let cursor: string | undefined;
@@ -47,7 +48,15 @@ async function main() {
 
         // 清洗内容
         const cleanResult = cleanContent(guide.content, {
-          categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+          categories: [
+            "ad",
+            "promotion",
+            "personal",
+            "platform",
+            "copyright",
+            "boilerplate",
+            "whitespace",
+          ],
           preserveParagraphs: true,
         });
 
@@ -59,25 +68,24 @@ async function main() {
           });
 
           totalCleaned++;
-          const pct = Math.round((1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100);
-          console.log(
-            `✅ [${totalProcessed}] ${item.title?.slice(0, 30) || item.sourceExternalId} — 清除 ${pct}% 噪音 (${cleanResult.originalLength} → ${cleanResult.cleanedLength}) [${cleanResult.removedTypes.join(', ')}]`,
+          const pct = Math.round(
+            (1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100,
           );
-        }
-        else {
+          console.log(
+            `✅ [${totalProcessed}] ${item.title?.slice(0, 30) || item.sourceExternalId} — 清除 ${pct}% 噪音 (${cleanResult.originalLength} → ${cleanResult.cleanedLength}) [${cleanResult.removedTypes.join(", ")}]`,
+          );
+        } else {
           totalSkipped++;
           if (totalProcessed % 20 === 0) {
             console.log(`⏭️  [${totalProcessed}] 已跳过（无需清洗）`);
           }
         }
-      }
-      catch (err) {
+      } catch (err) {
         console.error(`❌ [${totalProcessed}] ${item._id}: ${err}`);
       }
     }
 
-    if (result.isDone)
-      break;
+    if (result.isDone) break;
     cursor = result.cursor;
   }
 

@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * User Preferences - Learning and Personalization
@@ -10,17 +10,17 @@ import { mutation, query } from './_generated/server';
 
 // Preference category types
 const preferenceCategories = v.union(
-  v.literal('food'), // Food & Dining
-  v.literal('culture'), // Culture & History
-  v.literal('nature'), // Nature & Outdoors
-  v.literal('shopping'), // Shopping
-  v.literal('nightlife'), // Nightlife & Entertainment
-  v.literal('adventure'), // Adventure & Sports
-  v.literal('relaxation'), // Spa & Relaxation
-  v.literal('photography'), // Photography spots
-  v.literal('family'), // Family-friendly
-  v.literal('budget'), // Budget travel
-  v.literal('luxury'), // Luxury travel
+  v.literal("food"), // Food & Dining
+  v.literal("culture"), // Culture & History
+  v.literal("nature"), // Nature & Outdoors
+  v.literal("shopping"), // Shopping
+  v.literal("nightlife"), // Nightlife & Entertainment
+  v.literal("adventure"), // Adventure & Sports
+  v.literal("relaxation"), // Spa & Relaxation
+  v.literal("photography"), // Photography spots
+  v.literal("family"), // Family-friendly
+  v.literal("budget"), // Budget travel
+  v.literal("luxury"), // Luxury travel
 );
 
 // Get user preferences
@@ -28,8 +28,8 @@ export const getUserPreferences = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const preferences = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     if (!preferences) {
@@ -45,8 +45,8 @@ export const getOrCreatePreferences = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     if (existing) {
@@ -59,9 +59,9 @@ export const getOrCreatePreferences = query({
       userId: args.userId,
       categoryScores: {},
       explicitPreferences: [],
-      travelStyle: 'balanced',
-      budgetLevel: 'moderate',
-      pacePreference: 'moderate',
+      travelStyle: "balanced",
+      budgetLevel: "moderate",
+      pacePreference: "moderate",
       preferLocalFood: true,
       preferOffBeatPlaces: false,
       accessibilityNeeds: false,
@@ -78,20 +78,20 @@ export const upsertPreferences = mutation({
     explicitPreferences: v.optional(v.array(preferenceCategories)),
     travelStyle: v.optional(
       v.union(
-        v.literal('adventurous'),
-        v.literal('relaxed'),
-        v.literal('cultural'),
-        v.literal('balanced'),
+        v.literal("adventurous"),
+        v.literal("relaxed"),
+        v.literal("cultural"),
+        v.literal("balanced"),
       ),
     ),
     budgetLevel: v.optional(
-      v.union(v.literal('budget'), v.literal('moderate'), v.literal('luxury')),
+      v.union(v.literal("budget"), v.literal("moderate"), v.literal("luxury")),
     ),
     pacePreference: v.optional(
       v.union(
-        v.literal('slow'), // 1-2 activities per day
-        v.literal('moderate'), // 3-4 activities per day
-        v.literal('fast'), // 5+ activities per day
+        v.literal("slow"), // 1-2 activities per day
+        v.literal("moderate"), // 3-4 activities per day
+        v.literal("fast"), // 5+ activities per day
       ),
     ),
     preferLocalFood: v.optional(v.boolean()),
@@ -100,8 +100,8 @@ export const upsertPreferences = mutation({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     const now = Date.now();
@@ -139,13 +139,13 @@ export const upsertPreferences = mutation({
     }
 
     // Create new preferences
-    return await ctx.db.insert('userPreferences', {
+    return await ctx.db.insert("userPreferences", {
       userId: args.userId,
       categoryScores: {},
       explicitPreferences: args.explicitPreferences ?? [],
-      travelStyle: args.travelStyle ?? 'balanced',
-      budgetLevel: args.budgetLevel ?? 'moderate',
-      pacePreference: args.pacePreference ?? 'moderate',
+      travelStyle: args.travelStyle ?? "balanced",
+      budgetLevel: args.budgetLevel ?? "moderate",
+      pacePreference: args.pacePreference ?? "moderate",
       preferLocalFood: args.preferLocalFood ?? true,
       preferOffBeatPlaces: args.preferOffBeatPlaces ?? false,
       accessibilityNeeds: args.accessibilityNeeds ?? false,
@@ -161,23 +161,23 @@ export const recordBehavior = mutation({
   args: {
     userId: v.string(),
     behaviorType: v.union(
-      v.literal('view'), // Viewed content
-      v.literal('save'), // Saved/favorited
-      v.literal('unsave'), // Removed from favorites
-      v.literal('copy'), // Copied itinerary
-      v.literal('share'), // Shared content
-      v.literal('like'), // Liked content
-      v.literal('unlike'), // Removed like
-      v.literal('search'), // Searched for term
-      v.literal('poi_click'), // Clicked on POI
-      v.literal('poi_add'), // Added POI to itinerary
+      v.literal("view"), // Viewed content
+      v.literal("save"), // Saved/favorited
+      v.literal("unsave"), // Removed from favorites
+      v.literal("copy"), // Copied itinerary
+      v.literal("share"), // Shared content
+      v.literal("like"), // Liked content
+      v.literal("unlike"), // Removed like
+      v.literal("search"), // Searched for term
+      v.literal("poi_click"), // Clicked on POI
+      v.literal("poi_add"), // Added POI to itinerary
     ),
     targetType: v.union(
-      v.literal('guide'),
-      v.literal('itinerary'),
-      v.literal('poi'),
-      v.literal('city'),
-      v.literal('search'),
+      v.literal("guide"),
+      v.literal("itinerary"),
+      v.literal("poi"),
+      v.literal("city"),
+      v.literal("search"),
     ),
     targetId: v.string(),
     categories: v.optional(v.array(preferenceCategories)), // Associated categories
@@ -195,7 +195,7 @@ export const recordBehavior = mutation({
     const now = Date.now();
 
     // Record the behavior event
-    const eventId = await ctx.db.insert('userBehaviorEvents', {
+    const eventId = await ctx.db.insert("userBehaviorEvents", {
       userId: args.userId,
       behaviorType: args.behaviorType,
       targetType: args.targetType,
@@ -208,8 +208,8 @@ export const recordBehavior = mutation({
     // Update category scores based on behavior
     if (args.categories && args.categories.length > 0) {
       const preferences = await ctx.db
-        .query('userPreferences')
-        .withIndex('by_user', q => q.eq('userId', args.userId))
+        .query("userPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
         .first();
 
       // Behavior type weights
@@ -230,8 +230,8 @@ export const recordBehavior = mutation({
 
       if (preferences) {
         // Update existing scores
-        const currentScores
-          = (preferences.categoryScores as Record<string, number>) || {};
+        const currentScores =
+          (preferences.categoryScores as Record<string, number>) || {};
 
         for (const category of args.categories) {
           currentScores[category] = (currentScores[category] || 0) + weight;
@@ -242,21 +242,20 @@ export const recordBehavior = mutation({
           totalInteractions: (preferences.totalInteractions ?? 0) + 1,
           lastUpdated: now,
         });
-      }
-      else {
+      } else {
         // Create new preferences with initial scores
         const initialScores: Record<string, number> = {};
         for (const category of args.categories) {
           initialScores[category] = weight;
         }
 
-        await ctx.db.insert('userPreferences', {
+        await ctx.db.insert("userPreferences", {
           userId: args.userId,
           categoryScores: initialScores,
           explicitPreferences: [],
-          travelStyle: 'balanced',
-          budgetLevel: 'moderate',
-          pacePreference: 'moderate',
+          travelStyle: "balanced",
+          budgetLevel: "moderate",
+          pacePreference: "moderate",
           preferLocalFood: true,
           preferOffBeatPlaces: false,
           accessibilityNeeds: false,
@@ -279,8 +278,8 @@ export const getTopCategories = query({
   },
   handler: async (ctx, args) => {
     const preferences = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     if (!preferences || !preferences.categoryScores) {
@@ -307,28 +306,28 @@ export const getRecentBehaviors = query({
     limit: v.optional(v.number()),
     behaviorType: v.optional(
       v.union(
-        v.literal('view'),
-        v.literal('save'),
-        v.literal('unsave'),
-        v.literal('copy'),
-        v.literal('share'),
-        v.literal('like'),
-        v.literal('unlike'),
-        v.literal('search'),
-        v.literal('poi_click'),
-        v.literal('poi_add'),
+        v.literal("view"),
+        v.literal("save"),
+        v.literal("unsave"),
+        v.literal("copy"),
+        v.literal("share"),
+        v.literal("like"),
+        v.literal("unlike"),
+        v.literal("search"),
+        v.literal("poi_click"),
+        v.literal("poi_add"),
       ),
     ),
   },
   handler: async (ctx, args) => {
     const query = ctx.db
-      .query('userBehaviorEvents')
-      .withIndex('by_user', q => q.eq('userId', args.userId));
+      .query("userBehaviorEvents")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId));
 
-    const events = await query.order('desc').take(args.limit ?? 50);
+    const events = await query.order("desc").take(args.limit ?? 50);
 
     if (args.behaviorType) {
-      return events.filter(e => e.behaviorType === args.behaviorType);
+      return events.filter((e) => e.behaviorType === args.behaviorType);
     }
 
     return events;
@@ -341,8 +340,8 @@ export const resetPreferences = mutation({
   handler: async (ctx, args) => {
     // Find and update preferences (keep explicit settings, reset learned)
     const preferences = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     if (preferences) {
@@ -355,8 +354,8 @@ export const resetPreferences = mutation({
 
     // Delete all behavior events
     const events = await ctx.db
-      .query('userBehaviorEvents')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userBehaviorEvents")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     for (const event of events) {
@@ -372,15 +371,15 @@ export const getRecommendedCategories = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const preferences = await ctx.db
-      .query('userPreferences')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     if (!preferences) {
       // Return default recommendations for new users
       return {
-        topCategories: ['culture', 'food', 'nature'],
-        style: 'balanced',
+        topCategories: ["culture", "food", "nature"],
+        style: "balanced",
         isLearned: false,
       };
     }
@@ -403,7 +402,7 @@ export const getRecommendedCategories = query({
       topCategories:
         topCategories.length > 0
           ? topCategories
-          : ['culture', 'food', 'nature'],
+          : ["culture", "food", "nature"],
       style: preferences.travelStyle,
       budgetLevel: preferences.budgetLevel,
       pacePreference: preferences.pacePreference,

@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { v } from "convex/values";
 
 /**
  * Completeness metrics for data quality
@@ -97,26 +97,26 @@ export const dataQualityMetricsValidator = v.union(
  * Issue severity levels
  */
 export const issueSeverityValidator = v.union(
-  v.literal('critical'),
-  v.literal('high'),
-  v.literal('medium'),
-  v.literal('low'),
-  v.literal('info'),
+  v.literal("critical"),
+  v.literal("high"),
+  v.literal("medium"),
+  v.literal("low"),
+  v.literal("info"),
 );
 
 /**
  * Issue type categories
  */
 export const issueTypeValidator = v.union(
-  v.literal('missing_field'),
-  v.literal('invalid_format'),
-  v.literal('out_of_range'),
-  v.literal('duplicate'),
-  v.literal('inconsistent'),
-  v.literal('outdated'),
-  v.literal('geocoding_error'),
-  v.literal('encoding_error'),
-  v.literal('other'),
+  v.literal("missing_field"),
+  v.literal("invalid_format"),
+  v.literal("out_of_range"),
+  v.literal("duplicate"),
+  v.literal("inconsistent"),
+  v.literal("outdated"),
+  v.literal("geocoding_error"),
+  v.literal("encoding_error"),
+  v.literal("other"),
 );
 
 /**

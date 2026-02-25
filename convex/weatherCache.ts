@@ -3,8 +3,8 @@
  * Handles caching and retrieval of weather data
  */
 
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 // Type definition for weather data
 const weatherDataValidator = v.object({
@@ -91,9 +91,10 @@ export const get = query({
     const lon = Math.round(args.longitude * 100) / 100;
 
     const cached = await ctx.db
-      .query('weatherCache')
-      .withIndex('by_location', q =>
-        q.eq('latitude', lat).eq('longitude', lon))
+      .query("weatherCache")
+      .withIndex("by_location", (q) =>
+        q.eq("latitude", lat).eq("longitude", lon),
+      )
       .first();
 
     return cached;
@@ -117,9 +118,10 @@ export const upsert = mutation({
 
     // Check if entry already exists
     const existing = await ctx.db
-      .query('weatherCache')
-      .withIndex('by_location', q =>
-        q.eq('latitude', lat).eq('longitude', lon))
+      .query("weatherCache")
+      .withIndex("by_location", (q) =>
+        q.eq("latitude", lat).eq("longitude", lon),
+      )
       .first();
 
     if (existing) {
@@ -132,7 +134,7 @@ export const upsert = mutation({
     }
 
     // Create new entry
-    return await ctx.db.insert('weatherCache', {
+    return await ctx.db.insert("weatherCache", {
       latitude: lat,
       longitude: lon,
       data: args.data,
@@ -153,9 +155,9 @@ export const cleanup = mutation({
     const cutoffTime = Date.now() - maxAgeMs;
 
     const oldEntries = await ctx.db
-      .query('weatherCache')
-      .withIndex('by_fetched_at')
-      .filter(q => q.lt(q.field('fetchedAt'), cutoffTime))
+      .query("weatherCache")
+      .withIndex("by_fetched_at")
+      .filter((q) => q.lt(q.field("fetchedAt"), cutoffTime))
       .collect();
 
     let deleted = 0;
@@ -174,7 +176,7 @@ export const cleanup = mutation({
 export const stats = query({
   args: {},
   handler: async (ctx) => {
-    const entries = await ctx.db.query('weatherCache').collect();
+    const entries = await ctx.db.query("weatherCache").collect();
 
     const now = Date.now();
     const oneHourAgo = now - 60 * 60 * 1000;
@@ -186,8 +188,7 @@ export const stats = query({
     for (const entry of entries) {
       if (entry.fetchedAt > oneHourAgo) {
         recentCount++;
-      }
-      else if (entry.fetchedAt < oneDayAgo) {
+      } else if (entry.fetchedAt < oneDayAgo) {
         staleCount++;
       }
     }

@@ -1,7 +1,7 @@
-import type { Id } from './_generated/dataModel';
-import type { MutationCtx, QueryCtx } from './_generated/server';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Itinerary Versions - Version History Management
@@ -14,16 +14,16 @@ const snapshotDayValidator = v.object({
   date: v.string(),
   items: v.array(
     v.object({
-      poiId: v.id('pois'),
+      poiId: v.id("pois"),
       orderIndex: v.number(),
       startTime: v.optional(v.string()),
       endTime: v.optional(v.string()),
       transportMode: v.union(
-        v.literal('walking'),
-        v.literal('driving'),
-        v.literal('transit'),
-        v.literal('cycling'),
-        v.literal('taxi'),
+        v.literal("walking"),
+        v.literal("driving"),
+        v.literal("transit"),
+        v.literal("cycling"),
+        v.literal("taxi"),
       ),
       notes: v.optional(v.string()),
     }),
@@ -31,14 +31,14 @@ const snapshotDayValidator = v.object({
 });
 
 const visibilityValidator = v.union(
-  v.literal('private'),
-  v.literal('team'),
-  v.literal('public'),
+  v.literal("private"),
+  v.literal("team"),
+  v.literal("public"),
 );
 
 const _snapshotValidator = v.object({
   title: v.string(),
-  cityId: v.id('cities'),
+  cityId: v.id("cities"),
   startDate: v.string(),
   endDate: v.string(),
   visibility: visibilityValidator,
@@ -59,12 +59,12 @@ const _changesCountValidator = v.object({
  */
 async function checkVersionAccess(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>,
+  itineraryId: Id<"itineraries">,
   userId: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
-    throw new Error('Itinerary not found');
+    throw new Error("Itinerary not found");
   }
 
   // Check if user is the owner
@@ -74,13 +74,14 @@ async function checkVersionAccess(
 
   // Check if user is a collaborator with edit permissions
   const collab = await ctx.db
-    .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', q =>
-      q.eq('itineraryId', itineraryId).eq('userId', userId))
+    .query("itineraryCollaborators")
+    .withIndex("by_itinerary_user", (q) =>
+      q.eq("itineraryId", itineraryId).eq("userId", userId),
+    )
     .first();
 
   if (!collab) {
-    throw new Error('You do not have access to this itinerary');
+    throw new Error("You do not have access to this itinerary");
   }
 
   return true;
@@ -91,18 +92,18 @@ async function checkVersionAccess(
  */
 async function getNextVersionNumber(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>,
+  itineraryId: Id<"itineraries">,
 ): Promise<number> {
   const versions = await ctx.db
-    .query('itineraryVersions')
-    .withIndex('by_itinerary', q => q.eq('itineraryId', itineraryId))
+    .query("itineraryVersions")
+    .withIndex("by_itinerary", (q) => q.eq("itineraryId", itineraryId))
     .collect();
 
   if (versions.length === 0) {
     return 1;
   }
 
-  return Math.max(...versions.map(v => v.versionNumber)) + 1;
+  return Math.max(...versions.map((v) => v.versionNumber)) + 1;
 }
 
 /**
@@ -110,17 +111,17 @@ async function getNextVersionNumber(
  */
 async function createItinerarySnapshot(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>,
+  itineraryId: Id<"itineraries">,
 ) {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
-    throw new Error('Itinerary not found');
+    throw new Error("Itinerary not found");
   }
 
   // Get all days
   const days = await ctx.db
-    .query('itineraryDays')
-    .withIndex('by_itinerary', q => q.eq('itineraryId', itineraryId))
+    .query("itineraryDays")
+    .withIndex("by_itinerary", (q) => q.eq("itineraryId", itineraryId))
     .collect();
 
   days.sort((a, b) => a.dayNumber - b.dayNumber);
@@ -129,8 +130,8 @@ async function createItinerarySnapshot(
   const daysWithItems = await Promise.all(
     days.map(async (day) => {
       const items = await ctx.db
-        .query('itineraryItems')
-        .withIndex('by_day', q => q.eq('dayId', day._id))
+        .query("itineraryItems")
+        .withIndex("by_day", (q) => q.eq("dayId", day._id))
         .collect();
 
       items.sort((a, b) => a.orderIndex - b.orderIndex);
@@ -138,7 +139,7 @@ async function createItinerarySnapshot(
       return {
         dayNumber: day.dayNumber,
         date: day.date,
-        items: items.map(item => ({
+        items: items.map((item) => ({
           poiId: item.poiId,
           orderIndex: item.orderIndex,
           startTime: item.startTime,
@@ -168,18 +169,18 @@ function calculateChanges(
   oldSnapshot: {
     days: Array<{
       dayNumber: number;
-      items: Array<{ poiId: Id<'pois'>; orderIndex: number }>;
+      items: Array<{ poiId: Id<"pois">; orderIndex: number }>;
     }>;
   },
   newSnapshot: {
     days: Array<{
       dayNumber: number;
-      items: Array<{ poiId: Id<'pois'>; orderIndex: number }>;
+      items: Array<{ poiId: Id<"pois">; orderIndex: number }>;
     }>;
   },
 ) {
-  const oldDayNumbers = new Set(oldSnapshot.days.map(d => d.dayNumber));
-  const newDayNumbers = new Set(newSnapshot.days.map(d => d.dayNumber));
+  const oldDayNumbers = new Set(oldSnapshot.days.map((d) => d.dayNumber));
+  const newDayNumbers = new Set(newSnapshot.days.map((d) => d.dayNumber));
 
   let daysAdded = 0;
   let daysRemoved = 0;
@@ -206,13 +207,13 @@ function calculateChanges(
   for (const day of oldSnapshot.days) {
     oldItemsByDay.set(
       day.dayNumber,
-      new Set(day.items.map(i => `${i.poiId}:${i.orderIndex}`)),
+      new Set(day.items.map((i) => `${i.poiId}:${i.orderIndex}`)),
     );
   }
   for (const day of newSnapshot.days) {
     newItemsByDay.set(
       day.dayNumber,
-      new Set(day.items.map(i => `${i.poiId}:${i.orderIndex}`)),
+      new Set(day.items.map((i) => `${i.poiId}:${i.orderIndex}`)),
     );
   }
 
@@ -238,7 +239,7 @@ function calculateChanges(
   // Items in added days
   for (const dayNum of newDayNumbers) {
     if (!oldDayNumbers.has(dayNum)) {
-      const newDay = newSnapshot.days.find(d => d.dayNumber === dayNum);
+      const newDay = newSnapshot.days.find((d) => d.dayNumber === dayNum);
       if (newDay) {
         itemsAdded += newDay.items.length;
       }
@@ -248,7 +249,7 @@ function calculateChanges(
   // Items in removed days
   for (const dayNum of oldDayNumbers) {
     if (!newDayNumbers.has(dayNum)) {
-      const oldDay = oldSnapshot.days.find(d => d.dayNumber === dayNum);
+      const oldDay = oldSnapshot.days.find((d) => d.dayNumber === dayNum);
       if (oldDay) {
         itemsRemoved += oldDay.items.length;
       }
@@ -292,7 +293,7 @@ function generateChangesSummary(changes: {
     parts.push(`修改 ${changes.itemsModified} 个景点`);
   }
 
-  return parts.length > 0 ? parts.join('，') : '无变更';
+  return parts.length > 0 ? parts.join("，") : "无变更";
 }
 
 // ============================================
@@ -304,7 +305,7 @@ function generateChangesSummary(changes: {
  */
 export const listByItinerary = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
@@ -317,16 +318,16 @@ export const listByItinerary = query({
     const offset = (page - 1) * pageSize;
 
     const versions = await ctx.db
-      .query('itineraryVersions')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
-      .order('desc')
+      .query("itineraryVersions")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
+      .order("desc")
       .collect();
 
     const total = versions.length;
     const data = versions.slice(offset, offset + pageSize);
 
     // Enrich with user info (could be extended)
-    const enriched = data.map(version => ({
+    const enriched = data.map((version) => ({
       id: version._id,
       itineraryId: version.itineraryId,
       versionNumber: version.versionNumber,
@@ -354,7 +355,7 @@ export const listByItinerary = query({
  */
 export const getById = query({
   args: {
-    versionId: v.id('itineraryVersions'),
+    versionId: v.id("itineraryVersions"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -412,8 +413,8 @@ export const getById = query({
  */
 export const compare = query({
   args: {
-    versionId1: v.id('itineraryVersions'),
-    versionId2: v.id('itineraryVersions'),
+    versionId1: v.id("itineraryVersions"),
+    versionId2: v.id("itineraryVersions"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -421,53 +422,50 @@ export const compare = query({
     const version2 = await ctx.db.get(args.versionId2);
 
     if (!version1 || !version2) {
-      throw new Error('One or both versions not found');
+      throw new Error("One or both versions not found");
     }
 
     if (version1.itineraryId !== version2.itineraryId) {
-      throw new Error('Versions must belong to the same itinerary');
+      throw new Error("Versions must belong to the same itinerary");
     }
 
     await checkVersionAccess(ctx, version1.itineraryId, args.userId);
 
     // Calculate differences
-    const older
-      = version1.versionNumber < version2.versionNumber ? version1 : version2;
-    const newer
-      = version1.versionNumber < version2.versionNumber ? version2 : version1;
+    const older =
+      version1.versionNumber < version2.versionNumber ? version1 : version2;
+    const newer =
+      version1.versionNumber < version2.versionNumber ? version2 : version1;
 
     const changes = calculateChanges(older.snapshot, newer.snapshot);
 
     // Build detailed diff
     const daysDiff: Array<{
       dayNumber: number;
-      status: 'added' | 'removed' | 'modified' | 'unchanged';
+      status: "added" | "removed" | "modified" | "unchanged";
       olderItemCount: number;
       newerItemCount: number;
     }> = [];
 
     const allDayNumbers = new Set([
-      ...older.snapshot.days.map(d => d.dayNumber),
-      ...newer.snapshot.days.map(d => d.dayNumber),
+      ...older.snapshot.days.map((d) => d.dayNumber),
+      ...newer.snapshot.days.map((d) => d.dayNumber),
     ]);
 
     for (const dayNum of Array.from(allDayNumbers).sort((a, b) => a - b)) {
-      const olderDay = older.snapshot.days.find(d => d.dayNumber === dayNum);
-      const newerDay = newer.snapshot.days.find(d => d.dayNumber === dayNum);
+      const olderDay = older.snapshot.days.find((d) => d.dayNumber === dayNum);
+      const newerDay = newer.snapshot.days.find((d) => d.dayNumber === dayNum);
 
-      let status: 'added' | 'removed' | 'modified' | 'unchanged';
+      let status: "added" | "removed" | "modified" | "unchanged";
       if (!olderDay && newerDay) {
-        status = 'added';
-      }
-      else if (olderDay && !newerDay) {
-        status = 'removed';
-      }
-      else if (olderDay && newerDay) {
+        status = "added";
+      } else if (olderDay && !newerDay) {
+        status = "removed";
+      } else if (olderDay && newerDay) {
         const olderItems = JSON.stringify(olderDay.items);
         const newerItems = JSON.stringify(newerDay.items);
-        status = olderItems === newerItems ? 'unchanged' : 'modified';
-      }
-      else {
+        status = olderItems === newerItems ? "unchanged" : "modified";
+      } else {
         continue;
       }
 
@@ -508,7 +506,7 @@ export const compare = query({
  */
 export const create = mutation({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     versionNote: v.optional(v.string()),
   },
@@ -524,11 +522,12 @@ export const create = mutation({
 
     if (versionNumber > 1) {
       const prevVersion = await ctx.db
-        .query('itineraryVersions')
-        .withIndex('by_itinerary_version', q =>
+        .query("itineraryVersions")
+        .withIndex("by_itinerary_version", (q) =>
           q
-            .eq('itineraryId', args.itineraryId)
-            .eq('versionNumber', versionNumber - 1))
+            .eq("itineraryId", args.itineraryId)
+            .eq("versionNumber", versionNumber - 1),
+        )
         .first();
 
       if (prevVersion) {
@@ -537,7 +536,7 @@ export const create = mutation({
       }
     }
 
-    const versionId = await ctx.db.insert('itineraryVersions', {
+    const versionId = await ctx.db.insert("itineraryVersions", {
       itineraryId: args.itineraryId,
       userId: args.userId,
       versionNumber,
@@ -557,14 +556,14 @@ export const create = mutation({
  */
 export const updateNote = mutation({
   args: {
-    versionId: v.id('itineraryVersions'),
+    versionId: v.id("itineraryVersions"),
     userId: v.string(),
     versionNote: v.string(),
   },
   handler: async (ctx, args) => {
     const version = await ctx.db.get(args.versionId);
     if (!version) {
-      throw new Error('Version not found');
+      throw new Error("Version not found");
     }
 
     await checkVersionAccess(ctx, version.itineraryId, args.userId);
@@ -582,14 +581,14 @@ export const updateNote = mutation({
  */
 export const restore = mutation({
   args: {
-    versionId: v.id('itineraryVersions'),
+    versionId: v.id("itineraryVersions"),
     userId: v.string(),
     createBackup: v.optional(v.boolean()), // Default true: create a version of current state before restore
   },
   handler: async (ctx, args) => {
     const version = await ctx.db.get(args.versionId);
     if (!version) {
-      throw new Error('Version not found');
+      throw new Error("Version not found");
     }
 
     await checkVersionAccess(ctx, version.itineraryId, args.userId);
@@ -607,7 +606,7 @@ export const restore = mutation({
         version.itineraryId,
       );
 
-      await ctx.db.insert('itineraryVersions', {
+      await ctx.db.insert("itineraryVersions", {
         itineraryId: version.itineraryId,
         userId: args.userId,
         versionNumber: backupVersionNumber,
@@ -632,15 +631,16 @@ export const restore = mutation({
 
     // Delete existing days and items
     const existingDays = await ctx.db
-      .query('itineraryDays')
-      .withIndex('by_itinerary', q =>
-        q.eq('itineraryId', version.itineraryId))
+      .query("itineraryDays")
+      .withIndex("by_itinerary", (q) =>
+        q.eq("itineraryId", version.itineraryId),
+      )
       .collect();
 
     for (const day of existingDays) {
       const items = await ctx.db
-        .query('itineraryItems')
-        .withIndex('by_day', q => q.eq('dayId', day._id))
+        .query("itineraryItems")
+        .withIndex("by_day", (q) => q.eq("dayId", day._id))
         .collect();
 
       for (const item of items) {
@@ -651,14 +651,14 @@ export const restore = mutation({
 
     // Recreate days and items from snapshot
     for (const snapshotDay of snapshot.days) {
-      const dayId = await ctx.db.insert('itineraryDays', {
+      const dayId = await ctx.db.insert("itineraryDays", {
         itineraryId: version.itineraryId,
         dayNumber: snapshotDay.dayNumber,
         date: snapshotDay.date,
       });
 
       for (const item of snapshotDay.items) {
-        await ctx.db.insert('itineraryItems', {
+        await ctx.db.insert("itineraryItems", {
           dayId,
           poiId: item.poiId,
           orderIndex: item.orderIndex,
@@ -679,26 +679,27 @@ export const restore = mutation({
  */
 export const remove = mutation({
   args: {
-    versionId: v.id('itineraryVersions'),
+    versionId: v.id("itineraryVersions"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const version = await ctx.db.get(args.versionId);
     if (!version) {
-      throw new Error('Version not found');
+      throw new Error("Version not found");
     }
 
     await checkVersionAccess(ctx, version.itineraryId, args.userId);
 
     // Don't allow deleting the only version
     const allVersions = await ctx.db
-      .query('itineraryVersions')
-      .withIndex('by_itinerary', q =>
-        q.eq('itineraryId', version.itineraryId))
+      .query("itineraryVersions")
+      .withIndex("by_itinerary", (q) =>
+        q.eq("itineraryId", version.itineraryId),
+      )
       .collect();
 
     if (allVersions.length <= 1) {
-      throw new Error('Cannot delete the only remaining version');
+      throw new Error("Cannot delete the only remaining version");
     }
 
     await ctx.db.delete(args.versionId);
@@ -712,7 +713,7 @@ export const remove = mutation({
  */
 export const cleanup = mutation({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     keepCount: v.optional(v.number()), // Default 10
   },
@@ -722,9 +723,9 @@ export const cleanup = mutation({
     const keepCount = args.keepCount ?? 10;
 
     const versions = await ctx.db
-      .query('itineraryVersions')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
-      .order('desc')
+      .query("itineraryVersions")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
+      .order("desc")
       .collect();
 
     if (versions.length <= keepCount) {
@@ -745,22 +746,22 @@ export const cleanup = mutation({
  */
 export const getVersionCount = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     await checkVersionAccess(ctx, args.itineraryId, args.userId);
 
     const versions = await ctx.db
-      .query('itineraryVersions')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("itineraryVersions")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     return {
       count: versions.length,
       latestVersion:
         versions.length > 0
-          ? Math.max(...versions.map(v => v.versionNumber))
+          ? Math.max(...versions.map((v) => v.versionNumber))
           : 0,
     };
   },

@@ -1,6 +1,6 @@
-import type { Id } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Yearly Reviews - Annual Travel Summary Queries and Mutations
@@ -14,9 +14,10 @@ export const getByYear = query({
   },
   handler: async (ctx, args) => {
     const review = await ctx.db
-      .query('yearlyReviews')
-      .withIndex('by_user_year', q =>
-        q.eq('userId', args.userId).eq('year', args.year))
+      .query("yearlyReviews")
+      .withIndex("by_user_year", (q) =>
+        q.eq("userId", args.userId).eq("year", args.year),
+      )
       .first();
 
     return review;
@@ -30,9 +31,9 @@ export const listByUser = query({
   },
   handler: async (ctx, args) => {
     const reviews = await ctx.db
-      .query('yearlyReviews')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
-      .order('desc')
+      .query("yearlyReviews")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
       .collect();
 
     return reviews;
@@ -46,12 +47,12 @@ export const getAvailableYears = query({
   },
   handler: async (ctx, args) => {
     const itineraries = await ctx.db
-      .query('itineraries')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("itineraries")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     const years = new Set(
-      itineraries.map(it => new Date(it.startDate).getFullYear()),
+      itineraries.map((it) => new Date(it.startDate).getFullYear()),
     );
 
     return Array.from(years).sort((a, b) => b - a);
@@ -78,43 +79,44 @@ export const generate = mutation({
 
     // Check if review already exists
     const existingReview = await ctx.db
-      .query('yearlyReviews')
-      .withIndex('by_user_year', q =>
-        q.eq('userId', args.userId).eq('year', args.year))
+      .query("yearlyReviews")
+      .withIndex("by_user_year", (q) =>
+        q.eq("userId", args.userId).eq("year", args.year),
+      )
       .first();
 
     // Create placeholder if needed
-    const reviewId
-      = existingReview?._id
-        ?? (await ctx.db.insert('yearlyReviews', {
-          userId: args.userId,
-          year: args.year,
-          tripsCount: 0,
-          daysCount: 0,
-          citiesCount: 0,
-          countriesCount: 0,
-          poisCount: 0,
-          totalDistance: 0,
-          totalExpenses: 0,
-          expenseBreakdown: [],
-          averagePerTrip: 0,
-          averagePerDay: 0,
-          topCities: [],
-          monthlyActivity: [],
-          achievements: [],
-          status: 'generating',
-          createdAt: now,
-          updatedAt: now,
-        }));
+    const reviewId =
+      existingReview?._id ??
+      (await ctx.db.insert("yearlyReviews", {
+        userId: args.userId,
+        year: args.year,
+        tripsCount: 0,
+        daysCount: 0,
+        citiesCount: 0,
+        countriesCount: 0,
+        poisCount: 0,
+        totalDistance: 0,
+        totalExpenses: 0,
+        expenseBreakdown: [],
+        averagePerTrip: 0,
+        averagePerDay: 0,
+        topCities: [],
+        monthlyActivity: [],
+        achievements: [],
+        status: "generating",
+        createdAt: now,
+        updatedAt: now,
+      }));
 
     // Mark as generating
-    await ctx.db.patch(reviewId, { status: 'generating', updatedAt: now });
+    await ctx.db.patch(reviewId, { status: "generating", updatedAt: now });
 
     try {
       // Get itineraries for this year
       const allItineraries = await ctx.db
-        .query('itineraries')
-        .withIndex('by_user', q => q.eq('userId', args.userId))
+        .query("itineraries")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
         .collect();
 
       const itineraries = allItineraries.filter((it) => {
@@ -124,7 +126,7 @@ export const generate = mutation({
 
       if (itineraries.length === 0) {
         await ctx.db.patch(reviewId, {
-          status: 'ready',
+          status: "ready",
           generatedAt: now,
           updatedAt: now,
         });
@@ -133,18 +135,18 @@ export const generate = mutation({
 
       // Calculate basic stats
       const tripsCount = itineraries.length;
-      const itineraryDaysData = itineraries.map(it => ({
+      const itineraryDaysData = itineraries.map((it) => ({
         itinerary: it,
         days: calculateDays(it.startDate, it.endDate),
       }));
       const daysCount = itineraryDaysData.reduce((sum, d) => sum + d.days, 0);
 
       // Get unique cities and countries
-      const cityIds = [...new Set(itineraries.map(it => it.cityId))];
-      const cities = await Promise.all(cityIds.map(id => ctx.db.get(id)));
+      const cityIds = [...new Set(itineraries.map((it) => it.cityId))];
+      const cities = await Promise.all(cityIds.map((id) => ctx.db.get(id)));
       const citiesCount = cityIds.length;
       const countryCodes = new Set(
-        cities.filter(c => c).map(c => c!.countryCode),
+        cities.filter((c) => c).map((c) => c!.countryCode),
       );
       const countriesCount = countryCodes.size;
 
@@ -152,14 +154,14 @@ export const generate = mutation({
       let poisCount = 0;
       for (const it of itineraries) {
         const days = await ctx.db
-          .query('itineraryDays')
-          .withIndex('by_itinerary', q => q.eq('itineraryId', it._id))
+          .query("itineraryDays")
+          .withIndex("by_itinerary", (q) => q.eq("itineraryId", it._id))
           .collect();
 
         for (const day of days) {
           const items = await ctx.db
-            .query('itineraryItems')
-            .withIndex('by_day', q => q.eq('dayId', day._id))
+            .query("itineraryItems")
+            .withIndex("by_day", (q) => q.eq("dayId", day._id))
             .collect();
           poisCount += items.length;
         }
@@ -167,8 +169,8 @@ export const generate = mutation({
 
       // Get expenses for this year
       const allExpenses = await ctx.db
-        .query('expenses')
-        .withIndex('by_user', q => q.eq('userId', args.userId))
+        .query("expenses")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
         .collect();
 
       const yearExpenses = allExpenses.filter((e) => {
@@ -181,7 +183,7 @@ export const generate = mutation({
       // Calculate expense breakdown
       const expenseByCategory: Record<
         string,
-        { categoryId: Id<'expenseCategories'>; amount: number }
+        { categoryId: Id<"expenseCategories">; amount: number }
       > = {};
       for (const expense of yearExpenses) {
         const key = expense.categoryId;
@@ -199,7 +201,7 @@ export const generate = mutation({
           const category = await ctx.db.get(ec.categoryId);
           return {
             categoryId: ec.categoryId,
-            categoryName: category?.name ?? 'Unknown',
+            categoryName: category?.name ?? "Unknown",
             icon: category?.icon,
             amount: ec.amount,
             percentage:
@@ -210,13 +212,13 @@ export const generate = mutation({
 
       // Find most expensive trip
       let mostExpensiveTrip:
-        | { itineraryId: Id<'itineraries'>; title: string; amount: number }
+        | { itineraryId: Id<"itineraries">; title: string; amount: number }
         | undefined;
       let maxTripExpense = 0;
 
       for (const it of itineraries) {
         const tripExpenses = yearExpenses.filter(
-          e => e.itineraryId === it._id,
+          (e) => e.itineraryId === it._id,
         );
         const tripTotal = tripExpenses.reduce((sum, e) => sum + e.amount, 0);
         if (tripTotal > maxTripExpense) {
@@ -244,7 +246,7 @@ export const generate = mutation({
         ? {
             itineraryId: firstTrip._id,
             title: firstTrip.title,
-            cityName: firstCity?.name ?? 'Unknown',
+            cityName: firstCity?.name ?? "Unknown",
             startDate: firstTrip.startDate,
           }
         : undefined;
@@ -253,7 +255,7 @@ export const generate = mutation({
         ? {
             itineraryId: lastTrip._id,
             title: lastTrip.title,
-            cityName: lastCity?.name ?? 'Unknown',
+            cityName: lastCity?.name ?? "Unknown",
             startDate: lastTrip.startDate,
           }
         : undefined;
@@ -271,7 +273,7 @@ export const generate = mutation({
         ? {
             itineraryId: longestTripData.itinerary._id,
             title: longestTripData.itinerary.title,
-            cityName: longestTripCity?.name ?? 'Unknown',
+            cityName: longestTripCity?.name ?? "Unknown",
             days: longestTripData.days,
           }
         : undefined;
@@ -279,7 +281,7 @@ export const generate = mutation({
       // Calculate top cities
       const cityVisitCount: Record<
         string,
-        { cityId: Id<'cities'>; visitCount: number; totalDays: number }
+        { cityId: Id<"cities">; visitCount: number; totalDays: number }
       > = {};
       for (const { itinerary, days } of itineraryDaysData) {
         const key = itinerary.cityId;
@@ -302,7 +304,7 @@ export const generate = mutation({
             const city = await ctx.db.get(cv.cityId);
             return {
               cityId: cv.cityId,
-              cityName: city?.name ?? 'Unknown',
+              cityName: city?.name ?? "Unknown",
               visitCount: cv.visitCount,
               totalDays: cv.totalDays,
             };
@@ -348,50 +350,50 @@ export const generate = mutation({
 
       if (tripsCount >= 1) {
         achievements.push({
-          id: 'first_trip',
-          title: '开启旅途',
-          description: '完成了今年的第一次旅行',
-          icon: 'flag.fill',
+          id: "first_trip",
+          title: "开启旅途",
+          description: "完成了今年的第一次旅行",
+          icon: "flag.fill",
           earnedAt: now,
         });
       }
 
       if (tripsCount >= 5) {
         achievements.push({
-          id: 'frequent_traveler',
-          title: '旅行达人',
-          description: '今年完成了5次以上的旅行',
-          icon: 'star.fill',
+          id: "frequent_traveler",
+          title: "旅行达人",
+          description: "今年完成了5次以上的旅行",
+          icon: "star.fill",
           earnedAt: now,
         });
       }
 
       if (tripsCount >= 10) {
         achievements.push({
-          id: 'travel_master',
-          title: '旅行大师',
-          description: '今年完成了10次以上的旅行',
-          icon: 'crown.fill',
+          id: "travel_master",
+          title: "旅行大师",
+          description: "今年完成了10次以上的旅行",
+          icon: "crown.fill",
           earnedAt: now,
         });
       }
 
       if (citiesCount >= 5) {
         achievements.push({
-          id: 'city_explorer',
-          title: '城市探索者',
-          description: '今年探索了5个以上的城市',
-          icon: 'building.2.fill',
+          id: "city_explorer",
+          title: "城市探索者",
+          description: "今年探索了5个以上的城市",
+          icon: "building.2.fill",
           earnedAt: now,
         });
       }
 
       if (daysCount >= 30) {
         achievements.push({
-          id: 'month_on_road',
-          title: '在路上的一个月',
-          description: '今年旅行时间超过30天',
-          icon: 'calendar.badge.clock',
+          id: "month_on_road",
+          title: "在路上的一个月",
+          description: "今年旅行时间超过30天",
+          icon: "calendar.badge.clock",
           earnedAt: now,
         });
       }
@@ -399,24 +401,24 @@ export const generate = mutation({
       // Calculate year-over-year comparison
       let yearOverYear:
         | {
-          tripsChange: number;
-          expensesChange: number;
-          distanceChange: number;
-          citiesChange: number;
-        }
+            tripsChange: number;
+            expensesChange: number;
+            distanceChange: number;
+            citiesChange: number;
+          }
         | undefined;
 
       const previousYear = args.year - 1;
       const previousReview = await ctx.db
-        .query('yearlyReviews')
-        .withIndex('by_user_year', q =>
-          q.eq('userId', args.userId).eq('year', previousYear))
+        .query("yearlyReviews")
+        .withIndex("by_user_year", (q) =>
+          q.eq("userId", args.userId).eq("year", previousYear),
+        )
         .first();
 
-      if (previousReview && previousReview.status === 'ready') {
+      if (previousReview && previousReview.status === "ready") {
         const calcChange = (current: number, previous: number) => {
-          if (previous === 0)
-            return current > 0 ? 100 : 0;
+          if (previous === 0) return current > 0 ? 100 : 0;
           return ((current - previous) / previous) * 100;
         };
 
@@ -451,18 +453,17 @@ export const generate = mutation({
         monthlyActivity,
         achievements,
         yearOverYear,
-        status: 'ready',
+        status: "ready",
         generatedAt: now,
         updatedAt: now,
       });
 
       return reviewId;
-    }
-    catch (error) {
+    } catch (error) {
       // Mark as error
       await ctx.db.patch(reviewId, {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        status: "error",
+        error: error instanceof Error ? error.message : "Unknown error",
         updatedAt: now,
       });
       throw error;
@@ -476,20 +477,21 @@ export const addMemory = mutation({
     userId: v.string(),
     year: v.number(),
     text: v.string(),
-    itineraryId: v.optional(v.id('itineraries')),
+    itineraryId: v.optional(v.id("itineraries")),
     imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
 
     const review = await ctx.db
-      .query('yearlyReviews')
-      .withIndex('by_user_year', q =>
-        q.eq('userId', args.userId).eq('year', args.year))
+      .query("yearlyReviews")
+      .withIndex("by_user_year", (q) =>
+        q.eq("userId", args.userId).eq("year", args.year),
+      )
       .first();
 
     if (!review) {
-      throw new Error('Yearly review not found');
+      throw new Error("Yearly review not found");
     }
 
     const memories = review.memories ?? [];
@@ -517,17 +519,18 @@ export const remove = mutation({
   },
   handler: async (ctx, args) => {
     const review = await ctx.db
-      .query('yearlyReviews')
-      .withIndex('by_user_year', q =>
-        q.eq('userId', args.userId).eq('year', args.year))
+      .query("yearlyReviews")
+      .withIndex("by_user_year", (q) =>
+        q.eq("userId", args.userId).eq("year", args.year),
+      )
       .first();
 
     if (!review) {
-      throw new Error('Yearly review not found');
+      throw new Error("Yearly review not found");
     }
 
     if (review.userId !== args.userId) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
 
     await ctx.db.delete(review._id);

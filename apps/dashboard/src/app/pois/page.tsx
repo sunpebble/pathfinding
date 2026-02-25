@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
@@ -12,15 +12,15 @@ import {
   RefreshCw,
   Search,
   Star,
-} from 'lucide-react';
-import { useState } from 'react';
-import { getPOIs } from '@/lib/api';
-import { formatDateTime } from '@/lib/utils';
+} from "lucide-react";
+import { useState } from "react";
+import { getPOIs } from "@/lib/api";
+import { formatDateTime } from "@/lib/utils";
 
 export default function POIsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [category, setCategory] = useState('');
-  const [city, setCity] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [city, setCity] = useState("");
   const [page, setPage] = useState(0);
   const limit = 12;
 
@@ -29,7 +29,7 @@ export default function POIsPage() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ['pois', searchQuery, category, city, page],
+    queryKey: ["pois", searchQuery, category, city, page],
     queryFn: () =>
       getPOIs({
         query: searchQuery || undefined,
@@ -80,7 +80,7 @@ export default function POIsPage() {
             <input
               type="text"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search POIs..."
               className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
@@ -103,7 +103,7 @@ export default function POIsPage() {
           <input
             type="text"
             value={city}
-            onChange={e => setCity(e.target.value)}
+            onChange={(e) => setCity(e.target.value)}
             placeholder="City..."
             className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
@@ -118,49 +118,37 @@ export default function POIsPage() {
 
       {/* Results Count */}
       <div className="text-sm text-gray-500">
-        Showing
-        {' '}
-        {pois.length}
-        {' '}
-        of
-        {' '}
-        {total}
-        {' '}
-        POIs
+        Showing {pois.length} of {total} POIs
       </div>
 
       {/* POI Grid */}
-      {isLoading
-        ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-          )
-        : pois.length === 0
-          ? (
-              <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-                <MapPin className="mx-auto h-12 w-12 text-gray-300" />
-                <h3 className="mt-4 text-lg font-medium text-gray-900">
-                  No POIs found
-                </h3>
-                <p className="mt-2 text-gray-500">
-                  Try adjusting your search filters
-                </p>
-              </div>
-            )
-          : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {pois.map(poi => (
-                  <POICard key={poi.id} poi={poi} />
-                ))}
-              </div>
-            )}
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      ) : pois.length === 0 ? (
+        <div className="rounded-xl bg-white p-12 text-center shadow-sm">
+          <MapPin className="mx-auto h-12 w-12 text-gray-300" />
+          <h3 className="mt-4 text-lg font-medium text-gray-900">
+            No POIs found
+          </h3>
+          <p className="mt-2 text-gray-500">
+            Try adjusting your search filters
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {pois.map((poi) => (
+            <POICard key={poi.id} poi={poi} />
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4">
           <button
-            onClick={() => setPage(p => Math.max(0, p - 1))}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
             className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
@@ -168,16 +156,10 @@ export default function POIsPage() {
             Previous
           </button>
           <span className="text-sm text-gray-500">
-            Page
-            {' '}
-            {page + 1}
-            {' '}
-            of
-            {' '}
-            {totalPages}
+            Page {page + 1} of {totalPages}
           </span>
           <button
-            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
             className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
@@ -213,12 +195,12 @@ interface POICardProps {
 
 function POICard({ poi }: POICardProps) {
   const qualityPercentage = Math.round(poi.quality_score * 100);
-  const qualityColor
-    = qualityPercentage >= 70
-      ? 'text-emerald-600 bg-emerald-50'
+  const qualityColor =
+    qualityPercentage >= 70
+      ? "text-emerald-600 bg-emerald-50"
       : qualityPercentage >= 40
-        ? 'text-amber-600 bg-amber-50'
-        : 'text-red-600 bg-red-50';
+        ? "text-amber-600 bg-amber-50"
+        : "text-red-600 bg-red-50";
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
@@ -233,8 +215,7 @@ function POICard({ poi }: POICardProps) {
         <span
           className={`rounded-full px-2 py-0.5 text-xs font-medium ${qualityColor}`}
         >
-          {qualityPercentage}
-          %
+          {qualityPercentage}%
         </span>
       </div>
 
@@ -265,12 +246,7 @@ function POICard({ poi }: POICardProps) {
           <span className="font-medium text-gray-900">
             {poi.rating_overall.toFixed(1)}
           </span>
-          <span className="text-gray-500">
-            (
-            {poi.rating_count}
-            {' '}
-            reviews)
-          </span>
+          <span className="text-gray-500">({poi.rating_count} reviews)</span>
         </div>
       )}
 

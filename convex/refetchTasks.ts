@@ -1,5 +1,10 @@
-import { v } from 'convex/values';
-import { internalMutation, internalQuery, mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 
 /**
  * Content Refetch Tasks
@@ -7,10 +12,10 @@ import { internalMutation, internalQuery, mutation, query } from './_generated/s
  */
 
 const statusValidator = v.union(
-  v.literal('pending'),
-  v.literal('running'),
-  v.literal('completed'),
-  v.literal('failed'),
+  v.literal("pending"),
+  v.literal("running"),
+  v.literal("completed"),
+  v.literal("failed"),
 );
 
 // ============================================================
@@ -28,13 +33,13 @@ export const getPendingTasks = query({
 
     // Get pending tasks that are ready (no nextRetryAt or nextRetryAt <= now)
     const tasks = await ctx.db
-      .query('refetchTasks')
-      .withIndex('by_status', q => q.eq('status', 'pending'))
+      .query("refetchTasks")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
       .take(limit * 2);
 
     // Filter by nextRetryAt
     const readyTasks = tasks.filter(
-      t => !t.nextRetryAt || t.nextRetryAt <= now,
+      (t) => !t.nextRetryAt || t.nextRetryAt <= now,
     );
 
     return readyTasks.slice(0, limit);
@@ -43,11 +48,11 @@ export const getPendingTasks = query({
 
 // Get task by guide ID
 export const getByGuideId = query({
-  args: { guideId: v.id('travelGuides') },
+  args: { guideId: v.id("travelGuides") },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('refetchTasks')
-      .withIndex('by_guide', q => q.eq('guideId', args.guideId))
+      .query("refetchTasks")
+      .withIndex("by_guide", (q) => q.eq("guideId", args.guideId))
       .first();
   },
 });
@@ -63,16 +68,13 @@ export const list = query({
 
     if (args.status) {
       return await ctx.db
-        .query('refetchTasks')
-        .withIndex('by_status', q => q.eq('status', args.status!))
-        .order('desc')
+        .query("refetchTasks")
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .order("desc")
         .take(limit);
     }
 
-    return await ctx.db
-      .query('refetchTasks')
-      .order('desc')
-      .take(limit);
+    return await ctx.db.query("refetchTasks").order("desc").take(limit);
   },
 });
 
@@ -80,7 +82,7 @@ export const list = query({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    const allTasks = await ctx.db.query('refetchTasks').collect();
+    const allTasks = await ctx.db.query("refetchTasks").collect();
 
     const stats = {
       total: allTasks.length,
@@ -105,7 +107,7 @@ export const getStats = query({
 // Create a new refetch task
 export const create = mutation({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     sourceUrl: v.string(),
     sourceExternalId: v.string(),
     sourcePlatform: v.string(),
@@ -113,42 +115,41 @@ export const create = mutation({
   handler: async (ctx, args) => {
     // Check if task already exists for this guide
     const existing = await ctx.db
-      .query('refetchTasks')
-      .withIndex('by_guide', q => q.eq('guideId', args.guideId))
+      .query("refetchTasks")
+      .withIndex("by_guide", (q) => q.eq("guideId", args.guideId))
       .first();
 
     if (existing) {
       // If completed or failed, we can create a new one
-      if (existing.status === 'completed' || existing.status === 'failed') {
+      if (existing.status === "completed" || existing.status === "failed") {
         await ctx.db.delete(existing._id);
-      }
-      else {
+      } else {
         // Task already pending or running
-        return { id: existing._id, action: 'existing' as const };
+        return { id: existing._id, action: "existing" as const };
       }
     }
 
-    const id = await ctx.db.insert('refetchTasks', {
+    const id = await ctx.db.insert("refetchTasks", {
       guideId: args.guideId,
       sourceUrl: args.sourceUrl,
       sourceExternalId: args.sourceExternalId,
       sourcePlatform: args.sourcePlatform,
-      status: 'pending',
+      status: "pending",
       retryCount: 0,
       maxRetries: 3,
       createdAt: Date.now(),
     });
 
-    return { id, action: 'created' as const };
+    return { id, action: "created" as const };
   },
 });
 
 // Mark task as running
 export const markRunning = mutation({
-  args: { id: v.id('refetchTasks') },
+  args: { id: v.id("refetchTasks") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
-      status: 'running',
+      status: "running",
       startedAt: Date.now(),
     });
   },
@@ -156,10 +157,10 @@ export const markRunning = mutation({
 
 // Mark task as completed
 export const markCompleted = mutation({
-  args: { id: v.id('refetchTasks') },
+  args: { id: v.id("refetchTasks") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
-      status: 'completed',
+      status: "completed",
       completedAt: Date.now(),
       lastError: undefined,
     });
@@ -169,33 +170,34 @@ export const markCompleted = mutation({
 // Mark task as failed with retry logic
 export const markFailed = mutation({
   args: {
-    id: v.id('refetchTasks'),
+    id: v.id("refetchTasks"),
     error: v.string(),
   },
   handler: async (ctx, args) => {
     const task = await ctx.db.get(args.id);
-    if (!task)
-      return;
+    if (!task) return;
 
     const newRetryCount = task.retryCount + 1;
     const shouldRetry = newRetryCount < task.maxRetries;
 
     if (shouldRetry) {
       // Exponential backoff: 1min, 5min, 30min
-      const delayMs = Math.min(60000 * 5 ** (newRetryCount - 1), 30 * 60 * 1000);
+      const delayMs = Math.min(
+        60000 * 5 ** (newRetryCount - 1),
+        30 * 60 * 1000,
+      );
       const nextRetryAt = Date.now() + delayMs;
 
       await ctx.db.patch(args.id, {
-        status: 'pending',
+        status: "pending",
         retryCount: newRetryCount,
         lastError: args.error,
         nextRetryAt,
       });
-    }
-    else {
+    } else {
       // Max retries reached
       await ctx.db.patch(args.id, {
-        status: 'failed',
+        status: "failed",
         retryCount: newRetryCount,
         lastError: args.error,
         completedAt: Date.now(),
@@ -208,7 +210,7 @@ export const markFailed = mutation({
 
 // Delete a task
 export const remove = mutation({
-  args: { id: v.id('refetchTasks') },
+  args: { id: v.id("refetchTasks") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -223,8 +225,8 @@ export const cleanupCompleted = mutation({
     const cutoff = Date.now() - (args.olderThanDays || 7) * 24 * 60 * 60 * 1000;
 
     const tasks = await ctx.db
-      .query('refetchTasks')
-      .withIndex('by_status', q => q.eq('status', 'completed'))
+      .query("refetchTasks")
+      .withIndex("by_status", (q) => q.eq("status", "completed"))
       .collect();
 
     let deleted = 0;
@@ -251,12 +253,12 @@ export const getPendingTasksInternal = internalQuery({
     const now = Date.now();
 
     const tasks = await ctx.db
-      .query('refetchTasks')
-      .withIndex('by_status', q => q.eq('status', 'pending'))
+      .query("refetchTasks")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
       .take(limit * 2);
 
     return tasks
-      .filter(t => !t.nextRetryAt || t.nextRetryAt <= now)
+      .filter((t) => !t.nextRetryAt || t.nextRetryAt <= now)
       .slice(0, limit);
   },
 });
@@ -270,14 +272,16 @@ export const processRefetchQueue = internalMutation({
     // Get pending tasks ready for processing
     // Rate limit: process max 5 tasks per interval to avoid overwhelming platforms
     const tasks = await ctx.db
-      .query('refetchTasks')
-      .withIndex('by_status', q => q.eq('status', 'pending'))
+      .query("refetchTasks")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
       .take(5);
 
-    const readyTasks = tasks.filter(t => !t.nextRetryAt || t.nextRetryAt <= now);
+    const readyTasks = tasks.filter(
+      (t) => !t.nextRetryAt || t.nextRetryAt <= now,
+    );
 
     if (readyTasks.length === 0) {
-      return { processed: 0, message: 'No pending tasks' };
+      return { processed: 0, message: "No pending tasks" };
     }
 
     // Group tasks by platform for rate limiting
@@ -299,14 +303,14 @@ export const processRefetchQueue = internalMutation({
     // Mark tasks as running (actual crawling happens in external service)
     for (const task of tasksToProcess) {
       await ctx.db.patch(task._id, {
-        status: 'running',
+        status: "running",
         startedAt: Date.now(),
       });
     }
 
     return {
       processed: tasksToProcess.length,
-      taskIds: tasksToProcess.map(t => t._id),
+      taskIds: tasksToProcess.map((t) => t._id),
       platformDistribution: Object.fromEntries(
         Array.from(tasksByPlatform.entries()).map(([p, t]) => [p, t.length]),
       ),
@@ -322,8 +326,8 @@ export const cleanupCompletedInternal = internalMutation({
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days
 
     const tasks = await ctx.db
-      .query('refetchTasks')
-      .withIndex('by_status', q => q.eq('status', 'completed'))
+      .query("refetchTasks")
+      .withIndex("by_status", (q) => q.eq("status", "completed"))
       .collect();
 
     let deleted = 0;
@@ -357,7 +361,7 @@ const TRUNCATION_PATTERNS = [
 ];
 
 function isContentTruncated(content: string): boolean {
-  return TRUNCATION_PATTERNS.some(pattern => pattern.test(content));
+  return TRUNCATION_PATTERNS.some((pattern) => pattern.test(content));
 }
 
 function calculateCompletenessLevel(input: {
@@ -373,7 +377,7 @@ function calculateCompletenessLevel(input: {
   commentsCount?: number;
   viewsCount?: number;
   qualityScore?: number;
-}): 'complete' | 'usable' | 'incomplete' {
+}): "complete" | "usable" | "incomplete" {
   const {
     title,
     content,
@@ -389,35 +393,45 @@ function calculateCompletenessLevel(input: {
     qualityScore,
   } = input;
 
-  const isTruncated = contentTruncated || (content ? isContentTruncated(content) : false);
+  const isTruncated =
+    contentTruncated || (content ? isContentTruncated(content) : false);
   const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
   const hasTitle = !!(title && title.trim().length > 0);
   const hasAuthor = !!(authorName && authorName.trim().length > 0);
   const hasDestinations = !!(destinations && destinations.length > 0);
   const contentLength = content?.length ?? 0;
 
-  const hasAllCounts
-    = likesCount !== undefined && savesCount !== undefined
-      && commentsCount !== undefined && viewsCount !== undefined;
+  const hasAllCounts =
+    likesCount !== undefined &&
+    savesCount !== undefined &&
+    commentsCount !== undefined &&
+    viewsCount !== undefined;
   const hasQualityScore = qualityScore !== undefined;
 
-  if (hasTitle && hasImages && hasAuthor && hasDestinations
-    && hasAllCounts && hasQualityScore
-    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE && !isTruncated) {
-    return 'complete';
+  if (
+    hasTitle &&
+    hasImages &&
+    hasAuthor &&
+    hasDestinations &&
+    hasAllCounts &&
+    hasQualityScore &&
+    contentLength >= MIN_CONTENT_LENGTH_COMPLETE &&
+    !isTruncated
+  ) {
+    return "complete";
   }
 
   if (hasTitle && contentLength >= MIN_CONTENT_LENGTH && hasImages) {
-    return 'usable';
+    return "usable";
   }
 
-  return 'incomplete';
+  return "incomplete";
 }
 
 // Merge refetch result into original guide
 export const mergeRefetchResult = mutation({
   args: {
-    taskId: v.id('refetchTasks'),
+    taskId: v.id("refetchTasks"),
     content: v.string(),
     contentHtml: v.optional(v.string()),
     title: v.optional(v.string()),
@@ -433,11 +447,11 @@ export const mergeRefetchResult = mutation({
     if (!guide) {
       // Guide was deleted, mark task as completed
       await ctx.db.patch(args.taskId, {
-        status: 'completed',
+        status: "completed",
         completedAt: Date.now(),
-        lastError: 'Guide not found - may have been deleted',
+        lastError: "Guide not found - may have been deleted",
       });
-      return { success: false, reason: 'guide_deleted' };
+      return { success: false, reason: "guide_deleted" };
     }
 
     // Check if new content is still truncated
@@ -461,7 +475,7 @@ export const mergeRefetchResult = mutation({
     if (args.imageUrls && args.imageUrls.length > 0) {
       // Merge image URLs, avoiding duplicates
       const existingUrls = new Set(guide.imageUrls || []);
-      const newUrls = args.imageUrls.filter(url => !existingUrls.has(url));
+      const newUrls = args.imageUrls.filter((url) => !existingUrls.has(url));
       if (newUrls.length > 0) {
         updatedData.imageUrls = [...(guide.imageUrls || []), ...newUrls];
       }
@@ -476,7 +490,8 @@ export const mergeRefetchResult = mutation({
     const newCompletenessLevel = calculateCompletenessLevel({
       title: (updatedData.title as string) || guide.title,
       content: args.content,
-      coverImageUrl: (updatedData.coverImageUrl as string) || guide.coverImageUrl,
+      coverImageUrl:
+        (updatedData.coverImageUrl as string) || guide.coverImageUrl,
       imageUrls: (updatedData.imageUrls as string[]) || guide.imageUrls,
       authorName: guide.authorName,
       destinations: guide.destinations,
@@ -495,7 +510,7 @@ export const mergeRefetchResult = mutation({
 
     // Mark task as completed
     await ctx.db.patch(args.taskId, {
-      status: 'completed',
+      status: "completed",
       completedAt: Date.now(),
       lastError: undefined,
     });

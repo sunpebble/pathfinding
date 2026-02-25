@@ -3,9 +3,9 @@
  * Types for data pipeline monitoring and quality reporting
  */
 
-export type ReportType = 'daily' | 'weekly' | 'monthly' | 'on_demand';
-export type AnomalySeverity = 'low' | 'medium' | 'high';
-export type AnomalyType = 'spike' | 'drop' | 'error' | 'warning';
+export type ReportType = "daily" | "weekly" | "monthly" | "on_demand";
+export type AnomalySeverity = "low" | "medium" | "high";
+export type AnomalyType = "spike" | "drop" | "error" | "warning";
 
 export interface CompletenessMetrics {
   total_pois: number;

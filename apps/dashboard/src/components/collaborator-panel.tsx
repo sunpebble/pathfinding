@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { api } from '@pathfinding/convex-client';
-import { useMutation } from 'convex/react';
+import { api } from "@pathfinding/convex-client";
+import { useMutation } from "convex/react";
 import {
   Shield,
   Trash2,
@@ -9,16 +9,16 @@ import {
   UserMinus,
   UserPlus,
   Users,
-} from 'lucide-react';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { toConvexId } from '@/types/convex';
+} from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { toConvexId } from "@/types/convex";
 
 interface Collaborator {
   _id: string;
   userId: string;
-  role: 'owner' | 'editor' | 'viewer';
-  status: 'pending' | 'accepted' | 'rejected';
+  role: "owner" | "editor" | "viewer";
+  status: "pending" | "accepted" | "rejected";
 }
 
 interface CollaboratorPanelProps {
@@ -36,7 +36,7 @@ export function CollaboratorPanel({
 }: CollaboratorPanelProps) {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
 
   const removeCollaborator = useMutation(
     api.itineraryCollaborators.removeCollaborator,
@@ -44,9 +44,9 @@ export function CollaboratorPanel({
   const updateRole = useMutation(api.itineraryCollaborators.updateRole);
 
   const roleColors: Record<string, string> = {
-    owner: 'bg-purple-100 text-purple-800 border-purple-200',
-    editor: 'bg-blue-100 text-blue-800 border-blue-200',
-    viewer: 'bg-gray-100 text-gray-800 border-gray-200',
+    owner: "bg-purple-100 text-purple-800 border-purple-200",
+    editor: "bg-blue-100 text-blue-800 border-blue-200",
+    viewer: "bg-gray-100 text-gray-800 border-gray-200",
   };
 
   const roleIcons = {
@@ -56,39 +56,37 @@ export function CollaboratorPanel({
   };
 
   const statusLabels: Record<string, string> = {
-    pending: 'Pending',
-    accepted: 'Active',
-    rejected: 'Rejected',
+    pending: "Pending",
+    accepted: "Active",
+    rejected: "Rejected",
   };
 
   const statusColors: Record<string, string> = {
-    pending: 'text-amber-600',
-    accepted: 'text-emerald-600',
-    rejected: 'text-red-600',
+    pending: "text-amber-600",
+    accepted: "text-emerald-600",
+    rejected: "text-red-600",
   };
 
   const handleRemove = async (collaboratorId: string, userId: string) => {
     if (userId === currentUserId) {
-      setError('You cannot remove yourself');
+      setError("You cannot remove yourself");
       return;
     }
 
     setRemovingId(collaboratorId);
-    setError('');
+    setError("");
 
     try {
       await removeCollaborator({
-        itineraryId: toConvexId<'itineraries'>(itineraryId),
+        itineraryId: toConvexId<"itineraries">(itineraryId),
         userId,
         removedBy: currentUserId,
       });
-    }
-    catch (err) {
+    } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to remove collaborator',
+        err instanceof Error ? err.message : "Failed to remove collaborator",
       );
-    }
-    finally {
+    } finally {
       setRemovingId(null);
     }
   };
@@ -96,23 +94,21 @@ export function CollaboratorPanel({
   const handleRoleChange = async (
     collaboratorId: string,
     userId: string,
-    newRole: 'editor' | 'viewer',
+    newRole: "editor" | "viewer",
   ) => {
     setUpdatingRoleId(collaboratorId);
-    setError('');
+    setError("");
 
     try {
       await updateRole({
-        itineraryId: toConvexId<'itineraries'>(itineraryId),
+        itineraryId: toConvexId<"itineraries">(itineraryId),
         userId,
         newRole,
         updatedBy: currentUserId,
       });
-    }
-    catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update role');
-    }
-    finally {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update role");
+    } finally {
       setUpdatingRoleId(null);
     }
   };
@@ -141,9 +137,7 @@ export function CollaboratorPanel({
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
         <Users className="h-5 w-5 text-emerald-600" />
-        Collaborators (
-        {collaborators.length}
-        )
+        Collaborators ({collaborators.length})
       </h3>
 
       {error && (
@@ -156,10 +150,10 @@ export function CollaboratorPanel({
         {collaborators.map((collab) => {
           const RoleIcon = roleIcons[collab.role];
           const isCurrentUser = collab.userId === currentUserId;
-          const canRemove
-            = isOwner && collab.role !== 'owner' && !isCurrentUser;
-          const canChangeRole
-            = isOwner && collab.role !== 'owner' && !isCurrentUser;
+          const canRemove =
+            isOwner && collab.role !== "owner" && !isCurrentUser;
+          const canChangeRole =
+            isOwner && collab.role !== "owner" && !isCurrentUser;
           const isRemoving = removingId === collab._id;
           const isUpdating = updatingRoleId === collab._id;
 
@@ -188,7 +182,7 @@ export function CollaboratorPanel({
                   </div>
                   <p
                     className={cn(
-                      'text-xs font-medium',
+                      "text-xs font-medium",
                       statusColors[collab.status],
                     )}
                   >
@@ -198,39 +192,38 @@ export function CollaboratorPanel({
 
                 {/* Role Badge/Selector */}
                 <div className="flex items-center gap-2">
-                  {canChangeRole && collab.status === 'accepted'
-                    ? (
-                        <select
-                          value={collab.role}
-                          onChange={e =>
-                            handleRoleChange(
-                              collab._id,
-                              collab.userId,
-                              e.target.value as 'editor' | 'viewer',
-                            )}
-                          disabled={isUpdating}
-                          className={cn(
-                            'px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-colors',
-                            roleColors[collab.role],
-                            isUpdating && 'opacity-50 cursor-not-allowed',
-                          )}
-                        >
-                          <option value="editor">Editor</option>
-                          <option value="viewer">Viewer</option>
-                        </select>
-                      )
-                    : (
-                        <span
-                          className={cn(
-                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border',
-                            roleColors[collab.role],
-                          )}
-                        >
-                          <RoleIcon className="h-3.5 w-3.5" />
-                          {collab.role.charAt(0).toUpperCase()
-                            + collab.role.slice(1)}
-                        </span>
+                  {canChangeRole && collab.status === "accepted" ? (
+                    <select
+                      value={collab.role}
+                      onChange={(e) =>
+                        handleRoleChange(
+                          collab._id,
+                          collab.userId,
+                          e.target.value as "editor" | "viewer",
+                        )
+                      }
+                      disabled={isUpdating}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-colors",
+                        roleColors[collab.role],
+                        isUpdating && "opacity-50 cursor-not-allowed",
                       )}
+                    >
+                      <option value="editor">Editor</option>
+                      <option value="viewer">Viewer</option>
+                    </select>
+                  ) : (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border",
+                        roleColors[collab.role],
+                      )}
+                    >
+                      <RoleIcon className="h-3.5 w-3.5" />
+                      {collab.role.charAt(0).toUpperCase() +
+                        collab.role.slice(1)}
+                    </span>
+                  )}
                 </div>
 
                 {/* Remove Button */}
@@ -239,18 +232,16 @@ export function CollaboratorPanel({
                     onClick={() => handleRemove(collab._id, collab.userId)}
                     disabled={isRemoving}
                     className={cn(
-                      'p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors',
-                      isRemoving && 'opacity-50 cursor-not-allowed',
+                      "p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors",
+                      isRemoving && "opacity-50 cursor-not-allowed",
                     )}
                     title="Remove collaborator"
                   >
-                    {isRemoving
-                      ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                        )
-                      : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
+                    {isRemoving ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </button>
                 )}
               </div>
@@ -266,13 +257,9 @@ export function CollaboratorPanel({
             <Shield className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
             <span>
               As the owner, you can change roles and remove collaborators.
-              <strong className="block mt-1">Editor:</strong>
-              {' '}
-              Can add, edit, and
+              <strong className="block mt-1">Editor:</strong> Can add, edit, and
               remove POIs.
-              <strong className="block mt-1">Viewer:</strong>
-              {' '}
-              Can only view the
+              <strong className="block mt-1">Viewer:</strong> Can only view the
               itinerary.
             </span>
           </p>

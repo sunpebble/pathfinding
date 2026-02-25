@@ -1,7 +1,7 @@
-import type { Id } from './_generated/dataModel';
-import type { MutationCtx, QueryCtx } from './_generated/server';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Itinerary Comments - Queries and Mutations
@@ -9,11 +9,11 @@ import { mutation, query } from './_generated/server';
  */
 
 const reportReasonValidator = v.union(
-  v.literal('spam'),
-  v.literal('harassment'),
-  v.literal('inappropriate'),
-  v.literal('misinformation'),
-  v.literal('other'),
+  v.literal("spam"),
+  v.literal("harassment"),
+  v.literal("inappropriate"),
+  v.literal("misinformation"),
+  v.literal("other"),
 );
 
 /**
@@ -21,22 +21,22 @@ const reportReasonValidator = v.union(
  */
 async function checkItineraryAccess(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>,
+  itineraryId: Id<"itineraries">,
   userId?: string,
 ): Promise<boolean> {
   const itinerary = await ctx.db.get(itineraryId);
   if (!itinerary) {
-    throw new Error('Itinerary not found');
+    throw new Error("Itinerary not found");
   }
 
   // Public itineraries are accessible to everyone
-  if (itinerary.visibility === 'public') {
+  if (itinerary.visibility === "public") {
     return true;
   }
 
   // Private/team itineraries require ownership or collaboration
   if (!userId) {
-    throw new Error('Authentication required');
+    throw new Error("Authentication required");
   }
 
   if (itinerary.userId === userId) {
@@ -45,13 +45,14 @@ async function checkItineraryAccess(
 
   // Check collaborator access
   const collab = await ctx.db
-    .query('itineraryCollaborators')
-    .withIndex('by_itinerary_user', q =>
-      q.eq('itineraryId', itineraryId).eq('userId', userId))
+    .query("itineraryCollaborators")
+    .withIndex("by_itinerary_user", (q) =>
+      q.eq("itineraryId", itineraryId).eq("userId", userId),
+    )
     .first();
 
   if (!collab) {
-    throw new Error('You do not have access to this itinerary');
+    throw new Error("You do not have access to this itinerary");
   }
 
   return true;
@@ -62,8 +63,8 @@ async function checkItineraryAccess(
  */
 async function getUserProfile(ctx: QueryCtx | MutationCtx, userId: string) {
   const profile = await ctx.db
-    .query('profiles')
-    .withIndex('by_email', q => q.eq('email', userId))
+    .query("profiles")
+    .withIndex("by_email", (q) => q.eq("email", userId))
     .first();
 
   return profile;
@@ -76,8 +77,8 @@ async function createNotification(
   ctx: MutationCtx,
   params: {
     userId: string;
-    type: 'comment' | 'reply' | 'like' | 'mention';
-    referenceType: 'itinerary' | 'comment';
+    type: "comment" | "reply" | "like" | "mention";
+    referenceType: "itinerary" | "comment";
     referenceId: string;
     actorId: string;
     message: string;
@@ -88,7 +89,7 @@ async function createNotification(
     return;
   }
 
-  await ctx.db.insert('notifications', {
+  await ctx.db.insert("notifications", {
     userId: params.userId,
     type: params.type,
     referenceType: params.referenceType,
@@ -110,7 +111,7 @@ async function createNotification(
  */
 export const listByItinerary = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
     userId: v.optional(v.string()), // For checking if user liked comments
@@ -122,13 +123,13 @@ export const listByItinerary = query({
 
     // Get top-level comments (no parentId)
     const allComments = await ctx.db
-      .query('itineraryComments')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
-      .order('desc')
+      .query("itineraryComments")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
+      .order("desc")
       .collect();
 
     // Filter to top-level comments only
-    const topLevelComments = allComments.filter(c => !c.parentId);
+    const topLevelComments = allComments.filter((c) => !c.parentId);
     const total = topLevelComments.length;
     const paginatedComments = topLevelComments.slice(offset, offset + pageSize);
 
@@ -141,9 +142,10 @@ export const listByItinerary = query({
         let isLikedByUser = false;
         if (args.userId) {
           const like = await ctx.db
-            .query('commentLikes')
-            .withIndex('by_comment_user', q =>
-              q.eq('commentId', comment._id).eq('userId', args.userId!))
+            .query("commentLikes")
+            .withIndex("by_comment_user", (q) =>
+              q.eq("commentId", comment._id).eq("userId", args.userId!),
+            )
             .first();
           isLikedByUser = !!like;
         }
@@ -151,7 +153,7 @@ export const listByItinerary = query({
         return {
           ...comment,
           id: comment._id,
-          authorName: profile?.displayName ?? 'Anonymous',
+          authorName: profile?.displayName ?? "Anonymous",
           authorAvatar: profile?.avatarUrl,
           isLikedByUser,
         };
@@ -167,14 +169,14 @@ export const listByItinerary = query({
  */
 export const getReplies = query({
   args: {
-    commentId: v.id('itineraryComments'),
+    commentId: v.id("itineraryComments"),
     userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const replies = await ctx.db
-      .query('itineraryComments')
-      .withIndex('by_parent', q => q.eq('parentId', args.commentId))
-      .order('asc')
+      .query("itineraryComments")
+      .withIndex("by_parent", (q) => q.eq("parentId", args.commentId))
+      .order("asc")
       .collect();
 
     const enriched = await Promise.all(
@@ -184,9 +186,10 @@ export const getReplies = query({
         let isLikedByUser = false;
         if (args.userId) {
           const like = await ctx.db
-            .query('commentLikes')
-            .withIndex('by_comment_user', q =>
-              q.eq('commentId', reply._id).eq('userId', args.userId!))
+            .query("commentLikes")
+            .withIndex("by_comment_user", (q) =>
+              q.eq("commentId", reply._id).eq("userId", args.userId!),
+            )
             .first();
           isLikedByUser = !!like;
         }
@@ -194,7 +197,7 @@ export const getReplies = query({
         return {
           ...reply,
           id: reply._id,
-          authorName: profile?.displayName ?? 'Anonymous',
+          authorName: profile?.displayName ?? "Anonymous",
           authorAvatar: profile?.avatarUrl,
           isLikedByUser,
         };
@@ -209,18 +212,17 @@ export const getReplies = query({
  * Get a single comment by ID
  */
 export const getById = query({
-  args: { id: v.id('itineraryComments') },
+  args: { id: v.id("itineraryComments") },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.id);
-    if (!comment)
-      return null;
+    if (!comment) return null;
 
     const profile = await getUserProfile(ctx, comment.userId);
 
     return {
       ...comment,
       id: comment._id,
-      authorName: profile?.displayName ?? 'Anonymous',
+      authorName: profile?.displayName ?? "Anonymous",
       authorAvatar: profile?.avatarUrl,
     };
   },
@@ -230,15 +232,15 @@ export const getById = query({
  * Get comment count for an itinerary
  */
 export const getCommentCount = query({
-  args: { itineraryId: v.id('itineraries') },
+  args: { itineraryId: v.id("itineraries") },
   handler: async (ctx, args) => {
     const comments = await ctx.db
-      .query('itineraryComments')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("itineraryComments")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     // Count only non-deleted comments
-    return comments.filter(c => !c.isDeleted).length;
+    return comments.filter((c) => !c.isDeleted).length;
   },
 });
 
@@ -251,20 +253,20 @@ export const getCommentCount = query({
  */
 export const create = mutation({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     content: v.string(),
-    parentId: v.optional(v.id('itineraryComments')),
+    parentId: v.optional(v.id("itineraryComments")),
   },
   handler: async (ctx, args) => {
     // Validate content
     if (!args.content.trim()) {
-      throw new Error('Comment content cannot be empty');
+      throw new Error("Comment content cannot be empty");
     }
 
     if (args.content.length > 2000) {
       throw new Error(
-        'Comment content exceeds maximum length of 2000 characters',
+        "Comment content exceeds maximum length of 2000 characters",
       );
     }
 
@@ -276,15 +278,15 @@ export const create = mutation({
     if (args.parentId) {
       parentComment = await ctx.db.get(args.parentId);
       if (!parentComment) {
-        throw new Error('Parent comment not found');
+        throw new Error("Parent comment not found");
       }
       if (parentComment.itineraryId !== args.itineraryId) {
-        throw new Error('Parent comment does not belong to this itinerary');
+        throw new Error("Parent comment does not belong to this itinerary");
       }
     }
 
     // Create the comment
-    const commentId = await ctx.db.insert('itineraryComments', {
+    const commentId = await ctx.db.insert("itineraryComments", {
       itineraryId: args.itineraryId,
       userId: args.userId,
       parentId: args.parentId,
@@ -307,25 +309,24 @@ export const create = mutation({
       const profile = await getUserProfile(ctx, args.userId);
       await createNotification(ctx, {
         userId: parentComment.userId,
-        type: 'reply',
-        referenceType: 'comment',
+        type: "reply",
+        referenceType: "comment",
         referenceId: args.parentId,
         actorId: args.userId,
-        message: `${profile?.displayName ?? 'Someone'} replied to your comment`,
+        message: `${profile?.displayName ?? "Someone"} replied to your comment`,
       });
-    }
-    else {
+    } else {
       // Notify itinerary owner about new comment
       const itinerary = await ctx.db.get(args.itineraryId);
       if (itinerary) {
         const profile = await getUserProfile(ctx, args.userId);
         await createNotification(ctx, {
           userId: itinerary.userId,
-          type: 'comment',
-          referenceType: 'itinerary',
+          type: "comment",
+          referenceType: "itinerary",
           referenceId: args.itineraryId,
           actorId: args.userId,
-          message: `${profile?.displayName ?? 'Someone'} commented on your itinerary`,
+          message: `${profile?.displayName ?? "Someone"} commented on your itinerary`,
         });
       }
     }
@@ -339,31 +340,31 @@ export const create = mutation({
  */
 export const update = mutation({
   args: {
-    id: v.id('itineraryComments'),
+    id: v.id("itineraryComments"),
     userId: v.string(),
     content: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.id);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     if (comment.userId !== args.userId) {
-      throw new Error('You can only edit your own comments');
+      throw new Error("You can only edit your own comments");
     }
 
     if (comment.isDeleted) {
-      throw new Error('Cannot edit a deleted comment');
+      throw new Error("Cannot edit a deleted comment");
     }
 
     if (!args.content.trim()) {
-      throw new Error('Comment content cannot be empty');
+      throw new Error("Comment content cannot be empty");
     }
 
     if (args.content.length > 2000) {
       throw new Error(
-        'Comment content exceeds maximum length of 2000 characters',
+        "Comment content exceeds maximum length of 2000 characters",
       );
     }
 
@@ -382,23 +383,23 @@ export const update = mutation({
  */
 export const remove = mutation({
   args: {
-    id: v.id('itineraryComments'),
+    id: v.id("itineraryComments"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.id);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     if (comment.userId !== args.userId) {
-      throw new Error('You can only delete your own comments');
+      throw new Error("You can only delete your own comments");
     }
 
     // Soft delete - keep the record for reply chain integrity
     await ctx.db.patch(args.id, {
       isDeleted: true,
-      content: '[This comment has been deleted]',
+      content: "[This comment has been deleted]",
       updatedAt: Date.now(),
     });
 
@@ -419,20 +420,21 @@ export const remove = mutation({
  */
 export const toggleLike = mutation({
   args: {
-    commentId: v.id('itineraryComments'),
+    commentId: v.id("itineraryComments"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     // Check if already liked
     const existingLike = await ctx.db
-      .query('commentLikes')
-      .withIndex('by_comment_user', q =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId))
+      .query("commentLikes")
+      .withIndex("by_comment_user", (q) =>
+        q.eq("commentId", args.commentId).eq("userId", args.userId),
+      )
       .first();
 
     if (existingLike) {
@@ -442,10 +444,9 @@ export const toggleLike = mutation({
         likesCount: Math.max(0, comment.likesCount - 1),
       });
       return { liked: false, likesCount: Math.max(0, comment.likesCount - 1) };
-    }
-    else {
+    } else {
       // Like
-      await ctx.db.insert('commentLikes', {
+      await ctx.db.insert("commentLikes", {
         commentId: args.commentId,
         userId: args.userId,
         createdAt: Date.now(),
@@ -458,11 +459,11 @@ export const toggleLike = mutation({
       const profile = await getUserProfile(ctx, args.userId);
       await createNotification(ctx, {
         userId: comment.userId,
-        type: 'like',
-        referenceType: 'comment',
+        type: "like",
+        referenceType: "comment",
         referenceId: args.commentId,
         actorId: args.userId,
-        message: `${profile?.displayName ?? 'Someone'} liked your comment`,
+        message: `${profile?.displayName ?? "Someone"} liked your comment`,
       });
 
       return { liked: true, likesCount: comment.likesCount + 1 };
@@ -475,7 +476,7 @@ export const toggleLike = mutation({
  */
 export const report = mutation({
   args: {
-    commentId: v.id('itineraryComments'),
+    commentId: v.id("itineraryComments"),
     userId: v.string(),
     reason: reportReasonValidator,
     description: v.optional(v.string()),
@@ -483,27 +484,28 @@ export const report = mutation({
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     // Check if user already reported this comment
     const existingReport = await ctx.db
-      .query('commentReports')
-      .withIndex('by_comment_user', q =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId))
+      .query("commentReports")
+      .withIndex("by_comment_user", (q) =>
+        q.eq("commentId", args.commentId).eq("userId", args.userId),
+      )
       .first();
 
     if (existingReport) {
-      throw new Error('You have already reported this comment');
+      throw new Error("You have already reported this comment");
     }
 
     // Create report
-    await ctx.db.insert('commentReports', {
+    await ctx.db.insert("commentReports", {
       commentId: args.commentId,
       userId: args.userId,
       reason: args.reason,
       description: args.description,
-      status: 'pending',
+      status: "pending",
       createdAt: Date.now(),
     });
 
@@ -538,17 +540,17 @@ export const listNotifications = query({
     let notifications;
     if (args.unreadOnly) {
       notifications = await ctx.db
-        .query('notifications')
-        .withIndex('by_user_read', q =>
-          q.eq('userId', args.userId).eq('isRead', false))
-        .order('desc')
+        .query("notifications")
+        .withIndex("by_user_read", (q) =>
+          q.eq("userId", args.userId).eq("isRead", false),
+        )
+        .order("desc")
         .collect();
-    }
-    else {
+    } else {
       notifications = await ctx.db
-        .query('notifications')
-        .withIndex('by_user', q => q.eq('userId', args.userId))
-        .order('desc')
+        .query("notifications")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .order("desc")
         .collect();
     }
 
@@ -564,7 +566,7 @@ export const listNotifications = query({
         return {
           ...notification,
           id: notification._id,
-          actorName: actorProfile?.displayName ?? 'Someone',
+          actorName: actorProfile?.displayName ?? "Someone",
           actorAvatar: actorProfile?.avatarUrl,
         };
       }),
@@ -581,9 +583,10 @@ export const getUnreadCount = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const notifications = await ctx.db
-      .query('notifications')
-      .withIndex('by_user_read', q =>
-        q.eq('userId', args.userId).eq('isRead', false))
+      .query("notifications")
+      .withIndex("by_user_read", (q) =>
+        q.eq("userId", args.userId).eq("isRead", false),
+      )
       .collect();
 
     return notifications.length;
@@ -595,17 +598,17 @@ export const getUnreadCount = query({
  */
 export const markNotificationRead = mutation({
   args: {
-    id: v.id('notifications'),
+    id: v.id("notifications"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const notification = await ctx.db.get(args.id);
     if (!notification) {
-      throw new Error('Notification not found');
+      throw new Error("Notification not found");
     }
 
     if (notification.userId !== args.userId) {
-      throw new Error('You can only mark your own notifications as read');
+      throw new Error("You can only mark your own notifications as read");
     }
 
     await ctx.db.patch(args.id, {
@@ -622,9 +625,10 @@ export const markAllNotificationsRead = mutation({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const notifications = await ctx.db
-      .query('notifications')
-      .withIndex('by_user_read', q =>
-        q.eq('userId', args.userId).eq('isRead', false))
+      .query("notifications")
+      .withIndex("by_user_read", (q) =>
+        q.eq("userId", args.userId).eq("isRead", false),
+      )
       .collect();
 
     const now = Date.now();

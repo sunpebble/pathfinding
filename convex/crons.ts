@@ -1,5 +1,5 @@
-import { cronJobs } from 'convex/server';
-import { internal } from './_generated/api';
+import { cronJobs } from "convex/server";
+import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
@@ -7,7 +7,7 @@ const crons = cronJobs();
  * 每分钟检查并发送待处理的提醒
  */
 crons.interval(
-  'send-pending-reminders',
+  "send-pending-reminders",
   { minutes: 1 },
   internal.notifications.sendPendingReminders,
 );
@@ -16,7 +16,7 @@ crons.interval(
  * 每小时清理过期的 OTP 验证码
  */
 crons.interval(
-  'cleanup-expired-otps',
+  "cleanup-expired-otps",
   { hours: 1 },
   internal.phoneAuth.cleanupExpiredOtps,
 );
@@ -25,7 +25,7 @@ crons.interval(
  * 每天清理过期的速率限制记录
  */
 crons.interval(
-  'cleanup-expired-rate-limits',
+  "cleanup-expired-rate-limits",
   { hours: 24 },
   internal.phoneAuth.cleanupExpiredRateLimits,
 );
@@ -35,7 +35,7 @@ crons.interval(
  * Clean up read notifications older than 30 days
  */
 crons.interval(
-  'cleanup-old-notifications',
+  "cleanup-old-notifications",
   { hours: 6 },
   internal.notifications.cleanupOldNotifications,
 );
@@ -45,7 +45,7 @@ crons.interval(
  * Clean up old data quality reports
  */
 crons.daily(
-  'cleanup-old-quality-reports',
+  "cleanup-old-quality-reports",
   { hourUTC: 19, minuteUTC: 0 }, // 3:00 AM UTC+8
   internal.dataQualityReports.cleanupOld,
 );
@@ -55,7 +55,7 @@ crons.daily(
  * Process content refetch queue for truncated guides
  */
 crons.interval(
-  'process-refetch-queue',
+  "process-refetch-queue",
   { minutes: 5 },
   internal.refetchTasks.processRefetchQueue,
 );
@@ -65,7 +65,7 @@ crons.interval(
  * Clean up completed refetch tasks
  */
 crons.daily(
-  'cleanup-completed-refetch-tasks',
+  "cleanup-completed-refetch-tasks",
   { hourUTC: 20, minuteUTC: 0 }, // 4:00 AM UTC+8
   internal.refetchTasks.cleanupCompletedInternal,
 );

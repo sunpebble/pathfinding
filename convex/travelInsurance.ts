@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Travel Insurance - User's travel insurance information management
@@ -12,16 +12,14 @@ export const listByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const policies = await ctx.db
-      .query('travelInsurance')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("travelInsurance")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     // Sort by active first, then by end date (newest first)
     policies.sort((a, b) => {
-      if (a.isActive && !b.isActive)
-        return -1;
-      if (!a.isActive && b.isActive)
-        return 1;
+      if (a.isActive && !b.isActive) return -1;
+      if (!a.isActive && b.isActive) return 1;
       return b.endDate.localeCompare(a.endDate);
     });
 
@@ -31,7 +29,7 @@ export const listByUser = query({
 
 // Get a single insurance policy by ID
 export const getById = query({
-  args: { id: v.id('travelInsurance') },
+  args: { id: v.id("travelInsurance") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -42,9 +40,10 @@ export const getActive = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const policies = await ctx.db
-      .query('travelInsurance')
-      .withIndex('by_user_active', q =>
-        q.eq('userId', args.userId).eq('isActive', true))
+      .query("travelInsurance")
+      .withIndex("by_user_active", (q) =>
+        q.eq("userId", args.userId).eq("isActive", true),
+      )
       .collect();
 
     return policies;
@@ -55,17 +54,18 @@ export const getActive = query({
 export const getCurrentValid = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
     const policies = await ctx.db
-      .query('travelInsurance')
-      .withIndex('by_user_active', q =>
-        q.eq('userId', args.userId).eq('isActive', true))
+      .query("travelInsurance")
+      .withIndex("by_user_active", (q) =>
+        q.eq("userId", args.userId).eq("isActive", true),
+      )
       .collect();
 
     // Filter for policies that are currently valid
     const validPolicies = policies.filter(
-      p => p.startDate <= today && p.endDate >= today,
+      (p) => p.startDate <= today && p.endDate >= today,
     );
 
     return validPolicies;
@@ -98,7 +98,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    return await ctx.db.insert('travelInsurance', {
+    return await ctx.db.insert("travelInsurance", {
       ...args,
       createdAt: now,
       updatedAt: now,
@@ -109,7 +109,7 @@ export const create = mutation({
 // Update an insurance policy
 export const update = mutation({
   args: {
-    id: v.id('travelInsurance'),
+    id: v.id("travelInsurance"),
     providerName: v.optional(v.string()),
     policyNumber: v.optional(v.string()),
     startDate: v.optional(v.string()),
@@ -134,7 +134,7 @@ export const update = mutation({
 
     const existing = await ctx.db.get(id);
     if (!existing) {
-      throw new Error('Insurance policy not found');
+      throw new Error("Insurance policy not found");
     }
 
     const filteredUpdates = Object.fromEntries(
@@ -148,7 +148,7 @@ export const update = mutation({
 
 // Delete an insurance policy
 export const remove = mutation({
-  args: { id: v.id('travelInsurance') },
+  args: { id: v.id("travelInsurance") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -156,11 +156,11 @@ export const remove = mutation({
 
 // Toggle insurance active status
 export const toggleActive = mutation({
-  args: { id: v.id('travelInsurance') },
+  args: { id: v.id("travelInsurance") },
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
     if (!existing) {
-      throw new Error('Insurance policy not found');
+      throw new Error("Insurance policy not found");
     }
 
     await ctx.db.patch(args.id, {

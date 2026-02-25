@@ -1,6 +1,6 @@
-import type { ItineraryVisibility } from './itinerary';
-import type { Poi } from './poi';
-import type { TransportMode } from './transport';
+import type { ItineraryVisibility } from "./itinerary";
+import type { Poi } from "./poi";
+import type { TransportMode } from "./transport";
 
 /**
  * Snapshot of an itinerary item at a specific version
@@ -15,7 +15,7 @@ export interface VersionSnapshotItem {
   // Enriched POI data (populated when fetching)
   poi?: Pick<
     Poi,
-    'id' | 'name' | 'category' | 'address' | 'latitude' | 'longitude'
+    "id" | "name" | "category" | "address" | "latitude" | "longitude"
   >;
 }
 
@@ -89,7 +89,7 @@ export interface ItineraryVersionListItem {
 /**
  * Day diff status in version comparison
  */
-export type DayDiffStatus = 'added' | 'removed' | 'modified' | 'unchanged';
+export type DayDiffStatus = "added" | "removed" | "modified" | "unchanged";
 
 /**
  * Day diff entry for version comparison

@@ -1,7 +1,7 @@
 /**
  * Blog post visibility enum
  */
-export type BlogPostVisibility = 'draft' | 'private' | 'public';
+export type BlogPostVisibility = "draft" | "private" | "public";
 
 /**
  * BlogLocation entity - location marker for a blog post

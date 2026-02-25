@@ -1,6 +1,6 @@
-import type { Id } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Guide Comments - Comments on Travel Guides (travelGuides table)
@@ -20,17 +20,17 @@ export const create = mutation({
   handler: async (ctx, args) => {
     // Validate content
     if (!args.content.trim()) {
-      throw new Error('Comment content cannot be empty');
+      throw new Error("Comment content cannot be empty");
     }
 
     if (args.content.length > 2000) {
       throw new Error(
-        'Comment content exceeds maximum length of 2000 characters',
+        "Comment content exceeds maximum length of 2000 characters",
       );
     }
 
     // Create the comment
-    const commentId = await ctx.db.insert('guideComments', {
+    const commentId = await ctx.db.insert("guideComments", {
       guideId: args.guideId,
       userId: args.userId,
       parentId: args.parentId,
@@ -47,7 +47,7 @@ export const create = mutation({
       try {
         // parentId is stored as string, need to convert to Id for db.get
         const parentComment = await ctx.db.get(
-          args.parentId as Id<'guideComments'>,
+          args.parentId as Id<"guideComments">,
         );
 
         if (parentComment) {
@@ -55,11 +55,10 @@ export const create = mutation({
             repliesCount: parentComment.repliesCount + 1,
           });
         }
-      }
-      catch (error) {
+      } catch (error) {
         // Parent comment might not exist or ID format might be invalid
         // Continue without updating parent reply count
-        console.warn('Failed to update parent reply count:', error);
+        console.warn("Failed to update parent reply count:", error);
       }
     }
 
@@ -85,14 +84,14 @@ export const listByGuide = query({
 
     // Get all comments for this guide
     const allComments = await ctx.db
-      .query('guideComments')
-      .withIndex('by_guide', q => q.eq('guideId', args.guideId))
-      .order('desc')
+      .query("guideComments")
+      .withIndex("by_guide", (q) => q.eq("guideId", args.guideId))
+      .order("desc")
       .collect();
 
     // Filter to top-level comments only
     const topLevelComments = allComments.filter(
-      c => !c.parentId && !c.isDeleted,
+      (c) => !c.parentId && !c.isDeleted,
     );
     const total = topLevelComments.length;
     const paginatedComments = topLevelComments.slice(offset, offset + pageSize);
@@ -102,17 +101,18 @@ export const listByGuide = query({
       paginatedComments.map(async (comment) => {
         // Try to get user profile
         const profile = await ctx.db
-          .query('profiles')
-          .withIndex('by_email', q => q.eq('email', comment.userId))
+          .query("profiles")
+          .withIndex("by_email", (q) => q.eq("email", comment.userId))
           .first();
 
         // Check if current user liked this comment
         let isLikedByUser = false;
         if (args.userId) {
           const like = await ctx.db
-            .query('guideCommentLikes')
-            .withIndex('by_comment_user', q =>
-              q.eq('commentId', comment._id).eq('userId', args.userId!))
+            .query("guideCommentLikes")
+            .withIndex("by_comment_user", (q) =>
+              q.eq("commentId", comment._id).eq("userId", args.userId!),
+            )
             .first();
           isLikedByUser = !!like;
         }
@@ -129,7 +129,7 @@ export const listByGuide = query({
           is_deleted: comment.isDeleted,
           created_at: comment.createdAt,
           updated_at: comment.updatedAt,
-          author_name: profile?.displayName ?? 'User',
+          author_name: profile?.displayName ?? "User",
           author_avatar: profile?.avatarUrl,
           is_liked_by_user: isLikedByUser,
         };
@@ -156,24 +156,25 @@ export const getReplies = query({
   },
   handler: async (ctx, args) => {
     const replies = await ctx.db
-      .query('guideComments')
-      .withIndex('by_parent', q => q.eq('parentId', args.commentId))
-      .order('asc')
+      .query("guideComments")
+      .withIndex("by_parent", (q) => q.eq("parentId", args.commentId))
+      .order("asc")
       .collect();
 
     const enriched = await Promise.all(
       replies.map(async (reply) => {
         const profile = await ctx.db
-          .query('profiles')
-          .withIndex('by_email', q => q.eq('email', reply.userId))
+          .query("profiles")
+          .withIndex("by_email", (q) => q.eq("email", reply.userId))
           .first();
 
         let isLikedByUser = false;
         if (args.userId) {
           const like = await ctx.db
-            .query('guideCommentLikes')
-            .withIndex('by_comment_user', q =>
-              q.eq('commentId', reply._id).eq('userId', args.userId!))
+            .query("guideCommentLikes")
+            .withIndex("by_comment_user", (q) =>
+              q.eq("commentId", reply._id).eq("userId", args.userId!),
+            )
             .first();
           isLikedByUser = !!like;
         }
@@ -190,7 +191,7 @@ export const getReplies = query({
           is_deleted: reply.isDeleted,
           created_at: reply.createdAt,
           updated_at: reply.updatedAt,
-          author_name: profile?.displayName ?? 'User',
+          author_name: profile?.displayName ?? "User",
           author_avatar: profile?.avatarUrl,
           is_liked_by_user: isLikedByUser,
         };
@@ -206,20 +207,21 @@ export const getReplies = query({
  */
 export const toggleLike = mutation({
   args: {
-    commentId: v.id('guideComments'),
+    commentId: v.id("guideComments"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     // Check if already liked
     const existingLike = await ctx.db
-      .query('guideCommentLikes')
-      .withIndex('by_comment_user', q =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId))
+      .query("guideCommentLikes")
+      .withIndex("by_comment_user", (q) =>
+        q.eq("commentId", args.commentId).eq("userId", args.userId),
+      )
       .first();
 
     if (existingLike) {
@@ -229,10 +231,9 @@ export const toggleLike = mutation({
         likesCount: Math.max(0, comment.likesCount - 1),
       });
       return { liked: false, likesCount: Math.max(0, comment.likesCount - 1) };
-    }
-    else {
+    } else {
       // Like
-      await ctx.db.insert('guideCommentLikes', {
+      await ctx.db.insert("guideCommentLikes", {
         commentId: args.commentId,
         userId: args.userId,
         createdAt: Date.now(),
@@ -250,31 +251,31 @@ export const toggleLike = mutation({
  */
 export const update = mutation({
   args: {
-    id: v.id('guideComments'),
+    id: v.id("guideComments"),
     userId: v.string(),
     content: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.id);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     if (comment.userId !== args.userId) {
-      throw new Error('You can only edit your own comments');
+      throw new Error("You can only edit your own comments");
     }
 
     if (comment.isDeleted) {
-      throw new Error('Cannot edit a deleted comment');
+      throw new Error("Cannot edit a deleted comment");
     }
 
     if (!args.content.trim()) {
-      throw new Error('Comment content cannot be empty');
+      throw new Error("Comment content cannot be empty");
     }
 
     if (args.content.length > 2000) {
       throw new Error(
-        'Comment content exceeds maximum length of 2000 characters',
+        "Comment content exceeds maximum length of 2000 characters",
       );
     }
 
@@ -293,31 +294,31 @@ export const update = mutation({
  */
 export const remove = mutation({
   args: {
-    id: v.id('guideComments'),
+    id: v.id("guideComments"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.id);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     // Flexible userId matching - check if either contains the other
     // This handles cases where JWT sub might be a compound ID or different format
-    const isOwner
-      = comment.userId === args.userId
-        || comment.userId.includes(args.userId)
-        || args.userId.includes(comment.userId);
+    const isOwner =
+      comment.userId === args.userId ||
+      comment.userId.includes(args.userId) ||
+      args.userId.includes(comment.userId);
 
     if (!isOwner) {
-      throw new Error('You can only delete your own comments');
+      throw new Error("You can only delete your own comments");
     }
 
     // Update parent's reply count if this was a reply
     if (comment.parentId) {
       // parentId is stored as string, need to convert to Id for db.get
       const parentComment = await ctx.db.get(
-        comment.parentId as Id<'guideComments'>,
+        comment.parentId as Id<"guideComments">,
       );
 
       if (parentComment) {

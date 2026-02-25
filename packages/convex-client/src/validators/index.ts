@@ -3,12 +3,12 @@ export {
   timePeriodValidator as businessHoursTimePeriodValidator,
   businessHoursValidator,
   dayHoursValidator,
-} from './businessHours.js';
+} from "./businessHours.js";
 
 export {
   completenessLevelValidator,
   optionalCompletenessLevelValidator,
-} from './completenessLevel.js';
+} from "./completenessLevel.js";
 
 export {
   categoryConfigValidator,
@@ -18,7 +18,7 @@ export {
   crawlJobStatisticsValidator,
   errorStatsValidator,
   geographicScopeValidator,
-} from './crawlJobs.js';
+} from "./crawlJobs.js";
 
 export {
   accuracyMetricsValidator,
@@ -30,7 +30,7 @@ export {
   dataQualityMetricsValidator,
   issueSeverityValidator,
   issueTypeValidator,
-} from './dataQualityReports.js';
+} from "./dataQualityReports.js";
 
 export {
   createChangesValidator,
@@ -40,7 +40,7 @@ export {
   reorderChangesValidator,
   timePeriodValidator,
   updateChangesValidator,
-} from './editOperations.js';
+} from "./editOperations.js";
 
 export {
   deepLinkTargetValidator,
@@ -51,7 +51,7 @@ export {
   scheduledNotificationDataValidator,
   socialNotificationDataValidator,
   weatherNotificationDataValidator,
-} from './notifications.js';
+} from "./notifications.js";
 
 export {
   rawBusinessHoursValidator,
@@ -59,7 +59,7 @@ export {
   rawLocationValidator,
   rawPhotoValidator,
   rawRatingValidator,
-} from './rawCrawlRecords.js';
+} from "./rawCrawlRecords.js";
 
 export {
   categoryStatsValidator,
@@ -68,13 +68,13 @@ export {
   trainingGeographicScopeValidator,
   trainingStatisticsValidator,
   trainingStoragePathsValidator,
-} from './trainingDatasets.js';
+} from "./trainingDatasets.js";
 
 export {
   yearlyStatsEntryValidator,
   yearlyStatsStrictValidator,
   yearlyStatsValidator,
-} from './travelStats.js';
+} from "./travelStats.js";
 
 /**
  * # Typed Validators Library

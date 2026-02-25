@@ -1,7 +1,7 @@
-import type { Id } from './_generated/dataModel';
-import type { MutationCtx, QueryCtx } from './_generated/server';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Packing Lists - Smart Packing List Management
@@ -9,34 +9,34 @@ import { mutation, query } from './_generated/server';
 
 // Validators
 const tripTypeValidator = v.union(
-  v.literal('leisure'),
-  v.literal('business'),
-  v.literal('adventure'),
-  v.literal('beach'),
-  v.literal('ski'),
-  v.literal('city'),
-  v.literal('hiking'),
-  v.literal('other'),
+  v.literal("leisure"),
+  v.literal("business"),
+  v.literal("adventure"),
+  v.literal("beach"),
+  v.literal("ski"),
+  v.literal("city"),
+  v.literal("hiking"),
+  v.literal("other"),
 );
 
 const categoryValidator = v.union(
-  v.literal('clothing'),
-  v.literal('toiletries'),
-  v.literal('electronics'),
-  v.literal('documents'),
-  v.literal('medicine'),
-  v.literal('accessories'),
-  v.literal('gear'),
-  v.literal('snacks'),
-  v.literal('other'),
+  v.literal("clothing"),
+  v.literal("toiletries"),
+  v.literal("electronics"),
+  v.literal("documents"),
+  v.literal("medicine"),
+  v.literal("accessories"),
+  v.literal("gear"),
+  v.literal("snacks"),
+  v.literal("other"),
 );
 
 const suggestedByValidator = v.union(
-  v.literal('user'),
-  v.literal('weather'),
-  v.literal('activity'),
-  v.literal('template'),
-  v.literal('ai'),
+  v.literal("user"),
+  v.literal("weather"),
+  v.literal("activity"),
+  v.literal("template"),
+  v.literal("ai"),
 );
 
 /**
@@ -46,12 +46,12 @@ const suggestedByValidator = v.union(
 // Check if user can view the packing list
 async function checkViewPermission(
   ctx: QueryCtx | MutationCtx,
-  listId: Id<'packingLists'>,
+  listId: Id<"packingLists">,
   userId: string,
 ): Promise<boolean> {
   const list = await ctx.db.get(listId);
   if (!list) {
-    throw new Error('Packing list not found');
+    throw new Error("Packing list not found");
   }
 
   // Owner can always view
@@ -69,18 +69,18 @@ async function checkViewPermission(
     return true;
   }
 
-  throw new Error('You do not have access to this packing list');
+  throw new Error("You do not have access to this packing list");
 }
 
 // Check if user can edit the packing list
 async function checkEditPermission(
   ctx: QueryCtx | MutationCtx,
-  listId: Id<'packingLists'>,
+  listId: Id<"packingLists">,
   userId: string,
 ): Promise<boolean> {
   const list = await ctx.db.get(listId);
   if (!list) {
-    throw new Error('Packing list not found');
+    throw new Error("Packing list not found");
   }
 
   // Owner can always edit
@@ -93,13 +93,13 @@ async function checkEditPermission(
     return true;
   }
 
-  throw new Error('You do not have edit permissions for this packing list');
+  throw new Error("You do not have edit permissions for this packing list");
 }
 
 // Generate a unique share code
 function createShareCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
   for (let i = 0; i < 8; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -123,9 +123,9 @@ export const listByUser = query({
     const offset = (page - 1) * pageSize;
 
     const lists = await ctx.db
-      .query('packingLists')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
-      .order('desc')
+      .query("packingLists")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
       .collect();
 
     const total = lists.length;
@@ -135,11 +135,11 @@ export const listByUser = query({
     const enriched = await Promise.all(
       data.map(async (list) => {
         const items = await ctx.db
-          .query('packingItems')
-          .withIndex('by_list', q => q.eq('packingListId', list._id))
+          .query("packingItems")
+          .withIndex("by_list", (q) => q.eq("packingListId", list._id))
           .collect();
 
-        const packedCount = items.filter(i => i.isPacked).length;
+        const packedCount = items.filter((i) => i.isPacked).length;
         const totalItems = items.length;
 
         return {
@@ -159,13 +159,12 @@ export const listByUser = query({
 // Get packing list by ID with all items
 export const getById = query({
   args: {
-    id: v.id('packingLists'),
+    id: v.id("packingLists"),
     userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const list = await ctx.db.get(args.id);
-    if (!list)
-      return null;
+    if (!list) return null;
 
     // Check view permission if userId provided
     if (args.userId) {
@@ -174,8 +173,8 @@ export const getById = query({
 
     // Get all items
     const items = await ctx.db
-      .query('packingItems')
-      .withIndex('by_list', q => q.eq('packingListId', args.id))
+      .query("packingItems")
+      .withIndex("by_list", (q) => q.eq("packingListId", args.id))
       .collect();
 
     // Group items by category
@@ -192,7 +191,7 @@ export const getById = query({
       itemsByCategory[category].sort((a, b) => a.orderIndex - b.orderIndex);
     }
 
-    const packedCount = items.filter(i => i.isPacked).length;
+    const packedCount = items.filter((i) => i.isPacked).length;
     const totalItems = items.length;
 
     // Get linked itinerary info if available
@@ -228,17 +227,16 @@ export const getByShareCode = query({
   },
   handler: async (ctx, args) => {
     const list = await ctx.db
-      .query('packingLists')
-      .withIndex('by_share_code', q => q.eq('shareCode', args.shareCode))
+      .query("packingLists")
+      .withIndex("by_share_code", (q) => q.eq("shareCode", args.shareCode))
       .first();
 
-    if (!list)
-      return null;
+    if (!list) return null;
 
     // Get all items
     const items = await ctx.db
-      .query('packingItems')
-      .withIndex('by_list', q => q.eq('packingListId', list._id))
+      .query("packingItems")
+      .withIndex("by_list", (q) => q.eq("packingListId", list._id))
       .collect();
 
     // Group items by category
@@ -255,7 +253,7 @@ export const getByShareCode = query({
       itemsByCategory[category].sort((a, b) => a.orderIndex - b.orderIndex);
     }
 
-    const packedCount = items.filter(i => i.isPacked).length;
+    const packedCount = items.filter((i) => i.isPacked).length;
     const totalItems = items.length;
 
     return {
@@ -279,18 +277,18 @@ export const create = mutation({
   args: {
     userId: v.string(),
     title: v.string(),
-    itineraryId: v.optional(v.id('itineraries')),
+    itineraryId: v.optional(v.id("itineraries")),
     destination: v.optional(v.string()),
     startDate: v.optional(v.string()),
     endDate: v.optional(v.string()),
     tripType: v.optional(tripTypeValidator),
-    templateId: v.optional(v.id('packingTemplates')),
+    templateId: v.optional(v.id("packingTemplates")),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
 
     // Create the packing list
-    const listId = await ctx.db.insert('packingLists', {
+    const listId = await ctx.db.insert("packingLists", {
       userId: args.userId,
       title: args.title,
       itineraryId: args.itineraryId,
@@ -317,23 +315,23 @@ export const create = mutation({
         // Add items from template
         let orderIndex = 0;
         for (const templateItem of template.items) {
-          await ctx.db.insert('packingItems', {
+          await ctx.db.insert("packingItems", {
             packingListId: listId,
             name: templateItem.name,
             category: templateItem.category as
-            | 'clothing'
-            | 'toiletries'
-            | 'electronics'
-            | 'documents'
-            | 'medicine'
-            | 'accessories'
-            | 'gear'
-            | 'snacks'
-            | 'other',
+              | "clothing"
+              | "toiletries"
+              | "electronics"
+              | "documents"
+              | "medicine"
+              | "accessories"
+              | "gear"
+              | "snacks"
+              | "other",
             quantity: templateItem.quantity,
             isPacked: false,
             isEssential: templateItem.isEssential,
-            suggestedBy: 'template',
+            suggestedBy: "template",
             orderIndex: orderIndex++,
             createdAt: now,
             updatedAt: now,
@@ -349,7 +347,7 @@ export const create = mutation({
 // Update a packing list
 export const update = mutation({
   args: {
-    id: v.id('packingLists'),
+    id: v.id("packingLists"),
     userId: v.string(),
     title: v.optional(v.string()),
     destination: v.optional(v.string()),
@@ -386,24 +384,24 @@ export const update = mutation({
 // Delete a packing list
 export const remove = mutation({
   args: {
-    id: v.id('packingLists'),
+    id: v.id("packingLists"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const list = await ctx.db.get(args.id);
     if (!list) {
-      throw new Error('Packing list not found');
+      throw new Error("Packing list not found");
     }
 
     // Only owner can delete
     if (list.userId !== args.userId) {
-      throw new Error('Only the owner can delete this packing list');
+      throw new Error("Only the owner can delete this packing list");
     }
 
     // Delete all items
     const items = await ctx.db
-      .query('packingItems')
-      .withIndex('by_list', q => q.eq('packingListId', args.id))
+      .query("packingItems")
+      .withIndex("by_list", (q) => q.eq("packingListId", args.id))
       .collect();
 
     for (const item of items) {
@@ -418,17 +416,17 @@ export const remove = mutation({
 // Generate or regenerate share code
 export const generateShareCode = mutation({
   args: {
-    id: v.id('packingLists'),
+    id: v.id("packingLists"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const list = await ctx.db.get(args.id);
     if (!list) {
-      throw new Error('Packing list not found');
+      throw new Error("Packing list not found");
     }
 
     if (list.userId !== args.userId) {
-      throw new Error('Only the owner can generate share codes');
+      throw new Error("Only the owner can generate share codes");
     }
 
     const shareCode = createShareCode();
@@ -444,18 +442,18 @@ export const generateShareCode = mutation({
 // Add a user to the shared list
 export const addSharedUser = mutation({
   args: {
-    id: v.id('packingLists'),
+    id: v.id("packingLists"),
     userId: v.string(),
     sharedUserId: v.string(),
   },
   handler: async (ctx, args) => {
     const list = await ctx.db.get(args.id);
     if (!list) {
-      throw new Error('Packing list not found');
+      throw new Error("Packing list not found");
     }
 
     if (list.userId !== args.userId) {
-      throw new Error('Only the owner can share this list');
+      throw new Error("Only the owner can share this list");
     }
 
     const currentShared = list.sharedWith ?? [];
@@ -471,23 +469,23 @@ export const addSharedUser = mutation({
 // Remove a user from the shared list
 export const removeSharedUser = mutation({
   args: {
-    id: v.id('packingLists'),
+    id: v.id("packingLists"),
     userId: v.string(),
     sharedUserId: v.string(),
   },
   handler: async (ctx, args) => {
     const list = await ctx.db.get(args.id);
     if (!list) {
-      throw new Error('Packing list not found');
+      throw new Error("Packing list not found");
     }
 
     if (list.userId !== args.userId) {
-      throw new Error('Only the owner can manage sharing');
+      throw new Error("Only the owner can manage sharing");
     }
 
     const currentShared = list.sharedWith ?? [];
     await ctx.db.patch(args.id, {
-      sharedWith: currentShared.filter(id => id !== args.sharedUserId),
+      sharedWith: currentShared.filter((id) => id !== args.sharedUserId),
       updatedAt: Date.now(),
     });
   },
@@ -500,7 +498,7 @@ export const removeSharedUser = mutation({
 // Add an item to a packing list
 export const addItem = mutation({
   args: {
-    packingListId: v.id('packingLists'),
+    packingListId: v.id("packingLists"),
     userId: v.string(),
     name: v.string(),
     category: categoryValidator,
@@ -514,9 +512,10 @@ export const addItem = mutation({
 
     // Get the current max orderIndex for this category
     const existingItems = await ctx.db
-      .query('packingItems')
-      .withIndex('by_list_category', q =>
-        q.eq('packingListId', args.packingListId).eq('category', args.category))
+      .query("packingItems")
+      .withIndex("by_list_category", (q) =>
+        q.eq("packingListId", args.packingListId).eq("category", args.category),
+      )
       .collect();
 
     const maxOrderIndex = existingItems.reduce(
@@ -525,14 +524,14 @@ export const addItem = mutation({
     );
 
     const now = Date.now();
-    const itemId = await ctx.db.insert('packingItems', {
+    const itemId = await ctx.db.insert("packingItems", {
       packingListId: args.packingListId,
       name: args.name,
       category: args.category,
       quantity: args.quantity ?? 1,
       isPacked: false,
       isEssential: args.isEssential ?? false,
-      suggestedBy: args.suggestedBy ?? 'user',
+      suggestedBy: args.suggestedBy ?? "user",
       notes: args.notes,
       orderIndex: maxOrderIndex + 1,
       createdAt: now,
@@ -551,7 +550,7 @@ export const addItem = mutation({
 // Update an item
 export const updateItem = mutation({
   args: {
-    id: v.id('packingItems'),
+    id: v.id("packingItems"),
     userId: v.string(),
     name: v.optional(v.string()),
     category: v.optional(categoryValidator),
@@ -562,7 +561,7 @@ export const updateItem = mutation({
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.id);
     if (!item) {
-      throw new Error('Item not found');
+      throw new Error("Item not found");
     }
 
     await checkEditPermission(ctx, item.packingListId, args.userId);
@@ -590,13 +589,13 @@ export const updateItem = mutation({
 // Toggle item packed status
 export const toggleItemPacked = mutation({
   args: {
-    id: v.id('packingItems'),
+    id: v.id("packingItems"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.id);
     if (!item) {
-      throw new Error('Item not found');
+      throw new Error("Item not found");
     }
 
     await checkEditPermission(ctx, item.packingListId, args.userId);
@@ -623,13 +622,13 @@ export const toggleItemPacked = mutation({
 // Delete an item
 export const removeItem = mutation({
   args: {
-    id: v.id('packingItems'),
+    id: v.id("packingItems"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const item = await ctx.db.get(args.id);
     if (!item) {
-      throw new Error('Item not found');
+      throw new Error("Item not found");
     }
 
     await checkEditPermission(ctx, item.packingListId, args.userId);
@@ -646,7 +645,7 @@ export const removeItem = mutation({
 // Bulk add items (for AI/weather suggestions)
 export const addItemsBulk = mutation({
   args: {
-    packingListId: v.id('packingLists'),
+    packingListId: v.id("packingLists"),
     userId: v.string(),
     items: v.array(
       v.object({
@@ -663,7 +662,7 @@ export const addItemsBulk = mutation({
     await checkEditPermission(ctx, args.packingListId, args.userId);
 
     const now = Date.now();
-    const addedIds: Id<'packingItems'>[] = [];
+    const addedIds: Id<"packingItems">[] = [];
 
     // Group items by category and find max orderIndex for each
     const categoryMaxIndex: Record<string, number> = {};
@@ -671,11 +670,12 @@ export const addItemsBulk = mutation({
     for (const newItem of args.items) {
       if (categoryMaxIndex[newItem.category] === undefined) {
         const existingItems = await ctx.db
-          .query('packingItems')
-          .withIndex('by_list_category', q =>
+          .query("packingItems")
+          .withIndex("by_list_category", (q) =>
             q
-              .eq('packingListId', args.packingListId)
-              .eq('category', newItem.category))
+              .eq("packingListId", args.packingListId)
+              .eq("category", newItem.category),
+          )
           .collect();
 
         categoryMaxIndex[newItem.category] = existingItems.reduce(
@@ -686,14 +686,14 @@ export const addItemsBulk = mutation({
 
       categoryMaxIndex[newItem.category]++;
 
-      const itemId = await ctx.db.insert('packingItems', {
+      const itemId = await ctx.db.insert("packingItems", {
         packingListId: args.packingListId,
         name: newItem.name,
         category: newItem.category,
         quantity: newItem.quantity ?? 1,
         isPacked: false,
         isEssential: newItem.isEssential ?? false,
-        suggestedBy: newItem.suggestedBy ?? 'user',
+        suggestedBy: newItem.suggestedBy ?? "user",
         notes: newItem.notes,
         orderIndex: categoryMaxIndex[newItem.category],
         createdAt: now,
@@ -726,15 +726,14 @@ export const listSystemTemplates = query({
 
     if (args.tripType) {
       templates = await ctx.db
-        .query('packingTemplates')
-        .withIndex('by_trip_type', q => q.eq('tripType', args.tripType!))
-        .filter(q => q.eq(q.field('isSystem'), true))
+        .query("packingTemplates")
+        .withIndex("by_trip_type", (q) => q.eq("tripType", args.tripType!))
+        .filter((q) => q.eq(q.field("isSystem"), true))
         .collect();
-    }
-    else {
+    } else {
       templates = await ctx.db
-        .query('packingTemplates')
-        .withIndex('by_system', q => q.eq('isSystem', true))
+        .query("packingTemplates")
+        .withIndex("by_system", (q) => q.eq("isSystem", true))
         .collect();
     }
 
@@ -758,15 +757,14 @@ export const listPublicTemplates = query({
 
     if (args.tripType) {
       templates = await ctx.db
-        .query('packingTemplates')
-        .withIndex('by_trip_type', q => q.eq('tripType', args.tripType!))
-        .filter(q => q.eq(q.field('isPublic'), true))
+        .query("packingTemplates")
+        .withIndex("by_trip_type", (q) => q.eq("tripType", args.tripType!))
+        .filter((q) => q.eq(q.field("isPublic"), true))
         .collect();
-    }
-    else {
+    } else {
       templates = await ctx.db
-        .query('packingTemplates')
-        .withIndex('by_public', q => q.eq('isPublic', true))
+        .query("packingTemplates")
+        .withIndex("by_public", (q) => q.eq("isPublic", true))
         .collect();
     }
 
@@ -783,7 +781,7 @@ export const listPublicTemplates = query({
 // Get template by ID
 export const getTemplateById = query({
   args: {
-    id: v.id('packingTemplates'),
+    id: v.id("packingTemplates"),
   },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
@@ -797,7 +795,7 @@ export const getTemplateById = query({
 // Create a user template from an existing list
 export const createTemplateFromList = mutation({
   args: {
-    packingListId: v.id('packingLists'),
+    packingListId: v.id("packingLists"),
     userId: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
@@ -806,26 +804,26 @@ export const createTemplateFromList = mutation({
   handler: async (ctx, args) => {
     const list = await ctx.db.get(args.packingListId);
     if (!list) {
-      throw new Error('Packing list not found');
+      throw new Error("Packing list not found");
     }
 
     if (list.userId !== args.userId) {
-      throw new Error('Only the owner can create a template from this list');
+      throw new Error("Only the owner can create a template from this list");
     }
 
     // Get all items from the list
     const items = await ctx.db
-      .query('packingItems')
-      .withIndex('by_list', q => q.eq('packingListId', args.packingListId))
+      .query("packingItems")
+      .withIndex("by_list", (q) => q.eq("packingListId", args.packingListId))
       .collect();
 
     const now = Date.now();
 
-    const templateId = await ctx.db.insert('packingTemplates', {
+    const templateId = await ctx.db.insert("packingTemplates", {
       name: args.name,
       description: args.description,
-      tripType: list.tripType ?? 'other',
-      items: items.map(item => ({
+      tripType: list.tripType ?? "other",
+      items: items.map((item) => ({
         name: item.name,
         category: item.category,
         quantity: item.quantity,
@@ -846,7 +844,7 @@ export const createTemplateFromList = mutation({
 // Update a user template
 export const updateTemplate = mutation({
   args: {
-    id: v.id('packingTemplates'),
+    id: v.id("packingTemplates"),
     userId: v.string(),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -855,15 +853,15 @@ export const updateTemplate = mutation({
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
     if (!template) {
-      throw new Error('Template not found');
+      throw new Error("Template not found");
     }
 
     if (template.isSystem) {
-      throw new Error('Cannot modify system templates');
+      throw new Error("Cannot modify system templates");
     }
 
     if (template.createdBy !== args.userId) {
-      throw new Error('Only the creator can modify this template');
+      throw new Error("Only the creator can modify this template");
     }
 
     const { id, userId, ...updates } = args;
@@ -883,21 +881,21 @@ export const updateTemplate = mutation({
 // Delete a user template
 export const removeTemplate = mutation({
   args: {
-    id: v.id('packingTemplates'),
+    id: v.id("packingTemplates"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const template = await ctx.db.get(args.id);
     if (!template) {
-      throw new Error('Template not found');
+      throw new Error("Template not found");
     }
 
     if (template.isSystem) {
-      throw new Error('Cannot delete system templates');
+      throw new Error("Cannot delete system templates");
     }
 
     if (template.createdBy !== args.userId) {
-      throw new Error('Only the creator can delete this template');
+      throw new Error("Only the creator can delete this template");
     }
 
     await ctx.db.delete(args.id);

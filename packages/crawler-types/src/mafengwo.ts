@@ -8,26 +8,26 @@
 // ============================================
 
 /** 马蜂窝数据来源 */
-export type MafengwoSource = 'mafengwo';
+export type MafengwoSource = "mafengwo";
 
 /** 马蜂窝内容类型 */
-export type MafengwoContentType
-  = | 'destination' // 目的地
-    | 'poi' // 景点/餐厅/酒店
-    | 'guide' // 攻略
-    | 'travel_note' // 游记
-    | 'qa' // 问答
-    | 'ranking' // 榜单
-    | 'review'; // 评论
+export type MafengwoContentType =
+  | "destination" // 目的地
+  | "poi" // 景点/餐厅/酒店
+  | "guide" // 攻略
+  | "travel_note" // 游记
+  | "qa" // 问答
+  | "ranking" // 榜单
+  | "review"; // 评论
 
 /** POI 类别 */
-export type MafengwoPOICategory
-  = | 'attraction' // 景点
-    | 'restaurant' // 餐厅
-    | 'hotel' // 酒店
-    | 'shopping' // 购物
-    | 'entertainment' // 娱乐
-    | 'transport'; // 交通
+export type MafengwoPOICategory =
+  | "attraction" // 景点
+  | "restaurant" // 餐厅
+  | "hotel" // 酒店
+  | "shopping" // 购物
+  | "entertainment" // 娱乐
+  | "transport"; // 交通
 
 // ============================================
 // 目的地/城市
@@ -350,12 +350,12 @@ export interface MafengwoReview {
 // ============================================
 
 /** 马蜂窝榜单类型 */
-export type MafengwoRankingType
-  = | 'must_visit' // 必去榜
-    | 'food' // 美食榜
-    | 'hotel' // 酒店榜
-    | 'shopping' // 购物榜
-    | 'hidden_gem'; // 小众榜
+export type MafengwoRankingType =
+  | "must_visit" // 必去榜
+  | "food" // 美食榜
+  | "hotel" // 酒店榜
+  | "shopping" // 购物榜
+  | "hidden_gem"; // 小众榜
 
 /** 马蜂窝榜单项原始数据 */
 export interface MafengwoRankingItemRaw {
@@ -409,19 +409,19 @@ export interface MafengwoRanking {
 // ============================================
 
 /** 马蜂窝爬取任务类型 */
-export type MafengwoCrawlTaskType
-  = | 'destination_list' // 目的地列表
-    | 'destination_detail' // 目的地详情
-    | 'poi_list' // POI 列表
-    | 'poi_detail' // POI 详情
-    | 'guide_list' // 攻略列表
-    | 'guide_detail' // 攻略详情
-    | 'travel_note_list' // 游记列表
-    | 'travel_note_detail' // 游记详情
-    | 'qa_list' // 问答列表
-    | 'qa_detail' // 问答详情
-    | 'ranking' // 榜单
-    | 'review_list'; // 评论列表
+export type MafengwoCrawlTaskType =
+  | "destination_list" // 目的地列表
+  | "destination_detail" // 目的地详情
+  | "poi_list" // POI 列表
+  | "poi_detail" // POI 详情
+  | "guide_list" // 攻略列表
+  | "guide_detail" // 攻略详情
+  | "travel_note_list" // 游记列表
+  | "travel_note_detail" // 游记详情
+  | "qa_list" // 问答列表
+  | "qa_detail" // 问答详情
+  | "ranking" // 榜单
+  | "review_list"; // 评论列表
 
 /** 马蜂窝爬取任务配置 */
 export interface MafengwoCrawlTaskConfig {

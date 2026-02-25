@@ -1,14 +1,14 @@
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Chat - AI Travel Assistant Sessions and Messages
  */
 
 const roleValidator = v.union(
-  v.literal('user'),
-  v.literal('assistant'),
-  v.literal('system'),
+  v.literal("user"),
+  v.literal("assistant"),
+  v.literal("system"),
 );
 
 const metadataValidator = v.optional(
@@ -67,17 +67,17 @@ export const listSessions = query({
     let sessions;
     if (args.includeArchived) {
       sessions = await ctx.db
-        .query('chatSessions')
-        .withIndex('by_user', q => q.eq('userId', args.userId))
-        .order('desc')
+        .query("chatSessions")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .order("desc")
         .take(limit);
-    }
-    else {
+    } else {
       sessions = await ctx.db
-        .query('chatSessions')
-        .withIndex('by_user_archived', q =>
-          q.eq('userId', args.userId).eq('isArchived', false))
-        .order('desc')
+        .query("chatSessions")
+        .withIndex("by_user_archived", (q) =>
+          q.eq("userId", args.userId).eq("isArchived", false),
+        )
+        .order("desc")
         .take(limit);
     }
 
@@ -87,11 +87,10 @@ export const listSessions = query({
 
 // Get a single chat session by ID
 export const getSession = query({
-  args: { id: v.id('chatSessions') },
+  args: { id: v.id("chatSessions") },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.id);
-    if (!session)
-      return null;
+    if (!session) return null;
 
     // Optionally fetch linked itinerary/guide info
     let itinerary = null;
@@ -119,15 +118,15 @@ export const createSession = mutation({
   args: {
     userId: v.string(),
     title: v.optional(v.string()),
-    itineraryId: v.optional(v.id('itineraries')),
-    guideId: v.optional(v.id('travelGuides')),
+    itineraryId: v.optional(v.id("itineraries")),
+    guideId: v.optional(v.id("travelGuides")),
     context: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const title = args.title || '新对话';
+    const title = args.title || "新对话";
 
-    const sessionId = await ctx.db.insert('chatSessions', {
+    const sessionId = await ctx.db.insert("chatSessions", {
       userId: args.userId,
       title,
       itineraryId: args.itineraryId,
@@ -146,7 +145,7 @@ export const createSession = mutation({
 // Update a chat session
 export const updateSession = mutation({
   args: {
-    id: v.id('chatSessions'),
+    id: v.id("chatSessions"),
     title: v.optional(v.string()),
     context: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
@@ -164,12 +163,12 @@ export const updateSession = mutation({
 
 // Delete a chat session and all its messages
 export const deleteSession = mutation({
-  args: { id: v.id('chatSessions') },
+  args: { id: v.id("chatSessions") },
   handler: async (ctx, args) => {
     // Delete all messages in the session
     const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('by_session', q => q.eq('sessionId', args.id))
+      .query("chatMessages")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.id))
       .collect();
 
     for (const message of messages) {
@@ -188,7 +187,7 @@ export const deleteSession = mutation({
 // List messages for a session
 export const listMessages = query({
   args: {
-    sessionId: v.id('chatSessions'),
+    sessionId: v.id("chatSessions"),
     limit: v.optional(v.number()),
     cursor: v.optional(v.string()),
   },
@@ -196,9 +195,9 @@ export const listMessages = query({
     const limit = args.limit ?? 50;
 
     const result = await ctx.db
-      .query('chatMessages')
-      .withIndex('by_session_created', q => q.eq('sessionId', args.sessionId))
-      .order('asc')
+      .query("chatMessages")
+      .withIndex("by_session_created", (q) => q.eq("sessionId", args.sessionId))
+      .order("asc")
       .paginate({ numItems: limit, cursor: args.cursor ?? null });
 
     return {
@@ -212,16 +211,16 @@ export const listMessages = query({
 // Get recent messages for context (for AI)
 export const getRecentMessages = query({
   args: {
-    sessionId: v.id('chatSessions'),
+    sessionId: v.id("chatSessions"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 10;
 
     const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('by_session_created', q => q.eq('sessionId', args.sessionId))
-      .order('desc')
+      .query("chatMessages")
+      .withIndex("by_session_created", (q) => q.eq("sessionId", args.sessionId))
+      .order("desc")
       .take(limit);
 
     // Return in chronological order
@@ -232,7 +231,7 @@ export const getRecentMessages = query({
 // Add a message to a session
 export const addMessage = mutation({
   args: {
-    sessionId: v.id('chatSessions'),
+    sessionId: v.id("chatSessions"),
     role: roleValidator,
     content: v.string(),
     metadata: metadataValidator,
@@ -241,7 +240,7 @@ export const addMessage = mutation({
     const now = Date.now();
 
     // Insert the message
-    const messageId = await ctx.db.insert('chatMessages', {
+    const messageId = await ctx.db.insert("chatMessages", {
       sessionId: args.sessionId,
       role: args.role,
       content: args.content,
@@ -259,12 +258,12 @@ export const addMessage = mutation({
 
       // Auto-generate title from first user message if title is default
       if (
-        session.title === '新对话'
-        && args.role === 'user'
-        && session.messageCount === 0
+        session.title === "新对话" &&
+        args.role === "user" &&
+        session.messageCount === 0
       ) {
-        const newTitle
-          = args.content.slice(0, 30) + (args.content.length > 30 ? '...' : '');
+        const newTitle =
+          args.content.slice(0, 30) + (args.content.length > 30 ? "..." : "");
         await ctx.db.patch(args.sessionId, { title: newTitle });
       }
     }
@@ -276,16 +275,16 @@ export const addMessage = mutation({
 // Add a user message and return the session for context
 export const sendMessage = mutation({
   args: {
-    sessionId: v.id('chatSessions'),
+    sessionId: v.id("chatSessions"),
     content: v.string(),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
 
     // Insert user message
-    const messageId = await ctx.db.insert('chatMessages', {
+    const messageId = await ctx.db.insert("chatMessages", {
       sessionId: args.sessionId,
-      role: 'user',
+      role: "user",
       content: args.content,
       createdAt: now,
     });
@@ -299,18 +298,18 @@ export const sendMessage = mutation({
       });
 
       // Auto-generate title from first user message
-      if (session.title === '新对话' && session.messageCount === 0) {
-        const newTitle
-          = args.content.slice(0, 30) + (args.content.length > 30 ? '...' : '');
+      if (session.title === "新对话" && session.messageCount === 0) {
+        const newTitle =
+          args.content.slice(0, 30) + (args.content.length > 30 ? "..." : "");
         await ctx.db.patch(args.sessionId, { title: newTitle });
       }
     }
 
     // Get recent messages for context
     const recentMessages = await ctx.db
-      .query('chatMessages')
-      .withIndex('by_session_created', q => q.eq('sessionId', args.sessionId))
-      .order('desc')
+      .query("chatMessages")
+      .withIndex("by_session_created", (q) => q.eq("sessionId", args.sessionId))
+      .order("desc")
       .take(10);
 
     // Get linked itinerary if any
@@ -320,9 +319,10 @@ export const sendMessage = mutation({
       if (itinerary) {
         // Get itinerary days and items for context
         const days = await ctx.db
-          .query('itineraryDays')
-          .withIndex('by_itinerary', q =>
-            q.eq('itineraryId', session.itineraryId!))
+          .query("itineraryDays")
+          .withIndex("by_itinerary", (q) =>
+            q.eq("itineraryId", session.itineraryId!),
+          )
           .collect();
 
         itineraryContext = {
@@ -361,16 +361,16 @@ export const sendMessage = mutation({
 // Save assistant response
 export const saveAssistantResponse = mutation({
   args: {
-    sessionId: v.id('chatSessions'),
+    sessionId: v.id("chatSessions"),
     content: v.string(),
     metadata: metadataValidator,
   },
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    const messageId = await ctx.db.insert('chatMessages', {
+    const messageId = await ctx.db.insert("chatMessages", {
       sessionId: args.sessionId,
-      role: 'assistant',
+      role: "assistant",
       content: args.content,
       metadata: args.metadata,
       createdAt: now,
@@ -391,17 +391,16 @@ export const saveAssistantResponse = mutation({
 
 // Get session with full context for AI processing
 export const getSessionWithContext = query({
-  args: { sessionId: v.id('chatSessions') },
+  args: { sessionId: v.id("chatSessions") },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
-    if (!session)
-      return null;
+    if (!session) return null;
 
     // Get recent messages
     const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('by_session_created', q => q.eq('sessionId', args.sessionId))
-      .order('desc')
+      .query("chatMessages")
+      .withIndex("by_session_created", (q) => q.eq("sessionId", args.sessionId))
+      .order("desc")
       .take(20);
 
     // Get linked itinerary details
@@ -410,17 +409,18 @@ export const getSessionWithContext = query({
       const it = await ctx.db.get(session.itineraryId);
       if (it) {
         const days = await ctx.db
-          .query('itineraryDays')
-          .withIndex('by_itinerary', q =>
-            q.eq('itineraryId', session.itineraryId!))
+          .query("itineraryDays")
+          .withIndex("by_itinerary", (q) =>
+            q.eq("itineraryId", session.itineraryId!),
+          )
           .collect();
 
         // Get items for each day
         const daysWithItems = await Promise.all(
           days.map(async (day) => {
             const items = await ctx.db
-              .query('itineraryItems')
-              .withIndex('by_day', q => q.eq('dayId', day._id))
+              .query("itineraryItems")
+              .withIndex("by_day", (q) => q.eq("dayId", day._id))
               .collect();
 
             const itemsWithPoi = await Promise.all(
@@ -485,11 +485,11 @@ export const getSessionWithContext = query({
 
 // Clear all messages in a session (start fresh)
 export const clearMessages = mutation({
-  args: { sessionId: v.id('chatSessions') },
+  args: { sessionId: v.id("chatSessions") },
   handler: async (ctx, args) => {
     const messages = await ctx.db
-      .query('chatMessages')
-      .withIndex('by_session', q => q.eq('sessionId', args.sessionId))
+      .query("chatMessages")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
       .collect();
 
     for (const message of messages) {

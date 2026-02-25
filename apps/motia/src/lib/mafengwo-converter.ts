@@ -3,12 +3,12 @@
  * 将爬取的原始数据转换为 TravelGuide 格式
  */
 
-import { cleanContent } from '@pathfinding/crawler-types';
+import { cleanContent } from "@pathfinding/crawler-types";
 
 /**
  * 数据完整度级别
  */
-export type CompletenessLevel = 'complete' | 'usable' | 'incomplete';
+export type CompletenessLevel = "complete" | "usable" | "incomplete";
 
 /**
  * 爬取的原始游记数据
@@ -28,7 +28,7 @@ export interface MafengwoRawGuide {
  * 转换后的游记数据（用于 Convex upsert）
  */
 export interface MafengwoGuideForConvex {
-  sourcePlatform: 'mafengwo';
+  sourcePlatform: "mafengwo";
   sourceExternalId: string;
   sourceUrl: string;
   title?: string;
@@ -69,23 +69,21 @@ export function extractSourceExternalId(url: string): string {
  * 例如: "1.2万" -> 12000, "3.5k" -> 3500
  */
 export function parseChineseNumber(str: string | undefined): number {
-  if (!str)
-    return 0;
+  if (!str) return 0;
 
   const cleaned = str.trim();
 
   // 匹配数字和单位
   const match = cleaned.match(/^([\d.]+)\s*([万k])?/i);
-  if (!match)
-    return 0;
+  if (!match) return 0;
 
   const num = Number.parseFloat(match[1]);
   const unit = match[2]?.toLowerCase();
 
-  if (unit === '万') {
+  if (unit === "万") {
     return Math.round(num * 10000);
   }
-  if (unit === 'k') {
+  if (unit === "k") {
     return Math.round(num * 1000);
   }
 
@@ -107,11 +105,9 @@ export function calculateQualityScore(data: MafengwoRawGuide): number {
   const contentLength = data.content?.length || 0;
   if (contentLength >= 500) {
     score += 0.4;
-  }
-  else if (contentLength >= 200) {
+  } else if (contentLength >= 200) {
     score += 0.3;
-  }
-  else if (contentLength >= 100) {
+  } else if (contentLength >= 100) {
     score += 0.2;
   }
 
@@ -124,8 +120,7 @@ export function calculateQualityScore(data: MafengwoRawGuide): number {
   const imageCount = data.images?.length || 0;
   if (imageCount >= 5) {
     score += 0.2;
-  }
-  else if (imageCount >= 1) {
+  } else if (imageCount >= 1) {
     score += 0.1;
   }
 
@@ -150,17 +145,23 @@ export function determineCompletenessLevel(
   const hasAuthor = Boolean(data.author);
 
   // complete: 所有 iOS 必需字段, content >= 500
-  if (hasTitle && contentLength >= 500 && hasImages && hasAuthor && qualityScore >= 0.8) {
-    return 'complete';
+  if (
+    hasTitle &&
+    contentLength >= 500 &&
+    hasImages &&
+    hasAuthor &&
+    qualityScore >= 0.8
+  ) {
+    return "complete";
   }
 
   // usable: 有标题 + 内容 + 至少一张图
   if (hasTitle && contentLength >= 100 && hasImages) {
-    return 'usable';
+    return "usable";
   }
 
   // incomplete: 缺少关键字段
-  return 'incomplete';
+  return "incomplete";
 }
 
 /**
@@ -174,8 +175,16 @@ export function convertToConvexFormat(
   const sourceExternalId = extractSourceExternalId(url);
 
   // 清洗内容：去除广告、推广、个人信息、平台噪音
-  const cleanResult = cleanContent(rawData.content || '', {
-    categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+  const cleanResult = cleanContent(rawData.content || "", {
+    categories: [
+      "ad",
+      "promotion",
+      "personal",
+      "platform",
+      "copyright",
+      "boilerplate",
+      "whitespace",
+    ],
     preserveParagraphs: true,
   });
   const cleanedContent = cleanResult.content;
@@ -183,10 +192,13 @@ export function convertToConvexFormat(
   // 使用清洗后的内容计算质量分数
   const cleanedRawData = { ...rawData, content: cleanedContent };
   const qualityScore = calculateQualityScore(cleanedRawData);
-  const completenessLevel = determineCompletenessLevel(cleanedRawData, qualityScore);
+  const completenessLevel = determineCompletenessLevel(
+    cleanedRawData,
+    qualityScore,
+  );
 
   return {
-    sourcePlatform: 'mafengwo',
+    sourcePlatform: "mafengwo",
     sourceExternalId,
     sourceUrl: url,
     title: rawData.title || undefined,

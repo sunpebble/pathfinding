@@ -19,12 +19,12 @@ export interface City {
 /**
  * City input for creating a new city
  */
-export type CreateCityInput = Omit<City, 'id' | 'createdAt'>;
+export type CreateCityInput = Omit<City, "id" | "createdAt">;
 
 /**
  * City update input for partial updates
  */
-export type UpdateCityInput = Partial<Omit<City, 'id' | 'createdAt'>>;
+export type UpdateCityInput = Partial<Omit<City, "id" | "createdAt">>;
 
 /**
  * Timezone info for a city (simplified for UI)
@@ -47,7 +47,7 @@ export interface UserTimezoneSettings {
   userId: string;
   homeTimezone: string;
   homeCityId?: string;
-  displayFormat: '12h' | '24h';
+  displayFormat: "12h" | "24h";
   showSeconds: boolean;
   autoDetect: boolean;
   savedClocks: SavedClock[];
@@ -79,7 +79,7 @@ export interface WorldClockItem {
 export interface WorldClockResponse {
   settings: {
     homeTimezone: string;
-    displayFormat: '12h' | '24h';
+    displayFormat: "12h" | "24h";
     showSeconds: boolean;
     autoDetect: boolean;
   } | null;
@@ -104,7 +104,12 @@ export interface TimeDifference {
 /**
  * Season for best travel time
  */
-export type TravelSeason = 'spring' | 'summer' | 'autumn' | 'winter' | 'all_year';
+export type TravelSeason =
+  | "spring"
+  | "summer"
+  | "autumn"
+  | "winter"
+  | "all_year";
 
 /**
  * Best travel time information
@@ -115,21 +120,28 @@ export interface BestTravelTime {
   description: string;
   descriptionEn?: string;
   weatherNotes?: string;
-  crowdLevel?: 'low' | 'medium' | 'high';
-  priceLevel?: 'low' | 'medium' | 'high';
+  crowdLevel?: "low" | "medium" | "high";
+  priceLevel?: "low" | "medium" | "high";
 }
 
 /**
  * Local custom or taboo
  */
 export interface LocalCustom {
-  category: 'etiquette' | 'religion' | 'dining' | 'dress' | 'gift' | 'gesture' | 'general';
+  category:
+    | "etiquette"
+    | "religion"
+    | "dining"
+    | "dress"
+    | "gift"
+    | "gesture"
+    | "general";
   title: string;
   titleEn?: string;
   description: string;
   descriptionEn?: string;
   isTaboo: boolean; // true if this is something to avoid
-  importance: 'low' | 'medium' | 'high';
+  importance: "low" | "medium" | "high";
 }
 
 /**
@@ -144,7 +156,7 @@ export interface PracticalInfo {
   currencyNameEn: string; // e.g., "Chinese Yuan"
   tippingCustom: string;
   tippingCustomEn?: string;
-  waterSafety: 'safe' | 'boil' | 'bottled'; // tap water safety
+  waterSafety: "safe" | "boil" | "bottled"; // tap water safety
   waterSafetyNote?: string;
   visaRequired?: boolean;
   visaNote?: string;

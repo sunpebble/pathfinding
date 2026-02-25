@@ -3,14 +3,11 @@
  * 监听 crawler.mafengwo.detail.completed 事件，将数据存储到 Convex
  */
 
-import type { MafengwoRawGuide } from '../lib/mafengwo-converter.js';
-import { ConvexHttpClient } from 'convex/browser';
-import { z } from 'zod';
-import { api } from '../../../../convex/_generated/api.js';
-import {
-  convertToConvexFormat,
-
-} from '../lib/mafengwo-converter.js';
+import type { MafengwoRawGuide } from "../lib/mafengwo-converter.js";
+import { ConvexHttpClient } from "convex/browser";
+import { z } from "zod";
+import { api } from "../../../../convex/_generated/api.js";
+import { convertToConvexFormat } from "../lib/mafengwo-converter.js";
 
 const eventDataSchema = z.object({
   url: z.string(),
@@ -28,12 +25,12 @@ const eventDataSchema = z.object({
 });
 
 export const config = {
-  type: 'event',
-  name: 'MafengwoSaveGuide',
-  description: '保存马蜂窝游记到 Convex',
-  subscribes: ['crawler.mafengwo.detail.completed'],
-  emits: ['crawler.mafengwo.saved'],
-  flows: ['crawler'],
+  type: "event",
+  name: "MafengwoSaveGuide",
+  description: "保存马蜂窝游记到 Convex",
+  subscribes: ["crawler.mafengwo.detail.completed"],
+  emits: ["crawler.mafengwo.saved"],
+  flows: ["crawler"],
 };
 
 interface HandlerContext {
@@ -50,7 +47,7 @@ interface HandlerContext {
 function getConvexClient(): ConvexHttpClient {
   const url = process.env.CONVEX_URL;
   if (!url) {
-    throw new Error('CONVEX_URL environment variable is not set');
+    throw new Error("CONVEX_URL environment variable is not set");
   }
   return new ConvexHttpClient(url);
 }
@@ -62,14 +59,14 @@ export async function handler(
   // 验证事件数据
   const parseResult = eventDataSchema.safeParse(event.data);
   if (!parseResult.success) {
-    logger.error('Invalid event data', { error: parseResult.error.message });
+    logger.error("Invalid event data", { error: parseResult.error.message });
     return;
   }
 
   const { url, guide } = parseResult.data;
 
   try {
-    logger.info('Saving guide to Convex', { url });
+    logger.info("Saving guide to Convex", { url });
 
     // 转换为 Convex 格式
     const convexData = convertToConvexFormat(url, guide as MafengwoRawGuide);
@@ -97,28 +94,27 @@ export async function handler(
       qualityScore: convexData.qualityScore,
     });
 
-    logger.info('Guide saved successfully', {
+    logger.info("Guide saved successfully", {
       sourceExternalId: convexData.sourceExternalId,
       guideId: result,
     });
 
     // 发送保存完成事件
     await emit({
-      topic: 'crawler.mafengwo.saved',
+      topic: "crawler.mafengwo.saved",
       data: {
         sourceExternalId: convexData.sourceExternalId,
         success: true,
         guideId: result,
       },
     });
-  }
-  catch (error) {
-    const message = error instanceof Error ? error.message : 'Save failed';
-    logger.error('Failed to save guide', { error: message, url });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Save failed";
+    logger.error("Failed to save guide", { error: message, url });
 
     // 发送失败事件
     await emit({
-      topic: 'crawler.mafengwo.saved',
+      topic: "crawler.mafengwo.saved",
       data: {
         sourceExternalId: url,
         success: false,
@@ -133,7 +129,7 @@ export async function handler(
  */
 export async function saveBatch(
   guides: Array<{ url: string; guide: MafengwoRawGuide }>,
-  logger: HandlerContext['logger'],
+  logger: HandlerContext["logger"],
 ): Promise<{ success: number; failed: number }> {
   const client = getConvexClient();
   let success = 0;
@@ -162,12 +158,13 @@ export async function saveBatch(
       });
 
       success++;
-      logger.info('Batch: saved guide', { sourceExternalId: convexData.sourceExternalId });
-    }
-    catch (error) {
+      logger.info("Batch: saved guide", {
+        sourceExternalId: convexData.sourceExternalId,
+      });
+    } catch (error) {
       failed++;
-      const message = error instanceof Error ? error.message : 'Save failed';
-      logger.error('Batch: failed to save guide', { url, error: message });
+      const message = error instanceof Error ? error.message : "Save failed";
+      logger.error("Batch: failed to save guide", { url, error: message });
     }
   }
 

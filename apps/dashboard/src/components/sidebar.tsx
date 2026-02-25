@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   BookOpen,
@@ -11,24 +11,24 @@ import {
   PlusCircle,
   Route,
   Settings,
-} from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: 'Overview', href: '/', icon: LayoutDashboard },
-  { name: 'AI 助手', href: '/chat', icon: Bot },
-  { name: 'Crawl Jobs', href: '/jobs', icon: ListTodo },
-  { name: 'POIs', href: '/pois', icon: MapPin },
-  { name: 'Travel Guides', href: '/guides', icon: BookOpen },
-  { name: 'Itineraries', href: '/itineraries', icon: Route },
-  { name: 'Training Datasets', href: '/datasets', icon: Database },
-  { name: 'Create Job', href: '/jobs/create', icon: PlusCircle },
+  { name: "Overview", href: "/", icon: LayoutDashboard },
+  { name: "AI 助手", href: "/chat", icon: Bot },
+  { name: "Crawl Jobs", href: "/jobs", icon: ListTodo },
+  { name: "POIs", href: "/pois", icon: MapPin },
+  { name: "Travel Guides", href: "/guides", icon: BookOpen },
+  { name: "Itineraries", href: "/itineraries", icon: Route },
+  { name: "Training Datasets", href: "/datasets", icon: Database },
+  { name: "Create Job", href: "/jobs/create", icon: PlusCircle },
 ];
 
 const secondaryNavigation = [
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -45,19 +45,19 @@ export function Sidebar() {
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
-          const isActive
-            = pathname === item.href
-              || (item.href !== '/' && pathname.startsWith(item.href));
+          const isActive =
+            pathname === item.href ||
+            (item.href !== "/" && pathname.startsWith(item.href));
 
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+                  ? "bg-gray-800 text-white"
+                  : "text-gray-400 hover:bg-gray-800 hover:text-white",
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -69,7 +69,7 @@ export function Sidebar() {
 
       {/* Secondary Navigation */}
       <div className="border-t border-gray-800 px-3 py-4">
-        {secondaryNavigation.map(item => (
+        {secondaryNavigation.map((item) => (
           <Link
             key={item.name}
             href={item.href}

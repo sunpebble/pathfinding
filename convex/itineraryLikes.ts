@@ -1,5 +1,5 @@
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Itinerary Likes - User like/unlike operations for public itineraries
@@ -9,34 +9,34 @@ import { mutation, query } from './_generated/server';
 export const toggle = mutation({
   args: {
     userId: v.string(),
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     // Check if itinerary exists and is public
     const itinerary = await ctx.db.get(args.itineraryId);
     if (!itinerary) {
-      throw new Error('Itinerary not found');
+      throw new Error("Itinerary not found");
     }
 
-    if (itinerary.visibility !== 'public' && itinerary.userId !== args.userId) {
-      throw new Error('Cannot like a private itinerary');
+    if (itinerary.visibility !== "public" && itinerary.userId !== args.userId) {
+      throw new Error("Cannot like a private itinerary");
     }
 
     // Check if already liked
     const existing = await ctx.db
-      .query('itineraryLikes')
-      .withIndex('by_user_itinerary', q =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
+      .query("itineraryLikes")
+      .withIndex("by_user_itinerary", (q) =>
+        q.eq("userId", args.userId).eq("itineraryId", args.itineraryId),
+      )
       .first();
 
     if (existing) {
       // Unlike - remove the like
       await ctx.db.delete(existing._id);
       return { liked: false };
-    }
-    else {
+    } else {
       // Like - add new like
-      await ctx.db.insert('itineraryLikes', {
+      await ctx.db.insert("itineraryLikes", {
         userId: args.userId,
         itineraryId: args.itineraryId,
         createdAt: Date.now(),
@@ -50,13 +50,14 @@ export const toggle = mutation({
 export const isLiked = query({
   args: {
     userId: v.string(),
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     const like = await ctx.db
-      .query('itineraryLikes')
-      .withIndex('by_user_itinerary', q =>
-        q.eq('userId', args.userId).eq('itineraryId', args.itineraryId))
+      .query("itineraryLikes")
+      .withIndex("by_user_itinerary", (q) =>
+        q.eq("userId", args.userId).eq("itineraryId", args.itineraryId),
+      )
       .first();
 
     return { liked: !!like };
@@ -66,12 +67,12 @@ export const isLiked = query({
 // Get like count for an itinerary
 export const getCount = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     const likes = await ctx.db
-      .query('itineraryLikes')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("itineraryLikes")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     return { count: likes.length };
@@ -91,9 +92,9 @@ export const listByUser = query({
     const offset = (page - 1) * pageSize;
 
     const likes = await ctx.db
-      .query('itineraryLikes')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
-      .order('desc')
+      .query("itineraryLikes")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
       .collect();
 
     const total = likes.length;
@@ -103,8 +104,7 @@ export const listByUser = query({
     const enriched = await Promise.all(
       paginatedLikes.map(async (like) => {
         const itinerary = await ctx.db.get(like.itineraryId);
-        if (!itinerary)
-          return null;
+        if (!itinerary) return null;
 
         const city = await ctx.db.get(itinerary.cityId);
         return {
@@ -118,7 +118,7 @@ export const listByUser = query({
     );
 
     // Filter out null results (deleted itineraries)
-    const data = enriched.filter(item => item !== null);
+    const data = enriched.filter((item) => item !== null);
 
     return { data, total };
   },
@@ -128,7 +128,7 @@ export const listByUser = query({
 export const batchCheckLikes = query({
   args: {
     userId: v.string(),
-    itineraryIds: v.array(v.id('itineraries')),
+    itineraryIds: v.array(v.id("itineraries")),
   },
   handler: async (ctx, args) => {
     const results: Record<string, boolean> = {};
@@ -136,9 +136,10 @@ export const batchCheckLikes = query({
     await Promise.all(
       args.itineraryIds.map(async (itineraryId) => {
         const like = await ctx.db
-          .query('itineraryLikes')
-          .withIndex('by_user_itinerary', q =>
-            q.eq('userId', args.userId).eq('itineraryId', itineraryId))
+          .query("itineraryLikes")
+          .withIndex("by_user_itinerary", (q) =>
+            q.eq("userId", args.userId).eq("itineraryId", itineraryId),
+          )
           .first();
 
         results[itineraryId] = !!like;
@@ -152,7 +153,7 @@ export const batchCheckLikes = query({
 // Get batch like counts for multiple itineraries
 export const batchGetCounts = query({
   args: {
-    itineraryIds: v.array(v.id('itineraries')),
+    itineraryIds: v.array(v.id("itineraries")),
   },
   handler: async (ctx, args) => {
     const results: Record<string, number> = {};
@@ -160,8 +161,8 @@ export const batchGetCounts = query({
     await Promise.all(
       args.itineraryIds.map(async (itineraryId) => {
         const likes = await ctx.db
-          .query('itineraryLikes')
-          .withIndex('by_itinerary', q => q.eq('itineraryId', itineraryId))
+          .query("itineraryLikes")
+          .withIndex("by_itinerary", (q) => q.eq("itineraryId", itineraryId))
           .collect();
 
         results[itineraryId] = likes.length;
