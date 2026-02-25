@@ -158,12 +158,12 @@ export default function JobsPage() {
                 </h3>
                 {schedulerStatus.tasks.length === 0
                   ? (
-                      <p className="text-sm text-gray-500">
-                        No scheduled tasks configured
-                      </p>
-                    )
+                    <p className="text-sm text-gray-500">
+                      No scheduled tasks configured
+                    </p>
+                  )
                   : (
-                      <div className="space-y-2">
+                    <div className="space-y-2">
                         {schedulerStatus.tasks.map(task => (
                           <div
                             key={task.name}
@@ -181,7 +181,9 @@ export default function JobsPage() {
                                       : 'bg-gray-100 text-gray-600'
                                   }`}
                                 >
-                                  {task.enabled ? 'Enabled' : 'Disabled'}
+                                  {task.enabled
+                                    ? 'Enabled'
+                                    : 'Disabled'}
                                 </span>
                               </div>
                               <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
@@ -201,28 +203,28 @@ export default function JobsPage() {
                             <div className="flex items-center gap-2 ml-4">
                               {task.enabled
                                 ? (
-                                    <button
-                                      onClick={() => stopTaskMutation.mutate(task.name)}
-                                      disabled={stopTaskMutation.isPending}
-                                      className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Stop task"
-                                    >
-                                      <StopCircle className="h-4 w-4" />
-                                      Stop
-                                    </button>
-                                  )
+                                  <button
+                                    onClick={() => stopTaskMutation.mutate(task.name)}
+                                    disabled={stopTaskMutation.isPending}
+                                    className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
+                                    title="Stop task"
+                                  >
+                                    <StopCircle className="h-4 w-4" />
+                                    Stop
+                                  </button>
+                                )
                                 : (
-                                    <button
-                                      onClick={() =>
-                                        startTaskMutation.mutate(task.name)}
-                                      disabled={startTaskMutation.isPending}
-                                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Start task"
-                                    >
-                                      <Play className="h-4 w-4" />
-                                      Start
-                                    </button>
-                                  )}
+                                  <button
+                                    onClick={() =>
+                                      startTaskMutation.mutate(task.name)}
+                                    disabled={startTaskMutation.isPending}
+                                    className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
+                                    title="Start task"
+                                  >
+                                    <Play className="h-4 w-4" />
+                                    Start
+                                  </button>
+                                )}
                             </div>
                           </div>
                         ))}
