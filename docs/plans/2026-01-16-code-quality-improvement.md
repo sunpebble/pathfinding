@@ -83,7 +83,7 @@ This will surface type errors that need to be fixed in subsequent commits."
 
 ```typescript
 // apps/dashboard/src/types/convex.ts
-import type { Id } from 'convex/_generated/dataModel';
+import type { Id } from "convex/_generated/dataModel";
 
 /**
  * Helper to safely convert string to Convex ID
@@ -97,7 +97,7 @@ export function toConvexId<T extends string>(id: string): Id<T> {
  * Type guard to check if value is a valid ID format
  */
 export function isValidConvexId(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0;
+  return typeof value === "string" && value.length > 0;
 }
 ```
 
@@ -169,10 +169,10 @@ Expected: List of files and line numbers with `as any`
 
 ```typescript
 // apps/dashboard/src/types/api.ts
-import type { Doc } from 'convex/_generated/dataModel';
+import type { Doc } from "convex/_generated/dataModel";
 
 // Extended guide type with AI fields
-export interface GuideWithAI extends Doc<'travelGuides'> {
+export interface GuideWithAI extends Doc<"travelGuides"> {
   aiSummary?: string;
   aiTips?: string[];
   aiBestTime?: string;
@@ -190,7 +190,7 @@ export interface AiDay {
 
 export interface AiPoi {
   name: string;
-  type: 'attraction' | 'restaurant' | 'hotel' | 'transportation';
+  type: "attraction" | "restaurant" | "hotel" | "transportation";
   description?: string;
   latitude: number;
   longitude: number;
@@ -283,15 +283,15 @@ git commit -m "fix(dashboard): eliminate type assertions with proper types
 
 ```typescript
 // packages/test-utils/src/index.ts
-export * from './mocks/convex';
+export * from "./mocks/convex";
 
 // Re-export vitest utilities
-export { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+export { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 ```
 
 ```typescript
 // packages/test-utils/src/mocks/convex.ts
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 /**
  * Create a mock Convex client for testing
@@ -307,7 +307,7 @@ export function createMockConvexClient() {
 /**
  * Create a mock Convex ID
  */
-export function mockId<T extends string>(table: T, id = 'test-id'): string {
+export function mockId<T extends string>(table: T, id = "test-id"): string {
   return `${table}:${id}`;
 }
 ```
@@ -342,44 +342,44 @@ git commit -m "feat(test-utils): add shared testing utilities package
 
 ```typescript
 // packages/utils/src/__tests__/index.test.ts
-import { describe, it, expect } from 'vitest';
-import { cn, formatDate, truncate } from '../index';
+import { describe, it, expect } from "vitest";
+import { cn, formatDate, truncate } from "../index";
 
-describe('cn (classnames)', () => {
-  it('should merge class names', () => {
-    expect(cn('foo', 'bar')).toBe('foo bar');
+describe("cn (classnames)", () => {
+  it("should merge class names", () => {
+    expect(cn("foo", "bar")).toBe("foo bar");
   });
 
-  it('should handle conditional classes', () => {
-    expect(cn('base', false && 'hidden', 'visible')).toBe('base visible');
+  it("should handle conditional classes", () => {
+    expect(cn("base", false && "hidden", "visible")).toBe("base visible");
   });
 
-  it('should merge Tailwind classes correctly', () => {
-    expect(cn('px-2 py-1', 'px-4')).toBe('py-1 px-4');
+  it("should merge Tailwind classes correctly", () => {
+    expect(cn("px-2 py-1", "px-4")).toBe("py-1 px-4");
   });
 });
 
-describe('formatDate', () => {
-  it('should format ISO date to readable format', () => {
-    const result = formatDate('2024-01-15T10:30:00Z');
-    expect(result).toContain('2024');
+describe("formatDate", () => {
+  it("should format ISO date to readable format", () => {
+    const result = formatDate("2024-01-15T10:30:00Z");
+    expect(result).toContain("2024");
   });
 
-  it('should handle timestamp numbers', () => {
+  it("should handle timestamp numbers", () => {
     const result = formatDate(1705315800000);
     expect(result).toBeDefined();
   });
 });
 
-describe('truncate', () => {
-  it('should truncate long strings', () => {
-    const result = truncate('This is a very long string', 10);
-    expect(result).toBe('This is a...');
+describe("truncate", () => {
+  it("should truncate long strings", () => {
+    const result = truncate("This is a very long string", 10);
+    expect(result).toBe("This is a...");
   });
 
-  it('should not truncate short strings', () => {
-    const result = truncate('Short', 10);
-    expect(result).toBe('Short');
+  it("should not truncate short strings", () => {
+    const result = truncate("Short", 10);
+    expect(result).toBe("Short");
   });
 });
 ```
@@ -422,57 +422,57 @@ git commit -m "test(utils): add unit tests for utility functions
 
 ```typescript
 // apps/crawler/src/__tests__/services/geocoding.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NominatimGeocoder } from '../../services/geocoding/nominatim.geocoder';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NominatimGeocoder } from "../../services/geocoding/nominatim.geocoder";
 
-describe('NominatimGeocoder', () => {
+describe("NominatimGeocoder", () => {
   let geocoder: NominatimGeocoder;
 
   beforeEach(() => {
     geocoder = new NominatimGeocoder();
   });
 
-  describe('geocode', () => {
-    it('should return coordinates for valid location', async () => {
+  describe("geocode", () => {
+    it("should return coordinates for valid location", async () => {
       // Mock fetch to avoid real API calls
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve([
-            { lat: '39.9042', lon: '116.4074', display_name: 'Beijing, China' },
+            { lat: "39.9042", lon: "116.4074", display_name: "Beijing, China" },
           ]),
       });
 
-      const result = await geocoder.geocode('北京天安门');
+      const result = await geocoder.geocode("北京天安门");
 
       expect(result).toBeDefined();
       expect(result?.latitude).toBeCloseTo(39.9042, 2);
       expect(result?.longitude).toBeCloseTo(116.4074, 2);
     });
 
-    it('should return null for unknown location', async () => {
+    it("should return null for unknown location", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve([]),
       });
 
-      const result = await geocoder.geocode('不存在的地方xyz123');
+      const result = await geocoder.geocode("不存在的地方xyz123");
       expect(result).toBeNull();
     });
 
-    it('should handle API errors gracefully', async () => {
-      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+    it("should handle API errors gracefully", async () => {
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
 
-      const result = await geocoder.geocode('北京');
+      const result = await geocoder.geocode("北京");
       expect(result).toBeNull();
     });
   });
 
-  describe('cleanQuery', () => {
-    it('should remove parentheses and special characters', () => {
-      const cleaned = geocoder['cleanQuery']('北京(朝阳区)');
-      expect(cleaned).not.toContain('(');
-      expect(cleaned).not.toContain(')');
+  describe("cleanQuery", () => {
+    it("should remove parentheses and special characters", () => {
+      const cleaned = geocoder["cleanQuery"]("北京(朝阳区)");
+      expect(cleaned).not.toContain("(");
+      expect(cleaned).not.toContain(")");
     });
   });
 });
@@ -541,7 +541,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -569,7 +569,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -692,19 +692,19 @@ git commit -m "ci: add pre-push hook for quality checks
 
 ```typescript
 // packages/logger/src/index.ts
-import pino from 'pino';
+import pino from "pino";
 
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== "production";
 
 export const logger = pino({
-  level: process.env.LOG_LEVEL || (isDev ? 'debug' : 'info'),
+  level: process.env.LOG_LEVEL || (isDev ? "debug" : "info"),
   transport: isDev
     ? {
-        target: 'pino-pretty',
+        target: "pino-pretty",
         options: {
           colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
+          translateTime: "SYS:standard",
+          ignore: "pid,hostname",
         },
       }
     : undefined,
@@ -758,11 +758,11 @@ git commit -m "feat(logger): add structured logging package
 
 ```typescript
 // apps/crawler/src/lib/logger.ts
-import { createLogger } from '@pathfinding/logger';
+import { createLogger } from "@pathfinding/logger";
 
-export const crawlerLogger = createLogger('crawler');
-export const enrichLogger = createLogger('enrich');
-export const apiLogger = createLogger('api');
+export const crawlerLogger = createLogger("crawler");
+export const enrichLogger = createLogger("enrich");
+export const apiLogger = createLogger("api");
 ```
 
 **Step 3: Replace console statements systematically**
@@ -770,14 +770,14 @@ export const apiLogger = createLogger('api');
 ```typescript
 // Before
 console.log(`Starting crawl for ${platform}...`);
-console.error('Failed to process:', error);
-console.warn('Retrying...');
+console.error("Failed to process:", error);
+console.warn("Retrying...");
 
 // After
-import { crawlerLogger } from './lib/logger';
-crawlerLogger.info({ platform }, 'Starting crawl');
-crawlerLogger.error({ error }, 'Failed to process');
-crawlerLogger.warn('Retrying');
+import { crawlerLogger } from "./lib/logger";
+crawlerLogger.info({ platform }, "Starting crawl");
+crawlerLogger.error({ error }, "Failed to process");
+crawlerLogger.warn("Retrying");
 ```
 
 **Step 4: Run to verify logging works**
@@ -978,17 +978,17 @@ Expected: Multiple definitions in different files
  */
 export function formatDate(
   date: string | number | Date,
-  options?: Intl.DateTimeFormatOptions
+  options?: Intl.DateTimeFormatOptions,
 ): string {
   const d =
-    typeof date === 'number' || typeof date === 'string'
+    typeof date === "number" || typeof date === "string"
       ? new Date(date)
       : date;
 
-  return d.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  return d.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
     ...options,
   });
 }
@@ -998,8 +998,8 @@ export function formatDate(
  */
 export function formatDateTime(date: string | number | Date): string {
   return formatDate(date, {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 ```
@@ -1008,15 +1008,15 @@ export function formatDateTime(date: string | number | Date): string {
 
 ```typescript
 // packages/utils/src/index.ts
-export * from './cn';
-export * from './date';
+export * from "./cn";
+export * from "./date";
 ```
 
 **Step 4: Update dashboard files to use shared utility**
 
 ```typescript
 // In each file with duplicate formatDate
-import { formatDate } from '@pathfinding/utils';
+import { formatDate } from "@pathfinding/utils";
 
 // Remove local formatDate definition
 ```
