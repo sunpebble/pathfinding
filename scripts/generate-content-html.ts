@@ -3,6 +3,7 @@
  * 将纯文本 content + imageUrls 合并为 contentHtml
  */
 
+/* eslint-disable no-console */
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../convex/_generated/api.js';
 
