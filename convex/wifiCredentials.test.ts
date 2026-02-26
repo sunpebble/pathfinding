@@ -38,11 +38,11 @@ describe('wifiCredentials Security', () => {
   describe('listByUser', () => {
     it('should throw if unauthenticated', async () => {
       mockAuth.getUserIdentity.mockResolvedValue(null);
-      await expect(wifiCredentials.listByUser.handler(mockCtx, {})).rejects.toThrow('Unauthenticated');
+      await expect((wifiCredentials.listByUser as any).handler(mockCtx, {})).rejects.toThrow('Unauthenticated');
     });
 
     it('should query by authenticated user', async () => {
-      await wifiCredentials.listByUser.handler(mockCtx, {});
+      await (wifiCredentials.listByUser as any).handler(mockCtx, {});
 
       // Verify query is filtered by 'user123' (from mockAuth)
       expect(mockDb.query).toHaveBeenCalledWith('wifiCredentials');
@@ -56,7 +56,7 @@ describe('wifiCredentials Security', () => {
   describe('create', () => {
     it('should throw if unauthenticated', async () => {
       mockAuth.getUserIdentity.mockResolvedValue(null);
-      await expect(wifiCredentials.create.handler(mockCtx, {
+      await expect((wifiCredentials.create as any).handler(mockCtx, {
         name: 'test',
         ssid: 'test',
         password: 'pass',
@@ -71,7 +71,7 @@ describe('wifiCredentials Security', () => {
         isShared: false,
       };
 
-      await wifiCredentials.create.handler(mockCtx, args);
+      await (wifiCredentials.create as any).handler(mockCtx, args);
 
       expect(mockDb.insert).toHaveBeenCalledWith('wifiCredentials', expect.objectContaining({
         ...args,
@@ -91,7 +91,7 @@ describe('wifiCredentials Security', () => {
 
       const args = { id: 'cred1', name: 'New Name' };
 
-      await expect(wifiCredentials.update.handler(mockCtx, args)).rejects.toThrow('Unauthorized');
+      await expect((wifiCredentials.update as any).handler(mockCtx, args)).rejects.toThrow('Unauthorized');
     });
 
     it('should update if owner', async () => {
@@ -104,7 +104,7 @@ describe('wifiCredentials Security', () => {
 
       const args = { id: 'cred1', name: 'New Name' };
 
-      await wifiCredentials.update.handler(mockCtx, args);
+      await (wifiCredentials.update as any).handler(mockCtx, args);
 
       expect(mockDb.patch).toHaveBeenCalledWith('cred1', expect.objectContaining({
         name: 'New Name',
@@ -120,7 +120,7 @@ describe('wifiCredentials Security', () => {
         userId: 'otherUser',
       });
 
-      await expect(wifiCredentials.remove.handler(mockCtx, { id: 'cred1' })).rejects.toThrow('Unauthorized');
+      await expect((wifiCredentials.remove as any).handler(mockCtx, { id: 'cred1' })).rejects.toThrow('Unauthorized');
     });
 
     it('should delete if owner', async () => {
@@ -129,7 +129,7 @@ describe('wifiCredentials Security', () => {
         userId: 'user123',
       });
 
-      await wifiCredentials.remove.handler(mockCtx, { id: 'cred1' });
+      await (wifiCredentials.remove as any).handler(mockCtx, { id: 'cred1' });
 
       expect(mockDb.delete).toHaveBeenCalledWith('cred1');
     });
