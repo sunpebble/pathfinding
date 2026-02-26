@@ -1,4 +1,5 @@
 ## 2025-02-17 - Insecure WiFi Credentials API (IDOR + Plaintext)
+
 **Vulnerability:** The `wifiCredentials` module exposed functions like `listByUser` and `create` that accepted `userId` as an argument without validating the authenticated user, allowing any user to view or modify any other user's WiFi credentials. Additionally, passwords were stored in plaintext.
 **Learning:** Even if a feature is unused (as this one appeared to be), exposing insecure API endpoints creates a significant attack surface. The lack of standard authentication middleware/checks on each function allowed this.
 **Prevention:** Always use `ctx.auth.getUserIdentity()` to derive the user ID for sensitive operations instead of accepting it as an argument. Enforce ownership checks for `get`, `update`, and `delete` operations.
