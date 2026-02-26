@@ -1,90 +1,65 @@
-/**
- * 历史数据清洗脚本
- * 从 Convex 拉取所有游记，用 content-cleaner 清洗后回写
- */
-
+/* eslint-disable no-console */
 import { ConvexHttpClient } from 'convex/browser';
+import * as dotenv from 'dotenv';
 import { api } from '../convex/_generated/api.js';
-import { cleanContent } from '../packages/crawler-types/src/content-cleaner.js';
 
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
+// Load environment variables
+dotenv.config({ path: '.env.local' });
+
+const CONVEX_URL = process.env.CONVEX_URL;
+if (!CONVEX_URL) {
+  console.error('Error: CONVEX_URL is not defined in .env.local');
+  process.exit(1);
+}
+
 const client = new ConvexHttpClient(CONVEX_URL);
 
 async function main() {
-  console.log('🧹 开始清洗历史游记数据...');
-  console.log(`Convex: ${CONVEX_URL}\n`);
+  console.log('Starting cleanup of historical guides...');
 
-  let cursor: string | undefined;
-  let totalProcessed = 0;
-  let totalCleaned = 0;
-  let totalSkipped = 0;
+  try {
+    // 1. Remove duplicates
+    console.log('\n--- Removing duplicates ---');
+    // For each platform, run deduplication
+    const platforms = [
+      'xiaohongshu',
+      'weibo',
+      'ctrip',
+      'douyin',
+      'tripadvisor',
+      'qunar',
+      'tongcheng',
+      'mafengwo',
+      'qyer',
+    ];
 
-  // 分页遍历所有游记
-  while (true) {
-    const result = await client.query(api.travelGuides.listIds, {
-      cursor,
-      limit: 50,
-    });
-
-    if (!result.items || result.items.length === 0) {
-      break;
+    for (const platform of platforms) {
+      console.log(`Processing platform: ${platform}`);
+      // @ts-expect-error - using any for simplicity in script
+      const result = await client.mutation(api.travelGuides.removeDuplicates, {
+        platform,
+      });
+      console.log(`  Removed ${result.removedCount} duplicates`);
+      console.log(`  Total remaining: ${result.totalAfter}`);
     }
 
-    // 逐条处理
-    for (const item of result.items) {
-      totalProcessed++;
+    // 2. Remove short/truncated content
+    console.log('\n--- Removing short/truncated content ---');
+    // @ts-expect-error - using any for simplicity in script
+    const shortResult = await client.mutation(
+      api.travelGuides.removeShortContent,
+      {
+        minLength: 100, // Very short content
+      },
+    );
+    console.log(`Removed ${shortResult.removedCount} guides with short content`);
 
-      try {
-        // 获取完整 guide
-        const guide = await client.query(api.travelGuides.getById, {
-          id: item._id,
-        });
-
-        if (!guide || !guide.content) {
-          totalSkipped++;
-          continue;
-        }
-
-        // 清洗内容
-        const cleanResult = cleanContent(guide.content, {
-          categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
-          preserveParagraphs: true,
-        });
-
-        // 如果清洗后内容有变化，回写
-        if (cleanResult.cleanedLength !== cleanResult.originalLength) {
-          await client.mutation(api.travelGuides.update, {
-            id: item._id,
-            content: cleanResult.content,
-          });
-
-          totalCleaned++;
-          const pct = Math.round((1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100);
-          console.log(
-            `✅ [${totalProcessed}] ${item.title?.slice(0, 30) || item.sourceExternalId} — 清除 ${pct}% 噪音 (${cleanResult.originalLength} → ${cleanResult.cleanedLength}) [${cleanResult.removedTypes.join(', ')}]`,
-          );
-        }
-        else {
-          totalSkipped++;
-          if (totalProcessed % 20 === 0) {
-            console.log(`⏭️  [${totalProcessed}] 已跳过（无需清洗）`);
-          }
-        }
-      }
-      catch (err) {
-        console.error(`❌ [${totalProcessed}] ${item._id}: ${err}`);
-      }
-    }
-
-    if (result.isDone)
-      break;
-    cursor = result.cursor;
+    console.log('\nCleanup completed successfully!');
   }
-
-  console.log(`\n🎉 清洗完成！`);
-  console.log(`   总计处理: ${totalProcessed}`);
-  console.log(`   已清洗:   ${totalCleaned}`);
-  console.log(`   已跳过:   ${totalSkipped}`);
+  catch (error) {
+    console.error('Error during cleanup:', error);
+    process.exit(1);
+  }
 }
 
-main().catch(console.error);
+main();

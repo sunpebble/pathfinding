@@ -1,19 +1,19 @@
-import type { Id } from "./_generated/dataModel";
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import type { Id } from './_generated/dataModel';
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
 import {
   deleteGuideFromAggregates,
   insertGuideToAggregates,
   replaceGuideInAggregates,
-} from "./guideAggregates";
+} from './guideAggregates';
 import {
   deleteDestinationsForGuide,
   syncDestinationsInternal,
-} from "./guideDestinations";
+} from './guideDestinations';
 import {
   ensureDisplayFields,
   fillMissingDisplayFields,
-} from "./lib/displayFields";
+} from './lib/displayFields';
 
 /**
  * Travel Guides - Crawled Content from Social Platforms
@@ -31,7 +31,7 @@ const TRUNCATION_PATTERNS = [
 ];
 
 function isContentTruncated(content: string): boolean {
-  return TRUNCATION_PATTERNS.some((pattern) => pattern.test(content));
+  return TRUNCATION_PATTERNS.some(pattern => pattern.test(content));
 }
 
 // Completeness level calculation
@@ -51,7 +51,7 @@ function calculateCompletenessLevel(input: {
   commentsCount?: number;
   viewsCount?: number;
   qualityScore?: number;
-}): "complete" | "usable" | "incomplete" {
+}): 'complete' | 'usable' | 'incomplete' {
   const {
     title,
     content,
@@ -67,62 +67,62 @@ function calculateCompletenessLevel(input: {
     qualityScore,
   } = input;
 
-  const isTruncated =
-    contentTruncated || (content ? isContentTruncated(content) : false);
+  const isTruncated
+    = contentTruncated || (content ? isContentTruncated(content) : false);
   const hasImages = !!(coverImageUrl || (imageUrls && imageUrls.length > 0));
   const hasTitle = !!(title && title.trim().length > 0);
   const hasAuthor = !!(authorName && authorName.trim().length > 0);
   const hasDestinations = !!(destinations && destinations.length > 0);
   const contentLength = content?.length ?? 0;
 
-  const hasAllCounts =
-    likesCount !== undefined &&
-    likesCount !== null &&
-    savesCount !== undefined &&
-    savesCount !== null &&
-    commentsCount !== undefined &&
-    commentsCount !== null &&
-    viewsCount !== undefined &&
-    viewsCount !== null;
+  const hasAllCounts
+    = likesCount !== undefined
+      && likesCount !== null
+      && savesCount !== undefined
+      && savesCount !== null
+      && commentsCount !== undefined
+      && commentsCount !== null
+      && viewsCount !== undefined
+      && viewsCount !== null;
 
   const hasQualityScore = qualityScore !== undefined && qualityScore !== null;
 
   if (
-    hasTitle &&
-    hasImages &&
-    hasAuthor &&
-    hasDestinations &&
-    hasAllCounts &&
-    hasQualityScore &&
-    contentLength >= MIN_CONTENT_LENGTH_COMPLETE &&
-    !isTruncated
+    hasTitle
+    && hasImages
+    && hasAuthor
+    && hasDestinations
+    && hasAllCounts
+    && hasQualityScore
+    && contentLength >= MIN_CONTENT_LENGTH_COMPLETE
+    && !isTruncated
   ) {
-    return "complete";
+    return 'complete';
   }
 
   if (hasTitle && contentLength >= MIN_CONTENT_LENGTH && hasImages) {
-    return "usable";
+    return 'usable';
   }
 
-  return "incomplete";
+  return 'incomplete';
 }
 
 const platformValidator = v.union(
-  v.literal("xiaohongshu"),
-  v.literal("weibo"),
-  v.literal("ctrip"),
-  v.literal("douyin"),
-  v.literal("tripadvisor"),
-  v.literal("tongcheng"),
-  v.literal("mafengwo"),
-  v.literal("qunar"),
-  v.literal("qyer"),
+  v.literal('xiaohongshu'),
+  v.literal('weibo'),
+  v.literal('ctrip'),
+  v.literal('douyin'),
+  v.literal('tripadvisor'),
+  v.literal('tongcheng'),
+  v.literal('mafengwo'),
+  v.literal('qunar'),
+  v.literal('qyer'),
 );
 
 const completenessLevelValidator = v.union(
-  v.literal("complete"),
-  v.literal("usable"),
-  v.literal("incomplete"),
+  v.literal('complete'),
+  v.literal('usable'),
+  v.literal('incomplete'),
 );
 
 // List travel guides with filters (with display fields guaranteed)
@@ -138,8 +138,8 @@ export const list = query({
 
     // Take limited records before collecting to avoid 16MB limit
     // Note: We fetch more than the limit to allow for quality filtering
-    const fetchLimit =
-      args.minQuality !== undefined || args.completenessLevel !== undefined
+    const fetchLimit
+      = args.minQuality !== undefined || args.completenessLevel !== undefined
         ? effectiveLimit * 3
         : effectiveLimit;
 
@@ -148,32 +148,33 @@ export const list = query({
     // Use completeness index if specified
     if (args.completenessLevel) {
       guides = await ctx.db
-        .query("travelGuides")
-        .withIndex("by_completeness", (q) =>
-          q.eq("completenessLevel", args.completenessLevel!),
-        )
-        .order("desc")
+        .query('travelGuides')
+        .withIndex('by_completeness', q =>
+          q.eq('completenessLevel', args.completenessLevel!))
+        .order('desc')
         .take(fetchLimit);
 
       // Additional platform filter if needed
       if (args.platform) {
-        guides = guides.filter((g) => g.sourcePlatform === args.platform);
+        guides = guides.filter(g => g.sourcePlatform === args.platform);
       }
-    } else if (args.platform) {
+    }
+    else if (args.platform) {
       guides = await ctx.db
-        .query("travelGuides")
-        .withIndex("by_platform", (q) => q.eq("sourcePlatform", args.platform!))
-        .order("desc")
+        .query('travelGuides')
+        .withIndex('by_platform', q => q.eq('sourcePlatform', args.platform!))
+        .order('desc')
         .take(fetchLimit);
-    } else {
+    }
+    else {
       guides = await ctx.db
-        .query("travelGuides")
-        .order("desc")
+        .query('travelGuides')
+        .order('desc')
         .take(fetchLimit);
     }
 
     if (args.minQuality !== undefined) {
-      guides = guides.filter((g) => g.qualityScore >= args.minQuality!);
+      guides = guides.filter(g => g.qualityScore >= args.minQuality!);
     }
 
     // Apply display field guarantee to all returned guides
@@ -191,12 +192,12 @@ export const listIds = query({
     const limit = args.limit || 100;
 
     const result = await ctx.db
-      .query("travelGuides")
-      .order("desc")
+      .query('travelGuides')
+      .order('desc')
       .paginate({ numItems: limit, cursor: args.cursor ?? null });
 
     // Return only essential fields to avoid 16MB limit
-    const items = result.page.map((g) => ({
+    const items = result.page.map(g => ({
       _id: g._id,
       sourceExternalId: g.sourceExternalId,
       sourcePlatform: g.sourcePlatform,
@@ -220,7 +221,7 @@ export const count = query({
   handler: async (ctx) => {
     // Use index to count efficiently - iterate without loading full documents
     let count = 0;
-    const iter = ctx.db.query("travelGuides").order("desc");
+    const iter = ctx.db.query('travelGuides').order('desc');
     for await (const _ of iter) {
       count++;
     }
@@ -236,24 +237,25 @@ export const getByPlatformAndExternalId = query({
   },
   handler: async (ctx, args) => {
     const guide = await ctx.db
-      .query("travelGuides")
-      .withIndex("by_platform_external", (q) =>
+      .query('travelGuides')
+      .withIndex('by_platform_external', q =>
         q
-          .eq("sourcePlatform", args.sourcePlatform)
-          .eq("sourceExternalId", args.sourceExternalId),
-      )
+          .eq('sourcePlatform', args.sourcePlatform)
+          .eq('sourceExternalId', args.sourceExternalId))
       .first();
-    if (!guide) return null;
+    if (!guide)
+      return null;
     return ensureDisplayFields(guide);
   },
 });
 
 // Get a guide by ID (with display fields guaranteed)
 export const getById = query({
-  args: { id: v.id("travelGuides") },
+  args: { id: v.id('travelGuides') },
   handler: async (ctx, args) => {
     const guide = await ctx.db.get(args.id);
-    if (!guide) return null;
+    if (!guide)
+      return null;
     return ensureDisplayFields(guide);
   },
 });
@@ -261,7 +263,7 @@ export const getById = query({
 // Update a guide by ID (for content cleaning and updates)
 export const update = mutation({
   args: {
-    id: v.id("travelGuides"),
+    id: v.id('travelGuides'),
     title: v.optional(v.string()),
     content: v.optional(v.string()),
     aiSummary: v.optional(v.string()),
@@ -298,32 +300,33 @@ export const search = query({
     // If query is provided, use search index
     if (args.query && args.query.trim().length > 0) {
       guides = await ctx.db
-        .query("travelGuides")
-        .withSearchIndex("search_title", (q) => q.search("title", args.query!))
+        .query('travelGuides')
+        .withSearchIndex('search_title', q => q.search('title', args.query!))
         .take(effectiveLimit * 2);
-    } else {
+    }
+    else {
       guides = await ctx.db
-        .query("travelGuides")
-        .order("desc")
+        .query('travelGuides')
+        .order('desc')
         .take(effectiveLimit * 2);
     }
 
     // Apply filters
     if (args.destination) {
-      guides = guides.filter((g) =>
-        g.destinations.some((d) =>
+      guides = guides.filter(g =>
+        g.destinations.some(d =>
           d.toLowerCase().includes(args.destination!.toLowerCase()),
         ),
       );
     }
 
     if (args.hasAiData) {
-      guides = guides.filter((g) => g.aiProcessedAt !== undefined);
+      guides = guides.filter(g => g.aiProcessedAt !== undefined);
     }
 
     if (args.daysAgo) {
       const cutoffTime = Date.now() - args.daysAgo * 24 * 60 * 60 * 1000;
-      guides = guides.filter((g) => g.crawledAt >= cutoffTime);
+      guides = guides.filter(g => g.crawledAt >= cutoffTime);
     }
 
     // Apply display field guarantee to all returned guides
@@ -343,12 +346,12 @@ export const listDestinationsBatch = query({
     const batchSize = args.batchSize || 50;
 
     const result = await ctx.db
-      .query("travelGuides")
-      .order("desc")
+      .query('travelGuides')
+      .order('desc')
       .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
 
     // Return only the destinations arrays (minimal data)
-    const destinations = result.page.flatMap((g) => g.destinations);
+    const destinations = result.page.flatMap(g => g.destinations);
 
     return {
       destinations,
@@ -383,7 +386,7 @@ export const getPopularDestinations = query({
 
     // Fallback: fetch a small sample if called directly (for backward compatibility)
     // Use small limit to avoid 16MB error
-    const guides = await ctx.db.query("travelGuides").order("desc").take(20);
+    const guides = await ctx.db.query('travelGuides').order('desc').take(20);
 
     const destCounts: Record<string, number> = {};
     for (const guide of guides) {
@@ -414,9 +417,9 @@ export const getByDestination = query({
     // If exact match was needed, we could use the index:
     // .withIndex('by_destination', q => q.eq('destination', destLower))
     // Since we need substring match, we scan the lightweight table.
-    const guideDestinations = await ctx.db.query("guideDestinations").collect();
+    const guideDestinations = await ctx.db.query('guideDestinations').collect();
 
-    const matchedGuideIds = new Set<Id<"travelGuides">>();
+    const matchedGuideIds = new Set<Id<'travelGuides'>>();
     for (const gd of guideDestinations) {
       if (gd.destination.includes(destLower)) {
         matchedGuideIds.add(gd.guideId);
@@ -426,7 +429,7 @@ export const getByDestination = query({
     // Fetch only the matching guides
     // This reduces memory usage and IO by avoiding loading full content for non-matching guides
     const guides = await Promise.all(
-      Array.from(matchedGuideIds).map((id) => ctx.db.get(id)),
+      Array.from(matchedGuideIds).map(id => ctx.db.get(id)),
     );
 
     const validGuides = guides.filter(
@@ -468,12 +471,11 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     // Check if guide already exists using the unique index
     const existing = await ctx.db
-      .query("travelGuides")
-      .withIndex("by_platform_external", (q) =>
+      .query('travelGuides')
+      .withIndex('by_platform_external', q =>
         q
-          .eq("sourcePlatform", args.sourcePlatform)
-          .eq("sourceExternalId", args.sourceExternalId),
-      )
+          .eq('sourcePlatform', args.sourcePlatform)
+          .eq('sourceExternalId', args.sourceExternalId))
       .first();
 
     // Prepare base data
@@ -536,7 +538,7 @@ export const upsert = mutation({
       completenessLevel,
     };
 
-    let guideId: Id<"travelGuides">;
+    let guideId: Id<'travelGuides'>;
 
     if (existing) {
       // Update existing guide
@@ -553,9 +555,10 @@ export const upsert = mutation({
       }
 
       guideId = existing._id;
-    } else {
+    }
+    else {
       // Insert new guide
-      const id = await ctx.db.insert("travelGuides", data);
+      const id = await ctx.db.insert('travelGuides', data);
       const newDoc = await ctx.db.get(id);
 
       // Sync destinations for new guide
@@ -571,12 +574,12 @@ export const upsert = mutation({
 
     // Trigger refetch task if content is truncated and we have a source URL
     if (contentTruncated && args.sourceUrl) {
-      await ctx.db.insert("refetchTasks", {
+      await ctx.db.insert('refetchTasks', {
         guideId,
         sourceUrl: args.sourceUrl,
         sourceExternalId: args.sourceExternalId,
         sourcePlatform: args.sourcePlatform,
-        status: "pending",
+        status: 'pending',
         retryCount: 0,
         maxRetries: 3,
         createdAt: Date.now(),
@@ -585,7 +588,7 @@ export const upsert = mutation({
 
     return {
       id: guideId,
-      action: existing ? ("updated" as const) : ("inserted" as const),
+      action: existing ? ('updated' as const) : ('inserted' as const),
       contentTruncated,
       completenessLevel,
     };
@@ -620,10 +623,10 @@ export const bulkInsert = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const ids: Id<"travelGuides">[] = [];
+    const ids: Id<'travelGuides'>[] = [];
 
     for (const guide of args.guides) {
-      const id = await ctx.db.insert("travelGuides", {
+      const id = await ctx.db.insert('travelGuides', {
         ...guide,
         likesCount: guide.likesCount ?? 0,
         savesCount: guide.savesCount ?? 0,
@@ -671,17 +674,16 @@ export const bulkUpsert = mutation({
   handler: async (ctx, args) => {
     let inserted = 0;
     let updated = 0;
-    const ids: Id<"travelGuides">[] = [];
+    const ids: Id<'travelGuides'>[] = [];
 
     for (const guide of args.guides) {
       // Check if guide already exists
       const existing = await ctx.db
-        .query("travelGuides")
-        .withIndex("by_platform_external", (q) =>
+        .query('travelGuides')
+        .withIndex('by_platform_external', q =>
           q
-            .eq("sourcePlatform", guide.sourcePlatform)
-            .eq("sourceExternalId", guide.sourceExternalId),
-        )
+            .eq('sourcePlatform', guide.sourcePlatform)
+            .eq('sourceExternalId', guide.sourceExternalId))
         .first();
 
       const data = {
@@ -723,9 +725,10 @@ export const bulkUpsert = mutation({
 
         ids.push(existing._id);
         updated++;
-      } else {
+      }
+      else {
         // Insert new
-        const id = await ctx.db.insert("travelGuides", data);
+        const id = await ctx.db.insert('travelGuides', data);
         const newDoc = await ctx.db.get(id);
 
         // Sync destinations
@@ -748,7 +751,7 @@ export const bulkUpsert = mutation({
 // Update quality score
 export const updateQualityScore = mutation({
   args: {
-    id: v.id("travelGuides"),
+    id: v.id('travelGuides'),
     qualityScore: v.number(),
   },
   handler: async (ctx, args) => {
@@ -759,7 +762,7 @@ export const updateQualityScore = mutation({
 // Update AI-extracted data
 export const updateAiData = mutation({
   args: {
-    id: v.id("travelGuides"),
+    id: v.id('travelGuides'),
     contentMarkdown: v.optional(v.string()),
     aiSummary: v.optional(v.string()),
     aiTips: v.optional(v.array(v.string())),
@@ -820,7 +823,7 @@ export const updateAiData = mutation({
 // Update guide with AI-enhanced content (title, summary) and recalculate completenessLevel
 export const updateWithEnhancement = mutation({
   args: {
-    id: v.id("travelGuides"),
+    id: v.id('travelGuides'),
     title: v.optional(v.string()),
     aiSummary: v.optional(v.string()),
   },
@@ -879,21 +882,20 @@ export const getGuidesForEnhancement = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 10;
-    const priorityLevel = args.priorityLevel || "usable";
+    const priorityLevel = args.priorityLevel || 'usable';
 
     // Get guides at the specified completeness level that haven't been AI processed
     const guides = await ctx.db
-      .query("travelGuides")
-      .withIndex("by_completeness", (q) =>
-        q.eq("completenessLevel", priorityLevel),
-      )
-      .order("desc")
+      .query('travelGuides')
+      .withIndex('by_completeness', q =>
+        q.eq('completenessLevel', priorityLevel))
+      .order('desc')
       .take(limit * 2);
 
     // Filter to guides missing title or without AI summary
-    const needsEnhancement = guides.filter((g) => !g.title || !g.aiSummary);
+    const needsEnhancement = guides.filter(g => !g.title || !g.aiSummary);
 
-    return needsEnhancement.slice(0, limit).map((g) => ({
+    return needsEnhancement.slice(0, limit).map(g => ({
       _id: g._id,
       title: g.title,
       content: g.content?.slice(0, 1000), // Limit content for API response
@@ -908,16 +910,17 @@ export const getGuidesForEnhancement = query({
 // Delete a guide
 // Also cleans up associated data: recommendations, destinations, aggregates
 export const remove = mutation({
-  args: { id: v.id("travelGuides") },
+  args: { id: v.id('travelGuides') },
   handler: async (ctx, args) => {
     // Get the guide before deletion for aggregate update
     const guide = await ctx.db.get(args.id);
-    if (!guide) return;
+    if (!guide)
+      return;
 
     // Delete associated recommendations
     const recs = await ctx.db
-      .query("guideRecommendations")
-      .filter((q) => q.eq(q.field("guideId"), args.id))
+      .query('guideRecommendations')
+      .filter(q => q.eq(q.field('guideId'), args.id))
       .collect();
 
     for (const rec of recs) {
@@ -944,12 +947,11 @@ export const findDuplicatesForExternalId = query({
   handler: async (ctx, args) => {
     // Use the by_platform_external index for efficient lookup
     const guides = await ctx.db
-      .query("travelGuides")
-      .withIndex("by_platform_external", (q) =>
+      .query('travelGuides')
+      .withIndex('by_platform_external', q =>
         q
-          .eq("sourcePlatform", args.sourcePlatform)
-          .eq("sourceExternalId", args.sourceExternalId),
-      )
+          .eq('sourcePlatform', args.sourcePlatform)
+          .eq('sourceExternalId', args.sourceExternalId))
       .collect();
 
     if (guides.length <= 1) {
@@ -958,7 +960,7 @@ export const findDuplicatesForExternalId = query({
 
     // Sort to find best one
     const sorted = guides
-      .map((g) => ({
+      .map(g => ({
         _id: g._id,
         contentLength: g.content?.length || 0,
         qualityScore: g.qualityScore,
@@ -967,16 +969,19 @@ export const findDuplicatesForExternalId = query({
       }))
       .sort((a, b) => {
         const aiDiff = (b.aiProcessedAt ? 1 : 0) - (a.aiProcessedAt ? 1 : 0);
-        if (aiDiff !== 0) return aiDiff;
+        if (aiDiff !== 0)
+          return aiDiff;
         const contentDiff = b.contentLength - a.contentLength;
-        if (contentDiff !== 0) return contentDiff;
+        if (contentDiff !== 0)
+          return contentDiff;
         const qualityDiff = b.qualityScore - a.qualityScore;
-        if (qualityDiff !== 0) return qualityDiff;
+        if (qualityDiff !== 0)
+          return qualityDiff;
         return b.crawledAt - a.crawledAt;
       });
 
     return {
-      idsToDelete: sorted.slice(1).map((g) => g._id),
+      idsToDelete: sorted.slice(1).map(g => g._id),
       kept: sorted[0]._id,
       total: guides.length,
     };
@@ -994,15 +999,15 @@ export const getUniqueExternalIds = query({
     const limit = args.limit || 50;
 
     const result = await ctx.db
-      .query("travelGuides")
-      .withIndex("by_platform", (q) => q.eq("sourcePlatform", args.platform))
+      .query('travelGuides')
+      .withIndex('by_platform', q => q.eq('sourcePlatform', args.platform))
       .paginate({
         numItems: limit,
         cursor: args.cursor ?? null,
       });
 
     // Extract externalIds from this page
-    const items = result.page.map((g) => ({
+    const items = result.page.map(g => ({
       id: g._id,
       externalId: g.sourceExternalId,
       platform: g.sourcePlatform,
@@ -1019,7 +1024,7 @@ export const getUniqueExternalIds = query({
 // Batch delete guides by IDs
 export const batchDelete = mutation({
   args: {
-    ids: v.array(v.id("travelGuides")),
+    ids: v.array(v.id('travelGuides')),
   },
   handler: async (ctx, args) => {
     let deletedCount = 0;
@@ -1035,7 +1040,8 @@ export const batchDelete = mutation({
         }
         await ctx.db.delete(id);
         deletedCount++;
-      } catch {
+      }
+      catch {
         // Skip if already deleted
       }
     }
@@ -1056,7 +1062,7 @@ export const removeDuplicates = mutation({
   handler: async (ctx, args) => {
     // Collect guide metadata using platform index for smaller batches
     interface GuideInfo {
-      _id: Id<"travelGuides">;
+      _id: Id<'travelGuides'>;
       sourcePlatform: string;
       sourceExternalId: string;
       contentLength: number;
@@ -1070,33 +1076,33 @@ export const removeDuplicates = mutation({
     // If platform specified, only query that platform
     // Otherwise query all platforms one by one
     const platforms: Array<
-      | "xiaohongshu"
-      | "weibo"
-      | "ctrip"
-      | "douyin"
-      | "tripadvisor"
-      | "qunar"
-      | "tongcheng"
-      | "mafengwo"
-      | "qyer"
+      | 'xiaohongshu'
+      | 'weibo'
+      | 'ctrip'
+      | 'douyin'
+      | 'tripadvisor'
+      | 'qunar'
+      | 'tongcheng'
+      | 'mafengwo'
+      | 'qyer'
     > = args.platform
       ? [args.platform]
       : [
-          "xiaohongshu",
-          "weibo",
-          "ctrip",
-          "douyin",
-          "tripadvisor",
-          "qunar",
-          "tongcheng",
-          "mafengwo",
-          "qyer",
+          'xiaohongshu',
+          'weibo',
+          'ctrip',
+          'douyin',
+          'tripadvisor',
+          'qunar',
+          'tongcheng',
+          'mafengwo',
+          'qyer',
         ];
 
     for (const platform of platforms) {
       const guides = await ctx.db
-        .query("travelGuides")
-        .withIndex("by_platform", (q) => q.eq("sourcePlatform", platform))
+        .query('travelGuides')
+        .withIndex('by_platform', q => q.eq('sourcePlatform', platform))
         .collect();
 
       for (const g of guides) {
@@ -1123,7 +1129,7 @@ export const removeDuplicates = mutation({
 
     // Find and delete duplicates
     let removedCount = 0;
-    const idsToDelete: Id<"travelGuides">[] = [];
+    const idsToDelete: Id<'travelGuides'>[] = [];
 
     for (const [_key, group] of grouped) {
       if (group.length > 1) {
@@ -1131,13 +1137,16 @@ export const removeDuplicates = mutation({
         group.sort((a, b) => {
           // Prefer guides with AI data
           const aiDiff = (b.aiProcessedAt ? 1 : 0) - (a.aiProcessedAt ? 1 : 0);
-          if (aiDiff !== 0) return aiDiff;
+          if (aiDiff !== 0)
+            return aiDiff;
 
           const contentDiff = b.contentLength - a.contentLength;
-          if (contentDiff !== 0) return contentDiff;
+          if (contentDiff !== 0)
+            return contentDiff;
 
           const qualityDiff = b.qualityScore - a.qualityScore;
-          if (qualityDiff !== 0) return qualityDiff;
+          if (qualityDiff !== 0)
+            return qualityDiff;
 
           return b.crawledAt - a.crawledAt;
         });
@@ -1160,7 +1169,7 @@ export const removeDuplicates = mutation({
       totalBefore: allGuides.length,
       totalAfter: allGuides.length - removedCount,
       uniqueKeys: grouped.size,
-      platform: args.platform || "all",
+      platform: args.platform || 'all',
     };
   },
 });
@@ -1170,7 +1179,7 @@ export const removeShortContent = mutation({
   args: { minLength: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const minLength = args.minLength || 200; // Default minimum content length
-    const guides = await ctx.db.query("travelGuides").collect();
+    const guides = await ctx.db.query('travelGuides').collect();
 
     let removedCount = 0;
     for (const guide of guides) {
@@ -1191,8 +1200,8 @@ export const clearAllAiData = mutation({
     const limit = args.limit || 50;
     // Only get guides that have AI data
     const guides = await ctx.db
-      .query("travelGuides")
-      .filter((q) => q.neq(q.field("aiProcessedAt"), undefined))
+      .query('travelGuides')
+      .filter(q => q.neq(q.field('aiProcessedAt'), undefined))
       .take(limit);
 
     let clearedCount = 0;
@@ -1216,7 +1225,7 @@ export const clearAllAiData = mutation({
 // Update POI coordinates with manual override
 export const updatePoiCoordinates = mutation({
   args: {
-    guideId: v.id("travelGuides"),
+    guideId: v.id('travelGuides'),
     dayNumber: v.number(),
     poiIndex: v.number(),
     latitude: v.number(),
@@ -1230,12 +1239,12 @@ export const updatePoiCoordinates = mutation({
     }
 
     if (!guide.aiDays) {
-      throw new Error("Guide has no AI-generated itinerary data");
+      throw new Error('Guide has no AI-generated itinerary data');
     }
 
     // Find the day
     const dayIndex = guide.aiDays.findIndex(
-      (day) => day.dayNumber === args.dayNumber,
+      day => day.dayNumber === args.dayNumber,
     );
     if (dayIndex === -1) {
       throw new Error(`Day ${args.dayNumber} not found in guide`);
@@ -1250,17 +1259,19 @@ export const updatePoiCoordinates = mutation({
 
     // Create updated aiDays with the modified POI
     const updatedAiDays = guide.aiDays.map((d, dIdx) => {
-      if (dIdx !== dayIndex) return d;
+      if (dIdx !== dayIndex)
+        return d;
       return {
         ...d,
         pois: d.pois.map((poi, pIdx) => {
-          if (pIdx !== args.poiIndex) return poi;
+          if (pIdx !== args.poiIndex)
+            return poi;
           return {
             ...poi,
             latitude: args.latitude,
             longitude: args.longitude,
             geocodeConfidence: 1.0,
-            geocodeSource: "manual",
+            geocodeSource: 'manual',
             isManuallyVerified: true,
             verifiedAt: Date.now(),
             verifiedBy: args.verifiedBy,
@@ -1293,13 +1304,13 @@ export const updatePoiCoordinates = mutation({
         if (poi.isManuallyVerified) {
           manuallyVerifiedCount++;
         }
-        const source = poi.geocodeSource ?? "unknown";
+        const source = poi.geocodeSource ?? 'unknown';
         if (
-          source === "amap" ||
-          source === "nominatim" ||
-          source === "overpass" ||
-          source === "consensus" ||
-          source === "manual"
+          source === 'amap'
+          || source === 'nominatim'
+          || source === 'overpass'
+          || source === 'consensus'
+          || source === 'manual'
         ) {
           sourceDistribution[source] = (sourceDistribution[source] ?? 0) + 1;
         }
@@ -1345,14 +1356,15 @@ export const getGuidesWithLowConfidence = query({
 
     // Get all guides with AI data
     const guides = await ctx.db
-      .query("travelGuides")
-      .filter((q) => q.neq(q.field("aiDays"), undefined))
+      .query('travelGuides')
+      .filter(q => q.neq(q.field('aiDays'), undefined))
       .collect();
 
     // Calculate low confidence POI count for each guide
     const guidesWithStats = guides
       .map((guide) => {
-        if (!guide.aiDays) return null;
+        if (!guide.aiDays)
+          return null;
 
         let totalPois = 0;
         let lowConfidenceCount = 0;
@@ -1374,7 +1386,8 @@ export const getGuidesWithLowConfidence = query({
         }
 
         // Only include guides with low-confidence POIs
-        if (lowConfidenceCount === 0) return null;
+        if (lowConfidenceCount === 0)
+          return null;
 
         return {
           _id: guide._id,
@@ -1402,12 +1415,12 @@ export const getGuidesWithLowConfidence = query({
 // Update enrichment status (used by AI service poller)
 export const updateEnrichmentStatus = mutation({
   args: {
-    id: v.id("travelGuides"),
+    id: v.id('travelGuides'),
     status: v.union(
-      v.literal("pending"),
-      v.literal("processing"),
-      v.literal("completed"),
-      v.literal("failed"),
+      v.literal('pending'),
+      v.literal('processing'),
+      v.literal('completed'),
+      v.literal('failed'),
     ),
     error: v.optional(v.string()),
   },
@@ -1421,15 +1434,15 @@ export const updateEnrichmentStatus = mutation({
       enrichmentStatus: args.status,
     };
 
-    if (args.status === "processing") {
+    if (args.status === 'processing') {
       update.enrichmentStartedAt = Date.now();
     }
 
-    if (args.status === "failed" && args.error) {
+    if (args.status === 'failed' && args.error) {
       update.enrichmentError = args.error;
     }
 
-    if (args.status === "completed") {
+    if (args.status === 'completed') {
       update.enrichmentError = undefined;
     }
 
