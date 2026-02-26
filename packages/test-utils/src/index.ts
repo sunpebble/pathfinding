@@ -1,4 +1,4 @@
-export * from './mocks/index';
+export * from "./mocks/index";
 
 // Re-export vitest utilities for convenience
 export {
@@ -10,4 +10,4 @@ export {
   expect,
   it,
   vi,
-} from 'vitest';
+} from "vitest";

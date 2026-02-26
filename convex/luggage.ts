@@ -1,7 +1,7 @@
-import type { Id } from './_generated/dataModel';
-import type { MutationCtx, QueryCtx } from './_generated/server';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Luggage - Luggage Tracking and Management (行李追踪)
@@ -9,22 +9,22 @@ import { mutation, query } from './_generated/server';
 
 // Luggage status enum
 const luggageStatusValidator = v.union(
-  v.literal('checked_in'),
-  v.literal('in_transit'),
-  v.literal('arrived'),
-  v.literal('claimed'),
-  v.literal('delayed'),
-  v.literal('lost'),
-  v.literal('found'),
-  v.literal('damaged'),
+  v.literal("checked_in"),
+  v.literal("in_transit"),
+  v.literal("arrived"),
+  v.literal("claimed"),
+  v.literal("delayed"),
+  v.literal("lost"),
+  v.literal("found"),
+  v.literal("damaged"),
 );
 
 // Luggage size enum
 const luggageSizeValidator = v.union(
-  v.literal('cabin'),
-  v.literal('medium'),
-  v.literal('large'),
-  v.literal('oversized'),
+  v.literal("cabin"),
+  v.literal("medium"),
+  v.literal("large"),
+  v.literal("oversized"),
 );
 
 /**
@@ -32,15 +32,15 @@ const luggageSizeValidator = v.union(
  */
 async function checkLuggageOwnership(
   ctx: QueryCtx | MutationCtx,
-  luggageId: Id<'luggage'>,
+  luggageId: Id<"luggage">,
   userId: string,
 ): Promise<boolean> {
   const luggage = await ctx.db.get(luggageId);
   if (!luggage) {
-    throw new Error('Luggage not found');
+    throw new Error("Luggage not found");
   }
   if (luggage.userId !== userId) {
-    throw new Error('You do not have access to this luggage');
+    throw new Error("You do not have access to this luggage");
   }
   return true;
 }
@@ -56,8 +56,8 @@ export const list = query({
   args: {
     userId: v.string(),
     status: v.optional(luggageStatusValidator),
-    flightBookingId: v.optional(v.id('flightBookings')),
-    itineraryId: v.optional(v.id('itineraries')),
+    flightBookingId: v.optional(v.id("flightBookings")),
+    itineraryId: v.optional(v.id("itineraries")),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
   },
@@ -67,25 +67,25 @@ export const list = query({
     const offset = (page - 1) * pageSize;
 
     let luggageItems = await ctx.db
-      .query('luggage')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
-      .order('desc')
+      .query("luggage")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
       .collect();
 
     // Apply filters
     if (args.status) {
-      luggageItems = luggageItems.filter(l => l.status === args.status);
+      luggageItems = luggageItems.filter((l) => l.status === args.status);
     }
 
     if (args.flightBookingId) {
       luggageItems = luggageItems.filter(
-        l => l.flightBookingId === args.flightBookingId,
+        (l) => l.flightBookingId === args.flightBookingId,
       );
     }
 
     if (args.itineraryId) {
       luggageItems = luggageItems.filter(
-        l => l.itineraryId === args.itineraryId,
+        (l) => l.itineraryId === args.itineraryId,
       );
     }
 
@@ -100,11 +100,10 @@ export const list = query({
  * Get luggage by ID
  */
 export const getById = query({
-  args: { id: v.id('luggage') },
+  args: { id: v.id("luggage") },
   handler: async (ctx, args) => {
     const luggage = await ctx.db.get(args.id);
-    if (!luggage)
-      return null;
+    if (!luggage) return null;
 
     // If linked to a flight booking, fetch flight info
     let flightBooking = null;
@@ -129,9 +128,10 @@ export const getByTagNumber = query({
   },
   handler: async (ctx, args) => {
     const luggage = await ctx.db
-      .query('luggage')
-      .withIndex('by_tag_number', q =>
-        q.eq('tagNumber', args.tagNumber.toUpperCase()))
+      .query("luggage")
+      .withIndex("by_tag_number", (q) =>
+        q.eq("tagNumber", args.tagNumber.toUpperCase()),
+      )
       .first();
 
     if (!luggage || luggage.userId !== args.userId) {
@@ -147,18 +147,19 @@ export const getByTagNumber = query({
  */
 export const getByFlightBooking = query({
   args: {
-    flightBookingId: v.id('flightBookings'),
+    flightBookingId: v.id("flightBookings"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const luggageItems = await ctx.db
-      .query('luggage')
-      .withIndex('by_flight_booking', q =>
-        q.eq('flightBookingId', args.flightBookingId))
+      .query("luggage")
+      .withIndex("by_flight_booking", (q) =>
+        q.eq("flightBookingId", args.flightBookingId),
+      )
       .collect();
 
     // Filter by user
-    return luggageItems.filter(l => l.userId === args.userId);
+    return luggageItems.filter((l) => l.userId === args.userId);
   },
 });
 
@@ -167,17 +168,17 @@ export const getByFlightBooking = query({
  */
 export const getByItinerary = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const luggageItems = await ctx.db
-      .query('luggage')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("luggage")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
 
     // Filter by user
-    return luggageItems.filter(l => l.userId === args.userId);
+    return luggageItems.filter((l) => l.userId === args.userId);
   },
 });
 
@@ -193,13 +194,13 @@ export const getActive = query({
     const limit = args.limit ?? 10;
 
     const luggageItems = await ctx.db
-      .query('luggage')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
-      .order('desc')
+      .query("luggage")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
       .collect();
 
     // Filter active items (not claimed)
-    const active = luggageItems.filter(l => l.status !== 'claimed');
+    const active = luggageItems.filter((l) => l.status !== "claimed");
 
     return active.slice(0, limit);
   },
@@ -214,8 +215,8 @@ export const getStats = query({
   },
   handler: async (ctx, args) => {
     const luggageItems = await ctx.db
-      .query('luggage')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("luggage")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     const stats = {
@@ -232,28 +233,28 @@ export const getStats = query({
 
     for (const luggage of luggageItems) {
       switch (luggage.status) {
-        case 'checked_in':
+        case "checked_in":
           stats.checkedIn++;
           break;
-        case 'in_transit':
+        case "in_transit":
           stats.inTransit++;
           break;
-        case 'arrived':
+        case "arrived":
           stats.arrived++;
           break;
-        case 'claimed':
+        case "claimed":
           stats.claimed++;
           break;
-        case 'delayed':
+        case "delayed":
           stats.delayed++;
           break;
-        case 'lost':
+        case "lost":
           stats.lost++;
           break;
-        case 'found':
+        case "found":
           stats.found++;
           break;
-        case 'damaged':
+        case "damaged":
           stats.damaged++;
           break;
       }
@@ -273,8 +274,8 @@ export const getStats = query({
 export const create = mutation({
   args: {
     userId: v.string(),
-    flightBookingId: v.optional(v.id('flightBookings')),
-    itineraryId: v.optional(v.id('itineraries')),
+    flightBookingId: v.optional(v.id("flightBookings")),
+    itineraryId: v.optional(v.id("itineraries")),
     tagNumber: v.optional(v.string()),
     description: v.string(),
     color: v.optional(v.string()),
@@ -297,7 +298,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    const luggageId = await ctx.db.insert('luggage', {
+    const luggageId = await ctx.db.insert("luggage", {
       userId: args.userId,
       flightBookingId: args.flightBookingId,
       itineraryId: args.itineraryId,
@@ -311,7 +312,7 @@ export const create = mutation({
       features: args.features,
       tagPhotoUrl: args.tagPhotoUrl,
       luggagePhotoUrls: args.luggagePhotoUrls,
-      status: args.status ?? 'checked_in',
+      status: args.status ?? "checked_in",
       airlineCode: args.airlineCode?.toUpperCase(),
       airlineName: args.airlineName,
       airlineTrackingUrl: args.airlineTrackingUrl,
@@ -332,10 +333,10 @@ export const create = mutation({
  */
 export const update = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
-    flightBookingId: v.optional(v.id('flightBookings')),
-    itineraryId: v.optional(v.id('itineraries')),
+    flightBookingId: v.optional(v.id("flightBookings")),
+    itineraryId: v.optional(v.id("itineraries")),
     tagNumber: v.optional(v.string()),
     description: v.optional(v.string()),
     color: v.optional(v.string()),
@@ -390,7 +391,7 @@ export const update = mutation({
  */
 export const updateStatus = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
     status: luggageStatusValidator,
     lastKnownLocation: v.optional(v.string()),
@@ -413,7 +414,7 @@ export const updateStatus = mutation({
  */
 export const fileLossReport = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
     lossReportNumber: v.optional(v.string()),
     lossReportNotes: v.optional(v.string()),
@@ -422,7 +423,7 @@ export const fileLossReport = mutation({
     await checkLuggageOwnership(ctx, args.id, args.userId);
 
     await ctx.db.patch(args.id, {
-      status: 'lost',
+      status: "lost",
       lossReportFiled: true,
       lossReportNumber: args.lossReportNumber,
       lossReportDate: Date.now(),
@@ -439,7 +440,7 @@ export const fileLossReport = mutation({
  */
 export const markAsFound = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
     lastKnownLocation: v.optional(v.string()),
   },
@@ -447,7 +448,7 @@ export const markAsFound = mutation({
     await checkLuggageOwnership(ctx, args.id, args.userId);
 
     await ctx.db.patch(args.id, {
-      status: 'found',
+      status: "found",
       lastKnownLocation: args.lastKnownLocation,
       updatedAt: Date.now(),
     });
@@ -461,14 +462,14 @@ export const markAsFound = mutation({
  */
 export const markAsClaimed = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     await checkLuggageOwnership(ctx, args.id, args.userId);
 
     await ctx.db.patch(args.id, {
-      status: 'claimed',
+      status: "claimed",
       updatedAt: Date.now(),
     });
 
@@ -481,8 +482,8 @@ export const markAsClaimed = mutation({
  */
 export const linkToFlightBooking = mutation({
   args: {
-    id: v.id('luggage'),
-    flightBookingId: v.id('flightBookings'),
+    id: v.id("luggage"),
+    flightBookingId: v.id("flightBookings"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -517,7 +518,7 @@ export const linkToFlightBooking = mutation({
  */
 export const unlinkFromFlightBooking = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -537,8 +538,8 @@ export const unlinkFromFlightBooking = mutation({
  */
 export const linkToItinerary = mutation({
   args: {
-    id: v.id('luggage'),
-    itineraryId: v.id('itineraries'),
+    id: v.id("luggage"),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -558,7 +559,7 @@ export const linkToItinerary = mutation({
  */
 export const unlinkFromItinerary = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -578,7 +579,7 @@ export const unlinkFromItinerary = mutation({
  */
 export const remove = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -592,7 +593,7 @@ export const remove = mutation({
  */
 export const addPhotos = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
     photoUrls: v.array(v.string()),
   },
@@ -601,7 +602,7 @@ export const addPhotos = mutation({
 
     const luggage = await ctx.db.get(args.id);
     if (!luggage) {
-      throw new Error('Luggage not found');
+      throw new Error("Luggage not found");
     }
 
     const existingPhotos = luggage.luggagePhotoUrls ?? [];
@@ -621,7 +622,7 @@ export const addPhotos = mutation({
  */
 export const setTagPhoto = mutation({
   args: {
-    id: v.id('luggage'),
+    id: v.id("luggage"),
     userId: v.string(),
     tagPhotoUrl: v.string(),
   },
@@ -650,9 +651,10 @@ export const getLossReportTemplate = query({
   },
   handler: async (ctx, args) => {
     const template = await ctx.db
-      .query('luggageLossReportTemplates')
-      .withIndex('by_airline_code', q =>
-        q.eq('airlineCode', args.airlineCode.toUpperCase()))
+      .query("luggageLossReportTemplates")
+      .withIndex("by_airline_code", (q) =>
+        q.eq("airlineCode", args.airlineCode.toUpperCase()),
+      )
       .first();
 
     return template;
@@ -666,7 +668,7 @@ export const listLossReportTemplates = query({
   args: {},
   handler: async (ctx) => {
     const templates = await ctx.db
-      .query('luggageLossReportTemplates')
+      .query("luggageLossReportTemplates")
       .collect();
 
     return templates;
@@ -702,8 +704,8 @@ export const upsertLossReportTemplate = mutation({
     const airlineCode = args.airlineCode.toUpperCase();
 
     const existing = await ctx.db
-      .query('luggageLossReportTemplates')
-      .withIndex('by_airline_code', q => q.eq('airlineCode', airlineCode))
+      .query("luggageLossReportTemplates")
+      .withIndex("by_airline_code", (q) => q.eq("airlineCode", airlineCode))
       .first();
 
     if (existing) {
@@ -715,7 +717,7 @@ export const upsertLossReportTemplate = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert('luggageLossReportTemplates', {
+    return await ctx.db.insert("luggageLossReportTemplates", {
       ...args,
       airlineCode,
       createdAt: now,

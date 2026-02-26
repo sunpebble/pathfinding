@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
-import { useHealthStatus } from '@/hooks/use-health-status';
-import { AuthButton } from './auth-button';
+import { RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { useHealthStatus } from "@/hooks/use-health-status";
+import { AuthButton } from "./auth-button";
 
 export function Header() {
   const { data: health, isLoading, refetch } = useHealthStatus();
@@ -18,23 +18,19 @@ export function Header() {
       <div className="flex items-center gap-4">
         {/* Health Status */}
         <div className="flex items-center gap-2">
-          {isLoading
-            ? (
-                <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
-              )
-            : health?.status === 'ok' || health?.status === 'healthy'
-              ? (
-                  <>
-                    <Wifi className="h-4 w-4 text-emerald-500" />
-                    <span className="text-sm text-emerald-600">Connected</span>
-                  </>
-                )
-              : (
-                  <>
-                    <WifiOff className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-red-600">Disconnected</span>
-                  </>
-                )}
+          {isLoading ? (
+            <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
+          ) : health?.status === "ok" || health?.status === "healthy" ? (
+            <>
+              <Wifi className="h-4 w-4 text-emerald-500" />
+              <span className="text-sm text-emerald-600">Connected</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="h-4 w-4 text-red-500" />
+              <span className="text-sm text-red-600">Disconnected</span>
+            </>
+          )}
         </div>
 
         {/* Refresh Button */}

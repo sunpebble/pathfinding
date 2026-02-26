@@ -1,4 +1,4 @@
-import antfu from '@antfu/eslint-config';
+import antfu from "@antfu/eslint-config";
 
 export default antfu({
   // Enable React support
@@ -13,7 +13,7 @@ export default antfu({
   // Enable stylistic rules (antfu's config handles code style)
   stylistic: {
     indent: 2,
-    quotes: 'single',
+    quotes: "single",
     semi: true,
   },
 
@@ -21,28 +21,28 @@ export default antfu({
 
   // Ignore patterns
   ignores: [
-    '.claude/**',
-    '**/.claude/**',
-    '.auto-claude/**',
-    '.sisyphus/**',
-    '.planning/**',
-    'dist/**',
-    'node_modules/**',
-    'pnpm-workspace.yaml',
-    '**/_generated/**',
+    ".claude/**",
+    "**/.claude/**",
+    ".auto-claude/**",
+    ".sisyphus/**",
+    ".planning/**",
+    "dist/**",
+    "node_modules/**",
+    "pnpm-workspace.yaml",
+    "**/_generated/**",
     // Ignore auto-generated shadcn/ui and AI Elements components
-    '**/components/ui/**',
-    '**/components/ai-elements/**',
+    "**/components/ui/**",
+    "**/components/ai-elements/**",
   ],
 
   // Custom rule overrides
   rules: {
     // Allow console.log in development (warn instead of error)
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    "no-console": ["warn", { allow: ["warn", "error"] }],
 
     // Allow no-use-before-define for functions and classes (common React Native pattern)
-    'ts/no-use-before-define': [
-      'error',
+    "ts/no-use-before-define": [
+      "error",
       {
         functions: false,
         classes: false,
@@ -52,15 +52,15 @@ export default antfu({
     ],
 
     // Allow comparing Date objects in while loops
-    'no-unmodified-loop-condition': 'off',
+    "no-unmodified-loop-condition": "off",
 
     // Allow process.env in React Native (handled by Metro bundler)
-    'node/prefer-global/process': 'off',
+    "node/prefer-global/process": "off",
 
     // Allow non-component exports in files with components
-    'react-refresh/only-export-components': 'off',
+    "react-refresh/only-export-components": "off",
 
     // Stricter TypeScript rules (non-type-aware)
-    'ts/no-explicit-any': 'error',
+    "ts/no-explicit-any": "error",
   },
 });

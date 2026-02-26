@@ -3,10 +3,11 @@
  * 将纯文本 content + imageUrls 合并为 contentHtml
  */
 
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api.js';
+/* eslint-disable no-console */
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../convex/_generated/api.js";
 
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
+const CONVEX_URL = process.env.CONVEX_URL || "https://convex.kunish.org";
 const client = new ConvexHttpClient(CONVEX_URL);
 
 /**
@@ -14,32 +15,32 @@ const client = new ConvexHttpClient(CONVEX_URL);
  * 策略：将文本按段落分割，图片均匀插入段落之间
  */
 function generateContentHtml(content: string, imageUrls: string[]): string {
-  if (!content || content.trim().length === 0)
-    return '';
+  if (!content || content.trim().length === 0) return "";
 
   // 按段落分割（双换行或多换行）
-  let paragraphs = content.split(/\n{2,}/).map(p => p.trim()).filter(p => p.length > 0);
+  let paragraphs = content
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
 
   // 如果只有一段（没有换行），按句号分段
   if (paragraphs.length <= 1 && content.length > 200) {
     const sentences: string[] = [];
-    let current = '';
+    let current = "";
     for (const char of content) {
       current += char;
-      if ('。！？.!?'.includes(char)) {
+      if ("。！？.!?".includes(char)) {
         sentences.push(current.trim());
-        current = '';
+        current = "";
       }
     }
-    if (current.trim())
-      sentences.push(current.trim());
+    if (current.trim()) sentences.push(current.trim());
 
     // 每 3 句合成一段
     paragraphs = [];
     for (let i = 0; i < sentences.length; i += 3) {
-      const group = sentences.slice(i, i + 3).join('');
-      if (group)
-        paragraphs.push(group);
+      const group = sentences.slice(i, i + 3).join("");
+      if (group) paragraphs.push(group);
     }
   }
 
@@ -48,16 +49,23 @@ function generateContentHtml(content: string, imageUrls: string[]): string {
   }
 
   const validImages = (imageUrls || []).filter(
-    url => url && url.startsWith('http') && !url.includes('avatar') && !url.includes('icon'),
+    (url) =>
+      url &&
+      url.startsWith("http") &&
+      !url.includes("avatar") &&
+      !url.includes("icon"),
   );
 
   if (validImages.length === 0) {
     // 无图片，纯文本段落
-    return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('\n');
+    return paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join("\n");
   }
 
   // 计算图片插入间隔
-  const interval = Math.max(1, Math.floor(paragraphs.length / (validImages.length + 1)));
+  const interval = Math.max(
+    1,
+    Math.floor(paragraphs.length / (validImages.length + 1)),
+  );
   const parts: string[] = [];
   let imgIdx = 0;
 
@@ -81,19 +89,19 @@ function generateContentHtml(content: string, imageUrls: string[]): string {
     imgIdx++;
   }
 
-  return parts.join('\n');
+  return parts.join("\n");
 }
 
 function escapeHtml(str: string): string {
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 async function main() {
-  console.log('🖼️  为历史游记生成图文混排 HTML...');
+  console.log("🖼️  为历史游记生成图文混排 HTML...");
   console.log(`Convex: ${CONVEX_URL}\n`);
 
   let cursor: string | undefined;
@@ -107,8 +115,7 @@ async function main() {
       limit: 50,
     });
 
-    if (!result.items || result.items.length === 0)
-      break;
+    if (!result.items || result.items.length === 0) break;
 
     for (const item of result.items) {
       totalProcessed++;
@@ -137,7 +144,10 @@ async function main() {
           continue;
         }
 
-        const contentHtml = generateContentHtml(guide.content, guide.imageUrls || []);
+        const contentHtml = generateContentHtml(
+          guide.content,
+          guide.imageUrls || [],
+        );
 
         if (contentHtml.length > 0) {
           await client.mutation(api.travelGuides.update, {
@@ -172,18 +182,15 @@ async function main() {
           console.log(
             `✅ [${totalProcessed}] ${guide.title?.slice(0, 35) || guide.sourceExternalId} — ${imgCount} 张图片混排`,
           );
-        }
-        else {
+        } else {
           totalSkipped++;
         }
-      }
-      catch (err) {
+      } catch (err) {
         console.error(`❌ [${totalProcessed}] ${item._id}: ${err}`);
       }
     }
 
-    if (result.isDone)
-      break;
+    if (result.isDone) break;
     cursor = result.cursor;
   }
 

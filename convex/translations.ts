@@ -3,8 +3,8 @@
  * Convex functions for managing translations, phrases, and offline packs
  */
 
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 // ===========================================
 // Translation Phrases Queries
@@ -16,31 +16,31 @@ import { mutation, query } from './_generated/server';
 export const listPhrasesByCategory = query({
   args: {
     category: v.union(
-      v.literal('greeting'),
-      v.literal('transportation'),
-      v.literal('dining'),
-      v.literal('shopping'),
-      v.literal('accommodation'),
-      v.literal('emergency'),
-      v.literal('directions'),
-      v.literal('numbers'),
-      v.literal('time'),
-      v.literal('common'),
+      v.literal("greeting"),
+      v.literal("transportation"),
+      v.literal("dining"),
+      v.literal("shopping"),
+      v.literal("accommodation"),
+      v.literal("emergency"),
+      v.literal("directions"),
+      v.literal("numbers"),
+      v.literal("time"),
+      v.literal("common"),
     ),
     sourceLang: v.optional(v.string()),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const q = ctx.db
-      .query('translationPhrases')
-      .withIndex('by_category', q => q.eq('category', args.category));
+      .query("translationPhrases")
+      .withIndex("by_category", (q) => q.eq("category", args.category));
 
     const phrases = await q.collect();
 
     // Filter by source language if specified
     let filtered = phrases;
     if (args.sourceLang) {
-      filtered = phrases.filter(p => p.sourceLang === args.sourceLang);
+      filtered = phrases.filter((p) => p.sourceLang === args.sourceLang);
     }
 
     // Sort by sortOrder
@@ -63,16 +63,16 @@ export const searchPhrases = query({
     query: v.string(),
     category: v.optional(
       v.union(
-        v.literal('greeting'),
-        v.literal('transportation'),
-        v.literal('dining'),
-        v.literal('shopping'),
-        v.literal('accommodation'),
-        v.literal('emergency'),
-        v.literal('directions'),
-        v.literal('numbers'),
-        v.literal('time'),
-        v.literal('common'),
+        v.literal("greeting"),
+        v.literal("transportation"),
+        v.literal("dining"),
+        v.literal("shopping"),
+        v.literal("accommodation"),
+        v.literal("emergency"),
+        v.literal("directions"),
+        v.literal("numbers"),
+        v.literal("time"),
+        v.literal("common"),
       ),
     ),
     sourceLang: v.optional(v.string()),
@@ -80,14 +80,14 @@ export const searchPhrases = query({
   },
   handler: async (ctx, args) => {
     const results = await ctx.db
-      .query('translationPhrases')
-      .withSearchIndex('search_phrases', (q) => {
-        let search = q.search('sourceText', args.query);
+      .query("translationPhrases")
+      .withSearchIndex("search_phrases", (q) => {
+        let search = q.search("sourceText", args.query);
         if (args.category) {
-          search = search.eq('category', args.category);
+          search = search.eq("category", args.category);
         }
         if (args.sourceLang) {
-          search = search.eq('sourceLang', args.sourceLang);
+          search = search.eq("sourceLang", args.sourceLang);
         }
         return search;
       })
@@ -106,28 +106,28 @@ export const getCategories = query({
   },
   handler: async (ctx, args) => {
     const categories = [
-      'greeting',
-      'transportation',
-      'dining',
-      'shopping',
-      'accommodation',
-      'emergency',
-      'directions',
-      'numbers',
-      'time',
-      'common',
+      "greeting",
+      "transportation",
+      "dining",
+      "shopping",
+      "accommodation",
+      "emergency",
+      "directions",
+      "numbers",
+      "time",
+      "common",
     ] as const;
 
     const result = await Promise.all(
       categories.map(async (category) => {
         const phrases = await ctx.db
-          .query('translationPhrases')
-          .withIndex('by_category', q => q.eq('category', category))
+          .query("translationPhrases")
+          .withIndex("by_category", (q) => q.eq("category", category))
           .collect();
 
         let filtered = phrases;
         if (args.sourceLang) {
-          filtered = phrases.filter(p => p.sourceLang === args.sourceLang);
+          filtered = phrases.filter((p) => p.sourceLang === args.sourceLang);
         }
 
         return {
@@ -152,7 +152,7 @@ export const listSavedTranslations = query({
   args: {
     userId: v.string(),
     translationType: v.optional(
-      v.union(v.literal('text'), v.literal('photo'), v.literal('voice')),
+      v.union(v.literal("text"), v.literal("photo"), v.literal("voice")),
     ),
     favoritesOnly: v.optional(v.boolean()),
     limit: v.optional(v.number()),
@@ -163,22 +163,22 @@ export const listSavedTranslations = query({
 
     if (args.favoritesOnly) {
       q = ctx.db
-        .query('savedTranslations')
-        .withIndex('by_user_favorite', q =>
-          q.eq('userId', args.userId).eq('isFavorite', true));
-    }
-    else if (args.translationType) {
+        .query("savedTranslations")
+        .withIndex("by_user_favorite", (q) =>
+          q.eq("userId", args.userId).eq("isFavorite", true),
+        );
+    } else if (args.translationType) {
       q = ctx.db
-        .query('savedTranslations')
-        .withIndex('by_user_type', q =>
+        .query("savedTranslations")
+        .withIndex("by_user_type", (q) =>
           q
-            .eq('userId', args.userId)
-            .eq('translationType', args.translationType!));
-    }
-    else {
+            .eq("userId", args.userId)
+            .eq("translationType", args.translationType!),
+        );
+    } else {
       q = ctx.db
-        .query('savedTranslations')
-        .withIndex('by_user_last_used', q => q.eq('userId', args.userId));
+        .query("savedTranslations")
+        .withIndex("by_user_last_used", (q) => q.eq("userId", args.userId));
     }
 
     let results = await q.collect();
@@ -206,9 +206,10 @@ export const searchSavedTranslations = query({
   },
   handler: async (ctx, args) => {
     const results = await ctx.db
-      .query('savedTranslations')
-      .withSearchIndex('search_saved', q =>
-        q.search('sourceText', args.query).eq('userId', args.userId))
+      .query("savedTranslations")
+      .withSearchIndex("search_saved", (q) =>
+        q.search("sourceText", args.query).eq("userId", args.userId),
+      )
       .take(args.limit || 20);
 
     return results;
@@ -226,9 +227,9 @@ export const saveTranslation = mutation({
     targetText: v.string(),
     targetLang: v.string(),
     translationType: v.union(
-      v.literal('text'),
-      v.literal('photo'),
-      v.literal('voice'),
+      v.literal("text"),
+      v.literal("photo"),
+      v.literal("voice"),
     ),
     imageUrl: v.optional(v.string()),
     audioUrl: v.optional(v.string()),
@@ -239,13 +240,13 @@ export const saveTranslation = mutation({
 
     // Check if this exact translation already exists
     const existing = await ctx.db
-      .query('savedTranslations')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
-      .filter(q =>
+      .query("savedTranslations")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) =>
         q.and(
-          q.eq(q.field('sourceText'), args.sourceText),
-          q.eq(q.field('sourceLang'), args.sourceLang),
-          q.eq(q.field('targetLang'), args.targetLang),
+          q.eq(q.field("sourceText"), args.sourceText),
+          q.eq(q.field("sourceLang"), args.sourceLang),
+          q.eq(q.field("targetLang"), args.targetLang),
         ),
       )
       .first();
@@ -262,7 +263,7 @@ export const saveTranslation = mutation({
     }
 
     // Create new saved translation
-    const id = await ctx.db.insert('savedTranslations', {
+    const id = await ctx.db.insert("savedTranslations", {
       userId: args.userId,
       sourceText: args.sourceText,
       sourceLang: args.sourceLang,
@@ -287,12 +288,12 @@ export const saveTranslation = mutation({
  */
 export const toggleFavorite = mutation({
   args: {
-    id: v.id('savedTranslations'),
+    id: v.id("savedTranslations"),
   },
   handler: async (ctx, args) => {
     const translation = await ctx.db.get(args.id);
     if (!translation) {
-      throw new Error('Translation not found');
+      throw new Error("Translation not found");
     }
 
     await ctx.db.patch(args.id, {
@@ -308,7 +309,7 @@ export const toggleFavorite = mutation({
  */
 export const deleteSavedTranslation = mutation({
   args: {
-    id: v.id('savedTranslations'),
+    id: v.id("savedTranslations"),
   },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
@@ -320,12 +321,12 @@ export const deleteSavedTranslation = mutation({
  */
 export const recordUsage = mutation({
   args: {
-    id: v.id('savedTranslations'),
+    id: v.id("savedTranslations"),
   },
   handler: async (ctx, args) => {
     const translation = await ctx.db.get(args.id);
     if (!translation) {
-      throw new Error('Translation not found');
+      throw new Error("Translation not found");
     }
 
     await ctx.db.patch(args.id, {
@@ -349,15 +350,15 @@ export const listOfflinePacks = query({
   },
   handler: async (ctx, args) => {
     let packs = await ctx.db
-      .query('offlineTranslationPacks')
-      .withIndex('by_active', q => q.eq('isActive', true))
+      .query("offlineTranslationPacks")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
       .collect();
 
     if (args.sourceLang) {
-      packs = packs.filter(p => p.sourceLang === args.sourceLang);
+      packs = packs.filter((p) => p.sourceLang === args.sourceLang);
     }
     if (args.targetLang) {
-      packs = packs.filter(p => p.targetLang === args.targetLang);
+      packs = packs.filter((p) => p.targetLang === args.targetLang);
     }
 
     return packs;
@@ -373,8 +374,8 @@ export const getUserPacks = query({
   },
   handler: async (ctx, args) => {
     const userPacks = await ctx.db
-      .query('userOfflinePacks')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userOfflinePacks")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     // Fetch pack details
@@ -399,21 +400,22 @@ export const getUserPacks = query({
 export const recordPackDownload = mutation({
   args: {
     userId: v.string(),
-    packId: v.id('offlineTranslationPacks'),
+    packId: v.id("offlineTranslationPacks"),
   },
   handler: async (ctx, args) => {
     const pack = await ctx.db.get(args.packId);
     if (!pack) {
-      throw new Error('Pack not found');
+      throw new Error("Pack not found");
     }
 
     const now = Date.now();
 
     // Check if already downloaded
     const existing = await ctx.db
-      .query('userOfflinePacks')
-      .withIndex('by_user_pack', q =>
-        q.eq('userId', args.userId).eq('packId', args.packId))
+      .query("userOfflinePacks")
+      .withIndex("by_user_pack", (q) =>
+        q.eq("userId", args.userId).eq("packId", args.packId),
+      )
       .first();
 
     if (existing) {
@@ -427,7 +429,7 @@ export const recordPackDownload = mutation({
     }
 
     // Create new record
-    const id = await ctx.db.insert('userOfflinePacks', {
+    const id = await ctx.db.insert("userOfflinePacks", {
       userId: args.userId,
       packId: args.packId,
       downloadedVersion: pack.version,
@@ -444,7 +446,7 @@ export const recordPackDownload = mutation({
  */
 export const deleteUserPack = mutation({
   args: {
-    id: v.id('userOfflinePacks'),
+    id: v.id("userOfflinePacks"),
   },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
@@ -461,16 +463,16 @@ export const deleteUserPack = mutation({
 export const createPhrase = mutation({
   args: {
     category: v.union(
-      v.literal('greeting'),
-      v.literal('transportation'),
-      v.literal('dining'),
-      v.literal('shopping'),
-      v.literal('accommodation'),
-      v.literal('emergency'),
-      v.literal('directions'),
-      v.literal('numbers'),
-      v.literal('time'),
-      v.literal('common'),
+      v.literal("greeting"),
+      v.literal("transportation"),
+      v.literal("dining"),
+      v.literal("shopping"),
+      v.literal("accommodation"),
+      v.literal("emergency"),
+      v.literal("directions"),
+      v.literal("numbers"),
+      v.literal("time"),
+      v.literal("common"),
     ),
     sourceText: v.string(),
     sourceLang: v.string(),
@@ -495,7 +497,7 @@ export const createPhrase = mutation({
     isOfflineAvailable: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const id = await ctx.db.insert('translationPhrases', args);
+    const id = await ctx.db.insert("translationPhrases", args);
     return id;
   },
 });
@@ -508,16 +510,16 @@ export const batchCreatePhrases = mutation({
     phrases: v.array(
       v.object({
         category: v.union(
-          v.literal('greeting'),
-          v.literal('transportation'),
-          v.literal('dining'),
-          v.literal('shopping'),
-          v.literal('accommodation'),
-          v.literal('emergency'),
-          v.literal('directions'),
-          v.literal('numbers'),
-          v.literal('time'),
-          v.literal('common'),
+          v.literal("greeting"),
+          v.literal("transportation"),
+          v.literal("dining"),
+          v.literal("shopping"),
+          v.literal("accommodation"),
+          v.literal("emergency"),
+          v.literal("directions"),
+          v.literal("numbers"),
+          v.literal("time"),
+          v.literal("common"),
         ),
         sourceText: v.string(),
         sourceLang: v.string(),
@@ -545,7 +547,7 @@ export const batchCreatePhrases = mutation({
   },
   handler: async (ctx, args) => {
     const ids = await Promise.all(
-      args.phrases.map(phrase => ctx.db.insert('translationPhrases', phrase)),
+      args.phrases.map((phrase) => ctx.db.insert("translationPhrases", phrase)),
     );
     return ids;
   },
@@ -569,7 +571,7 @@ export const createOfflinePack = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const id = await ctx.db.insert('offlineTranslationPacks', {
+    const id = await ctx.db.insert("offlineTranslationPacks", {
       ...args,
       createdAt: now,
       updatedAt: now,
@@ -583,20 +585,20 @@ export const createOfflinePack = mutation({
 // ===========================================
 
 // Supported languages for content
-export const supportedLanguages = ['zh', 'en', 'ja'] as const;
+export const supportedLanguages = ["zh", "en", "ja"] as const;
 export type SupportedLanguage = (typeof supportedLanguages)[number];
 
 const contentLanguageValidator = v.union(
-  v.literal('zh'),
-  v.literal('en'),
-  v.literal('ja'),
+  v.literal("zh"),
+  v.literal("en"),
+  v.literal("ja"),
 );
 
 const entityTypeValidator = v.union(
-  v.literal('poi'),
-  v.literal('city'),
-  v.literal('travelGuide'),
-  v.literal('itinerary'),
+  v.literal("poi"),
+  v.literal("city"),
+  v.literal("travelGuide"),
+  v.literal("itinerary"),
 );
 
 /**
@@ -610,13 +612,14 @@ export const getContentTranslations = query({
   },
   handler: async (ctx, args) => {
     const translations = await ctx.db
-      .query('contentTranslations')
-      .withIndex('by_entity', q =>
-        q.eq('entityType', args.entityType).eq('entityId', args.entityId))
+      .query("contentTranslations")
+      .withIndex("by_entity", (q) =>
+        q.eq("entityType", args.entityType).eq("entityId", args.entityId),
+      )
       .collect();
 
     if (args.language) {
-      return translations.filter(t => t.language === args.language);
+      return translations.filter((t) => t.language === args.language);
     }
 
     return translations;
@@ -635,13 +638,14 @@ export const getContentTranslation = query({
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('contentTranslations')
-      .withIndex('by_entity_field_language', q =>
+      .query("contentTranslations")
+      .withIndex("by_entity_field_language", (q) =>
         q
-          .eq('entityType', args.entityType)
-          .eq('entityId', args.entityId)
-          .eq('field', args.field)
-          .eq('language', args.language))
+          .eq("entityType", args.entityType)
+          .eq("entityId", args.entityId)
+          .eq("field", args.field)
+          .eq("language", args.language),
+      )
       .first();
   },
 });
@@ -661,13 +665,14 @@ export const upsertContentTranslation = mutation({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query('contentTranslations')
-      .withIndex('by_entity_field_language', q =>
+      .query("contentTranslations")
+      .withIndex("by_entity_field_language", (q) =>
         q
-          .eq('entityType', args.entityType)
-          .eq('entityId', args.entityId)
-          .eq('field', args.field)
-          .eq('language', args.language))
+          .eq("entityType", args.entityType)
+          .eq("entityId", args.entityId)
+          .eq("field", args.field)
+          .eq("language", args.language),
+      )
       .first();
 
     const now = Date.now();
@@ -680,9 +685,8 @@ export const upsertContentTranslation = mutation({
         updatedAt: now,
       });
       return existing._id;
-    }
-    else {
-      return await ctx.db.insert('contentTranslations', {
+    } else {
+      return await ctx.db.insert("contentTranslations", {
         entityType: args.entityType,
         entityId: args.entityId,
         field: args.field,
@@ -720,13 +724,14 @@ export const bulkUpsertContentTranslations = mutation({
 
     for (const translation of args.translations) {
       const existing = await ctx.db
-        .query('contentTranslations')
-        .withIndex('by_entity_field_language', q =>
+        .query("contentTranslations")
+        .withIndex("by_entity_field_language", (q) =>
           q
-            .eq('entityType', args.entityType)
-            .eq('entityId', args.entityId)
-            .eq('field', translation.field)
-            .eq('language', translation.language))
+            .eq("entityType", args.entityType)
+            .eq("entityId", args.entityId)
+            .eq("field", translation.field)
+            .eq("language", translation.language),
+        )
         .first();
 
       if (existing) {
@@ -738,9 +743,8 @@ export const bulkUpsertContentTranslations = mutation({
           updatedAt: now,
         });
         results.push(existing._id);
-      }
-      else {
-        const id = await ctx.db.insert('contentTranslations', {
+      } else {
+        const id = await ctx.db.insert("contentTranslations", {
           entityType: args.entityType,
           entityId: args.entityId,
           field: translation.field,
@@ -770,14 +774,15 @@ export const deleteContentTranslations = mutation({
   },
   handler: async (ctx, args) => {
     const translations = await ctx.db
-      .query('contentTranslations')
-      .withIndex('by_entity', q =>
-        q.eq('entityType', args.entityType).eq('entityId', args.entityId))
+      .query("contentTranslations")
+      .withIndex("by_entity", (q) =>
+        q.eq("entityType", args.entityType).eq("entityId", args.entityId),
+      )
       .collect();
 
     let toDelete = translations;
     if (args.language) {
-      toDelete = translations.filter(t => t.language === args.language);
+      toDelete = translations.filter((t) => t.language === args.language);
     }
 
     for (const translation of toDelete) {
@@ -800,12 +805,11 @@ export const getContentTranslationStats = query({
 
     if (args.entityType) {
       translations = await ctx.db
-        .query('contentTranslations')
-        .withIndex('by_type', q => q.eq('entityType', args.entityType!))
+        .query("contentTranslations")
+        .withIndex("by_type", (q) => q.eq("entityType", args.entityType!))
         .collect();
-    }
-    else {
-      translations = await ctx.db.query('contentTranslations').collect();
+    } else {
+      translations = await ctx.db.query("contentTranslations").collect();
     }
 
     const byLanguage: Record<string, number> = {};
@@ -818,8 +822,7 @@ export const getContentTranslationStats = query({
       byEntityType[t.entityType] = (byEntityType[t.entityType] || 0) + 1;
       if (t.isAutoTranslated) {
         autoTranslatedCount++;
-      }
-      else {
+      } else {
         manualCount++;
       }
     }

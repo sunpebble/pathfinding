@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Recommended Medications - Travel Medicine Checklist
@@ -13,27 +13,27 @@ export const listGlobal = query({
   args: {},
   handler: async (ctx) => {
     const medications = await ctx.db
-      .query('recommendedMedications')
-      .withIndex('by_active', q => q.eq('isActive', true))
+      .query("recommendedMedications")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
       .collect();
 
     // Filter for global recommendations (no destinationId)
-    return medications.filter(m => !m.destinationId);
+    return medications.filter((m) => !m.destinationId);
   },
 });
 
 // List medications for a specific destination (includes global recommendations)
 export const listByDestination = query({
-  args: { destinationId: v.id('cities') },
+  args: { destinationId: v.id("cities") },
   handler: async (ctx, args) => {
     const allMedications = await ctx.db
-      .query('recommendedMedications')
-      .withIndex('by_active', q => q.eq('isActive', true))
+      .query("recommendedMedications")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
       .collect();
 
     // Include both global and destination-specific medications
     return allMedications.filter(
-      m => !m.destinationId || m.destinationId === args.destinationId,
+      (m) => !m.destinationId || m.destinationId === args.destinationId,
     );
   },
 });
@@ -42,22 +42,22 @@ export const listByDestination = query({
 export const listByCategory = query({
   args: {
     category: v.union(
-      v.literal('pain_relief'),
-      v.literal('digestive'),
-      v.literal('allergy'),
-      v.literal('motion_sickness'),
-      v.literal('skin'),
-      v.literal('cold_flu'),
-      v.literal('first_aid'),
-      v.literal('prescription'),
-      v.literal('other'),
+      v.literal("pain_relief"),
+      v.literal("digestive"),
+      v.literal("allergy"),
+      v.literal("motion_sickness"),
+      v.literal("skin"),
+      v.literal("cold_flu"),
+      v.literal("first_aid"),
+      v.literal("prescription"),
+      v.literal("other"),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('recommendedMedications')
-      .withIndex('by_category', q => q.eq('category', args.category))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("recommendedMedications")
+      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
@@ -66,23 +66,23 @@ export const listByCategory = query({
 export const listByPriority = query({
   args: {
     priority: v.union(
-      v.literal('essential'),
-      v.literal('recommended'),
-      v.literal('optional'),
+      v.literal("essential"),
+      v.literal("recommended"),
+      v.literal("optional"),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('recommendedMedications')
-      .withIndex('by_priority', q => q.eq('priority', args.priority))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("recommendedMedications")
+      .withIndex("by_priority", (q) => q.eq("priority", args.priority))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
 
 // Get a single medication by ID
 export const getById = query({
-  args: { id: v.id('recommendedMedications') },
+  args: { id: v.id("recommendedMedications") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -91,19 +91,19 @@ export const getById = query({
 // Create a new recommended medication
 export const create = mutation({
   args: {
-    destinationId: v.optional(v.id('cities')),
+    destinationId: v.optional(v.id("cities")),
     name: v.string(),
     nameEn: v.optional(v.string()),
     category: v.union(
-      v.literal('pain_relief'),
-      v.literal('digestive'),
-      v.literal('allergy'),
-      v.literal('motion_sickness'),
-      v.literal('skin'),
-      v.literal('cold_flu'),
-      v.literal('first_aid'),
-      v.literal('prescription'),
-      v.literal('other'),
+      v.literal("pain_relief"),
+      v.literal("digestive"),
+      v.literal("allergy"),
+      v.literal("motion_sickness"),
+      v.literal("skin"),
+      v.literal("cold_flu"),
+      v.literal("first_aid"),
+      v.literal("prescription"),
+      v.literal("other"),
     ),
     description: v.string(),
     usage: v.string(),
@@ -112,14 +112,14 @@ export const create = mutation({
     contraindications: v.optional(v.array(v.string())),
     prescription: v.boolean(),
     priority: v.union(
-      v.literal('essential'),
-      v.literal('recommended'),
-      v.literal('optional'),
+      v.literal("essential"),
+      v.literal("recommended"),
+      v.literal("optional"),
     ),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('recommendedMedications', {
+    return await ctx.db.insert("recommendedMedications", {
       ...args,
       isActive: true,
     });
@@ -129,20 +129,20 @@ export const create = mutation({
 // Update a recommended medication
 export const update = mutation({
   args: {
-    id: v.id('recommendedMedications'),
+    id: v.id("recommendedMedications"),
     name: v.optional(v.string()),
     nameEn: v.optional(v.string()),
     category: v.optional(
       v.union(
-        v.literal('pain_relief'),
-        v.literal('digestive'),
-        v.literal('allergy'),
-        v.literal('motion_sickness'),
-        v.literal('skin'),
-        v.literal('cold_flu'),
-        v.literal('first_aid'),
-        v.literal('prescription'),
-        v.literal('other'),
+        v.literal("pain_relief"),
+        v.literal("digestive"),
+        v.literal("allergy"),
+        v.literal("motion_sickness"),
+        v.literal("skin"),
+        v.literal("cold_flu"),
+        v.literal("first_aid"),
+        v.literal("prescription"),
+        v.literal("other"),
       ),
     ),
     description: v.optional(v.string()),
@@ -153,9 +153,9 @@ export const update = mutation({
     prescription: v.optional(v.boolean()),
     priority: v.optional(
       v.union(
-        v.literal('essential'),
-        v.literal('recommended'),
-        v.literal('optional'),
+        v.literal("essential"),
+        v.literal("recommended"),
+        v.literal("optional"),
       ),
     ),
     notes: v.optional(v.string()),
@@ -173,7 +173,7 @@ export const update = mutation({
 
 // Delete a recommended medication (soft delete)
 export const remove = mutation({
-  args: { id: v.id('recommendedMedications') },
+  args: { id: v.id("recommendedMedications") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, { isActive: false });
   },

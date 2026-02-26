@@ -5,7 +5,7 @@ services:
       dockerfile: apps/api/Dockerfile
     image: ghcr.io/kunish-homelab/pathfinding-api:latest
     ports:
-      - '8000:8000'
+      - "8000:8000"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=8000
@@ -19,7 +19,7 @@ services:
         - --no-verbose
         - --tries=1
         - --spider
-        - 'http://localhost:8000/health'
+        - "http://localhost:8000/health"
 
       interval: 30s
       timeout: 10s
@@ -33,7 +33,7 @@ services:
       dockerfile: apps/crawler/Dockerfile
     image: ghcr.io/kunish-homelab/pathfinding-crawler:latest
     ports:
-      - '3001:3001'
+      - "3001:3001"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3001
@@ -68,7 +68,7 @@ services:
         - --no-verbose
         - --tries=1
         - --spider
-        - 'http://localhost:3001/health'
+        - "http://localhost:3001/health"
 
       interval: 30s
       timeout: 10s
@@ -85,14 +85,14 @@ services:
   ollama:
     image: ollama/ollama:latest
     ports:
-      - '11434:11434'
+      - "11434:11434"
     volumes:
       - ollama-models:/root/.ollama
     environment:
       - OLLAMA_KEEP_ALIVE=24h
       - OLLAMA_NUM_PARALLEL=2
     healthcheck:
-      test: [CMD, curl, -f, 'http://localhost:11434/api/tags']
+      test: [CMD, curl, -f, "http://localhost:11434/api/tags"]
       interval: 30s
       timeout: 10s
       start_period: 60s
@@ -125,7 +125,7 @@ services:
   n8n:
     image: n8nio/n8n:latest
     ports:
-      - '5678:5678'
+      - "5678:5678"
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
@@ -143,7 +143,7 @@ services:
       - n8n-data:/home/node/.n8n
       - ./n8n/workflows:/home/node/workflows:ro
     healthcheck:
-      test: [CMD, wget, --spider, -q, 'http://localhost:5678/healthz']
+      test: [CMD, wget, --spider, -q, "http://localhost:5678/healthz"]
       interval: 30s
       timeout: 10s
       start_period: 30s
@@ -154,7 +154,7 @@ services:
   comfyui:
     image: yanwk/comfyui-boot:latest
     ports:
-      - '8188:8188'
+      - "8188:8188"
     volumes:
       - comfyui-data:/root
       - comfyui-output:/root/ComfyUI/output
@@ -162,7 +162,7 @@ services:
     environment:
       - CLI_ARGS=--listen 0.0.0.0
     healthcheck:
-      test: [CMD, curl, -f, 'http://localhost:8188/system_stats']
+      test: [CMD, curl, -f, "http://localhost:8188/system_stats"]
       interval: 30s
       timeout: 10s
       start_period: 120s

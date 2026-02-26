@@ -7,8 +7,8 @@
  * Run with: npx convex run migrations/migrateAiData:run
  */
 
-import { v } from 'convex/values';
-import { mutation } from '../_generated/server';
+import { v } from "convex/values";
+import { mutation } from "../_generated/server";
 
 /**
  * Migrate AI data for a batch of guides
@@ -22,7 +22,7 @@ export const run = mutation({
     const batchSize = args.batchSize ?? 50;
 
     const result = await ctx.db
-      .query('travelGuides')
+      .query("travelGuides")
       .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
 
     let migrated = 0;
@@ -37,8 +37,8 @@ export const run = mutation({
 
       // Check if already migrated
       const existing = await ctx.db
-        .query('travelGuideAiData')
-        .withIndex('by_guide', q => q.eq('guideId', guide._id))
+        .query("travelGuideAiData")
+        .withIndex("by_guide", (q) => q.eq("guideId", guide._id))
         .first();
 
       if (existing) {
@@ -47,7 +47,7 @@ export const run = mutation({
       }
 
       // Migrate AI data
-      await ctx.db.insert('travelGuideAiData', {
+      await ctx.db.insert("travelGuideAiData", {
         guideId: guide._id,
         version: 1,
         aiSummary: guide.aiSummary,
@@ -84,7 +84,7 @@ export const verify = mutation({
   handler: async (ctx) => {
     // Count guides with AI data in original table
     let guidesWithAiData = 0;
-    const guides = await ctx.db.query('travelGuides').collect();
+    const guides = await ctx.db.query("travelGuides").collect();
     for (const guide of guides) {
       if (guide.aiProcessedAt) {
         guidesWithAiData++;
@@ -92,10 +92,10 @@ export const verify = mutation({
     }
 
     // Count records in travelGuideAiData
-    const aiDataRecords = await ctx.db.query('travelGuideAiData').collect();
+    const aiDataRecords = await ctx.db.query("travelGuideAiData").collect();
 
     // Get unique guide IDs
-    const uniqueGuideIds = new Set(aiDataRecords.map(d => d.guideId));
+    const uniqueGuideIds = new Set(aiDataRecords.map((d) => d.guideId));
 
     return {
       guidesWithAiData,
@@ -104,7 +104,7 @@ export const verify = mutation({
       isComplete: uniqueGuideIds.size === guidesWithAiData,
       message:
         uniqueGuideIds.size === guidesWithAiData
-          ? '✓ AI data migration verified successfully!'
+          ? "✓ AI data migration verified successfully!"
           : `⚠ Mismatch: ${guidesWithAiData} guides have AI data, but only ${uniqueGuideIds.size} are in travelGuideAiData table.`,
     };
   },
@@ -122,8 +122,8 @@ export const verifySample = mutation({
 
     // Get guides with AI data
     const guidesWithAi = await ctx.db
-      .query('travelGuides')
-      .filter(q => q.neq(q.field('aiProcessedAt'), undefined))
+      .query("travelGuides")
+      .filter((q) => q.neq(q.field("aiProcessedAt"), undefined))
       .take(sampleSize);
 
     const results: Array<{
@@ -136,8 +136,8 @@ export const verifySample = mutation({
 
     for (const guide of guidesWithAi) {
       const aiData = await ctx.db
-        .query('travelGuideAiData')
-        .withIndex('by_guide', q => q.eq('guideId', guide._id))
+        .query("travelGuideAiData")
+        .withIndex("by_guide", (q) => q.eq("guideId", guide._id))
         .first();
 
       results.push({
@@ -151,7 +151,7 @@ export const verifySample = mutation({
     }
 
     const allMatch = results.every(
-      r => r.hasAiDataInNewTable && r.summaryMatches && r.daysCountMatches,
+      (r) => r.hasAiDataInNewTable && r.summaryMatches && r.daysCountMatches,
     );
 
     return {
@@ -159,8 +159,8 @@ export const verifySample = mutation({
       results,
       allMatch,
       message: allMatch
-        ? '✓ Sample verification passed!'
-        : '⚠ Some records do not match. Check results for details.',
+        ? "✓ Sample verification passed!"
+        : "⚠ Some records do not match. Check results for details.",
     };
   },
 });

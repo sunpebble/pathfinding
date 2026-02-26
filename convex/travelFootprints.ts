@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Travel Footprints - User's visited cities and countries tracking
@@ -16,15 +16,15 @@ export const listVisitedCities = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('visitedCities')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("visitedCities")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
   },
 });
 
 // Get visited city by ID
 export const getVisitedCityById = query({
-  args: { id: v.id('visitedCities') },
+  args: { id: v.id("visitedCities") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -45,15 +45,16 @@ export const addVisitedCity = mutation({
     notes: v.optional(v.string()),
     photos: v.optional(v.array(v.string())),
     rating: v.optional(v.number()), // 1-5
-    travelGuideId: v.optional(v.id('travelGuides')),
-    itineraryId: v.optional(v.id('itineraries')),
+    travelGuideId: v.optional(v.id("travelGuides")),
+    itineraryId: v.optional(v.id("itineraries")),
   },
   handler: async (ctx, args) => {
     // Check if city already exists for this user
     const existing = await ctx.db
-      .query('visitedCities')
-      .withIndex('by_user_city', q =>
-        q.eq('userId', args.userId).eq('cityName', args.cityName))
+      .query("visitedCities")
+      .withIndex("by_user_city", (q) =>
+        q.eq("userId", args.userId).eq("cityName", args.cityName),
+      )
       .first();
 
     if (existing) {
@@ -72,7 +73,7 @@ export const addVisitedCity = mutation({
     }
 
     // Create new visited city record
-    return await ctx.db.insert('visitedCities', {
+    return await ctx.db.insert("visitedCities", {
       ...args,
       visitCount: 1,
       firstVisitedAt: args.visitedAt,
@@ -85,7 +86,7 @@ export const addVisitedCity = mutation({
 // Update visited city
 export const updateVisitedCity = mutation({
   args: {
-    id: v.id('visitedCities'),
+    id: v.id("visitedCities"),
     notes: v.optional(v.string()),
     photos: v.optional(v.array(v.string())),
     rating: v.optional(v.number()),
@@ -102,7 +103,7 @@ export const updateVisitedCity = mutation({
 
 // Remove visited city
 export const removeVisitedCity = mutation({
-  args: { id: v.id('visitedCities') },
+  args: { id: v.id("visitedCities") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -117,8 +118,8 @@ export const listVisitedCountries = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('visitedCountries')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("visitedCountries")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
   },
 });
@@ -134,31 +135,32 @@ export const upsertVisitedCountry = mutation({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query('visitedCountries')
-      .withIndex('by_user_country', q =>
-        q.eq('userId', args.userId).eq('countryCode', args.countryCode))
+      .query("visitedCountries")
+      .withIndex("by_user_country", (q) =>
+        q.eq("userId", args.userId).eq("countryCode", args.countryCode),
+      )
       .first();
 
     if (existing) {
       // Update city count
       const cities = await ctx.db
-        .query('visitedCities')
-        .withIndex('by_user', q => q.eq('userId', args.userId))
+        .query("visitedCities")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
         .collect();
 
       const countryCities = cities.filter(
-        c => c.countryCode === args.countryCode,
+        (c) => c.countryCode === args.countryCode,
       );
       await ctx.db.patch(existing._id, {
         citiesCount: countryCities.length,
         lastVisitedAt: Math.max(
-          ...countryCities.map(c => c.lastVisitedAt || c.visitedAt),
+          ...countryCities.map((c) => c.lastVisitedAt || c.visitedAt),
         ),
       });
       return existing._id;
     }
 
-    return await ctx.db.insert('visitedCountries', {
+    return await ctx.db.insert("visitedCountries", {
       userId: args.userId,
       countryCode: args.countryCode,
       countryName: args.countryName,
@@ -180,8 +182,8 @@ export const getTravelStats = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const stats = await ctx.db
-      .query('travelStats')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("travelStats")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     if (!stats) {
@@ -214,13 +216,13 @@ export const updateTravelStats = mutation({
   handler: async (ctx, args) => {
     // Aggregate stats from visited cities and countries
     const cities = await ctx.db
-      .query('visitedCities')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("visitedCities")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     const countries = await ctx.db
-      .query('visitedCountries')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("visitedCountries")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     const totalCities = cities.length;
@@ -241,7 +243,7 @@ export const updateTravelStats = mutation({
     );
 
     // Get date range
-    const allDates = cities.map(c => c.firstVisitedAt || c.visitedAt);
+    const allDates = cities.map((c) => c.firstVisitedAt || c.visitedAt);
     const firstTripDate = allDates.length > 0 ? Math.min(...allDates) : null;
     const lastTripDate = allDates.length > 0 ? Math.max(...allDates) : null;
 
@@ -296,8 +298,8 @@ export const updateTravelStats = mutation({
 
     // Upsert stats
     const existing = await ctx.db
-      .query('travelStats')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("travelStats")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     if (existing) {
@@ -305,7 +307,7 @@ export const updateTravelStats = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert('travelStats', {
+    return await ctx.db.insert("travelStats", {
       ...statsData,
       createdAt: Date.now(),
     });
@@ -334,8 +336,8 @@ export const setTravelGoals = mutation({
     const { userId, ...updates } = args;
 
     const existing = await ctx.db
-      .query('travelStats')
-      .withIndex('by_user', q => q.eq('userId', userId))
+      .query("travelStats")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
     const filteredUpdates = Object.fromEntries(
@@ -350,7 +352,7 @@ export const setTravelGoals = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert('travelStats', {
+    return await ctx.db.insert("travelStats", {
       userId,
       totalCities: 0,
       totalCountries: 0,
@@ -383,8 +385,8 @@ export const getTravelTimeline = query({
   },
   handler: async (ctx, args) => {
     const allCities = await ctx.db
-      .query('visitedCities')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("visitedCities")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     // Sort by visit date descending

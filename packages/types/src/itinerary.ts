@@ -1,9 +1,9 @@
-import type { ItineraryItem } from './itinerary-item';
+import type { ItineraryItem } from "./itinerary-item";
 
 /**
  * Itinerary visibility enum (Convex: 'private' | 'public')
  */
-export type ItineraryVisibility = 'private' | 'public';
+export type ItineraryVisibility = "private" | "public";
 
 /**
  * ItineraryDay entity - single day within an itinerary

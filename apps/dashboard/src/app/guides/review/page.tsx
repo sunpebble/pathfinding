@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type { TravelGuide } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import type { TravelGuide } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   BookOpen,
@@ -10,44 +10,44 @@ import {
   Heart,
   MessageCircle,
   Star,
-} from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
-import { getTravelGuides } from '@/lib/api';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { getTravelGuides } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const PLATFORMS = [
-  { value: '', label: 'All Platforms' },
-  { value: 'ctrip', label: '携程' },
-  { value: 'xiaohongshu', label: '小红书' },
-  { value: 'weibo', label: '微博' },
-  { value: 'tongcheng', label: '同程旅行' },
-  { value: 'mafengwo', label: '马蜂窝' },
-  { value: 'qunar', label: '去哪儿' },
+  { value: "", label: "All Platforms" },
+  { value: "ctrip", label: "携程" },
+  { value: "xiaohongshu", label: "小红书" },
+  { value: "weibo", label: "微博" },
+  { value: "tongcheng", label: "同程旅行" },
+  { value: "mafengwo", label: "马蜂窝" },
+  { value: "qunar", label: "去哪儿" },
 ];
 
 function PlatformBadge({ platform }: { platform: string }) {
   const colors: Record<string, string> = {
-    ctrip: 'bg-blue-100 text-blue-800',
-    xiaohongshu: 'bg-red-100 text-red-800',
-    weibo: 'bg-orange-100 text-orange-800',
-    tongcheng: 'bg-purple-100 text-purple-800',
-    mafengwo: 'bg-yellow-100 text-yellow-800',
-    qunar: 'bg-green-100 text-green-800',
+    ctrip: "bg-blue-100 text-blue-800",
+    xiaohongshu: "bg-red-100 text-red-800",
+    weibo: "bg-orange-100 text-orange-800",
+    tongcheng: "bg-purple-100 text-purple-800",
+    mafengwo: "bg-yellow-100 text-yellow-800",
+    qunar: "bg-green-100 text-green-800",
   };
   const names: Record<string, string> = {
-    ctrip: '携程',
-    xiaohongshu: '小红书',
-    weibo: '微博',
-    tongcheng: '同程旅行',
-    mafengwo: '马蜂窝',
-    qunar: '去哪儿',
+    ctrip: "携程",
+    xiaohongshu: "小红书",
+    weibo: "微博",
+    tongcheng: "同程旅行",
+    mafengwo: "马蜂窝",
+    qunar: "去哪儿",
   };
   return (
     <span
       className={cn(
-        'px-2 py-0.5 rounded-full text-xs font-medium',
-        colors[platform] || 'bg-gray-100 text-gray-800',
+        "px-2 py-0.5 rounded-full text-xs font-medium",
+        colors[platform] || "bg-gray-100 text-gray-800",
       )}
     >
       {names[platform] || platform}
@@ -57,19 +57,16 @@ function PlatformBadge({ platform }: { platform: string }) {
 
 function QualityScore({ score }: { score: number }) {
   const percentage = Math.round(score * 100);
-  const color
-    = score >= 0.7
-      ? 'text-green-600'
+  const color =
+    score >= 0.7
+      ? "text-green-600"
       : score >= 0.4
-        ? 'text-yellow-600'
-        : 'text-red-600';
+        ? "text-yellow-600"
+        : "text-red-600";
   return (
-    <div className={cn('flex items-center gap-1', color)}>
+    <div className={cn("flex items-center gap-1", color)}>
       <Star className="h-3.5 w-3.5" />
-      <span className="text-xs font-medium">
-        {percentage}
-        %
-      </span>
+      <span className="text-xs font-medium">{percentage}%</span>
     </div>
   );
 }
@@ -83,10 +80,10 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
           <div className="flex-shrink-0">
             <img
               src={guide.cover_image_url}
-              alt={guide.title || 'Guide cover'}
+              alt={guide.title || "Guide cover"}
               className="w-24 h-24 object-cover rounded-lg"
               onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).style.display = "none";
               }}
             />
           </div>
@@ -96,7 +93,7 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-medium text-gray-900 line-clamp-2">
-              {guide.title || 'Untitled Guide'}
+              {guide.title || "Untitled Guide"}
             </h3>
             <PlatformBadge platform={guide.source_platform} />
           </div>
@@ -114,7 +111,7 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
           {/* Destinations */}
           {guide.destinations.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
-              {guide.destinations.slice(0, 3).map(dest => (
+              {guide.destinations.slice(0, 3).map((dest) => (
                 <span
                   key={dest}
                   className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs"
@@ -124,8 +121,7 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
               ))}
               {guide.destinations.length > 3 && (
                 <span className="text-xs text-gray-400">
-                  +
-                  {guide.destinations.length - 3}
+                  +{guide.destinations.length - 3}
                 </span>
               )}
             </div>
@@ -164,20 +160,20 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
 }
 
 export default function ReviewGuidesPage() {
-  const [platform, setPlatform] = useState('');
+  const [platform, setPlatform] = useState("");
   const [page, setPage] = useState(0);
   const pageSize = 20;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['guides-review', platform, page],
+    queryKey: ["guides-review", platform, page],
     queryFn: () =>
       getTravelGuides({
         platforms: platform || undefined,
         min_quality: 0.5,
         limit: pageSize,
         offset: page * pageSize,
-        sort: 'quality_score',
-        order: 'asc',
+        sort: "quality_score",
+        order: "asc",
       }),
   });
 
@@ -195,9 +191,7 @@ export default function ReviewGuidesPage() {
             Guides Review Queue
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {total.toLocaleString()}
-            {' '}
-            guides with low confidence scores need
+            {total.toLocaleString()} guides with low confidence scores need
             review
           </p>
         </div>
@@ -237,7 +231,7 @@ export default function ReviewGuidesPage() {
           }}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         >
-          {PLATFORMS.map(p => (
+          {PLATFORMS.map((p) => (
             <option key={p.value} value={p.value}>
               {p.label}
             </option>
@@ -266,7 +260,7 @@ export default function ReviewGuidesPage() {
         <>
           {/* Guides Grid */}
           <div className="grid gap-4 md:grid-cols-2">
-            {guides.map(guide => (
+            {guides.map((guide) => (
               <Link key={guide.id} href={`/guides/${guide.id}`}>
                 <GuideCard guide={guide} />
               </Link>
@@ -277,15 +271,8 @@ export default function ReviewGuidesPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-gray-200 pt-4">
               <p className="text-sm text-gray-500">
-                Showing
-                {' '}
-                {page * pageSize + 1}
-                {' '}
-                -
-                {' '}
-                {Math.min((page + 1) * pageSize, total)}
-                {' '}
-                of
+                Showing {page * pageSize + 1} -{" "}
+                {Math.min((page + 1) * pageSize, total)} of
                 {total}
               </p>
               <div className="flex gap-2">

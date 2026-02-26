@@ -72,13 +72,13 @@ export const search = query({
     // If query is provided, use search index
     if (args.query && args.query.trim().length > 0) {
       guides = await ctx.db
-        .query('travelGuides')
-        .withSearchIndex('search_title', (q) => q.search('title', args.query!))
+        .query("travelGuides")
+        .withSearchIndex("search_title", (q) => q.search("title", args.query!))
         .take(effectiveLimit * 2);
     } else {
       guides = await ctx.db
-        .query('travelGuides')
-        .order('desc')
+        .query("travelGuides")
+        .order("desc")
         .take(effectiveLimit * 2);
     }
 
@@ -86,8 +86,8 @@ export const search = query({
     if (args.destination) {
       guides = guides.filter((g) =>
         g.destinations.some((d) =>
-          d.toLowerCase().includes(args.destination!.toLowerCase())
-        )
+          d.toLowerCase().includes(args.destination!.toLowerCase()),
+        ),
       );
     }
 
@@ -111,7 +111,7 @@ export const getPopularDestinations = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 10;
-    const guides = await ctx.db.query('travelGuides').take(500);
+    const guides = await ctx.db.query("travelGuides").take(500);
 
     // Count destination occurrences
     const destCounts: Record<string, number> = {};
@@ -160,18 +160,18 @@ Add after the existing `/api/guides` GET route:
  * Search guides with filters
  */
 http.route({
-  path: '/api/guides/search',
-  method: 'GET',
+  path: "/api/guides/search",
+  method: "GET",
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
-    const query = url.searchParams.get('q') || undefined;
-    const destination = url.searchParams.get('destination') || undefined;
-    const hasAiData = url.searchParams.get('hasAiData') === 'true' || undefined;
-    const daysAgo = url.searchParams.get('daysAgo')
-      ? Number.parseInt(url.searchParams.get('daysAgo')!)
+    const query = url.searchParams.get("q") || undefined;
+    const destination = url.searchParams.get("destination") || undefined;
+    const hasAiData = url.searchParams.get("hasAiData") === "true" || undefined;
+    const daysAgo = url.searchParams.get("daysAgo")
+      ? Number.parseInt(url.searchParams.get("daysAgo")!)
       : undefined;
-    const limit = url.searchParams.get('limit')
-      ? Number.parseInt(url.searchParams.get('limit')!)
+    const limit = url.searchParams.get("limit")
+      ? Number.parseInt(url.searchParams.get("limit")!)
       : 30;
 
     try {
@@ -195,8 +195,8 @@ http.route({
       });
     } catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '搜索失败',
-        500
+        error instanceof Error ? error.message : "搜索失败",
+        500,
       );
     }
   }),
@@ -207,25 +207,25 @@ http.route({
  * Get popular destinations
  */
 http.route({
-  path: '/api/guides/destinations',
-  method: 'GET',
+  path: "/api/guides/destinations",
+  method: "GET",
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
-    const limit = url.searchParams.get('limit')
-      ? Number.parseInt(url.searchParams.get('limit')!)
+    const limit = url.searchParams.get("limit")
+      ? Number.parseInt(url.searchParams.get("limit")!)
       : 10;
 
     try {
       const destinations = await ctx.runQuery(
         api.travelGuides.getPopularDestinations,
-        { limit }
+        { limit },
       );
 
       return jsonResponse({ data: destinations });
     } catch (error) {
       return errorResponse(
-        error instanceof Error ? error.message : '获取目的地失败',
-        500
+        error instanceof Error ? error.message : "获取目的地失败",
+        500,
       );
     }
   }),

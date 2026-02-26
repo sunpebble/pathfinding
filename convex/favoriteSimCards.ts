@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Favorite SIM Cards - User's saved SIM card products
@@ -16,8 +16,8 @@ export const listByUser = query({
   },
   handler: async (ctx, args) => {
     const favorites = await ctx.db
-      .query('favoriteSimCards')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("favoriteSimCards")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     // Sort by creation date (newest first)
@@ -46,13 +46,14 @@ export const listByUser = query({
 export const isFavorited = query({
   args: {
     userId: v.string(),
-    simCardId: v.id('simCards'),
+    simCardId: v.id("simCards"),
   },
   handler: async (ctx, args) => {
     const favorites = await ctx.db
-      .query('favoriteSimCards')
-      .withIndex('by_user_sim_card', q =>
-        q.eq('userId', args.userId).eq('simCardId', args.simCardId))
+      .query("favoriteSimCards")
+      .withIndex("by_user_sim_card", (q) =>
+        q.eq("userId", args.userId).eq("simCardId", args.simCardId),
+      )
       .collect();
 
     return favorites.length > 0;
@@ -63,13 +64,14 @@ export const isFavorited = query({
 export const getFavorite = query({
   args: {
     userId: v.string(),
-    simCardId: v.id('simCards'),
+    simCardId: v.id("simCards"),
   },
   handler: async (ctx, args) => {
     const favorites = await ctx.db
-      .query('favoriteSimCards')
-      .withIndex('by_user_sim_card', q =>
-        q.eq('userId', args.userId).eq('simCardId', args.simCardId))
+      .query("favoriteSimCards")
+      .withIndex("by_user_sim_card", (q) =>
+        q.eq("userId", args.userId).eq("simCardId", args.simCardId),
+      )
       .collect();
 
     return favorites[0] ?? null;
@@ -80,28 +82,29 @@ export const getFavorite = query({
 export const add = mutation({
   args: {
     userId: v.string(),
-    simCardId: v.id('simCards'),
+    simCardId: v.id("simCards"),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Check if already favorited
     const existing = await ctx.db
-      .query('favoriteSimCards')
-      .withIndex('by_user_sim_card', q =>
-        q.eq('userId', args.userId).eq('simCardId', args.simCardId))
+      .query("favoriteSimCards")
+      .withIndex("by_user_sim_card", (q) =>
+        q.eq("userId", args.userId).eq("simCardId", args.simCardId),
+      )
       .collect();
 
     if (existing.length > 0) {
-      throw new Error('SIM card is already in favorites');
+      throw new Error("SIM card is already in favorites");
     }
 
     // Verify SIM card exists
     const simCard = await ctx.db.get(args.simCardId);
     if (!simCard) {
-      throw new Error('SIM card not found');
+      throw new Error("SIM card not found");
     }
 
-    return await ctx.db.insert('favoriteSimCards', {
+    return await ctx.db.insert("favoriteSimCards", {
       userId: args.userId,
       simCardId: args.simCardId,
       notes: args.notes,
@@ -113,13 +116,13 @@ export const add = mutation({
 // Update favorite notes
 export const updateNotes = mutation({
   args: {
-    id: v.id('favoriteSimCards'),
+    id: v.id("favoriteSimCards"),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const favorite = await ctx.db.get(args.id);
     if (!favorite) {
-      throw new Error('Favorite not found');
+      throw new Error("Favorite not found");
     }
 
     await ctx.db.patch(args.id, {
@@ -134,17 +137,18 @@ export const updateNotes = mutation({
 export const remove = mutation({
   args: {
     userId: v.string(),
-    simCardId: v.id('simCards'),
+    simCardId: v.id("simCards"),
   },
   handler: async (ctx, args) => {
     const favorites = await ctx.db
-      .query('favoriteSimCards')
-      .withIndex('by_user_sim_card', q =>
-        q.eq('userId', args.userId).eq('simCardId', args.simCardId))
+      .query("favoriteSimCards")
+      .withIndex("by_user_sim_card", (q) =>
+        q.eq("userId", args.userId).eq("simCardId", args.simCardId),
+      )
       .collect();
 
     if (favorites.length === 0) {
-      throw new Error('SIM card is not in favorites');
+      throw new Error("SIM card is not in favorites");
     }
 
     await ctx.db.delete(favorites[0]._id);
@@ -155,29 +159,29 @@ export const remove = mutation({
 export const toggle = mutation({
   args: {
     userId: v.string(),
-    simCardId: v.id('simCards'),
+    simCardId: v.id("simCards"),
   },
   handler: async (ctx, args) => {
     const favorites = await ctx.db
-      .query('favoriteSimCards')
-      .withIndex('by_user_sim_card', q =>
-        q.eq('userId', args.userId).eq('simCardId', args.simCardId))
+      .query("favoriteSimCards")
+      .withIndex("by_user_sim_card", (q) =>
+        q.eq("userId", args.userId).eq("simCardId", args.simCardId),
+      )
       .collect();
 
     if (favorites.length > 0) {
       // Remove from favorites
       await ctx.db.delete(favorites[0]._id);
       return { isFavorited: false };
-    }
-    else {
+    } else {
       // Verify SIM card exists
       const simCard = await ctx.db.get(args.simCardId);
       if (!simCard) {
-        throw new Error('SIM card not found');
+        throw new Error("SIM card not found");
       }
 
       // Add to favorites
-      await ctx.db.insert('favoriteSimCards', {
+      await ctx.db.insert("favoriteSimCards", {
         userId: args.userId,
         simCardId: args.simCardId,
         createdAt: Date.now(),
@@ -190,12 +194,12 @@ export const toggle = mutation({
 // Get favorite count for a SIM card
 export const getFavoriteCount = query({
   args: {
-    simCardId: v.id('simCards'),
+    simCardId: v.id("simCards"),
   },
   handler: async (ctx, args) => {
     const favorites = await ctx.db
-      .query('favoriteSimCards')
-      .withIndex('by_sim_card', q => q.eq('simCardId', args.simCardId))
+      .query("favoriteSimCards")
+      .withIndex("by_sim_card", (q) => q.eq("simCardId", args.simCardId))
       .collect();
 
     return favorites.length;

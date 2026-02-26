@@ -1,36 +1,36 @@
-'use client';
+"use client";
 
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
-import { Bot, Check, Copy, RefreshCcw, Sparkles } from 'lucide-react';
-import { Fragment, useCallback, useMemo, useState } from 'react';
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { Bot, Check, Copy, RefreshCcw, Sparkles } from "lucide-react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 
 import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
   ConversationScrollButton,
-} from '@/components/ai-elements/conversation';
-import { Loader } from '@/components/ai-elements/loader';
+} from "@/components/ai-elements/conversation";
+import { Loader } from "@/components/ai-elements/loader";
 import {
   Message,
   MessageAction,
   MessageActions,
   MessageContent,
   MessageResponse,
-} from '@/components/ai-elements/message';
+} from "@/components/ai-elements/message";
 import {
   PromptInput,
   PromptInputFooter,
   PromptInputSubmit,
   PromptInputTextarea,
-} from '@/components/ai-elements/prompt-input';
+} from "@/components/ai-elements/prompt-input";
 import {
   Reasoning,
   ReasoningContent,
   ReasoningTrigger,
-} from '@/components/ai-elements/reasoning';
-import { cn } from '@/lib/utils';
+} from "@/components/ai-elements/reasoning";
+import { cn } from "@/lib/utils";
 
 export default function ChatPage() {
   const [sessionId] = useState(() => `chat-${Date.now()}`);
@@ -38,7 +38,7 @@ export default function ChatPage() {
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: '/api/chat',
+        api: "/api/chat",
         body: { sessionId },
       }),
     [sessionId],
@@ -46,7 +46,7 @@ export default function ChatPage() {
 
   const { messages, sendMessage, status, regenerate } = useChat({ transport });
 
-  const isLoading = status === 'streaming' || status === 'submitted';
+  const isLoading = status === "streaming" || status === "submitted";
 
   const handleSubmit = useCallback(
     (message: { text: string }) => {
@@ -77,66 +77,67 @@ export default function ChatPage() {
       {/* Messages */}
       <Conversation className="flex-1 bg-muted/30">
         <ConversationContent className="mx-auto max-w-3xl px-4 py-6">
-          {messages.length === 0
-            ? (
-                <ConversationEmptyState
-                  icon={<Bot className="h-8 w-8" />}
-                  title="你好！我是你的 AI 助手"
-                  description="我可以帮你规划旅行行程、查询天气和景点信息、审核内容质量，或者探索数据库中的旅行数据。"
-                >
-                  <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-2">
-                    <SuggestionCard
-                      title="规划行程"
-                      description="帮我规划一个三天的杭州旅行"
-                      onClick={() =>
-                        handleSubmit({ text: '帮我规划一个三天的杭州旅行' })}
-                    />
-                    <SuggestionCard
-                      title="查询天气"
-                      description="上海明天天气怎么样？"
-                      onClick={() => handleSubmit({ text: '上海明天天气怎么样？' })}
-                    />
-                    <SuggestionCard
-                      title="搜索攻略"
-                      description="有哪些关于成都美食的攻略？"
-                      onClick={() =>
-                        handleSubmit({ text: '有哪些关于成都美食的攻略？' })}
-                    />
-                    <SuggestionCard
-                      title="数据统计"
-                      description="目前数据库里有多少条攻略？"
-                      onClick={() =>
-                        handleSubmit({ text: '目前数据库里有多少条攻略？' })}
-                    />
-                  </div>
-                </ConversationEmptyState>
-              )
-            : (
-                <>
-                  {messages.map((message, messageIndex) => (
-                    <MessageBubble
-                      key={message.id}
-                      message={message}
-                      isLastMessage={messageIndex === messages.length - 1}
-                      isStreaming={status === 'streaming'}
-                      lastMessageId={messages.at(-1)?.id}
-                      onRegenerate={regenerate}
-                    />
-                  ))}
-                  {status === 'submitted' && (
-                    <Message from="assistant">
-                      <MessageContent>
-                        <div className="flex items-center gap-2">
-                          <Loader size={16} />
-                          <span className="text-sm text-muted-foreground">
-                            思考中...
-                          </span>
-                        </div>
-                      </MessageContent>
-                    </Message>
-                  )}
-                </>
+          {messages.length === 0 ? (
+            <ConversationEmptyState
+              icon={<Bot className="h-8 w-8" />}
+              title="你好！我是你的 AI 助手"
+              description="我可以帮你规划旅行行程、查询天气和景点信息、审核内容质量，或者探索数据库中的旅行数据。"
+            >
+              <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-2">
+                <SuggestionCard
+                  title="规划行程"
+                  description="帮我规划一个三天的杭州旅行"
+                  onClick={() =>
+                    handleSubmit({ text: "帮我规划一个三天的杭州旅行" })
+                  }
+                />
+                <SuggestionCard
+                  title="查询天气"
+                  description="上海明天天气怎么样？"
+                  onClick={() => handleSubmit({ text: "上海明天天气怎么样？" })}
+                />
+                <SuggestionCard
+                  title="搜索攻略"
+                  description="有哪些关于成都美食的攻略？"
+                  onClick={() =>
+                    handleSubmit({ text: "有哪些关于成都美食的攻略？" })
+                  }
+                />
+                <SuggestionCard
+                  title="数据统计"
+                  description="目前数据库里有多少条攻略？"
+                  onClick={() =>
+                    handleSubmit({ text: "目前数据库里有多少条攻略？" })
+                  }
+                />
+              </div>
+            </ConversationEmptyState>
+          ) : (
+            <>
+              {messages.map((message, messageIndex) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  isLastMessage={messageIndex === messages.length - 1}
+                  isStreaming={status === "streaming"}
+                  lastMessageId={messages.at(-1)?.id}
+                  onRegenerate={regenerate}
+                />
+              ))}
+              {status === "submitted" && (
+                <Message from="assistant">
+                  <MessageContent>
+                    <div className="flex items-center gap-2">
+                      <Loader size={16} />
+                      <span className="text-sm text-muted-foreground">
+                        思考中...
+                      </span>
+                    </div>
+                  </MessageContent>
+                </Message>
               )}
+            </>
+          )}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
@@ -160,7 +161,7 @@ export default function ChatPage() {
 
 interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   parts: Array<{
     type: string;
     text?: string;
@@ -192,26 +193,26 @@ function MessageBubble({
 
   // Get the full text content for copy action
   const fullTextContent = message.parts
-    .filter(part => part.type === 'text' && part.text)
-    .map(part => part.text)
-    .join('');
+    .filter((part) => part.type === "text" && part.text)
+    .map((part) => part.text)
+    .join("");
 
   return (
     <Message from={message.role}>
       <MessageContent>
         {message.parts.map((part, i) => {
-          const isLastPart
-            = i === message.parts.length - 1 && message.id === lastMessageId;
+          const isLastPart =
+            i === message.parts.length - 1 && message.id === lastMessageId;
 
           switch (part.type) {
-            case 'text':
+            case "text":
               return (
                 // eslint-disable-next-line react/no-array-index-key -- parts are immutable and order-dependent
                 <Fragment key={`${message.id}-text-${i}`}>
-                  <MessageResponse>{part.text || ''}</MessageResponse>
+                  <MessageResponse>{part.text || ""}</MessageResponse>
                 </Fragment>
               );
-            case 'reasoning':
+            case "reasoning":
               return (
                 <Reasoning
                   // eslint-disable-next-line react/no-array-index-key -- parts are immutable and order-dependent
@@ -230,14 +231,12 @@ function MessageBubble({
                       return (
                         <span>
                           思考了
-                          {duration}
-                          {' '}
-                          秒
+                          {duration} 秒
                         </span>
                       );
                     }}
                   />
-                  <ReasoningContent>{part.text || ''}</ReasoningContent>
+                  <ReasoningContent>{part.text || ""}</ReasoningContent>
                 </Reasoning>
               );
             default:
@@ -247,7 +246,7 @@ function MessageBubble({
       </MessageContent>
 
       {/* Show actions only for the last assistant message */}
-      {message.role === 'assistant' && isLastMessage && !isStreaming && (
+      {message.role === "assistant" && isLastMessage && !isStreaming && (
         <MessageActions>
           <MessageAction
             onClick={onRegenerate}
@@ -261,13 +260,11 @@ function MessageBubble({
             tooltip="复制"
             label="复制"
           >
-            {copied
-              ? (
-                  <Check className="size-3" />
-                )
-              : (
-                  <Copy className="size-3" />
-                )}
+            {copied ? (
+              <Check className="size-3" />
+            ) : (
+              <Copy className="size-3" />
+            )}
           </MessageAction>
         </MessageActions>
       )}
@@ -289,9 +286,9 @@ function SuggestionCard({
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-lg border border-border bg-background p-4 text-left',
-        'transition-colors hover:border-emerald-300 hover:bg-emerald-50',
-        'dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20',
+        "rounded-lg border border-border bg-background p-4 text-left",
+        "transition-colors hover:border-emerald-300 hover:bg-emerald-50",
+        "dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20",
       )}
     >
       <p className="font-medium text-foreground">{title}</p>

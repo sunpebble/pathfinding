@@ -8,50 +8,54 @@
  * Continue: npx convex run migrations/cleanupDuplicates:run '{"platform": "xiaohongshu", "cursor": "..."}'
  */
 
-import type { Doc, Id } from '../_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation } from '../_generated/server';
-import { deleteGuideFromAggregates } from '../guideAggregates';
-import { deleteDestinationsForGuide } from '../guideDestinations';
+import type { Doc, Id } from "../_generated/dataModel";
+import { v } from "convex/values";
+import { mutation } from "../_generated/server";
+import { deleteGuideFromAggregates } from "../guideAggregates";
+import { deleteDestinationsForGuide } from "../guideDestinations";
 
 // Very small batch to avoid 16MB limit on large platforms
 const BATCH_SIZE = 20;
 
 const platforms = [
-  'xiaohongshu',
-  'weibo',
-  'ctrip',
-  'douyin',
-  'tripadvisor',
-  'tongcheng',
-  'mafengwo',
-  'qunar',
-  'qyer',
+  "xiaohongshu",
+  "weibo",
+  "ctrip",
+  "douyin",
+  "tripadvisor",
+  "tongcheng",
+  "mafengwo",
+  "qunar",
+  "qyer",
 ] as const;
 
 type Platform = (typeof platforms)[number];
 
 const platformValidator = v.union(
-  v.literal('xiaohongshu'),
-  v.literal('weibo'),
-  v.literal('ctrip'),
-  v.literal('douyin'),
-  v.literal('tripadvisor'),
-  v.literal('tongcheng'),
-  v.literal('mafengwo'),
-  v.literal('qunar'),
-  v.literal('qyer'),
+  v.literal("xiaohongshu"),
+  v.literal("weibo"),
+  v.literal("ctrip"),
+  v.literal("douyin"),
+  v.literal("tripadvisor"),
+  v.literal("tongcheng"),
+  v.literal("mafengwo"),
+  v.literal("qunar"),
+  v.literal("qyer"),
 );
 
 /**
  * Score a guide for quality comparison (higher is better)
  * Only uses fields that are always present to minimize data reads
  */
-function scoreGuide(guide: Pick<Doc<'travelGuides'>, '_id' | '_creationTime' | 'aiProcessedAt' | 'qualityScore' | 'crawledAt'>): number {
+function scoreGuide(
+  guide: Pick<
+    Doc<"travelGuides">,
+    "_id" | "_creationTime" | "aiProcessedAt" | "qualityScore" | "crawledAt"
+  >,
+): number {
   let score = 0;
   // AI processed data is most valuable
-  if (guide.aiProcessedAt)
-    score += 10000;
+  if (guide.aiProcessedAt) score += 10000;
   // Quality score
   score += guide.qualityScore * 10;
   // Newer is better
@@ -72,8 +76,8 @@ export const findDuplicates = mutation({
   },
   handler: async (ctx, args) => {
     const query = ctx.db
-      .query('travelGuides')
-      .withIndex('by_platform', q => q.eq('sourcePlatform', args.platform));
+      .query("travelGuides")
+      .withIndex("by_platform", (q) => q.eq("sourcePlatform", args.platform));
 
     const paginatedResult = await query.paginate({
       numItems: BATCH_SIZE,
@@ -89,15 +93,17 @@ export const findDuplicates = mutation({
     const checkedIds = new Set<string>();
 
     for (const guide of paginatedResult.page) {
-      if (checkedIds.has(guide.sourceExternalId))
-        continue;
+      if (checkedIds.has(guide.sourceExternalId)) continue;
       checkedIds.add(guide.sourceExternalId);
 
       // Use take(2) to check if more than 1 exists - much more efficient
       const sameExternalId = await ctx.db
-        .query('travelGuides')
-        .withIndex('by_platform_external', q =>
-          q.eq('sourcePlatform', args.platform).eq('sourceExternalId', guide.sourceExternalId))
+        .query("travelGuides")
+        .withIndex("by_platform_external", (q) =>
+          q
+            .eq("sourcePlatform", args.platform)
+            .eq("sourceExternalId", guide.sourceExternalId),
+        )
         .take(2);
 
       if (sameExternalId.length > 1) {
@@ -114,7 +120,9 @@ export const findDuplicates = mutation({
       duplicateGroups: duplicates.length,
       duplicates: duplicates.slice(0, 20),
       isDone: paginatedResult.isDone,
-      nextCursor: paginatedResult.isDone ? undefined : paginatedResult.continueCursor,
+      nextCursor: paginatedResult.isDone
+        ? undefined
+        : paginatedResult.continueCursor,
     };
   },
 });
@@ -133,8 +141,8 @@ export const cleanPlatform = mutation({
     const dryRun = args.dryRun ?? true;
 
     const query = ctx.db
-      .query('travelGuides')
-      .withIndex('by_platform', q => q.eq('sourcePlatform', args.platform));
+      .query("travelGuides")
+      .withIndex("by_platform", (q) => q.eq("sourcePlatform", args.platform));
 
     const paginatedResult = await query.paginate({
       numItems: BATCH_SIZE,
@@ -142,29 +150,33 @@ export const cleanPlatform = mutation({
     });
 
     let deletedCount = 0;
-    const deletedIds: Id<'travelGuides'>[] = [];
+    const deletedIds: Id<"travelGuides">[] = [];
     const processedExternalIds = new Set<string>();
 
     for (const guide of paginatedResult.page) {
-      if (processedExternalIds.has(guide.sourceExternalId))
-        continue;
+      if (processedExternalIds.has(guide.sourceExternalId)) continue;
       processedExternalIds.add(guide.sourceExternalId);
 
       // First check if duplicates exist with take(2)
       const checkDup = await ctx.db
-        .query('travelGuides')
-        .withIndex('by_platform_external', q =>
-          q.eq('sourcePlatform', args.platform).eq('sourceExternalId', guide.sourceExternalId))
+        .query("travelGuides")
+        .withIndex("by_platform_external", (q) =>
+          q
+            .eq("sourcePlatform", args.platform)
+            .eq("sourceExternalId", guide.sourceExternalId),
+        )
         .take(2);
 
-      if (checkDup.length <= 1)
-        continue;
+      if (checkDup.length <= 1) continue;
 
       // Only if duplicates exist, fetch all to determine which to keep
       const group = await ctx.db
-        .query('travelGuides')
-        .withIndex('by_platform_external', q =>
-          q.eq('sourcePlatform', args.platform).eq('sourceExternalId', guide.sourceExternalId))
+        .query("travelGuides")
+        .withIndex("by_platform_external", (q) =>
+          q
+            .eq("sourcePlatform", args.platform)
+            .eq("sourceExternalId", guide.sourceExternalId),
+        )
         .collect();
 
       // Sort by score (highest first)
@@ -191,7 +203,9 @@ export const cleanPlatform = mutation({
       deletedCount,
       deletedIds: deletedIds.slice(0, 50),
       isDone: paginatedResult.isDone,
-      nextCursor: paginatedResult.isDone ? undefined : paginatedResult.continueCursor,
+      nextCursor: paginatedResult.isDone
+        ? undefined
+        : paginatedResult.continueCursor,
       message: dryRun
         ? `[DRY RUN] Would delete ${deletedCount} duplicates in this batch.`
         : `Deleted ${deletedCount} duplicates in this batch.`,
@@ -213,8 +227,8 @@ export const run = mutation({
     const dryRun = args.dryRun ?? true;
 
     const query = ctx.db
-      .query('travelGuides')
-      .withIndex('by_platform', q => q.eq('sourcePlatform', args.platform));
+      .query("travelGuides")
+      .withIndex("by_platform", (q) => q.eq("sourcePlatform", args.platform));
 
     const paginatedResult = await query.paginate({
       numItems: BATCH_SIZE,
@@ -225,25 +239,29 @@ export const run = mutation({
     const processedExternalIds = new Set<string>();
 
     for (const guide of paginatedResult.page) {
-      if (processedExternalIds.has(guide.sourceExternalId))
-        continue;
+      if (processedExternalIds.has(guide.sourceExternalId)) continue;
       processedExternalIds.add(guide.sourceExternalId);
 
       // First check if duplicates exist with take(2)
       const checkDup = await ctx.db
-        .query('travelGuides')
-        .withIndex('by_platform_external', q =>
-          q.eq('sourcePlatform', args.platform).eq('sourceExternalId', guide.sourceExternalId))
+        .query("travelGuides")
+        .withIndex("by_platform_external", (q) =>
+          q
+            .eq("sourcePlatform", args.platform)
+            .eq("sourceExternalId", guide.sourceExternalId),
+        )
         .take(2);
 
-      if (checkDup.length <= 1)
-        continue;
+      if (checkDup.length <= 1) continue;
 
       // Only if duplicates exist, fetch all to determine which to keep
       const group = await ctx.db
-        .query('travelGuides')
-        .withIndex('by_platform_external', q =>
-          q.eq('sourcePlatform', args.platform).eq('sourceExternalId', guide.sourceExternalId))
+        .query("travelGuides")
+        .withIndex("by_platform_external", (q) =>
+          q
+            .eq("sourcePlatform", args.platform)
+            .eq("sourceExternalId", guide.sourceExternalId),
+        )
         .collect();
 
       // Sort by score (highest first)
@@ -265,9 +283,10 @@ export const run = mutation({
 
     // Get next platform if this one is done
     const currentIndex = platforms.indexOf(args.platform as Platform);
-    const nextPlatform = paginatedResult.isDone && currentIndex < platforms.length - 1
-      ? platforms[currentIndex + 1]
-      : undefined;
+    const nextPlatform =
+      paginatedResult.isDone && currentIndex < platforms.length - 1
+        ? platforms[currentIndex + 1]
+        : undefined;
 
     return {
       platform: args.platform,
@@ -275,11 +294,13 @@ export const run = mutation({
       deletedCount,
       batchSize: paginatedResult.page.length,
       isDone: paginatedResult.isDone && !nextPlatform,
-      nextCursor: paginatedResult.isDone ? undefined : paginatedResult.continueCursor,
+      nextCursor: paginatedResult.isDone
+        ? undefined
+        : paginatedResult.continueCursor,
       nextPlatform,
       message: dryRun
-        ? `[DRY RUN] Would delete ${deletedCount} duplicates. ${paginatedResult.isDone ? (nextPlatform ? `Platform done, next: ${nextPlatform}` : 'All platforms done!') : 'Run again with cursor to continue.'}`
-        : `Deleted ${deletedCount} duplicates. ${paginatedResult.isDone ? (nextPlatform ? `Platform done, next: ${nextPlatform}` : 'All platforms done!') : 'Run again with cursor to continue.'}`,
+        ? `[DRY RUN] Would delete ${deletedCount} duplicates. ${paginatedResult.isDone ? (nextPlatform ? `Platform done, next: ${nextPlatform}` : "All platforms done!") : "Run again with cursor to continue."}`
+        : `Deleted ${deletedCount} duplicates. ${paginatedResult.isDone ? (nextPlatform ? `Platform done, next: ${nextPlatform}` : "All platforms done!") : "Run again with cursor to continue."}`,
     };
   },
 });
@@ -297,8 +318,8 @@ export const verify = mutation({
     const platform = args.platform ?? platforms[0];
 
     const query = ctx.db
-      .query('travelGuides')
-      .withIndex('by_platform', q => q.eq('sourcePlatform', platform));
+      .query("travelGuides")
+      .withIndex("by_platform", (q) => q.eq("sourcePlatform", platform));
 
     const paginatedResult = await query.paginate({
       numItems: BATCH_SIZE,
@@ -309,15 +330,17 @@ export const verify = mutation({
     const checkedIds = new Set<string>();
 
     for (const guide of paginatedResult.page) {
-      if (checkedIds.has(guide.sourceExternalId))
-        continue;
+      if (checkedIds.has(guide.sourceExternalId)) continue;
       checkedIds.add(guide.sourceExternalId);
 
       // Use take(2) for efficient check
       const sameExternalId = await ctx.db
-        .query('travelGuides')
-        .withIndex('by_platform_external', q =>
-          q.eq('sourcePlatform', platform).eq('sourceExternalId', guide.sourceExternalId))
+        .query("travelGuides")
+        .withIndex("by_platform_external", (q) =>
+          q
+            .eq("sourcePlatform", platform)
+            .eq("sourceExternalId", guide.sourceExternalId),
+        )
         .take(2);
 
       if (sameExternalId.length > 1) {
@@ -327,20 +350,24 @@ export const verify = mutation({
 
     // Get next platform if this one is done
     const currentIndex = platforms.indexOf(platform as Platform);
-    const nextPlatform = paginatedResult.isDone && currentIndex < platforms.length - 1
-      ? platforms[currentIndex + 1]
-      : undefined;
+    const nextPlatform =
+      paginatedResult.isDone && currentIndex < platforms.length - 1
+        ? platforms[currentIndex + 1]
+        : undefined;
 
     return {
       platform,
       duplicatesFound,
       batchSize: paginatedResult.page.length,
       isDone: paginatedResult.isDone && !nextPlatform,
-      nextCursor: paginatedResult.isDone ? undefined : paginatedResult.continueCursor,
+      nextCursor: paginatedResult.isDone
+        ? undefined
+        : paginatedResult.continueCursor,
       nextPlatform,
-      message: duplicatesFound === 0
-        ? `✓ No duplicates found in this batch for ${platform}.`
-        : `⚠ Found ${duplicatesFound} duplicate groups in this batch for ${platform}.`,
+      message:
+        duplicatesFound === 0
+          ? `✓ No duplicates found in this batch for ${platform}.`
+          : `⚠ Found ${duplicatesFound} duplicate groups in this batch for ${platform}.`,
     };
   },
 });

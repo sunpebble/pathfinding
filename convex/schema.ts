@@ -1,6 +1,6 @@
-import { authTables } from '@convex-dev/auth/server';
-import { defineSchema, defineTable } from 'convex/server';
-import { v } from 'convex/values';
+import { authTables } from "@convex-dev/auth/server";
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
 
 /**
  * Pathfinding Database Schema
@@ -26,8 +26,8 @@ export default defineSchema({
     followersCount: v.optional(v.number()),
     followingCount: v.optional(v.number()),
   })
-    .index('by_email', ['email'])
-    .index('by_phone', ['phone']),
+    .index("by_email", ["email"])
+    .index("by_phone", ["phone"]),
 
   // ============================================
   // User Follows (social relationships)
@@ -37,9 +37,9 @@ export default defineSchema({
     followingId: v.string(), // Auth user ID of the user being followed
     createdAt: v.number(), // Unix timestamp
   })
-    .index('by_follower', ['followerId'])
-    .index('by_following', ['followingId'])
-    .index('by_follower_following', ['followerId', 'followingId']),
+    .index("by_follower", ["followerId"])
+    .index("by_following", ["followingId"])
+    .index("by_follower_following", ["followerId", "followingId"]),
 
   // ============================================
   // Activity Feed
@@ -52,16 +52,16 @@ export default defineSchema({
 
     // Activity type
     activityType: v.union(
-      v.literal('new_itinerary'), // Created a new itinerary
-      v.literal('update_itinerary'), // Updated an itinerary
-      v.literal('like_itinerary'), // Liked an itinerary
-      v.literal('comment_itinerary'), // Commented on an itinerary
-      v.literal('copy_itinerary'), // Copied an itinerary
-      v.literal('follow_user'), // Followed another user
+      v.literal("new_itinerary"), // Created a new itinerary
+      v.literal("update_itinerary"), // Updated an itinerary
+      v.literal("like_itinerary"), // Liked an itinerary
+      v.literal("comment_itinerary"), // Commented on an itinerary
+      v.literal("copy_itinerary"), // Copied an itinerary
+      v.literal("follow_user"), // Followed another user
     ),
 
     // Target resource
-    targetType: v.union(v.literal('itinerary'), v.literal('user')),
+    targetType: v.union(v.literal("itinerary"), v.literal("user")),
     targetId: v.string(), // ID of the target (itinerary ID or user ID)
 
     // Denormalized target info for performance
@@ -76,21 +76,21 @@ export default defineSchema({
 
     // Visibility
     visibility: v.union(
-      v.literal('public'), // Anyone can see
-      v.literal('followers'), // Only followers can see
+      v.literal("public"), // Anyone can see
+      v.literal("followers"), // Only followers can see
     ),
 
     // Timestamps
     createdAt: v.number(), // Unix timestamp
     updatedAt: v.optional(v.number()),
   })
-    .index('by_actor', ['actorId'])
-    .index('by_target', ['targetType', 'targetId'])
-    .index('by_type', ['activityType'])
-    .index('by_visibility', ['visibility'])
-    .index('by_visibility_created', ['visibility', 'createdAt'])
-    .index('by_created', ['createdAt'])
-    .index('by_actor_created', ['actorId', 'createdAt']),
+    .index("by_actor", ["actorId"])
+    .index("by_target", ["targetType", "targetId"])
+    .index("by_type", ["activityType"])
+    .index("by_visibility", ["visibility"])
+    .index("by_visibility_created", ["visibility", "createdAt"])
+    .index("by_created", ["createdAt"])
+    .index("by_actor_created", ["actorId", "createdAt"]),
 
   // ============================================
   // Reference Data
@@ -107,15 +107,15 @@ export default defineSchema({
     dstOffset: v.optional(v.number()), // DST UTC offset in minutes (if applicable)
     observesDst: v.optional(v.boolean()), // Whether the city observes daylight saving time
   })
-    .index('by_name', ['name'])
-    .index('by_country', ['countryCode'])
-    .index('by_timezone', ['timezone']),
+    .index("by_name", ["name"])
+    .index("by_country", ["countryCode"])
+    .index("by_timezone", ["timezone"]),
 
   // ============================================
   // City Encyclopedia (City Information Wiki)
   // ============================================
   cityEncyclopedia: defineTable({
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     // Basic Information
     basicInfo: v.optional(
       v.object({
@@ -150,11 +150,11 @@ export default defineSchema({
       v.object({
         seasons: v.array(
           v.union(
-            v.literal('spring'),
-            v.literal('summer'),
-            v.literal('autumn'),
-            v.literal('winter'),
-            v.literal('all_year'),
+            v.literal("spring"),
+            v.literal("summer"),
+            v.literal("autumn"),
+            v.literal("winter"),
+            v.literal("all_year"),
           ),
         ),
         months: v.array(v.number()), // 1-12
@@ -162,10 +162,10 @@ export default defineSchema({
         descriptionEn: v.optional(v.string()),
         weatherNotes: v.optional(v.string()),
         crowdLevel: v.optional(
-          v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
+          v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
         ),
         priceLevel: v.optional(
-          v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
+          v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
         ),
       }),
     ),
@@ -173,13 +173,13 @@ export default defineSchema({
     customs: v.array(
       v.object({
         category: v.union(
-          v.literal('etiquette'),
-          v.literal('religion'),
-          v.literal('dining'),
-          v.literal('dress'),
-          v.literal('gift'),
-          v.literal('gesture'),
-          v.literal('general'),
+          v.literal("etiquette"),
+          v.literal("religion"),
+          v.literal("dining"),
+          v.literal("dress"),
+          v.literal("gift"),
+          v.literal("gesture"),
+          v.literal("general"),
         ),
         title: v.string(),
         titleEn: v.optional(v.string()),
@@ -187,9 +187,9 @@ export default defineSchema({
         descriptionEn: v.optional(v.string()),
         isTaboo: v.boolean(),
         importance: v.union(
-          v.literal('low'),
-          v.literal('medium'),
-          v.literal('high'),
+          v.literal("low"),
+          v.literal("medium"),
+          v.literal("high"),
         ),
       }),
     ),
@@ -205,9 +205,9 @@ export default defineSchema({
         tippingCustom: v.string(),
         tippingCustomEn: v.optional(v.string()),
         waterSafety: v.union(
-          v.literal('safe'),
-          v.literal('boil'),
-          v.literal('bottled'),
+          v.literal("safe"),
+          v.literal("boil"),
+          v.literal("bottled"),
         ),
         waterSafetyNote: v.optional(v.string()),
         visaRequired: v.optional(v.boolean()),
@@ -224,7 +224,7 @@ export default defineSchema({
     sources: v.optional(v.array(v.string())),
     lastUpdatedAt: v.number(),
     createdAt: v.number(),
-  }).index('by_city', ['cityId']),
+  }).index("by_city", ["cityId"]),
 
   // ============================================
   // User Timezone Settings
@@ -232,20 +232,20 @@ export default defineSchema({
   userTimezoneSettings: defineTable({
     userId: v.string(), // Auth user ID
     homeTimezone: v.string(), // User's home timezone (IANA identifier)
-    homeCityId: v.optional(v.id('cities')), // Optional reference to home city
-    displayFormat: v.union(v.literal('12h'), v.literal('24h')), // Time display format
+    homeCityId: v.optional(v.id("cities")), // Optional reference to home city
+    displayFormat: v.union(v.literal("12h"), v.literal("24h")), // Time display format
     showSeconds: v.boolean(),
     autoDetect: v.boolean(), // Auto-detect timezone from device
     savedClocks: v.array(
       v.object({
-        cityId: v.id('cities'),
+        cityId: v.id("cities"),
         label: v.optional(v.string()), // Custom label (e.g., "Office", "Parents")
         sortOrder: v.number(),
       }),
     ),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index('by_user', ['userId']),
+  }).index("by_user", ["userId"]),
 
   // ============================================
   // Points of Interest (POIs)
@@ -255,13 +255,13 @@ export default defineSchema({
     name: v.string(),
     nameEn: v.optional(v.string()),
     category: v.union(
-      v.literal('attraction'),
-      v.literal('restaurant'),
-      v.literal('hotel'),
-      v.literal('shopping'),
-      v.literal('other'),
+      v.literal("attraction"),
+      v.literal("restaurant"),
+      v.literal("hotel"),
+      v.literal("shopping"),
+      v.literal("other"),
     ),
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     address: v.optional(v.string()),
     latitude: v.number(),
     longitude: v.number(),
@@ -324,11 +324,11 @@ export default defineSchema({
     ),
     popularityLevel: v.optional(
       v.union(
-        v.literal('hidden'), // Very few visitors know about it
-        v.literal('emerging'), // Starting to gain popularity
-        v.literal('moderate'), // Well-known locally but not to tourists
-        v.literal('popular'), // Popular among tourists
-        v.literal('crowded'), // Very crowded, mainstream tourist spot
+        v.literal("hidden"), // Very few visitors know about it
+        v.literal("emerging"), // Starting to gain popularity
+        v.literal("moderate"), // Well-known locally but not to tourists
+        v.literal("popular"), // Popular among tourists
+        v.literal("crowded"), // Very crowded, mainstream tourist spot
       ),
     ),
 
@@ -339,13 +339,13 @@ export default defineSchema({
     dietaryOptions: v.optional(v.array(v.string())), // e.g., "vegetarian", "halal"
     averagePrice: v.optional(v.number()), // Average price per person
   })
-    .index('by_city', ['cityId'])
-    .index('by_category', ['category'])
-    .index('by_city_category', ['cityId', 'category'])
-    .index('by_external_source', ['externalId', 'source'])
-    .index('by_hidden_gem', ['isHiddenGem'])
-    .index('by_city_hidden_gem', ['cityId', 'isHiddenGem'])
-    .index('by_popularity_level', ['popularityLevel']),
+    .index("by_city", ["cityId"])
+    .index("by_category", ["category"])
+    .index("by_city_category", ["cityId", "category"])
+    .index("by_external_source", ["externalId", "source"])
+    .index("by_hidden_gem", ["isHiddenGem"])
+    .index("by_city_hidden_gem", ["cityId", "isHiddenGem"])
+    .index("by_popularity_level", ["popularityLevel"]),
 
   // ============================================
   // User Submitted POIs (Hidden Gems)
@@ -358,13 +358,13 @@ export default defineSchema({
     name: v.string(),
     nameEn: v.optional(v.string()),
     category: v.union(
-      v.literal('attraction'),
-      v.literal('restaurant'),
-      v.literal('hotel'),
-      v.literal('shopping'),
-      v.literal('other'),
+      v.literal("attraction"),
+      v.literal("restaurant"),
+      v.literal("hotel"),
+      v.literal("shopping"),
+      v.literal("other"),
     ),
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     address: v.optional(v.string()),
     latitude: v.number(),
     longitude: v.number(),
@@ -383,17 +383,17 @@ export default defineSchema({
 
     // Moderation
     status: v.union(
-      v.literal('pending'), // Awaiting review
-      v.literal('approved'), // Approved and visible
-      v.literal('rejected'), // Rejected by moderator
-      v.literal('merged'), // Merged into main POI table
+      v.literal("pending"), // Awaiting review
+      v.literal("approved"), // Approved and visible
+      v.literal("rejected"), // Rejected by moderator
+      v.literal("merged"), // Merged into main POI table
     ),
     moderatorNotes: v.optional(v.string()),
     reviewedBy: v.optional(v.string()),
     reviewedAt: v.optional(v.number()),
 
     // If merged, reference to the main POI
-    mergedPoiId: v.optional(v.id('pois')),
+    mergedPoiId: v.optional(v.id("pois")),
 
     // Engagement
     upvotes: v.number(),
@@ -404,31 +404,31 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_user', ['userId'])
-    .index('by_city', ['cityId'])
-    .index('by_status', ['status'])
-    .index('by_city_status', ['cityId', 'status'])
-    .index('by_category', ['category'])
-    .index('by_created', ['createdAt']),
+    .index("by_user", ["userId"])
+    .index("by_city", ["cityId"])
+    .index("by_status", ["status"])
+    .index("by_city_status", ["cityId", "status"])
+    .index("by_category", ["category"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // User Submitted POI Votes
   // ============================================
   userSubmittedPoiVotes: defineTable({
-    poiId: v.id('userSubmittedPois'),
+    poiId: v.id("userSubmittedPois"),
     userId: v.string(),
-    voteType: v.union(v.literal('up'), v.literal('down')),
+    voteType: v.union(v.literal("up"), v.literal("down")),
     createdAt: v.number(),
   })
-    .index('by_poi', ['poiId'])
-    .index('by_user', ['userId'])
-    .index('by_poi_user', ['poiId', 'userId']),
+    .index("by_poi", ["poiId"])
+    .index("by_user", ["userId"])
+    .index("by_poi_user", ["poiId", "userId"]),
 
   // ============================================
   // Hidden Gem Ratings
   // ============================================
   hiddenGemRatings: defineTable({
-    poiId: v.id('pois'), // Reference to main POI
+    poiId: v.id("pois"), // Reference to main POI
     userId: v.string(),
     rating: v.number(), // 1-5 rating
     review: v.optional(v.string()), // Optional review text
@@ -437,16 +437,16 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_poi', ['poiId'])
-    .index('by_user', ['userId'])
-    .index('by_poi_user', ['poiId', 'userId'])
-    .index('by_rating', ['rating']),
+    .index("by_poi", ["poiId"])
+    .index("by_user", ["userId"])
+    .index("by_poi_user", ["poiId", "userId"])
+    .index("by_rating", ["rating"]),
 
   // ============================================
   // POI Holiday Hours
   // ============================================
   poiHolidayHours: defineTable({
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     holidayName: v.string(), // e.g., "春节", "国庆节"
     holidayNameEn: v.optional(v.string()), // e.g., "Chinese New Year"
     startDate: v.string(), // YYYY-MM-DD
@@ -465,21 +465,21 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_poi', ['poiId'])
-    .index('by_poi_dates', ['poiId', 'startDate', 'endDate'])
-    .index('by_dates', ['startDate', 'endDate']),
+    .index("by_poi", ["poiId"])
+    .index("by_poi_dates", ["poiId", "startDate", "endDate"])
+    .index("by_dates", ["startDate", "endDate"]),
 
   // ============================================
   // POI Business Hours Reminders
   // ============================================
   poiBusinessHoursReminders: defineTable({
     userId: v.string(), // Auth user ID
-    poiId: v.id('pois'),
-    itineraryItemId: v.optional(v.id('itineraryItems')), // Optional link to itinerary item
+    poiId: v.id("pois"),
+    itineraryItemId: v.optional(v.id("itineraryItems")), // Optional link to itinerary item
     reminderType: v.union(
-      v.literal('opening'), // Remind when POI opens
-      v.literal('closing'), // Remind before POI closes
-      v.literal('best_time'), // Remind at best visit time
+      v.literal("opening"), // Remind when POI opens
+      v.literal("closing"), // Remind before POI closes
+      v.literal("best_time"), // Remind at best visit time
     ),
     minutesBefore: v.number(), // Minutes before the event to trigger reminder
     scheduledTime: v.number(), // Unix timestamp when reminder should trigger
@@ -487,11 +487,11 @@ export default defineSchema({
     triggeredAt: v.optional(v.number()), // When reminder was triggered
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_poi', ['poiId'])
-    .index('by_user_poi', ['userId', 'poiId'])
-    .index('by_scheduled_time', ['scheduledTime'])
-    .index('by_itinerary_item', ['itineraryItemId']),
+    .index("by_user", ["userId"])
+    .index("by_poi", ["poiId"])
+    .index("by_user_poi", ["userId", "poiId"])
+    .index("by_scheduled_time", ["scheduledTime"])
+    .index("by_itinerary_item", ["itineraryItemId"]),
 
   // ============================================
   // Itineraries (Travel Plans)
@@ -499,49 +499,49 @@ export default defineSchema({
   itineraries: defineTable({
     userId: v.string(), // Auth user ID
     title: v.string(),
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     startDate: v.string(), // ISO date string YYYY-MM-DD
     endDate: v.string(),
     visibility: v.union(
-      v.literal('private'),
-      v.literal('team'),
-      v.literal('public'),
+      v.literal("private"),
+      v.literal("team"),
+      v.literal("public"),
     ),
     coverImageUrl: v.optional(v.string()),
-    copiedFromId: v.optional(v.id('itineraries')),
+    copiedFromId: v.optional(v.id("itineraries")),
   })
-    .index('by_user', ['userId'])
-    .index('by_visibility', ['visibility'])
-    .index('by_city', ['cityId'])
-    .index('by_visibility_city', ['visibility', 'cityId'])
-    .index('by_user_visibility', ['userId', 'visibility']),
+    .index("by_user", ["userId"])
+    .index("by_visibility", ["visibility"])
+    .index("by_city", ["cityId"])
+    .index("by_visibility_city", ["visibility", "cityId"])
+    .index("by_user_visibility", ["userId", "visibility"]),
 
   // ============================================
   // Itinerary Collaborators
   // ============================================
   itineraryCollaborators: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.id('itineraries'),
-    role: v.union(v.literal('owner'), v.literal('editor'), v.literal('viewer')),
+    itineraryId: v.id("itineraries"),
+    role: v.union(v.literal("owner"), v.literal("editor"), v.literal("viewer")),
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_user', ['userId'])
-    .index('by_itinerary_user', ['itineraryId', 'userId']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_user", ["userId"])
+    .index("by_itinerary_user", ["itineraryId", "userId"]),
 
   // ============================================
   // Collaborator Presence (Real-time)
   // ============================================
   collaboratorPresence: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     displayName: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     color: v.string(), // Assigned color for cursor/selection display
     lastActiveAt: v.number(), // Unix timestamp
     isOnline: v.boolean(),
     // Current editing context
-    currentDayId: v.optional(v.id('itineraryDays')),
-    currentItemId: v.optional(v.id('itineraryItems')),
+    currentDayId: v.optional(v.id("itineraryDays")),
+    currentItemId: v.optional(v.id("itineraryItems")),
     cursorPosition: v.optional(
       v.object({
         field: v.string(), // Which field is being edited
@@ -552,70 +552,70 @@ export default defineSchema({
     selectedElements: v.optional(
       v.array(
         v.object({
-          type: v.union(v.literal('day'), v.literal('item'), v.literal('poi')),
+          type: v.union(v.literal("day"), v.literal("item"), v.literal("poi")),
           id: v.string(),
         }),
       ),
     ),
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_user', ['userId'])
-    .index('by_itinerary_user', ['itineraryId', 'userId'])
-    .index('by_itinerary_online', ['itineraryId', 'isOnline']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_user", ["userId"])
+    .index("by_itinerary_user", ["itineraryId", "userId"])
+    .index("by_itinerary_online", ["itineraryId", "isOnline"]),
 
   // ============================================
   // Edit Operations (for conflict resolution)
   // ============================================
   editOperations: defineTable({
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     operationType: v.union(
-      v.literal('create'),
-      v.literal('update'),
-      v.literal('delete'),
-      v.literal('reorder'),
+      v.literal("create"),
+      v.literal("update"),
+      v.literal("delete"),
+      v.literal("reorder"),
     ),
     targetType: v.union(
-      v.literal('itinerary'),
-      v.literal('day'),
-      v.literal('item'),
+      v.literal("itinerary"),
+      v.literal("day"),
+      v.literal("item"),
     ),
     targetId: v.string(),
     changes: v.any(), // The actual changes made
     timestamp: v.number(),
     version: v.number(), // For optimistic concurrency control
     status: v.union(
-      v.literal('pending'),
-      v.literal('applied'),
-      v.literal('conflicted'),
-      v.literal('rejected'),
+      v.literal("pending"),
+      v.literal("applied"),
+      v.literal("conflicted"),
+      v.literal("rejected"),
     ),
     conflictResolution: v.optional(
       v.object({
         resolvedBy: v.string(), // userId
         resolvedAt: v.number(),
         resolution: v.union(
-          v.literal('accept_mine'),
-          v.literal('accept_theirs'),
-          v.literal('merge'),
+          v.literal("accept_mine"),
+          v.literal("accept_theirs"),
+          v.literal("merge"),
         ),
       }),
     ),
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_itinerary_timestamp', ['itineraryId', 'timestamp'])
-    .index('by_itinerary_status', ['itineraryId', 'status']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_itinerary_timestamp", ["itineraryId", "timestamp"])
+    .index("by_itinerary_status", ["itineraryId", "status"]),
 
   // ============================================
   // Itinerary Copy History
   // ============================================
   itineraryCopyHistory: defineTable({
-    originalItineraryId: v.id('itineraries'), // Source itinerary
-    copiedItineraryId: v.id('itineraries'), // New copied itinerary
+    originalItineraryId: v.id("itineraries"), // Source itinerary
+    copiedItineraryId: v.id("itineraries"), // New copied itinerary
     userId: v.string(), // User who performed the copy
     copyType: v.union(
-      v.literal('full'), // Full copy of all days
-      v.literal('partial'), // Partial copy of selected days
+      v.literal("full"), // Full copy of all days
+      v.literal("partial"), // Partial copy of selected days
     ),
     selectedDays: v.optional(v.array(v.number())), // Day numbers if partial copy
     originalStartDate: v.string(), // Original itinerary start date
@@ -623,54 +623,54 @@ export default defineSchema({
     dateOffset: v.number(), // Number of days offset
     createdAt: v.number(), // Unix timestamp
   })
-    .index('by_user', ['userId'])
-    .index('by_original', ['originalItineraryId'])
-    .index('by_copied', ['copiedItineraryId'])
-    .index('by_user_created', ['userId', 'createdAt']),
+    .index("by_user", ["userId"])
+    .index("by_original", ["originalItineraryId"])
+    .index("by_copied", ["copiedItineraryId"])
+    .index("by_user_created", ["userId", "createdAt"]),
 
   // ============================================
   // Itinerary Days
   // ============================================
   itineraryDays: defineTable({
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     dayNumber: v.number(),
     date: v.string(), // ISO date string YYYY-MM-DD
-  }).index('by_itinerary', ['itineraryId']),
+  }).index("by_itinerary", ["itineraryId"]),
 
   // ============================================
   // Itinerary Items (POIs within a day)
   // ============================================
   itineraryItems: defineTable({
-    dayId: v.id('itineraryDays'),
-    poiId: v.id('pois'),
+    dayId: v.id("itineraryDays"),
+    poiId: v.id("pois"),
     orderIndex: v.number(),
     startTime: v.optional(v.string()), // HH:MM format
     endTime: v.optional(v.string()),
     transportMode: v.union(
-      v.literal('walking'),
-      v.literal('driving'),
-      v.literal('transit'),
-      v.literal('cycling'),
-      v.literal('taxi'),
+      v.literal("walking"),
+      v.literal("driving"),
+      v.literal("transit"),
+      v.literal("cycling"),
+      v.literal("taxi"),
     ),
     notes: v.optional(v.string()),
-  }).index('by_day', ['dayId']),
+  }).index("by_day", ["dayId"]),
 
   // ============================================
   // Reminders
   // ============================================
   reminders: defineTable({
     userId: v.string(),
-    itineraryId: v.id('itineraries'),
-    itemId: v.optional(v.id('itineraryItems')),
+    itineraryId: v.id("itineraries"),
+    itemId: v.optional(v.id("itineraryItems")),
     reminderTime: v.number(), // Unix timestamp
     message: v.string(),
     isTriggered: v.boolean(),
     triggeredAt: v.optional(v.number()),
   })
-    .index('by_user', ['userId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_reminder_time', ['reminderTime']),
+    .index("by_user", ["userId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_reminder_time", ["reminderTime"]),
 
   // ============================================
   // Crawl Jobs (Data Collection)
@@ -691,22 +691,22 @@ export default defineSchema({
     lastFailureAt: v.optional(v.number()), // Timestamp of last failure
     lastFailureReason: v.optional(v.string()), // Reason for last failure
   })
-    .index('by_status', ['status'])
-    .index('by_platform', ['platform']),
+    .index("by_status", ["status"])
+    .index("by_platform", ["platform"]),
 
   // ============================================
   // Raw Crawl Records
   // ============================================
   rawCrawlRecords: defineTable({
-    jobId: v.id('crawlJobs'),
+    jobId: v.id("crawlJobs"),
     sourceUrl: v.string(),
     rawData: v.any(),
     crawledAt: v.number(),
     processingStatus: v.string(), // 'pending', 'processed', 'failed'
   })
-    .index('by_job', ['jobId'])
-    .index('by_job_status', ['jobId', 'processingStatus'])
-    .index('by_status', ['processingStatus']),
+    .index("by_job", ["jobId"])
+    .index("by_job_status", ["jobId", "processingStatus"])
+    .index("by_status", ["processingStatus"]),
 
   // ============================================
   // Normalized POIs (from crawl data)
@@ -726,29 +726,29 @@ export default defineSchema({
     imageUrls: v.optional(v.array(v.string())),
     normalizedAt: v.number(),
     confidence: v.number(), // 0-1 confidence score
-    sourceMappingId: v.optional(v.id('poiSourceMappings')),
+    sourceMappingId: v.optional(v.id("poiSourceMappings")),
   })
-    .index('by_category', ['category'])
-    .index('by_confidence', ['confidence'])
-    .index('by_category_confidence', ['category', 'confidence']),
+    .index("by_category", ["category"])
+    .index("by_confidence", ["confidence"])
+    .index("by_category_confidence", ["category", "confidence"]),
 
   // ============================================
   // POI Tickets (门票信息)
   // ============================================
   poiTickets: defineTable({
-    poiId: v.id('pois'), // 关联的景点
+    poiId: v.id("pois"), // 关联的景点
     // 基本门票信息
     ticketName: v.string(), // 门票名称，如 "成人票"、"学生票"
     ticketType: v.union(
-      v.literal('adult'), // 成人票
-      v.literal('student'), // 学生票
-      v.literal('senior'), // 老人票
-      v.literal('child'), // 儿童票
-      v.literal('group'), // 团体票
-      v.literal('family'), // 家庭票
-      v.literal('vip'), // VIP票
-      v.literal('free'), // 免费
-      v.literal('other'), // 其他
+      v.literal("adult"), // 成人票
+      v.literal("student"), // 学生票
+      v.literal("senior"), // 老人票
+      v.literal("child"), // 儿童票
+      v.literal("group"), // 团体票
+      v.literal("family"), // 家庭票
+      v.literal("vip"), // VIP票
+      v.literal("free"), // 免费
+      v.literal("other"), // 其他
     ),
     // 价格信息
     price: v.number(), // 价格（人民币）
@@ -785,10 +785,10 @@ export default defineSchema({
     isActive: v.boolean(), // 是否在售
     stockStatus: v.optional(
       v.union(
-        v.literal('in_stock'), // 有票
-        v.literal('low_stock'), // 少量
-        v.literal('sold_out'), // 售罄
-        v.literal('unknown'), // 未知
+        v.literal("in_stock"), // 有票
+        v.literal("low_stock"), // 少量
+        v.literal("sold_out"), // 售罄
+        v.literal("unknown"), // 未知
       ),
     ),
     // 排序和展示
@@ -801,26 +801,26 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_poi', ['poiId'])
-    .index('by_poi_type', ['poiId', 'ticketType'])
-    .index('by_active', ['isActive'])
-    .index('by_poi_active', ['poiId', 'isActive']),
+    .index("by_poi", ["poiId"])
+    .index("by_poi_type", ["poiId", "ticketType"])
+    .index("by_active", ["isActive"])
+    .index("by_poi_active", ["poiId", "isActive"]),
 
   // ============================================
   // Ticket Reminders (门票预约提醒)
   // ============================================
   ticketReminders: defineTable({
     userId: v.string(), // 用户ID
-    poiId: v.id('pois'), // 景点ID
-    ticketId: v.optional(v.id('poiTickets')), // 关联的门票（可选）
-    itineraryId: v.optional(v.id('itineraries')), // 关联的行程（可选）
+    poiId: v.id("pois"), // 景点ID
+    ticketId: v.optional(v.id("poiTickets")), // 关联的门票（可选）
+    itineraryId: v.optional(v.id("itineraries")), // 关联的行程（可选）
     // 提醒信息
     reminderType: v.union(
-      v.literal('reservation_open'), // 开放预约提醒
-      v.literal('booking_reminder'), // 购票提醒
-      v.literal('visit_reminder'), // 参观提醒
-      v.literal('price_drop'), // 降价提醒
-      v.literal('stock_available'), // 有票提醒
+      v.literal("reservation_open"), // 开放预约提醒
+      v.literal("booking_reminder"), // 购票提醒
+      v.literal("visit_reminder"), // 参观提醒
+      v.literal("price_drop"), // 降价提醒
+      v.literal("stock_available"), // 有票提醒
     ),
     reminderTime: v.number(), // 提醒时间 (Unix timestamp)
     message: v.optional(v.string()), // 自定义提醒消息
@@ -833,29 +833,29 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_poi', ['poiId'])
-    .index('by_user_poi', ['userId', 'poiId'])
-    .index('by_reminder_time', ['reminderTime'])
-    .index('by_triggered', ['isTriggered']),
+    .index("by_user", ["userId"])
+    .index("by_poi", ["poiId"])
+    .index("by_user_poi", ["userId", "poiId"])
+    .index("by_reminder_time", ["reminderTime"])
+    .index("by_triggered", ["isTriggered"]),
 
   // ============================================
   // POI Source Mappings
   // ============================================
   poiSourceMappings: defineTable({
-    normalizedPoiId: v.id('normalizedPois'),
+    normalizedPoiId: v.id("normalizedPois"),
     sourcePlatform: v.string(),
     sourceExternalId: v.string(),
-    rawRecordId: v.optional(v.id('rawCrawlRecords')),
+    rawRecordId: v.optional(v.id("rawCrawlRecords")),
   })
-    .index('by_normalized_poi', ['normalizedPoiId'])
-    .index('by_source', ['sourcePlatform', 'sourceExternalId']),
+    .index("by_normalized_poi", ["normalizedPoiId"])
+    .index("by_source", ["sourcePlatform", "sourceExternalId"]),
 
   // ============================================
   // POI Reviews
   // ============================================
   poiReviews: defineTable({
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     sourceId: v.optional(v.string()),
     authorName: v.optional(v.string()),
     content: v.string(),
@@ -864,8 +864,8 @@ export default defineSchema({
     sentiment: v.optional(v.string()),
     crawledAt: v.number(),
   })
-    .index('by_poi', ['poiId'])
-    .index('by_rating', ['rating']),
+    .index("by_poi", ["poiId"])
+    .index("by_rating", ["rating"]),
 
   // ============================================
   // Training Datasets
@@ -880,35 +880,35 @@ export default defineSchema({
     status: v.string(),
     generatedAt: v.optional(v.number()),
   })
-    .index('by_name', ['name'])
-    .index('by_version', ['version'])
-    .index('by_status', ['status']),
+    .index("by_name", ["name"])
+    .index("by_version", ["version"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // Data Quality Reports
   // ============================================
   dataQualityReports: defineTable({
-    datasetId: v.optional(v.id('trainingDatasets')),
+    datasetId: v.optional(v.id("trainingDatasets")),
     reportType: v.string(),
     metrics: v.any(),
     issues: v.optional(v.array(v.any())),
     generatedAt: v.number(),
-  }).index('by_dataset', ['datasetId']),
+  }).index("by_dataset", ["datasetId"]),
 
   // ============================================
   // Travel Guides (Crawled Content)
   // ============================================
   travelGuides: defineTable({
     sourcePlatform: v.union(
-      v.literal('xiaohongshu'),
-      v.literal('weibo'),
-      v.literal('ctrip'),
-      v.literal('douyin'),
-      v.literal('tripadvisor'),
-      v.literal('qunar'),
-      v.literal('tongcheng'),
-      v.literal('mafengwo'),
-      v.literal('qyer'),
+      v.literal("xiaohongshu"),
+      v.literal("weibo"),
+      v.literal("ctrip"),
+      v.literal("douyin"),
+      v.literal("tripadvisor"),
+      v.literal("qunar"),
+      v.literal("tongcheng"),
+      v.literal("mafengwo"),
+      v.literal("qyer"),
     ),
     sourceExternalId: v.string(),
     sourceUrl: v.optional(v.string()),
@@ -935,19 +935,19 @@ export default defineSchema({
     contentTruncated: v.optional(v.boolean()),
     completenessLevel: v.optional(
       v.union(
-        v.literal('complete'),
-        v.literal('usable'),
-        v.literal('incomplete'),
+        v.literal("complete"),
+        v.literal("usable"),
+        v.literal("incomplete"),
       ),
     ),
 
     // AI Enrichment Status (for LangGraph pipeline)
     enrichmentStatus: v.optional(
       v.union(
-        v.literal('pending'),
-        v.literal('processing'),
-        v.literal('completed'),
-        v.literal('failed'),
+        v.literal("pending"),
+        v.literal("processing"),
+        v.literal("completed"),
+        v.literal("failed"),
       ),
     ),
     enrichmentError: v.optional(v.string()),
@@ -1026,45 +1026,45 @@ export default defineSchema({
       }),
     ),
   })
-    .index('by_platform', ['sourcePlatform'])
-    .index('by_platform_external', ['sourcePlatform', 'sourceExternalId'])
-    .index('by_quality', ['qualityScore'])
-    .index('by_completeness', ['completenessLevel'])
-    .index('by_destinations', ['destinations'])
-    .searchIndex('search_content', {
-      searchField: 'content',
-      filterFields: ['destinations', 'aiProcessedAt'],
+    .index("by_platform", ["sourcePlatform"])
+    .index("by_platform_external", ["sourcePlatform", "sourceExternalId"])
+    .index("by_quality", ["qualityScore"])
+    .index("by_completeness", ["completenessLevel"])
+    .index("by_destinations", ["destinations"])
+    .searchIndex("search_content", {
+      searchField: "content",
+      filterFields: ["destinations", "aiProcessedAt"],
     })
-    .searchIndex('search_title', {
-      searchField: 'title',
-      filterFields: ['destinations', 'aiProcessedAt'],
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["destinations", "aiProcessedAt"],
     }),
 
   // ============================================
   // Guide Destinations (Auxiliary table for indexed destination lookup)
   // ============================================
   guideDestinations: defineTable({
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     destination: v.string(), // Normalized destination name
     createdAt: v.number(),
   })
-    .index('by_destination', ['destination'])
-    .index('by_guide', ['guideId'])
-    .index('by_destination_guide', ['destination', 'guideId']),
+    .index("by_destination", ["destination"])
+    .index("by_guide", ["guideId"])
+    .index("by_destination_guide", ["destination", "guideId"]),
 
   // ============================================
   // Content Refetch Tasks (For truncated content recovery)
   // ============================================
   refetchTasks: defineTable({
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     sourceUrl: v.string(),
     sourceExternalId: v.string(),
     sourcePlatform: v.string(),
     status: v.union(
-      v.literal('pending'),
-      v.literal('running'),
-      v.literal('completed'),
-      v.literal('failed'),
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
     ),
     retryCount: v.number(),
     maxRetries: v.number(),
@@ -1074,15 +1074,15 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
     nextRetryAt: v.optional(v.number()),
   })
-    .index('by_status', ['status'])
-    .index('by_guide', ['guideId'])
-    .index('by_next_retry', ['status', 'nextRetryAt']),
+    .index("by_status", ["status"])
+    .index("by_guide", ["guideId"])
+    .index("by_next_retry", ["status", "nextRetryAt"]),
 
   // ============================================
   // Travel Guide AI Data (Separated AI processing results)
   // ============================================
   travelGuideAiData: defineTable({
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     version: v.number(), // Processing version for versioning
     // AI Enhanced Fields
     aiSummary: v.optional(v.string()),
@@ -1151,16 +1151,16 @@ export default defineSchema({
     processedAt: v.number(),
     modelVersion: v.optional(v.string()),
   })
-    .index('by_guide', ['guideId'])
-    .index('by_guide_version', ['guideId', 'version']),
+    .index("by_guide", ["guideId"])
+    .index("by_guide_version", ["guideId", "version"]),
 
   // ============================================
   // Itinerary Comments
   // ============================================
   itineraryComments: defineTable({
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(), // Auth user ID
-    parentId: v.optional(v.id('itineraryComments')), // For nested replies
+    parentId: v.optional(v.id("itineraryComments")), // For nested replies
     content: v.string(),
     likesCount: v.number(),
     repliesCount: v.number(),
@@ -1170,10 +1170,10 @@ export default defineSchema({
     createdAt: v.number(), // Unix timestamp
     updatedAt: v.optional(v.number()),
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_user', ['userId'])
-    .index('by_parent', ['parentId'])
-    .index('by_itinerary_created', ['itineraryId', 'createdAt']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_user", ["userId"])
+    .index("by_parent", ["parentId"])
+    .index("by_itinerary_created", ["itineraryId", "createdAt"]),
 
   // ============================================
   // Guide Comments (for Travel Guides / BlogPosts)
@@ -1190,63 +1190,63 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_guide', ['guideId'])
-    .index('by_user', ['userId'])
-    .index('by_parent', ['parentId'])
-    .index('by_guide_created', ['guideId', 'createdAt']),
+    .index("by_guide", ["guideId"])
+    .index("by_user", ["userId"])
+    .index("by_parent", ["parentId"])
+    .index("by_guide_created", ["guideId", "createdAt"]),
 
   // ============================================
   // Guide Comment Likes
   // ============================================
   guideCommentLikes: defineTable({
-    commentId: v.id('guideComments'),
+    commentId: v.id("guideComments"),
     userId: v.string(),
     createdAt: v.number(),
   })
-    .index('by_comment', ['commentId'])
-    .index('by_user', ['userId'])
-    .index('by_comment_user', ['commentId', 'userId']),
+    .index("by_comment", ["commentId"])
+    .index("by_user", ["userId"])
+    .index("by_comment_user", ["commentId", "userId"]),
 
   // ============================================
   // Comment Likes
   // ============================================
   commentLikes: defineTable({
-    commentId: v.id('itineraryComments'),
+    commentId: v.id("itineraryComments"),
     userId: v.string(), // Auth user ID
     createdAt: v.number(), // Unix timestamp
   })
-    .index('by_comment', ['commentId'])
-    .index('by_user', ['userId'])
-    .index('by_comment_user', ['commentId', 'userId']),
+    .index("by_comment", ["commentId"])
+    .index("by_user", ["userId"])
+    .index("by_comment_user", ["commentId", "userId"]),
 
   // ============================================
   // Comment Reports
   // ============================================
   commentReports: defineTable({
-    commentId: v.id('itineraryComments'),
+    commentId: v.id("itineraryComments"),
     userId: v.string(), // Auth user ID
     reason: v.union(
-      v.literal('spam'),
-      v.literal('harassment'),
-      v.literal('inappropriate'),
-      v.literal('misinformation'),
-      v.literal('other'),
+      v.literal("spam"),
+      v.literal("harassment"),
+      v.literal("inappropriate"),
+      v.literal("misinformation"),
+      v.literal("other"),
     ),
     description: v.optional(v.string()),
     status: v.union(
-      v.literal('pending'),
-      v.literal('reviewed'),
-      v.literal('resolved'),
-      v.literal('dismissed'),
+      v.literal("pending"),
+      v.literal("reviewed"),
+      v.literal("resolved"),
+      v.literal("dismissed"),
     ),
     createdAt: v.number(),
     reviewedAt: v.optional(v.number()),
     reviewedBy: v.optional(v.string()),
   })
-    .index('by_comment', ['commentId'])
-    .index('by_user', ['userId'])
-    .index('by_status', ['status'])
-    .index('by_comment_user', ['commentId', 'userId']),
+    .index("by_comment", ["commentId"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_comment_user", ["commentId", "userId"]),
 
   // ============================================
   // Notifications
@@ -1254,24 +1254,24 @@ export default defineSchema({
   notifications: defineTable({
     userId: v.string(), // Recipient user ID
     type: v.union(
-      v.literal('comment'),
-      v.literal('reply'),
-      v.literal('like'),
-      v.literal('mention'),
-      v.literal('new_follower'),
-      v.literal('following_itinerary'),
+      v.literal("comment"),
+      v.literal("reply"),
+      v.literal("like"),
+      v.literal("mention"),
+      v.literal("new_follower"),
+      v.literal("following_itinerary"),
       // Push notification types
-      v.literal('itinerary_reminder'), // Itinerary start reminder
-      v.literal('flight_status'), // Flight status update
-      v.literal('weather_alert'), // Weather warning for destination
-      v.literal('social_interaction'), // Generic social notification
+      v.literal("itinerary_reminder"), // Itinerary start reminder
+      v.literal("flight_status"), // Flight status update
+      v.literal("weather_alert"), // Weather warning for destination
+      v.literal("social_interaction"), // Generic social notification
     ),
     referenceType: v.union(
-      v.literal('itinerary'),
-      v.literal('comment'),
-      v.literal('user'),
-      v.literal('flight'),
-      v.literal('weather'),
+      v.literal("itinerary"),
+      v.literal("comment"),
+      v.literal("user"),
+      v.literal("flight"),
+      v.literal("weather"),
     ),
     referenceId: v.string(), // ID of the itinerary, comment, user, or flight
     actorId: v.optional(v.string()), // User who triggered the notification (optional for system notifications)
@@ -1283,16 +1283,16 @@ export default defineSchema({
     isPushSent: v.optional(v.boolean()), // Whether push notification was sent
     pushSentAt: v.optional(v.number()), // When push was sent
     priority: v.optional(
-      v.union(v.literal('low'), v.literal('normal'), v.literal('high')),
+      v.union(v.literal("low"), v.literal("normal"), v.literal("high")),
     ),
     createdAt: v.number(),
     readAt: v.optional(v.number()),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_read', ['userId', 'isRead'])
-    .index('by_user_created', ['userId', 'createdAt'])
-    .index('by_type', ['type'])
-    .index('by_push_pending', ['isPushSent']),
+    .index("by_user", ["userId"])
+    .index("by_user_read", ["userId", "isRead"])
+    .index("by_user_created", ["userId", "createdAt"])
+    .index("by_type", ["type"])
+    .index("by_push_pending", ["isPushSent"]),
 
   // ============================================
   // Push Notification Tokens (Device Registration)
@@ -1300,7 +1300,7 @@ export default defineSchema({
   pushTokens: defineTable({
     userId: v.string(), // Auth user ID
     token: v.string(), // APNs device token
-    platform: v.union(v.literal('ios'), v.literal('android')),
+    platform: v.union(v.literal("ios"), v.literal("android")),
     deviceId: v.optional(v.string()), // Unique device identifier
     deviceName: v.optional(v.string()), // Device name for display
     appVersion: v.optional(v.string()), // App version
@@ -1310,9 +1310,9 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_token', ['token'])
-    .index('by_user_active', ['userId', 'isActive']),
+    .index("by_user", ["userId"])
+    .index("by_token", ["token"])
+    .index("by_user_active", ["userId", "isActive"]),
 
   // ============================================
   // Notification Settings (User Preferences)
@@ -1353,7 +1353,7 @@ export default defineSchema({
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index('by_user', ['userId']),
+  }).index("by_user", ["userId"]),
 
   // ============================================
   // Scheduled Notifications (for background processing)
@@ -1361,11 +1361,11 @@ export default defineSchema({
   scheduledNotifications: defineTable({
     userId: v.string(),
     type: v.union(
-      v.literal('itinerary_reminder'),
-      v.literal('flight_checkin'),
-      v.literal('flight_boarding'),
-      v.literal('weather_check'),
-      v.literal('custom'),
+      v.literal("itinerary_reminder"),
+      v.literal("flight_checkin"),
+      v.literal("flight_boarding"),
+      v.literal("weather_check"),
+      v.literal("custom"),
     ),
     referenceType: v.optional(v.string()),
     referenceId: v.optional(v.string()),
@@ -1374,23 +1374,23 @@ export default defineSchema({
     body: v.string(),
     data: v.optional(v.any()), // Additional payload
     priority: v.optional(
-      v.union(v.literal('low'), v.literal('normal'), v.literal('high')),
+      v.union(v.literal("low"), v.literal("normal"), v.literal("high")),
     ),
     status: v.union(
-      v.literal('pending'),
-      v.literal('sent'),
-      v.literal('cancelled'),
-      v.literal('failed'),
+      v.literal("pending"),
+      v.literal("sent"),
+      v.literal("cancelled"),
+      v.literal("failed"),
     ),
     sentAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
     retryCount: v.optional(v.number()),
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_status', ['status'])
-    .index('by_scheduled', ['scheduledFor'])
-    .index('by_status_scheduled', ['status', 'scheduledFor']),
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_scheduled", ["scheduledFor"])
+    .index("by_status_scheduled", ["status", "scheduledFor"]),
 
   // ============================================
   // Search History
@@ -1402,8 +1402,8 @@ export default defineSchema({
     resultId: v.optional(v.string()),
     searchedAt: v.number(),
   })
-    .index('by_user_query', ['userId', 'query'])
-    .index('by_user_searched', ['userId', 'searchedAt']),
+    .index("by_user_query", ["userId", "query"])
+    .index("by_user_searched", ["userId", "searchedAt"]),
 
   // ============================================
   // Search Trends (Aggregated search statistics)
@@ -1414,21 +1414,21 @@ export default defineSchema({
     searchCount: v.number(), // Number of searches
     resultType: v.optional(v.string()), // Type of search result
   })
-    .index('by_query_date', ['query', 'date'])
-    .index('by_date', ['date'])
-    .index('by_count', ['searchCount']),
+    .index("by_query_date", ["query", "date"])
+    .index("by_date", ["date"])
+    .index("by_count", ["searchCount"]),
 
   // ============================================
   // Itinerary Likes
   // ============================================
   itineraryLikes: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     createdAt: v.number(), // Unix timestamp
   })
-    .index('by_user', ['userId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_user_itinerary', ['userId', 'itineraryId']),
+    .index("by_user", ["userId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_user_itinerary", ["userId", "itineraryId"]),
 
   // ============================================
   // Favorite Collections (Folders)
@@ -1443,25 +1443,25 @@ export default defineSchema({
     createdAt: v.number(), // Unix timestamp
     updatedAt: v.number(), // Unix timestamp
   })
-    .index('by_user', ['userId'])
-    .index('by_user_default', ['userId', 'isDefault'])
-    .index('by_user_sort', ['userId', 'sortOrder']),
+    .index("by_user", ["userId"])
+    .index("by_user_default", ["userId", "isDefault"])
+    .index("by_user_sort", ["userId", "sortOrder"]),
 
   // ============================================
   // Itinerary Favorites
   // ============================================
   itineraryFavorites: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.id('itineraries'),
-    collectionId: v.optional(v.id('favoriteCollections')),
+    itineraryId: v.id("itineraries"),
+    collectionId: v.optional(v.id("favoriteCollections")),
     notes: v.optional(v.string()), // User notes about this favorite
     createdAt: v.number(), // Unix timestamp
   })
-    .index('by_user', ['userId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_collection', ['collectionId'])
-    .index('by_user_itinerary', ['userId', 'itineraryId'])
-    .index('by_user_collection', ['userId', 'collectionId']),
+    .index("by_user", ["userId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_collection", ["collectionId"])
+    .index("by_user_itinerary", ["userId", "itineraryId"])
+    .index("by_user_collection", ["userId", "collectionId"]),
 
   // ============================================
   // Conversations (Private Messaging)
@@ -1473,49 +1473,49 @@ export default defineSchema({
     lastMessageText: v.optional(v.string()),
     lastMessageAt: v.optional(v.number()), // Unix timestamp
     lastMessageSenderId: v.optional(v.string()),
-  }).index('by_last_message', ['lastMessageAt']),
+  }).index("by_last_message", ["lastMessageAt"]),
 
   // ============================================
   // Messages
   // ============================================
   messages: defineTable({
-    conversationId: v.id('conversations'),
+    conversationId: v.id("conversations"),
     senderId: v.string(), // Auth user ID
     content: v.string(),
     messageType: v.union(
-      v.literal('text'),
-      v.literal('image'),
-      v.literal('itinerary_share'),
+      v.literal("text"),
+      v.literal("image"),
+      v.literal("itinerary_share"),
     ),
     // Optional reference for shared content
-    sharedItineraryId: v.optional(v.id('itineraries')),
+    sharedItineraryId: v.optional(v.id("itineraries")),
     sharedImageUrl: v.optional(v.string()),
     // Timestamps
     sentAt: v.number(), // Unix timestamp
     isDeleted: v.optional(v.boolean()),
   })
-    .index('by_conversation', ['conversationId'])
-    .index('by_conversation_time', ['conversationId', 'sentAt'])
-    .index('by_sender', ['senderId']),
+    .index("by_conversation", ["conversationId"])
+    .index("by_conversation_time", ["conversationId", "sentAt"])
+    .index("by_sender", ["senderId"]),
 
   // ============================================
   // Message Read Status
   // ============================================
   messageReadStatus: defineTable({
-    conversationId: v.id('conversations'),
+    conversationId: v.id("conversations"),
     userId: v.string(), // Auth user ID
     lastReadAt: v.number(), // Unix timestamp of last read
-    lastReadMessageId: v.optional(v.id('messages')),
+    lastReadMessageId: v.optional(v.id("messages")),
   })
-    .index('by_conversation_user', ['conversationId', 'userId'])
-    .index('by_user', ['userId']),
+    .index("by_conversation_user", ["conversationId", "userId"])
+    .index("by_user", ["userId"]),
 
   // ============================================
   // Hotel Bookings
   // ============================================
   hotelBookings: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.optional(v.id('itineraries')), // Link to itinerary (optional)
+    itineraryId: v.optional(v.id("itineraries")), // Link to itinerary (optional)
 
     // Basic hotel information
     hotelName: v.string(),
@@ -1555,24 +1555,24 @@ export default defineSchema({
 
     // Import source (for email parsing)
     importSource: v.optional(
-      v.union(v.literal('manual'), v.literal('email'), v.literal('import')),
+      v.union(v.literal("manual"), v.literal("email"), v.literal("import")),
     ),
     rawEmailContent: v.optional(v.string()), // Original email content if imported
 
     // Status
     status: v.optional(
       v.union(
-        v.literal('confirmed'),
-        v.literal('pending'),
-        v.literal('cancelled'),
-        v.literal('completed'),
+        v.literal("confirmed"),
+        v.literal("pending"),
+        v.literal("cancelled"),
+        v.literal("completed"),
       ),
     ),
   })
-    .index('by_user', ['userId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_user_dates', ['userId', 'checkInDate'])
-    .index('by_status', ['status']),
+    .index("by_user", ["userId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_user_dates", ["userId", "checkInDate"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // Expense Categories (Reference Data)
@@ -1584,19 +1584,19 @@ export default defineSchema({
     color: v.string(), // Hex color code
     sortOrder: v.number(), // Display order
     isSystem: v.boolean(), // System default vs user-created
-  }).index('by_sort_order', ['sortOrder']),
+  }).index("by_sort_order", ["sortOrder"]),
 
   // ============================================
   // Itinerary Budgets
   // ============================================
   itineraryBudgets: defineTable({
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     totalBudget: v.number(), // Total budget in CNY
     currency: v.string(), // Currency code, e.g., "CNY"
     categoryBudgets: v.array(
       v.object({
-        categoryId: v.id('expenseCategories'),
+        categoryId: v.id("expenseCategories"),
         amount: v.number(),
       }),
     ),
@@ -1604,22 +1604,22 @@ export default defineSchema({
     createdAt: v.number(), // Unix timestamp
     updatedAt: v.number(),
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_user', ['userId']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_user", ["userId"]),
 
   // ============================================
   // Expenses (Actual Spending)
   // ============================================
   expenses: defineTable({
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
-    categoryId: v.id('expenseCategories'),
+    categoryId: v.id("expenseCategories"),
     amount: v.number(), // Amount in CNY
     currency: v.string(), // Currency code
     description: v.string(), // What was purchased
     date: v.string(), // ISO date string YYYY-MM-DD
     time: v.optional(v.string()), // HH:MM format
-    poiId: v.optional(v.id('pois')), // Related POI if any
+    poiId: v.optional(v.id("pois")), // Related POI if any
     dayNumber: v.optional(v.number()), // Day number in itinerary
     paymentMethod: v.optional(v.string()), // 支付方式：现金、微信、支付宝、信用卡等
     receiptImageUrl: v.optional(v.string()), // Receipt photo
@@ -1627,27 +1627,27 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_user', ['userId'])
-    .index('by_category', ['categoryId'])
-    .index('by_itinerary_category', ['itineraryId', 'categoryId'])
-    .index('by_date', ['date']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_user", ["userId"])
+    .index("by_category", ["categoryId"])
+    .index("by_itinerary_category", ["itineraryId", "categoryId"])
+    .index("by_date", ["date"]),
 
   // ============================================
   // Calendar Sync
   // ============================================
   calendarSyncs: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.optional(v.id('itineraries')),
+    itineraryId: v.optional(v.id("itineraries")),
     savedItineraryLocalId: v.optional(v.string()), // Local SavedItinerary UUID (for iOS local storage)
-    calendarProvider: v.union(v.literal('apple'), v.literal('google')),
+    calendarProvider: v.union(v.literal("apple"), v.literal("google")),
     calendarId: v.optional(v.string()), // External calendar ID from provider
     calendarEventIds: v.optional(v.array(v.string())), // Event IDs created in the calendar
     syncStatus: v.union(
-      v.literal('pending'),
-      v.literal('synced'),
-      v.literal('failed'),
-      v.literal('deleted'),
+      v.literal("pending"),
+      v.literal("synced"),
+      v.literal("failed"),
+      v.literal("deleted"),
     ),
     lastSyncedAt: v.optional(v.number()), // Unix timestamp
     syncError: v.optional(v.string()),
@@ -1659,26 +1659,26 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_local_itinerary', ['savedItineraryLocalId'])
-    .index('by_user_itinerary', ['userId', 'itineraryId'])
-    .index('by_user_local_itinerary', ['userId', 'savedItineraryLocalId'])
-    .index('by_status', ['syncStatus']),
+    .index("by_user", ["userId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_local_itinerary", ["savedItineraryLocalId"])
+    .index("by_user_itinerary", ["userId", "itineraryId"])
+    .index("by_user_local_itinerary", ["userId", "savedItineraryLocalId"])
+    .index("by_status", ["syncStatus"]),
 
   // ============================================
   // Guide Recommendations
   // ============================================
   guideRecommendations: defineTable({
     userId: v.string(),
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     score: v.number(), // 0-1
     reason: v.optional(v.string()),
     isDismissed: v.boolean(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_guide', ['userId', 'guideId'])
-    .index('by_score', ['score']),
+    .index("by_user", ["userId"])
+    .index("by_user_guide", ["userId", "guideId"])
+    .index("by_score", ["score"]),
 
   // ============================================
   // Visited Cities (Travel Footprints)
@@ -1699,14 +1699,14 @@ export default defineSchema({
     notes: v.optional(v.string()),
     photos: v.optional(v.array(v.string())),
     rating: v.optional(v.number()), // 1-5 rating
-    travelGuideId: v.optional(v.id('travelGuides')),
-    itineraryId: v.optional(v.id('itineraries')),
+    travelGuideId: v.optional(v.id("travelGuides")),
+    itineraryId: v.optional(v.id("itineraries")),
     createdAt: v.optional(v.number()),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_city', ['userId', 'cityName'])
-    .index('by_user_country', ['userId', 'countryCode'])
-    .index('by_country', ['countryCode']),
+    .index("by_user", ["userId"])
+    .index("by_user_city", ["userId", "cityName"])
+    .index("by_user_country", ["userId", "countryCode"])
+    .index("by_country", ["countryCode"]),
 
   // ============================================
   // Visited Countries (Aggregated)
@@ -1721,9 +1721,9 @@ export default defineSchema({
     lastVisitedAt: v.number(),
     createdAt: v.optional(v.number()),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_country', ['userId', 'countryCode'])
-    .index('by_country', ['countryCode']),
+    .index("by_user", ["userId"])
+    .index("by_user_country", ["userId", "countryCode"])
+    .index("by_country", ["countryCode"]),
 
   // ============================================
   // Travel Statistics
@@ -1766,7 +1766,7 @@ export default defineSchema({
     yearlyStats: v.optional(v.any()), // { "2024": { cities: 5, countries: 2 } }
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
-  }).index('by_user', ['userId']),
+  }).index("by_user", ["userId"]),
 
   // ============================================
   // Insurance Products (保险产品)
@@ -1780,13 +1780,13 @@ export default defineSchema({
 
     // Product type
     type: v.union(
-      v.literal('comprehensive'), // 综合旅行险
-      v.literal('medical'), // 医疗险
-      v.literal('accident'), // 意外险
-      v.literal('flight_delay'), // 航班延误险
-      v.literal('luggage'), // 行李险
-      v.literal('cancellation'), // 取消险
-      v.literal('emergency_evacuation'), // 紧急救援险
+      v.literal("comprehensive"), // 综合旅行险
+      v.literal("medical"), // 医疗险
+      v.literal("accident"), // 意外险
+      v.literal("flight_delay"), // 航班延误险
+      v.literal("luggage"), // 行李险
+      v.literal("cancellation"), // 取消险
+      v.literal("emergency_evacuation"), // 紧急救援险
     ),
 
     // Coverage details
@@ -1811,10 +1811,10 @@ export default defineSchema({
     // Risk level coverage
     riskLevelCoverage: v.array(
       v.union(
-        v.literal('low'), // Safe destinations
-        v.literal('medium'), // Standard destinations
-        v.literal('high'), // Adventure/high-risk activities
-        v.literal('extreme'), // Extreme sports/war zones
+        v.literal("low"), // Safe destinations
+        v.literal("medium"), // Standard destinations
+        v.literal("high"), // Adventure/high-risk activities
+        v.literal("extreme"), // Extreme sports/war zones
       ),
     ),
 
@@ -1839,19 +1839,19 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_type', ['type'])
-    .index('by_provider', ['provider'])
-    .index('by_active', ['isActive'])
-    .index('by_domestic', ['domesticOnly'])
-    .index('by_priority', ['priority']),
+    .index("by_type", ["type"])
+    .index("by_provider", ["provider"])
+    .index("by_active", ["isActive"])
+    .index("by_domestic", ["domesticOnly"])
+    .index("by_priority", ["priority"]),
 
   // ============================================
   // User Insurance (用户购买的保险)
   // ============================================
   userInsurance: defineTable({
     userId: v.string(), // Auth user ID
-    productId: v.id('insuranceProducts'),
-    itineraryId: v.optional(v.id('itineraries')), // Optional linked itinerary
+    productId: v.id("insuranceProducts"),
+    itineraryId: v.optional(v.id("itineraries")), // Optional linked itinerary
 
     // Coverage period
     startDate: v.string(), // ISO date string YYYY-MM-DD
@@ -1866,18 +1866,18 @@ export default defineSchema({
       v.object({
         name: v.string(),
         idType: v.union(
-          v.literal('id_card'), // 身份证
-          v.literal('passport'), // 护照
-          v.literal('other'),
+          v.literal("id_card"), // 身份证
+          v.literal("passport"), // 护照
+          v.literal("other"),
         ),
         idNumber: v.string(),
         phone: v.optional(v.string()),
         relationship: v.union(
-          v.literal('self'), // 本人
-          v.literal('spouse'), // 配偶
-          v.literal('child'), // 子女
-          v.literal('parent'), // 父母
-          v.literal('other'),
+          v.literal("self"), // 本人
+          v.literal("spouse"), // 配偶
+          v.literal("child"), // 子女
+          v.literal("parent"), // 父母
+          v.literal("other"),
         ),
       }),
     ),
@@ -1887,19 +1887,19 @@ export default defineSchema({
     policyNumber: v.optional(v.string()), // Policy number
     totalPrice: v.number(), // Total price paid in CNY
     paymentStatus: v.union(
-      v.literal('pending'),
-      v.literal('paid'),
-      v.literal('refunded'),
-      v.literal('failed'),
+      v.literal("pending"),
+      v.literal("paid"),
+      v.literal("refunded"),
+      v.literal("failed"),
     ),
 
     // Status
     status: v.union(
-      v.literal('pending'), // Waiting for coverage to start
-      v.literal('active'), // Currently covered
-      v.literal('expired'), // Coverage ended
-      v.literal('cancelled'), // User cancelled
-      v.literal('claimed'), // Claim filed
+      v.literal("pending"), // Waiting for coverage to start
+      v.literal("active"), // Currently covered
+      v.literal("expired"), // Coverage ended
+      v.literal("cancelled"), // User cancelled
+      v.literal("claimed"), // Claim filed
     ),
 
     // Claim info
@@ -1911,11 +1911,11 @@ export default defineSchema({
           claimType: v.string(),
           claimAmount: v.number(),
           status: v.union(
-            v.literal('submitted'),
-            v.literal('processing'),
-            v.literal('approved'),
-            v.literal('rejected'),
-            v.literal('paid'),
+            v.literal("submitted"),
+            v.literal("processing"),
+            v.literal("approved"),
+            v.literal("rejected"),
+            v.literal("paid"),
           ),
           notes: v.optional(v.string()),
         }),
@@ -1930,11 +1930,11 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_product', ['productId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_status', ['status'])
-    .index('by_user_status', ['userId', 'status']),
+    .index("by_user", ["userId"])
+    .index("by_product", ["productId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_status", ["status"])
+    .index("by_user_status", ["userId", "status"]),
 
   // ============================================
   // Destination Risk Profiles (目的地风险等级)
@@ -1943,29 +1943,29 @@ export default defineSchema({
     destination: v.string(), // Country or region name
     destinationCode: v.optional(v.string()), // Country code like CN, JP, US
     riskLevel: v.union(
-      v.literal('low'),
-      v.literal('medium'),
-      v.literal('high'),
-      v.literal('extreme'),
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high"),
+      v.literal("extreme"),
     ),
     riskFactors: v.array(v.string()), // Risk factors description
     recommendedInsuranceTypes: v.array(
       v.union(
-        v.literal('comprehensive'),
-        v.literal('medical'),
-        v.literal('accident'),
-        v.literal('flight_delay'),
-        v.literal('luggage'),
-        v.literal('cancellation'),
-        v.literal('emergency_evacuation'),
+        v.literal("comprehensive"),
+        v.literal("medical"),
+        v.literal("accident"),
+        v.literal("flight_delay"),
+        v.literal("luggage"),
+        v.literal("cancellation"),
+        v.literal("emergency_evacuation"),
       ),
     ),
     travelAdvisory: v.optional(v.string()), // Travel advisory notes
     lastUpdated: v.number(),
   })
-    .index('by_destination', ['destination'])
-    .index('by_code', ['destinationCode'])
-    .index('by_risk_level', ['riskLevel']),
+    .index("by_destination", ["destination"])
+    .index("by_code", ["destinationCode"])
+    .index("by_risk_level", ["riskLevel"]),
 
   // ============================================
   // Insurance Claim Guides (理赔指南)
@@ -1973,13 +1973,13 @@ export default defineSchema({
   insuranceClaimGuides: defineTable({
     title: v.string(),
     claimType: v.union(
-      v.literal('medical'), // 医疗理赔
-      v.literal('accident'), // 意外理赔
-      v.literal('flight_delay'), // 航班延误理赔
-      v.literal('luggage_loss'), // 行李丢失理赔
-      v.literal('trip_cancellation'), // 行程取消理赔
-      v.literal('emergency_evacuation'), // 紧急救援理赔
-      v.literal('other'),
+      v.literal("medical"), // 医疗理赔
+      v.literal("accident"), // 意外理赔
+      v.literal("flight_delay"), // 航班延误理赔
+      v.literal("luggage_loss"), // 行李丢失理赔
+      v.literal("trip_cancellation"), // 行程取消理赔
+      v.literal("emergency_evacuation"), // 紧急救援理赔
+      v.literal("other"),
     ),
     content: v.string(), // Markdown content
     steps: v.array(
@@ -2013,9 +2013,9 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_claim_type', ['claimType'])
-    .index('by_active', ['isActive'])
-    .index('by_priority', ['priority']),
+    .index("by_claim_type", ["claimType"])
+    .index("by_active", ["isActive"])
+    .index("by_priority", ["priority"]),
 
   // ============================================
   // Chat Sessions (AI Travel Assistant)
@@ -2023,28 +2023,28 @@ export default defineSchema({
   chatSessions: defineTable({
     userId: v.string(), // Auth user ID
     title: v.string(), // Session title (auto-generated or user-defined)
-    itineraryId: v.optional(v.id('itineraries')), // Optional linked itinerary
-    guideId: v.optional(v.id('travelGuides')), // Optional linked travel guide
+    itineraryId: v.optional(v.id("itineraries")), // Optional linked itinerary
+    guideId: v.optional(v.id("travelGuides")), // Optional linked travel guide
     context: v.optional(v.string()), // Additional context (destination, preferences)
     messageCount: v.number(),
     lastMessageAt: v.number(), // Unix timestamp
     isArchived: v.boolean(),
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_archived', ['userId', 'isArchived'])
-    .index('by_user_last_message', ['userId', 'lastMessageAt'])
-    .index('by_itinerary', ['itineraryId']),
+    .index("by_user", ["userId"])
+    .index("by_user_archived", ["userId", "isArchived"])
+    .index("by_user_last_message", ["userId", "lastMessageAt"])
+    .index("by_itinerary", ["itineraryId"]),
 
   // ============================================
   // Chat Messages
   // ============================================
   chatMessages: defineTable({
-    sessionId: v.id('chatSessions'),
+    sessionId: v.id("chatSessions"),
     role: v.union(
-      v.literal('user'),
-      v.literal('assistant'),
-      v.literal('system'),
+      v.literal("user"),
+      v.literal("assistant"),
+      v.literal("system"),
     ),
     content: v.string(),
     // Structured data for rich responses
@@ -2092,8 +2092,8 @@ export default defineSchema({
     ),
     createdAt: v.number(),
   })
-    .index('by_session', ['sessionId'])
-    .index('by_session_created', ['sessionId', 'createdAt']),
+    .index("by_session", ["sessionId"])
+    .index("by_session_created", ["sessionId", "createdAt"]),
 
   // ============================================
   // Tipping Guides (小费指南)
@@ -2105,25 +2105,25 @@ export default defineSchema({
     currency: v.string(), // Currency code (e.g., 'USD', 'JPY')
     currencySymbol: v.string(), // Currency symbol (e.g., '$', '¥')
     tippingCulture: v.union(
-      v.literal('expected'), // 小费是社会规范，几乎必须
-      v.literal('appreciated'), // 小费受欢迎但非必须
-      v.literal('optional'), // 可给可不给
-      v.literal('not_expected'), // 不期待小费
-      v.literal('offensive'), // 给小费可能被视为冒犯
+      v.literal("expected"), // 小费是社会规范，几乎必须
+      v.literal("appreciated"), // 小费受欢迎但非必须
+      v.literal("optional"), // 可给可不给
+      v.literal("not_expected"), // 不期待小费
+      v.literal("offensive"), // 给小费可能被视为冒犯
     ),
     cultureSummary: v.string(), // 小费文化简要说明
     scenarios: v.array(
       v.object({
         type: v.union(
-          v.literal('restaurant'), // 餐厅
-          v.literal('hotel'), // 酒店
-          v.literal('taxi'), // 出租车
-          v.literal('bar'), // 酒吧
-          v.literal('spa'), // 水疗/按摩
-          v.literal('tour'), // 旅游向导
-          v.literal('delivery'), // 外卖/快递
-          v.literal('hairdresser'), // 理发店
-          v.literal('other'), // 其他
+          v.literal("restaurant"), // 餐厅
+          v.literal("hotel"), // 酒店
+          v.literal("taxi"), // 出租车
+          v.literal("bar"), // 酒吧
+          v.literal("spa"), // 水疗/按摩
+          v.literal("tour"), // 旅游向导
+          v.literal("delivery"), // 外卖/快递
+          v.literal("hairdresser"), // 理发店
+          v.literal("other"), // 其他
         ),
         typeName: v.string(), // 场景中文名称 (e.g., '餐厅')
         minPercentage: v.number(), // 最低小费百分比
@@ -2136,8 +2136,8 @@ export default defineSchema({
     tips: v.optional(v.array(v.string())), // 小费相关的旅行提示
     lastUpdated: v.number(), // Unix timestamp
   })
-    .index('by_country_code', ['countryCode'])
-    .index('by_tipping_culture', ['tippingCulture']),
+    .index("by_country_code", ["countryCode"])
+    .index("by_tipping_culture", ["tippingCulture"]),
 
   // ============================================
   // Travel Blog Posts
@@ -2152,8 +2152,8 @@ export default defineSchema({
     publishedAt: v.optional(v.number()),
     crawledAt: v.number(),
   })
-    .index('by_platform', ['sourcePlatform'])
-    .index('by_platform_external', ['sourcePlatform', 'sourceExternalId']),
+    .index("by_platform", ["sourcePlatform"])
+    .index("by_platform_external", ["sourcePlatform", "sourceExternalId"]),
 
   // ============================================
   // Emergency Contacts (Personal contacts)
@@ -2170,8 +2170,8 @@ export default defineSchema({
     createdAt: v.number(), // Unix timestamp
     updatedAt: v.number(), // Unix timestamp
   })
-    .index('by_user', ['userId'])
-    .index('by_user_primary', ['userId', 'isPrimary']),
+    .index("by_user", ["userId"])
+    .index("by_user_primary", ["userId", "isPrimary"]),
 
   // ============================================
   // Emergency Services (By country/city)
@@ -2208,8 +2208,8 @@ export default defineSchema({
     notes: v.optional(v.string()), // Important notes for travelers
     lastUpdated: v.number(), // Unix timestamp
   })
-    .index('by_country', ['countryCode'])
-    .index('by_country_city', ['countryCode', 'cityName']),
+    .index("by_country", ["countryCode"])
+    .index("by_country_city", ["countryCode", "cityName"]),
 
   // ============================================
   // Travel Insurance (User's insurance info)
@@ -2242,8 +2242,8 @@ export default defineSchema({
     createdAt: v.number(), // Unix timestamp
     updatedAt: v.number(), // Unix timestamp
   })
-    .index('by_user', ['userId'])
-    .index('by_user_active', ['userId', 'isActive']),
+    .index("by_user", ["userId"])
+    .index("by_user_active", ["userId", "isActive"]),
 
   // ============================================
   // SOS Alerts (Emergency alerts sent by users)
@@ -2257,29 +2257,29 @@ export default defineSchema({
     accuracy: v.optional(v.number()), // Location accuracy in meters
     // Alert details
     alertType: v.union(
-      v.literal('emergency'),
-      v.literal('medical'),
-      v.literal('safety'),
-      v.literal('other'),
+      v.literal("emergency"),
+      v.literal("medical"),
+      v.literal("safety"),
+      v.literal("other"),
     ),
     message: v.optional(v.string()), // Optional user message
     // Status tracking
     status: v.union(
-      v.literal('sent'),
-      v.literal('received'),
-      v.literal('resolved'),
-      v.literal('cancelled'),
+      v.literal("sent"),
+      v.literal("received"),
+      v.literal("resolved"),
+      v.literal("cancelled"),
     ),
     // Notifications
-    notifiedContacts: v.array(v.id('emergencyContacts')), // Contacts who were notified
+    notifiedContacts: v.array(v.id("emergencyContacts")), // Contacts who were notified
     // Timestamps
     createdAt: v.number(), // When alert was created
     resolvedAt: v.optional(v.number()), // When alert was resolved
     resolvedBy: v.optional(v.string()), // Who resolved the alert
   })
-    .index('by_user', ['userId'])
-    .index('by_user_status', ['userId', 'status'])
-    .index('by_status', ['status']),
+    .index("by_user", ["userId"])
+    .index("by_user_status", ["userId", "status"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // Safety Ratings (Destination Safety Levels)
@@ -2289,7 +2289,7 @@ export default defineSchema({
     destinationName: v.string(), // e.g., "Paris", "Tokyo"
     destinationNameEn: v.optional(v.string()),
     countryCode: v.string(), // ISO 3166-1 alpha-2
-    cityId: v.optional(v.id('cities')), // Link to cities table if available
+    cityId: v.optional(v.id("cities")), // Link to cities table if available
 
     // Overall safety rating (1-5 scale)
     overallRating: v.number(), // 1=Very Dangerous, 2=Dangerous, 3=Moderate, 4=Safe, 5=Very Safe
@@ -2325,10 +2325,10 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_destination', ['destinationName'])
-    .index('by_country', ['countryCode'])
-    .index('by_city', ['cityId'])
-    .index('by_overall_rating', ['overallRating']),
+    .index("by_destination", ["destinationName"])
+    .index("by_country", ["countryCode"])
+    .index("by_city", ["cityId"])
+    .index("by_overall_rating", ["overallRating"]),
 
   // ============================================
   // Safety Alerts (Travel Warnings)
@@ -2337,28 +2337,28 @@ export default defineSchema({
     // Location
     destinationName: v.string(),
     countryCode: v.string(),
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     affectedAreas: v.optional(v.array(v.string())), // Specific areas affected
 
     // Alert details
     alertType: v.union(
-      v.literal('travel_advisory'), // Government travel advisory
-      v.literal('health_warning'), // Disease outbreak, health emergency
-      v.literal('natural_disaster'), // Earthquake, typhoon, flood
-      v.literal('civil_unrest'), // Protests, political instability
-      v.literal('terrorism'), // Terrorism threat
-      v.literal('crime_spike'), // Increased crime activity
-      v.literal('scam_warning'), // Tourist scam alerts
-      v.literal('other'),
+      v.literal("travel_advisory"), // Government travel advisory
+      v.literal("health_warning"), // Disease outbreak, health emergency
+      v.literal("natural_disaster"), // Earthquake, typhoon, flood
+      v.literal("civil_unrest"), // Protests, political instability
+      v.literal("terrorism"), // Terrorism threat
+      v.literal("crime_spike"), // Increased crime activity
+      v.literal("scam_warning"), // Tourist scam alerts
+      v.literal("other"),
     ),
 
     // Severity levels
     severity: v.union(
-      v.literal('info'), // Informational
-      v.literal('low'), // Exercise normal precautions
-      v.literal('medium'), // Exercise increased caution
-      v.literal('high'), // Reconsider travel
-      v.literal('critical'), // Do not travel
+      v.literal("info"), // Informational
+      v.literal("low"), // Exercise normal precautions
+      v.literal("medium"), // Exercise increased caution
+      v.literal("high"), // Reconsider travel
+      v.literal("critical"), // Do not travel
     ),
 
     // Content
@@ -2384,13 +2384,13 @@ export default defineSchema({
     updatedAt: v.number(),
     createdBy: v.optional(v.string()), // Admin/user ID
   })
-    .index('by_destination', ['destinationName'])
-    .index('by_country', ['countryCode'])
-    .index('by_city', ['cityId'])
-    .index('by_type', ['alertType'])
-    .index('by_severity', ['severity'])
-    .index('by_active', ['isActive'])
-    .index('by_active_destination', ['isActive', 'destinationName']),
+    .index("by_destination", ["destinationName"])
+    .index("by_country", ["countryCode"])
+    .index("by_city", ["cityId"])
+    .index("by_type", ["alertType"])
+    .index("by_severity", ["severity"])
+    .index("by_active", ["isActive"])
+    .index("by_active_destination", ["isActive", "destinationName"]),
 
   // ============================================
   // Danger Zones (Specific Dangerous Areas)
@@ -2399,7 +2399,7 @@ export default defineSchema({
     // Location
     destinationName: v.string(),
     countryCode: v.string(),
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
 
     // Zone details
     zoneName: v.string(), // e.g., "Red Light District", "Border Area"
@@ -2420,22 +2420,22 @@ export default defineSchema({
 
     // Danger classification
     dangerLevel: v.union(
-      v.literal('caution'), // Be careful
-      v.literal('avoid_night'), // Avoid at night
-      v.literal('avoid_alone'), // Don't go alone
-      v.literal('high_risk'), // High risk area
-      v.literal('no_go'), // Do not enter
+      v.literal("caution"), // Be careful
+      v.literal("avoid_night"), // Avoid at night
+      v.literal("avoid_alone"), // Don't go alone
+      v.literal("high_risk"), // High risk area
+      v.literal("no_go"), // Do not enter
     ),
 
     dangerTypes: v.array(
       v.union(
-        v.literal('crime'),
-        v.literal('scam'),
-        v.literal('traffic'),
-        v.literal('natural_hazard'),
-        v.literal('political'),
-        v.literal('health'),
-        v.literal('other'),
+        v.literal("crime"),
+        v.literal("scam"),
+        v.literal("traffic"),
+        v.literal("natural_hazard"),
+        v.literal("political"),
+        v.literal("health"),
+        v.literal("other"),
       ),
     ),
 
@@ -2466,12 +2466,12 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_destination', ['destinationName'])
-    .index('by_country', ['countryCode'])
-    .index('by_city', ['cityId'])
-    .index('by_danger_level', ['dangerLevel'])
-    .index('by_active', ['isActive'])
-    .index('by_location', ['latitude', 'longitude']),
+    .index("by_destination", ["destinationName"])
+    .index("by_country", ["countryCode"])
+    .index("by_city", ["cityId"])
+    .index("by_danger_level", ["dangerLevel"])
+    .index("by_active", ["isActive"])
+    .index("by_location", ["latitude", "longitude"]),
 
   // ============================================
   // WiFi Spots (Public WiFi Hotspots)
@@ -2481,20 +2481,20 @@ export default defineSchema({
     name: v.string(),
     nameEn: v.optional(v.string()),
     type: v.union(
-      v.literal('hotel'),
-      v.literal('restaurant'),
-      v.literal('cafe'),
-      v.literal('airport'),
-      v.literal('train_station'),
-      v.literal('shopping_mall'),
-      v.literal('library'),
-      v.literal('coworking'),
-      v.literal('public'),
-      v.literal('other'),
+      v.literal("hotel"),
+      v.literal("restaurant"),
+      v.literal("cafe"),
+      v.literal("airport"),
+      v.literal("train_station"),
+      v.literal("shopping_mall"),
+      v.literal("library"),
+      v.literal("coworking"),
+      v.literal("public"),
+      v.literal("other"),
     ),
 
     // Location
-    cityId: v.id('cities'),
+    cityId: v.id("cities"),
     address: v.optional(v.string()),
     latitude: v.number(),
     longitude: v.number(),
@@ -2515,7 +2515,7 @@ export default defineSchema({
     imageUrls: v.optional(v.array(v.string())),
 
     // Related POI (if this WiFi is at a known POI)
-    poiId: v.optional(v.id('pois')),
+    poiId: v.optional(v.id("pois")),
 
     // Moderation
     isVerified: v.boolean(),
@@ -2527,12 +2527,12 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_city', ['cityId'])
-    .index('by_type', ['type'])
-    .index('by_city_type', ['cityId', 'type'])
-    .index('by_poi', ['poiId'])
-    .index('by_verified', ['isVerified'])
-    .index('by_rating', ['averageRating']),
+    .index("by_city", ["cityId"])
+    .index("by_type", ["type"])
+    .index("by_city_type", ["cityId", "type"])
+    .index("by_poi", ["poiId"])
+    .index("by_verified", ["isVerified"])
+    .index("by_rating", ["averageRating"]),
 
   // ============================================
   // WiFi Credentials (User-saved WiFi passwords)
@@ -2541,7 +2541,7 @@ export default defineSchema({
     userId: v.string(), // Auth user ID
 
     // Link to WiFi spot (optional - can be standalone)
-    wifiSpotId: v.optional(v.id('wifiSpots')),
+    wifiSpotId: v.optional(v.id("wifiSpots")),
 
     // WiFi Details
     name: v.string(), // User-friendly name
@@ -2549,12 +2549,12 @@ export default defineSchema({
     password: v.string(), // Encrypted in production
     securityType: v.optional(
       v.union(
-        v.literal('open'),
-        v.literal('wep'),
-        v.literal('wpa'),
-        v.literal('wpa2'),
-        v.literal('wpa3'),
-        v.literal('unknown'),
+        v.literal("open"),
+        v.literal("wep"),
+        v.literal("wpa"),
+        v.literal("wpa2"),
+        v.literal("wpa3"),
+        v.literal("unknown"),
       ),
     ),
 
@@ -2576,16 +2576,16 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_spot', ['userId', 'wifiSpotId'])
-    .index('by_spot_shared', ['wifiSpotId', 'isShared']),
+    .index("by_user", ["userId"])
+    .index("by_user_spot", ["userId", "wifiSpotId"])
+    .index("by_spot_shared", ["wifiSpotId", "isShared"]),
 
   // ============================================
   // WiFi Reviews (User quality ratings)
   // ============================================
   wifiReviews: defineTable({
     userId: v.string(), // Auth user ID
-    wifiSpotId: v.id('wifiSpots'),
+    wifiSpotId: v.id("wifiSpots"),
 
     // Quality ratings (1-5 scale)
     speedRating: v.number(),
@@ -2607,22 +2607,22 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_spot', ['wifiSpotId'])
-    .index('by_user', ['userId'])
-    .index('by_user_spot', ['userId', 'wifiSpotId'])
-    .index('by_rating', ['overallRating']),
+    .index("by_spot", ["wifiSpotId"])
+    .index("by_user", ["userId"])
+    .index("by_user_spot", ["userId", "wifiSpotId"])
+    .index("by_rating", ["overallRating"]),
 
   // ============================================
   // WiFi Review Helpful (Tracks who found reviews helpful)
   // ============================================
   wifiReviewHelpful: defineTable({
-    reviewId: v.id('wifiReviews'),
+    reviewId: v.id("wifiReviews"),
     userId: v.string(),
     createdAt: v.number(),
   })
-    .index('by_review', ['reviewId'])
-    .index('by_user', ['userId'])
-    .index('by_review_user', ['reviewId', 'userId']),
+    .index("by_review", ["reviewId"])
+    .index("by_user", ["userId"])
+    .index("by_review_user", ["reviewId", "userId"]),
 
   // ============================================
   // Safety Incident Reports (User Reports)
@@ -2635,29 +2635,29 @@ export default defineSchema({
     // Location
     destinationName: v.string(),
     countryCode: v.string(),
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     specificLocation: v.optional(v.string()), // Address or landmark
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
 
     // Incident details
     incidentType: v.union(
-      v.literal('theft'),
-      v.literal('assault'),
-      v.literal('scam'),
-      v.literal('harassment'),
-      v.literal('traffic_accident'),
-      v.literal('natural_disaster'),
-      v.literal('health_issue'),
-      v.literal('police_issue'),
-      v.literal('other'),
+      v.literal("theft"),
+      v.literal("assault"),
+      v.literal("scam"),
+      v.literal("harassment"),
+      v.literal("traffic_accident"),
+      v.literal("natural_disaster"),
+      v.literal("health_issue"),
+      v.literal("police_issue"),
+      v.literal("other"),
     ),
 
     severity: v.union(
-      v.literal('minor'), // Inconvenience
-      v.literal('moderate'), // Significant impact
-      v.literal('severe'), // Serious harm
-      v.literal('critical'), // Life-threatening
+      v.literal("minor"), // Inconvenience
+      v.literal("moderate"), // Significant impact
+      v.literal("severe"), // Serious harm
+      v.literal("critical"), // Life-threatening
     ),
 
     // Content
@@ -2672,10 +2672,10 @@ export default defineSchema({
 
     // Moderation
     status: v.union(
-      v.literal('pending'), // Awaiting review
-      v.literal('verified'), // Verified by admin
-      v.literal('rejected'), // Rejected as invalid
-      v.literal('resolved'), // Issue has been resolved
+      v.literal("pending"), // Awaiting review
+      v.literal("verified"), // Verified by admin
+      v.literal("rejected"), // Rejected as invalid
+      v.literal("resolved"), // Issue has been resolved
     ),
     moderatorNotes: v.optional(v.string()),
     reviewedBy: v.optional(v.string()),
@@ -2689,13 +2689,13 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_destination', ['destinationName'])
-    .index('by_country', ['countryCode'])
-    .index('by_city', ['cityId'])
-    .index('by_type', ['incidentType'])
-    .index('by_status', ['status'])
-    .index('by_date', ['incidentDate']),
+    .index("by_user", ["userId"])
+    .index("by_destination", ["destinationName"])
+    .index("by_country", ["countryCode"])
+    .index("by_city", ["cityId"])
+    .index("by_type", ["incidentType"])
+    .index("by_status", ["status"])
+    .index("by_date", ["incidentDate"]),
 
   // ============================================
   // EV Charging Stations (电动车充电站)
@@ -2710,16 +2710,16 @@ export default defineSchema({
 
     // Location
     address: v.string(),
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     latitude: v.number(),
     longitude: v.number(),
 
     // Station Details
     stationType: v.union(
-      v.literal('public'), // 公共充电站
-      v.literal('private'), // 私人充电站
-      v.literal('destination'), // 目的地充电站 (商场、酒店等)
-      v.literal('highway'), // 高速服务区充电站
+      v.literal("public"), // 公共充电站
+      v.literal("private"), // 私人充电站
+      v.literal("destination"), // 目的地充电站 (商场、酒店等)
+      v.literal("highway"), // 高速服务区充电站
     ),
     totalPorts: v.number(), // 总充电桩数量
     availablePorts: v.number(), // 可用充电桩数量
@@ -2728,10 +2728,10 @@ export default defineSchema({
     chargerTypes: v.array(
       v.object({
         type: v.union(
-          v.literal('ac_slow'), // 交流慢充 (7kW)
-          v.literal('ac_fast'), // 交流快充 (22kW)
-          v.literal('dc_fast'), // 直流快充 (50-150kW)
-          v.literal('dc_superfast'), // 直流超快充 (150kW+)
+          v.literal("ac_slow"), // 交流慢充 (7kW)
+          v.literal("ac_fast"), // 交流快充 (22kW)
+          v.literal("dc_fast"), // 直流快充 (50-150kW)
+          v.literal("dc_superfast"), // 直流超快充 (150kW+)
         ),
         powerKw: v.number(), // 功率 (kW)
         count: v.number(), // 该类型数量
@@ -2761,25 +2761,25 @@ export default defineSchema({
     amenities: v.optional(
       v.array(
         v.union(
-          v.literal('restroom'), // 卫生间
-          v.literal('convenience_store'), // 便利店
-          v.literal('restaurant'), // 餐厅
-          v.literal('wifi'), // WiFi
-          v.literal('lounge'), // 休息室
-          v.literal('car_wash'), // 洗车
-          v.literal('covered'), // 有顶棚
-          v.literal('lighting'), // 照明
-          v.literal('security'), // 安保
+          v.literal("restroom"), // 卫生间
+          v.literal("convenience_store"), // 便利店
+          v.literal("restaurant"), // 餐厅
+          v.literal("wifi"), // WiFi
+          v.literal("lounge"), // 休息室
+          v.literal("car_wash"), // 洗车
+          v.literal("covered"), // 有顶棚
+          v.literal("lighting"), // 照明
+          v.literal("security"), // 安保
         ),
       ),
     ),
 
     // Status
     status: v.union(
-      v.literal('operational'), // 正常运营
-      v.literal('maintenance'), // 维护中
-      v.literal('offline'), // 离线
-      v.literal('coming_soon'), // 即将开放
+      v.literal("operational"), // 正常运营
+      v.literal("maintenance"), // 维护中
+      v.literal("offline"), // 离线
+      v.literal("coming_soon"), // 即将开放
     ),
     lastStatusUpdate: v.optional(v.number()), // 状态更新时间
 
@@ -2805,11 +2805,11 @@ export default defineSchema({
     paymentMethods: v.optional(
       v.array(
         v.union(
-          v.literal('app'), // APP支付
-          v.literal('wechat'), // 微信支付
-          v.literal('alipay'), // 支付宝
-          v.literal('card'), // 刷卡
-          v.literal('membership'), // 会员卡
+          v.literal("app"), // APP支付
+          v.literal("wechat"), // 微信支付
+          v.literal("alipay"), // 支付宝
+          v.literal("card"), // 刷卡
+          v.literal("membership"), // 会员卡
         ),
       ),
     ),
@@ -2817,19 +2817,19 @@ export default defineSchema({
     // Supported Vehicle Brands (if applicable)
     supportedBrands: v.optional(v.array(v.string())), // 支持的车型品牌
   })
-    .index('by_city', ['cityId'])
-    .index('by_status', ['status'])
-    .index('by_operator', ['operatorName'])
-    .index('by_type', ['stationType'])
-    .index('by_source', ['source'])
-    .index('by_external', ['externalId', 'source'])
-    .index('by_city_status', ['cityId', 'status']),
+    .index("by_city", ["cityId"])
+    .index("by_status", ["status"])
+    .index("by_operator", ["operatorName"])
+    .index("by_type", ["stationType"])
+    .index("by_source", ["source"])
+    .index("by_external", ["externalId", "source"])
+    .index("by_city_status", ["cityId", "status"]),
 
   // ============================================
   // Charging Station Reviews
   // ============================================
   chargingStationReviews: defineTable({
-    stationId: v.id('chargingStations'),
+    stationId: v.id("chargingStations"),
     userId: v.optional(v.string()), // Auth user ID (optional for crawled reviews)
     authorName: v.optional(v.string()),
     content: v.string(),
@@ -2846,23 +2846,23 @@ export default defineSchema({
     isVerified: v.boolean(), // 是否已验证
     createdAt: v.number(),
   })
-    .index('by_station', ['stationId'])
-    .index('by_user', ['userId'])
-    .index('by_rating', ['rating'])
-    .index('by_station_rating', ['stationId', 'rating']),
+    .index("by_station", ["stationId"])
+    .index("by_user", ["userId"])
+    .index("by_rating", ["rating"])
+    .index("by_station_rating", ["stationId", "rating"]),
 
   // ============================================
   // User Favorite Charging Stations
   // ============================================
   favoriteChargingStations: defineTable({
     userId: v.string(),
-    stationId: v.id('chargingStations'),
+    stationId: v.id("chargingStations"),
     notes: v.optional(v.string()),
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_station', ['stationId'])
-    .index('by_user_station', ['userId', 'stationId']),
+    .index("by_user", ["userId"])
+    .index("by_station", ["stationId"])
+    .index("by_user_station", ["userId", "stationId"]),
 
   // ============================================
   // SIM Cards / Data Plans (电话卡/流量卡)
@@ -2876,18 +2876,18 @@ export default defineSchema({
 
     // Card Type
     cardType: v.union(
-      v.literal('physical'), // 实体SIM卡
-      v.literal('esim'), // eSIM
-      v.literal('wifi_device'), // 随身WiFi设备
+      v.literal("physical"), // 实体SIM卡
+      v.literal("esim"), // eSIM
+      v.literal("wifi_device"), // 随身WiFi设备
     ),
 
     // Coverage
     destinations: v.array(v.string()), // 支持的国家/地区代码 (ISO 3166-1 alpha-2)
     destinationNames: v.optional(v.array(v.string())), // 国家/地区名称
     coverageType: v.union(
-      v.literal('single_country'), // 单国
-      v.literal('regional'), // 区域 (e.g., 东南亚, 欧洲)
-      v.literal('global'), // 全球
+      v.literal("single_country"), // 单国
+      v.literal("regional"), // 区域 (e.g., 东南亚, 欧洲)
+      v.literal("global"), // 全球
     ),
     regionName: v.optional(v.string()), // 区域名称 (e.g., "东南亚10国", "欧洲35国")
 
@@ -2971,19 +2971,19 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_card_type', ['cardType'])
-    .index('by_provider', ['provider'])
-    .index('by_active', ['isActive'])
-    .index('by_coverage_type', ['coverageType'])
-    .index('by_priority', ['priority'])
-    .index('by_promoted', ['isPromoted'])
-    .index('by_rating', ['rating']),
+    .index("by_card_type", ["cardType"])
+    .index("by_provider", ["provider"])
+    .index("by_active", ["isActive"])
+    .index("by_coverage_type", ["coverageType"])
+    .index("by_priority", ["priority"])
+    .index("by_promoted", ["isPromoted"])
+    .index("by_rating", ["rating"]),
 
   // ============================================
   // SIM Card Reviews (电话卡用户评价)
   // ============================================
   simCardReviews: defineTable({
-    simCardId: v.id('simCards'),
+    simCardId: v.id("simCards"),
     userId: v.optional(v.string()), // Auth user ID (optional for crawled reviews)
     authorName: v.optional(v.string()), // 评价者名称
 
@@ -3012,11 +3012,11 @@ export default defineSchema({
     activationExperience: v.optional(v.string()), // 激活体验
     signalQuality: v.optional(
       v.union(
-        v.literal('excellent'), // 优秀
-        v.literal('good'), // 良好
-        v.literal('average'), // 一般
-        v.literal('poor'), // 较差
-        v.literal('very_poor'), // 很差
+        v.literal("excellent"), // 优秀
+        v.literal("good"), // 良好
+        v.literal("average"), // 一般
+        v.literal("poor"), // 较差
+        v.literal("very_poor"), // 很差
       ),
     ),
     speedTestResult: v.optional(v.string()), // 测速结果
@@ -3037,9 +3037,9 @@ export default defineSchema({
 
     // Moderation
     status: v.union(
-      v.literal('pending'), // 待审核
-      v.literal('approved'), // 已通过
-      v.literal('rejected'), // 已拒绝
+      v.literal("pending"), // 待审核
+      v.literal("approved"), // 已通过
+      v.literal("rejected"), // 已拒绝
     ),
 
     // Timestamps
@@ -3047,39 +3047,39 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_sim_card', ['simCardId'])
-    .index('by_user', ['userId'])
-    .index('by_overall_rating', ['overallRating'])
-    .index('by_sim_card_rating', ['simCardId', 'overallRating'])
-    .index('by_status', ['status'])
-    .index('by_verified', ['isVerified'])
-    .index('by_helpful', ['helpfulCount']),
+    .index("by_sim_card", ["simCardId"])
+    .index("by_user", ["userId"])
+    .index("by_overall_rating", ["overallRating"])
+    .index("by_sim_card_rating", ["simCardId", "overallRating"])
+    .index("by_status", ["status"])
+    .index("by_verified", ["isVerified"])
+    .index("by_helpful", ["helpfulCount"]),
 
   // ============================================
   // SIM Card Review Votes (评价投票)
   // ============================================
   simCardReviewVotes: defineTable({
-    reviewId: v.id('simCardReviews'),
+    reviewId: v.id("simCardReviews"),
     userId: v.string(),
-    voteType: v.union(v.literal('helpful'), v.literal('not_helpful')),
+    voteType: v.union(v.literal("helpful"), v.literal("not_helpful")),
     createdAt: v.number(),
   })
-    .index('by_review', ['reviewId'])
-    .index('by_user', ['userId'])
-    .index('by_review_user', ['reviewId', 'userId']),
+    .index("by_review", ["reviewId"])
+    .index("by_user", ["userId"])
+    .index("by_review_user", ["reviewId", "userId"]),
 
   // ============================================
   // User Favorite SIM Cards (收藏的电话卡)
   // ============================================
   favoriteSimCards: defineTable({
     userId: v.string(),
-    simCardId: v.id('simCards'),
+    simCardId: v.id("simCards"),
     notes: v.optional(v.string()), // 用户备注
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_sim_card', ['simCardId'])
-    .index('by_user_sim_card', ['userId', 'simCardId']),
+    .index("by_user", ["userId"])
+    .index("by_sim_card", ["simCardId"])
+    .index("by_user_sim_card", ["userId", "simCardId"]),
 
   // ============================================
   // Travel Notes (游记)
@@ -3089,11 +3089,11 @@ export default defineSchema({
     title: v.string(),
     content: v.string(),
     visibility: v.union(
-      v.literal('private'),
-      v.literal('public'),
-      v.literal('followers'),
+      v.literal("private"),
+      v.literal("public"),
+      v.literal("followers"),
     ),
-    itineraryId: v.optional(v.id('itineraries')), // 关联的行程
+    itineraryId: v.optional(v.id("itineraries")), // 关联的行程
     location: v.optional(v.string()), // 旅行地点
     travelDate: v.optional(v.string()), // 旅行日期 YYYY-MM-DD
     likesCount: v.number(),
@@ -3104,68 +3104,68 @@ export default defineSchema({
     createdAt: v.number(), // Unix timestamp
     updatedAt: v.number(), // Unix timestamp
   })
-    .index('by_author', ['authorId'])
-    .index('by_visibility', ['visibility'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_author_visibility', ['authorId', 'visibility'])
-    .index('by_created', ['createdAt']),
+    .index("by_author", ["authorId"])
+    .index("by_visibility", ["visibility"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_author_visibility", ["authorId", "visibility"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Note Images (游记图片)
   // ============================================
   noteImages: defineTable({
-    noteId: v.id('travelNotes'),
+    noteId: v.id("travelNotes"),
     url: v.string(),
     caption: v.optional(v.string()),
     isCover: v.boolean(), // 是否为封面图
     orderIndex: v.number(), // 排序顺序
     createdAt: v.number(),
   })
-    .index('by_note', ['noteId'])
-    .index('by_note_order', ['noteId', 'orderIndex']),
+    .index("by_note", ["noteId"])
+    .index("by_note_order", ["noteId", "orderIndex"]),
 
   // ============================================
   // Note Tags (游记标签)
   // ============================================
   noteTags: defineTable({
-    noteId: v.id('travelNotes'),
+    noteId: v.id("travelNotes"),
     tag: v.string(), // 标签名（小写，去空格）
     createdAt: v.number(),
   })
-    .index('by_note', ['noteId'])
-    .index('by_tag', ['tag']),
+    .index("by_note", ["noteId"])
+    .index("by_tag", ["tag"]),
 
   // ============================================
   // Note POIs (游记关联的POI)
   // ============================================
   notePois: defineTable({
-    noteId: v.id('travelNotes'),
-    poiId: v.id('pois'),
+    noteId: v.id("travelNotes"),
+    poiId: v.id("pois"),
     mentionIndex: v.optional(v.number()), // 在内容中提及的位置
     createdAt: v.number(),
   })
-    .index('by_note', ['noteId'])
-    .index('by_poi', ['poiId']),
+    .index("by_note", ["noteId"])
+    .index("by_poi", ["poiId"]),
 
   // ============================================
   // Note Likes (游记点赞)
   // ============================================
   noteLikes: defineTable({
     userId: v.string(), // Auth user ID
-    noteId: v.id('travelNotes'),
+    noteId: v.id("travelNotes"),
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_note', ['noteId'])
-    .index('by_user_note', ['userId', 'noteId']),
+    .index("by_user", ["userId"])
+    .index("by_note", ["noteId"])
+    .index("by_user_note", ["userId", "noteId"]),
 
   // ============================================
   // Note Comments (游记评论)
   // ============================================
   noteComments: defineTable({
-    noteId: v.id('travelNotes'),
+    noteId: v.id("travelNotes"),
     userId: v.string(), // Auth user ID
-    parentId: v.optional(v.id('noteComments')), // 回复的父评论
+    parentId: v.optional(v.id("noteComments")), // 回复的父评论
     content: v.string(),
     likesCount: v.number(),
     repliesCount: v.number(),
@@ -3174,36 +3174,36 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_note', ['noteId'])
-    .index('by_user', ['userId'])
-    .index('by_parent', ['parentId'])
-    .index('by_note_created', ['noteId', 'createdAt']),
+    .index("by_note", ["noteId"])
+    .index("by_user", ["userId"])
+    .index("by_parent", ["parentId"])
+    .index("by_note_created", ["noteId", "createdAt"]),
 
   // ============================================
   // Note Comment Likes (评论点赞)
   // ============================================
   noteCommentLikes: defineTable({
-    commentId: v.id('noteComments'),
+    commentId: v.id("noteComments"),
     userId: v.string(),
     createdAt: v.number(),
   })
-    .index('by_comment', ['commentId'])
-    .index('by_user', ['userId'])
-    .index('by_comment_user', ['commentId', 'userId']),
+    .index("by_comment", ["commentId"])
+    .index("by_user", ["userId"])
+    .index("by_comment_user", ["commentId", "userId"]),
 
   // ============================================
   // Note Saves (游记收藏)
   // ============================================
   noteSaves: defineTable({
     userId: v.string(),
-    noteId: v.id('travelNotes'),
-    collectionId: v.optional(v.id('favoriteCollections')), // 可选的收藏夹
+    noteId: v.id("travelNotes"),
+    collectionId: v.optional(v.id("favoriteCollections")), // 可选的收藏夹
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_note', ['noteId'])
-    .index('by_user_note', ['userId', 'noteId'])
-    .index('by_collection', ['collectionId']),
+    .index("by_user", ["userId"])
+    .index("by_note", ["noteId"])
+    .index("by_user_note", ["userId", "noteId"])
+    .index("by_collection", ["collectionId"]),
 
   // ============================================
   // Travel Statistics (User Travel Stats)
@@ -3222,7 +3222,7 @@ export default defineSchema({
     // Time-based stats
     longestTrip: v.optional(
       v.object({
-        itineraryId: v.id('itineraries'),
+        itineraryId: v.id("itineraries"),
         title: v.string(),
         days: v.number(),
         startDate: v.string(),
@@ -3231,7 +3231,7 @@ export default defineSchema({
     ),
     shortestTrip: v.optional(
       v.object({
-        itineraryId: v.id('itineraries'),
+        itineraryId: v.id("itineraries"),
         title: v.string(),
         days: v.number(),
         startDate: v.string(),
@@ -3243,7 +3243,7 @@ export default defineSchema({
     totalExpenses: v.number(), // Total spending in CNY
     expensesByCategory: v.array(
       v.object({
-        categoryId: v.id('expenseCategories'),
+        categoryId: v.id("expenseCategories"),
         categoryName: v.string(),
         amount: v.number(),
         percentage: v.number(), // 0-100
@@ -3255,7 +3255,7 @@ export default defineSchema({
     // Popular destinations
     topDestinations: v.array(
       v.object({
-        cityId: v.id('cities'),
+        cityId: v.id("cities"),
         cityName: v.string(),
         visitCount: v.number(),
         totalDays: v.number(),
@@ -3291,9 +3291,9 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_total_trips', ['totalTrips'])
-    .index('by_total_distance', ['totalDistance']),
+    .index("by_user", ["userId"])
+    .index("by_total_trips", ["totalTrips"])
+    .index("by_total_distance", ["totalDistance"]),
 
   // ============================================
   // Yearly Reviews (Annual Travel Summary)
@@ -3314,7 +3314,7 @@ export default defineSchema({
     totalExpenses: v.number(), // CNY
     expenseBreakdown: v.array(
       v.object({
-        categoryId: v.id('expenseCategories'),
+        categoryId: v.id("expenseCategories"),
         categoryName: v.string(),
         icon: v.optional(v.string()),
         amount: v.number(),
@@ -3325,7 +3325,7 @@ export default defineSchema({
     averagePerDay: v.number(),
     mostExpensiveTrip: v.optional(
       v.object({
-        itineraryId: v.id('itineraries'),
+        itineraryId: v.id("itineraries"),
         title: v.string(),
         amount: v.number(),
       }),
@@ -3334,7 +3334,7 @@ export default defineSchema({
     // Highlights
     firstTripOfYear: v.optional(
       v.object({
-        itineraryId: v.id('itineraries'),
+        itineraryId: v.id("itineraries"),
         title: v.string(),
         cityName: v.string(),
         startDate: v.string(),
@@ -3342,7 +3342,7 @@ export default defineSchema({
     ),
     lastTripOfYear: v.optional(
       v.object({
-        itineraryId: v.id('itineraries'),
+        itineraryId: v.id("itineraries"),
         title: v.string(),
         cityName: v.string(),
         startDate: v.string(),
@@ -3350,7 +3350,7 @@ export default defineSchema({
     ),
     longestTrip: v.optional(
       v.object({
-        itineraryId: v.id('itineraries'),
+        itineraryId: v.id("itineraries"),
         title: v.string(),
         cityName: v.string(),
         days: v.number(),
@@ -3360,7 +3360,7 @@ export default defineSchema({
     // Top destinations this year
     topCities: v.array(
       v.object({
-        cityId: v.id('cities'),
+        cityId: v.id("cities"),
         cityName: v.string(),
         visitCount: v.number(),
         totalDays: v.number(),
@@ -3404,7 +3404,7 @@ export default defineSchema({
       v.array(
         v.object({
           text: v.string(),
-          itineraryId: v.optional(v.id('itineraries')),
+          itineraryId: v.optional(v.id("itineraries")),
           imageUrl: v.optional(v.string()),
           createdAt: v.number(),
         }),
@@ -3413,9 +3413,9 @@ export default defineSchema({
 
     // Generation metadata
     status: v.union(
-      v.literal('generating'),
-      v.literal('ready'),
-      v.literal('error'),
+      v.literal("generating"),
+      v.literal("ready"),
+      v.literal("error"),
     ),
     generatedAt: v.optional(v.number()),
     error: v.optional(v.string()),
@@ -3424,10 +3424,10 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_year', ['year'])
-    .index('by_user_year', ['userId', 'year'])
-    .index('by_status', ['status']),
+    .index("by_user", ["userId"])
+    .index("by_year", ["year"])
+    .index("by_user_year", ["userId", "year"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // Verification Badges (用户认证徽章)
@@ -3435,9 +3435,9 @@ export default defineSchema({
   verificationBadges: defineTable({
     userId: v.string(), // Auth user ID
     badgeType: v.union(
-      v.literal('travel_expert'), // 旅行达人认证
-      v.literal('local_guide'), // 本地向导认证
-      v.literal('official_account'), // 官方账号认证
+      v.literal("travel_expert"), // 旅行达人认证
+      v.literal("local_guide"), // 本地向导认证
+      v.literal("official_account"), // 官方账号认证
     ),
     // Badge display info
     displayName: v.string(), // 显示名称，如 "旅行达人"
@@ -3466,7 +3466,7 @@ export default defineSchema({
 
         // 本地向导特有字段
         localCity: v.optional(v.string()), // 所在城市
-        localCityId: v.optional(v.id('cities')), // 城市 ID
+        localCityId: v.optional(v.id("cities")), // 城市 ID
         yearsOfResidence: v.optional(v.number()), // 居住年限
         languages: v.optional(v.array(v.string())), // 语言能力
 
@@ -3480,11 +3480,11 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_type', ['userId', 'badgeType'])
-    .index('by_type', ['badgeType'])
-    .index('by_active', ['isActive'])
-    .index('by_user_active', ['userId', 'isActive']),
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "badgeType"])
+    .index("by_type", ["badgeType"])
+    .index("by_active", ["isActive"])
+    .index("by_user_active", ["userId", "isActive"]),
 
   // ============================================
   // Verification Applications (认证申请)
@@ -3492,26 +3492,26 @@ export default defineSchema({
   verificationApplications: defineTable({
     userId: v.string(), // 申请人 ID
     badgeType: v.union(
-      v.literal('travel_expert'),
-      v.literal('local_guide'),
-      v.literal('official_account'),
+      v.literal("travel_expert"),
+      v.literal("local_guide"),
+      v.literal("official_account"),
     ),
 
     // Application status
     status: v.union(
-      v.literal('pending'), // 待审核
-      v.literal('under_review'), // 审核中
-      v.literal('approved'), // 已通过
-      v.literal('rejected'), // 已拒绝
-      v.literal('cancelled'), // 已取消
+      v.literal("pending"), // 待审核
+      v.literal("under_review"), // 审核中
+      v.literal("approved"), // 已通过
+      v.literal("rejected"), // 已拒绝
+      v.literal("cancelled"), // 已取消
     ),
 
     // Applicant info
     realName: v.string(), // 真实姓名
     idType: v.union(
-      v.literal('id_card'), // 身份证
-      v.literal('passport'), // 护照
-      v.literal('business_license'), // 营业执照 (官方账号)
+      v.literal("id_card"), // 身份证
+      v.literal("passport"), // 护照
+      v.literal("business_license"), // 营业执照 (官方账号)
     ),
     idNumber: v.string(), // 证件号码 (加密存储)
     phone: v.string(), // 联系电话
@@ -3523,11 +3523,11 @@ export default defineSchema({
       v.array(
         v.object({
           type: v.union(
-            v.literal('id_photo'), // 证件照片
-            v.literal('work_proof'), // 工作证明
-            v.literal('portfolio'), // 作品集
-            v.literal('certificate'), // 资质证书
-            v.literal('other'), // 其他材料
+            v.literal("id_photo"), // 证件照片
+            v.literal("work_proof"), // 工作证明
+            v.literal("portfolio"), // 作品集
+            v.literal("certificate"), // 资质证书
+            v.literal("other"), // 其他材料
           ),
           url: v.string(), // 材料 URL
           description: v.optional(v.string()), // 材料说明
@@ -3566,18 +3566,18 @@ export default defineSchema({
     rejectionReason: v.optional(v.string()), // 拒绝原因
 
     // If approved, link to the created badge
-    badgeId: v.optional(v.id('verificationBadges')),
+    badgeId: v.optional(v.id("verificationBadges")),
 
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_status', ['status'])
-    .index('by_type', ['badgeType'])
-    .index('by_user_type', ['userId', 'badgeType'])
-    .index('by_user_status', ['userId', 'status'])
-    .index('by_created', ['createdAt']),
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_type", ["badgeType"])
+    .index("by_user_type", ["userId", "badgeType"])
+    .index("by_user_status", ["userId", "status"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Weather Cache
@@ -3658,29 +3658,29 @@ export default defineSchema({
     }),
     fetchedAt: v.number(),
   })
-    .index('by_location', ['latitude', 'longitude'])
-    .index('by_fetched_at', ['fetchedAt']),
+    .index("by_location", ["latitude", "longitude"])
+    .index("by_fetched_at", ["fetchedAt"]),
 
   // ============================================
   // Packing Lists (智能打包清单)
   // ============================================
   packingLists: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.optional(v.id('itineraries')), // Link to itinerary (optional)
+    itineraryId: v.optional(v.id("itineraries")), // Link to itinerary (optional)
     title: v.string(), // List title
     destination: v.optional(v.string()), // Destination for weather-based suggestions
     startDate: v.optional(v.string()), // ISO date string YYYY-MM-DD
     endDate: v.optional(v.string()), // ISO date string YYYY-MM-DD
     tripType: v.optional(
       v.union(
-        v.literal('leisure'), // 休闲
-        v.literal('business'), // 商务
-        v.literal('adventure'), // 冒险
-        v.literal('beach'), // 海滩
-        v.literal('ski'), // 滑雪
-        v.literal('city'), // 城市
-        v.literal('hiking'), // 徒步
-        v.literal('other'), // 其他
+        v.literal("leisure"), // 休闲
+        v.literal("business"), // 商务
+        v.literal("adventure"), // 冒险
+        v.literal("beach"), // 海滩
+        v.literal("ski"), // 滑雪
+        v.literal("city"), // 城市
+        v.literal("hiking"), // 徒步
+        v.literal("other"), // 其他
       ),
     ),
     // Weather information for smart suggestions
@@ -3696,44 +3696,44 @@ export default defineSchema({
     shareCode: v.optional(v.string()), // Unique code for sharing
     sharedWith: v.optional(v.array(v.string())), // User IDs with access
     isPublic: v.boolean(), // Public template for community
-    templateId: v.optional(v.id('packingTemplates')), // If created from template
+    templateId: v.optional(v.id("packingTemplates")), // If created from template
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_share_code', ['shareCode'])
-    .index('by_user_created', ['userId', 'createdAt'])
-    .index('by_public', ['isPublic']),
+    .index("by_user", ["userId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_share_code", ["shareCode"])
+    .index("by_user_created", ["userId", "createdAt"])
+    .index("by_public", ["isPublic"]),
 
   // ============================================
   // Packing Items (清单物品)
   // ============================================
   packingItems: defineTable({
-    packingListId: v.id('packingLists'),
+    packingListId: v.id("packingLists"),
     name: v.string(), // Item name
     category: v.union(
-      v.literal('clothing'), // 衣物
-      v.literal('toiletries'), // 洗漱用品
-      v.literal('electronics'), // 电子产品
-      v.literal('documents'), // 证件文件
-      v.literal('medicine'), // 药品
-      v.literal('accessories'), // 配饰
-      v.literal('gear'), // 装备
-      v.literal('snacks'), // 零食
-      v.literal('other'), // 其他
+      v.literal("clothing"), // 衣物
+      v.literal("toiletries"), // 洗漱用品
+      v.literal("electronics"), // 电子产品
+      v.literal("documents"), // 证件文件
+      v.literal("medicine"), // 药品
+      v.literal("accessories"), // 配饰
+      v.literal("gear"), // 装备
+      v.literal("snacks"), // 零食
+      v.literal("other"), // 其他
     ),
     quantity: v.number(), // Number of items
     isPacked: v.boolean(), // Whether item is packed
     isEssential: v.boolean(), // Must-have item
     suggestedBy: v.optional(
       v.union(
-        v.literal('user'), // User added
-        v.literal('weather'), // Weather-based suggestion
-        v.literal('activity'), // Activity-based suggestion
-        v.literal('template'), // From template
-        v.literal('ai'), // AI recommendation
+        v.literal("user"), // User added
+        v.literal("weather"), // Weather-based suggestion
+        v.literal("activity"), // Activity-based suggestion
+        v.literal("template"), // From template
+        v.literal("ai"), // AI recommendation
       ),
     ),
     notes: v.optional(v.string()), // Additional notes
@@ -3745,10 +3745,10 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_list', ['packingListId'])
-    .index('by_list_category', ['packingListId', 'category'])
-    .index('by_list_packed', ['packingListId', 'isPacked'])
-    .index('by_list_essential', ['packingListId', 'isEssential']),
+    .index("by_list", ["packingListId"])
+    .index("by_list_category", ["packingListId", "category"])
+    .index("by_list_packed", ["packingListId", "isPacked"])
+    .index("by_list_essential", ["packingListId", "isEssential"]),
 
   // ============================================
   // Packing Templates (清单模板)
@@ -3758,23 +3758,23 @@ export default defineSchema({
     nameEn: v.optional(v.string()),
     description: v.optional(v.string()), // Template description
     tripType: v.union(
-      v.literal('leisure'),
-      v.literal('business'),
-      v.literal('adventure'),
-      v.literal('beach'),
-      v.literal('ski'),
-      v.literal('city'),
-      v.literal('hiking'),
-      v.literal('other'),
+      v.literal("leisure"),
+      v.literal("business"),
+      v.literal("adventure"),
+      v.literal("beach"),
+      v.literal("ski"),
+      v.literal("city"),
+      v.literal("hiking"),
+      v.literal("other"),
     ),
     climate: v.optional(
       v.union(
-        v.literal('tropical'), // 热带
-        v.literal('dry'), // 干燥
-        v.literal('temperate'), // 温带
-        v.literal('cold'), // 寒冷
-        v.literal('polar'), // 极地
-        v.literal('any'), // 任何气候
+        v.literal("tropical"), // 热带
+        v.literal("dry"), // 干燥
+        v.literal("temperate"), // 温带
+        v.literal("cold"), // 寒冷
+        v.literal("polar"), // 极地
+        v.literal("any"), // 任何气候
       ),
     ),
     durationDays: v.optional(v.number()), // Suggested trip duration
@@ -3809,18 +3809,18 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_trip_type', ['tripType'])
-    .index('by_climate', ['climate'])
-    .index('by_system', ['isSystem'])
-    .index('by_public', ['isPublic'])
-    .index('by_creator', ['createdBy'])
-    .index('by_usage', ['usageCount']),
+    .index("by_trip_type", ["tripType"])
+    .index("by_climate", ["climate"])
+    .index("by_system", ["isSystem"])
+    .index("by_public", ["isPublic"])
+    .index("by_creator", ["createdBy"])
+    .index("by_usage", ["usageCount"]),
 
   // ============================================
   // Expense Splitting - Trip Members (旅行同伴)
   // ============================================
   tripMembers: defineTable({
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     name: v.string(), // Display name
     email: v.optional(v.string()), // Optional email for notifications
     avatarUrl: v.optional(v.string()),
@@ -3828,32 +3828,32 @@ export default defineSchema({
     isOwner: v.boolean(), // Whether this member created the trip
     createdAt: v.number(), // Unix timestamp
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_itinerary_user', ['itineraryId', 'userId'])
-    .index('by_user', ['userId']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_itinerary_user", ["itineraryId", "userId"])
+    .index("by_user", ["userId"]),
 
   // ============================================
   // Expense Splitting - Shared Expenses (共享支出)
   // ============================================
   sharedExpenses: defineTable({
-    itineraryId: v.id('itineraries'),
-    paidById: v.id('tripMembers'), // Who paid
+    itineraryId: v.id("itineraries"),
+    paidById: v.id("tripMembers"), // Who paid
     amount: v.number(), // Total amount in cents (to avoid floating point issues)
     currency: v.string(), // Currency code (CNY, USD, etc.)
     description: v.string(), // What was purchased
     category: v.union(
-      v.literal('food'), // 餐饮
-      v.literal('transport'), // 交通
-      v.literal('accommodation'), // 住宿
-      v.literal('tickets'), // 门票
-      v.literal('shopping'), // 购物
-      v.literal('other'), // 其他
+      v.literal("food"), // 餐饮
+      v.literal("transport"), // 交通
+      v.literal("accommodation"), // 住宿
+      v.literal("tickets"), // 门票
+      v.literal("shopping"), // 购物
+      v.literal("other"), // 其他
     ),
     splitType: v.union(
-      v.literal('equal'), // Split equally among participants
-      v.literal('exact'), // Exact amounts per person
-      v.literal('percentage'), // Percentage-based split
-      v.literal('shares'), // Share-based split (e.g., 2 shares vs 1 share)
+      v.literal("equal"), // Split equally among participants
+      v.literal("exact"), // Exact amounts per person
+      v.literal("percentage"), // Percentage-based split
+      v.literal("shares"), // Share-based split (e.g., 2 shares vs 1 share)
     ),
     date: v.string(), // ISO date string YYYY-MM-DD
     notes: v.optional(v.string()),
@@ -3861,31 +3861,31 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_itinerary_date', ['itineraryId', 'date'])
-    .index('by_paid_by', ['paidById'])
-    .index('by_category', ['category']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_itinerary_date", ["itineraryId", "date"])
+    .index("by_paid_by", ["paidById"])
+    .index("by_category", ["category"]),
 
   // ============================================
   // Expense Splitting - Expense Participants (支出参与者)
   // ============================================
   expenseParticipants: defineTable({
-    expenseId: v.id('sharedExpenses'),
-    memberId: v.id('tripMembers'),
+    expenseId: v.id("sharedExpenses"),
+    memberId: v.id("tripMembers"),
     splitValue: v.number(), // Value depends on splitType: equal=1, exact=amount, percentage=%, shares=share count
     amountOwed: v.number(), // Calculated amount owed in cents
   })
-    .index('by_expense', ['expenseId'])
-    .index('by_member', ['memberId'])
-    .index('by_expense_member', ['expenseId', 'memberId']),
+    .index("by_expense", ["expenseId"])
+    .index("by_member", ["memberId"])
+    .index("by_expense_member", ["expenseId", "memberId"]),
 
   // ============================================
   // Expense Splitting - Settlements (结算记录)
   // ============================================
   settlements: defineTable({
-    itineraryId: v.id('itineraries'),
-    fromMemberId: v.id('tripMembers'), // Who pays
-    toMemberId: v.id('tripMembers'), // Who receives
+    itineraryId: v.id("itineraries"),
+    fromMemberId: v.id("tripMembers"), // Who pays
+    toMemberId: v.id("tripMembers"), // Who receives
     amount: v.number(), // Amount in cents
     currency: v.string(),
     isSettled: v.boolean(), // Whether this has been paid
@@ -3893,10 +3893,10 @@ export default defineSchema({
     notes: v.optional(v.string()),
     createdAt: v.number(),
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_from_member', ['fromMemberId'])
-    .index('by_to_member', ['toMemberId'])
-    .index('by_settled', ['isSettled']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_from_member", ["fromMemberId"])
+    .index("by_to_member", ["toMemberId"])
+    .index("by_settled", ["isSettled"]),
 
   // ============================================
   // Template Categories (模板分类)
@@ -3911,8 +3911,8 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_sort_order', ['sortOrder'])
-    .index('by_active', ['isActive']),
+    .index("by_sort_order", ["sortOrder"])
+    .index("by_active", ["isActive"]),
 
   // ============================================
   // Itinerary Templates (行程模板)
@@ -3924,8 +3924,8 @@ export default defineSchema({
     coverImageUrl: v.optional(v.string()),
 
     // Classification
-    categoryId: v.id('templateCategories'),
-    templateType: v.union(v.literal('preset'), v.literal('user')), // preset=系统预设, user=用户创建
+    categoryId: v.id("templateCategories"),
+    templateType: v.union(v.literal("preset"), v.literal("user")), // preset=系统预设, user=用户创建
 
     // Creator info (for user templates)
     creatorId: v.optional(v.string()), // Clerk user ID
@@ -3941,12 +3941,12 @@ export default defineSchema({
           v.object({
             name: v.string(),
             type: v.union(
-              v.literal('attraction'),
-              v.literal('restaurant'),
-              v.literal('hotel'),
-              v.literal('transportation'),
-              v.literal('activity'),
-              v.literal('shopping'),
+              v.literal("attraction"),
+              v.literal("restaurant"),
+              v.literal("hotel"),
+              v.literal("transportation"),
+              v.literal("activity"),
+              v.literal("shopping"),
             ),
             description: v.optional(v.string()),
             suggestedDuration: v.optional(v.number()), // Minutes
@@ -3976,9 +3976,9 @@ export default defineSchema({
 
     // Visibility & sharing
     visibility: v.union(
-      v.literal('private'),
-      v.literal('public'),
-      v.literal('unlisted'),
+      v.literal("private"),
+      v.literal("public"),
+      v.literal("unlisted"),
     ),
     isPublished: v.boolean(), // Whether publicly discoverable
 
@@ -3993,53 +3993,53 @@ export default defineSchema({
     updatedAt: v.number(),
     publishedAt: v.optional(v.number()),
   })
-    .index('by_category', ['categoryId'])
-    .index('by_type', ['templateType'])
-    .index('by_creator', ['creatorId'])
-    .index('by_visibility', ['visibility'])
-    .index('by_published', ['isPublished'])
-    .index('by_use_count', ['useCount'])
-    .index('by_like_count', ['likeCount'])
-    .index('by_created', ['createdAt']),
+    .index("by_category", ["categoryId"])
+    .index("by_type", ["templateType"])
+    .index("by_creator", ["creatorId"])
+    .index("by_visibility", ["visibility"])
+    .index("by_published", ["isPublished"])
+    .index("by_use_count", ["useCount"])
+    .index("by_like_count", ["likeCount"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Template Likes (模板点赞)
   // ============================================
   templateLikes: defineTable({
-    templateId: v.id('itineraryTemplates'),
+    templateId: v.id("itineraryTemplates"),
     userId: v.string(), // Clerk user ID
     createdAt: v.number(),
   })
-    .index('by_template', ['templateId'])
-    .index('by_user', ['userId'])
-    .index('by_template_user', ['templateId', 'userId']),
+    .index("by_template", ["templateId"])
+    .index("by_user", ["userId"])
+    .index("by_template_user", ["templateId", "userId"]),
 
   // ============================================
   // Template Saves (模板收藏)
   // ============================================
   templateSaves: defineTable({
-    templateId: v.id('itineraryTemplates'),
+    templateId: v.id("itineraryTemplates"),
     userId: v.string(), // Clerk user ID
     createdAt: v.number(),
   })
-    .index('by_template', ['templateId'])
-    .index('by_user', ['userId'])
-    .index('by_template_user', ['templateId', 'userId']),
+    .index("by_template", ["templateId"])
+    .index("by_user", ["userId"])
+    .index("by_template_user", ["templateId", "userId"]),
 
   // ============================================
   // Itinerary Drafts (Auto-saved editing state)
   // ============================================
   itineraryDrafts: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.optional(v.id('itineraries')), // Reference to existing itinerary (null for new drafts)
+    itineraryId: v.optional(v.id("itineraries")), // Reference to existing itinerary (null for new drafts)
 
     // Draft content (mirrors itinerary fields)
     title: v.string(),
-    cityId: v.optional(v.id('cities')),
+    cityId: v.optional(v.id("cities")),
     startDate: v.optional(v.string()), // ISO date string YYYY-MM-DD
     endDate: v.optional(v.string()), // ISO date string YYYY-MM-DD
     visibility: v.optional(
-      v.union(v.literal('private'), v.literal('team'), v.literal('public')),
+      v.union(v.literal("private"), v.literal("team"), v.literal("public")),
     ),
     coverImageUrl: v.optional(v.string()),
 
@@ -4051,17 +4051,17 @@ export default defineSchema({
           date: v.optional(v.string()),
           items: v.array(
             v.object({
-              poiId: v.optional(v.id('pois')), // Reference to existing POI
+              poiId: v.optional(v.id("pois")), // Reference to existing POI
               orderIndex: v.number(),
               startTime: v.optional(v.string()),
               endTime: v.optional(v.string()),
               transportMode: v.optional(
                 v.union(
-                  v.literal('walking'),
-                  v.literal('driving'),
-                  v.literal('transit'),
-                  v.literal('cycling'),
-                  v.literal('taxi'),
+                  v.literal("walking"),
+                  v.literal("driving"),
+                  v.literal("transit"),
+                  v.literal("cycling"),
+                  v.literal("taxi"),
                 ),
               ),
               notes: v.optional(v.string()),
@@ -4070,11 +4070,11 @@ export default defineSchema({
                 v.object({
                   name: v.string(),
                   category: v.union(
-                    v.literal('attraction'),
-                    v.literal('restaurant'),
-                    v.literal('hotel'),
-                    v.literal('shopping'),
-                    v.literal('other'),
+                    v.literal("attraction"),
+                    v.literal("restaurant"),
+                    v.literal("hotel"),
+                    v.literal("shopping"),
+                    v.literal("other"),
                   ),
                   address: v.optional(v.string()),
                   latitude: v.optional(v.number()),
@@ -4095,10 +4095,10 @@ export default defineSchema({
     deviceId: v.optional(v.string()), // Device identifier for conflict resolution
     syncVersion: v.number(), // Incremented on each save for optimistic locking
   })
-    .index('by_user', ['userId'])
-    .index('by_user_itinerary', ['userId', 'itineraryId'])
-    .index('by_expires', ['expiresAt'])
-    .index('by_user_modified', ['userId', 'lastModifiedAt']),
+    .index("by_user", ["userId"])
+    .index("by_user_itinerary", ["userId", "itineraryId"])
+    .index("by_expires", ["expiresAt"])
+    .index("by_user_modified", ["userId", "lastModifiedAt"]),
 
   // ============================================
   // User Travel Preferences (旅行偏好)
@@ -4108,66 +4108,66 @@ export default defineSchema({
     travelStyles: v.optional(
       v.array(
         v.union(
-          v.literal('adventure'),
-          v.literal('relaxation'),
-          v.literal('culture'),
-          v.literal('food'),
-          v.literal('nature'),
-          v.literal('shopping'),
-          v.literal('photography'),
-          v.literal('budget'),
-          v.literal('luxury'),
+          v.literal("adventure"),
+          v.literal("relaxation"),
+          v.literal("culture"),
+          v.literal("food"),
+          v.literal("nature"),
+          v.literal("shopping"),
+          v.literal("photography"),
+          v.literal("budget"),
+          v.literal("luxury"),
         ),
       ),
     ),
     preferredPace: v.optional(
-      v.union(v.literal('slow'), v.literal('moderate'), v.literal('fast')),
+      v.union(v.literal("slow"), v.literal("moderate"), v.literal("fast")),
     ),
     languages: v.optional(v.array(v.string())),
     ageRange: v.optional(
       v.union(
-        v.literal('18-25'),
-        v.literal('26-35'),
-        v.literal('36-45'),
-        v.literal('46-55'),
-        v.literal('55+'),
+        v.literal("18-25"),
+        v.literal("26-35"),
+        v.literal("36-45"),
+        v.literal("46-55"),
+        v.literal("55+"),
       ),
     ),
     gender: v.optional(
-      v.union(v.literal('male'), v.literal('female'), v.literal('other')),
+      v.union(v.literal("male"), v.literal("female"), v.literal("other")),
     ),
     preferredPartnerGender: v.optional(
       v.union(
-        v.literal('male'),
-        v.literal('female'),
-        v.literal('other'),
-        v.literal('any'),
+        v.literal("male"),
+        v.literal("female"),
+        v.literal("other"),
+        v.literal("any"),
       ),
     ),
     bio: v.optional(v.string()),
     interests: v.optional(v.array(v.string())),
     smokingPreference: v.optional(
       v.union(
-        v.literal('smoker'),
-        v.literal('non_smoker'),
-        v.literal('no_preference'),
+        v.literal("smoker"),
+        v.literal("non_smoker"),
+        v.literal("no_preference"),
       ),
     ),
     accommodationPreference: v.optional(
       v.union(
-        v.literal('hostel'),
-        v.literal('budget_hotel'),
-        v.literal('mid_range'),
-        v.literal('luxury'),
-        v.literal('no_preference'),
+        v.literal("hostel"),
+        v.literal("budget_hotel"),
+        v.literal("mid_range"),
+        v.literal("luxury"),
+        v.literal("no_preference"),
       ),
     ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_age_range', ['ageRange'])
-    .index('by_gender', ['gender']),
+    .index("by_user", ["userId"])
+    .index("by_age_range", ["ageRange"])
+    .index("by_gender", ["gender"]),
 
   // ============================================
   // Travel Partner Requests (结伴请求)
@@ -4177,7 +4177,7 @@ export default defineSchema({
     title: v.string(),
     description: v.string(),
     destination: v.string(),
-    destinationCityId: v.optional(v.id('cities')),
+    destinationCityId: v.optional(v.id("cities")),
     startDate: v.string(),
     endDate: v.string(),
     isFlexibleDates: v.boolean(),
@@ -4185,56 +4185,56 @@ export default defineSchema({
     maxGroupSize: v.number(),
     preferredGender: v.optional(
       v.union(
-        v.literal('male'),
-        v.literal('female'),
-        v.literal('other'),
-        v.literal('any'),
+        v.literal("male"),
+        v.literal("female"),
+        v.literal("other"),
+        v.literal("any"),
       ),
     ),
     preferredAgeRange: v.optional(
       v.array(
         v.union(
-          v.literal('18-25'),
-          v.literal('26-35'),
-          v.literal('36-45'),
-          v.literal('46-55'),
-          v.literal('55+'),
+          v.literal("18-25"),
+          v.literal("26-35"),
+          v.literal("36-45"),
+          v.literal("46-55"),
+          v.literal("55+"),
         ),
       ),
     ),
     travelStyles: v.optional(
       v.array(
         v.union(
-          v.literal('adventure'),
-          v.literal('relaxation'),
-          v.literal('culture'),
-          v.literal('food'),
-          v.literal('nature'),
-          v.literal('shopping'),
-          v.literal('photography'),
-          v.literal('budget'),
-          v.literal('luxury'),
+          v.literal("adventure"),
+          v.literal("relaxation"),
+          v.literal("culture"),
+          v.literal("food"),
+          v.literal("nature"),
+          v.literal("shopping"),
+          v.literal("photography"),
+          v.literal("budget"),
+          v.literal("luxury"),
         ),
       ),
     ),
     budgetRange: v.optional(
       v.union(
-        v.literal('budget'),
-        v.literal('moderate'),
-        v.literal('comfortable'),
-        v.literal('luxury'),
+        v.literal("budget"),
+        v.literal("moderate"),
+        v.literal("comfortable"),
+        v.literal("luxury"),
       ),
     ),
     estimatedBudget: v.optional(v.number()),
-    itineraryId: v.optional(v.id('itineraries')),
+    itineraryId: v.optional(v.id("itineraries")),
     coverImageUrl: v.optional(v.string()),
     imageUrls: v.optional(v.array(v.string())),
     status: v.union(
-      v.literal('active'),
-      v.literal('paused'),
-      v.literal('fulfilled'),
-      v.literal('cancelled'),
-      v.literal('expired'),
+      v.literal("active"),
+      v.literal("paused"),
+      v.literal("fulfilled"),
+      v.literal("cancelled"),
+      v.literal("expired"),
     ),
     viewCount: v.number(),
     applicationCount: v.number(),
@@ -4242,19 +4242,19 @@ export default defineSchema({
     updatedAt: v.number(),
     expiresAt: v.optional(v.number()),
   })
-    .index('by_user', ['userId'])
-    .index('by_status', ['status'])
-    .index('by_destination', ['destination'])
-    .index('by_city', ['destinationCityId'])
-    .index('by_dates', ['startDate', 'endDate'])
-    .index('by_status_dates', ['status', 'startDate'])
-    .index('by_created', ['createdAt']),
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_destination", ["destination"])
+    .index("by_city", ["destinationCityId"])
+    .index("by_dates", ["startDate", "endDate"])
+    .index("by_status_dates", ["status", "startDate"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Partner Match Applications (结伴申请)
   // ============================================
   partnerMatchApplications: defineTable({
-    requestId: v.id('travelPartnerRequests'),
+    requestId: v.id("travelPartnerRequests"),
     applicantId: v.string(),
     requestOwnerId: v.string(),
     message: v.string(),
@@ -4269,31 +4269,31 @@ export default defineSchema({
       }),
     ),
     status: v.union(
-      v.literal('pending'),
-      v.literal('accepted'),
-      v.literal('rejected'),
-      v.literal('withdrawn'),
-      v.literal('expired'),
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+      v.literal("withdrawn"),
+      v.literal("expired"),
     ),
     responseMessage: v.optional(v.string()),
     respondedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_request', ['requestId'])
-    .index('by_applicant', ['applicantId'])
-    .index('by_owner', ['requestOwnerId'])
-    .index('by_request_status', ['requestId', 'status'])
-    .index('by_applicant_status', ['applicantId', 'status'])
-    .index('by_owner_status', ['requestOwnerId', 'status'])
-    .index('by_match_score', ['matchScore']),
+    .index("by_request", ["requestId"])
+    .index("by_applicant", ["applicantId"])
+    .index("by_owner", ["requestOwnerId"])
+    .index("by_request_status", ["requestId", "status"])
+    .index("by_applicant_status", ["applicantId", "status"])
+    .index("by_owner_status", ["requestOwnerId", "status"])
+    .index("by_match_score", ["matchScore"]),
 
   // ============================================
   // Partner Matches (成功匹配)
   // ============================================
   partnerMatches: defineTable({
-    requestId: v.id('travelPartnerRequests'),
-    applicationId: v.id('partnerMatchApplications'),
+    requestId: v.id("travelPartnerRequests"),
+    applicationId: v.id("partnerMatchApplications"),
     requestOwnerId: v.string(),
     partnerId: v.string(),
     matchScore: v.number(),
@@ -4302,11 +4302,11 @@ export default defineSchema({
     startDate: v.string(),
     endDate: v.string(),
     status: v.union(
-      v.literal('active'),
-      v.literal('completed'),
-      v.literal('cancelled'),
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("cancelled"),
     ),
-    conversationId: v.optional(v.id('conversations')),
+    conversationId: v.optional(v.id("conversations")),
     ownerFeedback: v.optional(
       v.object({
         rating: v.number(),
@@ -4326,12 +4326,12 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_request', ['requestId'])
-    .index('by_owner', ['requestOwnerId'])
-    .index('by_partner', ['partnerId'])
-    .index('by_status', ['status'])
-    .index('by_destination', ['destination'])
-    .index('by_dates', ['startDate', 'endDate']),
+    .index("by_request", ["requestId"])
+    .index("by_owner", ["requestOwnerId"])
+    .index("by_partner", ["partnerId"])
+    .index("by_status", ["status"])
+    .index("by_destination", ["destination"])
+    .index("by_dates", ["startDate", "endDate"]),
 
   // ============================================
   // User Verifications (用户认证)
@@ -4339,18 +4339,18 @@ export default defineSchema({
   userVerifications: defineTable({
     userId: v.string(),
     verificationType: v.union(
-      v.literal('identity'),
-      v.literal('phone'),
-      v.literal('email'),
-      v.literal('social'),
-      v.literal('travel_history'),
-      v.literal('reference'),
+      v.literal("identity"),
+      v.literal("phone"),
+      v.literal("email"),
+      v.literal("social"),
+      v.literal("travel_history"),
+      v.literal("reference"),
     ),
     status: v.union(
-      v.literal('pending'),
-      v.literal('verified'),
-      v.literal('rejected'),
-      v.literal('expired'),
+      v.literal("pending"),
+      v.literal("verified"),
+      v.literal("rejected"),
+      v.literal("expired"),
     ),
     verificationData: v.optional(v.string()),
     verificationMethod: v.optional(v.string()),
@@ -4365,10 +4365,10 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_type', ['userId', 'verificationType'])
-    .index('by_status', ['status'])
-    .index('by_type_status', ['verificationType', 'status']),
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "verificationType"])
+    .index("by_status", ["status"])
+    .index("by_type_status", ["verificationType", "status"]),
 
   // ============================================
   // User Trust Scores (用户信任分)
@@ -4388,12 +4388,12 @@ export default defineSchema({
     badges: v.optional(
       v.array(
         v.union(
-          v.literal('verified_identity'),
-          v.literal('trusted_traveler'),
-          v.literal('super_host'),
-          v.literal('responsive'),
-          v.literal('experienced'),
-          v.literal('top_rated'),
+          v.literal("verified_identity"),
+          v.literal("trusted_traveler"),
+          v.literal("super_host"),
+          v.literal("responsive"),
+          v.literal("experienced"),
+          v.literal("top_rated"),
         ),
       ),
     ),
@@ -4401,39 +4401,39 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_overall_score', ['overallScore']),
+    .index("by_user", ["userId"])
+    .index("by_overall_score", ["overallScore"]),
 
   // ============================================
   // Partner Request Saves (收藏结伴请求)
   // ============================================
   partnerRequestSaves: defineTable({
     userId: v.string(),
-    requestId: v.id('travelPartnerRequests'),
+    requestId: v.id("travelPartnerRequests"),
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_request', ['requestId'])
-    .index('by_user_request', ['userId', 'requestId']),
+    .index("by_user", ["userId"])
+    .index("by_request", ["requestId"])
+    .index("by_user_request", ["userId", "requestId"]),
 
   // ============================================
   // POI Questions (POI 问答 - 问题)
   // ============================================
   poiQuestions: defineTable({
-    poiId: v.id('pois'), // 关联的 POI
+    poiId: v.id("pois"), // 关联的 POI
     userId: v.string(), // 提问者 Auth user ID
     title: v.string(), // 问题标题
     content: v.string(), // 问题详情
     category: v.union(
-      v.literal('general'), // 一般问题
-      v.literal('transportation'), // 交通
-      v.literal('timing'), // 时间/开放时间
-      v.literal('pricing'), // 价格/门票
-      v.literal('tips'), // 游玩攻略
-      v.literal('food'), // 餐饮
-      v.literal('accommodation'), // 住宿
-      v.literal('safety'), // 安全
-      v.literal('other'), // 其他
+      v.literal("general"), // 一般问题
+      v.literal("transportation"), // 交通
+      v.literal("timing"), // 时间/开放时间
+      v.literal("pricing"), // 价格/门票
+      v.literal("tips"), // 游玩攻略
+      v.literal("food"), // 餐饮
+      v.literal("accommodation"), // 住宿
+      v.literal("safety"), // 安全
+      v.literal("other"), // 其他
     ),
     tags: v.optional(v.array(v.string())), // 标签
     imageUrls: v.optional(v.array(v.string())), // 问题附图
@@ -4443,13 +4443,13 @@ export default defineSchema({
     followersCount: v.number(), // 关注此问题的用户数
     // Status
     status: v.union(
-      v.literal('open'), // 开放中
-      v.literal('answered'), // 已有采纳答案
-      v.literal('closed'), // 已关闭
-      v.literal('resolved'), // 已解决
+      v.literal("open"), // 开放中
+      v.literal("answered"), // 已有采纳答案
+      v.literal("closed"), // 已关闭
+      v.literal("resolved"), // 已解决
     ),
-    acceptedAnswerId: v.optional(v.id('poiAnswers')), // 采纳的答案
-    bestAnswerId: v.optional(v.id('poiAnswers')), // 最佳答案
+    acceptedAnswerId: v.optional(v.id("poiAnswers")), // 采纳的答案
+    bestAnswerId: v.optional(v.id("poiAnswers")), // 最佳答案
     hasBestAnswer: v.optional(v.boolean()), // 是否有最佳答案
     isEdited: v.boolean(),
     isPinned: v.boolean(), // 是否置顶
@@ -4468,26 +4468,26 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
     lastActivityAt: v.number(), // 最后活动时间（新回答等）
   })
-    .index('by_poi', ['poiId'])
-    .index('by_user', ['userId'])
-    .index('by_poi_status', ['poiId', 'status'])
-    .index('by_poi_category', ['poiId', 'category'])
-    .index('by_status', ['status'])
-    .index('by_category', ['category'])
-    .index('by_created', ['createdAt'])
-    .index('by_last_activity', ['lastActivityAt'])
-    .index('by_poi_last_activity', ['poiId', 'lastActivityAt'])
-    .searchIndex('search_questions', {
-      searchField: 'title',
-      filterFields: ['poiId', 'isDeleted'],
+    .index("by_poi", ["poiId"])
+    .index("by_user", ["userId"])
+    .index("by_poi_status", ["poiId", "status"])
+    .index("by_poi_category", ["poiId", "category"])
+    .index("by_status", ["status"])
+    .index("by_category", ["category"])
+    .index("by_created", ["createdAt"])
+    .index("by_last_activity", ["lastActivityAt"])
+    .index("by_poi_last_activity", ["poiId", "lastActivityAt"])
+    .searchIndex("search_questions", {
+      searchField: "title",
+      filterFields: ["poiId", "isDeleted"],
     }),
 
   // ============================================
   // POI Answers (POI 问答 - 回答)
   // ============================================
   poiAnswers: defineTable({
-    questionId: v.id('poiQuestions'), // 关联的问题
-    poiId: v.optional(v.id('pois')), // 关联的 POI（冗余，方便查询）
+    questionId: v.id("poiQuestions"), // 关联的问题
+    poiId: v.optional(v.id("pois")), // 关联的 POI（冗余，方便查询）
     userId: v.string(), // 回答者 Auth user ID
     content: v.string(), // 回答内容
     imageUrls: v.optional(v.array(v.string())), // 回答附图
@@ -4507,9 +4507,9 @@ export default defineSchema({
     isVerifiedAuthor: v.boolean(), // 是否为认证用户（旅行达人/本地向导）
     authorBadgeType: v.optional(
       v.union(
-        v.literal('travel_expert'),
-        v.literal('local_guide'),
-        v.literal('official_account'),
+        v.literal("travel_expert"),
+        v.literal("local_guide"),
+        v.literal("official_account"),
       ),
     ),
     // Moderation
@@ -4519,113 +4519,113 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_question', ['questionId'])
-    .index('by_user', ['userId'])
-    .index('by_question_accepted', ['questionId', 'isAccepted'])
-    .index('by_question_upvotes', ['questionId', 'upvotesCount'])
-    .index('by_created', ['createdAt']),
+    .index("by_question", ["questionId"])
+    .index("by_user", ["userId"])
+    .index("by_question_accepted", ["questionId", "isAccepted"])
+    .index("by_question_upvotes", ["questionId", "upvotesCount"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Answer Votes (回答投票)
   // ============================================
   answerVotes: defineTable({
-    answerId: v.id('poiAnswers'),
+    answerId: v.id("poiAnswers"),
     userId: v.string(), // Auth user ID
-    voteType: v.union(v.literal('up'), v.literal('down')),
+    voteType: v.union(v.literal("up"), v.literal("down")),
     createdAt: v.number(),
   })
-    .index('by_answer', ['answerId'])
-    .index('by_user', ['userId'])
-    .index('by_answer_user', ['answerId', 'userId']),
+    .index("by_answer", ["answerId"])
+    .index("by_user", ["userId"])
+    .index("by_answer_user", ["answerId", "userId"]),
 
   // ============================================
   // Answer Comments (回答评论)
   // ============================================
   answerComments: defineTable({
-    answerId: v.id('poiAnswers'),
+    answerId: v.id("poiAnswers"),
     userId: v.string(), // Auth user ID
     content: v.string(),
-    parentId: v.optional(v.id('answerComments')), // 回复的父评论
+    parentId: v.optional(v.id("answerComments")), // 回复的父评论
     likesCount: v.number(),
     isEdited: v.boolean(),
     isDeleted: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_answer', ['answerId'])
-    .index('by_user', ['userId'])
-    .index('by_parent', ['parentId'])
-    .index('by_answer_created', ['answerId', 'createdAt']),
+    .index("by_answer", ["answerId"])
+    .index("by_user", ["userId"])
+    .index("by_parent", ["parentId"])
+    .index("by_answer_created", ["answerId", "createdAt"]),
 
   // ============================================
   // Question Followers (问题关注)
   // ============================================
   questionFollowers: defineTable({
-    questionId: v.id('poiQuestions'),
+    questionId: v.id("poiQuestions"),
     userId: v.string(), // Auth user ID
     createdAt: v.number(),
   })
-    .index('by_question', ['questionId'])
-    .index('by_user', ['userId'])
-    .index('by_question_user', ['questionId', 'userId']),
+    .index("by_question", ["questionId"])
+    .index("by_user", ["userId"])
+    .index("by_question_user", ["questionId", "userId"]),
 
   // ============================================
   // Question Reports (问题举报)
   // ============================================
   questionReports: defineTable({
-    questionId: v.id('poiQuestions'),
+    questionId: v.id("poiQuestions"),
     userId: v.string(), // Auth user ID
     reason: v.union(
-      v.literal('spam'),
-      v.literal('inappropriate'),
-      v.literal('duplicate'),
-      v.literal('off_topic'),
-      v.literal('other'),
+      v.literal("spam"),
+      v.literal("inappropriate"),
+      v.literal("duplicate"),
+      v.literal("off_topic"),
+      v.literal("other"),
     ),
     description: v.optional(v.string()),
     status: v.union(
-      v.literal('pending'),
-      v.literal('reviewed'),
-      v.literal('resolved'),
-      v.literal('dismissed'),
+      v.literal("pending"),
+      v.literal("reviewed"),
+      v.literal("resolved"),
+      v.literal("dismissed"),
     ),
     createdAt: v.number(),
     reviewedAt: v.optional(v.number()),
     reviewedBy: v.optional(v.string()),
   })
-    .index('by_question', ['questionId'])
-    .index('by_user', ['userId'])
-    .index('by_status', ['status'])
-    .index('by_question_user', ['questionId', 'userId']),
+    .index("by_question", ["questionId"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_question_user", ["questionId", "userId"]),
 
   // ============================================
   // Answer Reports (回答举报)
   // ============================================
   answerReports: defineTable({
-    answerId: v.id('poiAnswers'),
+    answerId: v.id("poiAnswers"),
     userId: v.string(), // Auth user ID
     reason: v.union(
-      v.literal('spam'),
-      v.literal('inappropriate'),
-      v.literal('misleading'),
-      v.literal('plagiarism'),
-      v.literal('other'),
+      v.literal("spam"),
+      v.literal("inappropriate"),
+      v.literal("misleading"),
+      v.literal("plagiarism"),
+      v.literal("other"),
     ),
     description: v.optional(v.string()),
     status: v.union(
-      v.literal('pending'),
-      v.literal('reviewed'),
-      v.literal('resolved'),
-      v.literal('dismissed'),
+      v.literal("pending"),
+      v.literal("reviewed"),
+      v.literal("resolved"),
+      v.literal("dismissed"),
     ),
     createdAt: v.number(),
     reviewedAt: v.optional(v.number()),
     reviewedBy: v.optional(v.string()),
   })
-    .index('by_answer', ['answerId'])
-    .index('by_user', ['userId'])
-    .index('by_status', ['status'])
-    .index('by_answer_user', ['answerId', 'userId']),
+    .index("by_answer", ["answerId"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_answer_user", ["answerId", "userId"]),
 
   // ============================================
   // Translation Phrases (翻译短语库)
@@ -4633,16 +4633,16 @@ export default defineSchema({
   translationPhrases: defineTable({
     // Category for organizing phrases
     category: v.union(
-      v.literal('greeting'), // 问候语
-      v.literal('transportation'), // 交通
-      v.literal('dining'), // 餐饮
-      v.literal('shopping'), // 购物
-      v.literal('accommodation'), // 住宿
-      v.literal('emergency'), // 紧急情况
-      v.literal('directions'), // 问路
-      v.literal('numbers'), // 数字
-      v.literal('time'), // 时间
-      v.literal('common'), // 常用语
+      v.literal("greeting"), // 问候语
+      v.literal("transportation"), // 交通
+      v.literal("dining"), // 餐饮
+      v.literal("shopping"), // 购物
+      v.literal("accommodation"), // 住宿
+      v.literal("emergency"), // 紧急情况
+      v.literal("directions"), // 问路
+      v.literal("numbers"), // 数字
+      v.literal("time"), // 时间
+      v.literal("common"), // 常用语
     ),
 
     // Source text and language
@@ -4678,12 +4678,12 @@ export default defineSchema({
     // Offline availability
     isOfflineAvailable: v.boolean(),
   })
-    .index('by_category', ['category'])
-    .index('by_source_lang', ['sourceLang'])
-    .index('by_category_lang', ['category', 'sourceLang'])
-    .searchIndex('search_phrases', {
-      searchField: 'sourceText',
-      filterFields: ['category', 'sourceLang'],
+    .index("by_category", ["category"])
+    .index("by_source_lang", ["sourceLang"])
+    .index("by_category_lang", ["category", "sourceLang"])
+    .searchIndex("search_phrases", {
+      searchField: "sourceText",
+      filterFields: ["category", "sourceLang"],
     }),
 
   // ============================================
@@ -4702,9 +4702,9 @@ export default defineSchema({
 
     // Translation type
     translationType: v.union(
-      v.literal('text'), // 文字翻译
-      v.literal('photo'), // 拍照翻译
-      v.literal('voice'), // 语音翻译
+      v.literal("text"), // 文字翻译
+      v.literal("photo"), // 拍照翻译
+      v.literal("voice"), // 语音翻译
     ),
 
     // Optional media URLs
@@ -4722,13 +4722,13 @@ export default defineSchema({
     // Optional notes
     notes: v.optional(v.string()),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_type', ['userId', 'translationType'])
-    .index('by_user_favorite', ['userId', 'isFavorite'])
-    .index('by_user_last_used', ['userId', 'lastUsedAt'])
-    .searchIndex('search_saved', {
-      searchField: 'sourceText',
-      filterFields: ['userId'],
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "translationType"])
+    .index("by_user_favorite", ["userId", "isFavorite"])
+    .index("by_user_last_used", ["userId", "lastUsedAt"])
+    .searchIndex("search_saved", {
+      searchField: "sourceText",
+      filterFields: ["userId"],
     }),
 
   // ============================================
@@ -4760,17 +4760,17 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_source_lang', ['sourceLang'])
-    .index('by_target_lang', ['targetLang'])
-    .index('by_lang_pair', ['sourceLang', 'targetLang'])
-    .index('by_active', ['isActive']),
+    .index("by_source_lang", ["sourceLang"])
+    .index("by_target_lang", ["targetLang"])
+    .index("by_lang_pair", ["sourceLang", "targetLang"])
+    .index("by_active", ["isActive"]),
 
   // ============================================
   // User Offline Packs (用户下载的离线包)
   // ============================================
   userOfflinePacks: defineTable({
     userId: v.string(), // Auth user ID
-    packId: v.id('offlineTranslationPacks'),
+    packId: v.id("offlineTranslationPacks"),
 
     // Download info
     downloadedVersion: v.string(),
@@ -4779,16 +4779,16 @@ export default defineSchema({
     // Sync status
     lastSyncedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_pack', ['packId'])
-    .index('by_user_pack', ['userId', 'packId']),
+    .index("by_user", ["userId"])
+    .index("by_pack", ["packId"])
+    .index("by_user_pack", ["userId", "packId"]),
 
   // ============================================
   // POI Photos (用户上传的POI照片)
   // ============================================
   poiPhotos: defineTable({
     // Reference
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
 
     // User info
     userId: v.string(), // Auth user ID
@@ -4805,13 +4805,13 @@ export default defineSchema({
     // Photo category
     category: v.optional(
       v.union(
-        v.literal('interior'), // Interior/indoor photos
-        v.literal('exterior'), // Exterior/outdoor photos
-        v.literal('food'), // Food and drinks
-        v.literal('scenery'), // Scenic views
-        v.literal('activity'), // Activities and experiences
-        v.literal('detail'), // Close-up details
-        v.literal('other'), // Other/uncategorized
+        v.literal("interior"), // Interior/indoor photos
+        v.literal("exterior"), // Exterior/outdoor photos
+        v.literal("food"), // Food and drinks
+        v.literal("scenery"), // Scenic views
+        v.literal("activity"), // Activities and experiences
+        v.literal("detail"), // Close-up details
+        v.literal("other"), // Other/uncategorized
       ),
     ),
 
@@ -4835,10 +4835,10 @@ export default defineSchema({
 
     // Moderation
     status: v.union(
-      v.literal('pending'), // Awaiting review
-      v.literal('approved'), // Approved for display
-      v.literal('rejected'), // Rejected (inappropriate)
-      v.literal('hidden'), // Hidden by user
+      v.literal("pending"), // Awaiting review
+      v.literal("approved"), // Approved for display
+      v.literal("rejected"), // Rejected (inappropriate)
+      v.literal("hidden"), // Hidden by user
     ),
     moderatorNotes: v.optional(v.string()),
     reviewedBy: v.optional(v.string()), // Admin user ID
@@ -4848,28 +4848,28 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_poi', ['poiId'])
-    .index('by_user', ['userId'])
-    .index('by_poi_status', ['poiId', 'status'])
-    .index('by_poi_featured', ['poiId', 'isFeatured'])
-    .index('by_poi_category', ['poiId', 'category'])
-    .index('by_status', ['status'])
-    .index('by_featured', ['isFeatured'])
-    .index('by_created', ['createdAt'])
-    .index('by_poi_created', ['poiId', 'createdAt'])
-    .index('by_user_created', ['userId', 'createdAt']),
+    .index("by_poi", ["poiId"])
+    .index("by_user", ["userId"])
+    .index("by_poi_status", ["poiId", "status"])
+    .index("by_poi_featured", ["poiId", "isFeatured"])
+    .index("by_poi_category", ["poiId", "category"])
+    .index("by_status", ["status"])
+    .index("by_featured", ["isFeatured"])
+    .index("by_created", ["createdAt"])
+    .index("by_poi_created", ["poiId", "createdAt"])
+    .index("by_user_created", ["userId", "createdAt"]),
 
   // ============================================
   // POI Photo Likes (照片点赞)
   // ============================================
   poiPhotoLikes: defineTable({
-    photoId: v.id('poiPhotos'),
+    photoId: v.id("poiPhotos"),
     userId: v.string(), // Auth user ID
     createdAt: v.number(),
   })
-    .index('by_photo', ['photoId'])
-    .index('by_user', ['userId'])
-    .index('by_photo_user', ['photoId', 'userId']),
+    .index("by_photo", ["photoId"])
+    .index("by_user", ["userId"])
+    .index("by_photo_user", ["photoId", "userId"]),
 
   // ============================================
   // Flights (Flight Information Cache)
@@ -4896,15 +4896,15 @@ export default defineSchema({
     actualDeparture: v.optional(v.number()),
     actualArrival: v.optional(v.number()),
     status: v.union(
-      v.literal('scheduled'),
-      v.literal('delayed'),
-      v.literal('boarding'),
-      v.literal('departed'),
-      v.literal('in_air'),
-      v.literal('landed'),
-      v.literal('arrived'),
-      v.literal('cancelled'),
-      v.literal('diverted'),
+      v.literal("scheduled"),
+      v.literal("delayed"),
+      v.literal("boarding"),
+      v.literal("departed"),
+      v.literal("in_air"),
+      v.literal("landed"),
+      v.literal("arrived"),
+      v.literal("cancelled"),
+      v.literal("diverted"),
     ),
     aircraftType: v.optional(v.string()), // e.g., "Boeing 737-800"
     duration: v.optional(v.number()), // Duration in minutes
@@ -4913,36 +4913,36 @@ export default defineSchema({
     delayReason: v.optional(v.string()),
     lastUpdated: v.number(), // Unix timestamp
   })
-    .index('by_flight_number', ['flightNumber'])
-    .index('by_flight_number_date', ['flightNumber', 'departureDate'])
-    .index('by_route', ['departureAirport', 'arrivalAirport'])
-    .index('by_departure_date', ['departureDate'])
-    .index('by_status', ['status']),
+    .index("by_flight_number", ["flightNumber"])
+    .index("by_flight_number_date", ["flightNumber", "departureDate"])
+    .index("by_route", ["departureAirport", "arrivalAirport"])
+    .index("by_departure_date", ["departureDate"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // Flight Bookings (User Reservations)
   // ============================================
   flightBookings: defineTable({
     userId: v.string(), // Clerk user ID
-    flightId: v.id('flights'), // Reference to flight
+    flightId: v.id("flights"), // Reference to flight
     confirmationCode: v.string(), // PNR/Confirmation code
     passengerName: v.string(),
     passengerEmail: v.optional(v.string()),
     passengerPhone: v.optional(v.string()),
     seatNumber: v.optional(v.string()), // e.g., "12A"
     cabinClass: v.union(
-      v.literal('economy'),
-      v.literal('premium_economy'),
-      v.literal('business'),
-      v.literal('first'),
+      v.literal("economy"),
+      v.literal("premium_economy"),
+      v.literal("business"),
+      v.literal("first"),
     ),
     status: v.union(
-      v.literal('confirmed'),
-      v.literal('pending'),
-      v.literal('cancelled'),
-      v.literal('checked_in'),
-      v.literal('boarded'),
-      v.literal('completed'),
+      v.literal("confirmed"),
+      v.literal("pending"),
+      v.literal("cancelled"),
+      v.literal("checked_in"),
+      v.literal("boarded"),
+      v.literal("completed"),
     ),
     departureTime: v.number(), // Cached departure time for sorting
     arrivalTime: v.number(), // Cached arrival time
@@ -4952,19 +4952,19 @@ export default defineSchema({
     baggageAllowance: v.optional(v.string()), // e.g., "2x23kg"
     frequentFlyerNumber: v.optional(v.string()),
     checkInTime: v.optional(v.number()), // When user checked in
-    itineraryId: v.optional(v.id('itineraries')), // Link to itinerary
+    itineraryId: v.optional(v.id("itineraries")), // Link to itinerary
     notes: v.optional(v.string()),
     importedFrom: v.optional(v.string()), // 'manual', 'email', 'api'
     rawEmailContent: v.optional(v.string()), // Original email for parsing reference
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_departure', ['userId', 'departureTime'])
-    .index('by_confirmation', ['confirmationCode'])
-    .index('by_flight', ['flightId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_status', ['status']),
+    .index("by_user", ["userId"])
+    .index("by_user_departure", ["userId", "departureTime"])
+    .index("by_confirmation", ["confirmationCode"])
+    .index("by_flight", ["flightId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // Visa Requirements (签证要求)
@@ -4980,32 +4980,32 @@ export default defineSchema({
 
     // Visa type
     visaType: v.union(
-      v.literal('visa_free'), // 免签
-      v.literal('visa_on_arrival'), // 落地签
-      v.literal('e_visa'), // 电子签证
-      v.literal('standard_visa'), // 普通签证
-      v.literal('transit_visa'), // 过境签
-      v.literal('work_visa'), // 工作签证
-      v.literal('student_visa'), // 学生签证
-      v.literal('business_visa'), // 商务签证
+      v.literal("visa_free"), // 免签
+      v.literal("visa_on_arrival"), // 落地签
+      v.literal("e_visa"), // 电子签证
+      v.literal("standard_visa"), // 普通签证
+      v.literal("transit_visa"), // 过境签
+      v.literal("work_visa"), // 工作签证
+      v.literal("student_visa"), // 学生签证
+      v.literal("business_visa"), // 商务签证
     ),
     visaTypeName: v.string(), // 免签/落地签/电子签证等
     visaTypeNameEn: v.optional(v.string()),
 
     // Difficulty level
     difficultyLevel: v.union(
-      v.literal('very_easy'), // 非常容易（免签/落地签）
-      v.literal('easy'), // 容易（电子签）
-      v.literal('moderate'), // 中等
-      v.literal('difficult'), // 困难
-      v.literal('very_difficult'), // 非常困难
+      v.literal("very_easy"), // 非常容易（免签/落地签）
+      v.literal("easy"), // 容易（电子签）
+      v.literal("moderate"), // 中等
+      v.literal("difficult"), // 困难
+      v.literal("very_difficult"), // 非常困难
     ),
 
     // Duration and validity
     maxStayDays: v.optional(v.number()), // 最长停留天数
     validityPeriod: v.optional(v.string()), // 有效期，如 "90天" "6个月"
     entryType: v.optional(
-      v.union(v.literal('single'), v.literal('multiple'), v.literal('dual')),
+      v.union(v.literal("single"), v.literal("multiple"), v.literal("dual")),
     ), // 单次/多次入境
 
     // Processing information
@@ -5035,11 +5035,11 @@ export default defineSchema({
     applicationMethods: v.array(
       v.object({
         method: v.union(
-          v.literal('online'), // 在线申请
-          v.literal('embassy'), // 大使馆
-          v.literal('consulate'), // 领事馆
-          v.literal('visa_center'), // 签证中心
-          v.literal('on_arrival'), // 到达时办理
+          v.literal("online"), // 在线申请
+          v.literal("embassy"), // 大使馆
+          v.literal("consulate"), // 领事馆
+          v.literal("visa_center"), // 签证中心
+          v.literal("on_arrival"), // 到达时办理
         ),
         name: v.string(), // 方式名称
         nameEn: v.optional(v.string()),
@@ -5089,22 +5089,22 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_origin', ['originCountryCode'])
-    .index('by_destination', ['destinationCountryCode'])
-    .index('by_origin_destination', [
-      'originCountryCode',
-      'destinationCountryCode',
+    .index("by_origin", ["originCountryCode"])
+    .index("by_destination", ["destinationCountryCode"])
+    .index("by_origin_destination", [
+      "originCountryCode",
+      "destinationCountryCode",
     ])
-    .index('by_visa_type', ['visaType'])
-    .index('by_difficulty', ['difficultyLevel']),
+    .index("by_visa_type", ["visaType"])
+    .index("by_difficulty", ["difficultyLevel"]),
 
   // ============================================
   // User Visa Reminders (用户签证提醒)
   // ============================================
   userVisaReminders: defineTable({
     userId: v.string(), // Auth user ID
-    itineraryId: v.optional(v.id('itineraries')), // 关联行程
-    visaRequirementId: v.optional(v.id('visaRequirements')), // 关联签证要求
+    itineraryId: v.optional(v.id("itineraries")), // 关联行程
+    visaRequirementId: v.optional(v.id("visaRequirements")), // 关联签证要求
 
     // Destination info
     destinationCountryCode: v.string(),
@@ -5116,22 +5116,22 @@ export default defineSchema({
 
     // Visa info
     visaType: v.union(
-      v.literal('visa_free'),
-      v.literal('visa_on_arrival'),
-      v.literal('e_visa'),
-      v.literal('standard_visa'),
-      v.literal('transit_visa'),
-      v.literal('work_visa'),
-      v.literal('student_visa'),
-      v.literal('business_visa'),
+      v.literal("visa_free"),
+      v.literal("visa_on_arrival"),
+      v.literal("e_visa"),
+      v.literal("standard_visa"),
+      v.literal("transit_visa"),
+      v.literal("work_visa"),
+      v.literal("student_visa"),
+      v.literal("business_visa"),
     ),
 
     // Status
     status: v.union(
-      v.literal('pending'), // 待提醒
-      v.literal('sent'), // 已发送
-      v.literal('dismissed'), // 已忽略
-      v.literal('completed'), // 已完成
+      v.literal("pending"), // 待提醒
+      v.literal("sent"), // 已发送
+      v.literal("dismissed"), // 已忽略
+      v.literal("completed"), // 已完成
     ),
 
     // Notes
@@ -5153,19 +5153,19 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_status', ['status'])
-    .index('by_user_status', ['userId', 'status'])
-    .index('by_reminder_date', ['reminderDate']),
+    .index("by_user", ["userId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_status", ["status"])
+    .index("by_user_status", ["userId", "status"])
+    .index("by_reminder_date", ["reminderDate"]),
 
   // ============================================
   // Visa Applications (签证申请跟踪)
   // ============================================
   visaApplications: defineTable({
     userId: v.string(), // Auth user ID
-    visaRequirementId: v.optional(v.id('visaRequirements')), // 关联签证要求
-    itineraryId: v.optional(v.id('itineraries')), // 关联行程
+    visaRequirementId: v.optional(v.id("visaRequirements")), // 关联签证要求
+    itineraryId: v.optional(v.id("itineraries")), // 关联行程
 
     // Destination info
     destinationCountryCode: v.string(),
@@ -5173,23 +5173,23 @@ export default defineSchema({
 
     // Visa type
     visaType: v.union(
-      v.literal('visa_free'),
-      v.literal('visa_on_arrival'),
-      v.literal('e_visa'),
-      v.literal('standard_visa'),
-      v.literal('transit_visa'),
-      v.literal('work_visa'),
-      v.literal('student_visa'),
-      v.literal('business_visa'),
+      v.literal("visa_free"),
+      v.literal("visa_on_arrival"),
+      v.literal("e_visa"),
+      v.literal("standard_visa"),
+      v.literal("transit_visa"),
+      v.literal("work_visa"),
+      v.literal("student_visa"),
+      v.literal("business_visa"),
     ),
 
     // Application method
     applicationMethod: v.union(
-      v.literal('online'),
-      v.literal('embassy'),
-      v.literal('consulate'),
-      v.literal('visa_center'),
-      v.literal('on_arrival'),
+      v.literal("online"),
+      v.literal("embassy"),
+      v.literal("consulate"),
+      v.literal("visa_center"),
+      v.literal("on_arrival"),
     ),
 
     // Dates
@@ -5206,12 +5206,12 @@ export default defineSchema({
 
     // Status
     status: v.union(
-      v.literal('preparing'), // 准备中
-      v.literal('submitted'), // 已提交
-      v.literal('processing'), // 处理中
-      v.literal('approved'), // 已批准
-      v.literal('rejected'), // 已拒绝
-      v.literal('cancelled'), // 已取消
+      v.literal("preparing"), // 准备中
+      v.literal("submitted"), // 已提交
+      v.literal("processing"), // 处理中
+      v.literal("approved"), // 已批准
+      v.literal("rejected"), // 已拒绝
+      v.literal("cancelled"), // 已取消
     ),
 
     // Documents tracking
@@ -5220,9 +5220,9 @@ export default defineSchema({
         v.object({
           name: v.string(),
           status: v.union(
-            v.literal('not_started'),
-            v.literal('in_progress'),
-            v.literal('completed'),
+            v.literal("not_started"),
+            v.literal("in_progress"),
+            v.literal("completed"),
           ),
           notes: v.optional(v.string()),
         }),
@@ -5237,11 +5237,11 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_status', ['status'])
-    .index('by_user_status', ['userId', 'status'])
-    .index('by_destination', ['destinationCountryCode']),
+    .index("by_user", ["userId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_status", ["status"])
+    .index("by_user_status", ["userId", "status"])
+    .index("by_destination", ["destinationCountryCode"]),
 
   // ============================================
   // Visa Centers (签证中心信息)
@@ -5261,10 +5261,10 @@ export default defineSchema({
     name: v.string(), // 中心名称
     nameEn: v.optional(v.string()),
     type: v.union(
-      v.literal('embassy'), // 大使馆
-      v.literal('consulate'), // 领事馆
-      v.literal('visa_center'), // 签证中心
-      v.literal('agency'), // 代理机构
+      v.literal("embassy"), // 大使馆
+      v.literal("consulate"), // 领事馆
+      v.literal("visa_center"), // 签证中心
+      v.literal("agency"), // 代理机构
     ),
 
     // Contact
@@ -5304,12 +5304,12 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_country', ['countryCode'])
-    .index('by_target_country', ['targetCountryCode'])
-    .index('by_country_target', ['countryCode', 'targetCountryCode'])
-    .index('by_city', ['city'])
-    .index('by_type', ['type'])
-    .index('by_active', ['isActive']),
+    .index("by_country", ["countryCode"])
+    .index("by_target_country", ["targetCountryCode"])
+    .index("by_country_target", ["countryCode", "targetCountryCode"])
+    .index("by_city", ["city"])
+    .index("by_type", ["type"])
+    .index("by_active", ["isActive"]),
 
   // ============================================
   // Share Links - Managed share links with permissions
@@ -5317,9 +5317,9 @@ export default defineSchema({
   shareLinks: defineTable({
     // Resource being shared
     resourceType: v.union(
-      v.literal('itinerary'),
-      v.literal('travelGuide'),
-      v.literal('travelNote'),
+      v.literal("itinerary"),
+      v.literal("travelGuide"),
+      v.literal("travelNote"),
     ),
     resourceId: v.string(),
     ownerId: v.string(), // Auth user ID of the owner
@@ -5330,22 +5330,22 @@ export default defineSchema({
 
     // Platform where shared
     platform: v.union(
-      v.literal('wechat'),
-      v.literal('weibo'),
-      v.literal('xiaohongshu'),
-      v.literal('qq'),
-      v.literal('douyin'),
-      v.literal('copy_link'),
-      v.literal('system_share'),
-      v.literal('generic'),
+      v.literal("wechat"),
+      v.literal("weibo"),
+      v.literal("xiaohongshu"),
+      v.literal("qq"),
+      v.literal("douyin"),
+      v.literal("copy_link"),
+      v.literal("system_share"),
+      v.literal("generic"),
     ),
 
     // Access control
     permission: v.union(
-      v.literal('public'), // Anyone with link can view
-      v.literal('unlisted'), // Only people with link can view (not searchable)
-      v.literal('private'), // Only owner and explicitly shared users can view
-      v.literal('password'), // Requires password to view
+      v.literal("public"), // Anyone with link can view
+      v.literal("unlisted"), // Only people with link can view (not searchable)
+      v.literal("private"), // Only owner and explicitly shared users can view
+      v.literal("password"), // Requires password to view
     ),
     password: v.optional(v.string()), // Password for password-protected links
     expiresAt: v.optional(v.number()), // Expiration timestamp
@@ -5368,12 +5368,12 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_share_code', ['shareCode'])
-    .index('by_resource', ['resourceType', 'resourceId'])
-    .index('by_owner', ['ownerId'])
-    .index('by_owner_resource', ['ownerId', 'resourceType'])
-    .index('by_active', ['isActive'])
-    .index('by_expires', ['expiresAt']),
+    .index("by_share_code", ["shareCode"])
+    .index("by_resource", ["resourceType", "resourceId"])
+    .index("by_owner", ["ownerId"])
+    .index("by_owner_resource", ["ownerId", "resourceType"])
+    .index("by_active", ["isActive"])
+    .index("by_expires", ["expiresAt"]),
 
   // ============================================
   // Share Events - Track share actions
@@ -5381,76 +5381,76 @@ export default defineSchema({
   shareEvents: defineTable({
     // Resource being shared
     resourceType: v.union(
-      v.literal('itinerary'),
-      v.literal('travelGuide'),
-      v.literal('travelNote'),
+      v.literal("itinerary"),
+      v.literal("travelGuide"),
+      v.literal("travelNote"),
     ),
     resourceId: v.string(),
 
     // Sharer info
     sharerId: v.optional(v.string()), // Auth user ID (optional for anonymous)
-    shareLinkId: v.optional(v.id('shareLinks')), // Reference to share link if created
+    shareLinkId: v.optional(v.id("shareLinks")), // Reference to share link if created
 
     // Share details
     platform: v.union(
-      v.literal('wechat'),
-      v.literal('weibo'),
-      v.literal('xiaohongshu'),
-      v.literal('qq'),
-      v.literal('douyin'),
-      v.literal('copy_link'),
-      v.literal('system_share'),
-      v.literal('generic'),
+      v.literal("wechat"),
+      v.literal("weibo"),
+      v.literal("xiaohongshu"),
+      v.literal("qq"),
+      v.literal("douyin"),
+      v.literal("copy_link"),
+      v.literal("system_share"),
+      v.literal("generic"),
     ),
     eventType: v.union(
-      v.literal('share'), // Initial share action
-      v.literal('click'), // Link clicked
-      v.literal('view'), // Content viewed
-      v.literal('save'), // Content saved/copied
+      v.literal("share"), // Initial share action
+      v.literal("click"), // Link clicked
+      v.literal("view"), // Content viewed
+      v.literal("save"), // Content saved/copied
     ),
     shareUrl: v.optional(v.string()),
 
     // Timestamp
     createdAt: v.number(),
   })
-    .index('by_resource', ['resourceType', 'resourceId'])
-    .index('by_sharer', ['sharerId'])
-    .index('by_platform', ['platform'])
-    .index('by_event_type', ['eventType'])
-    .index('by_created', ['createdAt'])
-    .index('by_share_link', ['shareLinkId']),
+    .index("by_resource", ["resourceType", "resourceId"])
+    .index("by_sharer", ["sharerId"])
+    .index("by_platform", ["platform"])
+    .index("by_event_type", ["eventType"])
+    .index("by_created", ["createdAt"])
+    .index("by_share_link", ["shareLinkId"]),
 
   // ============================================
   // Share Event Logs - Detailed event tracking
   // ============================================
   shareEventLogs: defineTable({
     // Reference to share link (if applicable)
-    shareLinkId: v.optional(v.id('shareLinks')),
+    shareLinkId: v.optional(v.id("shareLinks")),
 
     // Resource info
     resourceType: v.union(
-      v.literal('itinerary'),
-      v.literal('travelGuide'),
-      v.literal('travelNote'),
+      v.literal("itinerary"),
+      v.literal("travelGuide"),
+      v.literal("travelNote"),
     ),
     resourceId: v.string(),
 
     // Event details
     platform: v.union(
-      v.literal('wechat'),
-      v.literal('weibo'),
-      v.literal('xiaohongshu'),
-      v.literal('qq'),
-      v.literal('douyin'),
-      v.literal('copy_link'),
-      v.literal('system_share'),
-      v.literal('generic'),
+      v.literal("wechat"),
+      v.literal("weibo"),
+      v.literal("xiaohongshu"),
+      v.literal("qq"),
+      v.literal("douyin"),
+      v.literal("copy_link"),
+      v.literal("system_share"),
+      v.literal("generic"),
     ),
     eventType: v.union(
-      v.literal('share'),
-      v.literal('click'),
-      v.literal('view'),
-      v.literal('save'),
+      v.literal("share"),
+      v.literal("click"),
+      v.literal("view"),
+      v.literal("save"),
     ),
 
     // Tracking info (anonymized)
@@ -5461,18 +5461,18 @@ export default defineSchema({
     // Timestamp
     createdAt: v.number(),
   })
-    .index('by_share_link', ['shareLinkId'])
-    .index('by_resource', ['resourceType', 'resourceId'])
-    .index('by_created', ['createdAt'])
-    .index('by_event_type', ['eventType']),
+    .index("by_share_link", ["shareLinkId"])
+    .index("by_resource", ["resourceType", "resourceId"])
+    .index("by_created", ["createdAt"])
+    .index("by_event_type", ["eventType"]),
 
   // ============================================
   // Luggage (行李追踪)
   // ============================================
   luggage: defineTable({
     userId: v.string(), // Clerk user ID
-    flightBookingId: v.optional(v.id('flightBookings')), // Link to flight booking
-    itineraryId: v.optional(v.id('itineraries')), // Link to itinerary
+    flightBookingId: v.optional(v.id("flightBookings")), // Link to flight booking
+    itineraryId: v.optional(v.id("itineraries")), // Link to itinerary
 
     // Luggage identification
     tagNumber: v.optional(v.string()), // Airline luggage tag number
@@ -5481,10 +5481,10 @@ export default defineSchema({
     brand: v.optional(v.string()), // Brand name
     size: v.optional(
       v.union(
-        v.literal('cabin'), // 登机箱
-        v.literal('medium'), // 中型
-        v.literal('large'), // 大型
-        v.literal('oversized'), // 超大
+        v.literal("cabin"), // 登机箱
+        v.literal("medium"), // 中型
+        v.literal("large"), // 大型
+        v.literal("oversized"), // 超大
       ),
     ),
     weight: v.optional(v.number()), // Weight in kg
@@ -5499,14 +5499,14 @@ export default defineSchema({
 
     // Status tracking
     status: v.union(
-      v.literal('checked_in'), // 已托运
-      v.literal('in_transit'), // 运输中
-      v.literal('arrived'), // 已到达
-      v.literal('claimed'), // 已领取
-      v.literal('delayed'), // 延误
-      v.literal('lost'), // 丢失
-      v.literal('found'), // 已找到
-      v.literal('damaged'), // 损坏
+      v.literal("checked_in"), // 已托运
+      v.literal("in_transit"), // 运输中
+      v.literal("arrived"), // 已到达
+      v.literal("claimed"), // 已领取
+      v.literal("delayed"), // 延误
+      v.literal("lost"), // 丢失
+      v.literal("found"), // 已找到
+      v.literal("damaged"), // 损坏
     ),
     lastKnownLocation: v.optional(v.string()), // Last known location
 
@@ -5531,12 +5531,12 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_status', ['userId', 'status'])
-    .index('by_flight_booking', ['flightBookingId'])
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_tag_number', ['tagNumber'])
-    .index('by_status', ['status']),
+    .index("by_user", ["userId"])
+    .index("by_user_status", ["userId", "status"])
+    .index("by_flight_booking", ["flightBookingId"])
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_tag_number", ["tagNumber"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // Luggage Loss Report Templates (行李丢失报告模板)
@@ -5564,7 +5564,7 @@ export default defineSchema({
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index('by_airline_code', ['airlineCode']),
+  }).index("by_airline_code", ["airlineCode"]),
 
   // ============================================
   // Local Events (本地活动/节日)
@@ -5577,7 +5577,7 @@ export default defineSchema({
     descriptionEn: v.optional(v.string()), // 英文描述
 
     // Location
-    cityId: v.id('cities'), // 所在城市
+    cityId: v.id("cities"), // 所在城市
     venue: v.optional(v.string()), // 活动场地
     venueAddress: v.optional(v.string()), // 场地地址
     latitude: v.optional(v.number()), // 经度
@@ -5585,18 +5585,18 @@ export default defineSchema({
 
     // Event Type
     eventType: v.union(
-      v.literal('festival'), // 节日 (春节, 中秋等)
-      v.literal('concert'), // 演唱会/音乐会
-      v.literal('exhibition'), // 展览
-      v.literal('sports'), // 体育赛事
-      v.literal('food'), // 美食节
-      v.literal('cultural'), // 文化活动
-      v.literal('market'), // 集市/市集
-      v.literal('performance'), // 演出/表演
-      v.literal('religious'), // 宗教活动
-      v.literal('seasonal'), // 季节性活动 (赏花, 赏月)
-      v.literal('local_custom'), // 地方习俗
-      v.literal('other'), // 其他
+      v.literal("festival"), // 节日 (春节, 中秋等)
+      v.literal("concert"), // 演唱会/音乐会
+      v.literal("exhibition"), // 展览
+      v.literal("sports"), // 体育赛事
+      v.literal("food"), // 美食节
+      v.literal("cultural"), // 文化活动
+      v.literal("market"), // 集市/市集
+      v.literal("performance"), // 演出/表演
+      v.literal("religious"), // 宗教活动
+      v.literal("seasonal"), // 季节性活动 (赏花, 赏月)
+      v.literal("local_custom"), // 地方习俗
+      v.literal("other"), // 其他
     ),
 
     // Date and Time
@@ -5611,9 +5611,9 @@ export default defineSchema({
     recurrencePattern: v.optional(
       v.object({
         type: v.union(
-          v.literal('yearly'), // 每年
-          v.literal('monthly'), // 每月
-          v.literal('weekly'), // 每周
+          v.literal("yearly"), // 每年
+          v.literal("monthly"), // 每月
+          v.literal("weekly"), // 每周
         ),
         // For lunar calendar events (e.g., Chinese New Year)
         isLunarCalendar: v.optional(v.boolean()),
@@ -5656,10 +5656,10 @@ export default defineSchema({
 
     // Status
     status: v.union(
-      v.literal('upcoming'), // 即将开始
-      v.literal('ongoing'), // 进行中
-      v.literal('ended'), // 已结束
-      v.literal('cancelled'), // 已取消
+      v.literal("upcoming"), // 即将开始
+      v.literal("ongoing"), // 进行中
+      v.literal("ended"), // 已结束
+      v.literal("cancelled"), // 已取消
     ),
     isVerified: v.boolean(), // 是否经过验证
     isFeatured: v.optional(v.boolean()), // 是否为精选活动
@@ -5673,42 +5673,42 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_city', ['cityId'])
-    .index('by_city_type', ['cityId', 'eventType'])
-    .index('by_city_status', ['cityId', 'status'])
-    .index('by_city_dates', ['cityId', 'startDate', 'endDate'])
-    .index('by_type', ['eventType'])
-    .index('by_status', ['status'])
-    .index('by_start_date', ['startDate'])
-    .index('by_featured', ['isFeatured'])
-    .index('by_recurring', ['isRecurring']),
+    .index("by_city", ["cityId"])
+    .index("by_city_type", ["cityId", "eventType"])
+    .index("by_city_status", ["cityId", "status"])
+    .index("by_city_dates", ["cityId", "startDate", "endDate"])
+    .index("by_type", ["eventType"])
+    .index("by_status", ["status"])
+    .index("by_start_date", ["startDate"])
+    .index("by_featured", ["isFeatured"])
+    .index("by_recurring", ["isRecurring"]),
 
   // ============================================
   // Event Favorites (活动收藏)
   // ============================================
   eventFavorites: defineTable({
     userId: v.string(), // Auth user ID
-    eventId: v.id('localEvents'),
+    eventId: v.id("localEvents"),
     notes: v.optional(v.string()), // 用户备注
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_event', ['eventId'])
-    .index('by_user_event', ['userId', 'eventId'])
-    .index('by_user_created', ['userId', 'createdAt']),
+    .index("by_user", ["userId"])
+    .index("by_event", ["eventId"])
+    .index("by_user_event", ["userId", "eventId"])
+    .index("by_user_created", ["userId", "createdAt"]),
 
   // ============================================
   // Event Reminders (活动提醒)
   // ============================================
   eventReminders: defineTable({
     userId: v.string(), // Auth user ID
-    eventId: v.id('localEvents'),
+    eventId: v.id("localEvents"),
 
     // Reminder Settings
     reminderType: v.union(
-      v.literal('event_start'), // 活动开始提醒
-      v.literal('booking_open'), // 开放预约提醒
-      v.literal('custom'), // 自定义时间提醒
+      v.literal("event_start"), // 活动开始提醒
+      v.literal("booking_open"), // 开放预约提醒
+      v.literal("custom"), // 自定义时间提醒
     ),
     reminderTime: v.number(), // Unix timestamp - 提醒时间
     minutesBefore: v.optional(v.number()), // 提前多少分钟提醒
@@ -5726,18 +5726,18 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_event', ['eventId'])
-    .index('by_user_event', ['userId', 'eventId'])
-    .index('by_reminder_time', ['reminderTime'])
-    .index('by_triggered', ['isTriggered'])
-    .index('by_user_triggered', ['userId', 'isTriggered']),
+    .index("by_user", ["userId"])
+    .index("by_event", ["eventId"])
+    .index("by_user_event", ["userId", "eventId"])
+    .index("by_reminder_time", ["reminderTime"])
+    .index("by_triggered", ["isTriggered"])
+    .index("by_user_triggered", ["userId", "isTriggered"]),
 
   // ============================================
   // Event Reviews (活动评价)
   // ============================================
   eventReviews: defineTable({
-    eventId: v.id('localEvents'),
+    eventId: v.id("localEvents"),
     userId: v.string(), // Auth user ID
 
     // Ratings
@@ -5763,34 +5763,34 @@ export default defineSchema({
     // Status
     isVerified: v.boolean(), // 是否已验证参加
     status: v.union(
-      v.literal('pending'), // 待审核
-      v.literal('approved'), // 已通过
-      v.literal('rejected'), // 已拒绝
+      v.literal("pending"), // 待审核
+      v.literal("approved"), // 已通过
+      v.literal("rejected"), // 已拒绝
     ),
 
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_event', ['eventId'])
-    .index('by_user', ['userId'])
-    .index('by_event_user', ['eventId', 'userId'])
-    .index('by_rating', ['rating'])
-    .index('by_event_rating', ['eventId', 'rating'])
-    .index('by_status', ['status']),
+    .index("by_event", ["eventId"])
+    .index("by_user", ["userId"])
+    .index("by_event_user", ["eventId", "userId"])
+    .index("by_rating", ["rating"])
+    .index("by_event_rating", ["eventId", "rating"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // Event Review Votes (评价投票)
   // ============================================
   eventReviewVotes: defineTable({
-    reviewId: v.id('eventReviews'),
+    reviewId: v.id("eventReviews"),
     userId: v.string(),
-    voteType: v.union(v.literal('helpful'), v.literal('not_helpful')),
+    voteType: v.union(v.literal("helpful"), v.literal("not_helpful")),
     createdAt: v.number(),
   })
-    .index('by_review', ['reviewId'])
-    .index('by_user', ['userId'])
-    .index('by_review_user', ['reviewId', 'userId']),
+    .index("by_review", ["reviewId"])
+    .index("by_user", ["userId"])
+    .index("by_review_user", ["reviewId", "userId"]),
 
   // ============================================
   // User Preferences (用户偏好学习)
@@ -5804,40 +5804,40 @@ export default defineSchema({
     // Explicit user preferences (manually set)
     explicitPreferences: v.array(
       v.union(
-        v.literal('food'),
-        v.literal('culture'),
-        v.literal('nature'),
-        v.literal('shopping'),
-        v.literal('nightlife'),
-        v.literal('adventure'),
-        v.literal('relaxation'),
-        v.literal('photography'),
-        v.literal('family'),
-        v.literal('budget'),
-        v.literal('luxury'),
+        v.literal("food"),
+        v.literal("culture"),
+        v.literal("nature"),
+        v.literal("shopping"),
+        v.literal("nightlife"),
+        v.literal("adventure"),
+        v.literal("relaxation"),
+        v.literal("photography"),
+        v.literal("family"),
+        v.literal("budget"),
+        v.literal("luxury"),
       ),
     ),
 
     // Travel style preferences
     travelStyle: v.union(
-      v.literal('adventurous'),
-      v.literal('relaxed'),
-      v.literal('cultural'),
-      v.literal('balanced'),
+      v.literal("adventurous"),
+      v.literal("relaxed"),
+      v.literal("cultural"),
+      v.literal("balanced"),
     ),
 
     // Budget preference
     budgetLevel: v.union(
-      v.literal('budget'),
-      v.literal('moderate'),
-      v.literal('luxury'),
+      v.literal("budget"),
+      v.literal("moderate"),
+      v.literal("luxury"),
     ),
 
     // Pace preference
     pacePreference: v.union(
-      v.literal('slow'),
-      v.literal('moderate'),
-      v.literal('fast'),
+      v.literal("slow"),
+      v.literal("moderate"),
+      v.literal("fast"),
     ),
 
     // Additional preferences
@@ -5851,7 +5851,7 @@ export default defineSchema({
     // Timestamps
     createdAt: v.optional(v.number()),
     lastUpdated: v.number(),
-  }).index('by_user', ['userId']),
+  }).index("by_user", ["userId"]),
 
   // ============================================
   // User Behavior Events (用户行为事件)
@@ -5861,42 +5861,42 @@ export default defineSchema({
 
     // Behavior type
     behaviorType: v.union(
-      v.literal('view'),
-      v.literal('save'),
-      v.literal('unsave'),
-      v.literal('copy'),
-      v.literal('share'),
-      v.literal('like'),
-      v.literal('unlike'),
-      v.literal('search'),
-      v.literal('poi_click'),
-      v.literal('poi_add'),
+      v.literal("view"),
+      v.literal("save"),
+      v.literal("unsave"),
+      v.literal("copy"),
+      v.literal("share"),
+      v.literal("like"),
+      v.literal("unlike"),
+      v.literal("search"),
+      v.literal("poi_click"),
+      v.literal("poi_add"),
     ),
 
     // Target information
     targetType: v.union(
-      v.literal('guide'),
-      v.literal('itinerary'),
-      v.literal('poi'),
-      v.literal('city'),
-      v.literal('search'),
+      v.literal("guide"),
+      v.literal("itinerary"),
+      v.literal("poi"),
+      v.literal("city"),
+      v.literal("search"),
     ),
     targetId: v.string(),
 
     // Associated categories
     categories: v.array(
       v.union(
-        v.literal('food'),
-        v.literal('culture'),
-        v.literal('nature'),
-        v.literal('shopping'),
-        v.literal('nightlife'),
-        v.literal('adventure'),
-        v.literal('relaxation'),
-        v.literal('photography'),
-        v.literal('family'),
-        v.literal('budget'),
-        v.literal('luxury'),
+        v.literal("food"),
+        v.literal("culture"),
+        v.literal("nature"),
+        v.literal("shopping"),
+        v.literal("nightlife"),
+        v.literal("adventure"),
+        v.literal("relaxation"),
+        v.literal("photography"),
+        v.literal("family"),
+        v.literal("budget"),
+        v.literal("luxury"),
       ),
     ),
 
@@ -5906,16 +5906,16 @@ export default defineSchema({
     // Timestamp
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_type', ['userId', 'behaviorType'])
-    .index('by_target', ['targetType', 'targetId'])
-    .index('by_created', ['createdAt']),
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "behaviorType"])
+    .index("by_target", ["targetType", "targetId"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Itinerary Versions (行程版本历史)
   // ============================================
   itineraryVersions: defineTable({
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(), // User who created this version
 
     // Version metadata
@@ -5925,13 +5925,13 @@ export default defineSchema({
     // Snapshot of itinerary at this version
     snapshot: v.object({
       title: v.string(),
-      cityId: v.id('cities'),
+      cityId: v.id("cities"),
       startDate: v.string(), // ISO date string YYYY-MM-DD
       endDate: v.string(),
       visibility: v.union(
-        v.literal('private'),
-        v.literal('team'),
-        v.literal('public'),
+        v.literal("private"),
+        v.literal("team"),
+        v.literal("public"),
       ),
       coverImageUrl: v.optional(v.string()),
       // Days snapshot with items
@@ -5941,16 +5941,16 @@ export default defineSchema({
           date: v.string(),
           items: v.array(
             v.object({
-              poiId: v.id('pois'),
+              poiId: v.id("pois"),
               orderIndex: v.number(),
               startTime: v.optional(v.string()),
               endTime: v.optional(v.string()),
               transportMode: v.union(
-                v.literal('walking'),
-                v.literal('driving'),
-                v.literal('transit'),
-                v.literal('cycling'),
-                v.literal('taxi'),
+                v.literal("walking"),
+                v.literal("driving"),
+                v.literal("transit"),
+                v.literal("cycling"),
+                v.literal("taxi"),
               ),
               notes: v.optional(v.string()),
             }),
@@ -5974,10 +5974,10 @@ export default defineSchema({
     // Timestamps
     createdAt: v.number(), // Unix timestamp
   })
-    .index('by_itinerary', ['itineraryId'])
-    .index('by_itinerary_version', ['itineraryId', 'versionNumber'])
-    .index('by_user', ['userId'])
-    .index('by_created', ['createdAt']),
+    .index("by_itinerary", ["itineraryId"])
+    .index("by_itinerary_version", ["itineraryId", "versionNumber"])
+    .index("by_user", ["userId"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // POI Questions & Answers (Q&A Community) - Extended
@@ -5988,7 +5988,7 @@ export default defineSchema({
    * Users can ask questions about specific points of interest
    */
   poiQuestionsExtended: defineTable({
-    poiId: v.id('pois'), // The POI this question is about
+    poiId: v.id("pois"), // The POI this question is about
     userId: v.string(), // Auth user ID of the question author
 
     // Question content
@@ -6006,14 +6006,14 @@ export default defineSchema({
     viewsCount: v.number(), // Number of views
 
     // Best answer
-    bestAnswerId: v.optional(v.id('poiAnswers')), // Marked best answer
+    bestAnswerId: v.optional(v.id("poiAnswers")), // Marked best answer
     hasBestAnswer: v.boolean(), // Quick flag for filtering
 
     // Status
     status: v.union(
-      v.literal('open'), // Accepting answers
-      v.literal('closed'), // No longer accepting answers
-      v.literal('resolved'), // Has a best answer
+      v.literal("open"), // Accepting answers
+      v.literal("closed"), // No longer accepting answers
+      v.literal("resolved"), // Has a best answer
     ),
     isEdited: v.boolean(),
     isDeleted: v.boolean(),
@@ -6030,24 +6030,24 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
     lastActivityAt: v.number(), // Updated when new answer is posted
   })
-    .index('by_poi', ['poiId'])
-    .index('by_poi_status', ['poiId', 'status'])
-    .index('by_user', ['userId'])
-    .index('by_created', ['createdAt'])
-    .index('by_last_activity', ['lastActivityAt'])
-    .index('by_upvotes', ['upvotesCount'])
-    .index('by_poi_created', ['poiId', 'createdAt'])
-    .searchIndex('search_questions', {
-      searchField: 'title',
-      filterFields: ['poiId', 'status', 'isDeleted'],
+    .index("by_poi", ["poiId"])
+    .index("by_poi_status", ["poiId", "status"])
+    .index("by_user", ["userId"])
+    .index("by_created", ["createdAt"])
+    .index("by_last_activity", ["lastActivityAt"])
+    .index("by_upvotes", ["upvotesCount"])
+    .index("by_poi_created", ["poiId", "createdAt"])
+    .searchIndex("search_questions", {
+      searchField: "title",
+      filterFields: ["poiId", "status", "isDeleted"],
     }),
 
   /**
    * Answers to POI questions - Extended
    */
   poiAnswersExtended: defineTable({
-    questionId: v.id('poiQuestions'), // The question this answers
-    poiId: v.id('pois'), // Denormalized for easier queries
+    questionId: v.id("poiQuestions"), // The question this answers
+    poiId: v.id("pois"), // Denormalized for easier queries
     userId: v.string(), // Auth user ID of the answer author
 
     // Answer content
@@ -6076,47 +6076,47 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_question', ['questionId'])
-    .index('by_question_best', ['questionId', 'isBestAnswer'])
-    .index('by_user', ['userId'])
-    .index('by_poi', ['poiId'])
-    .index('by_created', ['createdAt'])
-    .index('by_upvotes', ['upvotesCount']),
+    .index("by_question", ["questionId"])
+    .index("by_question_best", ["questionId", "isBestAnswer"])
+    .index("by_user", ["userId"])
+    .index("by_poi", ["poiId"])
+    .index("by_created", ["createdAt"])
+    .index("by_upvotes", ["upvotesCount"]),
 
   /**
    * Question votes (upvotes/downvotes)
    * One vote per user per question
    */
   poiQuestionVotes: defineTable({
-    questionId: v.id('poiQuestions'),
+    questionId: v.id("poiQuestions"),
     userId: v.string(), // Auth user ID
-    voteType: v.union(v.literal('up'), v.literal('down')),
+    voteType: v.union(v.literal("up"), v.literal("down")),
     createdAt: v.number(),
   })
-    .index('by_question', ['questionId'])
-    .index('by_user', ['userId'])
-    .index('by_question_user', ['questionId', 'userId']),
+    .index("by_question", ["questionId"])
+    .index("by_user", ["userId"])
+    .index("by_question_user", ["questionId", "userId"]),
 
   /**
    * Answer votes (upvotes/downvotes)
    * One vote per user per answer
    */
   poiAnswerVotes: defineTable({
-    answerId: v.id('poiAnswers'),
+    answerId: v.id("poiAnswers"),
     userId: v.string(), // Auth user ID
-    voteType: v.union(v.literal('up'), v.literal('down')),
+    voteType: v.union(v.literal("up"), v.literal("down")),
     createdAt: v.number(),
   })
-    .index('by_answer', ['answerId'])
-    .index('by_user', ['userId'])
-    .index('by_answer_user', ['answerId', 'userId']),
+    .index("by_answer", ["answerId"])
+    .index("by_user", ["userId"])
+    .index("by_answer_user", ["answerId", "userId"]),
 
   /**
    * Q&A reports for moderation
    */
   poiQAReports: defineTable({
     // Target (either question or answer)
-    targetType: v.union(v.literal('question'), v.literal('answer')),
+    targetType: v.union(v.literal("question"), v.literal("answer")),
     targetId: v.string(), // Question or Answer ID
 
     // Reporter
@@ -6124,21 +6124,21 @@ export default defineSchema({
 
     // Report details
     reason: v.union(
-      v.literal('spam'),
-      v.literal('inappropriate'),
-      v.literal('misleading'),
-      v.literal('off_topic'),
-      v.literal('harassment'),
-      v.literal('other'),
+      v.literal("spam"),
+      v.literal("inappropriate"),
+      v.literal("misleading"),
+      v.literal("off_topic"),
+      v.literal("harassment"),
+      v.literal("other"),
     ),
     description: v.optional(v.string()),
 
     // Status
     status: v.union(
-      v.literal('pending'),
-      v.literal('reviewed'),
-      v.literal('dismissed'),
-      v.literal('actioned'),
+      v.literal("pending"),
+      v.literal("reviewed"),
+      v.literal("dismissed"),
+      v.literal("actioned"),
     ),
     reviewedBy: v.optional(v.string()), // Admin user ID
     reviewedAt: v.optional(v.number()),
@@ -6147,10 +6147,10 @@ export default defineSchema({
     // Timestamps
     createdAt: v.number(),
   })
-    .index('by_target', ['targetType', 'targetId'])
-    .index('by_user', ['userId'])
-    .index('by_status', ['status'])
-    .index('by_created', ['createdAt']),
+    .index("by_target", ["targetType", "targetId"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Content Translations
@@ -6170,14 +6170,14 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_entity', ['entityType', 'entityId'])
-    .index('by_entity_field_language', [
-      'entityType',
-      'entityId',
-      'field',
-      'language',
+    .index("by_entity", ["entityType", "entityId"])
+    .index("by_entity_field_language", [
+      "entityType",
+      "entityId",
+      "field",
+      "language",
     ])
-    .index('by_type', ['entityType']),
+    .index("by_type", ["entityType"]),
 
   // ============================================
   // OTP Authentication (Phone Login)
@@ -6191,7 +6191,7 @@ export default defineSchema({
     code: v.string(),
     attempts: v.number(),
     expiresAt: v.number(), // Unix timestamp in milliseconds
-  }).index('by_phone', ['phone']),
+  }).index("by_phone", ["phone"]),
 
   /**
    * Rate limiting for OTP and other operations
@@ -6200,7 +6200,7 @@ export default defineSchema({
     key: v.string(), // e.g., "hourly:{phone}" or "daily:{phone}"
     count: v.number(),
     expiresAt: v.number(), // Unix timestamp in milliseconds
-  }).index('by_key', ['key']),
+  }).index("by_key", ["key"]),
 
   // ============================================
   // Food Reviews & Collections
@@ -6210,7 +6210,7 @@ export default defineSchema({
    * Food reviews for restaurants
    */
   foodReviews: defineTable({
-    restaurantId: v.id('pois'),
+    restaurantId: v.id("pois"),
     userId: v.string(),
     rating: v.number(),
     title: v.optional(v.string()),
@@ -6226,35 +6226,35 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_restaurant', ['restaurantId'])
-    .index('by_restaurant_user', ['restaurantId', 'userId'])
-    .index('by_user', ['userId']),
+    .index("by_restaurant", ["restaurantId"])
+    .index("by_restaurant_user", ["restaurantId", "userId"])
+    .index("by_user", ["userId"]),
 
   /**
    * Tracks users marking food reviews as helpful
    */
   foodReviewHelpful: defineTable({
-    reviewId: v.id('foodReviews'),
+    reviewId: v.id("foodReviews"),
     userId: v.string(),
     createdAt: v.number(),
   })
-    .index('by_review', ['reviewId'])
-    .index('by_review_user', ['reviewId', 'userId'])
-    .index('by_user', ['userId']),
+    .index("by_review", ["reviewId"])
+    .index("by_review_user", ["reviewId", "userId"])
+    .index("by_user", ["userId"]),
 
   /**
    * User's favorite restaurants
    */
   foodFavorites: defineTable({
     userId: v.string(),
-    restaurantId: v.id('pois'),
-    collectionId: v.optional(v.id('foodCollections')),
+    restaurantId: v.id("pois"),
+    collectionId: v.optional(v.id("foodCollections")),
     notes: v.optional(v.string()),
     createdAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_user_restaurant', ['userId', 'restaurantId'])
-    .index('by_collection', ['collectionId']),
+    .index("by_user", ["userId"])
+    .index("by_user_restaurant", ["userId", "restaurantId"])
+    .index("by_collection", ["collectionId"]),
 
   /**
    * Food collections for organizing favorite restaurants
@@ -6269,8 +6269,8 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('by_user', ['userId'])
-    .index('by_public', ['isPublic']),
+    .index("by_user", ["userId"])
+    .index("by_public", ["isPublic"]),
 
   // ============================================
   // Currency Rates Cache (汇率缓存)
@@ -6284,8 +6284,8 @@ export default defineSchema({
     rates: v.any(), // Record<string, number> - rates for all target currencies
     fetchedAt: v.number(), // Unix timestamp in milliseconds
   })
-    .index('by_base', ['base'])
-    .index('by_fetched_at', ['fetchedAt']),
+    .index("by_base", ["base"])
+    .index("by_fetched_at", ["fetchedAt"]),
 
   /**
    * Cached exchange rate history for currency pairs
@@ -6304,13 +6304,13 @@ export default defineSchema({
         }),
       ),
       change: v.number(), // Percentage change over the period
-      trend: v.union(v.literal('up'), v.literal('down'), v.literal('stable')),
+      trend: v.union(v.literal("up"), v.literal("down"), v.literal("stable")),
     }),
     fetchedAt: v.number(), // Unix timestamp in milliseconds
   })
-    .index('by_pair', ['base', 'target'])
-    .index('by_pair_days', ['base', 'target', 'days'])
-    .index('by_fetched_at', ['fetchedAt']),
+    .index("by_pair", ["base", "target"])
+    .index("by_pair_days", ["base", "target", "days"])
+    .index("by_fetched_at", ["fetchedAt"]),
 
   // ============================================
   // Agent Sessions (LangGraph Memory)
@@ -6319,23 +6319,23 @@ export default defineSchema({
     sessionId: v.string(), // Unique session identifier
     userId: v.optional(v.string()), // Auth user ID (optional for anonymous)
     sessionType: v.union(
-      v.literal('chat'), // General chat
-      v.literal('travel_plan'), // Travel planning session
-      v.literal('enrichment'), // Content enrichment task
+      v.literal("chat"), // General chat
+      v.literal("travel_plan"), // Travel planning session
+      v.literal("enrichment"), // Content enrichment task
     ),
     status: v.union(
-      v.literal('active'),
-      v.literal('paused'), // Waiting for user input (interrupt)
-      v.literal('completed'),
-      v.literal('expired'),
+      v.literal("active"),
+      v.literal("paused"), // Waiting for user input (interrupt)
+      v.literal("completed"),
+      v.literal("expired"),
     ),
     messages: v.array(
       v.object({
         role: v.union(
-          v.literal('human'),
-          v.literal('ai'),
-          v.literal('system'),
-          v.literal('tool'),
+          v.literal("human"),
+          v.literal("ai"),
+          v.literal("system"),
+          v.literal("tool"),
         ),
         content: v.string(),
         toolCalls: v.optional(v.any()), // Tool call info if role is 'tool'
@@ -6352,11 +6352,11 @@ export default defineSchema({
     updatedAt: v.number(),
     expiresAt: v.optional(v.number()), // Optional session expiry
   })
-    .index('by_session', ['sessionId'])
-    .index('by_user', ['userId'])
-    .index('by_user_type', ['userId', 'sessionType'])
-    .index('by_status', ['status'])
-    .index('by_created', ['createdAt']),
+    .index("by_session", ["sessionId"])
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "sessionType"])
+    .index("by_status", ["status"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Agent Checkpoints (LangGraph State Persistence)
@@ -6375,10 +6375,10 @@ export default defineSchema({
     metadata: v.optional(v.any()),
     createdAt: v.number(),
   })
-    .index('by_thread', ['threadId'])
-    .index('by_thread_ns', ['threadId', 'checkpointNs'])
-    .index('by_thread_ns_id', ['threadId', 'checkpointNs', 'checkpointId'])
-    .index('by_created', ['createdAt']),
+    .index("by_thread", ["threadId"])
+    .index("by_thread_ns", ["threadId", "checkpointNs"])
+    .index("by_thread_ns_id", ["threadId", "checkpointNs", "checkpointId"])
+    .index("by_created", ["createdAt"]),
 
   // ============================================
   // Mafengwo Destinations (马蜂窝目的地)
@@ -6416,9 +6416,9 @@ export default defineSchema({
     crawledAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_mdd_id', ['mddId'])
-    .index('by_name', ['name'])
-    .index('by_country', ['country']),
+    .index("by_mdd_id", ["mddId"])
+    .index("by_name", ["name"])
+    .index("by_country", ["country"]),
 
   // ============================================
   // Mafengwo POIs (马蜂窝景点/餐厅/酒店)
@@ -6431,12 +6431,12 @@ export default defineSchema({
     name: v.string(),
     nameEn: v.optional(v.string()),
     category: v.union(
-      v.literal('attraction'),
-      v.literal('restaurant'),
-      v.literal('hotel'),
-      v.literal('shopping'),
-      v.literal('entertainment'),
-      v.literal('transport'),
+      v.literal("attraction"),
+      v.literal("restaurant"),
+      v.literal("hotel"),
+      v.literal("shopping"),
+      v.literal("entertainment"),
+      v.literal("transport"),
     ),
     // Destination reference
     destinationId: v.optional(v.string()),
@@ -6482,12 +6482,12 @@ export default defineSchema({
     crawledAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_poi_id', ['poiId'])
-    .index('by_name', ['name'])
-    .index('by_category', ['category'])
-    .index('by_destination', ['destinationId'])
-    .index('by_destination_category', ['destinationId', 'category'])
-    .index('by_rating', ['rating']),
+    .index("by_poi_id", ["poiId"])
+    .index("by_name", ["name"])
+    .index("by_category", ["category"])
+    .index("by_destination", ["destinationId"])
+    .index("by_destination_category", ["destinationId", "category"])
+    .index("by_rating", ["rating"]),
 
   // ============================================
   // Mafengwo Guides (马蜂窝攻略)
@@ -6533,10 +6533,10 @@ export default defineSchema({
     crawledAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_guide_id', ['guideId'])
-    .index('by_destination', ['destinationId'])
-    .index('by_quality', ['qualityScore'])
-    .index('by_views', ['viewsCount']),
+    .index("by_guide_id", ["guideId"])
+    .index("by_destination", ["destinationId"])
+    .index("by_quality", ["qualityScore"])
+    .index("by_views", ["viewsCount"]),
 
   // ============================================
   // Mafengwo Q&A (马蜂窝问答)
@@ -6574,9 +6574,9 @@ export default defineSchema({
     // Metadata
     crawledAt: v.number(),
   })
-    .index('by_question_id', ['questionId'])
-    .index('by_destination', ['destinationId'])
-    .index('by_answers', ['answersCount']),
+    .index("by_question_id", ["questionId"])
+    .index("by_destination", ["destinationId"])
+    .index("by_answers", ["answersCount"]),
 
   // ============================================
   // Mafengwo Reviews (马蜂窝评论)
@@ -6605,9 +6605,9 @@ export default defineSchema({
     // Metadata
     crawledAt: v.number(),
   })
-    .index('by_review_id', ['reviewId'])
-    .index('by_poi', ['poiExternalId'])
-    .index('by_rating', ['rating']),
+    .index("by_review_id", ["reviewId"])
+    .index("by_poi", ["poiExternalId"])
+    .index("by_rating", ["rating"]),
 
   // ============================================
   // Mafengwo Rankings (马蜂窝榜单)
@@ -6618,11 +6618,11 @@ export default defineSchema({
     sourceUrl: v.string(),
     // Type
     rankingType: v.union(
-      v.literal('must_visit'),
-      v.literal('food'),
-      v.literal('hotel'),
-      v.literal('shopping'),
-      v.literal('hidden_gem'),
+      v.literal("must_visit"),
+      v.literal("food"),
+      v.literal("hotel"),
+      v.literal("shopping"),
+      v.literal("hidden_gem"),
     ),
     title: v.string(),
     // Destination reference
@@ -6646,10 +6646,10 @@ export default defineSchema({
     crawledAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_ranking_id', ['rankingId'])
-    .index('by_destination', ['destinationId'])
-    .index('by_type', ['rankingType'])
-    .index('by_destination_type', ['destinationId', 'rankingType']),
+    .index("by_ranking_id", ["rankingId"])
+    .index("by_destination", ["destinationId"])
+    .index("by_type", ["rankingType"])
+    .index("by_destination_type", ["destinationId", "rankingType"]),
 
   // ============================================
   // Mafengwo Crawl Tasks (马蜂窝爬取任务)
@@ -6657,18 +6657,18 @@ export default defineSchema({
   mafengwoCrawlTasks: defineTable({
     // Task type
     taskType: v.union(
-      v.literal('destination_list'),
-      v.literal('destination_detail'),
-      v.literal('poi_list'),
-      v.literal('poi_detail'),
-      v.literal('guide_list'),
-      v.literal('guide_detail'),
-      v.literal('travel_note_list'),
-      v.literal('travel_note_detail'),
-      v.literal('qa_list'),
-      v.literal('qa_detail'),
-      v.literal('ranking'),
-      v.literal('review_list'),
+      v.literal("destination_list"),
+      v.literal("destination_detail"),
+      v.literal("poi_list"),
+      v.literal("poi_detail"),
+      v.literal("guide_list"),
+      v.literal("guide_detail"),
+      v.literal("travel_note_list"),
+      v.literal("travel_note_detail"),
+      v.literal("qa_list"),
+      v.literal("qa_detail"),
+      v.literal("ranking"),
+      v.literal("review_list"),
     ),
     // Task config
     config: v.object({
@@ -6684,11 +6684,11 @@ export default defineSchema({
     }),
     // Status
     status: v.union(
-      v.literal('pending'),
-      v.literal('running'),
-      v.literal('completed'),
-      v.literal('failed'),
-      v.literal('cancelled'),
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("cancelled"),
     ),
     priority: v.number(),
     // Results
@@ -6703,9 +6703,9 @@ export default defineSchema({
     startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
   })
-    .index('by_status', ['status'])
-    .index('by_type', ['taskType'])
-    .index('by_priority', ['priority'])
-    .index('by_status_priority', ['status', 'priority'])
-    .index('by_next_retry', ['status', 'nextRetryAt']),
+    .index("by_status", ["status"])
+    .index("by_type", ["taskType"])
+    .index("by_priority", ["priority"])
+    .index("by_status_priority", ["status", "priority"])
+    .index("by_next_retry", ["status", "nextRetryAt"]),
 });

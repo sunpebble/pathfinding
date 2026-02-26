@@ -41,19 +41,19 @@ src/
 项目使用 [Vitest](https://vitest.dev/) 作为测试框架。
 
 ```typescript
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
-describe('ModuleName', () => {
-  describe('functionName', () => {
-    it('should do something specific', () => {
+describe("ModuleName", () => {
+  describe("functionName", () => {
+    it("should do something specific", () => {
       // Arrange
-      const input = 'test';
-      
+      const input = "test";
+
       // Act
       const result = functionName(input);
-      
+
       // Assert
-      expect(result).toBe('expected');
+      expect(result).toBe("expected");
     });
   });
 });
@@ -70,7 +70,7 @@ const { MockClass } = vi.hoisted(() => {
   return { MockClass };
 });
 
-vi.mock('module-path', () => ({
+vi.mock("module-path", () => ({
   ClassName: MockClass,
 }));
 ```
@@ -78,7 +78,7 @@ vi.mock('module-path', () => ({
 #### 环境变量隔离
 
 ```typescript
-describe('Module with env vars', () => {
+describe("Module with env vars", () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -90,10 +90,10 @@ describe('Module with env vars', () => {
     vi.clearAllMocks();
   });
 
-  it('should use default when env not set', async () => {
+  it("should use default when env not set", async () => {
     delete process.env.SOME_VAR;
     vi.resetModules();
-    const { someFunction } = await import('../module.js');
+    const { someFunction } = await import("../module.js");
     // ...
   });
 });
@@ -118,9 +118,9 @@ pnpm test --coverage
 测试独立函数和模块：
 
 ```typescript
-it('should parse URL correctly', () => {
-  const result = parseUrl('https://example.com/path');
-  expect(result.host).toBe('example.com');
+it("should parse URL correctly", () => {
+  const result = parseUrl("https://example.com/path");
+  expect(result.host).toBe("example.com");
 });
 ```
 
@@ -129,11 +129,11 @@ it('should parse URL correctly', () => {
 测试模块间交互，使用 mock 隔离外部依赖：
 
 ```typescript
-it('should clean content with LLM', async () => {
-  mockLLM.invoke.mockResolvedValue({ content: '...' });
-  
+it("should clean content with LLM", async () => {
+  mockLLM.invoke.mockResolvedValue({ content: "..." });
+
   const result = await cleanContentWithLLM(rawData);
-  
+
   expect(result.content).toBeDefined();
   expect(mockLLM.invoke).toHaveBeenCalled();
 });
@@ -144,16 +144,16 @@ it('should clean content with LLM', async () => {
 #### 错误处理测试
 
 ```typescript
-it('should throw error when API key missing', () => {
+it("should throw error when API key missing", () => {
   delete process.env.API_KEY;
-  expect(() => createClient()).toThrow('API_KEY is not set');
+  expect(() => createClient()).toThrow("API_KEY is not set");
 });
 
-it('should handle errors gracefully', async () => {
-  mockFetch.mockRejectedValue(new Error('Network error'));
-  
+it("should handle errors gracefully", async () => {
+  mockFetch.mockRejectedValue(new Error("Network error"));
+
   const result = await fetchData();
-  
+
   expect(result).toBeNull();
 });
 ```
@@ -161,11 +161,11 @@ it('should handle errors gracefully', async () => {
 #### 异步测试
 
 ```typescript
-it('should fetch data successfully', async () => {
+it("should fetch data successfully", async () => {
   mockFetch.mockResolvedValue({ ok: true, json: async () => data });
-  
+
   const result = await fetchData();
-  
+
   expect(result).toEqual(data);
 });
 ```

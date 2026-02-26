@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import type { CreateCrawlJobInput } from '@/lib/api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { createCrawlJob } from '@/lib/api';
+import type { CreateCrawlJobInput } from "@/lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { createCrawlJob } from "@/lib/api";
 
 export default function CreateJobPage() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function CreateJobPage() {
   const mutation = useMutation({
     mutationFn: createCrawlJob,
     onSuccess: (job) => {
-      queryClient.invalidateQueries({ queryKey: ['crawl-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ["crawl-jobs"] });
       router.push(`/jobs/${job.id}`);
     },
     onError: (err: Error) => {
@@ -30,26 +30,26 @@ export default function CreateJobPage() {
 
     const formData = new FormData(e.currentTarget);
 
-    const categories = formData.get('categories') as string;
-    const cities = formData.get('cities') as string;
+    const categories = formData.get("categories") as string;
+    const cities = formData.get("cities") as string;
 
     const input: CreateCrawlJobInput = {
-      name: formData.get('name') as string,
-      platform: formData.get('platform') as string,
-      job_type: (formData.get('job_type') as string) || 'full',
-      schedule_cron: (formData.get('schedule_cron') as string) || undefined,
+      name: formData.get("name") as string,
+      platform: formData.get("platform") as string,
+      job_type: (formData.get("job_type") as string) || "full",
+      schedule_cron: (formData.get("schedule_cron") as string) || undefined,
       config: {
         categories: categories
-          ? categories.split(',').map(c => c.trim())
+          ? categories.split(",").map((c) => c.trim())
           : undefined,
         geographic_scope: cities
-          ? { cities: cities.split(',').map(c => c.trim()) }
+          ? { cities: cities.split(",").map((c) => c.trim()) }
           : undefined,
         rate_limit: {
           requests_per_second:
-            Number.parseFloat(formData.get('rate_limit_rps') as string) || 1,
+            Number.parseFloat(formData.get("rate_limit_rps") as string) || 1,
           max_concurrent:
-            Number.parseInt(formData.get('max_concurrent') as string) || 5,
+            Number.parseInt(formData.get("max_concurrent") as string) || 5,
         },
       },
     };

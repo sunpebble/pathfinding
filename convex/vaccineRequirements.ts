@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Vaccine Requirements - Destination Vaccination Recommendations
@@ -10,13 +10,14 @@ import { mutation, query } from './_generated/server';
 
 // List vaccine requirements for a destination
 export const listByDestination = query({
-  args: { destinationId: v.id('cities') },
+  args: { destinationId: v.id("cities") },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('vaccineRequirements')
-      .withIndex('by_destination', q =>
-        q.eq('destinationId', args.destinationId))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("vaccineRequirements")
+      .withIndex("by_destination", (q) =>
+        q.eq("destinationId", args.destinationId),
+      )
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
@@ -26,8 +27,8 @@ export const listActive = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db
-      .query('vaccineRequirements')
-      .withIndex('by_active', q => q.eq('isActive', true))
+      .query("vaccineRequirements")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
       .collect();
   },
 });
@@ -36,16 +37,16 @@ export const listActive = query({
 export const listByRequirement = query({
   args: {
     requirement: v.union(
-      v.literal('required'),
-      v.literal('recommended'),
-      v.literal('consider'),
+      v.literal("required"),
+      v.literal("recommended"),
+      v.literal("consider"),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('vaccineRequirements')
-      .withIndex('by_requirement', q => q.eq('requirement', args.requirement))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("vaccineRequirements")
+      .withIndex("by_requirement", (q) => q.eq("requirement", args.requirement))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
@@ -55,16 +56,16 @@ export const listByVaccineName = query({
   args: { vaccineName: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('vaccineRequirements')
-      .withIndex('by_vaccine', q => q.eq('vaccineName', args.vaccineName))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("vaccineRequirements")
+      .withIndex("by_vaccine", (q) => q.eq("vaccineName", args.vaccineName))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
 
 // Get a single vaccine requirement by ID
 export const getById = query({
-  args: { id: v.id('vaccineRequirements') },
+  args: { id: v.id("vaccineRequirements") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -73,14 +74,14 @@ export const getById = query({
 // Create a new vaccine requirement
 export const create = mutation({
   args: {
-    destinationId: v.id('cities'),
+    destinationId: v.id("cities"),
     destinationName: v.string(),
     vaccineName: v.string(),
     vaccineNameEn: v.optional(v.string()),
     requirement: v.union(
-      v.literal('required'),
-      v.literal('recommended'),
-      v.literal('consider'),
+      v.literal("required"),
+      v.literal("recommended"),
+      v.literal("consider"),
     ),
     description: v.string(),
     recommendedTiming: v.optional(v.string()),
@@ -92,7 +93,7 @@ export const create = mutation({
     sourceUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('vaccineRequirements', {
+    return await ctx.db.insert("vaccineRequirements", {
       ...args,
       lastUpdated: Date.now(),
       isActive: true,
@@ -103,14 +104,14 @@ export const create = mutation({
 // Update a vaccine requirement
 export const update = mutation({
   args: {
-    id: v.id('vaccineRequirements'),
+    id: v.id("vaccineRequirements"),
     vaccineName: v.optional(v.string()),
     vaccineNameEn: v.optional(v.string()),
     requirement: v.optional(
       v.union(
-        v.literal('required'),
-        v.literal('recommended'),
-        v.literal('consider'),
+        v.literal("required"),
+        v.literal("recommended"),
+        v.literal("consider"),
       ),
     ),
     description: v.optional(v.string()),
@@ -138,7 +139,7 @@ export const update = mutation({
 
 // Delete a vaccine requirement (soft delete)
 export const remove = mutation({
-  args: { id: v.id('vaccineRequirements') },
+  args: { id: v.id("vaccineRequirements") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, { isActive: false });
   },

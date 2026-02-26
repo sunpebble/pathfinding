@@ -1,8 +1,8 @@
-import type { Id } from './_generated/dataModel';
-import type { MutationCtx, QueryCtx } from './_generated/server';
-import { v } from 'convex/values';
-import { editOperationChangesValidator } from '../packages/convex-client/src/validators/index.js';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { v } from "convex/values";
+import { editOperationChangesValidator } from "../packages/convex-client/src/validators/index.js";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Edit Operations - Conflict Resolution and Operation Tracking
@@ -11,29 +11,29 @@ import { mutation, query } from './_generated/server';
 
 // Operation type validators
 const operationTypeValidator = v.union(
-  v.literal('create'),
-  v.literal('update'),
-  v.literal('delete'),
-  v.literal('reorder'),
+  v.literal("create"),
+  v.literal("update"),
+  v.literal("delete"),
+  v.literal("reorder"),
 );
 
 const targetTypeValidator = v.union(
-  v.literal('itinerary'),
-  v.literal('day'),
-  v.literal('item'),
+  v.literal("itinerary"),
+  v.literal("day"),
+  v.literal("item"),
 );
 
 const _statusValidator = v.union(
-  v.literal('pending'),
-  v.literal('applied'),
-  v.literal('conflicted'),
-  v.literal('rejected'),
+  v.literal("pending"),
+  v.literal("applied"),
+  v.literal("conflicted"),
+  v.literal("rejected"),
 );
 
 const resolutionValidator = v.union(
-  v.literal('accept_mine'),
-  v.literal('accept_theirs'),
-  v.literal('merge'),
+  v.literal("accept_mine"),
+  v.literal("accept_theirs"),
+  v.literal("merge"),
 );
 
 /**
@@ -41,20 +41,21 @@ const resolutionValidator = v.union(
  */
 async function getCurrentVersion(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>,
+  itineraryId: Id<"itineraries">,
   targetType: string,
   targetId: string,
 ): Promise<number> {
   const lastOperation = await ctx.db
-    .query('editOperations')
-    .withIndex('by_itinerary_timestamp', q =>
-      q.eq('itineraryId', itineraryId))
-    .order('desc')
-    .filter(q =>
+    .query("editOperations")
+    .withIndex("by_itinerary_timestamp", (q) =>
+      q.eq("itineraryId", itineraryId),
+    )
+    .order("desc")
+    .filter((q) =>
       q.and(
-        q.eq(q.field('targetType'), targetType),
-        q.eq(q.field('targetId'), targetId),
-        q.eq(q.field('status'), 'applied'),
+        q.eq(q.field("targetType"), targetType),
+        q.eq(q.field("targetId"), targetId),
+        q.eq(q.field("status"), "applied"),
       ),
     )
     .first();
@@ -67,23 +68,24 @@ async function getCurrentVersion(
  */
 async function checkForConflicts(
   ctx: QueryCtx | MutationCtx,
-  itineraryId: Id<'itineraries'>,
+  itineraryId: Id<"itineraries">,
   targetType: string,
   targetId: string,
   baseVersion: number,
   excludeUserId: string,
 ): Promise<boolean> {
   const conflictingOps = await ctx.db
-    .query('editOperations')
-    .withIndex('by_itinerary_timestamp', q =>
-      q.eq('itineraryId', itineraryId))
-    .filter(q =>
+    .query("editOperations")
+    .withIndex("by_itinerary_timestamp", (q) =>
+      q.eq("itineraryId", itineraryId),
+    )
+    .filter((q) =>
       q.and(
-        q.eq(q.field('targetType'), targetType),
-        q.eq(q.field('targetId'), targetId),
-        q.gte(q.field('version'), baseVersion),
-        q.neq(q.field('userId'), excludeUserId),
-        q.eq(q.field('status'), 'applied'),
+        q.eq(q.field("targetType"), targetType),
+        q.eq(q.field("targetId"), targetId),
+        q.gte(q.field("version"), baseVersion),
+        q.neq(q.field("userId"), excludeUserId),
+        q.eq(q.field("status"), "applied"),
       ),
     )
     .collect();
@@ -100,17 +102,18 @@ async function checkForConflicts(
  */
 export const getRecentOperations = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50;
 
     const operations = await ctx.db
-      .query('editOperations')
-      .withIndex('by_itinerary_timestamp', q =>
-        q.eq('itineraryId', args.itineraryId))
-      .order('desc')
+      .query("editOperations")
+      .withIndex("by_itinerary_timestamp", (q) =>
+        q.eq("itineraryId", args.itineraryId),
+      )
+      .order("desc")
       .take(limit);
 
     return operations;
@@ -121,12 +124,13 @@ export const getRecentOperations = query({
  * Get pending operations for conflict resolution
  */
 export const getPendingOperations = query({
-  args: { itineraryId: v.id('itineraries') },
+  args: { itineraryId: v.id("itineraries") },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('editOperations')
-      .withIndex('by_itinerary_status', q =>
-        q.eq('itineraryId', args.itineraryId).eq('status', 'pending'))
+      .query("editOperations")
+      .withIndex("by_itinerary_status", (q) =>
+        q.eq("itineraryId", args.itineraryId).eq("status", "pending"),
+      )
       .collect();
   },
 });
@@ -135,12 +139,13 @@ export const getPendingOperations = query({
  * Get conflicted operations that need resolution
  */
 export const getConflictedOperations = query({
-  args: { itineraryId: v.id('itineraries') },
+  args: { itineraryId: v.id("itineraries") },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('editOperations')
-      .withIndex('by_itinerary_status', q =>
-        q.eq('itineraryId', args.itineraryId).eq('status', 'conflicted'))
+      .query("editOperations")
+      .withIndex("by_itinerary_status", (q) =>
+        q.eq("itineraryId", args.itineraryId).eq("status", "conflicted"),
+      )
       .collect();
   },
 });
@@ -150,7 +155,7 @@ export const getConflictedOperations = query({
  */
 export const getOperationsByUser = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     limit: v.optional(v.number()),
   },
@@ -158,11 +163,12 @@ export const getOperationsByUser = query({
     const limit = args.limit ?? 20;
 
     const operations = await ctx.db
-      .query('editOperations')
-      .withIndex('by_itinerary_timestamp', q =>
-        q.eq('itineraryId', args.itineraryId))
-      .order('desc')
-      .filter(q => q.eq(q.field('userId'), args.userId))
+      .query("editOperations")
+      .withIndex("by_itinerary_timestamp", (q) =>
+        q.eq("itineraryId", args.itineraryId),
+      )
+      .order("desc")
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .take(limit);
 
     return operations;
@@ -178,7 +184,7 @@ export const getOperationsByUser = query({
  */
 export const recordOperation = mutation({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     userId: v.string(),
     operationType: operationTypeValidator,
     targetType: targetTypeValidator,
@@ -209,9 +215,9 @@ export const recordOperation = mutation({
     );
 
     // Determine initial status
-    const status = hasConflict ? 'conflicted' : 'pending';
+    const status = hasConflict ? "conflicted" : "pending";
 
-    const operationId = await ctx.db.insert('editOperations', {
+    const operationId = await ctx.db.insert("editOperations", {
       itineraryId: args.itineraryId,
       userId: args.userId,
       operationType: args.operationType,
@@ -236,23 +242,23 @@ export const recordOperation = mutation({
  */
 export const applyOperation = mutation({
   args: {
-    operationId: v.id('editOperations'),
+    operationId: v.id("editOperations"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const operation = await ctx.db.get(args.operationId);
     if (!operation) {
-      throw new Error('Operation not found');
+      throw new Error("Operation not found");
     }
 
-    if (operation.status !== 'pending') {
+    if (operation.status !== "pending") {
       throw new Error(
         `Cannot apply operation with status: ${operation.status}`,
       );
     }
 
     await ctx.db.patch(args.operationId, {
-      status: 'applied',
+      status: "applied",
     });
 
     return { success: true };
@@ -264,18 +270,18 @@ export const applyOperation = mutation({
  */
 export const rejectOperation = mutation({
   args: {
-    operationId: v.id('editOperations'),
+    operationId: v.id("editOperations"),
     userId: v.string(),
     reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const operation = await ctx.db.get(args.operationId);
     if (!operation) {
-      throw new Error('Operation not found');
+      throw new Error("Operation not found");
     }
 
     await ctx.db.patch(args.operationId, {
-      status: 'rejected',
+      status: "rejected",
     });
 
     return { success: true };
@@ -287,23 +293,23 @@ export const rejectOperation = mutation({
  */
 export const resolveConflict = mutation({
   args: {
-    operationId: v.id('editOperations'),
+    operationId: v.id("editOperations"),
     userId: v.string(),
     resolution: resolutionValidator,
   },
   handler: async (ctx, args) => {
     const operation = await ctx.db.get(args.operationId);
     if (!operation) {
-      throw new Error('Operation not found');
+      throw new Error("Operation not found");
     }
 
-    if (operation.status !== 'conflicted') {
-      throw new Error('Operation is not in conflicted state');
+    if (operation.status !== "conflicted") {
+      throw new Error("Operation is not in conflicted state");
     }
 
     const now = Date.now();
-    const newStatus
-      = args.resolution === 'accept_theirs' ? 'rejected' : 'applied';
+    const newStatus =
+      args.resolution === "accept_theirs" ? "rejected" : "applied";
 
     await ctx.db.patch(args.operationId, {
       status: newStatus,
@@ -323,7 +329,7 @@ export const resolveConflict = mutation({
  */
 export const cleanupOldOperations = mutation({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
     daysToKeep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -331,16 +337,17 @@ export const cleanupOldOperations = mutation({
     const cutoffTime = Date.now() - daysToKeep * 24 * 60 * 60 * 1000;
 
     const oldOperations = await ctx.db
-      .query('editOperations')
-      .withIndex('by_itinerary_timestamp', q =>
-        q.eq('itineraryId', args.itineraryId))
-      .filter(q => q.lt(q.field('timestamp'), cutoffTime))
+      .query("editOperations")
+      .withIndex("by_itinerary_timestamp", (q) =>
+        q.eq("itineraryId", args.itineraryId),
+      )
+      .filter((q) => q.lt(q.field("timestamp"), cutoffTime))
       .collect();
 
     let deletedCount = 0;
     for (const op of oldOperations) {
       // Only delete applied or rejected operations
-      if (op.status === 'applied' || op.status === 'rejected') {
+      if (op.status === "applied" || op.status === "rejected") {
         await ctx.db.delete(op._id);
         deletedCount++;
       }

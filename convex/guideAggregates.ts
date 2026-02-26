@@ -5,12 +5,12 @@
  * without requiring full table scans.
  */
 
-import type { DataModel, Doc } from './_generated/dataModel';
-import type { MutationCtx } from './_generated/server';
-import { TableAggregate } from '@convex-dev/aggregate';
-import { v } from 'convex/values';
-import { components } from './_generated/api';
-import { query } from './_generated/server';
+import type { DataModel, Doc } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
+import { TableAggregate } from "@convex-dev/aggregate";
+import { v } from "convex/values";
+import { components } from "./_generated/api";
+import { query } from "./_generated/server";
 
 // ============================================================================
 // Aggregate Definitions
@@ -23,7 +23,7 @@ import { query } from './_generated/server';
 export const guidesAggregate = new TableAggregate<{
   Key: null;
   DataModel: DataModel;
-  TableName: 'travelGuides';
+  TableName: "travelGuides";
 }>(components.aggregateGuides, {
   sortKey: () => null,
 });
@@ -35,9 +35,9 @@ export const guidesAggregate = new TableAggregate<{
 export const guidesByPlatformAggregate = new TableAggregate<{
   Key: string;
   DataModel: DataModel;
-  TableName: 'travelGuides';
+  TableName: "travelGuides";
 }>(components.aggregateGuidesByPlatform, {
-  sortKey: doc => doc.sourcePlatform,
+  sortKey: (doc) => doc.sourcePlatform,
 });
 
 // ============================================================================
@@ -49,7 +49,7 @@ export const guidesByPlatformAggregate = new TableAggregate<{
  */
 export async function insertGuideToAggregates(
   ctx: MutationCtx,
-  doc: Doc<'travelGuides'>,
+  doc: Doc<"travelGuides">,
 ): Promise<void> {
   await guidesAggregate.insert(ctx, doc);
   await guidesByPlatformAggregate.insert(ctx, doc);
@@ -60,7 +60,7 @@ export async function insertGuideToAggregates(
  */
 export async function deleteGuideFromAggregates(
   ctx: MutationCtx,
-  doc: Doc<'travelGuides'>,
+  doc: Doc<"travelGuides">,
 ): Promise<void> {
   await guidesAggregate.delete(ctx, doc);
   await guidesByPlatformAggregate.delete(ctx, doc);
@@ -71,8 +71,8 @@ export async function deleteGuideFromAggregates(
  */
 export async function replaceGuideInAggregates(
   ctx: MutationCtx,
-  oldDoc: Doc<'travelGuides'>,
-  newDoc: Doc<'travelGuides'>,
+  oldDoc: Doc<"travelGuides">,
+  newDoc: Doc<"travelGuides">,
 ): Promise<void> {
   await guidesAggregate.replace(ctx, oldDoc, newDoc);
   await guidesByPlatformAggregate.replace(ctx, oldDoc, newDoc);
@@ -116,15 +116,15 @@ export const countAllPlatforms = query({
   args: {},
   handler: async (ctx) => {
     const platforms = [
-      'xiaohongshu',
-      'weibo',
-      'ctrip',
-      'douyin',
-      'tripadvisor',
-      'tongcheng',
-      'mafengwo',
-      'qunar',
-      'qyer',
+      "xiaohongshu",
+      "weibo",
+      "ctrip",
+      "douyin",
+      "tripadvisor",
+      "tongcheng",
+      "mafengwo",
+      "qunar",
+      "qyer",
     ] as const;
 
     const counts: Record<string, number> = {};

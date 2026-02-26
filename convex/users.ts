@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Users - Authentication and Profile Management
@@ -20,8 +20,8 @@ export const getCurrentUser = query({
 
     // Look up profile by email
     const profile = await ctx.db
-      .query('profiles')
-      .withIndex('by_email', q => q.eq('email', identity.email!))
+      .query("profiles")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
     return {
@@ -48,8 +48,8 @@ export const getUserById = query({
   handler: async (ctx, args) => {
     // Query profiles table - in Convex Auth, user data is spread across auth tables and profiles
     const profile = await ctx.db
-      .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
+      .query("profiles")
+      .filter((q) => q.eq(q.field("email"), args.userId))
       .first();
 
     if (!profile) {
@@ -77,8 +77,8 @@ export const getUserProfile = query({
   handler: async (ctx, args) => {
     // Query profiles table
     const profile = await ctx.db
-      .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
+      .query("profiles")
+      .filter((q) => q.eq(q.field("email"), args.userId))
       .first();
 
     if (!profile) {
@@ -91,16 +91,22 @@ export const getUserProfile = query({
 
     if (args.currentUserId && args.currentUserId !== args.userId) {
       const currentUserFollows = await ctx.db
-        .query('userFollows')
-        .withIndex('by_follower_following', q =>
-          q.eq('followerId', args.currentUserId!).eq('followingId', args.userId))
+        .query("userFollows")
+        .withIndex("by_follower_following", (q) =>
+          q
+            .eq("followerId", args.currentUserId!)
+            .eq("followingId", args.userId),
+        )
         .first();
       isFollowing = currentUserFollows !== null;
 
       const targetUserFollows = await ctx.db
-        .query('userFollows')
-        .withIndex('by_follower_following', q =>
-          q.eq('followerId', args.userId).eq('followingId', args.currentUserId!))
+        .query("userFollows")
+        .withIndex("by_follower_following", (q) =>
+          q
+            .eq("followerId", args.userId)
+            .eq("followingId", args.currentUserId!),
+        )
         .first();
       isFollowedBy = targetUserFollows !== null;
     }
@@ -140,13 +146,13 @@ export const updateProfile = mutation({
     // Verify authentication
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // Check if profile exists
     const existing = await ctx.db
-      .query('profiles')
-      .withIndex('by_email', q => q.eq('email', identity.email!))
+      .query("profiles")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
     const data: {
@@ -172,10 +178,9 @@ export const updateProfile = mutation({
       // Update existing profile
       await ctx.db.patch(existing._id, data);
       return existing._id;
-    }
-    else {
+    } else {
       // Create new profile
-      return await ctx.db.insert('profiles', data);
+      return await ctx.db.insert("profiles", data);
     }
   },
 });
@@ -186,13 +191,13 @@ export const getOrCreateProfile = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // Check if profile exists
     const existing = await ctx.db
-      .query('profiles')
-      .withIndex('by_email', q => q.eq('email', identity.email!))
+      .query("profiles")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (existing) {
@@ -200,7 +205,7 @@ export const getOrCreateProfile = mutation({
     }
 
     // Create new profile with defaults from identity
-    return await ctx.db.insert('profiles', {
+    return await ctx.db.insert("profiles", {
       email: identity.email!,
       displayName: identity.name,
       avatarUrl: identity.pictureUrl,

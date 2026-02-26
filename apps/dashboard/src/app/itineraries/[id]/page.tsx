@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { api } from '@pathfinding/convex-client';
-import { useQuery } from 'convex/react';
+import { api } from "@pathfinding/convex-client";
+import { useQuery } from "convex/react";
 import {
   ArrowLeft,
   Calendar,
@@ -12,14 +12,14 @@ import {
   MapPin,
   UserPlus,
   Users,
-} from 'lucide-react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useState } from 'react';
-import { CollaboratorPanel } from '@/components/collaborator-panel';
-import { InviteDialog } from '@/components/invite-dialog';
-import { cn } from '@/lib/utils';
-import { toConvexId } from '@/types/convex';
+} from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useState } from "react";
+import { CollaboratorPanel } from "@/components/collaborator-panel";
+import { InviteDialog } from "@/components/invite-dialog";
+import { cn } from "@/lib/utils";
+import { toConvexId } from "@/types/convex";
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
   const icons = {
@@ -28,14 +28,14 @@ function VisibilityBadge({ visibility }: { visibility: string }) {
     public: Globe,
   };
   const colors: Record<string, string> = {
-    private: 'bg-gray-100 text-gray-800 border-gray-200',
-    team: 'bg-blue-100 text-blue-800 border-blue-200',
-    public: 'bg-green-100 text-green-800 border-green-200',
+    private: "bg-gray-100 text-gray-800 border-gray-200",
+    team: "bg-blue-100 text-blue-800 border-blue-200",
+    public: "bg-green-100 text-green-800 border-green-200",
   };
   const labels: Record<string, string> = {
-    private: 'Private',
-    team: 'Team',
-    public: 'Public',
+    private: "Private",
+    team: "Team",
+    public: "Public",
   };
 
   const Icon = icons[visibility as keyof typeof icons] || Lock;
@@ -43,8 +43,8 @@ function VisibilityBadge({ visibility }: { visibility: string }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border',
-        colors[visibility] || 'bg-gray-100 text-gray-800 border-gray-200',
+        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border",
+        colors[visibility] || "bg-gray-100 text-gray-800 border-gray-200",
       )}
     >
       <Icon className="h-3.5 w-3.5" />
@@ -55,13 +55,12 @@ function VisibilityBadge({ visibility }: { visibility: string }) {
 
 function formatDate(dateString: string) {
   try {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
-  }
-  catch {
+  } catch {
     return dateString;
   }
 }
@@ -70,15 +69,15 @@ function formatDateRange(startDate: string, endDate: string) {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const options: Intl.DateTimeFormatOptions = {
-    month: 'short',
-    day: 'numeric',
+    month: "short",
+    day: "numeric",
   };
 
   if (startDate === endDate) {
-    return start.toLocaleDateString('en-US', { ...options, year: 'numeric' });
+    return start.toLocaleDateString("en-US", { ...options, year: "numeric" });
   }
 
-  return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', { ...options, year: 'numeric' })}`;
+  return `${start.toLocaleDateString("en-US", options)} - ${end.toLocaleDateString("en-US", { ...options, year: "numeric" })}`;
 }
 
 interface Poi {
@@ -112,8 +111,8 @@ interface Day {
 interface Collaborator {
   _id: string;
   userId: string;
-  role: 'owner' | 'editor' | 'viewer';
-  status: 'pending' | 'accepted' | 'rejected';
+  role: "owner" | "editor" | "viewer";
+  status: "pending" | "accepted" | "rejected";
 }
 
 interface Itinerary {
@@ -122,7 +121,7 @@ interface Itinerary {
   cityName?: string;
   startDate: string;
   endDate: string;
-  visibility: 'private' | 'team' | 'public';
+  visibility: "private" | "team" | "public";
   coverImageUrl?: string;
   daysCount: number;
   days: Day[];
@@ -141,11 +140,11 @@ function PoiCard({ item }: { item: Item }) {
   }
 
   const transportModeLabels: Record<string, string> = {
-    walking: 'Walk',
-    driving: 'Drive',
-    transit: 'Transit',
-    cycling: 'Cycle',
-    taxi: 'Taxi',
+    walking: "Walk",
+    driving: "Drive",
+    transit: "Transit",
+    cycling: "Cycle",
+    taxi: "Taxi",
   };
 
   return (
@@ -179,8 +178,7 @@ function PoiCard({ item }: { item: Item }) {
           )}
           {item.transportMode && (
             <span className="text-xs text-gray-500 mt-2 inline-block">
-              Transport:
-              {' '}
+              Transport:{" "}
               {transportModeLabels[item.transportMode] || item.transportMode}
             </span>
           )}
@@ -214,24 +212,22 @@ function DaySection({ day }: { day: Day }) {
         </div>
       </div>
       <div className="ml-5 pl-5 border-l-2 border-gray-200 space-y-3 pb-4">
-        {day.items.length === 0
-          ? (
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
-                <p className="text-sm text-gray-500">
-                  No activities planned for this day
-                </p>
-              </div>
-            )
-          : (
-              day.items.map(item => <PoiCard key={item._id} item={item} />)
-            )}
+        {day.items.length === 0 ? (
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+            <p className="text-sm text-gray-500">
+              No activities planned for this day
+            </p>
+          </div>
+        ) : (
+          day.items.map((item) => <PoiCard key={item._id} item={item} />)
+        )}
       </div>
     </div>
   );
 }
 
 // Current user ID for testing (in production, this would come from auth)
-const TEST_USER_ID = 'test-user-1';
+const TEST_USER_ID = "test-user-1";
 
 export default function ItineraryDetailPage() {
   const params = useParams();
@@ -239,19 +235,19 @@ export default function ItineraryDetailPage() {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
   const itinerary = useQuery(api.itineraries.getById, {
-    id: toConvexId<'itineraries'>(id),
+    id: toConvexId<"itineraries">(id),
   }) as unknown as Itinerary | null | undefined;
 
   const isLoading = itinerary === undefined;
 
   // Determine current user's role
   const currentUserCollaborator = itinerary?.collaborators?.find(
-    c => c.userId === TEST_USER_ID,
+    (c) => c.userId === TEST_USER_ID,
   );
-  const isOwner = currentUserCollaborator?.role === 'owner';
-  const isEditor
-    = currentUserCollaborator?.role === 'editor'
-      || currentUserCollaborator?.role === 'owner';
+  const isOwner = currentUserCollaborator?.role === "owner";
+  const isEditor =
+    currentUserCollaborator?.role === "editor" ||
+    currentUserCollaborator?.role === "owner";
   const canInvite = isOwner || isEditor;
 
   if (isLoading) {
@@ -302,7 +298,7 @@ export default function ItineraryDetailPage() {
               alt={itinerary.title}
               className="w-full h-full object-cover"
               onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).style.display = "none";
               }}
             />
           </div>
@@ -326,9 +322,8 @@ export default function ItineraryDetailPage() {
                 </span>
                 <span className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
-                  {itinerary.daysCount}
-                  {' '}
-                  {itinerary.daysCount === 1 ? 'day' : 'days'}
+                  {itinerary.daysCount}{" "}
+                  {itinerary.daysCount === 1 ? "day" : "days"}
                 </span>
               </div>
             </div>
@@ -366,16 +361,14 @@ export default function ItineraryDetailPage() {
           Itinerary
         </h2>
         <div className="space-y-6">
-          {itinerary.days.length === 0
-            ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">No days found for this itinerary</p>
-                </div>
-              )
-            : (
-                itinerary.days.map(day => <DaySection key={day._id} day={day} />)
-              )}
+          {itinerary.days.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500">No days found for this itinerary</p>
+            </div>
+          ) : (
+            itinerary.days.map((day) => <DaySection key={day._id} day={day} />)
+          )}
         </div>
       </div>
 

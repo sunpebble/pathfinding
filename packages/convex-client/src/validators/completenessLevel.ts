@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { v } from "convex/values";
 
 /**
  * Completeness level validator for travel guides
@@ -9,12 +9,14 @@ import { v } from 'convex/values';
  * - incomplete: Missing critical fields or truncated content
  */
 export const completenessLevelValidator = v.union(
-  v.literal('complete'),
-  v.literal('usable'),
-  v.literal('incomplete'),
+  v.literal("complete"),
+  v.literal("usable"),
+  v.literal("incomplete"),
 );
 
 /**
  * Optional completeness level validator (for backwards compatibility)
  */
-export const optionalCompletenessLevelValidator = v.optional(completenessLevelValidator);
+export const optionalCompletenessLevelValidator = v.optional(
+  completenessLevelValidator,
+);

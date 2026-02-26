@@ -8,9 +8,12 @@
  * Verify:   npx convex run migrations/fillDisplayFields:verify
  */
 
-import { v } from 'convex/values';
-import { mutation } from '../_generated/server';
-import { fillMissingDisplayFields, validateDisplayFields } from '../lib/displayFields';
+import { v } from "convex/values";
+import { mutation } from "../_generated/server";
+import {
+  fillMissingDisplayFields,
+  validateDisplayFields,
+} from "../lib/displayFields";
 
 const BATCH_SIZE = 50;
 
@@ -25,12 +28,10 @@ export const run = mutation({
   handler: async (ctx, args) => {
     const dryRun = args.dryRun ?? true;
 
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: BATCH_SIZE,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let fixed = 0;
     let skipped = 0;
@@ -76,8 +77,8 @@ export const run = mutation({
       isDone: result.isDone,
       nextCursor: result.isDone ? undefined : result.continueCursor,
       message: dryRun
-        ? `[DRY RUN] Would fix ${fixed} guides, skipped ${skipped}. ${result.isDone ? 'Migration complete!' : 'Run again with cursor to continue.'}`
-        : `Fixed ${fixed} guides, skipped ${skipped}. ${result.isDone ? 'Migration complete!' : 'Run again with cursor to continue.'}`,
+        ? `[DRY RUN] Would fix ${fixed} guides, skipped ${skipped}. ${result.isDone ? "Migration complete!" : "Run again with cursor to continue."}`
+        : `Fixed ${fixed} guides, skipped ${skipped}. ${result.isDone ? "Migration complete!" : "Run again with cursor to continue."}`,
     };
   },
 });
@@ -90,12 +91,10 @@ export const verify = mutation({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: BATCH_SIZE,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     let valid = 0;
     let invalid = 0;
@@ -106,8 +105,7 @@ export const verify = mutation({
 
       if (validation.isValid) {
         valid++;
-      }
-      else {
+      } else {
         invalid++;
         if (invalidGuides.length < 10) {
           invalidGuides.push({
@@ -125,9 +123,10 @@ export const verify = mutation({
       invalidGuides,
       isDone: result.isDone,
       nextCursor: result.isDone ? undefined : result.continueCursor,
-      message: invalid === 0
-        ? `✓ All ${valid} guides in this batch have valid display fields.`
-        : `⚠ Found ${invalid} guides with missing display fields in this batch.`,
+      message:
+        invalid === 0
+          ? `✓ All ${valid} guides in this batch have valid display fields.`
+          : `⚠ Found ${invalid} guides with missing display fields in this batch.`,
     };
   },
 });
@@ -140,12 +139,10 @@ export const stats = mutation({
     cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query('travelGuides')
-      .paginate({
-        numItems: BATCH_SIZE,
-        cursor: args.cursor ? (args.cursor as never) : null,
-      });
+    const result = await ctx.db.query("travelGuides").paginate({
+      numItems: BATCH_SIZE,
+      cursor: args.cursor ? (args.cursor as never) : null,
+    });
 
     const fieldStats: Record<string, { present: number; missing: number }> = {
       title: { present: 0, missing: 0 },
@@ -161,71 +158,65 @@ export const stats = mutation({
 
     for (const guide of result.page) {
       // title
-      if (guide.title && guide.title.trim() !== '') {
+      if (guide.title && guide.title.trim() !== "") {
         fieldStats.title.present++;
-      }
-      else {
+      } else {
         fieldStats.title.missing++;
       }
 
       // coverImageUrl
-      if (guide.coverImageUrl || (guide.imageUrls && guide.imageUrls.length > 0)) {
+      if (
+        guide.coverImageUrl ||
+        (guide.imageUrls && guide.imageUrls.length > 0)
+      ) {
         fieldStats.coverImageUrl.present++;
-      }
-      else {
+      } else {
         fieldStats.coverImageUrl.missing++;
       }
 
       // authorName
-      if (guide.authorName && guide.authorName.trim() !== '') {
+      if (guide.authorName && guide.authorName.trim() !== "") {
         fieldStats.authorName.present++;
-      }
-      else {
+      } else {
         fieldStats.authorName.missing++;
       }
 
       // destinations
       if (guide.destinations) {
         fieldStats.destinations.present++;
-      }
-      else {
+      } else {
         fieldStats.destinations.missing++;
       }
 
       // count fields
       if (guide.likesCount !== undefined && guide.likesCount !== null) {
         fieldStats.likesCount.present++;
-      }
-      else {
+      } else {
         fieldStats.likesCount.missing++;
       }
 
       if (guide.savesCount !== undefined && guide.savesCount !== null) {
         fieldStats.savesCount.present++;
-      }
-      else {
+      } else {
         fieldStats.savesCount.missing++;
       }
 
       if (guide.commentsCount !== undefined && guide.commentsCount !== null) {
         fieldStats.commentsCount.present++;
-      }
-      else {
+      } else {
         fieldStats.commentsCount.missing++;
       }
 
       if (guide.viewsCount !== undefined && guide.viewsCount !== null) {
         fieldStats.viewsCount.present++;
-      }
-      else {
+      } else {
         fieldStats.viewsCount.missing++;
       }
 
       // qualityScore
       if (guide.qualityScore !== undefined && guide.qualityScore !== null) {
         fieldStats.qualityScore.present++;
-      }
-      else {
+      } else {
         fieldStats.qualityScore.missing++;
       }
     }

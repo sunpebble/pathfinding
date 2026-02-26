@@ -1,5 +1,5 @@
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Note Comments - 游记评论相关操作
@@ -8,27 +8,27 @@ import { mutation, query } from './_generated/server';
 // 添加评论
 export const create = mutation({
   args: {
-    noteId: v.id('travelNotes'),
+    noteId: v.id("travelNotes"),
     userId: v.string(),
     content: v.string(),
-    parentId: v.optional(v.id('noteComments')),
+    parentId: v.optional(v.id("noteComments")),
   },
   handler: async (ctx, args) => {
     // 检查游记是否存在且可访问
     const note = await ctx.db.get(args.noteId);
     if (!note) {
-      throw new Error('Travel note not found');
+      throw new Error("Travel note not found");
     }
 
-    if (note.visibility !== 'public' && note.authorId !== args.userId) {
-      throw new Error('Cannot comment on a private travel note');
+    if (note.visibility !== "public" && note.authorId !== args.userId) {
+      throw new Error("Cannot comment on a private travel note");
     }
 
     // 如果是回复，检查父评论是否存在
     if (args.parentId) {
       const parent = await ctx.db.get(args.parentId);
       if (!parent || parent.noteId !== args.noteId) {
-        throw new Error('Parent comment not found');
+        throw new Error("Parent comment not found");
       }
       // 更新父评论的回复数
       await ctx.db.patch(args.parentId, {
@@ -36,7 +36,7 @@ export const create = mutation({
       });
     }
 
-    const commentId = await ctx.db.insert('noteComments', {
+    const commentId = await ctx.db.insert("noteComments", {
       noteId: args.noteId,
       userId: args.userId,
       content: args.content,
@@ -60,22 +60,22 @@ export const create = mutation({
 // 更新评论
 export const update = mutation({
   args: {
-    commentId: v.id('noteComments'),
+    commentId: v.id("noteComments"),
     userId: v.string(),
     content: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     if (comment.userId !== args.userId) {
-      throw new Error('You can only edit your own comments');
+      throw new Error("You can only edit your own comments");
     }
 
     if (comment.isDeleted) {
-      throw new Error('Cannot edit a deleted comment');
+      throw new Error("Cannot edit a deleted comment");
     }
 
     await ctx.db.patch(args.commentId, {
@@ -91,25 +91,25 @@ export const update = mutation({
 // 删除评论（软删除）
 export const remove = mutation({
   args: {
-    commentId: v.id('noteComments'),
+    commentId: v.id("noteComments"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     // 检权限：评论作者或游记作者可以删除
     const note = await ctx.db.get(comment.noteId);
     if (comment.userId !== args.userId && note?.authorId !== args.userId) {
-      throw new Error('You do not have permission to delete this comment');
+      throw new Error("You do not have permission to delete this comment");
     }
 
     // 软删除
     await ctx.db.patch(args.commentId, {
       isDeleted: true,
-      content: '[评论已删除]',
+      content: "[评论已删除]",
       updatedAt: Date.now(),
     });
 
@@ -125,31 +125,30 @@ export const remove = mutation({
 // 获取游记的评论列表
 export const listByNote = query({
   args: {
-    noteId: v.id('travelNotes'),
+    noteId: v.id("travelNotes"),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
-    sortBy: v.optional(v.union(v.literal('latest'), v.literal('popular'))),
+    sortBy: v.optional(v.union(v.literal("latest"), v.literal("popular"))),
   },
   handler: async (ctx, args) => {
     const page = args.page ?? 1;
     const pageSize = args.pageSize ?? 20;
     const offset = (page - 1) * pageSize;
-    const sortBy = args.sortBy ?? 'latest';
+    const sortBy = args.sortBy ?? "latest";
 
     // 获取顶级评论（非回复）
     let comments = await ctx.db
-      .query('noteComments')
-      .withIndex('by_note', q => q.eq('noteId', args.noteId))
+      .query("noteComments")
+      .withIndex("by_note", (q) => q.eq("noteId", args.noteId))
       .collect();
 
     // 只获取顶级评论
-    comments = comments.filter(c => !c.parentId);
+    comments = comments.filter((c) => !c.parentId);
 
     // 排序
-    if (sortBy === 'popular') {
+    if (sortBy === "popular") {
       comments.sort((a, b) => b.likesCount - a.likesCount);
-    }
-    else {
+    } else {
       comments.sort((a, b) => b.createdAt - a.createdAt);
     }
 
@@ -161,27 +160,27 @@ export const listByNote = query({
       data.map(async (comment) => {
         // 获取用户信息
         const profile = await ctx.db
-          .query('profiles')
-          .filter(q => q.eq(q.field('email'), comment.userId))
+          .query("profiles")
+          .filter((q) => q.eq(q.field("email"), comment.userId))
           .first();
 
         // 获取回复（最多3条）
         const replies = await ctx.db
-          .query('noteComments')
-          .withIndex('by_parent', q => q.eq('parentId', comment._id))
-          .order('asc')
+          .query("noteComments")
+          .withIndex("by_parent", (q) => q.eq("parentId", comment._id))
+          .order("asc")
           .take(3);
 
         const enrichedReplies = await Promise.all(
           replies.map(async (reply) => {
             const replyProfile = await ctx.db
-              .query('profiles')
-              .filter(q => q.eq(q.field('email'), reply.userId))
+              .query("profiles")
+              .filter((q) => q.eq(q.field("email"), reply.userId))
               .first();
 
             return {
               ...reply,
-              userName: replyProfile?.displayName ?? '匿名用户',
+              userName: replyProfile?.displayName ?? "匿名用户",
               userAvatar: replyProfile?.avatarUrl,
             };
           }),
@@ -189,7 +188,7 @@ export const listByNote = query({
 
         return {
           ...comment,
-          userName: profile?.displayName ?? '匿名用户',
+          userName: profile?.displayName ?? "匿名用户",
           userAvatar: profile?.avatarUrl,
           replies: enrichedReplies,
         };
@@ -203,7 +202,7 @@ export const listByNote = query({
 // 获取评论的回复列表
 export const listReplies = query({
   args: {
-    parentId: v.id('noteComments'),
+    parentId: v.id("noteComments"),
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
   },
@@ -213,9 +212,9 @@ export const listReplies = query({
     const offset = (page - 1) * pageSize;
 
     const replies = await ctx.db
-      .query('noteComments')
-      .withIndex('by_parent', q => q.eq('parentId', args.parentId))
-      .order('asc')
+      .query("noteComments")
+      .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
+      .order("asc")
       .collect();
 
     const total = replies.length;
@@ -225,13 +224,13 @@ export const listReplies = query({
     const enriched = await Promise.all(
       data.map(async (reply) => {
         const profile = await ctx.db
-          .query('profiles')
-          .filter(q => q.eq(q.field('email'), reply.userId))
+          .query("profiles")
+          .filter((q) => q.eq(q.field("email"), reply.userId))
           .first();
 
         return {
           ...reply,
-          userName: profile?.displayName ?? '匿名用户',
+          userName: profile?.displayName ?? "匿名用户",
           userAvatar: profile?.avatarUrl,
         };
       }),
@@ -244,20 +243,21 @@ export const listReplies = query({
 // 点赞评论
 export const toggleLike = mutation({
   args: {
-    commentId: v.id('noteComments'),
+    commentId: v.id("noteComments"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
-      throw new Error('Comment not found');
+      throw new Error("Comment not found");
     }
 
     // 检查是否已点赞
     const existing = await ctx.db
-      .query('noteCommentLikes')
-      .withIndex('by_comment_user', q =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId))
+      .query("noteCommentLikes")
+      .withIndex("by_comment_user", (q) =>
+        q.eq("commentId", args.commentId).eq("userId", args.userId),
+      )
       .first();
 
     if (existing) {
@@ -267,10 +267,9 @@ export const toggleLike = mutation({
         likesCount: Math.max(0, comment.likesCount - 1),
       });
       return { liked: false };
-    }
-    else {
+    } else {
       // 添加点赞
-      await ctx.db.insert('noteCommentLikes', {
+      await ctx.db.insert("noteCommentLikes", {
         commentId: args.commentId,
         userId: args.userId,
         createdAt: Date.now(),
@@ -286,14 +285,15 @@ export const toggleLike = mutation({
 // 检查评论点赞状态
 export const isCommentLiked = query({
   args: {
-    commentId: v.id('noteComments'),
+    commentId: v.id("noteComments"),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const like = await ctx.db
-      .query('noteCommentLikes')
-      .withIndex('by_comment_user', q =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId))
+      .query("noteCommentLikes")
+      .withIndex("by_comment_user", (q) =>
+        q.eq("commentId", args.commentId).eq("userId", args.userId),
+      )
       .first();
 
     return { liked: !!like };
@@ -304,7 +304,7 @@ export const isCommentLiked = query({
 export const batchCheckCommentLikes = query({
   args: {
     userId: v.string(),
-    commentIds: v.array(v.id('noteComments')),
+    commentIds: v.array(v.id("noteComments")),
   },
   handler: async (ctx, args) => {
     const results: Record<string, boolean> = {};
@@ -312,9 +312,10 @@ export const batchCheckCommentLikes = query({
     await Promise.all(
       args.commentIds.map(async (commentId) => {
         const like = await ctx.db
-          .query('noteCommentLikes')
-          .withIndex('by_comment_user', q =>
-            q.eq('commentId', commentId).eq('userId', args.userId))
+          .query("noteCommentLikes")
+          .withIndex("by_comment_user", (q) =>
+            q.eq("commentId", commentId).eq("userId", args.userId),
+          )
           .first();
 
         results[commentId] = !!like;
@@ -338,9 +339,9 @@ export const listByUser = query({
     const offset = (page - 1) * pageSize;
 
     const comments = await ctx.db
-      .query('noteComments')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
-      .order('desc')
+      .query("noteComments")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
       .collect();
 
     const total = comments.length;

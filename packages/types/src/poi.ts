@@ -1,18 +1,18 @@
 /**
  * POI category enum - matches Convex category strings
  */
-export type PoiCategory
-  = | 'attraction'
-    | 'restaurant'
-    | 'hotel'
-    | 'shopping'
-    | 'cafe'
-    | 'bar'
-    | 'museum'
-    | 'park'
-    | 'entertainment'
-    | 'transport'
-    | 'other';
+export type PoiCategory =
+  | "attraction"
+  | "restaurant"
+  | "hotel"
+  | "shopping"
+  | "cafe"
+  | "bar"
+  | "museum"
+  | "park"
+  | "entertainment"
+  | "transport"
+  | "other";
 
 /**
  * Business hours by day of week
@@ -55,12 +55,12 @@ export interface Poi {
 /**
  * POI input for creating a new POI
  */
-export type CreatePoiInput = Omit<Poi, 'id'>;
+export type CreatePoiInput = Omit<Poi, "id">;
 
 /**
  * POI update input for partial updates
  */
-export type UpdatePoiInput = Partial<Omit<Poi, 'id'>>;
+export type UpdatePoiInput = Partial<Omit<Poi, "id">>;
 
 /**
  * POI search filters

@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Visa Requirements - Country visa requirements and user visa reminders
@@ -12,29 +12,29 @@ import { mutation, query } from './_generated/server';
 // ============================================
 
 const visaTypeValidator = v.union(
-  v.literal('visa_free'), // 免签
-  v.literal('visa_on_arrival'), // 落地签
-  v.literal('e_visa'), // 电子签证
-  v.literal('standard_visa'), // 普通签证
-  v.literal('transit_visa'), // 过境签
-  v.literal('work_visa'), // 工作签证
-  v.literal('student_visa'), // 学生签证
-  v.literal('business_visa'), // 商务签证
+  v.literal("visa_free"), // 免签
+  v.literal("visa_on_arrival"), // 落地签
+  v.literal("e_visa"), // 电子签证
+  v.literal("standard_visa"), // 普通签证
+  v.literal("transit_visa"), // 过境签
+  v.literal("work_visa"), // 工作签证
+  v.literal("student_visa"), // 学生签证
+  v.literal("business_visa"), // 商务签证
 );
 
 const difficultyLevelValidator = v.union(
-  v.literal('very_easy'), // 非常容易（免签/落地签）
-  v.literal('easy'), // 容易（电子签）
-  v.literal('moderate'), // 中等
-  v.literal('difficult'), // 困难
-  v.literal('very_difficult'), // 非常困难
+  v.literal("very_easy"), // 非常容易（免签/落地签）
+  v.literal("easy"), // 容易（电子签）
+  v.literal("moderate"), // 中等
+  v.literal("difficult"), // 困难
+  v.literal("very_difficult"), // 非常困难
 );
 
 const reminderStatusValidator = v.union(
-  v.literal('pending'), // 待提醒
-  v.literal('sent'), // 已发送
-  v.literal('dismissed'), // 已忽略
-  v.literal('completed'), // 已完成
+  v.literal("pending"), // 待提醒
+  v.literal("sent"), // 已发送
+  v.literal("dismissed"), // 已忽略
+  v.literal("completed"), // 已完成
 );
 
 // ============================================
@@ -49,11 +49,12 @@ export const getVisaRequirement = query({
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('visaRequirements')
-      .withIndex('by_origin_destination', q =>
+      .query("visaRequirements")
+      .withIndex("by_origin_destination", (q) =>
         q
-          .eq('originCountryCode', args.originCountryCode)
-          .eq('destinationCountryCode', args.destinationCountryCode))
+          .eq("originCountryCode", args.originCountryCode)
+          .eq("destinationCountryCode", args.destinationCountryCode),
+      )
       .first();
   },
 });
@@ -67,13 +68,14 @@ export const listByOriginCountry = query({
   },
   handler: async (ctx, args) => {
     let requirements = await ctx.db
-      .query('visaRequirements')
-      .withIndex('by_origin', q =>
-        q.eq('originCountryCode', args.originCountryCode))
+      .query("visaRequirements")
+      .withIndex("by_origin", (q) =>
+        q.eq("originCountryCode", args.originCountryCode),
+      )
       .collect();
 
     if (args.visaType) {
-      requirements = requirements.filter(r => r.visaType === args.visaType);
+      requirements = requirements.filter((r) => r.visaType === args.visaType);
     }
 
     const limit = args.limit ?? 50;
@@ -89,13 +91,14 @@ export const listVisaFreeDestinations = query({
   },
   handler: async (ctx, args) => {
     const requirements = await ctx.db
-      .query('visaRequirements')
-      .withIndex('by_origin', q =>
-        q.eq('originCountryCode', args.originCountryCode))
+      .query("visaRequirements")
+      .withIndex("by_origin", (q) =>
+        q.eq("originCountryCode", args.originCountryCode),
+      )
       .collect();
 
     const visaFree = requirements.filter(
-      r => r.visaType === 'visa_free' || r.visaType === 'visa_on_arrival',
+      (r) => r.visaType === "visa_free" || r.visaType === "visa_on_arrival",
     );
 
     const limit = args.limit ?? 50;
@@ -111,12 +114,13 @@ export const listEVisaDestinations = query({
   },
   handler: async (ctx, args) => {
     const requirements = await ctx.db
-      .query('visaRequirements')
-      .withIndex('by_origin', q =>
-        q.eq('originCountryCode', args.originCountryCode))
+      .query("visaRequirements")
+      .withIndex("by_origin", (q) =>
+        q.eq("originCountryCode", args.originCountryCode),
+      )
       .collect();
 
-    const eVisa = requirements.filter(r => r.visaType === 'e_visa');
+    const eVisa = requirements.filter((r) => r.visaType === "e_visa");
 
     const limit = args.limit ?? 50;
     return eVisa.slice(0, limit);
@@ -132,17 +136,18 @@ export const searchByDestination = query({
   },
   handler: async (ctx, args) => {
     const requirements = await ctx.db
-      .query('visaRequirements')
-      .withIndex('by_origin', q =>
-        q.eq('originCountryCode', args.originCountryCode))
+      .query("visaRequirements")
+      .withIndex("by_origin", (q) =>
+        q.eq("originCountryCode", args.originCountryCode),
+      )
       .collect();
 
     const searchQuery = args.query.toLowerCase();
     const filtered = requirements.filter(
-      r =>
-        r.destinationCountryName.toLowerCase().includes(searchQuery)
-        || r.destinationCountryNameEn?.toLowerCase().includes(searchQuery)
-        || r.destinationCountryCode.toLowerCase().includes(searchQuery),
+      (r) =>
+        r.destinationCountryName.toLowerCase().includes(searchQuery) ||
+        r.destinationCountryNameEn?.toLowerCase().includes(searchQuery) ||
+        r.destinationCountryCode.toLowerCase().includes(searchQuery),
     );
 
     const limit = args.limit ?? 20;
@@ -152,7 +157,7 @@ export const searchByDestination = query({
 
 // Get visa requirement by ID
 export const getById = query({
-  args: { id: v.id('visaRequirements') },
+  args: { id: v.id("visaRequirements") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -180,7 +185,7 @@ export const upsertVisaRequirement = mutation({
     maxStayDays: v.optional(v.number()),
     validityPeriod: v.optional(v.string()),
     entryType: v.optional(
-      v.union(v.literal('single'), v.literal('multiple'), v.literal('dual')),
+      v.union(v.literal("single"), v.literal("multiple"), v.literal("dual")),
     ),
 
     // Processing information
@@ -210,11 +215,11 @@ export const upsertVisaRequirement = mutation({
     applicationMethods: v.array(
       v.object({
         method: v.union(
-          v.literal('online'),
-          v.literal('embassy'),
-          v.literal('consulate'),
-          v.literal('visa_center'),
-          v.literal('on_arrival'),
+          v.literal("online"),
+          v.literal("embassy"),
+          v.literal("consulate"),
+          v.literal("visa_center"),
+          v.literal("on_arrival"),
         ),
         name: v.string(),
         nameEn: v.optional(v.string()),
@@ -264,11 +269,12 @@ export const upsertVisaRequirement = mutation({
 
     // Check if requirement exists
     const existing = await ctx.db
-      .query('visaRequirements')
-      .withIndex('by_origin_destination', q =>
+      .query("visaRequirements")
+      .withIndex("by_origin_destination", (q) =>
         q
-          .eq('originCountryCode', args.originCountryCode)
-          .eq('destinationCountryCode', args.destinationCountryCode))
+          .eq("originCountryCode", args.originCountryCode)
+          .eq("destinationCountryCode", args.destinationCountryCode),
+      )
       .first();
 
     if (existing) {
@@ -280,7 +286,7 @@ export const upsertVisaRequirement = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert('visaRequirements', {
+    return await ctx.db.insert("visaRequirements", {
       ...args,
       lastVerifiedAt: now,
       createdAt: now,
@@ -292,7 +298,7 @@ export const upsertVisaRequirement = mutation({
 // Update visa requirement
 export const updateVisaRequirement = mutation({
   args: {
-    id: v.id('visaRequirements'),
+    id: v.id("visaRequirements"),
     visaType: v.optional(visaTypeValidator),
     visaTypeName: v.optional(v.string()),
     visaTypeNameEn: v.optional(v.string()),
@@ -345,12 +351,12 @@ export const getUserVisaReminders = query({
   },
   handler: async (ctx, args) => {
     let reminders = await ctx.db
-      .query('userVisaReminders')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userVisaReminders")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     if (args.status) {
-      reminders = reminders.filter(r => r.status === args.status);
+      reminders = reminders.filter((r) => r.status === args.status);
     }
 
     // Sort by reminder date
@@ -373,22 +379,22 @@ export const getUpcomingReminders = query({
     const futureDate = now + daysAhead * 24 * 60 * 60 * 1000;
 
     const reminders = await ctx.db
-      .query('userVisaReminders')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("userVisaReminders")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     return reminders.filter(
-      r =>
-        r.status === 'pending'
-        && r.reminderDate >= now
-        && r.reminderDate <= futureDate,
+      (r) =>
+        r.status === "pending" &&
+        r.reminderDate >= now &&
+        r.reminderDate <= futureDate,
     );
   },
 });
 
 // Get visa reminder by ID
 export const getVisaReminderById = query({
-  args: { id: v.id('userVisaReminders') },
+  args: { id: v.id("userVisaReminders") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -397,12 +403,12 @@ export const getVisaReminderById = query({
 // Get reminders for itinerary
 export const getRemindersForItinerary = query({
   args: {
-    itineraryId: v.id('itineraries'),
+    itineraryId: v.id("itineraries"),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('userVisaReminders')
-      .withIndex('by_itinerary', q => q.eq('itineraryId', args.itineraryId))
+      .query("userVisaReminders")
+      .withIndex("by_itinerary", (q) => q.eq("itineraryId", args.itineraryId))
       .collect();
   },
 });
@@ -415,8 +421,8 @@ export const getRemindersForItinerary = query({
 export const createVisaReminder = mutation({
   args: {
     userId: v.string(),
-    itineraryId: v.optional(v.id('itineraries')),
-    visaRequirementId: v.optional(v.id('visaRequirements')),
+    itineraryId: v.optional(v.id("itineraries")),
+    visaRequirementId: v.optional(v.id("visaRequirements")),
     destinationCountryCode: v.string(),
     destinationCountryName: v.string(),
     travelDate: v.number(),
@@ -435,9 +441,9 @@ export const createVisaReminder = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert('userVisaReminders', {
+    return await ctx.db.insert("userVisaReminders", {
       ...args,
-      status: 'pending',
+      status: "pending",
       createdAt: now,
       updatedAt: now,
     });
@@ -447,7 +453,7 @@ export const createVisaReminder = mutation({
 // Update visa reminder status
 export const updateVisaReminderStatus = mutation({
   args: {
-    id: v.id('userVisaReminders'),
+    id: v.id("userVisaReminders"),
     status: reminderStatusValidator,
     sentAt: v.optional(v.number()),
   },
@@ -459,7 +465,7 @@ export const updateVisaReminderStatus = mutation({
       updatedAt: Date.now(),
     };
 
-    if (status === 'sent' && sentAt) {
+    if (status === "sent" && sentAt) {
       updates.sentAt = sentAt;
     }
 
@@ -471,7 +477,7 @@ export const updateVisaReminderStatus = mutation({
 // Update visa reminder checklist
 export const updateVisaReminderChecklist = mutation({
   args: {
-    id: v.id('userVisaReminders'),
+    id: v.id("userVisaReminders"),
     checklist: v.array(
       v.object({
         item: v.string(),
@@ -491,7 +497,7 @@ export const updateVisaReminderChecklist = mutation({
 
 // Delete visa reminder
 export const deleteVisaReminder = mutation({
-  args: { id: v.id('userVisaReminders') },
+  args: { id: v.id("userVisaReminders") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -507,24 +513,24 @@ export const getUserVisaApplications = query({
     userId: v.string(),
     status: v.optional(
       v.union(
-        v.literal('preparing'),
-        v.literal('submitted'),
-        v.literal('processing'),
-        v.literal('approved'),
-        v.literal('rejected'),
-        v.literal('cancelled'),
+        v.literal("preparing"),
+        v.literal("submitted"),
+        v.literal("processing"),
+        v.literal("approved"),
+        v.literal("rejected"),
+        v.literal("cancelled"),
       ),
     ),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     let applications = await ctx.db
-      .query('visaApplications')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("visaApplications")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     if (args.status) {
-      applications = applications.filter(a => a.status === args.status);
+      applications = applications.filter((a) => a.status === args.status);
     }
 
     // Sort by created date (newest first)
@@ -539,17 +545,17 @@ export const getUserVisaApplications = query({
 export const createVisaApplication = mutation({
   args: {
     userId: v.string(),
-    visaRequirementId: v.optional(v.id('visaRequirements')),
-    itineraryId: v.optional(v.id('itineraries')),
+    visaRequirementId: v.optional(v.id("visaRequirements")),
+    itineraryId: v.optional(v.id("itineraries")),
     destinationCountryCode: v.string(),
     destinationCountryName: v.string(),
     visaType: visaTypeValidator,
     applicationMethod: v.union(
-      v.literal('online'),
-      v.literal('embassy'),
-      v.literal('consulate'),
-      v.literal('visa_center'),
-      v.literal('on_arrival'),
+      v.literal("online"),
+      v.literal("embassy"),
+      v.literal("consulate"),
+      v.literal("visa_center"),
+      v.literal("on_arrival"),
     ),
     plannedTravelDate: v.number(),
     applicationDate: v.optional(v.number()),
@@ -561,9 +567,9 @@ export const createVisaApplication = mutation({
         v.object({
           name: v.string(),
           status: v.union(
-            v.literal('not_started'),
-            v.literal('in_progress'),
-            v.literal('completed'),
+            v.literal("not_started"),
+            v.literal("in_progress"),
+            v.literal("completed"),
           ),
           notes: v.optional(v.string()),
         }),
@@ -572,9 +578,9 @@ export const createVisaApplication = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    return await ctx.db.insert('visaApplications', {
+    return await ctx.db.insert("visaApplications", {
       ...args,
-      status: 'preparing',
+      status: "preparing",
       createdAt: now,
       updatedAt: now,
     });
@@ -584,15 +590,15 @@ export const createVisaApplication = mutation({
 // Update visa application
 export const updateVisaApplication = mutation({
   args: {
-    id: v.id('visaApplications'),
+    id: v.id("visaApplications"),
     status: v.optional(
       v.union(
-        v.literal('preparing'),
-        v.literal('submitted'),
-        v.literal('processing'),
-        v.literal('approved'),
-        v.literal('rejected'),
-        v.literal('cancelled'),
+        v.literal("preparing"),
+        v.literal("submitted"),
+        v.literal("processing"),
+        v.literal("approved"),
+        v.literal("rejected"),
+        v.literal("cancelled"),
       ),
     ),
     applicationDate: v.optional(v.number()),
@@ -608,9 +614,9 @@ export const updateVisaApplication = mutation({
         v.object({
           name: v.string(),
           status: v.union(
-            v.literal('not_started'),
-            v.literal('in_progress'),
-            v.literal('completed'),
+            v.literal("not_started"),
+            v.literal("in_progress"),
+            v.literal("completed"),
           ),
           notes: v.optional(v.string()),
         }),
@@ -635,7 +641,7 @@ export const updateVisaApplication = mutation({
 
 // Delete visa application
 export const deleteVisaApplication = mutation({
-  args: { id: v.id('visaApplications') },
+  args: { id: v.id("visaApplications") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -643,7 +649,7 @@ export const deleteVisaApplication = mutation({
 
 // Get visa application by ID
 export const getVisaApplicationById = query({
-  args: { id: v.id('visaApplications') },
+  args: { id: v.id("visaApplications") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },

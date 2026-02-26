@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import type { ReactNode } from 'react';
-import { ConvexAuthProvider } from '@convex-dev/auth/react';
-import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import type { ReactNode } from "react";
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
 
 // Initialize Convex client with the self-hosted URL
 const convex = new ConvexReactClient(
-  process.env.NEXT_PUBLIC_CONVEX_URL ?? 'https://convex.kunish.org',
+  process.env.NEXT_PUBLIC_CONVEX_URL ?? "https://convex.kunish.org",
 );
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {

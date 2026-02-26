@@ -22,14 +22,14 @@ export interface CleaningResult {
   cleanedLength: number;
 }
 
-export type CleaningCategory
-  = | 'ad' // 广告
-    | 'promotion' // 推广/软广
-    | 'personal' // 个人信息（微信号、手机号等）
-    | 'platform' // 平台噪音（关注、点赞提示等）
-    | 'copyright' // 版权声明
-    | 'boilerplate' // 模板文字
-    | 'whitespace'; // 多余空白
+export type CleaningCategory =
+  | "ad" // 广告
+  | "promotion" // 推广/软广
+  | "personal" // 个人信息（微信号、手机号等）
+  | "platform" // 平台噪音（关注、点赞提示等）
+  | "copyright" // 版权声明
+  | "boilerplate" // 模板文字
+  | "whitespace"; // 多余空白
 
 export interface CleaningOptions {
   /** 要执行的清洗类别，默认全部 */
@@ -168,7 +168,15 @@ export function cleanContent(
   options: CleaningOptions = {},
 ): CleaningResult {
   const {
-    categories = ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+    categories = [
+      "ad",
+      "promotion",
+      "personal",
+      "platform",
+      "copyright",
+      "boilerplate",
+      "whitespace",
+    ],
     preserveParagraphs = true,
     customPatterns = [],
   } = options;
@@ -190,15 +198,14 @@ export function cleanContent(
   };
 
   for (const category of categories) {
-    if (category === 'whitespace')
-      continue; // 最后处理
+    if (category === "whitespace") continue; // 最后处理
 
     const patterns = categoryPatterns[category] || [];
     for (const pattern of patterns) {
       // 确保使用新的 RegExp 实例（避免 lastIndex 问题）
       const regex = new RegExp(pattern.source, pattern.flags);
       const before = cleaned;
-      cleaned = cleaned.replace(regex, '');
+      cleaned = cleaned.replace(regex, "");
       if (cleaned !== before) {
         removedCount++;
         removedTypes.add(category);
@@ -210,18 +217,18 @@ export function cleanContent(
   for (const pattern of customPatterns) {
     const regex = new RegExp(pattern.source, pattern.flags);
     const before = cleaned;
-    cleaned = cleaned.replace(regex, '');
+    cleaned = cleaned.replace(regex, "");
     if (cleaned !== before) {
       removedCount++;
     }
   }
 
   // 空白处理（最后执行）
-  if (categories.includes('whitespace')) {
+  if (categories.includes("whitespace")) {
     const before = cleaned;
     cleaned = normalizeWhitespace(cleaned, preserveParagraphs);
     if (cleaned !== before) {
-      removedTypes.add('whitespace');
+      removedTypes.add("whitespace");
     }
   }
 
@@ -242,11 +249,17 @@ export function cleanHtmlContent(html: string): string {
   let cleaned = html;
 
   // 移除 script/style/iframe 标签
-  cleaned = cleaned.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  cleaned = cleaned.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-  cleaned = cleaned.replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, '');
-  cleaned = cleaned.replace(/<object\b[^>]*>.*?<\/object>/gi, '');
-  cleaned = cleaned.replace(/<embed\b[^>]*>/gi, '');
+  cleaned = cleaned.replace(
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    "",
+  );
+  cleaned = cleaned.replace(
+    /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+    "",
+  );
+  cleaned = cleaned.replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, "");
+  cleaned = cleaned.replace(/<object\b[^>]*>.*?<\/object>/gi, "");
+  cleaned = cleaned.replace(/<embed\b[^>]*>/gi, "");
 
   // 移除广告相关 class/id 的元素
   const adSelectors = [
@@ -256,28 +269,31 @@ export function cleanHtmlContent(html: string): string {
   for (const selector of adSelectors) {
     // 移除匹配的整个标签及其内容
     cleaned = cleaned.replace(
-      new RegExp(`<div\\b[^>]*${selector.source}[^>]*>.*?</div>`, 'gis'),
-      '',
+      new RegExp(`<div\\b[^>]*${selector.source}[^>]*>.*?</div>`, "gis"),
+      "",
     );
   }
 
   // 移除事件处理属性 (XSS prevention)
-  cleaned = cleaned.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '');
+  cleaned = cleaned.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, "");
 
   // 移除 data-track 等跟踪属性
-  cleaned = cleaned.replace(/\s+data-(?:track|ad|click|monitor)[\w-]*\s*=\s*["'][^"']*["']/gi, '');
+  cleaned = cleaned.replace(
+    /\s+data-(?:track|ad|click|monitor)[\w-]*\s*=\s*["'][^"']*["']/gi,
+    "",
+  );
 
   // 移除 display:none 的元素
   cleaned = cleaned.replace(
     /<[^>]+style\s*=\s*["'][^"']*display\s*:\s*none[^"']*["'][^>]*>.*?<\/\w+>/gis,
-    '',
+    "",
   );
 
   // 移除空标签（递归清理）
-  let prev = '';
+  let prev = "";
   while (prev !== cleaned) {
     prev = cleaned;
-    cleaned = cleaned.replace(/<(\w+)\b[^>]*>\s*<\/\1>/g, '');
+    cleaned = cleaned.replace(/<(\w+)\b[^>]*>\s*<\/\1>/g, "");
   }
 
   return cleaned.trim();
@@ -293,20 +309,19 @@ export function normalizeWhitespace(
   let cleaned = content;
 
   // 统一换行符
-  cleaned = cleaned.replace(/\r\n/g, '\n');
-  cleaned = cleaned.replace(/\r/g, '\n');
+  cleaned = cleaned.replace(/\r\n/g, "\n");
+  cleaned = cleaned.replace(/\r/g, "\n");
 
   if (preserveParagraphs) {
     // 保留段落分隔（双换行），但规范化
-    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+    cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
     // 行内多余空格
-    cleaned = cleaned.replace(/[^\S\n]+/g, ' ');
+    cleaned = cleaned.replace(/[^\S\n]+/g, " ");
     // 段落开头/结尾空格
-    cleaned = cleaned.replace(/^ +| +$/gm, '');
-  }
-  else {
+    cleaned = cleaned.replace(/^ +| +$/gm, "");
+  } else {
     // 所有连续空白替换为单空格
-    cleaned = cleaned.replace(/\s+/g, ' ');
+    cleaned = cleaned.replace(/\s+/g, " ");
   }
 
   return cleaned.trim();
@@ -321,8 +336,7 @@ export function normalizeWhitespace(
  * // density > 0 表示含有广告内容
  */
 export function detectAdDensity(content: string): number {
-  if (!content || content.length === 0)
-    return 0;
+  if (!content || content.length === 0) return 0;
 
   const allPatterns = [
     ...AD_PATTERNS,
@@ -350,7 +364,15 @@ export function detectAdDensity(content: string): number {
  */
 export function extractPureContent(content: string): string {
   const result = cleanContent(content, {
-    categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+    categories: [
+      "ad",
+      "promotion",
+      "personal",
+      "platform",
+      "copyright",
+      "boilerplate",
+      "whitespace",
+    ],
     preserveParagraphs: true,
   });
 
@@ -390,5 +412,5 @@ export function cleanContentBatch(
   contents: string[],
   options?: CleaningOptions,
 ): CleaningResult[] {
-  return contents.map(content => cleanContent(content, options));
+  return contents.map((content) => cleanContent(content, options));
 }

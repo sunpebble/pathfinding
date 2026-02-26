@@ -5,9 +5,9 @@
  * supporting version control and efficient querying.
  */
 
-import type { Doc, Id } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { internalMutation, mutation, query } from './_generated/server';
+import type { Doc, Id } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 // ============================================================================
 // Validators
@@ -73,14 +73,14 @@ const _geocodingMetricsValidator = v.object({
  */
 export const getLatestAiData = query({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
   },
   handler: async (ctx, args) => {
     // Query by guide, ordered by version descending
     const aiData = await ctx.db
-      .query('travelGuideAiData')
-      .withIndex('by_guide', q => q.eq('guideId', args.guideId))
-      .order('desc')
+      .query("travelGuideAiData")
+      .withIndex("by_guide", (q) => q.eq("guideId", args.guideId))
+      .order("desc")
       .first();
 
     return aiData;
@@ -92,14 +92,15 @@ export const getLatestAiData = query({
  */
 export const getAiDataByVersion = query({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     version: v.number(),
   },
   handler: async (ctx, args) => {
     const aiData = await ctx.db
-      .query('travelGuideAiData')
-      .withIndex('by_guide_version', q =>
-        q.eq('guideId', args.guideId).eq('version', args.version))
+      .query("travelGuideAiData")
+      .withIndex("by_guide_version", (q) =>
+        q.eq("guideId", args.guideId).eq("version", args.version),
+      )
       .first();
 
     return aiData;
@@ -111,16 +112,16 @@ export const getAiDataByVersion = query({
  */
 export const getAiDataVersions = query({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
   },
   handler: async (ctx, args) => {
     const versions = await ctx.db
-      .query('travelGuideAiData')
-      .withIndex('by_guide', q => q.eq('guideId', args.guideId))
-      .order('desc')
+      .query("travelGuideAiData")
+      .withIndex("by_guide", (q) => q.eq("guideId", args.guideId))
+      .order("desc")
       .collect();
 
-    return versions.map(v => ({
+    return versions.map((v) => ({
       _id: v._id,
       version: v.version,
       processedAt: v.processedAt,
@@ -136,16 +137,16 @@ export const getAiDataVersions = query({
  */
 export const getGuideWithAiData = query({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
   },
   handler: async (ctx, args) => {
     // Fetch guide and AI data in parallel
     const [guide, aiData] = await Promise.all([
       ctx.db.get(args.guideId),
       ctx.db
-        .query('travelGuideAiData')
-        .withIndex('by_guide', q => q.eq('guideId', args.guideId))
-        .order('desc')
+        .query("travelGuideAiData")
+        .withIndex("by_guide", (q) => q.eq("guideId", args.guideId))
+        .order("desc")
         .first(),
     ]);
 
@@ -175,15 +176,15 @@ export const getGuidesWithLowConfidence = query({
 
     // Get all AI data with geocoding metrics
     const allAiData = await ctx.db
-      .query('travelGuideAiData')
-      .order('desc')
+      .query("travelGuideAiData")
+      .order("desc")
       .collect();
 
     // Filter for low confidence and deduplicate by guideId (keep latest)
     const seenGuides = new Set<string>();
     const lowConfidenceData: Array<{
-      _id: Id<'travelGuideAiData'>;
-      guideId: Id<'travelGuides'>;
+      _id: Id<"travelGuideAiData">;
+      guideId: Id<"travelGuides">;
       version: number;
       averageConfidence: number;
       lowConfidenceCount: number;
@@ -192,8 +193,7 @@ export const getGuidesWithLowConfidence = query({
 
     for (const data of allAiData) {
       // Skip if we've already seen this guide (we're ordered desc, so first is latest)
-      if (seenGuides.has(data.guideId))
-        continue;
+      if (seenGuides.has(data.guideId)) continue;
       seenGuides.add(data.guideId);
 
       // Check if has low confidence
@@ -209,8 +209,7 @@ export const getGuidesWithLowConfidence = query({
         });
       }
 
-      if (lowConfidenceData.length >= limit)
-        break;
+      if (lowConfidenceData.length >= limit) break;
     }
 
     // Fetch guide titles
@@ -238,7 +237,7 @@ export const getGuidesWithLowConfidence = query({
  */
 export const createAiData = mutation({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     aiSummary: v.optional(v.string()),
     aiTips: v.optional(v.array(v.string())),
     aiBestTime: v.optional(v.string()),
@@ -250,15 +249,15 @@ export const createAiData = mutation({
   handler: async (ctx, args) => {
     // Get the latest version for this guide
     const latestVersion = await ctx.db
-      .query('travelGuideAiData')
-      .withIndex('by_guide', q => q.eq('guideId', args.guideId))
-      .order('desc')
+      .query("travelGuideAiData")
+      .withIndex("by_guide", (q) => q.eq("guideId", args.guideId))
+      .order("desc")
       .first();
 
     const newVersion = (latestVersion?.version ?? 0) + 1;
 
     // Calculate geocoding metrics if aiDays provided
-    let geocodingMetrics: Doc<'travelGuideAiData'>['geocodingMetrics'];
+    let geocodingMetrics: Doc<"travelGuideAiData">["geocodingMetrics"];
     if (args.aiDays && args.aiDays.length > 0) {
       let totalPois = 0;
       let totalConfidence = 0;
@@ -277,13 +276,17 @@ export const createAiData = mutation({
           totalPois++;
           const confidence = poi.geocodeConfidence ?? 0;
           totalConfidence += confidence;
-          if (confidence < 0.5)
-            lowConfidenceCount++;
-          if (poi.isManuallyVerified)
-            manuallyVerifiedCount++;
+          if (confidence < 0.5) lowConfidenceCount++;
+          if (poi.isManuallyVerified) manuallyVerifiedCount++;
 
           const source = poi.geocodeSource;
-          if (source === 'amap' || source === 'nominatim' || source === 'overpass' || source === 'consensus' || source === 'manual') {
+          if (
+            source === "amap" ||
+            source === "nominatim" ||
+            source === "overpass" ||
+            source === "consensus" ||
+            source === "manual"
+          ) {
             sourceDistribution[source] = (sourceDistribution[source] ?? 0) + 1;
           }
         }
@@ -300,7 +303,7 @@ export const createAiData = mutation({
     }
 
     // Insert new AI data record
-    const id = await ctx.db.insert('travelGuideAiData', {
+    const id = await ctx.db.insert("travelGuideAiData", {
       guideId: args.guideId,
       version: newVersion,
       aiSummary: args.aiSummary,
@@ -329,7 +332,7 @@ export const createAiData = mutation({
  */
 export const updateAiData = mutation({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
     aiSummary: v.optional(v.string()),
     aiTips: v.optional(v.array(v.string())),
     aiBestTime: v.optional(v.string()),
@@ -344,9 +347,9 @@ export const updateAiData = mutation({
 
     // Get the latest version
     const latest = await ctx.db
-      .query('travelGuideAiData')
-      .withIndex('by_guide', q => q.eq('guideId', guideId))
-      .order('desc')
+      .query("travelGuideAiData")
+      .withIndex("by_guide", (q) => q.eq("guideId", guideId))
+      .order("desc")
       .first();
 
     const newVersion = (latest?.version ?? 0) + 1;
@@ -363,7 +366,7 @@ export const updateAiData = mutation({
     };
 
     // Calculate geocoding metrics
-    let geocodingMetrics: Doc<'travelGuideAiData'>['geocodingMetrics'];
+    let geocodingMetrics: Doc<"travelGuideAiData">["geocodingMetrics"];
     if (mergedData.aiDays && mergedData.aiDays.length > 0) {
       let totalPois = 0;
       let totalConfidence = 0;
@@ -382,13 +385,17 @@ export const updateAiData = mutation({
           totalPois++;
           const confidence = poi.geocodeConfidence ?? 0;
           totalConfidence += confidence;
-          if (confidence < 0.5)
-            lowConfidenceCount++;
-          if (poi.isManuallyVerified)
-            manuallyVerifiedCount++;
+          if (confidence < 0.5) lowConfidenceCount++;
+          if (poi.isManuallyVerified) manuallyVerifiedCount++;
 
           const source = poi.geocodeSource;
-          if (source === 'amap' || source === 'nominatim' || source === 'overpass' || source === 'consensus' || source === 'manual') {
+          if (
+            source === "amap" ||
+            source === "nominatim" ||
+            source === "overpass" ||
+            source === "consensus" ||
+            source === "manual"
+          ) {
             sourceDistribution[source] = (sourceDistribution[source] ?? 0) + 1;
           }
         }
@@ -405,7 +412,7 @@ export const updateAiData = mutation({
     }
 
     // Insert new version
-    const id = await ctx.db.insert('travelGuideAiData', {
+    const id = await ctx.db.insert("travelGuideAiData", {
       guideId,
       version: newVersion,
       ...mergedData,
@@ -427,12 +434,12 @@ export const updateAiData = mutation({
  */
 export const deleteAiDataForGuide = mutation({
   args: {
-    guideId: v.id('travelGuides'),
+    guideId: v.id("travelGuides"),
   },
   handler: async (ctx, args) => {
     const allVersions = await ctx.db
-      .query('travelGuideAiData')
-      .withIndex('by_guide', q => q.eq('guideId', args.guideId))
+      .query("travelGuideAiData")
+      .withIndex("by_guide", (q) => q.eq("guideId", args.guideId))
       .collect();
 
     for (const version of allVersions) {
@@ -448,7 +455,7 @@ export const deleteAiDataForGuide = mutation({
  */
 export const deleteAiDataVersion = mutation({
   args: {
-    id: v.id('travelGuideAiData'),
+    id: v.id("travelGuideAiData"),
   },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
@@ -472,7 +479,7 @@ export const migrateFromGuides = internalMutation({
 
     // Get guides with AI data that haven't been migrated
     const result = await ctx.db
-      .query('travelGuides')
+      .query("travelGuides")
       .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
 
     let migrated = 0;
@@ -487,8 +494,8 @@ export const migrateFromGuides = internalMutation({
 
       // Check if already migrated
       const existing = await ctx.db
-        .query('travelGuideAiData')
-        .withIndex('by_guide', q => q.eq('guideId', guide._id))
+        .query("travelGuideAiData")
+        .withIndex("by_guide", (q) => q.eq("guideId", guide._id))
         .first();
 
       if (existing) {
@@ -497,7 +504,7 @@ export const migrateFromGuides = internalMutation({
       }
 
       // Migrate AI data
-      await ctx.db.insert('travelGuideAiData', {
+      await ctx.db.insert("travelGuideAiData", {
         guideId: guide._id,
         version: 1,
         aiSummary: guide.aiSummary,

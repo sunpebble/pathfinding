@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * SOS Alerts - Emergency alert management
@@ -13,8 +13,8 @@ export const listByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const alerts = await ctx.db
-      .query('sosAlerts')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("sosAlerts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     // Sort by most recent first
@@ -26,7 +26,7 @@ export const listByUser = query({
 
 // Get a single SOS alert by ID
 export const getById = query({
-  args: { id: v.id('sosAlerts') },
+  args: { id: v.id("sosAlerts") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -37,9 +37,10 @@ export const getActiveAlerts = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const alerts = await ctx.db
-      .query('sosAlerts')
-      .withIndex('by_user_status', q =>
-        q.eq('userId', args.userId).eq('status', 'sent'))
+      .query("sosAlerts")
+      .withIndex("by_user_status", (q) =>
+        q.eq("userId", args.userId).eq("status", "sent"),
+      )
       .collect();
 
     return alerts;
@@ -55,10 +56,10 @@ export const create = mutation({
     locationName: v.optional(v.string()),
     accuracy: v.optional(v.number()),
     alertType: v.union(
-      v.literal('emergency'),
-      v.literal('medical'),
-      v.literal('safety'),
-      v.literal('other'),
+      v.literal("emergency"),
+      v.literal("medical"),
+      v.literal("safety"),
+      v.literal("other"),
     ),
     message: v.optional(v.string()),
   },
@@ -67,15 +68,15 @@ export const create = mutation({
 
     // Get all SOS contacts for the user
     const sosContacts = await ctx.db
-      .query('emergencyContacts')
-      .withIndex('by_user', q => q.eq('userId', args.userId))
+      .query("emergencyContacts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     const contactsToNotify = sosContacts
-      .filter(c => c.notifyOnSos)
-      .map(c => c._id);
+      .filter((c) => c.notifyOnSos)
+      .map((c) => c._id);
 
-    const alertId = await ctx.db.insert('sosAlerts', {
+    const alertId = await ctx.db.insert("sosAlerts", {
       userId: args.userId,
       latitude: args.latitude,
       longitude: args.longitude,
@@ -83,7 +84,7 @@ export const create = mutation({
       accuracy: args.accuracy,
       alertType: args.alertType,
       message: args.message,
-      status: 'sent',
+      status: "sent",
       notifiedContacts: contactsToNotify,
       createdAt: now,
     });
@@ -95,23 +96,23 @@ export const create = mutation({
 // Update SOS alert status
 export const updateStatus = mutation({
   args: {
-    id: v.id('sosAlerts'),
+    id: v.id("sosAlerts"),
     status: v.union(
-      v.literal('sent'),
-      v.literal('received'),
-      v.literal('resolved'),
-      v.literal('cancelled'),
+      v.literal("sent"),
+      v.literal("received"),
+      v.literal("resolved"),
+      v.literal("cancelled"),
     ),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
     if (!existing) {
-      throw new Error('SOS alert not found');
+      throw new Error("SOS alert not found");
     }
 
     const updates: Record<string, unknown> = { status: args.status };
 
-    if (args.status === 'resolved' || args.status === 'cancelled') {
+    if (args.status === "resolved" || args.status === "cancelled") {
       updates.resolvedAt = Date.now();
     }
 
@@ -123,17 +124,17 @@ export const updateStatus = mutation({
 // Resolve an SOS alert
 export const resolve = mutation({
   args: {
-    id: v.id('sosAlerts'),
+    id: v.id("sosAlerts"),
     resolvedBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
     if (!existing) {
-      throw new Error('SOS alert not found');
+      throw new Error("SOS alert not found");
     }
 
     await ctx.db.patch(args.id, {
-      status: 'resolved',
+      status: "resolved",
       resolvedAt: Date.now(),
       resolvedBy: args.resolvedBy,
     });
@@ -144,15 +145,15 @@ export const resolve = mutation({
 
 // Cancel an SOS alert
 export const cancel = mutation({
-  args: { id: v.id('sosAlerts') },
+  args: { id: v.id("sosAlerts") },
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
     if (!existing) {
-      throw new Error('SOS alert not found');
+      throw new Error("SOS alert not found");
     }
 
     await ctx.db.patch(args.id, {
-      status: 'cancelled',
+      status: "cancelled",
       resolvedAt: Date.now(),
     });
 
@@ -162,7 +163,7 @@ export const cancel = mutation({
 
 // Get SOS alert with contact details
 export const getWithContacts = query({
-  args: { id: v.id('sosAlerts') },
+  args: { id: v.id("sosAlerts") },
   handler: async (ctx, args) => {
     const alert = await ctx.db.get(args.id);
     if (!alert) {
@@ -194,7 +195,7 @@ export const getWithContacts = query({
 // Get SOS alert with full emergency info (contacts + emergency services)
 export const getWithEmergencyInfo = query({
   args: {
-    id: v.id('sosAlerts'),
+    id: v.id("sosAlerts"),
     countryCode: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -223,9 +224,9 @@ export const getWithEmergencyInfo = query({
     let emergencyServices = null;
     if (args.countryCode) {
       emergencyServices = await ctx.db
-        .query('emergencyServices')
-        .withIndex('by_country', q => q.eq('countryCode', args.countryCode!))
-        .filter(q => q.eq(q.field('cityName'), undefined))
+        .query("emergencyServices")
+        .withIndex("by_country", (q) => q.eq("countryCode", args.countryCode!))
+        .filter((q) => q.eq(q.field("cityName"), undefined))
         .first();
     }
 
@@ -240,7 +241,7 @@ export const getWithEmergencyInfo = query({
 // Update SOS alert location (for continuous tracking)
 export const updateLocation = mutation({
   args: {
-    id: v.id('sosAlerts'),
+    id: v.id("sosAlerts"),
     latitude: v.number(),
     longitude: v.number(),
     accuracy: v.optional(v.number()),
@@ -249,12 +250,12 @@ export const updateLocation = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
     if (!existing) {
-      throw new Error('SOS alert not found');
+      throw new Error("SOS alert not found");
     }
 
     // Only update if alert is still active
-    if (existing.status !== 'sent' && existing.status !== 'received') {
-      throw new Error('Cannot update location for resolved/cancelled alert');
+    if (existing.status !== "sent" && existing.status !== "received") {
+      throw new Error("Cannot update location for resolved/cancelled alert");
     }
 
     await ctx.db.patch(args.id, {
@@ -274,10 +275,10 @@ export const getRecentAlerts = query({
     limit: v.optional(v.number()),
     status: v.optional(
       v.union(
-        v.literal('sent'),
-        v.literal('received'),
-        v.literal('resolved'),
-        v.literal('cancelled'),
+        v.literal("sent"),
+        v.literal("received"),
+        v.literal("resolved"),
+        v.literal("cancelled"),
       ),
     ),
   },
@@ -287,12 +288,11 @@ export const getRecentAlerts = query({
     let alerts;
     if (args.status) {
       alerts = await ctx.db
-        .query('sosAlerts')
-        .withIndex('by_status', q => q.eq('status', args.status!))
+        .query("sosAlerts")
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
         .collect();
-    }
-    else {
-      alerts = await ctx.db.query('sosAlerts').collect();
+    } else {
+      alerts = await ctx.db.query("sosAlerts").collect();
     }
 
     // Sort by most recent first
@@ -305,13 +305,13 @@ export const getRecentAlerts = query({
 // Add message to SOS alert
 export const addMessage = mutation({
   args: {
-    id: v.id('sosAlerts'),
+    id: v.id("sosAlerts"),
     message: v.string(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
     if (!existing) {
-      throw new Error('SOS alert not found');
+      throw new Error("SOS alert not found");
     }
 
     await ctx.db.patch(args.id, {

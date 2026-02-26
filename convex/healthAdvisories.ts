@@ -1,7 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Health Advisories - Destination Health Risk Information
@@ -10,13 +10,14 @@ import { mutation, query } from './_generated/server';
 
 // List health advisories for a destination
 export const listByDestination = query({
-  args: { destinationId: v.id('cities') },
+  args: { destinationId: v.id("cities") },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('healthAdvisories')
-      .withIndex('by_destination', q =>
-        q.eq('destinationId', args.destinationId))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("healthAdvisories")
+      .withIndex("by_destination", (q) =>
+        q.eq("destinationId", args.destinationId),
+      )
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
@@ -26,8 +27,8 @@ export const listActive = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db
-      .query('healthAdvisories')
-      .withIndex('by_active', q => q.eq('isActive', true))
+      .query("healthAdvisories")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
       .collect();
   },
 });
@@ -36,17 +37,17 @@ export const listActive = query({
 export const listByRiskLevel = query({
   args: {
     riskLevel: v.union(
-      v.literal('low'),
-      v.literal('moderate'),
-      v.literal('high'),
-      v.literal('extreme'),
+      v.literal("low"),
+      v.literal("moderate"),
+      v.literal("high"),
+      v.literal("extreme"),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('healthAdvisories')
-      .withIndex('by_risk_level', q => q.eq('riskLevel', args.riskLevel))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("healthAdvisories")
+      .withIndex("by_risk_level", (q) => q.eq("riskLevel", args.riskLevel))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
@@ -55,27 +56,27 @@ export const listByRiskLevel = query({
 export const listByCategory = query({
   args: {
     category: v.union(
-      v.literal('disease_outbreak'),
-      v.literal('environmental'),
-      v.literal('food_water'),
-      v.literal('insect_borne'),
-      v.literal('altitude'),
-      v.literal('climate'),
-      v.literal('general'),
+      v.literal("disease_outbreak"),
+      v.literal("environmental"),
+      v.literal("food_water"),
+      v.literal("insect_borne"),
+      v.literal("altitude"),
+      v.literal("climate"),
+      v.literal("general"),
     ),
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('healthAdvisories')
-      .withIndex('by_category', q => q.eq('category', args.category))
-      .filter(q => q.eq(q.field('isActive'), true))
+      .query("healthAdvisories")
+      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
   },
 });
 
 // Get a single health advisory by ID
 export const getById = query({
-  args: { id: v.id('healthAdvisories') },
+  args: { id: v.id("healthAdvisories") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -84,24 +85,24 @@ export const getById = query({
 // Create a new health advisory
 export const create = mutation({
   args: {
-    destinationId: v.id('cities'),
+    destinationId: v.id("cities"),
     destinationName: v.string(),
     riskLevel: v.union(
-      v.literal('low'),
-      v.literal('moderate'),
-      v.literal('high'),
-      v.literal('extreme'),
+      v.literal("low"),
+      v.literal("moderate"),
+      v.literal("high"),
+      v.literal("extreme"),
     ),
     title: v.string(),
     description: v.string(),
     category: v.union(
-      v.literal('disease_outbreak'),
-      v.literal('environmental'),
-      v.literal('food_water'),
-      v.literal('insect_borne'),
-      v.literal('altitude'),
-      v.literal('climate'),
-      v.literal('general'),
+      v.literal("disease_outbreak"),
+      v.literal("environmental"),
+      v.literal("food_water"),
+      v.literal("insect_borne"),
+      v.literal("altitude"),
+      v.literal("climate"),
+      v.literal("general"),
     ),
     symptoms: v.optional(v.array(v.string())),
     preventionTips: v.array(v.string()),
@@ -115,7 +116,7 @@ export const create = mutation({
     sourceUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert('healthAdvisories', {
+    return await ctx.db.insert("healthAdvisories", {
       ...args,
       lastUpdated: Date.now(),
       isActive: true,
@@ -126,26 +127,26 @@ export const create = mutation({
 // Update a health advisory
 export const update = mutation({
   args: {
-    id: v.id('healthAdvisories'),
+    id: v.id("healthAdvisories"),
     riskLevel: v.optional(
       v.union(
-        v.literal('low'),
-        v.literal('moderate'),
-        v.literal('high'),
-        v.literal('extreme'),
+        v.literal("low"),
+        v.literal("moderate"),
+        v.literal("high"),
+        v.literal("extreme"),
       ),
     ),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     category: v.optional(
       v.union(
-        v.literal('disease_outbreak'),
-        v.literal('environmental'),
-        v.literal('food_water'),
-        v.literal('insect_borne'),
-        v.literal('altitude'),
-        v.literal('climate'),
-        v.literal('general'),
+        v.literal("disease_outbreak"),
+        v.literal("environmental"),
+        v.literal("food_water"),
+        v.literal("insect_borne"),
+        v.literal("altitude"),
+        v.literal("climate"),
+        v.literal("general"),
       ),
     ),
     symptoms: v.optional(v.array(v.string())),
@@ -175,7 +176,7 @@ export const update = mutation({
 
 // Delete a health advisory (soft delete by setting isActive to false)
 export const remove = mutation({
-  args: { id: v.id('healthAdvisories') },
+  args: { id: v.id("healthAdvisories") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, { isActive: false });
   },

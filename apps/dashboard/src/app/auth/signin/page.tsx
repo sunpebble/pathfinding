@@ -1,57 +1,54 @@
-'use client';
+"use client";
 
-import { useAuthActions } from '@convex-dev/auth/react';
-import { Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthActions } from "@convex-dev/auth/react";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SignInPage() {
   const { signIn } = useAuthActions();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Redirect to home if already authenticated
   if (isAuthenticated) {
-    router.push('/');
+    router.push("/");
     return null;
   }
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
-      await signIn('password', { email, password, flow: 'signIn' });
-      router.push('/');
-    }
-    catch (err) {
+      await signIn("password", { email, password, flow: "signIn" });
+      router.push("/");
+    } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to sign in. Please try again.',
+          : "Failed to sign in. Please try again.",
       );
-    }
-    finally {
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOAuthSignIn = async (provider: 'google' | 'apple') => {
-    setError('');
+  const handleOAuthSignIn = async (provider: "google" | "apple") => {
+    setError("");
     setIsLoading(true);
 
     try {
       await signIn(provider);
       // OAuth redirect will happen automatically
-    }
-    catch (err) {
+    } catch (err) {
       setError(
         err instanceof Error
           ? err.message
@@ -97,7 +94,7 @@ export default function SignInPage() {
                 type="email"
                 required
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="you@example.com"
                 disabled={isLoading}
@@ -116,7 +113,7 @@ export default function SignInPage() {
                 type="password"
                 required
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="••••••••"
                 disabled={isLoading}
@@ -149,7 +146,7 @@ export default function SignInPage() {
           <div className="space-y-3">
             <button
               type="button"
-              onClick={() => handleOAuthSignIn('google')}
+              onClick={() => handleOAuthSignIn("google")}
               disabled={isLoading}
               className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
@@ -176,7 +173,7 @@ export default function SignInPage() {
 
             <button
               type="button"
-              onClick={() => handleOAuthSignIn('apple')}
+              onClick={() => handleOAuthSignIn("apple")}
               disabled={isLoading}
               className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
@@ -189,8 +186,7 @@ export default function SignInPage() {
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center text-sm text-gray-600">
-            Don&apos;t have an account?
-            {' '}
+            Don&apos;t have an account?{" "}
             <Link href="/auth/signup" className="text-blue-600 hover:underline">
               Sign up
             </Link>

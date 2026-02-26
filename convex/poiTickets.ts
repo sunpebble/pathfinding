@@ -1,8 +1,8 @@
 /* eslint-disable ts/ban-ts-comment */
 // @ts-nocheck
-import type { Id } from './_generated/dataModel';
-import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import type { Id } from "./_generated/dataModel";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * POI Tickets - Ticket Information Queries and Mutations
@@ -10,22 +10,22 @@ import { mutation, query } from './_generated/server';
  */
 
 const ticketTypeValidator = v.union(
-  v.literal('adult'),
-  v.literal('student'),
-  v.literal('senior'),
-  v.literal('child'),
-  v.literal('group'),
-  v.literal('family'),
-  v.literal('vip'),
-  v.literal('free'),
-  v.literal('other'),
+  v.literal("adult"),
+  v.literal("student"),
+  v.literal("senior"),
+  v.literal("child"),
+  v.literal("group"),
+  v.literal("family"),
+  v.literal("vip"),
+  v.literal("free"),
+  v.literal("other"),
 );
 
 const stockStatusValidator = v.union(
-  v.literal('in_stock'),
-  v.literal('low_stock'),
-  v.literal('sold_out'),
-  v.literal('unknown'),
+  v.literal("in_stock"),
+  v.literal("low_stock"),
+  v.literal("sold_out"),
+  v.literal("unknown"),
 );
 
 // ============================================
@@ -37,7 +37,7 @@ const stockStatusValidator = v.union(
  */
 export const listByPoi = query({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     activeOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -45,15 +45,15 @@ export const listByPoi = query({
 
     if (args.activeOnly) {
       tickets = await ctx.db
-        .query('poiTickets')
-        .withIndex('by_poi_active', q =>
-          q.eq('poiId', args.poiId).eq('isActive', true))
+        .query("poiTickets")
+        .withIndex("by_poi_active", (q) =>
+          q.eq("poiId", args.poiId).eq("isActive", true),
+        )
         .collect();
-    }
-    else {
+    } else {
       tickets = await ctx.db
-        .query('poiTickets')
-        .withIndex('by_poi', q => q.eq('poiId', args.poiId))
+        .query("poiTickets")
+        .withIndex("by_poi", (q) => q.eq("poiId", args.poiId))
         .collect();
     }
 
@@ -66,7 +66,7 @@ export const listByPoi = query({
  * Get a ticket by ID
  */
 export const getById = query({
-  args: { id: v.id('poiTickets') },
+  args: { id: v.id("poiTickets") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -77,14 +77,15 @@ export const getById = query({
  */
 export const listByType = query({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     ticketType: ticketTypeValidator,
   },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query('poiTickets')
-      .withIndex('by_poi_type', q =>
-        q.eq('poiId', args.poiId).eq('ticketType', args.ticketType))
+      .query("poiTickets")
+      .withIndex("by_poi_type", (q) =>
+        q.eq("poiId", args.poiId).eq("ticketType", args.ticketType),
+      )
       .collect();
   },
 });
@@ -94,18 +95,19 @@ export const listByType = query({
  */
 export const getRecommended = query({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const tickets = await ctx.db
-      .query('poiTickets')
-      .withIndex('by_poi_active', q =>
-        q.eq('poiId', args.poiId).eq('isActive', true))
+      .query("poiTickets")
+      .withIndex("by_poi_active", (q) =>
+        q.eq("poiId", args.poiId).eq("isActive", true),
+      )
       .collect();
 
     const recommended = tickets
-      .filter(t => t.isRecommended)
+      .filter((t) => t.isRecommended)
       .sort((a, b) => a.sortOrder - b.sortOrder);
 
     const limit = args.limit ?? 5;
@@ -117,26 +119,27 @@ export const getRecommended = query({
  * Get ticket price range for a POI
  */
 export const getPriceRange = query({
-  args: { poiId: v.id('pois') },
+  args: { poiId: v.id("pois") },
   handler: async (ctx, args) => {
     const tickets = await ctx.db
-      .query('poiTickets')
-      .withIndex('by_poi_active', q =>
-        q.eq('poiId', args.poiId).eq('isActive', true))
+      .query("poiTickets")
+      .withIndex("by_poi_active", (q) =>
+        q.eq("poiId", args.poiId).eq("isActive", true),
+      )
       .collect();
 
     if (tickets.length === 0) {
       return null;
     }
 
-    const prices = tickets.map(t => t.price);
+    const prices = tickets.map((t) => t.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
-    const currency = tickets[0].currency ?? 'CNY';
+    const currency = tickets[0].currency ?? "CNY";
 
     // Check if there are free tickets
     const hasFreeTickets = tickets.some(
-      t => t.ticketType === 'free' || t.price === 0,
+      (t) => t.ticketType === "free" || t.price === 0,
     );
 
     return {
@@ -158,7 +161,7 @@ export const getPriceRange = query({
  */
 export const create = mutation({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     ticketName: v.string(),
     ticketType: ticketTypeValidator,
     price: v.number(),
@@ -196,16 +199,16 @@ export const create = mutation({
 
     // Get max sortOrder for this POI
     const existingTickets = await ctx.db
-      .query('poiTickets')
-      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
+      .query("poiTickets")
+      .withIndex("by_poi", (q) => q.eq("poiId", args.poiId))
       .collect();
 
-    const maxSortOrder
-      = existingTickets.length > 0
-        ? Math.max(...existingTickets.map(t => t.sortOrder))
+    const maxSortOrder =
+      existingTickets.length > 0
+        ? Math.max(...existingTickets.map((t) => t.sortOrder))
         : 0;
 
-    return await ctx.db.insert('poiTickets', {
+    return await ctx.db.insert("poiTickets", {
       ...args,
       isActive: args.isActive ?? true,
       sortOrder: args.sortOrder ?? maxSortOrder + 1,
@@ -220,7 +223,7 @@ export const create = mutation({
  */
 export const update = mutation({
   args: {
-    id: v.id('poiTickets'),
+    id: v.id("poiTickets"),
     ticketName: v.optional(v.string()),
     ticketType: v.optional(ticketTypeValidator),
     price: v.optional(v.number()),
@@ -273,7 +276,7 @@ export const update = mutation({
  * Delete a ticket
  */
 export const remove = mutation({
-  args: { id: v.id('poiTickets') },
+  args: { id: v.id("poiTickets") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -284,7 +287,7 @@ export const remove = mutation({
  */
 export const bulkCreate = mutation({
   args: {
-    poiId: v.id('pois'),
+    poiId: v.id("pois"),
     tickets: v.array(
       v.object({
         ticketName: v.string(),
@@ -323,11 +326,11 @@ export const bulkCreate = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const ids: Id<'poiTickets'>[] = [];
+    const ids: Id<"poiTickets">[] = [];
 
     for (let i = 0; i < args.tickets.length; i++) {
       const ticket = args.tickets[i];
-      const id = await ctx.db.insert('poiTickets', {
+      const id = await ctx.db.insert("poiTickets", {
         poiId: args.poiId,
         ...ticket,
         isActive: ticket.isActive ?? true,
@@ -346,11 +349,11 @@ export const bulkCreate = mutation({
  * Deactivate all tickets for a POI (soft delete)
  */
 export const deactivateByPoi = mutation({
-  args: { poiId: v.id('pois') },
+  args: { poiId: v.id("pois") },
   handler: async (ctx, args) => {
     const tickets = await ctx.db
-      .query('poiTickets')
-      .withIndex('by_poi', q => q.eq('poiId', args.poiId))
+      .query("poiTickets")
+      .withIndex("by_poi", (q) => q.eq("poiId", args.poiId))
       .collect();
 
     const now = Date.now();

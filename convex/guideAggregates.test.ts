@@ -3,7 +3,7 @@
  * Tests aggregate update operations and count queries
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
 // ============================================================
 // Types and Helpers
@@ -52,9 +52,9 @@ class MockAggregate {
 // Tests
 // ============================================================
 
-describe('guideAggregates - Insert Operations', () => {
-  describe('insertGuideToAggregates', () => {
-    it('should increment total count', () => {
+describe("guideAggregates - Insert Operations", () => {
+  describe("insertGuideToAggregates", () => {
+    it("should increment total count", () => {
       const totalAggregate = new MockAggregate();
 
       totalAggregate.insert(null);
@@ -64,23 +64,23 @@ describe('guideAggregates - Insert Operations', () => {
       expect(totalAggregate.count()).toBe(2);
     });
 
-    it('should increment platform count', () => {
+    it("should increment platform count", () => {
       const platformAggregate = new MockAggregate();
 
-      platformAggregate.insert('xiaohongshu');
-      platformAggregate.insert('xiaohongshu');
-      platformAggregate.insert('weibo');
+      platformAggregate.insert("xiaohongshu");
+      platformAggregate.insert("xiaohongshu");
+      platformAggregate.insert("weibo");
 
-      expect(platformAggregate.count('xiaohongshu')).toBe(2);
-      expect(platformAggregate.count('weibo')).toBe(1);
-      expect(platformAggregate.count('ctrip')).toBe(0);
+      expect(platformAggregate.count("xiaohongshu")).toBe(2);
+      expect(platformAggregate.count("weibo")).toBe(1);
+      expect(platformAggregate.count("ctrip")).toBe(0);
     });
   });
 });
 
-describe('guideAggregates - Delete Operations', () => {
-  describe('deleteGuideFromAggregates', () => {
-    it('should decrement total count', () => {
+describe("guideAggregates - Delete Operations", () => {
+  describe("deleteGuideFromAggregates", () => {
+    it("should decrement total count", () => {
       const totalAggregate = new MockAggregate();
 
       totalAggregate.insert(null);
@@ -92,76 +92,76 @@ describe('guideAggregates - Delete Operations', () => {
       expect(totalAggregate.count()).toBe(2);
     });
 
-    it('should decrement platform count', () => {
+    it("should decrement platform count", () => {
       const platformAggregate = new MockAggregate();
 
-      platformAggregate.insert('xiaohongshu');
-      platformAggregate.insert('xiaohongshu');
-      expect(platformAggregate.count('xiaohongshu')).toBe(2);
+      platformAggregate.insert("xiaohongshu");
+      platformAggregate.insert("xiaohongshu");
+      expect(platformAggregate.count("xiaohongshu")).toBe(2);
 
-      platformAggregate.delete('xiaohongshu');
-      expect(platformAggregate.count('xiaohongshu')).toBe(1);
+      platformAggregate.delete("xiaohongshu");
+      expect(platformAggregate.count("xiaohongshu")).toBe(1);
     });
 
-    it('should not go below zero', () => {
+    it("should not go below zero", () => {
       const platformAggregate = new MockAggregate();
 
-      platformAggregate.delete('nonexistent');
-      expect(platformAggregate.count('nonexistent')).toBe(0);
+      platformAggregate.delete("nonexistent");
+      expect(platformAggregate.count("nonexistent")).toBe(0);
     });
   });
 });
 
-describe('guideAggregates - Replace Operations', () => {
-  describe('replaceGuideInAggregates', () => {
-    it('should handle platform change', () => {
+describe("guideAggregates - Replace Operations", () => {
+  describe("replaceGuideInAggregates", () => {
+    it("should handle platform change", () => {
       const platformAggregate = new MockAggregate();
 
       // Initial state
-      platformAggregate.insert('xiaohongshu');
-      platformAggregate.insert('xiaohongshu');
-      platformAggregate.insert('weibo');
+      platformAggregate.insert("xiaohongshu");
+      platformAggregate.insert("xiaohongshu");
+      platformAggregate.insert("weibo");
 
-      expect(platformAggregate.count('xiaohongshu')).toBe(2);
-      expect(platformAggregate.count('weibo')).toBe(1);
+      expect(platformAggregate.count("xiaohongshu")).toBe(2);
+      expect(platformAggregate.count("weibo")).toBe(1);
 
       // Replace: change platform from xiaohongshu to weibo
-      platformAggregate.replace('xiaohongshu', 'weibo');
+      platformAggregate.replace("xiaohongshu", "weibo");
 
-      expect(platformAggregate.count('xiaohongshu')).toBe(1);
-      expect(platformAggregate.count('weibo')).toBe(2);
+      expect(platformAggregate.count("xiaohongshu")).toBe(1);
+      expect(platformAggregate.count("weibo")).toBe(2);
     });
 
-    it('should handle same platform (no change)', () => {
+    it("should handle same platform (no change)", () => {
       const platformAggregate = new MockAggregate();
 
-      platformAggregate.insert('xiaohongshu');
-      platformAggregate.insert('xiaohongshu');
+      platformAggregate.insert("xiaohongshu");
+      platformAggregate.insert("xiaohongshu");
 
-      expect(platformAggregate.count('xiaohongshu')).toBe(2);
+      expect(platformAggregate.count("xiaohongshu")).toBe(2);
 
       // Replace with same platform
-      platformAggregate.replace('xiaohongshu', 'xiaohongshu');
+      platformAggregate.replace("xiaohongshu", "xiaohongshu");
 
       // Count should remain the same
-      expect(platformAggregate.count('xiaohongshu')).toBe(2);
+      expect(platformAggregate.count("xiaohongshu")).toBe(2);
     });
   });
 });
 
-describe('guideAggregates - Count Queries', () => {
-  describe('countAllPlatforms', () => {
-    it('should return counts for all platforms', () => {
+describe("guideAggregates - Count Queries", () => {
+  describe("countAllPlatforms", () => {
+    it("should return counts for all platforms", () => {
       const platformAggregate = new MockAggregate();
 
-      platformAggregate.insert('xiaohongshu');
-      platformAggregate.insert('xiaohongshu');
-      platformAggregate.insert('weibo');
-      platformAggregate.insert('ctrip');
-      platformAggregate.insert('ctrip');
-      platformAggregate.insert('ctrip');
+      platformAggregate.insert("xiaohongshu");
+      platformAggregate.insert("xiaohongshu");
+      platformAggregate.insert("weibo");
+      platformAggregate.insert("ctrip");
+      platformAggregate.insert("ctrip");
+      platformAggregate.insert("ctrip");
 
-      const platforms = ['xiaohongshu', 'weibo', 'ctrip', 'douyin', 'mafengwo'];
+      const platforms = ["xiaohongshu", "weibo", "ctrip", "douyin", "mafengwo"];
       const counts: Record<string, number> = {};
 
       for (const platform of platforms) {
@@ -175,15 +175,15 @@ describe('guideAggregates - Count Queries', () => {
       expect(counts.mafengwo).toBe(0);
     });
 
-    it('should calculate total from individual platform counts', () => {
+    it("should calculate total from individual platform counts", () => {
       const totalAggregate = new MockAggregate();
       const platformAggregate = new MockAggregate();
 
       const docs: GuideDoc[] = [
-        { _id: '1', sourcePlatform: 'xiaohongshu' },
-        { _id: '2', sourcePlatform: 'xiaohongshu' },
-        { _id: '3', sourcePlatform: 'weibo' },
-        { _id: '4', sourcePlatform: 'ctrip' },
+        { _id: "1", sourcePlatform: "xiaohongshu" },
+        { _id: "2", sourcePlatform: "xiaohongshu" },
+        { _id: "3", sourcePlatform: "weibo" },
+        { _id: "4", sourcePlatform: "ctrip" },
       ];
 
       for (const doc of docs) {
@@ -192,25 +192,25 @@ describe('guideAggregates - Count Queries', () => {
       }
 
       expect(totalAggregate.count()).toBe(4);
-      expect(platformAggregate.count('xiaohongshu')).toBe(2);
-      expect(platformAggregate.count('weibo')).toBe(1);
-      expect(platformAggregate.count('ctrip')).toBe(1);
+      expect(platformAggregate.count("xiaohongshu")).toBe(2);
+      expect(platformAggregate.count("weibo")).toBe(1);
+      expect(platformAggregate.count("ctrip")).toBe(1);
     });
   });
 });
 
-describe('guideAggregates - Edge Cases', () => {
-  describe('empty state', () => {
-    it('should return 0 for empty aggregate', () => {
+describe("guideAggregates - Edge Cases", () => {
+  describe("empty state", () => {
+    it("should return 0 for empty aggregate", () => {
       const aggregate = new MockAggregate();
 
       expect(aggregate.count()).toBe(0);
-      expect(aggregate.count('xiaohongshu')).toBe(0);
+      expect(aggregate.count("xiaohongshu")).toBe(0);
     });
   });
 
-  describe('consistency after operations', () => {
-    it('should maintain consistency after insert/delete sequence', () => {
+  describe("consistency after operations", () => {
+    it("should maintain consistency after insert/delete sequence", () => {
       const aggregate = new MockAggregate();
 
       // Insert 5
