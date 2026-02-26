@@ -22,7 +22,7 @@ interface HandlerContext {
 }
 
 export async function handler(input: z.infer<typeof inputSchema>, { emit, logger }: HandlerContext) {
-  const { type, recipient, subject, message: _message } = input;
+  const { type, recipient, subject: _subject, message: _message } = input;
 
   try {
     logger.info('Sending notification', { type, recipient });

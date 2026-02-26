@@ -181,7 +181,9 @@ export default function JobsPage() {
                                       : 'bg-gray-100 text-gray-600'
                                   }`}
                                 >
-                                  {task.enabled ? 'Enabled' : 'Disabled'}
+                                  {task.enabled
+                                    ? 'Enabled'
+                                    : 'Disabled'}
                                 </span>
                               </div>
                               <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
