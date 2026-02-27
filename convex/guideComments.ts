@@ -18,6 +18,17 @@ export const create = mutation({
     parentId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Authenticate user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Verify identity matches user ID
+    if (identity.email !== args.userId) {
+      throw new Error('Cannot comment as another user');
+    }
+
     // Validate content
     if (!args.content.trim()) {
       throw new Error('Comment content cannot be empty');
@@ -210,6 +221,17 @@ export const toggleLike = mutation({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
+    // Authenticate user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Verify identity matches user ID
+    if (identity.email !== args.userId) {
+      throw new Error('Cannot like as another user');
+    }
+
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
       throw new Error('Comment not found');
@@ -255,6 +277,17 @@ export const update = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
+    // Authenticate user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Verify identity matches user ID
+    if (identity.email !== args.userId) {
+      throw new Error('Cannot update another user\'s comment');
+    }
+
     const comment = await ctx.db.get(args.id);
     if (!comment) {
       throw new Error('Comment not found');
@@ -297,17 +330,24 @@ export const remove = mutation({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
+    // Authenticate user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Verify identity matches user ID
+    if (identity.email !== args.userId) {
+      throw new Error('Cannot delete another user\'s comment');
+    }
+
     const comment = await ctx.db.get(args.id);
     if (!comment) {
       throw new Error('Comment not found');
     }
 
-    // Flexible userId matching - check if either contains the other
-    // This handles cases where JWT sub might be a compound ID or different format
-    const isOwner
-      = comment.userId === args.userId
-        || comment.userId.includes(args.userId)
-        || args.userId.includes(comment.userId);
+    // Strict userId matching - ensure exactly the same user
+    const isOwner = comment.userId === args.userId;
 
     if (!isOwner) {
       throw new Error('You can only delete your own comments');
