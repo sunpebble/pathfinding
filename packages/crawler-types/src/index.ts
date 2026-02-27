@@ -25,8 +25,8 @@ export * from './poi-review.js';
 export * from './quality-report.js';
 
 // Quality Score
-export type { QualityScoreFactor, QualityScoreWeight } from './quality-score.js';
-export { calculateQualityScore, QUALITY_SCORE_WEIGHTS } from './quality-score.js';
+export type { QualityScoreInput, QualityScoreResult, QualityBreakdown } from './quality-score.js';
+export { calculateQualityScoreUnified } from './quality-score.js';
 
 export * from './raw-record.js';
 
