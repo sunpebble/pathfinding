@@ -446,8 +446,8 @@ export interface ParsedNumber {
   original: string;
 }
 
-/** 质量评分结果 */
-export interface QualityScoreResult {
+/** 质量评分结果 (Mafengwo specific) */
+export interface MafengwoQualityScoreResult {
   score: number; // 0-1
   factors: {
     hasTitle: boolean;

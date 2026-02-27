@@ -3,13 +3,16 @@ import { internal } from './_generated/api';
 
 const crons = cronJobs();
 
+// Cast internal to any to avoid type errors when _generated/api.d.ts is outdated
+const internalApi = internal as any;
+
 /**
  * 每分钟检查并发送待处理的提醒
  */
 crons.interval(
   'send-pending-reminders',
   { minutes: 1 },
-  internal.notifications.sendPendingReminders,
+  internalApi.notifications.sendPendingReminders,
 );
 
 /**
@@ -18,7 +21,7 @@ crons.interval(
 crons.interval(
   'cleanup-expired-otps',
   { hours: 1 },
-  internal.phoneAuth.cleanupExpiredOtps,
+  internalApi.phoneAuth.cleanupExpiredOtps,
 );
 
 /**
@@ -27,7 +30,7 @@ crons.interval(
 crons.interval(
   'cleanup-expired-rate-limits',
   { hours: 24 },
-  internal.phoneAuth.cleanupExpiredRateLimits,
+  internalApi.phoneAuth.cleanupExpiredRateLimits,
 );
 
 /**
@@ -37,7 +40,7 @@ crons.interval(
 crons.interval(
   'cleanup-old-notifications',
   { hours: 6 },
-  internal.notifications.cleanupOldNotifications,
+  internalApi.notifications.cleanupOldNotifications,
 );
 
 /**
@@ -47,7 +50,7 @@ crons.interval(
 crons.daily(
   'cleanup-old-quality-reports',
   { hourUTC: 19, minuteUTC: 0 }, // 3:00 AM UTC+8
-  internal.dataQualityReports.cleanupOld,
+  internalApi.dataQualityReports.cleanupOld,
 );
 
 /**
