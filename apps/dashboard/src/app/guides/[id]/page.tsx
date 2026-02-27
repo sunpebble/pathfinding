@@ -245,9 +245,9 @@ export default function GuideDetailPage() {
               Destinations
             </h3>
             <div className="flex flex-wrap gap-2">
-              {guide.destinations.map((dest: string) => (
+              {guide.destinations.map((dest: string, i: number) => (
                 <span
-                  key={dest}
+                  key={`${dest}-${i}`}
                   className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium"
                 >
                   {dest}
@@ -261,9 +261,9 @@ export default function GuideDetailPage() {
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
             <div className="flex flex-wrap gap-2">
-              {guide.tags.map((tag: string) => (
+              {guide.tags.map((tag: string, i: number) => (
                 <span
-                  key={tag}
+                  key={`${tag}-${i}`}
                   className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
                 >
                   #
