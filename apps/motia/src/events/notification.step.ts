@@ -14,6 +14,7 @@ export const config = {
   subscribes: ['notification.send'],
   emits: ['notification.sent', 'notification.failed'],
   flows: ['notification'],
+  inputSchema,
 };
 
 interface HandlerContext {
@@ -22,7 +23,7 @@ interface HandlerContext {
 }
 
 export async function handler(input: z.infer<typeof inputSchema>, { emit, logger }: HandlerContext) {
-  const { type, recipient, subject, message: _message } = input;
+  const { type, recipient, message: _message } = input;
 
   try {
     logger.info('Sending notification', { type, recipient });

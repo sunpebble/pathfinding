@@ -1,7 +1,7 @@
-import type { UseQueryResult } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useHealthStatus } from '@/hooks/use-health-status';
+import type { UseQueryResult } from '@tanstack/react-query';
 
 import { Header } from './header';
 

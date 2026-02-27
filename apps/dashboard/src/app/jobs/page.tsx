@@ -1,426 +1,376 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { CrawlJob } from '@/types/api';
+import { useQuery } from '@tanstack/react-query';
 import {
+  AlertCircle,
+  BarChart2,
   CheckCircle,
   Clock,
-  Eye,
-  Loader2,
-  Play,
-  Plus,
-  RefreshCw,
-  StopCircle,
+  ExternalLink,
+  PlayCircle,
+  Search,
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import * as React from 'react';
-import { useCallback, useMemo, useState } from 'react';
-import {
-  cancelCrawlJob,
-  getCrawlJobs,
-  getSchedulerStatus,
-  startCrawlJob,
-  startScheduledTask,
-  stopScheduledTask,
-} from '@/lib/api';
-import { formatDateTime, shortId } from '@/lib/utils';
+import { useState } from 'react';
+import { getCrawlJobs } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
-export default function JobsPage() {
-  const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<string>('');
+const STATUS_FILTERS = [
+  { value: '', label: 'All Status' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'running', label: 'Running' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'failed', label: 'Failed' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
 
-  const {
-    data: jobsData,
-    isLoading,
-    refetch,
-  } = useQuery({
-    queryKey: ['crawl-jobs', statusFilter],
-    queryFn: () =>
-      getCrawlJobs({ status: statusFilter || undefined, limit: 50 }),
-  });
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    running: 'bg-blue-100 text-blue-800 border-blue-200 animate-pulse',
+    completed: 'bg-green-100 text-green-800 border-green-200',
+    failed: 'bg-red-100 text-red-800 border-red-200',
+    cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
+  };
 
-  const {
-    data: schedulerStatus,
-    isLoading: isLoadingScheduler,
-    refetch: refetchScheduler,
-  } = useQuery({
-    queryKey: ['scheduler-status'],
-    queryFn: getSchedulerStatus,
-    refetchInterval: 10000,
-  });
+  const icons: Record<string, React.ElementType> = {
+    pending: Clock,
+    running: PlayCircle,
+    completed: CheckCircle,
+    failed: XCircle,
+    cancelled: XCircle,
+  };
 
-  const startMutation = useMutation({
-    mutationFn: startCrawlJob,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crawl-jobs'] });
-    },
-  });
-
-  const cancelMutation = useMutation({
-    mutationFn: cancelCrawlJob,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['crawl-jobs'] });
-    },
-  });
-
-  const startTaskMutation = useMutation({
-    mutationFn: startScheduledTask,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduler-status'] });
-    },
-  });
-
-  const stopTaskMutation = useMutation({
-    mutationFn: stopScheduledTask,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduler-status'] });
-    },
-  });
-
-  const jobs = useMemo(() => jobsData?.data ?? [], [jobsData?.data]);
-
-  const handleRefresh = useCallback(() => {
-    refetch();
-    refetchScheduler();
-  }, [refetch, refetchScheduler]);
+  const Icon = icons[status] || AlertCircle;
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Crawl Jobs</h1>
-          <p className="text-gray-500">Manage and monitor crawling tasks</p>
-        </div>
+    <span
+      className={cn(
+        'px-2.5 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1.5 w-fit',
+        styles[status] || 'bg-gray-100 text-gray-800 border-gray-200',
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+function formatDate(timestamp?: number) {
+  if (!timestamp)
+    return '-';
+  return new Date(timestamp).toLocaleString('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatDuration(start?: number, end?: number) {
+  if (!start || !end)
+    return '-';
+  const seconds = Math.floor((end - start) / 1000);
+  if (seconds < 60)
+    return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}m ${seconds % 60}s`;
+}
+
+function JobRow({ job }: { job: CrawlJob }) {
+  return (
+    <tr className="hover:bg-gray-50 transition-colors group">
+      <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleRefresh}
-            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </button>
-          <Link
-            href="/jobs/create"
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4" />
-            Create Job
-          </Link>
-        </div>
-      </div>
-
-      {/* Scheduler Status Card */}
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-        <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Scheduler Status
-          </h2>
-        </div>
-        <div className="p-6">
-          {isLoadingScheduler ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+          <div className="flex-shrink-0">
+            <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-mono text-xs border border-gray-200">
+              {job.platform.slice(0, 2).toUpperCase()}
             </div>
-          ) : schedulerStatus ? (
-            <div className="space-y-6">
-              {/* Worker Status */}
-              <div>
-                <h3 className="mb-3 text-sm font-medium text-gray-700">
-                  Worker Status
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="rounded-lg bg-blue-50 p-4">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {schedulerStatus.workerStatus.running}
-                    </div>
-                    <div className="text-sm text-blue-600">Running</div>
-                  </div>
-                  <div className="rounded-lg bg-amber-50 p-4">
-                    <div className="text-2xl font-bold text-amber-600">
-                      {schedulerStatus.workerStatus.pending}
-                    </div>
-                    <div className="text-sm text-amber-600">Pending</div>
-                  </div>
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <div className="text-2xl font-bold text-gray-600">
-                      {schedulerStatus.workerStatus.maxConcurrent}
-                    </div>
-                    <div className="text-sm text-gray-600">Max Concurrent</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Active Tasks */}
-              <div>
-                <h3 className="mb-3 text-sm font-medium text-gray-700">
-                  Scheduled Tasks
-                </h3>
-                {schedulerStatus.tasks.length === 0
-                  ? (
-                      <p className="text-sm text-gray-500">
-                        No scheduled tasks configured
-                      </p>
-                    )
-                  : (
-                      <div className="space-y-2">
-                        {schedulerStatus.tasks.map(task => (
-                          <div
-                            key={task.name}
-                            className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-gray-900">
-                                  {task.name}
-                                </span>
-                                <span
-                                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                    task.enabled
-                                      ? 'bg-emerald-50 text-emerald-600'
-                                      : 'bg-gray-100 text-gray-600'
-                                  }`}
-                                >
-                                  {task.enabled ? 'Enabled' : 'Disabled'}
-                                </span>
-                              </div>
-                              <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  {task.cronExpression}
-                                </span>
-                                {task.lastRun && (
-                                  <span>
-                                    Last run:
-                                    {' '}
-                                    {formatDateTime(task.lastRun)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 ml-4">
-                              {task.enabled
-                                ? (
-                                    <button
-                                      onClick={() => stopTaskMutation.mutate(task.name)}
-                                      disabled={stopTaskMutation.isPending}
-                                      className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Stop task"
-                                    >
-                                      <StopCircle className="h-4 w-4" />
-                                      Stop
-                                    </button>
-                                  )
-                                : (
-                                    <button
-                                      onClick={() =>
-                                        startTaskMutation.mutate(task.name)}
-                                      disabled={startTaskMutation.isPending}
-                                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
-                                      title="Start task"
-                                    >
-                                      <Play className="h-4 w-4" />
-                                      Start
-                                    </button>
-                                  )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-              </div>
+          </div>
+          <div>
+            <div className="font-medium text-gray-900 group-hover:text-emerald-600 transition-colors">
+              <Link href={`/jobs/${job._id}`} className="hover:underline">
+                {job.name || 'Untitled Job'}
+              </Link>
             </div>
-          ) : (
-            <div className="text-center text-sm text-gray-500">
-              Failed to load scheduler status
+            <div className="text-xs text-gray-500 font-mono mt-0.5">
+              {job._id.slice(0, 8)}
+              ...
+            </div>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <StatusBadge status={job.status} />
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-wider text-gray-400">
+              Start
+            </span>
+            {formatDate(job.startedAt)}
+          </div>
+          {job.completedAt && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs uppercase tracking-wider text-gray-400">
+                End
+              </span>
+              {formatDate(job.completedAt)}
             </div>
           )}
         </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {job.startedAt && job.completedAt
+          ? (
+              <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                {formatDuration(job.startedAt, job.completedAt)}
+              </span>
+            )
+          : (
+              '-'
+            )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {job.statistics
+          ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                  <CheckCircle className="h-3 w-3" />
+                  <span className="font-medium">
+                    {job.statistics.processedCount || 0}
+                  </span>
+                </div>
+                {job.statistics.failedCount > 0 && (
+                  <div className="flex items-center gap-1.5 text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                    <AlertCircle className="h-3 w-3" />
+                    <span className="font-medium">
+                      {job.statistics.failedCount}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
+          : (
+              '-'
+            )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <Link
+          href={`/jobs/${job._id}`}
+          className="text-gray-400 hover:text-emerald-600 transition-colors inline-block p-2 hover:bg-emerald-50 rounded-lg"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Link>
+      </td>
+    </tr>
+  );
+}
+
+export default function JobsPage() {
+  const [status, setStatus] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const pageSize = 20;
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['jobs', status, page],
+    queryFn: () =>
+      getCrawlJobs({
+        status: status || undefined,
+        limit: pageSize,
+        offset: page * pageSize,
+      }),
+  });
+
+  const jobs = data?.data || [];
+  const total = data?.pagination?.total || 0;
+  const totalPages = Math.ceil(total / pageSize);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <BarChart2 className="h-6 w-6 text-emerald-600" />
+            Crawl Jobs
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage and monitor data collection tasks
+          </p>
+        </div>
+        <Link
+          href="/jobs/new"
+          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <PlayCircle className="h-4 w-4" />
+          New Job
+        </Link>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="running">Running</option>
-          <option value="completed">Completed</option>
-          <option value="failed">Failed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        <span className="text-sm text-gray-500">
-          {jobsData?.pagination.total ?? 0}
-          {' '}
-          jobs total
-        </span>
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+        <div className="flex items-center gap-4">
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search jobs..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {STATUS_FILTERS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => {
+                  setStatus(f.value);
+                  setPage(0);
+                }}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors',
+                  status === f.value
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200 border'
+                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100',
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Jobs Table */}
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Platform
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Records
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Created
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {isLoading ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
-                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
-                </td>
-              </tr>
-            ) : jobs.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-12 text-center text-gray-500"
-                >
-                  No jobs found.
-                  {' '}
-                  <Link
-                    href="/jobs/create"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Create one
-                  </Link>
-                </td>
-              </tr>
-            ) : (
-              jobs.map(job => (
-                <tr key={job.id} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
-                    {shortId(job.id)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{job.name}</div>
-                    <div className="text-sm text-gray-500">{job.job_type}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                      {job.platform}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <StatusBadge status={job.status} />
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {job.statistics?.records_extracted ?? 0}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {formatDateTime(job.created_at)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {job.status === 'pending' && (
-                        <button
-                          onClick={() => startMutation.mutate(job.id)}
-                          disabled={startMutation.isPending}
-                          className="rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:opacity-50"
-                          title="Start job"
-                        >
-                          <Play className="h-4 w-4" />
-                        </button>
-                      )}
-                      {job.status === 'running' && (
-                        <button
-                          onClick={() => {
-                            // eslint-disable-next-line no-alert
-                            if (confirm('Cancel this job?')) {
-                              cancelMutation.mutate(job.id);
-                            }
-                          }}
-                          disabled={cancelMutation.isPending}
-                          className="rounded-lg bg-red-500 p-2 text-white hover:bg-red-600 disabled:opacity-50"
-                          title="Cancel job"
-                        >
-                          <StopCircle className="h-4 w-4" />
-                        </button>
-                      )}
-                      <Link
-                        href={`/jobs/${job.id}`}
-                        className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
-                        title="View details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Link>
+      {/* Content */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {isLoading
+          ? (
+              <div className="flex items-center justify-center py-24">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+              </div>
+            )
+          : error
+            ? (
+                <div className="p-8 text-center">
+                  <div className="bg-red-50 text-red-700 p-4 rounded-lg inline-block">
+                    Failed to load jobs. Please try again.
+                  </div>
+                </div>
+              )
+            : jobs.length === 0
+              ? (
+                  <div className="text-center py-24">
+                    <div className="bg-gray-50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
+                      <BarChart2 className="h-8 w-8 text-gray-300" />
                     </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                    <p className="text-gray-900 font-medium">No jobs found</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Create a new job to start collecting data
+                    </p>
+                  </div>
+                )
+              : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Job Info
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Status
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Timeline
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Duration
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Statistics
+                            </th>
+                            <th scope="col" className="relative px-6 py-3">
+                              <span className="sr-only">Actions</span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {jobs.map(job => (
+                            <JobRow key={job._id} job={job} />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4 bg-gray-50">
+                        <p className="text-sm text-gray-500">
+                          Showing
+                          {' '}
+                          <span className="font-medium">
+                            {page * pageSize + 1}
+                          </span>
+                          {' '}
+                          to
+                          {' '}
+                          <span className="font-medium">
+                            {Math.min((page + 1) * pageSize, total)}
+                          </span>
+                          {' '}
+                          of
+                          {' '}
+                          <span className="font-medium">{total}</span>
+                          {' '}
+                          results
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setPage(Math.max(0, page - 1))}
+                            disabled={page === 0}
+                            className="px-3 py-1.5 text-sm border rounded-lg bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm"
+                          >
+                            Previous
+                          </button>
+                          <button
+                            onClick={() =>
+                              setPage(Math.min(totalPages - 1, page + 1))}
+                            disabled={page >= totalPages - 1}
+                            className="px-3 py-1.5 text-sm border rounded-lg bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
       </div>
     </div>
   );
 }
-
-// Status config moved outside component to avoid recreation on each render
-const STATUS_CONFIG: Record<
-  string,
-  { icon: React.ReactNode; className: string }
-> = {
-  pending: {
-    icon: <Clock className="h-3.5 w-3.5" />,
-    className: 'bg-amber-50 text-amber-600 border-amber-200',
-  },
-  running: {
-    icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-    className: 'bg-blue-50 text-blue-600 border-blue-200',
-  },
-  completed: {
-    icon: <CheckCircle className="h-3.5 w-3.5" />,
-    className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-  },
-  failed: {
-    icon: <XCircle className="h-3.5 w-3.5" />,
-    className: 'bg-red-50 text-red-600 border-red-200',
-  },
-  cancelled: {
-    icon: <XCircle className="h-3.5 w-3.5" />,
-    className: 'bg-gray-50 text-gray-600 border-gray-200',
-  },
-};
-
-const StatusBadge = React.memo(({
-  status,
-}: {
-  status: string;
-}) => {
-  const statusConfig = STATUS_CONFIG[status] ?? STATUS_CONFIG.cancelled!;
-  const { icon, className } = statusConfig;
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}
-    >
-      {icon}
-      {status}
-    </span>
-  );
-});

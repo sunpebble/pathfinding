@@ -4,6 +4,7 @@ import { internal } from './_generated/api';
 const crons = cronJobs();
 
 // Cast internal to any to avoid type errors when _generated/api.d.ts is outdated
+// eslint-disable-next-line ts/no-explicit-any
 const internalApi = internal as any;
 
 /**
