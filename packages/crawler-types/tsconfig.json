@@ -4,8 +4,8 @@
     "rootDir": "./src",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "outDir": "./dist",
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "outDir": "./dist"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

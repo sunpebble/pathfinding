@@ -3,6 +3,7 @@
 Pathfinding 是一个旅行规划 iOS App，使用 SwiftUI 构建，支持 iOS 16+。App 包含 4 个主 Tab（发现、聊天、行程、个人），约 30+ 个 View 文件。当前已有完善的 DesignSystem（DesignTokens），包含 spacing、radius、shadow、typography、colors、button styles 等 token。
 
 当前问题：
+
 - 零 accessibility 支持（无 accessibilityLabel/Hint/Value）
 - 工具栏按钮密集（ItineraryListView leading 有 3 个按钮）
 - 自定义字体使用固定 size（Display/Numeric/Card/MapLegend），不支持 Dynamic Type
@@ -13,6 +14,7 @@ Pathfinding 是一个旅行规划 iOS App，使用 SwiftUI 构建，支持 iOS 1
 ## Goals / Non-Goals
 
 **Goals:**
+
 - 为核心交互元素添加 VoiceOver 支持（accessibilityLabel/Hint/Value）
 - 优化工具栏布局，减少按钮密度，增大点击区域
 - 在 DesignSystem 中添加 accessibility 相关的 ViewModifier 和工具方法
@@ -21,6 +23,7 @@ Pathfinding 是一个旅行规划 iOS App，使用 SwiftUI 构建，支持 iOS 1
 - swipe action 添加可发现性提示
 
 **Non-Goals:**
+
 - 不做完整的 WCAG 合规审计（需要人工辅助测试）
 - 不重构现有导航架构（NavigationStack 结构保持不变）
 - 不修改后端 API
