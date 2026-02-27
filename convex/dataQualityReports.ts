@@ -1,5 +1,6 @@
-/* eslint-disable ts/ban-ts-comment */
+// eslint-disable-next-line ts/ban-ts-comment
 // @ts-nocheck
+
 /**
  * Data Quality Reports - Convex Functions
  * CRUD operations for data quality analysis reports
@@ -123,7 +124,9 @@ export const getSummary = query({
  * Clean up old quality reports (internal, called by cron)
  * Deletes reports older than 90 days
  */
-export const cleanupOld = internalMutation({
+
+// eslint-disable-next-line ts/no-explicit-any
+export const cleanupOld: any = internalMutation({
   handler: async (ctx): Promise<{ deletedCount: number }> => {
     const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
 

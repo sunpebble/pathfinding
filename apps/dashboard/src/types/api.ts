@@ -23,15 +23,21 @@ export interface GuideWithAI {
   quality_score: number;
   destinations?: string[];
   tags?: string[];
-  // AI enriched fields
+  // AI enriched fields (camelCase)
   aiSummary?: string;
   aiTips?: string[];
   aiBestTime?: string;
   aiDuration?: string;
   aiBudget?: string;
   aiDays?: AiDay[];
-  ai_days?: AiDay[]; // Duplicate for snake_case compatibility
   aiProcessedAt?: number;
+  // AI enriched fields (snake_case duplicates for API compatibility)
+  ai_summary?: string;
+  ai_tips?: string[];
+  ai_best_time?: string;
+  ai_duration?: string;
+  ai_budget?: string;
+  ai_days?: AiDay[];
   geocoding_metrics?: {
     total_pois: number;
     average_confidence: number;

@@ -319,11 +319,11 @@ export default function GuideDetailPage() {
             )}
           </div>
 
-          {(guide.aiTips || guide.ai_tips) && (guide.aiTips || guide.ai_tips).length > 0 && (
+          {(guide.aiTips ?? guide.ai_tips) && (guide.aiTips ?? guide.ai_tips)!.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">💡 实用贴士</h3>
               <ul className="space-y-1.5">
-                {(guide.aiTips || guide.ai_tips).map((tip: string, i: number) => (
+                {(guide.aiTips ?? guide.ai_tips)!.map((tip: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                     <span className="text-purple-400 mt-0.5 flex-shrink-0">•</span>
                     {tip}

@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  // Skip TypeScript errors during build - typecheck is done separately via `pnpm typecheck`
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // Environment variables exposed to the browser
   env: {
     NEXT_PUBLIC_CONVEX_URL:

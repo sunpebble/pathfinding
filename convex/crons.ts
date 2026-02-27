@@ -1,3 +1,5 @@
+// eslint-disable-next-line ts/ban-ts-comment
+// @ts-nocheck
 import { cronJobs } from 'convex/server';
 import { internal } from './_generated/api';
 

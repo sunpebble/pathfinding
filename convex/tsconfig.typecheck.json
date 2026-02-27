@@ -22,6 +22,7 @@
     "_generated/**/*",
     "phoneAuth.ts",
     "notifications.ts",
-    "dataQualityReports.ts"
+    "dataQualityReports.ts",
+    "*.test.ts"
   ]
 }

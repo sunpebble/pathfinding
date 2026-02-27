@@ -1,8 +1,8 @@
 {
   "name": "@pathfinding/motia",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "motia dev",
     "start": "motia start",
@@ -11,12 +11,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@browserbasehq/stagehand": "^3.0.0",
-    "@onkernel/sdk": "^0.29.0",
+    "@browserbasehq/stagehand": "^3.1.0",
+    "@onkernel/sdk": "^0.41.0",
     "@pathfinding/crawler-types": "workspace:*",
-    "convex": "^1.21.0",
-    "motia": "^0.17.14-beta.196",
-    "zod": "^3.24.2"
+    "convex": "^1.32.0",
+    "motia": "1.0.0-rc.26",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "vitest": "^4.0.18"
