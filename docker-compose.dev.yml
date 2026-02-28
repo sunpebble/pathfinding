@@ -2,15 +2,15 @@ services:
   tidb:
     image: pingcap/tidb:v8.5.0
     ports:
-      - "4000:4000"    # MySQL protocol port
-      - "10080:10080"  # TiDB status port
+      - '4000:4000' # MySQL protocol port
+      - '10080:10080' # TiDB status port
     volumes:
       - tidb-data:/tmp/tidb
     environment:
       - TIDB_ENABLE_TELEMETRY=0
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "4000", "-u", "root"]
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1, -P, '4000', -u, root]
       interval: 10s
       timeout: 5s
       retries: 5
