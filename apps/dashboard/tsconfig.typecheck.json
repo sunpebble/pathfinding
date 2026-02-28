@@ -14,18 +14,18 @@
       "@pathfinding/convex-client/dataModel": ["../../convex/_generated/dataModel"]
     },
     "allowJs": true,
-    "declaration": false,
-    "declarationMap": false,
-    "noEmit": true,
-    "noImplicitAny": false,
-    "skipLibCheck": true,
-    "strict": false,
-    "strictNullChecks": false,
     "plugins": [
       {
         "name": "next"
       }
-    ]
+    ],
+    "strict": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "skipLibCheck": true
   },
   "include": [
     "next-env.d.ts",
