@@ -209,7 +209,6 @@ export default function JobsPage() {
                                             disabled={stopTaskMutation.isPending}
                                             className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center gap-1.5"
                                             title="Stop task"
-                                            aria-label="Stop task"
                                           >
                                             <StopCircle className="h-4 w-4" />
                                             Stop
@@ -222,7 +221,6 @@ export default function JobsPage() {
                                             disabled={startTaskMutation.isPending}
                                             className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
                                             title="Start task"
-                                            aria-label="Start task"
                                           >
                                             <Play className="h-4 w-4" />
                                             Start

@@ -243,7 +243,7 @@ export function CollaboratorPanel({
                       isRemoving && 'opacity-50 cursor-not-allowed',
                     )}
                     title="Remove collaborator"
-                    aria-label="Remove collaborator"
+                    aria-label={isRemoving ? 'Removing collaborator' : 'Remove collaborator'}
                   >
                     {isRemoving
                       ? (
