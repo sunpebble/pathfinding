@@ -128,7 +128,7 @@ export const upsertTravelPreferences = mutation({
     }
 
     return await ctx.db.insert('userTravelPreferences', {
-      userId,
+      userId: _userId,
       ...preferences,
       createdAt: now,
       updatedAt: now,
