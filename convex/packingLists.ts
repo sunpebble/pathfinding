@@ -369,7 +369,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     await checkEditPermission(ctx, args.id, args.userId);
 
-    const { id, userId, ...updates } = args;
+    const { id, userId: _userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );
@@ -567,7 +567,7 @@ export const updateItem = mutation({
 
     await checkEditPermission(ctx, item.packingListId, args.userId);
 
-    const { id, userId, ...updates } = args;
+    const { id, userId: _userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );
@@ -866,7 +866,7 @@ export const updateTemplate = mutation({
       throw new Error('Only the creator can modify this template');
     }
 
-    const { id, userId, ...updates } = args;
+    const { id, userId: _userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );

@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 /**
  * 历史数据清洗脚本
  * 从 Convex 拉取所有游记，用 content-cleaner 清洗后回写

@@ -214,7 +214,7 @@ export const update = mutation({
       throw new Error('You do not have permission to update this booking');
     }
 
-    const { id, userId, ...updates } = args;
+    const { id, userId: _userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );

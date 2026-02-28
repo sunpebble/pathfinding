@@ -98,7 +98,7 @@ export const create = mutation({
 
     if (existing) {
       // Update existing review
-      const { userId, wifiSpotId, ...updates } = args;
+      const { userId: _userId, wifiSpotId: _wifiSpotId, ...updates } = args;
       await ctx.db.patch(existing._id, {
         ...updates,
         updatedAt: Date.now(),
