@@ -76,7 +76,7 @@ export function getTransportLabel(
   mode: TransportMode,
   locale: 'zh' | 'en' = 'zh',
 ): string {
-  const transport = TRANSPORT_MODES[mode];
+  const transport = TRANSPORT_MODES[mode]!;
   return locale === 'zh' ? transport.label : transport.labelEn;
 }
 
@@ -84,7 +84,7 @@ export function getTransportLabel(
  * Get transport mode icon name
  */
 export function getTransportIcon(mode: TransportMode): string {
-  return TRANSPORT_MODES[mode].icon;
+  return TRANSPORT_MODES[mode]!.icon;
 }
 
 /**
@@ -94,7 +94,7 @@ export function estimateTravelTime(
   distanceKm: number,
   mode: TransportMode,
 ): number {
-  const speed = TRANSPORT_MODES[mode].defaultSpeed;
+  const speed = TRANSPORT_MODES[mode]!.defaultSpeed;
   const hours = distanceKm / speed;
   return Math.ceil(hours * 60);
 }

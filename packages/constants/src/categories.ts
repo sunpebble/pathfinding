@@ -88,7 +88,7 @@ export function getCategoryLabel(
   category: PoiCategory,
   locale: 'zh' | 'en' = 'zh',
 ): string {
-  const cat = POI_CATEGORIES[category];
+  const cat = POI_CATEGORIES[category]!;
   return locale === 'zh' ? cat.label : cat.labelEn;
 }
 
@@ -96,5 +96,5 @@ export function getCategoryLabel(
  * Get category icon name
  */
 export function getCategoryIcon(category: PoiCategory): string {
-  return POI_CATEGORIES[category].icon;
+  return POI_CATEGORIES[category]!.icon;
 }

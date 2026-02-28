@@ -1,11 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2021",
-    "lib": ["ES2021"],
+    "lib": [
+      "ES2021"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
@@ -17,7 +21,9 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["*.ts"],
+  "include": [
+    "*.ts"
+  ],
   "exclude": [
     "_generated/**/*",
     "phoneAuth.ts",

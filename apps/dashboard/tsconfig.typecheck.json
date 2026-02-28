@@ -4,13 +4,26 @@
     "incremental": true,
     "target": "ES2020",
     "jsx": "preserve",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["./src/*"],
-      "@pathfinding/convex-client/api": ["../../convex/_generated/api"],
-      "@pathfinding/convex-client/dataModel": ["../../convex/_generated/dataModel"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@pathfinding/convex-client/api": [
+        "../../convex/_generated/api"
+      ],
+      "@pathfinding/convex-client/dataModel": [
+        "../../convex/_generated/dataModel"
+      ],
+      "@pathfinding/convex-client": [
+        "../../packages/convex-client/src"
+      ]
     },
     "allowJs": true,
     "strict": false,
@@ -24,7 +37,9 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "declaration": false,
+    "declarationMap": false
   },
   "include": [
     "next-env.d.ts",
@@ -32,5 +47,8 @@
     "src/**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "../../convex"]
+  "exclude": [
+    "node_modules",
+    "../../convex"
+  ]
 }
