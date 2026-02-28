@@ -77,6 +77,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           <Link
             href="/jobs"
             className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+            aria-label="Back to Jobs"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
