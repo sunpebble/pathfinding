@@ -117,7 +117,7 @@ export const upsertTravelPreferences = mutation({
       .first();
 
     const now = Date.now();
-    const { userId, ...preferences } = args;
+    const { userId: _userId, ...preferences } = args;
 
     if (existing) {
       await ctx.db.patch(existing._id, {
@@ -468,7 +468,7 @@ export const updateRequest = mutation({
       throw new Error('You can only update your own requests');
     }
 
-    const { id, userId, ...updates } = args;
+    const { id, userId: _userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );

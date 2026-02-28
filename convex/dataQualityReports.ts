@@ -125,7 +125,7 @@ export const getSummary = query({
  * Deletes reports older than 90 days
  */
 
-// eslint-disable-next-line ts/no-explicit-any
+
 export const cleanupOld: any = internalMutation({
   handler: async (ctx): Promise<{ deletedCount: number }> => {
     const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
