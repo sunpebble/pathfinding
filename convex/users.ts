@@ -47,9 +47,10 @@ export const getUserById = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     // Query profiles table - in Convex Auth, user data is spread across auth tables and profiles
+    // ⚡ Bolt: Using 'by_email' index instead of .filter() full table scan
     const profile = await ctx.db
       .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
+      .withIndex('by_email', q => q.eq('email', args.userId))
       .first();
 
     if (!profile) {
@@ -76,9 +77,10 @@ export const getUserProfile = query({
   },
   handler: async (ctx, args) => {
     // Query profiles table
+    // ⚡ Bolt: Using 'by_email' index instead of .filter() full table scan
     const profile = await ctx.db
       .query('profiles')
-      .filter(q => q.eq(q.field('email'), args.userId))
+      .withIndex('by_email', q => q.eq('email', args.userId))
       .first();
 
     if (!profile) {
