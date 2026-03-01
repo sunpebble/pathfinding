@@ -1,6 +1,7 @@
 import type { Id } from './_generated/dataModel';
 import { httpRouter } from 'convex/server';
 import { api } from './_generated/api';
+import type { ActionCtx } from './_generated/server';
 import { httpAction } from './_generated/server';
 import { auth } from './auth';
 
@@ -153,7 +154,12 @@ http.route({
 /**
  * Helper to extract userId from Authorization header JWT token
  */
-async function getUserIdFromAuth(request: Request): Promise<string | null> {
+async function getUserIdFromAuth(ctx: ActionCtx): Promise<string | null> {
+  const identity = await ctx.auth.getUserIdentity();
+  return identity?.subject || null;
+}
+
+/**
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return null;
@@ -254,7 +260,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       // Extract userId from JWT token
-      const userId = await getUserIdFromAuth(request);
+      const userId = await getUserIdFromAuth(ctx);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
@@ -334,7 +340,7 @@ http.route({
   method: 'PATCH',
   handler: httpAction(async (ctx, request) => {
     try {
-      const userId = await getUserIdFromAuth(request);
+      const userId = await getUserIdFromAuth(ctx);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
@@ -388,7 +394,7 @@ http.route({
   method: 'DELETE',
   handler: httpAction(async (ctx, request) => {
     try {
-      const userId = await getUserIdFromAuth(request);
+      const userId = await getUserIdFromAuth(ctx);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
@@ -485,7 +491,7 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     try {
-      const userId = await getUserIdFromAuth(request);
+      const userId = await getUserIdFromAuth(ctx);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
@@ -548,7 +554,7 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     try {
-      const userId = await getUserIdFromAuth(request);
+      const userId = await getUserIdFromAuth(ctx);
       if (!userId) {
         return new Response(JSON.stringify({ error: '未授权，请先登录' }), {
           status: 401,
