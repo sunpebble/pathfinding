@@ -12,7 +12,6 @@ import { desc, eq, gte, like, sql } from 'drizzle-orm';
  */
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 
 type Guide = InferSelectModel<typeof travelGuides>;
 
@@ -20,6 +19,39 @@ const app = new Hono<{ Variables: AuthVariables }>();
 
 function getDb() {
   return createDb();
+}
+
+/**
+ * Convert a DB guide row to the iOS-compatible response format.
+ * The iOS BlogPost model expects specific field names that differ from the DB schema.
+ */
+function toClientGuide(guide: Guide): Record<string, unknown> {
+  return {
+    id: String(guide.id),
+    title: guide.title,
+    author_name: guide.authorName,
+    content: guide.content,
+    content_html: null,
+    content_markdown: null,
+    summary: null,
+    cover_image_url: guide.coverImageUrl,
+    image_urls: guide.imageUrls,
+    source_platform: guide.platform,
+    quality_score: guide.qualityScore,
+    views_count: guide.viewCount,
+    likes_count: guide.likeCount,
+    saves_count: 0,
+    created_at: guide.createdAt?.toISOString() ?? null,
+    destinations: guide.destinations,
+    // AI fields from enrichedData
+    ai_summary: (guide.enrichedData as Record<string, unknown> | null)?.summary ?? null,
+    ai_tips: (guide.enrichedData as Record<string, unknown> | null)?.tips ?? null,
+    ai_best_time: (guide.enrichedData as Record<string, unknown> | null)?.bestTime ?? null,
+    ai_duration: (guide.enrichedData as Record<string, unknown> | null)?.duration ?? null,
+    ai_budget: (guide.enrichedData as Record<string, unknown> | null)?.budget ?? null,
+    ai_days: (guide.dayItineraries as unknown[]) ?? null,
+    ai_processed_at: null,
+  };
 }
 
 // ── GET / — List guides with pagination ────────────────
@@ -67,7 +99,7 @@ app.get('/', async (c) => {
   }
 
   return c.json({
-    data: convertKeysToSnakeCase(results),
+    data: results.map(toClientGuide),
     pagination: { limit, offset, total: results.length },
   });
 });
@@ -109,7 +141,7 @@ app.get('/search', async (c) => {
   }
 
   return c.json({
-    data: convertKeysToSnakeCase(results),
+    data: results.map(toClientGuide),
     pagination: { total: results.length, limit, offset: 0 },
   });
 });
@@ -163,7 +195,7 @@ app.get('/by-id', async (c) => {
     return c.json({ error: 'Guide not found' }, 404);
   }
 
-  return c.json(convertKeysToSnakeCase(result[0]));
+  return c.json(toClientGuide(result[0]!));
 });
 
 // ── GET /:id — Get guide by ID (path param) ────────────
@@ -181,7 +213,7 @@ app.get('/:id', async (c) => {
     return c.json({ error: 'Guide not found' }, 404);
   }
 
-  return c.json({ data: convertKeysToSnakeCase(result[0]) });
+  return c.json({ data: toClientGuide(result[0]!) });
 });
 
 // ── GET /stats — Guide statistics ──────────────────────

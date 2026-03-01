@@ -2,7 +2,7 @@
  * Crawl schema - crawl jobs, raw records, training datasets, quality reports, blog posts.
  */
 import { index, int, json, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const crawlJobs = mysqlTable('crawl_jobs', {
   id: id(),

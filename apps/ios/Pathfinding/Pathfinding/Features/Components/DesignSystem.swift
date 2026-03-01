@@ -846,7 +846,7 @@ extension View {
   }
 
   /// Apply animation that respects Reduce Motion accessibility setting
-  func adaptiveAnimation(_ animation: Animation = DesignTokens.Animation.standard, value: some Equatable) -> some View {
+  func adaptiveAnimation(_ animation: Animation = DesignTokens.Animation.standard, value: some Hashable) -> some View {
     modifier(AdaptiveAnimationModifier(animation: animation, trigger: AnyHashableEquatable(value)))
   }
 
@@ -891,12 +891,12 @@ struct AppleShadowModifier: ViewModifier {
 
 // MARK: - Adaptive Animation Modifier
 
-private struct AnyHashableEquatable: Equatable {
+fileprivate struct AnyHashableEquatable: Equatable {
   let value: AnyHashable
   init<T: Hashable>(_ value: T) { self.value = AnyHashable(value) }
 }
 
-struct AdaptiveAnimationModifier: ViewModifier {
+fileprivate struct AdaptiveAnimationModifier: ViewModifier {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   let animation: Animation
   let trigger: AnyHashableEquatable

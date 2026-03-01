@@ -8,7 +8,7 @@ import {
   timestamp,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { fk, id } from './columns.js';
+import { fk, id } from './columns';
 
 // ── Agent Sessions ─────────────────────────────────────
 export const agentSessions = mysqlTable(

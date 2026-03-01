@@ -9,7 +9,7 @@ import {
   text,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Travel Notes ───────────────────────────────────────
 export const travelNotes = mysqlTable(

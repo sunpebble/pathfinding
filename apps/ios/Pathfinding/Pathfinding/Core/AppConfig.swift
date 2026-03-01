@@ -46,7 +46,7 @@ enum AppConfig {
 
   // MARK: - API Configuration
 
-  /// Convex URL for CRUD operations (guides, chat sessions, translations data, etc.)
+  /// API URL for CRUD operations (guides, chat sessions, translations data, etc.)
   static var convexURL: String {
     // Read from Info.plist (set via xcconfig)
     if let url = infoPlistString(forKey: "PFConvexURL"), !url.isEmpty {
@@ -55,7 +55,7 @@ enum AppConfig {
     // Fallback based on environment
     switch Environment.current {
     case .development:
-      return "https://convex.kunish.org"
+      return "http://127.0.0.1:3000"
     case .staging:
       return "https://convex.kunish.org"
     case .production:

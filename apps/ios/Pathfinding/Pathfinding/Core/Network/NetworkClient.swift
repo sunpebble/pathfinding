@@ -70,15 +70,15 @@ actor NetworkClient {
   func baseURL(for path: String) -> URL {
     switch serviceType(for: path) {
     case .convex:
-      return convexURL.appendingPathComponent("http")
+      return convexURL
     case .aiService:
       return aiServiceURL
     }
   }
 
-  /// Default baseURL - points to Convex HTTP Actions for CRUD operations
+  /// Default baseURL - points to API server for CRUD operations
   var baseURL: URL {
-    convexURL.appendingPathComponent("http")
+    convexURL
   }
 
   /// Construct full URL for a given path, routing to the appropriate service
@@ -598,7 +598,7 @@ extension NetworkClient {
   /// Path should be like "comments", "notifications", etc. (without api/ prefix)
   func fetch<T: Decodable & Sendable>(path: String, queryItems: [URLQueryItem] = []) async throws -> T {
     var components = URLComponents(
-      url: convexURL.appendingPathComponent("http/api/\(path)"),
+      url: convexURL.appendingPathComponent("api/\(path)"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -616,7 +616,7 @@ extension NetworkClient {
 
   /// Generic POST request with path and body (Dictionary)
   func post<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "POST"
@@ -642,14 +642,14 @@ extension NetworkClient {
 
   /// Generic POST request with path and Encodable body
   func post<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
     let data = try await postWithRetry(url: url, body: body)
     return try decoder.decode(T.self, from: data)
   }
 
   /// POST request that doesn't return a value
   func postVoid(path: String, body: [String: Any]) async throws {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "POST"
@@ -673,7 +673,7 @@ extension NetworkClient {
 
   /// Generic PUT request with path and body (Dictionary)
   func put<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "PUT"
@@ -699,14 +699,14 @@ extension NetworkClient {
 
   /// Generic PUT request with path and Encodable body
   func putWithBody<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
     let data = try await putWithRetry(url: url, body: body)
     return try decoder.decode(T.self, from: data)
   }
 
   /// Generic PATCH request with path and body (Dictionary)
   func patch<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "PATCH"
@@ -732,20 +732,20 @@ extension NetworkClient {
 
   /// Generic PATCH request with path and Encodable body
   func patchWithBody<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
     let data = try await patchWithRetry(url: url, body: body)
     return try decoder.decode(T.self, from: data)
   }
 
   /// Generic DELETE request with path
   func delete(path: String) async throws {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
     _ = try await deleteWithRetry(url: url)
   }
 
   /// Generic DELETE request with path and body (Dictionary)
   func delete(path: String, body: [String: Any]) async throws {
-    let url = convexURL.appendingPathComponent("http/api/\(path)")
+    let url = convexURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "DELETE"

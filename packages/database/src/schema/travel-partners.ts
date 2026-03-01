@@ -2,7 +2,7 @@
  * Travel Partners schema - partner requests, match applications, matches, saves.
  */
 import { double, index, int, mysqlTable, text, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const travelPartnerRequests = mysqlTable('travel_partner_requests', {
   id: id(),

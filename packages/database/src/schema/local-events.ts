@@ -2,7 +2,7 @@
  * Local Events schema - events, favorites, reminders, reviews, review votes.
  */
 import { boolean, double, index, json, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const localEvents = mysqlTable('local_events', {
   id: id(),

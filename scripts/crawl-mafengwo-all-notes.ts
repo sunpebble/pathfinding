@@ -7,13 +7,13 @@
  *
  * 环境变量：
  * - KERNEL_API_KEY: Kernel.sh API 密钥
- * - CONVEX_URL: Convex 部署 URL
+ * - DATABASE_URL: TiDB 连接字符串
  */
 
 import { Stagehand } from '@browserbasehq/stagehand';
 import Kernel from '@onkernel/sdk';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api.js';
+import { createDb, travelGuides } from '@pathfinding/database';
+import { and, eq } from 'drizzle-orm';
 
 // ============================================
 // 配置
@@ -375,34 +375,54 @@ async function crawlNoteDetail(
 }
 
 // ============================================
-// 保存到 Convex
+// 保存到 TiDB
 // ============================================
 
-async function saveToConvex(
-  client: ConvexHttpClient,
+async function saveToTiDB(
   item: GuideListItem,
   detail: GuideDetail,
 ): Promise<boolean> {
   try {
+    const db = createDb();
     const qualityScore = calculateQualityScore(detail);
 
-    await client.mutation(api.travelGuides.upsert, {
-      sourcePlatform: 'mafengwo',
-      sourceExternalId: item.externalId,
-      sourceUrl: item.url,
-      title: detail.title,
+    // 检查是否已存在
+    const existing = await db
+      .select({ id: travelGuides.id })
+      .from(travelGuides)
+      .where(
+        and(
+          eq(travelGuides.platform, 'mafengwo'),
+          eq(travelGuides.externalId, item.externalId),
+        ),
+      )
+      .limit(1);
+
+    const guideData = {
+      platform: 'mafengwo',
+      externalId: item.externalId,
+      title: detail.title || item.externalId,
       content: detail.content,
-      authorName: detail.author,
-      destinations: [],
-      tags: [],
-      likesCount: parseChineseNumber(detail.likes),
-      savesCount: 0,
-      commentsCount: 0,
-      viewsCount: parseChineseNumber(detail.views),
-      coverImageUrl: detail.coverImage,
+      authorName: detail.author ?? null,
+      sourceUrl: item.url,
+      coverImageUrl: detail.coverImage ?? null,
       imageUrls: detail.images,
+      destinations: [] as string[],
+      tags: [] as string[],
+      viewCount: parseChineseNumber(detail.views),
+      likeCount: parseChineseNumber(detail.likes),
+      commentCount: 0,
       qualityScore,
-    });
+      crawledAt: new Date(),
+      lastUpdatedAt: new Date(),
+    };
+
+    if (existing.length > 0) {
+      await db.update(travelGuides).set(guideData).where(eq(travelGuides.id, existing[0]!.id));
+    }
+    else {
+      await db.insert(travelGuides).values(guideData);
+    }
 
     return true;
   }
@@ -428,12 +448,12 @@ async function main() {
     process.exit(1);
   }
 
-  if (!process.env.CONVEX_URL) {
-    console.error('ERROR: CONVEX_URL environment variable is required');
+  if (!process.env.DATABASE_URL) {
+    console.error('ERROR: DATABASE_URL environment variable is required');
     process.exit(1);
   }
 
-  const convexClient = new ConvexHttpClient(process.env.CONVEX_URL);
+  const db = createDb();
 
   const stats: CrawlStats = {
     totalUrlsFound: 0,
@@ -469,12 +489,18 @@ async function main() {
 
       // 检查是否已存在
       try {
-        const existing = await convexClient.query(api.travelGuides.getByPlatformAndExternalId, {
-          sourcePlatform: 'mafengwo',
-          sourceExternalId: item.externalId,
-        });
+        const existing = await db
+          .select({ id: travelGuides.id })
+          .from(travelGuides)
+          .where(
+            and(
+              eq(travelGuides.platform, 'mafengwo'),
+              eq(travelGuides.externalId, item.externalId),
+            ),
+          )
+          .limit(1);
 
-        if (existing) {
+        if (existing.length > 0) {
           log(`  -> Already exists, skipping`);
           continue;
         }
@@ -489,8 +515,8 @@ async function main() {
       if (detail) {
         stats.detailsCrawled++;
 
-        // 保存到 Convex
-        const saved = await saveToConvex(convexClient, item, detail);
+        // 保存到 TiDB
+        const saved = await saveToTiDB(item, detail);
         if (saved) {
           stats.detailsSaved++;
           log(`  -> Saved: ${detail.title?.slice(0, 50)}... (${detail.content.length} chars)`);

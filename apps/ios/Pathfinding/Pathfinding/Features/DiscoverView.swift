@@ -45,24 +45,21 @@ struct DiscoverView: View {
             .background(filterBarBackground)
 
           // Content with reveal animation
-          Group {
-            if store.isLoading && store.guides.isEmpty {
-              loadingView
-            } else if isSearchMode {
-              searchResultsView
-                .transition(.asymmetric(
-                  insertion: .opacity.combined(with: .move(edge: .trailing)),
-                  removal: .opacity.combined(with: .move(edge: .leading))
-                ))
-            } else {
-              cardLayoutView
-                .transition(.asymmetric(
-                  insertion: .opacity.combined(with: .move(edge: .leading)),
-                  removal: .opacity.combined(with: .move(edge: .trailing))
-                ))
-            }
+          if store.isLoading && store.guides.isEmpty {
+            loadingView
+          } else if isSearchMode {
+            searchResultsView
+              .transition(.asymmetric(
+                insertion: .opacity.combined(with: .move(edge: .trailing)),
+                removal: .opacity.combined(with: .move(edge: .leading))
+              ))
+          } else {
+            cardLayoutView
+              .transition(.asymmetric(
+                insertion: .opacity.combined(with: .move(edge: .leading)),
+                removal: .opacity.combined(with: .move(edge: .trailing))
+              ))
           }
-          .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSearchMode)
         }
       }
       .navigationTitle("discover.title".localized)
@@ -159,7 +156,7 @@ struct DiscoverView: View {
           // Topographic lines
           TopographicLinesView(
             lineCount: 5,
-            lineColor: DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.08 : 0.04)
+            lineColor: DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.08 : 0.02)
           )
           .frame(height: 300)
 
@@ -170,7 +167,7 @@ struct DiscoverView: View {
               CompassRoseDecoration(
                 size: 150,
                 color: DesignTokens.Colors.accent,
-                opacity: colorScheme == .dark ? 0.06 : 0.04
+                opacity: colorScheme == .dark ? 0.06 : 0.02
               )
               Spacer()
             }
@@ -474,23 +471,26 @@ struct DiscoverView: View {
   // MARK: - Loading View
 
   private var loadingView: some View {
-    VStack(spacing: DesignTokens.Spacing.xl) {
-      // Explorer loading indicator
-      ExplorerLoadingIndicator(message: "探索中...", size: 60)
+    ScrollView {
+      VStack(spacing: DesignTokens.Spacing.xl) {
+        // Explorer loading indicator
+        ExplorerLoadingIndicator(message: "探索中...", size: 50)
+          .padding(.top, DesignTokens.Spacing.xl)
 
-      // Skeleton cards for visual feedback
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: DesignTokens.Spacing.md) {
-          ForEach(0..<3, id: \.self) { index in
-            ExplorerFeaturedCardSkeleton()
-              .staggeredAnimation(index: index, baseDelay: 0.1)
+        // Skeleton cards for visual feedback
+        ScrollView(.horizontal, showsIndicators: false) {
+          HStack(spacing: DesignTokens.Spacing.md) {
+            ForEach(0..<3, id: \.self) { index in
+              ExplorerFeaturedCardSkeleton()
+                .staggeredAnimation(index: index, baseDelay: 0.1)
+            }
           }
+          .padding(.horizontal, DesignTokens.Spacing.lg)
         }
-        .padding(.horizontal, DesignTokens.Spacing.lg)
+        .scrollClipDisabled()
       }
-      .scrollClipDisabled()
+      .padding(.vertical, DesignTokens.Spacing.md)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 
   // MARK: - Search Logic

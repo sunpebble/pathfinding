@@ -14,7 +14,7 @@
     "@browserbasehq/stagehand": "^3.1.0",
     "@onkernel/sdk": "^0.41.0",
     "@pathfinding/crawler-types": "workspace:*",
-    "convex": "^1.32.0",
+    "@pathfinding/database": "workspace:*",
     "motia": "1.0.0-rc.26",
     "zod": "^4.3.6"
   },

@@ -8,7 +8,7 @@ import {
   mysqlTable,
   timestamp,
 } from 'drizzle-orm/mysql-core';
-import { id } from './columns.js';
+import { id } from './columns';
 
 // ── Weather Cache ──────────────────────────────────────
 export const weatherCache = mysqlTable(
