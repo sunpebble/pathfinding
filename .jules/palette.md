@@ -1,0 +1,3 @@
+## 2024-05-18 - Tooltips for Icon-only Buttons
+**Learning:** In complex interactive components like `ItineraryEditor`, relying solely on `aria-label` for icon-only buttons limits usability for sighted users. The `Tooltip` primitive pattern provides a simple and consistent way to surface explicit context.
+**Action:** When creating or modifying nested interfaces with multiple icon-only action buttons, always wrap the action button in a `Tooltip` component (combining `TooltipTrigger` and `TooltipContent`) to ensure visual clarity.
