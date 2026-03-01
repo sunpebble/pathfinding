@@ -386,17 +386,29 @@ export const getByDestination = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const guides = await ctx.db.query('travelGuides').collect();
+    // Collect all guideDestinations which is a lightweight table
+    const destinationsTable = await ctx.db.query('guideDestinations').collect();
 
+    // Filter by destination substring
     const destLower = args.destination.toLowerCase();
-    const filtered = guides.filter(g =>
-      g.destinations.some(d => d.toLowerCase().includes(destLower)),
+    const matchingDestinations = destinationsTable.filter(d =>
+      d.destination.toLowerCase().includes(destLower)
     );
 
-    // Sort by quality score
-    filtered.sort((a, b) => b.qualityScore - a.qualityScore);
+    // Get unique guideIds
+    const uniqueGuideIds = Array.from(new Set(matchingDestinations.map(d => d.guideId)));
 
-    return args.limit ? filtered.slice(0, args.limit) : filtered;
+    // Batch fetch guides
+    const guides = await Promise.all(
+      uniqueGuideIds.map(id => ctx.db.get(id))
+    );
+
+    // Filter out nulls and sort by quality score
+    const validGuides = guides
+      .filter((g): g is NonNullable<typeof g> => g !== null)
+      .sort((a, b) => b.qualityScore - a.qualityScore);
+
+    return args.limit ? validGuides.slice(0, args.limit) : validGuides;
   },
 });
 
