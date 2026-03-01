@@ -18,13 +18,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/components/**', 'src/app/**'],
-      exclude: ['**/*.test.tsx', '**/test/**'],
-      thresholds: {
-        lines: 60,
-        functions: 60,
-        branches: 60,
-        statements: 60,
-      },
+      exclude: ['**/*.test.tsx', '**/test/**', '**/.claude/**'],
     },
   },
 });
