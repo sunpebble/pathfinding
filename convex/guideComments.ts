@@ -13,11 +13,16 @@ import { mutation, query } from './_generated/server';
 export const create = mutation({
   args: {
     guideId: v.string(), // Travel guide ID (string, not Convex ID)
-    userId: v.string(),
+    userId: v.string(), // Kept for compatibility, but identity used instead
     content: v.string(),
     parentId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || !identity.email) {
+      throw new Error('Unauthenticated');
+    }
+
     // Validate content
     if (!args.content.trim()) {
       throw new Error('Comment content cannot be empty');
@@ -29,10 +34,10 @@ export const create = mutation({
       );
     }
 
-    // Create the comment
+    // Create the comment securely using authenticated email
     const commentId = await ctx.db.insert('guideComments', {
       guideId: args.guideId,
-      userId: args.userId,
+      userId: identity.email,
       parentId: args.parentId,
       content: args.content.trim(),
       likesCount: 0,
@@ -207,9 +212,15 @@ export const getReplies = query({
 export const toggleLike = mutation({
   args: {
     commentId: v.id('guideComments'),
-    userId: v.string(),
+    userId: v.string(), // Kept for compatibility
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || !identity.email) {
+      throw new Error('Unauthenticated');
+    }
+    const authenticatedEmail = identity.email;
+
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
       throw new Error('Comment not found');
@@ -219,7 +230,7 @@ export const toggleLike = mutation({
     const existingLike = await ctx.db
       .query('guideCommentLikes')
       .withIndex('by_comment_user', q =>
-        q.eq('commentId', args.commentId).eq('userId', args.userId))
+        q.eq('commentId', args.commentId).eq('userId', authenticatedEmail))
       .first();
 
     if (existingLike) {
@@ -231,10 +242,10 @@ export const toggleLike = mutation({
       return { liked: false, likesCount: Math.max(0, comment.likesCount - 1) };
     }
     else {
-      // Like
+      // Like securely using authenticated identity
       await ctx.db.insert('guideCommentLikes', {
         commentId: args.commentId,
-        userId: args.userId,
+        userId: authenticatedEmail,
         createdAt: Date.now(),
       });
       await ctx.db.patch(args.commentId, {
@@ -251,16 +262,21 @@ export const toggleLike = mutation({
 export const update = mutation({
   args: {
     id: v.id('guideComments'),
-    userId: v.string(),
+    userId: v.string(), // Kept for compatibility
     content: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || !identity.email) {
+      throw new Error('Unauthenticated');
+    }
+
     const comment = await ctx.db.get(args.id);
     if (!comment) {
       throw new Error('Comment not found');
     }
 
-    if (comment.userId !== args.userId) {
+    if (comment.userId !== identity.email) {
       throw new Error('You can only edit your own comments');
     }
 
@@ -294,17 +310,22 @@ export const update = mutation({
 export const remove = mutation({
   args: {
     id: v.id('guideComments'),
-    userId: v.string(),
+    userId: v.string(), // Kept for compatibility, but validated against identity
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Unauthenticated');
+    }
+
     const comment = await ctx.db.get(args.id);
     if (!comment) {
       throw new Error('Comment not found');
     }
 
-    // Strict ownership check to prevent IDOR vulnerabilities.
-    // Substring matching is strictly prohibited.
-    const isOwner = comment.userId === args.userId;
+    // Strict ownership check using verified identity to prevent IDOR vulnerabilities.
+    // In this table, userId is functionally the user's email.
+    const isOwner = comment.userId === identity.email;
 
     if (!isOwner) {
       throw new Error('You can only delete your own comments');
