@@ -43,10 +43,15 @@ export const globalSearch = query({
 
     // Search POIs
     if (types.includes('poi')) {
-      let pois = await ctx.db.query('pois').take(500);
+      let pois;
 
       if (args.cityId) {
-        pois = pois.filter(p => p.cityId === args.cityId);
+        pois = await ctx.db
+          .query('pois')
+          .withIndex('by_city', q => q.eq('cityId', args.cityId!))
+          .take(500);
+      } else {
+        pois = await ctx.db.query('pois').take(500);
       }
 
       for (const poi of pois) {
@@ -97,14 +102,22 @@ export const globalSearch = query({
 
     // Search Itineraries
     if (types.includes('itinerary')) {
-      let itineraries = await ctx.db
-        .query('itineraries')
-        .withIndex('by_visibility', q => q.eq('visibility', 'public'))
-        .take(200);
+      let itineraries;
 
       if (args.cityId) {
-        itineraries = itineraries.filter(i => i.cityId === args.cityId);
+        itineraries = await ctx.db
+          .query('itineraries')
+          .withIndex('by_visibility', q => q.eq('visibility', 'public'))
+          .filter(q => q.eq(q.field('cityId'), args.cityId!))
+          .take(200);
+      } else {
+        itineraries = await ctx.db
+          .query('itineraries')
+          .withIndex('by_visibility', q => q.eq('visibility', 'public'))
+          .take(200);
       }
+
+      const cityCache = new Map<string, Doc<'cities'> | null>();
 
       for (const itinerary of itineraries) {
         const matchedFields: string[] = [];
@@ -116,7 +129,11 @@ export const globalSearch = query({
         }
 
         if (matchedFields.length > 0) {
-          const city = await ctx.db.get(itinerary.cityId);
+          let city = cityCache.get(itinerary.cityId);
+          if (city === undefined) {
+            city = await ctx.db.get(itinerary.cityId);
+            cityCache.set(itinerary.cityId, city);
+          }
           const daysCount = calculateDaysCount(
             itinerary.startDate,
             itinerary.endDate,
