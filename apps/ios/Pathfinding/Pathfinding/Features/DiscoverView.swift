@@ -31,35 +31,52 @@ struct DiscoverView: View {
     !searchText.isEmpty || selectedCity != nil || onlyAiGuides || timeFilter != .all
   }
 
-  var body: some View {
+   var body: some View {
     NavigationStack {
       ZStack {
         // Explorer background with star field in dark mode
         explorerBackground
 
-        VStack(spacing: 0) {
-          // Enhanced filter bar
-          filterBar
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(filterBarBackground)
-
-          // Content with reveal animation
-          if store.isLoading && store.guides.isEmpty {
-            loadingView
-          } else if isSearchMode {
+        // Content with reveal animation
+        if store.isLoading && store.guides.isEmpty {
+          loadingView
+        } else if isSearchMode {
+          VStack(spacing: 0) {
+            filterBar
+              .padding(.horizontal, DesignTokens.Spacing.md)
+              .padding(.vertical, DesignTokens.Spacing.sm)
             searchResultsView
-              .transition(.asymmetric(
-                insertion: .opacity.combined(with: .move(edge: .trailing)),
-                removal: .opacity.combined(with: .move(edge: .leading))
-              ))
-          } else {
-            cardLayoutView
-              .transition(.asymmetric(
-                insertion: .opacity.combined(with: .move(edge: .leading)),
-                removal: .opacity.combined(with: .move(edge: .trailing))
-              ))
           }
+        } else {
+          ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+              // Filter bar inline
+              filterBar
+                .padding(.horizontal, DesignTokens.Spacing.md)
+                .padding(.vertical, DesignTokens.Spacing.sm)
+
+              // Featured section
+              if !store.featuredGuides.isEmpty {
+                featuredSection
+              }
+
+              // Decorated divider between sections
+              if !store.featuredGuides.isEmpty && !store.recentGuides.isEmpty {
+                ExplorerDivider(style: ExplorerDivider.Style.topographic, color: DesignTokens.Colors.accent)
+                  .padding(.horizontal, DesignTokens.Spacing.xl)
+                  .padding(.vertical, DesignTokens.Spacing.sm)
+              }
+
+              // Recent section
+              if !store.recentGuides.isEmpty {
+                recentSection
+                  .padding(.top, DesignTokens.Spacing.md)
+              }
+            }
+            .padding(.bottom, DesignTokens.Spacing.md)
+          }
+          .scrollDismissesKeyboard(.interactively)
+          .contentMargins(.top, 0, for: .scrollContent)
         }
       }
       .navigationTitle("discover.title".localized)
@@ -93,33 +110,6 @@ struct DiscoverView: View {
         } else {
           await store.fetchGuides(forceRefresh: true)
         }
-      }
-    }
-  }
-
-  // MARK: - Filter Bar Background
-
-  private var filterBarBackground: some View {
-    ZStack {
-      // Material background
-      Rectangle()
-        .fill(.ultraThinMaterial)
-
-      // Subtle bottom border
-      VStack {
-        Spacer()
-        Rectangle()
-          .fill(
-            LinearGradient(
-              colors: [
-                DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.3 : 0.15),
-                DesignTokens.Colors.accent.opacity(0)
-              ],
-              startPoint: .leading,
-              endPoint: .trailing
-            )
-          )
-          .frame(height: 1)
       }
     }
   }
@@ -190,18 +180,20 @@ struct DiscoverView: View {
 
   private var filterBar: some View {
     VStack(spacing: DesignTokens.Spacing.sm) {
-      // City tags as DestinationBadge components with staggered animation
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: DesignTokens.Spacing.xs) {
-          // "All" badge
-          destinationFilterBadge(nil, label: "全部", index: 0)
+      // City tags - only show when destinations are loaded
+      if !store.popularDestinations.isEmpty {
+        ScrollView(.horizontal, showsIndicators: false) {
+          HStack(spacing: DesignTokens.Spacing.xs) {
+            // "All" badge
+            destinationFilterBadge(nil, label: "全部", index: 0)
 
-          // Popular destinations
-          ForEach(Array(store.popularDestinations.enumerated()), id: \.element.id) { index, dest in
-            destinationFilterBadge(dest.name, label: dest.name, index: index + 1)
+            // Popular destinations
+            ForEach(Array(store.popularDestinations.enumerated()), id: \.element.id) { index, dest in
+              destinationFilterBadge(dest.name, label: dest.name, index: index + 1)
+            }
           }
+          .padding(.horizontal, DesignTokens.Spacing.xxs)
         }
-        .padding(.horizontal, DesignTokens.Spacing.xxs)
       }
 
       // Filter buttons with enhanced styling
@@ -328,32 +320,6 @@ struct DiscoverView: View {
     let hash = abs(destination.hashValue)
     let icons = ["mountain.2", "water.waves", "tree", "building.2", "sun.max", "leaf"]
     return icons[hash % icons.count]
-  }
-
-  // MARK: - Card Layout (Default)
-
-  private var cardLayoutView: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
-        // Featured section
-        if !store.featuredGuides.isEmpty {
-          featuredSection
-        }
-
-        // Decorated divider between sections
-        if !store.featuredGuides.isEmpty && !store.recentGuides.isEmpty {
-          ExplorerDivider(style: ExplorerDivider.Style.topographic, color: DesignTokens.Colors.accent)
-            .padding(.horizontal, DesignTokens.Spacing.xl)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-        }
-
-        // Recent section
-        if !store.recentGuides.isEmpty {
-          recentSection
-        }
-      }
-      .padding(.vertical, DesignTokens.Spacing.md)
-    }
   }
 
   // MARK: - Featured Section
