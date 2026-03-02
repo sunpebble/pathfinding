@@ -117,7 +117,7 @@ export const globalSearch = query({
           .take(200);
       }
 
-      const cityCache = new Map<string, Doc<'cities'> | null>();
+      const cityCache = new Map<string, any>();
 
       for (const itinerary of itineraries) {
         const matchedFields: string[] = [];
