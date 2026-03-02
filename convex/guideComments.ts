@@ -302,12 +302,9 @@ export const remove = mutation({
       throw new Error('Comment not found');
     }
 
-    // Flexible userId matching - check if either contains the other
-    // This handles cases where JWT sub might be a compound ID or different format
-    const isOwner
-      = comment.userId === args.userId
-        || comment.userId.includes(args.userId)
-        || args.userId.includes(comment.userId);
+    // Strict ownership check to prevent IDOR vulnerabilities.
+    // Substring matching is strictly prohibited.
+    const isOwner = comment.userId === args.userId;
 
     if (!isOwner) {
       throw new Error('You can only delete your own comments');
