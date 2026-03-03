@@ -18,6 +18,7 @@ import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import { CollaboratorPanel } from '@/components/collaborator-panel';
 import { InviteDialog } from '@/components/invite-dialog';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { toConvexId } from '@/types/convex';
 
@@ -230,29 +231,53 @@ function DaySection({ day }: { day: Day }) {
   );
 }
 
-// Current user ID for testing (in production, this would come from auth)
-const TEST_USER_ID = 'test-user-1';
-
 export default function ItineraryDetailPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const params = useParams();
   const id = params.id as string;
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+
+  const currentUser = useQuery(
+    api.users.getCurrentUser,
+    isAuthenticated ? {} : 'skip',
+  );
+  const currentUserId = currentUser?.id;
 
   const itinerary = useQuery(api.itineraries.getById, {
     id: toConvexId<'itineraries'>(id),
   }) as unknown as Itinerary | null | undefined;
 
-  const isLoading = itinerary === undefined;
+  const isLoading
+    = authLoading
+      || (isAuthenticated && currentUser === undefined)
+      || itinerary === undefined;
 
   // Determine current user's role
-  const currentUserCollaborator = itinerary?.collaborators?.find(
-    c => c.userId === TEST_USER_ID,
-  );
+  const currentUserCollaborator = currentUserId
+    ? itinerary?.collaborators?.find(c => c.userId === currentUserId)
+    : undefined;
   const isOwner = currentUserCollaborator?.role === 'owner';
   const isEditor
     = currentUserCollaborator?.role === 'editor'
       || currentUserCollaborator?.role === 'owner';
   const canInvite = isOwner || isEditor;
+
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
+        <h2 className="text-xl font-semibold text-gray-900">Sign in required</h2>
+        <p className="mt-2 text-sm text-gray-500">
+          Please sign in to access itinerary details.
+        </p>
+        <Link
+          href="/auth/signin"
+          className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
+        >
+          Go to Sign In
+        </Link>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -353,7 +378,7 @@ export default function ItineraryDetailPage() {
           <CollaboratorPanel
             itineraryId={itinerary._id}
             collaborators={itinerary.collaborators}
-            currentUserId={TEST_USER_ID}
+            currentUserId={currentUserId ?? ''}
             isOwner={isOwner}
           />
         )}
@@ -380,29 +405,33 @@ export default function ItineraryDetailPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/itineraries/${itinerary._id}/edit`}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-        >
-          Edit Itinerary
-        </Link>
-        <button
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-          onClick={() => {
-            // TODO: Implement delete functionality with proper modal
-          }}
-        >
-          Delete
-        </button>
-      </div>
+      {isEditor && (
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/itineraries/${itinerary._id}/edit`}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+          >
+            Edit Itinerary
+          </Link>
+          {isOwner && (
+            <button
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              onClick={() => {
+                // TODO: Implement delete functionality with proper modal
+              }}
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Invite Dialog */}
       <InviteDialog
         isOpen={isInviteDialogOpen}
         onClose={() => setIsInviteDialogOpen(false)}
         itineraryId={itinerary._id}
-        currentUserId={TEST_USER_ID}
+        currentUserId={currentUserId ?? ''}
       />
     </div>
   );

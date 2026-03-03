@@ -138,7 +138,13 @@ export function PoiEditor({
   if (!isOpen)
     return null;
 
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude},${latitude},${longitude},${latitude}&layer=mapnik&marker=${latitude},${longitude}`;
+  const mapLat = Number.parseFloat(latitude);
+  const mapLng = Number.parseFloat(longitude);
+  const mapDelta = 0.005;
+  const mapUrl
+    = Number.isNaN(mapLat) || Number.isNaN(mapLng)
+      ? 'https://www.openstreetmap.org'
+      : `https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - mapDelta},${mapLat - mapDelta},${mapLng + mapDelta},${mapLat + mapDelta}&layer=mapnik&marker=${mapLat},${mapLng}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

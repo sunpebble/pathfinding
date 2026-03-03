@@ -5,9 +5,13 @@ import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 
 // Initialize Convex client with the self-hosted URL
-const convex = new ConvexReactClient(
-  process.env.NEXT_PUBLIC_CONVEX_URL ?? 'https://convex.kunish.org',
-);
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+
+if (!convexUrl) {
+  throw new Error('NEXT_PUBLIC_CONVEX_URL environment variable is required');
+}
+
+const convex = new ConvexReactClient(convexUrl);
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   return (

@@ -5,10 +5,8 @@ import { useQuery } from 'convex/react';
 import { Calendar, Eye, MapPin, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
-
-// For development - in production this would come from auth
-const TEST_USER_ID = 'test-user-1';
 
 interface Itinerary {
   _id: string;
@@ -121,15 +119,27 @@ function ItineraryCard({ itinerary }: { itinerary: Itinerary }) {
 }
 
 export default function ItinerariesPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  const result = useQuery(api.itineraries.listByUser, {
-    userId: TEST_USER_ID,
-    page,
-    pageSize,
-  });
+  const currentUser = useQuery(
+    api.users.getCurrentUser,
+    isAuthenticated ? {} : 'skip',
+  );
+  const currentUserId = currentUser?.id;
+
+  const result = useQuery(
+    api.itineraries.listByUser,
+    currentUserId
+      ? {
+          userId: currentUserId,
+          page,
+          pageSize,
+        }
+      : 'skip',
+  );
 
   const itineraries = result?.data || [];
   const total = result?.total || 0;
@@ -144,7 +154,27 @@ export default function ItinerariesPage() {
       )
     : itineraries;
 
-  const isLoading = result === undefined;
+  const isLoading
+    = authLoading
+      || (isAuthenticated && currentUser === undefined)
+      || (currentUserId !== undefined && result === undefined);
+
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
+        <h2 className="text-xl font-semibold text-gray-900">Sign in required</h2>
+        <p className="mt-2 text-sm text-gray-500">
+          Please sign in to view your itineraries.
+        </p>
+        <Link
+          href="/auth/signin"
+          className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
+        >
+          Go to Sign In
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -605,9 +605,12 @@ export function ItineraryEditor({
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Fetch itinerary to get cityId
-  const itinerary = useQuery(api.itineraries.getById, {
-    id: toConvexId<'itineraries'>(itineraryId),
-  });
+  const itinerary = useQuery(
+    api.itineraries.getById,
+    isOpen && itineraryId
+      ? { id: toConvexId<'itineraries'>(itineraryId) }
+      : 'skip',
+  );
 
   const handleItemsChange = useCallback(() => {
     setRefreshKey(prev => prev + 1);

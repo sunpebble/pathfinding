@@ -77,7 +77,7 @@ export default function DatasetsPage() {
           <option value="failed">Failed</option>
         </select>
         <span className="text-sm text-gray-500">
-          {datasetsData?.pagination.total ?? 0}
+          {datasetsData?.pagination?.total ?? 0}
           {' '}
           datasets total
         </span>

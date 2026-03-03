@@ -41,8 +41,13 @@ export function AuthButton() {
 
   const handleSignOut = async () => {
     setIsMenuOpen(false);
-    await signOut();
-    router.push('/auth/signin');
+    try {
+      await signOut();
+      router.push('/auth/signin');
+    }
+    catch (error) {
+      console.error('Sign out failed:', error);
+    }
   };
 
   // Loading state

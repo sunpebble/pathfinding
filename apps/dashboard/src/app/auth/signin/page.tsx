@@ -60,6 +60,8 @@ export default function SignInPage() {
           ? err.message
           : `Failed to sign in with ${provider}`,
       );
+    }
+    finally {
       setIsLoading(false);
     }
   };

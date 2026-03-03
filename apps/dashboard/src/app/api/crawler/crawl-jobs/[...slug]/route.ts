@@ -8,10 +8,14 @@ const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const client = new ConvexHttpClient(CONVEX_URL);
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
   const { slug } = await params;
+
+  if (slug.length !== 1) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
 
   // Parse slug: [id] or [id, action]
   const [id, action] = slug;
@@ -59,17 +63,22 @@ export async function GET(
   catch (error) {
     console.error('Error fetching crawl job:', error);
     return NextResponse.json(
-      { error: 'Internal server error', message: String(error) },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }
 }
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
   const { slug } = await params;
+
+  if (slug.length !== 2) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const [id, action] = slug;
 
   if (!action) {
@@ -111,7 +120,7 @@ export async function POST(
   catch (error) {
     console.error(`Error ${action} crawl job:`, error);
     return NextResponse.json(
-      { error: `Failed to ${action} job`, message: String(error) },
+      { error: `Failed to ${action} job` },
       { status: 500 },
     );
   }

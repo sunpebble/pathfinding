@@ -451,6 +451,14 @@ export default function GuideDetailPage() {
                     const isLowConfidence
                       = poi.geocodeConfidence !== undefined
                         && poi.geocodeConfidence < 0.5;
+                    const latitudeText
+                      = typeof poi.latitude === 'number'
+                        ? poi.latitude.toFixed(6)
+                        : 'N/A';
+                    const longitudeText
+                      = typeof poi.longitude === 'number'
+                        ? poi.longitude.toFixed(6)
+                        : 'N/A';
 
                     return (
                       <div
@@ -488,10 +496,10 @@ export default function GuideDetailPage() {
                                 </p>
                               )}
                               <p className="text-xs text-gray-400 mt-1 font-mono">
-                                {poi.latitude.toFixed(6)}
+                                {latitudeText}
                                 ,
                                 {' '}
-                                {poi.longitude.toFixed(6)}
+                                {longitudeText}
                               </p>
                             </div>
 

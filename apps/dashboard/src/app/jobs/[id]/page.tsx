@@ -26,7 +26,12 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
   const queryClient = useQueryClient();
 
-  const { data: job, isLoading } = useQuery({
+  const {
+    data: job,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['crawl-job', id],
     queryFn: () => getCrawlJob(id),
     refetchInterval: query =>
@@ -51,6 +56,25 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Failed to load job
+        </h2>
+        {error instanceof Error && (
+          <p className="mt-2 text-sm text-gray-500">{error.message}</p>
+        )}
+        <Link
+          href="/jobs"
+          className="mt-4 inline-block text-blue-600 hover:underline"
+        >
+          Back to Jobs
+        </Link>
       </div>
     );
   }

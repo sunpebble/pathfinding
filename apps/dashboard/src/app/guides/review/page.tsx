@@ -173,7 +173,7 @@ export default function ReviewGuidesPage() {
     queryFn: () =>
       getTravelGuides({
         platforms: platform || undefined,
-        min_quality: 0.5,
+        max_quality: 0.5,
         limit: pageSize,
         offset: page * pageSize,
         sort: 'quality_score',

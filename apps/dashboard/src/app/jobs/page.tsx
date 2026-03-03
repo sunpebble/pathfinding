@@ -32,6 +32,8 @@ export default function JobsPage() {
   const {
     data: jobsData,
     isLoading,
+    isError,
+    error,
     refetch,
   } = useQuery({
     queryKey: ['crawl-jobs', statusFilter],
@@ -257,7 +259,7 @@ export default function JobsPage() {
           <option value="cancelled">Cancelled</option>
         </select>
         <span className="text-sm text-gray-500">
-          {jobsData?.pagination.total ?? 0}
+          {jobsData?.pagination?.total ?? 0}
           {' '}
           jobs total
         </span>
@@ -300,87 +302,99 @@ export default function JobsPage() {
                     </td>
                   </tr>
                 )
-              : jobs.length === 0
+              : isError
                 ? (
                     <tr>
                       <td
                         colSpan={7}
-                        className="px-6 py-12 text-center text-gray-500"
+                        className="px-6 py-12 text-center text-red-600"
                       >
-                        No jobs found.
-                        {' '}
-                        <Link
-                          href="/jobs/create"
-                          className="text-blue-600 hover:underline"
-                        >
-                          Create one
-                        </Link>
+                        Failed to load jobs
+                        {error instanceof Error ? `: ${error.message}` : ''}
                       </td>
                     </tr>
                   )
-                : (
-                    jobs.map(job => (
-                      <tr key={job.id} className="hover:bg-gray-50">
-                        <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
-                          {shortId(job.id)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="font-medium text-gray-900">{job.name}</div>
-                          <div className="text-sm text-gray-500">{job.job_type}</div>
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4">
-                          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                            {job.platform}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4">
-                          <StatusBadge status={job.status} />
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                          {job.statistics?.records_extracted ?? 0}
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                          {formatDateTime(job.created_at)}
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {job.status === 'pending' && (
-                              <button
-                                onClick={() => startMutation.mutate(job.id)}
-                                disabled={startMutation.isPending}
-                                className="rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:opacity-50"
-                                title="Start job"
-                              >
-                                <Play className="h-4 w-4" />
-                              </button>
-                            )}
-                            {job.status === 'running' && (
-                              <button
-                                onClick={() => {
-                                  // eslint-disable-next-line no-alert
-                                  if (confirm('Cancel this job?')) {
-                                    cancelMutation.mutate(job.id);
-                                  }
-                                }}
-                                disabled={cancelMutation.isPending}
-                                className="rounded-lg bg-red-500 p-2 text-white hover:bg-red-600 disabled:opacity-50"
-                                title="Cancel job"
-                              >
-                                <StopCircle className="h-4 w-4" />
-                              </button>
-                            )}
-                            <Link
-                              href={`/jobs/${job.id}`}
-                              className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
-                              title="View details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Link>
-                          </div>
+                : jobs.length === 0
+                  ? (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-6 py-12 text-center text-gray-500"
+                        >
+                          No jobs found.
+                          {' '}
+                          <Link
+                            href="/jobs/create"
+                            className="text-blue-600 hover:underline"
+                          >
+                            Create one
+                          </Link>
                         </td>
                       </tr>
-                    ))
-                  )}
+                    )
+                  : (
+                      jobs.map(job => (
+                        <tr key={job.id} className="hover:bg-gray-50">
+                          <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-500">
+                            {shortId(job.id)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-gray-900">{job.name}</div>
+                            <div className="text-sm text-gray-500">{job.job_type}</div>
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4">
+                            <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                              {job.platform}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4">
+                            <StatusBadge status={job.status} />
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                            {job.statistics?.records_extracted ?? 0}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                            {formatDateTime(job.created_at)}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {job.status === 'pending' && (
+                                <button
+                                  onClick={() => startMutation.mutate(job.id)}
+                                  disabled={startMutation.isPending}
+                                  className="rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:opacity-50"
+                                  title="Start job"
+                                >
+                                  <Play className="h-4 w-4" />
+                                </button>
+                              )}
+                              {job.status === 'running' && (
+                                <button
+                                  onClick={() => {
+                                  // eslint-disable-next-line no-alert
+                                    if (confirm('Cancel this job?')) {
+                                      cancelMutation.mutate(job.id);
+                                    }
+                                  }}
+                                  disabled={cancelMutation.isPending}
+                                  className="rounded-lg bg-red-500 p-2 text-white hover:bg-red-600 disabled:opacity-50"
+                                  title="Cancel job"
+                                >
+                                  <StopCircle className="h-4 w-4" />
+                                </button>
+                              )}
+                              <Link
+                                href={`/jobs/${job.id}`}
+                                className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
+                                title="View details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
           </tbody>
         </table>
       </div>

@@ -2,8 +2,8 @@
 
 import { api } from '@pathfinding/convex-client';
 import { useMutation } from 'convex/react';
-import { Check, Copy, Link2, Mail, UserPlus, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Check, Mail, UserPlus, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { toConvexId } from '@/types/convex';
 
@@ -25,8 +25,7 @@ export function InviteDialog({
   const [isInviting, setIsInviting] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
-  const [shareableLinkCopied, setShareableLinkCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
     () => () => {
@@ -82,23 +81,6 @@ export function InviteDialog({
     }
     finally {
       setIsInviting(false);
-    }
-  };
-
-  const shareableLink = useMemo(() => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const shareToken = btoa(`${itineraryId}:${role}:${Date.now()}`);
-    return `${baseUrl}/itineraries/accept?token=${shareToken}`;
-  }, [itineraryId, role]);
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareableLink);
-      setShareableLinkCopied(true);
-      setTimeout(() => setShareableLinkCopied(false), 2000);
-    }
-    catch {
-      setError('Failed to copy link to clipboard');
     }
   };
 
@@ -219,72 +201,11 @@ export function InviteDialog({
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-white text-gray-500">Or</span>
-            </div>
-          </div>
-
-          {/* Shareable Link Section */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Link2 className="h-4 w-4" />
-              Shareable Link
-            </label>
-            <p className="text-xs text-gray-500">
-              Generate a link that anyone can use to join as a
-              {' '}
-              {role}
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="text-xs text-amber-800">
+              Shareable links are temporarily disabled for security reasons.
+              Please invite collaborators by user ID or email.
             </p>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={shareableLink}
-                readOnly
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600"
-              />
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className={cn(
-                  'px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2',
-                  shareableLinkCopied
-                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200',
-                )}
-              >
-                {shareableLinkCopied
-                  ? (
-                      <>
-                        <Check className="h-4 w-4" />
-                        Copied!
-                      </>
-                    )
-                  : (
-                      <>
-                        <Copy className="h-4 w-4" />
-                        Copy
-                      </>
-                    )}
-              </button>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs text-blue-800">
-                <strong>Note:</strong>
-                {' '}
-                Anyone with this link can join your
-                itinerary. The link will grant them
-                {role}
-                {' '}
-                access.
-              </p>
-            </div>
           </div>
         </div>
 

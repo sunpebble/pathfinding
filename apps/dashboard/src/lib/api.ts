@@ -25,7 +25,12 @@ async function fetchApi<T>(
     throw new Error(error.message || `HTTP error ${res.status}`);
   }
 
-  return res.json();
+  const text = await res.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  return JSON.parse(text) as T;
 }
 
 // Health check
@@ -329,6 +334,7 @@ export async function getTravelGuides(params?: {
   destinations?: string;
   search?: string;
   min_quality?: number;
+  max_quality?: number;
   limit?: number;
   offset?: number;
   sort?: string;
@@ -341,11 +347,13 @@ export async function getTravelGuides(params?: {
     searchParams.append('destinations', params.destinations);
   if (params?.search)
     searchParams.append('q', params.search);
-  if (params?.min_quality)
+  if (params?.min_quality !== undefined)
     searchParams.append('min_quality', params.min_quality.toString());
-  if (params?.limit)
+  if (params?.max_quality !== undefined)
+    searchParams.append('max_quality', params.max_quality.toString());
+  if (params?.limit !== undefined)
     searchParams.append('limit', params.limit.toString());
-  if (params?.offset)
+  if (params?.offset !== undefined)
     searchParams.append('offset', params.offset.toString());
   if (params?.sort)
     searchParams.append('sort', params.sort);

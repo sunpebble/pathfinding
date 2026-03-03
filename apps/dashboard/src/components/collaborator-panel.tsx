@@ -154,7 +154,7 @@ export function CollaboratorPanel({
 
       <div className="space-y-3">
         {collaborators.map((collab) => {
-          const RoleIcon = roleIcons[collab.role];
+          const RoleIcon = roleIcons[collab.role] ?? UserMinus;
           const isCurrentUser = collab.userId === currentUserId;
           const canRemove
             = isOwner && collab.role !== 'owner' && !isCurrentUser;

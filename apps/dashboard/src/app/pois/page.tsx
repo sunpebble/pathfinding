@@ -41,7 +41,7 @@ export default function POIsPage() {
   });
 
   const pois = poisData?.data || [];
-  const total = poisData?.pagination.total ?? 0;
+  const total = poisData?.pagination?.total ?? 0;
   const totalPages = Math.ceil(total / limit);
 
   const handleSearch = (e: React.FormEvent) => {

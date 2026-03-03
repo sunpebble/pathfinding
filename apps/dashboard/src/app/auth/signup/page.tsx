@@ -92,6 +92,8 @@ export default function SignUpPage() {
           ? err.message
           : `Failed to sign up with ${provider}`,
       );
+    }
+    finally {
       setIsLoading(false);
     }
   };

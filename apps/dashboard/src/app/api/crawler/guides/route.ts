@@ -19,11 +19,29 @@ type Platform
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const limit = Number.parseInt(searchParams.get('limit') || '20');
+  const rawLimit = Number.parseInt(searchParams.get('limit') || '20', 10);
+  const limit
+    = Number.isFinite(rawLimit) && rawLimit > 0
+      ? Math.min(rawLimit, 100)
+      : 20;
   const platform
     = searchParams.get('platforms') || searchParams.get('platform');
   const sort = searchParams.get('sort');
   const order = searchParams.get('order');
+  const rawMinQuality = searchParams.get('min_quality');
+  const parsedMinQuality
+    = rawMinQuality === null ? Number.NaN : Number.parseFloat(rawMinQuality);
+  const minQuality
+    = Number.isFinite(parsedMinQuality) && parsedMinQuality >= 0
+      ? parsedMinQuality
+      : undefined;
+  const rawMaxQuality = searchParams.get('max_quality');
+  const parsedMaxQuality
+    = rawMaxQuality === null ? Number.NaN : Number.parseFloat(rawMaxQuality);
+  const maxQuality
+    = Number.isFinite(parsedMaxQuality) && parsedMaxQuality >= 0
+      ? parsedMaxQuality
+      : undefined;
 
   try {
     const validPlatforms: Platform[] = [
@@ -42,9 +60,14 @@ export async function GET(request: NextRequest) {
         ? (platform as Platform)
         : undefined;
 
+    const fetchLimit
+      = minQuality !== undefined || maxQuality !== undefined
+        ? Math.min(limit * 5, 500)
+        : limit;
+
     const guides = await client.query(api.travelGuides.list, {
       platform: validPlatform,
-      limit,
+      limit: fetchLimit,
     });
 
     // Sort if requested
@@ -57,8 +80,22 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    let filteredGuides = sortedGuides;
+    if (minQuality !== undefined) {
+      filteredGuides = filteredGuides.filter(
+        guide => (guide.qualityScore ?? 0) >= minQuality,
+      );
+    }
+    if (maxQuality !== undefined) {
+      filteredGuides = filteredGuides.filter(
+        guide => (guide.qualityScore ?? 0) <= maxQuality,
+      );
+    }
+
+    const paginatedGuides = filteredGuides.slice(0, limit);
+
     // Transform camelCase to snake_case for frontend compatibility
-    const transformedGuides = sortedGuides.map(guide => ({
+    const transformedGuides = paginatedGuides.map(guide => ({
       id: guide._id,
       source_platform: guide.sourcePlatform,
       source_external_id: guide.sourceExternalId,
@@ -101,7 +138,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: transformedGuides,
       pagination: {
-        total: transformedGuides.length,
+        total: filteredGuides.length,
         limit,
         offset: 0,
       },
@@ -110,7 +147,7 @@ export async function GET(request: NextRequest) {
   catch (error) {
     console.error('Error fetching guides:', error);
     return NextResponse.json(
-      { error: 'Internal server error', message: String(error) },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

@@ -1,4 +1,7 @@
 export default function SettingsPage() {
+  const crawlerApiUrl
+    = process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:3001';
+
   return (
     <div className="space-y-6">
       <div>
@@ -22,7 +25,7 @@ export default function SettingsPage() {
             <input
               type="text"
               id="api_url"
-              defaultValue="http://localhost:3001"
+              defaultValue={crawlerApiUrl}
               disabled
               className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500"
             />

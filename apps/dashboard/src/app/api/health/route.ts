@@ -30,9 +30,12 @@ export async function GET() {
   // Overall status is ok if AI Service is healthy
   const overallStatus = checks.aiService?.status === 'ok' ? 'ok' : 'degraded';
 
-  return Response.json({
-    status: overallStatus,
-    checks,
-    timestamp: new Date().toISOString(),
-  });
+  return Response.json(
+    {
+      status: overallStatus,
+      checks,
+      timestamp: new Date().toISOString(),
+    },
+    { status: overallStatus === 'ok' ? 200 : 503 },
+  );
 }

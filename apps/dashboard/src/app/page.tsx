@@ -51,7 +51,7 @@ export default function OverviewPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Total Jobs</p>
               <p className="mt-1 text-3xl font-bold text-gray-900">
-                {jobsData?.pagination.total ?? '-'}
+                {jobsData?.pagination?.total ?? '-'}
               </p>
             </div>
             <div className="rounded-full bg-blue-100 p-3">
@@ -82,7 +82,7 @@ export default function OverviewPage() {
                 Normalized POIs
               </p>
               <p className="mt-1 text-3xl font-bold text-gray-900">
-                {poisData?.pagination.total ?? '-'}
+                {poisData?.pagination?.total ?? '-'}
               </p>
             </div>
             <div className="rounded-full bg-emerald-100 p-3">
@@ -103,7 +103,7 @@ export default function OverviewPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Datasets</p>
               <p className="mt-1 text-3xl font-bold text-gray-900">
-                {datasetsData?.pagination.total ?? '-'}
+                {datasetsData?.pagination?.total ?? '-'}
               </p>
             </div>
             <div className="rounded-full bg-purple-100 p-3">

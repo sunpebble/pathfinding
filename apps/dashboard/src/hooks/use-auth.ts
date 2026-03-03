@@ -10,7 +10,7 @@ export function useAuth() {
   const token = useAuthToken();
 
   return {
-    isAuthenticated: token !== null,
+    isAuthenticated: token !== null && token !== undefined,
     isLoading: token === undefined,
   };
 }
