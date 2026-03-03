@@ -297,8 +297,10 @@ export const search = query({
       );
     }
 
-    if (args.hasAiData) {
-      guides = guides.filter(g => g.aiProcessedAt !== undefined);
+    if (args.hasAiData !== undefined) {
+      guides = guides.filter(
+        g => (g.aiProcessedAt !== undefined) === args.hasAiData,
+      );
     }
 
     if (args.daysAgo) {

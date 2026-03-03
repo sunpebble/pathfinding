@@ -59,9 +59,21 @@ function toClientGuide(guide: Guide): Record<string, unknown> {
 // ── GET / — List guides with pagination ────────────────
 app.get('/', async (c) => {
   const platform = c.req.query('platform');
-  const minQuality = Number.parseFloat(c.req.query('min_quality') ?? '0');
-  const limit = Number.parseInt(c.req.query('limit') ?? '20', 10);
-  const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
+  const parsedMinQuality = Number.parseFloat(c.req.query('min_quality') ?? '0');
+  const minQuality
+    = Number.isFinite(parsedMinQuality) && parsedMinQuality >= 0
+      ? parsedMinQuality
+      : 0;
+  const parsedLimit = Number.parseInt(c.req.query('limit') ?? '20', 10);
+  const limit
+    = Number.isInteger(parsedLimit) && parsedLimit > 0
+      ? Math.min(parsedLimit, 100)
+      : 20;
+  const parsedOffset = Number.parseInt(c.req.query('offset') ?? '0', 10);
+  const offset
+    = Number.isInteger(parsedOffset) && parsedOffset >= 0
+      ? parsedOffset
+      : 0;
 
   const db = getDb();
 
@@ -106,7 +118,11 @@ app.get('/', async (c) => {
 app.get('/search', async (c) => {
   const q = c.req.query('q');
   const destination = c.req.query('destination');
-  const limit = Number.parseInt(c.req.query('limit') ?? '30', 10);
+  const parsedLimit = Number.parseInt(c.req.query('limit') ?? '30', 10);
+  const limit
+    = Number.isInteger(parsedLimit) && parsedLimit > 0
+      ? Math.min(parsedLimit, 100)
+      : 30;
 
   const db = getDb();
 
@@ -146,7 +162,11 @@ app.get('/search', async (c) => {
 
 // ── GET /destinations — Popular destinations ───────────
 app.get('/destinations', async (c) => {
-  const limit = Number.parseInt(c.req.query('limit') ?? '10', 10);
+  const parsedLimit = Number.parseInt(c.req.query('limit') ?? '10', 10);
+  const limit
+    = Number.isInteger(parsedLimit) && parsedLimit > 0
+      ? Math.min(parsedLimit, 100)
+      : 10;
   const db = getDb();
 
   // Use JSON_TABLE or a simpler aggregation depending on MySQL/TiDB version.

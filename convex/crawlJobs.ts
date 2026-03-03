@@ -39,6 +39,14 @@ export const list = query({
       jobs = await ctx.db.query('crawlJobs').order('desc').collect();
     }
 
+    if (args.status) {
+      jobs = jobs.filter(job => job.status === args.status);
+    }
+
+    if (args.platform) {
+      jobs = jobs.filter(job => job.platform === args.platform);
+    }
+
     return args.limit ? jobs.slice(0, args.limit) : jobs;
   },
 });

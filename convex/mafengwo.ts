@@ -6,6 +6,15 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
+const poiCategoryValidator = v.union(
+  v.literal('attraction'),
+  v.literal('restaurant'),
+  v.literal('hotel'),
+  v.literal('shopping'),
+  v.literal('entertainment'),
+  v.literal('transport'),
+);
+
 // ============================================
 // 目的地存储
 // ============================================
@@ -78,14 +87,7 @@ export const upsertPoi = mutation({
     sourceUrl: v.string(),
     name: v.string(),
     nameEn: v.optional(v.string()),
-    category: v.union(
-      v.literal('attraction'),
-      v.literal('restaurant'),
-      v.literal('hotel'),
-      v.literal('shopping'),
-      v.literal('entertainment'),
-      v.literal('transport'),
-    ),
+    category: poiCategoryValidator,
     destinationId: v.optional(v.string()),
     destinationName: v.optional(v.string()),
     address: v.optional(v.string()),
@@ -151,7 +153,7 @@ export const batchInsertPois = mutation({
       poiId: v.string(),
       sourceUrl: v.string(),
       name: v.string(),
-      category: v.string(),
+      category: poiCategoryValidator,
       destinationId: v.optional(v.string()),
       destinationName: v.optional(v.string()),
       rating: v.optional(v.number()),
@@ -187,7 +189,7 @@ export const batchInsertPois = mutation({
           poiId: poi.poiId,
           sourceUrl: poi.sourceUrl,
           name: poi.name,
-          category: poi.category as 'attraction' | 'restaurant' | 'hotel' | 'shopping' | 'entertainment' | 'transport',
+          category: poi.category,
           destinationId: poi.destinationId,
           destinationName: poi.destinationName,
           rating: poi.rating,

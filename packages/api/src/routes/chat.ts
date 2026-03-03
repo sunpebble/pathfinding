@@ -16,40 +16,53 @@ function getDb() {
   return createDb();
 }
 
+function parsePositiveInt(
+  value: string | undefined,
+  fallback: number,
+  max: number,
+): number {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return Math.min(parsed, max);
+}
+
 // ── GET /sessions — List user's chat sessions ──────────
 app.get('/sessions', async (c) => {
   const userId = c.req.query('userId');
   const includeArchived = c.req.query('includeArchived') === 'true';
-  const limit = Number.parseInt(c.req.query('limit') ?? '50', 10);
+  const limit = parsePositiveInt(c.req.query('limit'), 50, 200);
 
   if (!userId) {
     return c.json({ error: 'Missing userId parameter' }, 400);
   }
 
+  const parsedUserId = Number.parseInt(userId, 10);
+  if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+    return c.json({ error: 'Invalid userId parameter' }, 400);
+  }
+
   const db = getDb();
 
-  let results;
-  if (includeArchived) {
-    results = await db
-      .select()
-      .from(chatSessions)
-      .where(eq(chatSessions.userId, Number(userId)))
-      .orderBy(desc(chatSessions.lastMessageAt))
-      .limit(limit);
-  }
-  else {
-    results = await db
-      .select()
-      .from(chatSessions)
-      .where(
-        and(
-          eq(chatSessions.userId, Number(userId)),
-          eq(chatSessions.isArchived, false),
-        ),
-      )
-      .orderBy(desc(chatSessions.lastMessageAt))
-      .limit(limit);
-  }
+  const results = includeArchived
+    ? await db
+        .select()
+        .from(chatSessions)
+        .where(eq(chatSessions.userId, parsedUserId))
+        .orderBy(desc(chatSessions.lastMessageAt))
+        .limit(limit)
+    : await db
+        .select()
+        .from(chatSessions)
+        .where(
+          and(
+            eq(chatSessions.userId, parsedUserId),
+            eq(chatSessions.isArchived, false),
+          ),
+        )
+        .orderBy(desc(chatSessions.lastMessageAt))
+        .limit(limit);
 
   return c.json({ data: convertKeysToSnakeCase(results) });
 });
@@ -86,10 +99,15 @@ app.post('/sessions', zValidator('json', createSessionSchema), async (c) => {
 // ── GET /messages — Get messages for a session ─────────
 app.get('/messages', async (c) => {
   const sessionId = c.req.query('sessionId');
-  const limit = Number.parseInt(c.req.query('limit') ?? '50', 10);
+  const limit = parsePositiveInt(c.req.query('limit'), 50, 200);
 
   if (!sessionId) {
     return c.json({ error: 'Missing sessionId parameter' }, 400);
+  }
+
+  const parsedSessionId = Number.parseInt(sessionId, 10);
+  if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
+    return c.json({ error: 'Invalid sessionId parameter' }, 400);
   }
 
   const db = getDb();
@@ -97,7 +115,7 @@ app.get('/messages', async (c) => {
   const results = await db
     .select()
     .from(chatMessages)
-    .where(eq(chatMessages.sessionId, Number(sessionId)))
+    .where(eq(chatMessages.sessionId, parsedSessionId))
     .orderBy(chatMessages.createdAt)
     .limit(limit);
 

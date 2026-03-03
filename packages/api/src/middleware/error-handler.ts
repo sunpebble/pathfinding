@@ -28,21 +28,33 @@ function errorBody(message: string, details?: unknown) {
   };
 }
 
+function normalizeStatusCode(statusCode: number): ContentfulStatusCode {
+  if (
+    Number.isInteger(statusCode)
+    && statusCode >= 100
+    && statusCode <= 599
+  ) {
+    return statusCode as ContentfulStatusCode;
+  }
+
+  return 500;
+}
+
 /**
  * Hono error handler — attach via `app.onError(errorHandler)`.
  */
 export function errorHandler(err: Error, c: Context) {
   if (err instanceof ApiError) {
-    if (err.statusCode >= 500) {
-      log.error({ err, statusCode: err.statusCode }, err.message);
+    const statusCode = normalizeStatusCode(err.statusCode);
+
+    if (statusCode >= 500) {
+      log.error({ err, statusCode }, err.message);
     }
     else {
-      log.warn({ statusCode: err.statusCode }, err.message);
+      log.warn({ statusCode }, err.message);
     }
-    return c.json(
-      errorBody(err.message, err.details),
-      err.statusCode as ContentfulStatusCode,
-    );
+
+    return c.json(errorBody(err.message, err.details), statusCode);
   }
 
   // Unexpected errors

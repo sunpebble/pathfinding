@@ -1,4 +1,6 @@
 import type { AuthVariables } from '../middleware/auth.js';
+import { Buffer } from 'node:buffer';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { zValidator } from '@hono/zod-validator';
 import { authAccounts, createDb, users } from '@pathfinding/database';
 import { and, eq } from 'drizzle-orm';
@@ -21,6 +23,32 @@ function getJwtSecret(): Uint8Array {
   if (!secret)
     throw new Error('JWT_SECRET is required');
   return new TextEncoder().encode(secret);
+}
+
+function hashPassword(password: string): string {
+  const salt = randomBytes(16).toString('hex');
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return `scrypt:${salt}:${hash}`;
+}
+
+function verifyPassword(password: string, storedSecret: string): boolean {
+  if (storedSecret.startsWith('scrypt:')) {
+    const [, salt, storedHashHex] = storedSecret.split(':');
+    if (!salt || !storedHashHex) {
+      return false;
+    }
+
+    const expectedHash = Buffer.from(storedHashHex, 'hex');
+    const actualHash = scryptSync(password, salt, expectedHash.length);
+
+    return (
+      expectedHash.length === actualHash.length
+      && timingSafeEqual(expectedHash, actualHash)
+    );
+  }
+
+  // Backward compatibility for legacy plain-text secrets.
+  return storedSecret === password;
 }
 
 // ── POST /signin — Email/password sign-in ──────────────
@@ -60,7 +88,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
       userId: result!.id,
       provider: 'password',
       providerAccountId: email,
-      secret: password, // TODO: hash with bcrypt/argon2
+      secret: hashPassword(password),
     });
 
     // Generate JWT
@@ -108,9 +136,16 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
 
   const account = accountRows[0]!;
 
-  // TODO: use proper password comparison (bcrypt/argon2)
-  if (account.secret !== password) {
+  if (!account.secret || !verifyPassword(password, account.secret)) {
     return c.json({ error: 'Invalid email or password' }, 401);
+  }
+
+  // Migrate legacy plain-text secrets after successful authentication.
+  if (!account.secret.startsWith('scrypt:')) {
+    await db
+      .update(authAccounts)
+      .set({ secret: hashPassword(password) })
+      .where(eq(authAccounts.id, account.id));
   }
 
   const userId = String(user.id);

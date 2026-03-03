@@ -3,7 +3,7 @@
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { rawCrawlDataValidator } from '../packages/convex-client/src/validators/index.js';
-import { mutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
 
 /**
  * Raw Crawl Records - Storage for crawled data
@@ -103,7 +103,7 @@ export const remove = mutation({
 });
 
 // Delete all records for a job
-export const removeByJob = mutation({
+export const removeByJob = internalMutation({
   args: { jobId: v.id('crawlJobs') },
   handler: async (ctx, args) => {
     const records = await ctx.db

@@ -274,6 +274,8 @@ http.route({
         parentId: parentId || undefined,
       });
 
+      const now = Date.now();
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -544,7 +546,7 @@ http.route({
       }
 
       const body = await request.json();
-      const { commentId, reason, description } = body;
+      const { commentId, reason } = body;
 
       if (!commentId || !reason) {
         return new Response(JSON.stringify({ error: "缺少必要参数" }), {
@@ -553,20 +555,8 @@ http.route({
         });
       }
 
-      const result = await ctx.runMutation(api.guideComments.report, {
-        commentId: commentId as Id<"guideComments">,
-        userId,
-        reason: reason as
-          | "spam"
-          | "harassment"
-          | "inappropriate"
-          | "misinformation"
-          | "other",
-        description,
-      });
-
-      return new Response(JSON.stringify({ data: result }), {
-        status: 200,
+      return new Response(JSON.stringify({ error: "举报功能暂未启用" }), {
+        status: 501,
         headers: { "Content-Type": "application/json" },
       });
     } catch (error) {

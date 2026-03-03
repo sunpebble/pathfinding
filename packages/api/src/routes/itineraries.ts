@@ -152,8 +152,33 @@ app.patch(
   zValidator('json', updateItinerarySchema),
   async (c) => {
     const { id } = c.req.param();
+    const authUserId = Number.parseInt(c.get('userId'), 10);
     const body = c.req.valid('json');
     const db = getDb();
+
+    if (!Number.isInteger(authUserId) || authUserId <= 0) {
+      return c.json({ error: 'Invalid authenticated user' }, 401);
+    }
+
+    const itineraryId = Number.parseInt(id, 10);
+    if (!Number.isInteger(itineraryId) || itineraryId <= 0) {
+      return c.json({ error: 'Invalid itinerary ID' }, 400);
+    }
+
+    const ownedItinerary = await db
+      .select({ id: itineraries.id })
+      .from(itineraries)
+      .where(
+        and(
+          eq(itineraries.id, itineraryId),
+          eq(itineraries.userId, authUserId),
+        ),
+      )
+      .limit(1);
+
+    if (!ownedItinerary[0]) {
+      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    }
 
     const updates: Record<string, unknown> = {};
     if (body.title !== undefined)
@@ -174,7 +199,7 @@ app.patch(
     await db
       .update(itineraries)
       .set(updates)
-      .where(eq(itineraries.id, Number(id)));
+      .where(eq(itineraries.id, itineraryId));
 
     return c.json({ success: true });
   },
@@ -183,12 +208,37 @@ app.patch(
 // ── DELETE /:id — Delete itinerary ─────────────────────
 app.delete('/:id', authRequired(), async (c) => {
   const { id } = c.req.param();
+  const authUserId = Number.parseInt(c.get('userId'), 10);
   const db = getDb();
+
+  if (!Number.isInteger(authUserId) || authUserId <= 0) {
+    return c.json({ error: 'Invalid authenticated user' }, 401);
+  }
+
+  const itineraryId = Number.parseInt(id, 10);
+  if (!Number.isInteger(itineraryId) || itineraryId <= 0) {
+    return c.json({ error: 'Invalid itinerary ID' }, 400);
+  }
+
+  const ownedItinerary = await db
+    .select({ id: itineraries.id })
+    .from(itineraries)
+    .where(
+      and(
+        eq(itineraries.id, itineraryId),
+        eq(itineraries.userId, authUserId),
+      ),
+    )
+    .limit(1);
+
+  if (!ownedItinerary[0]) {
+    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+  }
 
   const days = await db
     .select({ id: itineraryDays.id })
     .from(itineraryDays)
-    .where(eq(itineraryDays.itineraryId, Number(id)));
+    .where(eq(itineraryDays.itineraryId, itineraryId));
 
   const dayIds = days.map(d => d.id);
   await db.transaction(async (tx) => {
@@ -199,8 +249,8 @@ app.delete('/:id', authRequired(), async (c) => {
     }
     await tx
       .delete(itineraryDays)
-      .where(eq(itineraryDays.itineraryId, Number(id)));
-    await tx.delete(itineraries).where(eq(itineraries.id, Number(id)));
+      .where(eq(itineraryDays.itineraryId, itineraryId));
+    await tx.delete(itineraries).where(eq(itineraries.id, itineraryId));
   });
 
   return c.json({ success: true });

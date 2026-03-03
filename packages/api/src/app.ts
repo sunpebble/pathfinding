@@ -39,6 +39,12 @@ const log = createLogger('api');
 
 export function createApp() {
   const app = new Hono();
+  const isProduction = process.env.NODE_ENV === 'production';
+  const corsOrigin = process.env.CORS_ORIGIN ?? (isProduction ? '' : '*');
+
+  if (isProduction && !process.env.CORS_ORIGIN) {
+    throw new Error('CORS_ORIGIN must be set in production');
+  }
 
   // ── Global middleware ──────────────────────────────────
 
@@ -46,7 +52,7 @@ export function createApp() {
   app.use(
     '*',
     cors({
-      origin: process.env.CORS_ORIGIN ?? '*',
+      origin: corsOrigin,
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Content-Type', 'Authorization'],
       exposeHeaders: ['X-Request-Id'],

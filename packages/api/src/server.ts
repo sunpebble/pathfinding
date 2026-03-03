@@ -7,7 +7,11 @@ import { createApp } from './app.js';
 
 const log = createLogger('server');
 
-const port = Number.parseInt(process.env.PORT ?? '3000', 10);
+const parsedPort = Number.parseInt(process.env.PORT ?? '3000', 10);
+const port
+  = Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65535
+    ? parsedPort
+    : 3000;
 const app = createApp();
 
 serve({ fetch: app.fetch, port }, (info) => {

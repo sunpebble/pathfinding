@@ -71,6 +71,15 @@ export function authRequired() {
     catch (err) {
       if (err instanceof ApiError)
         throw err;
+
+      if (
+        err instanceof Error
+        && err.message.includes('JWT_SECRET environment variable is required')
+      ) {
+        log.error({ err }, 'JWT service misconfigured');
+        throw new ApiError(500, 'Authentication service misconfigured');
+      }
+
       log.warn({ err }, 'JWT verification failed');
       throw new ApiError(401, 'Invalid or expired token');
     }

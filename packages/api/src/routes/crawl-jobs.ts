@@ -19,7 +19,11 @@ function getDb() {
 app.get('/', async (c) => {
   const status = c.req.query('status');
   const platform = c.req.query('platform');
-  const limit = Number.parseInt(c.req.query('limit') ?? '50', 10);
+  const parsedLimit = Number.parseInt(c.req.query('limit') ?? '50', 10);
+  const limit
+    = Number.isInteger(parsedLimit) && parsedLimit > 0
+      ? Math.min(parsedLimit, 200)
+      : 50;
 
   const db = getDb();
 
