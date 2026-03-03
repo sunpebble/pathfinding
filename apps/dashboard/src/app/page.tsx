@@ -33,8 +33,6 @@ export default function OverviewPage() {
   const jobs = jobsData?.data || [];
   const runningJobs = jobs.filter(j => j.status === 'running').length;
   const completedJobs = jobs.filter(j => j.status === 'completed').length;
-  const _failedJobs = jobs.filter(j => j.status === 'failed').length;
-
   return (
     <div className="space-y-6">
       {/* Page Title */}
@@ -128,15 +126,19 @@ export default function OverviewPage() {
                 Service Status
               </p>
               <p className="mt-1 text-3xl font-bold text-gray-900">
-                {health?.status === 'healthy' ? 'Online' : 'Offline'}
+                {health?.status === 'ok' || health?.status === 'healthy'
+                  ? 'Online'
+                  : 'Offline'}
               </p>
             </div>
             <div
               className={`rounded-full p-3 ${
-                health?.status === 'healthy' ? 'bg-emerald-100' : 'bg-red-100'
+                health?.status === 'ok' || health?.status === 'healthy'
+                  ? 'bg-emerald-100'
+                  : 'bg-red-100'
               }`}
             >
-              {health?.status === 'healthy'
+              {health?.status === 'ok' || health?.status === 'healthy'
                 ? (
                     <CheckCircle className="h-6 w-6 text-emerald-600" />
                   )

@@ -39,14 +39,24 @@ app.get('/', async (c) => {
     db
       .select()
       .from(guideComments)
-      .where(and(eq(guideComments.guideId, guideId), eq(guideComments.isDeleted, false)))
+      .where(
+        and(
+          eq(guideComments.guideId, guideId),
+          eq(guideComments.isDeleted, false),
+        ),
+      )
       .orderBy(desc(guideComments.createdAt))
       .limit(pageSize)
       .offset(offset),
     db
       .select({ count: sql<number>`count(*)` })
       .from(guideComments)
-      .where(and(eq(guideComments.guideId, guideId), eq(guideComments.isDeleted, false))),
+      .where(
+        and(
+          eq(guideComments.guideId, guideId),
+          eq(guideComments.isDeleted, false),
+        ),
+      ),
   ]);
 
   const total = countResult[0]?.count ?? 0;
@@ -163,7 +173,12 @@ app.delete('/', authRequired(), async (c) => {
   await db
     .update(guideComments)
     .set({ isDeleted: true, updatedAt: new Date() })
-    .where(and(eq(guideComments.id, commentId), eq(guideComments.userId, Number(userId))));
+    .where(
+      and(
+        eq(guideComments.id, commentId),
+        eq(guideComments.userId, Number(userId)),
+      ),
+    );
 
   return c.json({ success: true });
 });
@@ -182,7 +197,12 @@ app.get('/replies', async (c) => {
   const replies = await db
     .select()
     .from(guideComments)
-    .where(and(eq(guideComments.parentId, parentId), eq(guideComments.isDeleted, false)))
+    .where(
+      and(
+        eq(guideComments.parentId, parentId),
+        eq(guideComments.isDeleted, false),
+      ),
+    )
     .orderBy(desc(guideComments.createdAt));
 
   return c.json({ success: true, data: convertKeysToSnakeCase(replies) });
@@ -206,7 +226,12 @@ app.post('/like', authRequired(), async (c) => {
   const existing = await db
     .select()
     .from(guideCommentLikes)
-    .where(and(eq(guideCommentLikes.commentId, cid), eq(guideCommentLikes.userId, uid)))
+    .where(
+      and(
+        eq(guideCommentLikes.commentId, cid),
+        eq(guideCommentLikes.userId, uid),
+      ),
+    )
     .limit(1);
 
   let liked: boolean;
@@ -215,10 +240,15 @@ app.post('/like', authRequired(), async (c) => {
     // Unlike
     await db
       .delete(guideCommentLikes)
-      .where(and(eq(guideCommentLikes.commentId, cid), eq(guideCommentLikes.userId, uid)));
+      .where(
+        and(
+          eq(guideCommentLikes.commentId, cid),
+          eq(guideCommentLikes.userId, uid),
+        ),
+      );
     await db
       .update(guideComments)
-      .set({ likesCount: sql`${guideComments.likesCount} - 1` })
+      .set({ likesCount: sql`GREATEST(${guideComments.likesCount} - 1, 0)` })
       .where(eq(guideComments.id, cid));
     liked = false;
   }

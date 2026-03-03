@@ -67,19 +67,7 @@ export const POI_CATEGORIES: Record<
 /**
  * All POI category values
  */
-export const POI_CATEGORY_VALUES: PoiCategory[] = [
-  'attraction',
-  'restaurant',
-  'hotel',
-  'shopping',
-  'cafe',
-  'bar',
-  'museum',
-  'park',
-  'entertainment',
-  'transport',
-  'other',
-];
+export const POI_CATEGORY_VALUES = Object.keys(POI_CATEGORIES) as PoiCategory[];
 
 /**
  * Get category display label

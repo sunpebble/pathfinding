@@ -1,5 +1,11 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, shareEventLogs, shareEvents, shareLinks } from '@pathfinding/database';
+import { randomBytes } from 'node:crypto';
+import {
+  createDb,
+  shareEventLogs,
+  shareEvents,
+  shareLinks,
+} from '@pathfinding/database';
 import { and, eq, sql } from 'drizzle-orm';
 /**
  * Sharing routes — share links, tracking, stats.
@@ -7,6 +13,7 @@ import { and, eq, sql } from 'drizzle-orm';
  */
 import { Hono } from 'hono';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
@@ -15,14 +22,8 @@ function getDb() {
   return createDb();
 }
 
-/** Generate a random share code */
 function generateShareCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  return randomBytes(6).toString('base64url');
 }
 
 // ── POST /link — Generate a share link ─────────────────
@@ -127,7 +128,10 @@ app.get('/stats', async (c) => {
       ),
     );
 
-  const totalViews = links.reduce((sum, link) => sum + (link.viewCount ?? 0), 0);
+  const totalViews = links.reduce(
+    (sum, link) => sum + (link.viewCount ?? 0),
+    0,
+  );
 
   return c.json(
     convertKeysToSnakeCase({

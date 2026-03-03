@@ -3,7 +3,7 @@
 import { api } from '@pathfinding/convex-client';
 import { useMutation } from 'convex/react';
 import { Check, Copy, Link2, Mail, UserPlus, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { toConvexId } from '@/types/convex';
 
@@ -26,6 +26,15 @@ export function InviteDialog({
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [shareableLinkCopied, setShareableLinkCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(
+    () => () => {
+      if (timerRef.current)
+        clearTimeout(timerRef.current);
+    },
+    [],
+  );
 
   const inviteCollaborator = useMutation(
     api.itineraryCollaborators.inviteCollaborator,
@@ -61,8 +70,7 @@ export function InviteDialog({
       setUserId('');
       setRole('editor');
 
-      // Auto-close after 2 seconds on success
-      setTimeout(() => {
+      timerRef.current = setTimeout(() => {
         onClose();
         setSuccess('');
       }, 2000);
@@ -77,17 +85,15 @@ export function InviteDialog({
     }
   };
 
-  const generateShareableLink = () => {
-    // Generate a shareable link with itinerary ID and role
-    const baseUrl = window.location.origin;
+  const shareableLink = useMemo(() => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     const shareToken = btoa(`${itineraryId}:${role}:${Date.now()}`);
     return `${baseUrl}/itineraries/accept?token=${shareToken}`;
-  };
+  }, [itineraryId, role]);
 
   const handleCopyLink = async () => {
-    const link = generateShareableLink();
     try {
-      await navigator.clipboard.writeText(link);
+      await navigator.clipboard.writeText(shareableLink);
       setShareableLinkCopied(true);
       setTimeout(() => setShareableLinkCopied(false), 2000);
     }
@@ -238,7 +244,7 @@ export function InviteDialog({
             <div className="flex gap-2">
               <input
                 type="text"
-                value={generateShareableLink()}
+                value={shareableLink}
                 readOnly
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600"
               />

@@ -578,7 +578,7 @@ function DayEditor({
           : (
               items.map((item, index) => (
                 <ItemEditor
-                  key={item._id}
+                  key={`${item._id}-${item.startTime ?? ''}-${item.endTime ?? ''}-${item.notes ?? ''}-${item.transportMode ?? ''}`}
                   item={item}
                   onUpdate={updates => handleUpdateItem(item._id, updates)}
                   onRemove={() => handleRemoveItem(item._id)}

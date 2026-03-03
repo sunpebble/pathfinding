@@ -172,10 +172,11 @@ export default function GuidesPage() {
   const pageSize = 20;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['guides', platform, page],
+    queryKey: ['guides', platform, page, searchQuery],
     queryFn: () =>
       getTravelGuides({
         platforms: platform || undefined,
+        search: searchQuery || undefined,
         limit: pageSize,
         offset: page * pageSize,
         sort: 'quality_score',

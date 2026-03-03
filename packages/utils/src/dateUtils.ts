@@ -7,7 +7,22 @@
  */
 export function toTimezone(date: Date | string, timezone: string): Date {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return new Date(d.toLocaleString('en-US', { timeZone: timezone }));
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+  const parts = Object.fromEntries(
+    formatter.formatToParts(d).map(p => [p.type, p.value]),
+  );
+  return new Date(
+    `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`,
+  );
 }
 
 /**
@@ -35,8 +50,20 @@ export function formatTime(date: Date | string): string {
  * Parse time string (HH:mm) to hours and minutes
  */
 export function parseTime(timeStr: string): { hours: number; minutes: number } {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  return { hours: hours || 0, minutes: minutes || 0 };
+  const parts = timeStr.split(':');
+  const hours = Number(parts[0]);
+  const minutes = Number(parts[1]);
+  if (
+    Number.isNaN(hours)
+    || Number.isNaN(minutes)
+    || hours < 0
+    || hours > 23
+    || minutes < 0
+    || minutes > 59
+  ) {
+    return { hours: 0, minutes: 0 };
+  }
+  return { hours, minutes };
 }
 
 /**
@@ -77,11 +104,16 @@ export function getDaysBetween(
 ): number {
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
-
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  return diffDays + 1; // Inclusive
+  const startDay = new Date(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate(),
+  );
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const diffDays = Math.round(
+    Math.abs(endDay.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  return diffDays + 1;
 }
 
 /**
@@ -130,6 +162,11 @@ export function getRelativeTime(
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
+
+  if (diffMs < 0) {
+    return locale === 'zh' ? '即将' : 'upcoming';
+  }
+
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));

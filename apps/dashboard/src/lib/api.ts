@@ -31,6 +31,9 @@ async function fetchApi<T>(
 // Health check
 export async function getHealth(): Promise<{ status: string }> {
   const res = await fetch('/api/health');
+  if (!res.ok) {
+    return { status: 'error' };
+  }
   return res.json();
 }
 
@@ -324,6 +327,7 @@ export interface TravelGuide {
 export async function getTravelGuides(params?: {
   platforms?: string;
   destinations?: string;
+  search?: string;
   min_quality?: number;
   limit?: number;
   offset?: number;
@@ -335,6 +339,8 @@ export async function getTravelGuides(params?: {
     searchParams.append('platforms', params.platforms);
   if (params?.destinations)
     searchParams.append('destinations', params.destinations);
+  if (params?.search)
+    searchParams.append('q', params.search);
   if (params?.min_quality)
     searchParams.append('min_quality', params.min_quality.toString());
   if (params?.limit)

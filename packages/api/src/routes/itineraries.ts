@@ -6,7 +6,7 @@ import {
   itineraryDays,
   itineraryItems,
 } from '@pathfinding/database';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 /**
  * Itineraries routes — CRUD for itineraries, days, and items.
  */
@@ -84,22 +84,18 @@ app.get('/:id', async (c) => {
     .orderBy(itineraryDays.dayNumber);
 
   const dayIds = days.map(d => d.id);
-  let items: (typeof itineraryItems.$inferSelect)[] = [];
-  if (dayIds.length > 0) {
-    // Fetch all items for all days
-    for (const dayId of dayIds) {
-      const dayItems = await db
-        .select()
-        .from(itineraryItems)
-        .where(eq(itineraryItems.dayId, dayId))
-        .orderBy(itineraryItems.orderIndex);
-      items = items.concat(dayItems);
-    }
-  }
+  const items
+    = dayIds.length > 0
+      ? await db
+          .select()
+          .from(itineraryItems)
+          .where(inArray(itineraryItems.dayId, dayIds))
+          .orderBy(itineraryItems.orderIndex)
+      : [];
 
   return c.json({
     data: {
-      ...convertKeysToSnakeCase(result[0]) as Record<string, unknown>,
+      ...(convertKeysToSnakeCase(result[0]) as Record<string, unknown>),
       days: convertKeysToSnakeCase(
         days.map(day => ({
           ...day,
@@ -189,18 +185,23 @@ app.delete('/:id', authRequired(), async (c) => {
   const { id } = c.req.param();
   const db = getDb();
 
-  // Delete items first, then days, then itinerary
   const days = await db
     .select({ id: itineraryDays.id })
     .from(itineraryDays)
     .where(eq(itineraryDays.itineraryId, Number(id)));
 
-  for (const day of days) {
-    await db.delete(itineraryItems).where(eq(itineraryItems.dayId, day.id));
-  }
-
-  await db.delete(itineraryDays).where(eq(itineraryDays.itineraryId, Number(id)));
-  await db.delete(itineraries).where(eq(itineraries.id, Number(id)));
+  const dayIds = days.map(d => d.id);
+  await db.transaction(async (tx) => {
+    if (dayIds.length > 0) {
+      await tx
+        .delete(itineraryItems)
+        .where(inArray(itineraryItems.dayId, dayIds));
+    }
+    await tx
+      .delete(itineraryDays)
+      .where(eq(itineraryDays.itineraryId, Number(id)));
+    await tx.delete(itineraries).where(eq(itineraries.id, Number(id)));
+  });
 
   return c.json({ success: true });
 });
@@ -211,26 +212,22 @@ const createDaySchema = z.object({
   date: z.string(),
 });
 
-app.post(
-  '/:id/days',
-  zValidator('json', createDaySchema),
-  async (c) => {
-    const { id } = c.req.param();
-    const body = c.req.valid('json');
-    const db = getDb();
+app.post('/:id/days', zValidator('json', createDaySchema), async (c) => {
+  const { id } = c.req.param();
+  const body = c.req.valid('json');
+  const db = getDb();
 
-    const [result] = await db
-      .insert(itineraryDays)
-      .values({
-        itineraryId: Number(id),
-        dayNumber: body.dayNumber,
-        date: body.date,
-      })
-      .$returningId();
+  const [result] = await db
+    .insert(itineraryDays)
+    .values({
+      itineraryId: Number(id),
+      dayNumber: body.dayNumber,
+      date: body.date,
+    })
+    .$returningId();
 
-    return c.json({ data: { id: result!.id } }, 201);
-  },
-);
+  return c.json({ data: { id: result!.id } }, 201);
+});
 
 // ── POST /:id/days/:dayId/items — Add item to day ──────
 const createItemSchema = z.object({

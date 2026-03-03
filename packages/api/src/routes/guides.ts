@@ -1,11 +1,8 @@
 import type { InferSelectModel } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
-import {
-  createDb,
-  travelGuides,
-} from '@pathfinding/database';
-import { desc, eq, gte, like, sql } from 'drizzle-orm';
+import { createDb, travelGuides } from '@pathfinding/database';
+import { and, desc, eq, gte, like, sql } from 'drizzle-orm';
 /**
  * Guides routes — list, get by ID, search, destinations, stats.
  * Mirrors the Convex /api/guides/* HTTP endpoints.
@@ -44,11 +41,16 @@ function toClientGuide(guide: Guide): Record<string, unknown> {
     created_at: guide.createdAt?.toISOString() ?? null,
     destinations: guide.destinations,
     // AI fields from enrichedData
-    ai_summary: (guide.enrichedData as Record<string, unknown> | null)?.summary ?? null,
-    ai_tips: (guide.enrichedData as Record<string, unknown> | null)?.tips ?? null,
-    ai_best_time: (guide.enrichedData as Record<string, unknown> | null)?.bestTime ?? null,
-    ai_duration: (guide.enrichedData as Record<string, unknown> | null)?.duration ?? null,
-    ai_budget: (guide.enrichedData as Record<string, unknown> | null)?.budget ?? null,
+    ai_summary:
+      (guide.enrichedData as Record<string, unknown> | null)?.summary ?? null,
+    ai_tips:
+      (guide.enrichedData as Record<string, unknown> | null)?.tips ?? null,
+    ai_best_time:
+      (guide.enrichedData as Record<string, unknown> | null)?.bestTime ?? null,
+    ai_duration:
+      (guide.enrichedData as Record<string, unknown> | null)?.duration ?? null,
+    ai_budget:
+      (guide.enrichedData as Record<string, unknown> | null)?.budget ?? null,
     ai_days: (guide.dayItineraries as unknown[]) ?? null,
     ai_processed_at: null,
   };
@@ -82,14 +84,10 @@ app.get('/', async (c) => {
 
   let results: Guide[];
   if (conditions.length > 0) {
-    const where
-      = conditions.length === 1
-        ? conditions[0]!
-        : sql`${conditions[0]} AND ${conditions[1]}`;
     results = await db
       .select()
       .from(travelGuides)
-      .where(where)
+      .where(and(...conditions))
       .orderBy(desc(travelGuides.createdAt))
       .limit(limit)
       .offset(offset);
@@ -198,24 +196,6 @@ app.get('/by-id', async (c) => {
   return c.json(toClientGuide(result[0]!));
 });
 
-// ── GET /:id — Get guide by ID (path param) ────────────
-app.get('/:id', async (c) => {
-  const { id } = c.req.param();
-  const db = getDb();
-
-  const result = await db
-    .select()
-    .from(travelGuides)
-    .where(eq(travelGuides.id, Number(id)))
-    .limit(1);
-
-  if (result.length === 0) {
-    return c.json({ error: 'Guide not found' }, 404);
-  }
-
-  return c.json({ data: toClientGuide(result[0]!) });
-});
-
 // ── GET /stats — Guide statistics ──────────────────────
 app.get('/stats', async (c) => {
   const db = getDb();
@@ -236,6 +216,24 @@ app.get('/stats', async (c) => {
   }
 
   return c.json({ total, by_platform: byPlatform });
+});
+
+// ── GET /:id — Get guide by ID (path param) ────────────
+app.get('/:id', async (c) => {
+  const { id } = c.req.param();
+  const db = getDb();
+
+  const result = await db
+    .select()
+    .from(travelGuides)
+    .where(eq(travelGuides.id, Number(id)))
+    .limit(1);
+
+  if (result.length === 0) {
+    return c.json({ error: 'Guide not found' }, 404);
+  }
+
+  return c.json({ data: toClientGuide(result[0]!) });
 });
 
 // ── POST / — Create a guide ───────────────────────────
@@ -280,37 +278,33 @@ const updateGuideSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
-app.patch(
-  '/:id',
-  zValidator('json', updateGuideSchema),
-  async (c) => {
-    const { id } = c.req.param();
-    const body = c.req.valid('json');
-    const db = getDb();
+app.patch('/:id', zValidator('json', updateGuideSchema), async (c) => {
+  const { id } = c.req.param();
+  const body = c.req.valid('json');
+  const db = getDb();
 
-    const updates: Record<string, unknown> = {};
-    if (body.title !== undefined)
-      updates.title = body.title;
-    if (body.content !== undefined)
-      updates.content = body.content;
-    if (body.category !== undefined)
-      updates.category = body.category;
-    if (body.destinations !== undefined)
-      updates.destinations = body.destinations;
-    if (body.tags !== undefined)
-      updates.tags = body.tags;
+  const updates: Record<string, unknown> = {};
+  if (body.title !== undefined)
+    updates.title = body.title;
+  if (body.content !== undefined)
+    updates.content = body.content;
+  if (body.category !== undefined)
+    updates.category = body.category;
+  if (body.destinations !== undefined)
+    updates.destinations = body.destinations;
+  if (body.tags !== undefined)
+    updates.tags = body.tags;
 
-    if (Object.keys(updates).length === 0) {
-      return c.json({ error: 'No fields to update' }, 400);
-    }
+  if (Object.keys(updates).length === 0) {
+    return c.json({ error: 'No fields to update' }, 400);
+  }
 
-    await db
-      .update(travelGuides)
-      .set(updates)
-      .where(eq(travelGuides.id, Number(id)));
+  await db
+    .update(travelGuides)
+    .set(updates)
+    .where(eq(travelGuides.id, Number(id)));
 
-    return c.json({ success: true });
-  },
-);
+  return c.json({ success: true });
+});
 
 export default app;

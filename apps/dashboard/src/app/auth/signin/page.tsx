@@ -4,7 +4,7 @@ import { useAuthActions } from '@convex-dev/auth/react';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function SignInPage() {
@@ -16,11 +16,14 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirect to home if already authenticated
-  if (isAuthenticated) {
-    router.push('/');
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
+
+  if (isAuthenticated)
     return null;
-  }
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
