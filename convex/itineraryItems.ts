@@ -171,7 +171,7 @@ export const update = mutation({
     // Check edit permission
     await checkItemEditPermission(ctx, item.dayId, args.userId);
 
-    const { id, userId, ...updates } = args;
+    const { id, userId: _userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );

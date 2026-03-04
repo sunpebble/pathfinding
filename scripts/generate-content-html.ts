@@ -93,8 +93,8 @@ function escapeHtml(str: string): string {
 }
 
 async function main() {
-  console.log('🖼️  为历史游记生成图文混排 HTML...');
-  console.log(`Convex: ${CONVEX_URL}\n`);
+  console.warn('🖼️  为历史游记生成图文混排 HTML...');
+  console.warn(`Convex: ${CONVEX_URL}\n`);
 
   let cursor: string | undefined;
   let totalProcessed = 0;
@@ -127,7 +127,7 @@ async function main() {
         if (guide.contentHtml && guide.contentHtml.length > 50) {
           totalSkipped++;
           if (totalProcessed % 20 === 0) {
-            console.log(`⏭️  [${totalProcessed}] 已跳过（已有 contentHtml）`);
+            console.warn(`⏭️  [${totalProcessed}] 已跳过（已有 contentHtml）`);
           }
           continue;
         }
@@ -169,7 +169,7 @@ async function main() {
 
           totalUpdated++;
           const imgCount = (guide.imageUrls || []).length;
-          console.log(
+          console.warn(
             `✅ [${totalProcessed}] ${guide.title?.slice(0, 35) || guide.sourceExternalId} — ${imgCount} 张图片混排`,
           );
         }
@@ -187,10 +187,10 @@ async function main() {
     cursor = result.cursor;
   }
 
-  console.log(`\n🎉 图文混排生成完成！`);
-  console.log(`   总计处理: ${totalProcessed}`);
-  console.log(`   已更新:   ${totalUpdated}`);
-  console.log(`   已跳过:   ${totalSkipped}`);
+  console.warn(`\n🎉 图文混排生成完成！`);
+  console.warn(`   总计处理: ${totalProcessed}`);
+  console.warn(`   已更新:   ${totalUpdated}`);
+  console.warn(`   已跳过:   ${totalSkipped}`);
 }
 
 main().catch(console.error);

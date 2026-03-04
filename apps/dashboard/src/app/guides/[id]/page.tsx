@@ -114,6 +114,39 @@ export default function GuideDetailPage() {
   });
 
   const guide = data?.data as unknown as GuideWithAI | undefined;
+  const aiTips = guide?.aiTips ?? guide?.ai_tips;
+
+  const aiTipsWithKeys = React.useMemo(() => {
+    if (!aiTips)
+      return [] as Array<{ key: string; tip: string }>;
+
+    const occurrences = new Map<string, number>();
+    return aiTips.map((tip) => {
+      const currentCount = occurrences.get(tip) ?? 0;
+      occurrences.set(tip, currentCount + 1);
+      return {
+        key: `${tip}-${currentCount}`,
+        tip,
+      };
+    });
+  }, [aiTips]);
+
+  const contentParagraphsWithKeys = React.useMemo(() => {
+    if (!guide?.content)
+      return [] as Array<{ key: string; paragraph: string }>;
+
+    const occurrences = new Map<string, number>();
+    return guide.content.split(/\n{2,}/).map((paragraph) => {
+      const trimmedParagraph = paragraph.trim();
+      const currentCount = occurrences.get(trimmedParagraph) ?? 0;
+      occurrences.set(trimmedParagraph, currentCount + 1);
+
+      return {
+        key: `${trimmedParagraph}-${currentCount}`,
+        paragraph: trimmedParagraph,
+      };
+    });
+  }, [guide?.content]);
 
   if (isLoading) {
     return (
@@ -319,12 +352,12 @@ export default function GuideDetailPage() {
             )}
           </div>
 
-          {(guide.aiTips ?? guide.ai_tips) && (guide.aiTips ?? guide.ai_tips)!.length > 0 && (
+          {aiTipsWithKeys.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">💡 实用贴士</h3>
               <ul className="space-y-1.5">
-                {(guide.aiTips ?? guide.ai_tips)!.map((tip: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                {aiTipsWithKeys.map(({ key, tip }) => (
+                  <li key={key} className="flex items-start gap-2 text-sm text-gray-600">
                     <span className="text-purple-400 mt-0.5 flex-shrink-0">•</span>
                     {tip}
                   </li>
@@ -351,9 +384,9 @@ export default function GuideDetailPage() {
             ? (
                 // Plain text with paragraph formatting
                 <div className="prose prose-gray max-w-none">
-                  {guide.content.split(/\n{2,}/).map((paragraph: string, i: number) => (
-                    <p key={i} className="text-gray-700 leading-relaxed mb-4">
-                      {paragraph.trim()}
+                  {contentParagraphsWithKeys.map(({ key, paragraph }) => (
+                    <p key={key} className="text-gray-700 leading-relaxed mb-4">
+                      {paragraph}
                     </p>
                   ))}
                 </div>

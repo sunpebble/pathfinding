@@ -89,10 +89,10 @@ interface CrawlStats {
 function log(message: string, data?: unknown) {
   const timestamp = new Date().toISOString().slice(11, 19);
   if (data) {
-    console.log(`[${timestamp}] ${message}`, typeof data === 'string' ? data : JSON.stringify(data));
+    console.warn(`[${timestamp}] ${message}`, typeof data === 'string' ? data : JSON.stringify(data));
   }
   else {
-    console.log(`[${timestamp}] ${message}`);
+    console.warn(`[${timestamp}] ${message}`);
   }
 }
 
@@ -460,13 +460,13 @@ async function saveToTiDB(
 // ============================================
 
 async function main() {
-  console.log(`\n${'='.repeat(50)}`);
-  console.log('  马蜂窝游记爬取 — Playwright 本地浏览器版');
-  console.log('='.repeat(50));
-  console.log(`  最大条数: ${CONFIG.maxNotes}`);
-  console.log(`  Headless: ${CONFIG.headless}`);
-  console.log(`  入口页数: ${ENTRY_URLS.length}`);
-  console.log(`${'='.repeat(50)}\n`);
+  console.warn(`\n${'='.repeat(50)}`);
+  console.warn('  马蜂窝游记爬取 — Playwright 本地浏览器版');
+  console.warn('='.repeat(50));
+  console.warn(`  最大条数: ${CONFIG.maxNotes}`);
+  console.warn(`  Headless: ${CONFIG.headless}`);
+  console.warn(`  入口页数: ${ENTRY_URLS.length}`);
+  console.warn(`${'='.repeat(50)}\n`);
 
   if (!process.env.DATABASE_URL) {
     console.error('ERROR: DATABASE_URL 环境变量未设置');
@@ -588,19 +588,19 @@ async function main() {
   // 输出最终统计
   const totalTime = (Date.now() - stats.startTime) / 1000 / 60;
 
-  console.log(`\n${'='.repeat(50)}`);
-  console.log('  爬取完成！统计：');
-  console.log('='.repeat(50));
-  console.log(`  发现链接:  ${stats.totalUrlsFound}`);
-  console.log(`  爬取详情:  ${stats.detailsCrawled}`);
-  console.log(`  保存成功:  ${stats.detailsSaved}`);
-  console.log(`  已跳过:    ${stats.skipped}`);
-  console.log(`  错误数:    ${stats.errors}`);
-  console.log(`  总耗时:    ${totalTime.toFixed(1)} 分钟`);
+  console.warn(`\n${'='.repeat(50)}`);
+  console.warn('  爬取完成！统计：');
+  console.warn('='.repeat(50));
+  console.warn(`  发现链接:  ${stats.totalUrlsFound}`);
+  console.warn(`  爬取详情:  ${stats.detailsCrawled}`);
+  console.warn(`  保存成功:  ${stats.detailsSaved}`);
+  console.warn(`  已跳过:    ${stats.skipped}`);
+  console.warn(`  错误数:    ${stats.errors}`);
+  console.warn(`  总耗时:    ${totalTime.toFixed(1)} 分钟`);
   if (stats.detailsSaved > 0) {
-    console.log(`  平均速度:  ${(stats.detailsSaved / totalTime).toFixed(1)} 条/分钟`);
+    console.warn(`  平均速度:  ${(stats.detailsSaved / totalTime).toFixed(1)} 条/分钟`);
   }
-  console.log(`${'='.repeat(50)}\n`);
+  console.warn(`${'='.repeat(50)}\n`);
 }
 
 // 运行

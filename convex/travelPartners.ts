@@ -468,7 +468,7 @@ export const updateRequest = mutation({
       throw new Error('You can only update your own requests');
     }
 
-    const { id, userId, ...updates } = args;
+    const { id, userId: _userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );

@@ -427,7 +427,7 @@ export const updateBooking = mutation({
   handler: async (ctx, args) => {
     await checkBookingOwnership(ctx, args.id, args.userId);
 
-    const { id, userId, ...updates } = args;
+    const { id, userId: _userId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined),
     );

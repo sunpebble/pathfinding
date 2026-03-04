@@ -11,8 +11,8 @@ const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
 const client = new ConvexHttpClient(CONVEX_URL);
 
 async function main() {
-  console.log('🧹 开始清洗历史游记数据...');
-  console.log(`Convex: ${CONVEX_URL}\n`);
+  console.warn('🧹 开始清洗历史游记数据...');
+  console.warn(`Convex: ${CONVEX_URL}\n`);
 
   let cursor: string | undefined;
   let totalProcessed = 0;
@@ -60,14 +60,14 @@ async function main() {
 
           totalCleaned++;
           const pct = Math.round((1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100);
-          console.log(
+          console.warn(
             `✅ [${totalProcessed}] ${item.title?.slice(0, 30) || item.sourceExternalId} — 清除 ${pct}% 噪音 (${cleanResult.originalLength} → ${cleanResult.cleanedLength}) [${cleanResult.removedTypes.join(', ')}]`,
           );
         }
         else {
           totalSkipped++;
           if (totalProcessed % 20 === 0) {
-            console.log(`⏭️  [${totalProcessed}] 已跳过（无需清洗）`);
+            console.warn(`⏭️  [${totalProcessed}] 已跳过（无需清洗）`);
           }
         }
       }
@@ -81,10 +81,10 @@ async function main() {
     cursor = result.cursor;
   }
 
-  console.log(`\n🎉 清洗完成！`);
-  console.log(`   总计处理: ${totalProcessed}`);
-  console.log(`   已清洗:   ${totalCleaned}`);
-  console.log(`   已跳过:   ${totalSkipped}`);
+  console.warn(`\n🎉 清洗完成！`);
+  console.warn(`   总计处理: ${totalProcessed}`);
+  console.warn(`   已清洗:   ${totalCleaned}`);
+  console.warn(`   已跳过:   ${totalSkipped}`);
 }
 
 main().catch(console.error);
