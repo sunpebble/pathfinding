@@ -26,7 +26,6 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=8000
       - DATABASE_URL=mysql://root@tidb:4000/pathfinding
-      # - CONVEX_URL=${CONVEX_URL}  # Deprecated: replaced by TiDB
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
     healthcheck:
@@ -58,7 +57,6 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3001
       - DATABASE_URL=mysql://root@tidb:4000/pathfinding
-      # - CONVEX_URL=${CONVEX_URL}  # Deprecated: replaced by TiDB
       - AMAP_API_KEY=${AMAP_API_KEY:-}
       - AMAP_SECRET_KEY=${AMAP_SECRET_KEY:-}
       - OVERPASS_API_URL=${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
@@ -161,7 +159,6 @@ services:
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-your-encryption-key-here}
       # External service connections
       - DATABASE_URL=mysql://root@tidb:4000/pathfinding
-      # - CONVEX_URL=${CONVEX_URL}  # Deprecated: replaced by TiDB
       - CRAWLER_API_URL=http://crawler:3001
     volumes:
       - n8n-data:/home/node/.n8n

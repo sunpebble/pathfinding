@@ -59,11 +59,8 @@
   },
   "dependencies": {
     "@auth/core": "^0.37.4",
-    "@convex-dev/aggregate": "^0.2.1",
-    "@convex-dev/auth": "^0.0.91",
     "@types/node": "^25.3.2",
     "cheerio": "^1.2.0",
-    "convex": "^1.32.0",
     "drizzle-orm": "^0.44.7",
     "expo-server-sdk": "^6.0.0",
     "jose": "^6.1.3",

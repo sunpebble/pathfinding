@@ -1,8 +1,5 @@
 'use client';
 
-import { useAuthActions } from '@convex-dev/auth/react';
-import { api } from '@pathfinding/convex-client';
-import { useQuery } from 'convex/react';
 import { ChevronDown, LogOut, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,17 +7,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 export function AuthButton() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { signOut } = useAuthActions();
+  const { isAuthenticated, isLoading: authLoading, signOut, user } = useAuth();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  // Get current user data
-  const currentUser = useQuery(
-    api.users.getCurrentUser,
-    isAuthenticated ? {} : 'skip',
-  );
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -69,16 +59,16 @@ export function AuthButton() {
 
   // Authenticated - show user menu
   const displayName
-    = currentUser?.profile?.displayName
-      || currentUser?.name
-      || currentUser?.email?.split('@')[0]
+    = user?.name
+      || user?.email?.split('@')[0]
       || 'User';
-  const userEmail = currentUser?.email || '';
+  const userEmail = user?.email || '';
 
   return (
     <div className="relative" ref={menuRef}>
       {/* User Button */}
       <button
+        type="button"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50"
       >
@@ -109,6 +99,7 @@ export function AuthButton() {
               Profile
             </Link>
             <button
+              type="button"
               onClick={handleSignOut}
               className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >

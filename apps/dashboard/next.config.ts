@@ -11,23 +11,33 @@ const nextConfig: NextConfig = {
 
   // Environment variables exposed to the browser
   env: {
-    NEXT_PUBLIC_CONVEX_URL:
-      process.env.NEXT_PUBLIC_CONVEX_URL || 'https://convex.kunish.org',
+    NEXT_PUBLIC_API_URL:
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
     NEXT_PUBLIC_AI_SERVICE_URL:
       process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:3001',
   },
 
   // Rewrites to proxy API requests to the appropriate services
   async rewrites() {
-    const convexUrl
-      = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://convex.kunish.org';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const aiServiceUrl
       = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:3001';
     return [
-      // Convex HTTP Actions for CRUD operations
       {
-        source: '/api/convex/:path*',
-        destination: `${convexUrl}/api/:path*`,
+        source: '/api/auth/:path*',
+        destination: `${apiUrl}/api/auth/:path*`,
+      },
+      {
+        source: '/api/itineraries/:path*',
+        destination: `${apiUrl}/api/itineraries/:path*`,
+      },
+      {
+        source: '/api/pois/:path*',
+        destination: `${apiUrl}/api/pois/:path*`,
+      },
+      {
+        source: '/api/itinerary-collaborators/:path*',
+        destination: `${apiUrl}/api/itinerary-collaborators/:path*`,
       },
       // AI Service for AI/weather/transport/pdf
       {

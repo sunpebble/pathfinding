@@ -27,8 +27,8 @@
     <!-- Custom Build Settings -->
     <key>PFEnvironment</key>
     <string>$(PF_ENVIRONMENT)</string>
-    <key>PFConvexURL</key>
-    <string>$(PF_CONVEX_URL)</string>
+    <key>PFAPIBaseURL</key>
+    <string>$(PF_API_BASE_URL)</string>
     <key>PFAIServiceURL</key>
     <string>$(PF_AI_SERVICE_URL)</string>
     <key>PFAPITimeout</key>

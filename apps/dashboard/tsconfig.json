@@ -8,10 +8,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["./src/*"],
-      "@pathfinding/convex-client": ["../../packages/convex-client/src"],
-      "@pathfinding/convex-client/api": ["../../convex/_generated/api"],
-      "@pathfinding/convex-client/dataModel": ["../../convex/_generated/dataModel"]
+      "@/*": ["./src/*"]
     },
     "allowJs": true,
     "declaration": false,
@@ -25,5 +22,5 @@
     ]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "../../convex"]
+  "exclude": ["node_modules"]
 }

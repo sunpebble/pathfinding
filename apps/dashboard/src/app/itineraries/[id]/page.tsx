@@ -1,11 +1,12 @@
 'use client';
 
-import { api } from '@pathfinding/convex-client';
-import { useQuery } from 'convex/react';
+import type { ItineraryDay, ItineraryDetail, ItineraryItem } from '@/lib/api/itineraries';
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Calendar,
   Clock,
+  Edit3,
   Eye,
   Globe,
   Lock,
@@ -14,28 +15,35 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { CollaboratorPanel } from '@/components/collaborator-panel';
 import { InviteDialog } from '@/components/invite-dialog';
+import { ItineraryEditor } from '@/components/itinerary-editor';
 import { useAuth } from '@/hooks/use-auth';
+import { getCollaborators } from '@/lib/api/collaborators';
+import {
+  getItinerary,
+
+  normalizeCollaboratorsResponse,
+  normalizeItineraryResponse,
+} from '@/lib/api/itineraries';
 import { cn } from '@/lib/utils';
-import { toConvexId } from '@/types/convex';
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
   const icons = {
     private: Lock,
-    team: Users,
+    friends: Users,
     public: Globe,
   };
   const colors: Record<string, string> = {
     private: 'bg-gray-100 text-gray-800 border-gray-200',
-    team: 'bg-blue-100 text-blue-800 border-blue-200',
+    friends: 'bg-blue-100 text-blue-800 border-blue-200',
     public: 'bg-green-100 text-green-800 border-green-200',
   };
   const labels: Record<string, string> = {
     private: 'Private',
-    team: 'Team',
+    friends: 'Friends',
     public: 'Public',
   };
 
@@ -82,56 +90,7 @@ function formatDateRange(startDate: string, endDate: string) {
   return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', { ...options, year: 'numeric' })}`;
 }
 
-interface Poi {
-  id: string;
-  name: string;
-  category?: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  rating?: number;
-}
-
-interface Item {
-  _id: string;
-  poiId: string;
-  orderIndex: number;
-  startTime?: string;
-  endTime?: string;
-  transportMode?: string;
-  notes?: string;
-  poi: Poi | null;
-}
-
-interface Day {
-  _id: string;
-  dayNumber: number;
-  date: string;
-  items: Item[];
-}
-
-interface Collaborator {
-  _id: string;
-  userId: string;
-  role: 'owner' | 'editor' | 'viewer';
-  status: 'pending' | 'accepted' | 'rejected';
-}
-
-interface Itinerary {
-  _id: string;
-  title: string;
-  cityName?: string;
-  startDate: string;
-  endDate: string;
-  visibility: 'private' | 'team' | 'public';
-  coverImageUrl?: string;
-  daysCount: number;
-  days: Day[];
-  collaborators: Collaborator[];
-  _creationTime: number;
-}
-
-function PoiCard({ item }: { item: Item }) {
+function PoiCard({ item }: { item: ItineraryItem }) {
   const poi = item.poi;
   if (!poi) {
     return (
@@ -197,7 +156,7 @@ function PoiCard({ item }: { item: Item }) {
   );
 }
 
-function DaySection({ day }: { day: Day }) {
+function DaySection({ day }: { day: ItineraryDay }) {
   const dayDate = formatDate(day.date);
 
   return (
@@ -224,7 +183,7 @@ function DaySection({ day }: { day: Day }) {
               </div>
             )
           : (
-              day.items.map(item => <PoiCard key={item._id} item={item} />)
+              day.items.map(item => <PoiCard key={item.id} item={item} />)
             )}
       </div>
     </div>
@@ -232,51 +191,67 @@ function DaySection({ day }: { day: Day }) {
 }
 
 export default function ItineraryDetailPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const params = useParams();
   const id = params.id as string;
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
-  const currentUser = useQuery(
-    api.users.getCurrentUser,
-    isAuthenticated ? {} : 'skip',
-  );
-  const currentUserId = currentUser?.id;
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace('/auth/signin');
+    }
+  }, [authLoading, isAuthenticated, router]);
 
-  const itinerary = useQuery(api.itineraries.getById, {
-    id: toConvexId<'itineraries'>(id),
-  }) as unknown as Itinerary | null | undefined;
+  const itineraryResult = useQuery({
+    queryKey: ['itinerary', id],
+    enabled: Boolean(isAuthenticated && id),
+    queryFn: () => getItinerary(id),
+  });
+
+  const collaboratorsResult = useQuery({
+    queryKey: ['itinerary-collaborators', id],
+    enabled: Boolean(isAuthenticated && id),
+    queryFn: () => getCollaborators(id),
+  });
+
+  const normalizedItinerary = itineraryResult.data
+    ? normalizeItineraryResponse(itineraryResult.data).data
+    : null;
+  const collaborators = collaboratorsResult.data
+    ? normalizeCollaboratorsResponse(collaboratorsResult.data).data
+    : [];
+  const itinerary: ItineraryDetail | null = normalizedItinerary
+    ? {
+        ...normalizedItinerary,
+        collaborators,
+      }
+    : null;
+  const currentUserId = user?.id;
 
   const isLoading
     = authLoading
-      || (isAuthenticated && currentUser === undefined)
-      || itinerary === undefined;
+      || (isAuthenticated && (itineraryResult.isLoading || collaboratorsResult.isLoading));
+
+  const inferredOwnerFallback = Boolean(
+    currentUserId
+    && itinerary?.userId
+    && itinerary.userId === currentUserId,
+  );
 
   // Determine current user's role
   const currentUserCollaborator = currentUserId
     ? itinerary?.collaborators?.find(c => c.userId === currentUserId)
     : undefined;
-  const isOwner = currentUserCollaborator?.role === 'owner';
+  const isOwner = currentUserCollaborator?.role === 'owner' || inferredOwnerFallback;
   const isEditor
     = currentUserCollaborator?.role === 'editor'
-      || currentUserCollaborator?.role === 'owner';
-  const canInvite = isOwner || isEditor;
+      || currentUserCollaborator?.role === 'owner'
+      || inferredOwnerFallback;
 
   if (!authLoading && !isAuthenticated) {
-    return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-        <h2 className="text-xl font-semibold text-gray-900">Sign in required</h2>
-        <p className="mt-2 text-sm text-gray-500">
-          Please sign in to access itinerary details.
-        </p>
-        <Link
-          href="/auth/signin"
-          className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
-        >
-          Go to Sign In
-        </Link>
-      </div>
-    );
+    return null;
   }
 
   if (isLoading) {
@@ -306,6 +281,32 @@ export default function ItineraryDetailPage() {
       </div>
     );
   }
+
+  const editorDays = itinerary.days.map(day => ({
+    _id: day.id,
+    dayNumber: day.dayNumber,
+    date: day.date,
+    items: day.items.map(item => ({
+      _id: item.id,
+      poiId: item.poiId,
+      orderIndex: item.orderIndex,
+      startTime: item.startTime,
+      endTime: item.endTime,
+      transportMode: item.transportMode,
+      notes: item.notes,
+      poi: item.poi
+        ? {
+            id: item.poi.id,
+            name: item.poi.name,
+            category: item.poi.category || 'other',
+            address: item.poi.address,
+            rating: item.poi.rating,
+            latitude: item.poi.latitude ?? 0,
+            longitude: item.poi.longitude ?? 0,
+          }
+        : null,
+    })),
+  }));
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -364,32 +365,65 @@ export default function ItineraryDetailPage() {
 
       {/* Collaborators */}
       <div className="space-y-4">
-        {canInvite && (
-          <button
-            onClick={() => setIsInviteDialogOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-          >
-            <UserPlus className="h-4 w-4" />
-            Invite Collaborator
-          </button>
-        )}
-
-        {itinerary.collaborators && itinerary.collaborators.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <Users className="h-5 w-5 text-emerald-600" />
+                Collaborators
+              </h3>
+              <p className="text-sm text-gray-600">
+                {itinerary.collaborators.length}
+                {' '}
+                {itinerary.collaborators.length === 1 ? 'person has' : 'people have'}
+                {' '}
+                access to this itinerary.
+              </p>
+            </div>
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setIsInviteDialogOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+              >
+                <UserPlus className="h-4 w-4" />
+                Invite Collaborator
+              </button>
+            )}
+          </div>
           <CollaboratorPanel
-            itineraryId={itinerary._id}
-            collaborators={itinerary.collaborators}
+            key={itinerary.collaborators.map(collaborator => `${collaborator.id}:${collaborator.role}:${collaborator.status}`).join('|')}
+            itineraryId={id}
+            collaborators={itinerary.collaborators.map(collaborator => ({
+              id: collaborator.id,
+              userId: collaborator.userId,
+              role: collaborator.role,
+              status: collaborator.status,
+            }))}
             currentUserId={currentUserId ?? ''}
-            isOwner={isOwner}
+            isOwner={Boolean(isOwner)}
           />
-        )}
+        </div>
       </div>
 
       {/* Days and POIs */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-emerald-600" />
-          Itinerary
-        </h2>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-emerald-600" />
+            Itinerary
+          </h2>
+          {isEditor && (
+            <button
+              type="button"
+              onClick={() => setIsEditorOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <Edit3 className="h-4 w-4" />
+              Edit Itinerary
+            </button>
+          )}
+        </div>
         <div className="space-y-6">
           {itinerary.days.length === 0
             ? (
@@ -399,40 +433,29 @@ export default function ItineraryDetailPage() {
                 </div>
               )
             : (
-                itinerary.days.map(day => <DaySection key={day._id} day={day} />)
+                itinerary.days.map(day => <DaySection key={day.id} day={day} />)
               )}
         </div>
       </div>
 
-      {/* Actions */}
-      {isEditor && (
-        <div className="flex items-center gap-3">
-          <Link
-            href={`/itineraries/${itinerary._id}/edit`}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-          >
-            Edit Itinerary
-          </Link>
-          {isOwner && (
-            <button
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              onClick={() => {
-                // TODO: Implement delete functionality with proper modal
-              }}
-            >
-              Delete
-            </button>
-          )}
-        </div>
+      {(isOwner && currentUserId) && (
+        <InviteDialog
+          isOpen={isInviteDialogOpen}
+          onClose={() => setIsInviteDialogOpen(false)}
+          itineraryId={id}
+          currentUserId={currentUserId}
+        />
       )}
 
-      {/* Invite Dialog */}
-      <InviteDialog
-        isOpen={isInviteDialogOpen}
-        onClose={() => setIsInviteDialogOpen(false)}
-        itineraryId={itinerary._id}
-        currentUserId={currentUserId ?? ''}
-      />
+      {(isEditor && currentUserId) && (
+        <ItineraryEditor
+          isOpen={isEditorOpen}
+          onClose={() => setIsEditorOpen(false)}
+          itineraryId={id}
+          days={editorDays}
+          userId={currentUserId}
+        />
+      )}
     </div>
   );
 }

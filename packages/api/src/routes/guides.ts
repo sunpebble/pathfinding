@@ -298,6 +298,14 @@ const updateGuideSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
+const updateGuidePoiCoordinatesSchema = z.object({
+  dayNumber: z.number().int().positive(),
+  poiIndex: z.number().int().min(0),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  verifiedBy: z.string().optional(),
+});
+
 app.patch('/:id', zValidator('json', updateGuideSchema), async (c) => {
   const { id } = c.req.param();
   const body = c.req.valid('json');
@@ -323,6 +331,60 @@ app.patch('/:id', zValidator('json', updateGuideSchema), async (c) => {
     .update(travelGuides)
     .set(updates)
     .where(eq(travelGuides.id, Number(id)));
+
+  return c.json({ success: true });
+});
+
+app.patch('/:id/poi-coordinates', zValidator('json', updateGuidePoiCoordinatesSchema), async (c) => {
+  const { id } = c.req.param();
+  const body = c.req.valid('json');
+  const guideId = Number.parseInt(id, 10);
+
+  if (!Number.isInteger(guideId) || guideId <= 0) {
+    return c.json({ error: 'Invalid guide ID' }, 400);
+  }
+
+  const db = getDb();
+  const result = await db
+    .select()
+    .from(travelGuides)
+    .where(eq(travelGuides.id, guideId))
+    .limit(1);
+
+  const guide = result[0];
+  if (!guide) {
+    return c.json({ error: 'Guide not found' }, 404);
+  }
+
+  const dayItineraries = Array.isArray(guide.dayItineraries) ? structuredClone(guide.dayItineraries) as Array<Record<string, unknown>> : [];
+  const dayIndex = dayItineraries.findIndex(day => Number(day.dayNumber) === body.dayNumber);
+  if (dayIndex === -1) {
+    return c.json({ error: 'Guide day not found' }, 404);
+  }
+
+  const pois = Array.isArray(dayItineraries[dayIndex]?.pois) ? [...(dayItineraries[dayIndex]!.pois as Array<Record<string, unknown>>)] : [];
+  if (!pois[body.poiIndex]) {
+    return c.json({ error: 'Guide POI not found' }, 404);
+  }
+
+  pois[body.poiIndex] = {
+    ...pois[body.poiIndex],
+    latitude: body.latitude,
+    longitude: body.longitude,
+    isManuallyVerified: true,
+    verifiedAt: Date.now(),
+    verifiedBy: body.verifiedBy ?? null,
+  };
+
+  dayItineraries[dayIndex] = {
+    ...dayItineraries[dayIndex],
+    pois,
+  };
+
+  await db
+    .update(travelGuides)
+    .set({ dayItineraries })
+    .where(eq(travelGuides.id, guideId));
 
   return c.json({ success: true });
 });

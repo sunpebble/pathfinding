@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import {
   createDb,
   itineraries,
+  itineraryCollaborators,
   itineraryDays,
   itineraryItems,
 } from '@pathfinding/database';
@@ -13,34 +14,207 @@ import { and, desc, eq, inArray } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
-import { authRequired } from '../middleware/auth.js';
+import { authOptional, authRequired } from '../middleware/auth.js';
+import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
+type ItineraryRow = typeof itineraries.$inferSelect;
 
 function getDb() {
   return createDb();
 }
 
+function parsePositiveInt(value: string) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+async function getOwnedItinerary(itineraryId: number, userId: number) {
+  const db = getDb();
+
+  const result = await db
+    .select()
+    .from(itineraries)
+    .where(
+      and(
+        eq(itineraries.id, itineraryId),
+        eq(itineraries.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  return result[0] ?? null;
+}
+
+async function getCollaboratorAccess(
+  itineraryId: number,
+  userId: number,
+  allowedRoles: Array<'viewer' | 'editor' | 'owner'>,
+) {
+  const db = getDb();
+
+  const result = await db
+    .select()
+    .from(itineraryCollaborators)
+    .where(
+      and(
+        eq(itineraryCollaborators.itineraryId, itineraryId),
+        eq(itineraryCollaborators.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  const collaborator = result[0] ?? null;
+  if (!collaborator) {
+    return null;
+  }
+
+  return allowedRoles.includes(collaborator.role as 'viewer' | 'editor' | 'owner')
+    ? collaborator
+    : null;
+}
+
+async function getAccessibleItinerary(itineraryId: number, userId: number) {
+  const ownedItinerary = await getOwnedItinerary(itineraryId, userId);
+  if (ownedItinerary) {
+    return { itinerary: ownedItinerary, access: 'owner' as const };
+  }
+
+  const collaborator = await getCollaboratorAccess(itineraryId, userId, ['viewer', 'editor']);
+  if (!collaborator) {
+    return null;
+  }
+
+  return { itinerary: null, access: collaborator.role };
+}
+
+async function getEditableItinerary(itineraryId: number, userId: number) {
+  const ownedItinerary = await getOwnedItinerary(itineraryId, userId);
+  if (ownedItinerary) {
+    return { itinerary: ownedItinerary, access: 'owner' as const };
+  }
+
+  const collaborator = await getCollaboratorAccess(itineraryId, userId, ['editor']);
+  if (!collaborator) {
+    return null;
+  }
+
+  return { itinerary: null, access: collaborator.role };
+}
+
+async function getScopedDay(itineraryId: number, dayId: number) {
+  const db = getDb();
+
+  const result = await db
+    .select()
+    .from(itineraryDays)
+    .where(
+      and(
+        eq(itineraryDays.id, dayId),
+        eq(itineraryDays.itineraryId, itineraryId),
+      ),
+    )
+    .limit(1);
+
+  return result[0] ?? null;
+}
+
+async function getScopedItem(dayId: number, itemId: number) {
+  const db = getDb();
+
+  const result = await db
+    .select()
+    .from(itineraryItems)
+    .where(
+      and(
+        eq(itineraryItems.id, itemId),
+        eq(itineraryItems.dayId, dayId),
+      ),
+    )
+    .limit(1);
+
+  return result[0] ?? null;
+}
+
+async function getScopedItems(dayId: number, itemIds: number[]) {
+  const db = getDb();
+
+  return db
+    .select()
+    .from(itineraryItems)
+    .where(
+      and(
+        eq(itineraryItems.dayId, dayId),
+        inArray(itineraryItems.id, itemIds),
+      ),
+    )
+    .limit(itemIds.length);
+}
+
+async function getItineraryDto(itineraryId: number) {
+  const db = getDb();
+
+  const result = await db
+    .select()
+    .from(itineraries)
+    .where(eq(itineraries.id, itineraryId))
+    .limit(1);
+
+  if (!result[0]) {
+    return null;
+  }
+
+  const days = await db
+    .select()
+    .from(itineraryDays)
+    .where(eq(itineraryDays.itineraryId, itineraryId))
+    .orderBy(itineraryDays.dayNumber);
+
+  const dayIds = days.map(day => day.id);
+  const items = dayIds.length > 0
+    ? await db
+        .select()
+        .from(itineraryItems)
+        .where(inArray(itineraryItems.dayId, dayIds))
+        .orderBy(itineraryItems.orderIndex)
+    : [];
+
+  return convertKeysToSnakeCase({
+    ...result[0],
+    days: days.map(day => ({
+      ...day,
+      items: items.filter(item => item.dayId === day.id),
+    })),
+  });
+}
+
 // ── GET / — List itineraries ───────────────────────────
-app.get('/', async (c) => {
+app.get('/', authOptional(), async (c) => {
   const userId = c.req.query('userId');
-  const visibility = c.req.query('visibility') ?? 'public';
+  const visibility = c.req.query('visibility');
   const limit = Number.parseInt(c.req.query('limit') ?? '20', 10);
   const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
+  const authUserId = c.get('userId');
 
   const db = getDb();
 
-  let results;
+  let results: ItineraryRow[];
   if (userId) {
+    if (!authUserId || authUserId !== userId) {
+      return c.json({ error: 'Itinerary access denied' }, 403);
+    }
+
+    const whereClause = visibility && visibility !== 'all'
+      ? and(
+          eq(itineraries.userId, Number(userId)),
+          eq(itineraries.visibility, visibility),
+        )
+      : eq(itineraries.userId, Number(userId));
+
     results = await db
       .select()
       .from(itineraries)
-      .where(
-        and(
-          eq(itineraries.userId, Number(userId)),
-          eq(itineraries.visibility, visibility),
-        ),
-      )
+      .where(whereClause)
       .orderBy(desc(itineraries.createdAt))
       .limit(limit)
       .offset(offset);
@@ -62,9 +236,10 @@ app.get('/', async (c) => {
 });
 
 // ── GET /:id — Get itinerary by ID ─────────────────────
-app.get('/:id', async (c) => {
+app.get('/:id', authOptional(), async (c) => {
   const { id } = c.req.param();
   const db = getDb();
+  const authUserId = c.get('userId');
 
   const result = await db
     .select()
@@ -74,6 +249,18 @@ app.get('/:id', async (c) => {
 
   if (result.length === 0) {
     return c.json({ error: 'Itinerary not found' }, 404);
+  }
+
+  const itinerary = result[0]!;
+  if (itinerary.visibility !== 'public') {
+    if (!authUserId) {
+      throw new ApiError(401, 'Authorization token is required');
+    }
+
+    const access = await getAccessibleItinerary(itinerary.id, Number.parseInt(authUserId, 10));
+    if (!access) {
+      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    }
   }
 
   // Fetch days and items
@@ -95,7 +282,7 @@ app.get('/:id', async (c) => {
 
   return c.json({
     data: {
-      ...(convertKeysToSnakeCase(result[0]) as Record<string, unknown>),
+      ...(convertKeysToSnakeCase(itinerary) as Record<string, unknown>),
       days: convertKeysToSnakeCase(
         days.map(day => ({
           ...day,
@@ -262,15 +449,30 @@ const createDaySchema = z.object({
   date: z.string(),
 });
 
-app.post('/:id/days', zValidator('json', createDaySchema), async (c) => {
+app.post('/:id/days', authRequired(), zValidator('json', createDaySchema), async (c) => {
   const { id } = c.req.param();
   const body = c.req.valid('json');
+  const authUserId = parsePositiveInt(c.get('userId'));
   const db = getDb();
+
+  if (!authUserId) {
+    return c.json({ error: 'Invalid authenticated user' }, 401);
+  }
+
+  const itineraryId = parsePositiveInt(id);
+  if (!itineraryId) {
+    return c.json({ error: 'Invalid itinerary ID' }, 400);
+  }
+
+  const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+  if (!editableItinerary) {
+    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+  }
 
   const [result] = await db
     .insert(itineraryDays)
     .values({
-      itineraryId: Number(id),
+      itineraryId,
       dayNumber: body.dayNumber,
       date: body.date,
     })
@@ -291,16 +493,37 @@ const createItemSchema = z.object({
 
 app.post(
   '/:id/days/:dayId/items',
+  authRequired(),
   zValidator('json', createItemSchema),
   async (c) => {
-    const { dayId } = c.req.param();
+    const itineraryId = parsePositiveInt(c.req.param('id'));
+    const dayId = parsePositiveInt(c.req.param('dayId'));
+    const authUserId = parsePositiveInt(c.get('userId'));
     const body = c.req.valid('json');
     const db = getDb();
+
+    if (!authUserId) {
+      return c.json({ error: 'Invalid authenticated user' }, 401);
+    }
+
+    if (!itineraryId || !dayId) {
+      return c.json({ error: 'Invalid itinerary item path' }, 400);
+    }
+
+    const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+    if (!editableItinerary) {
+      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    }
+
+    const scopedDay = await getScopedDay(itineraryId, dayId);
+    if (!scopedDay) {
+      return c.json({ error: 'Itinerary day not found' }, 404);
+    }
 
     const [result] = await db
       .insert(itineraryItems)
       .values({
-        dayId: Number(dayId),
+        dayId,
         poiId: body.poiId,
         orderIndex: body.orderIndex,
         startTime: body.startTime ?? null,
@@ -313,5 +536,198 @@ app.post(
     return c.json({ data: { id: result!.id } }, 201);
   },
 );
+
+const updateItemSchema = z.object({
+  poiId: z.number().optional(),
+  orderIndex: z.number().optional(),
+  startTime: z.string().nullable().optional(),
+  endTime: z.string().nullable().optional(),
+  transportMode: z.string().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+const reorderItemsSchema = z.object({
+  itemIds: z.array(z.number().int().positive()).min(1),
+});
+
+app.patch(
+  '/:id/days/:dayId/items/reorder',
+  authRequired(),
+  zValidator('json', reorderItemsSchema),
+  async (c) => {
+    const itineraryId = parsePositiveInt(c.req.param('id'));
+    const dayId = parsePositiveInt(c.req.param('dayId'));
+    const authUserId = parsePositiveInt(c.get('userId'));
+    const body = c.req.valid('json');
+
+    if (!authUserId) {
+      return c.json({ error: 'Invalid authenticated user' }, 401);
+    }
+
+    if (!itineraryId || !dayId) {
+      return c.json({ error: 'Invalid itinerary item path' }, 400);
+    }
+
+    const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+    if (!editableItinerary) {
+      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    }
+
+    const scopedDay = await getScopedDay(itineraryId, dayId);
+    if (!scopedDay) {
+      return c.json({ error: 'Itinerary day not found' }, 404);
+    }
+
+    const scopedItems = await getScopedItems(dayId, body.itemIds);
+    if (scopedItems.length !== body.itemIds.length) {
+      return c.json({ error: 'One or more itinerary items were not found' }, 404);
+    }
+
+    const db = getDb();
+    await db.transaction(async (tx) => {
+      await Promise.all(
+        body.itemIds.map((itemId, orderIndex) => tx
+          .update(itineraryItems)
+          .set({ orderIndex })
+          .where(eq(itineraryItems.id, itemId))),
+      );
+    });
+
+    const itinerary = await getItineraryDto(itineraryId);
+    return c.json({ data: itinerary });
+  },
+);
+
+app.patch(
+  '/:id/days/:dayId/items/:itemId',
+  authRequired(),
+  zValidator('json', updateItemSchema),
+  async (c) => {
+    const itineraryId = parsePositiveInt(c.req.param('id'));
+    const dayId = parsePositiveInt(c.req.param('dayId'));
+    const itemId = parsePositiveInt(c.req.param('itemId'));
+    const authUserId = parsePositiveInt(c.get('userId'));
+    const body = c.req.valid('json');
+
+    if (!authUserId) {
+      return c.json({ error: 'Invalid authenticated user' }, 401);
+    }
+
+    if (!itineraryId || !dayId || !itemId) {
+      return c.json({ error: 'Invalid itinerary item path' }, 400);
+    }
+
+    const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+    if (!editableItinerary) {
+      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    }
+
+    const scopedDay = await getScopedDay(itineraryId, dayId);
+    if (!scopedDay) {
+      return c.json({ error: 'Itinerary day not found' }, 404);
+    }
+
+    const scopedItem = await getScopedItem(dayId, itemId);
+    if (!scopedItem) {
+      return c.json({ error: 'Itinerary item not found' }, 404);
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (body.poiId !== undefined)
+      updates.poiId = body.poiId;
+    if (body.orderIndex !== undefined)
+      updates.orderIndex = body.orderIndex;
+    if (body.startTime !== undefined)
+      updates.startTime = body.startTime;
+    if (body.endTime !== undefined)
+      updates.endTime = body.endTime;
+    if (body.transportMode !== undefined)
+      updates.transportMode = body.transportMode;
+    if (body.notes !== undefined)
+      updates.notes = body.notes;
+
+    if (Object.keys(updates).length === 0) {
+      return c.json({ error: 'No fields to update' }, 400);
+    }
+
+    const db = getDb();
+    await db
+      .update(itineraryItems)
+      .set(updates)
+      .where(eq(itineraryItems.id, itemId));
+
+    const itinerary = await getItineraryDto(itineraryId);
+    return c.json({ data: itinerary });
+  },
+);
+
+app.delete('/:id/days/:dayId/items/:itemId', authRequired(), async (c) => {
+  const itineraryId = parsePositiveInt(c.req.param('id'));
+  const dayId = parsePositiveInt(c.req.param('dayId'));
+  const itemId = parsePositiveInt(c.req.param('itemId'));
+  const authUserId = parsePositiveInt(c.get('userId'));
+
+  if (!authUserId) {
+    return c.json({ error: 'Invalid authenticated user' }, 401);
+  }
+
+  if (!itineraryId || !dayId || !itemId) {
+    return c.json({ error: 'Invalid itinerary item path' }, 400);
+  }
+
+  const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+  if (!editableItinerary) {
+    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+  }
+
+  const scopedDay = await getScopedDay(itineraryId, dayId);
+  if (!scopedDay) {
+    return c.json({ error: 'Itinerary day not found' }, 404);
+  }
+
+  const scopedItem = await getScopedItem(dayId, itemId);
+  if (!scopedItem) {
+    return c.json({ error: 'Itinerary item not found' }, 404);
+  }
+
+  const db = getDb();
+  await db.delete(itineraryItems).where(eq(itineraryItems.id, itemId));
+
+  const itinerary = await getItineraryDto(itineraryId);
+  return c.json({ success: true, data: itinerary });
+});
+
+app.delete('/:id/days/:dayId', authRequired(), async (c) => {
+  const itineraryId = parsePositiveInt(c.req.param('id'));
+  const dayId = parsePositiveInt(c.req.param('dayId'));
+  const authUserId = parsePositiveInt(c.get('userId'));
+
+  if (!authUserId) {
+    return c.json({ error: 'Invalid authenticated user' }, 401);
+  }
+
+  if (!itineraryId || !dayId) {
+    return c.json({ error: 'Invalid itinerary day path' }, 400);
+  }
+
+  const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+  if (!editableItinerary) {
+    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+  }
+
+  const scopedDay = await getScopedDay(itineraryId, dayId);
+  if (!scopedDay) {
+    return c.json({ error: 'Itinerary day not found' }, 404);
+  }
+
+  const db = getDb();
+  await db.transaction(async (tx) => {
+    await tx.delete(itineraryItems).where(eq(itineraryItems.dayId, dayId));
+    await tx.delete(itineraryDays).where(eq(itineraryDays.id, dayId));
+  });
+
+  const itinerary = await getItineraryDto(itineraryId);
+  return c.json({ success: true, data: itinerary });
+});
 
 export default app;

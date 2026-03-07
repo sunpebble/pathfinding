@@ -1,10 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { api } from '@pathfinding/convex-client/api';
-import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
-
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
-const client = new ConvexHttpClient(CONVEX_URL);
+import { fetchBackendApi, normalizeCrawlJob } from '@/lib/api';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -13,46 +9,31 @@ export async function GET(request: NextRequest) {
     = Number.isFinite(rawLimit) && rawLimit > 0
       ? Math.min(rawLimit, 100)
       : 50;
-  const status = searchParams.get('status');
 
   try {
-    const jobs = await client.query(api.crawlJobs.list, {
-      limit,
-    });
+    const backendParams = new URLSearchParams();
+    const status = searchParams.get('status');
+    const platform = searchParams.get('platform');
 
-    // Filter by status if provided
-    let filteredJobs = jobs;
     if (status) {
-      filteredJobs = jobs.filter(job => job.status === status);
+      backendParams.set('status', status);
     }
+    if (platform) {
+      backendParams.set('platform', platform);
+    }
+    backendParams.set('limit', String(limit));
 
-    // Transform to snake_case for frontend compatibility
-    const transformedJobs = filteredJobs.map(job => ({
-      id: job._id,
-      name: job.name,
-      platform: job.platform,
-      job_type: job.jobType,
-      status: job.status,
-      config: job.config,
-      statistics: job.statistics,
-      schedule_cron: job.scheduleCron,
-      started_at: job.startedAt
-        ? new Date(job.startedAt).toISOString()
-        : undefined,
-      completed_at: job.completedAt
-        ? new Date(job.completedAt).toISOString()
-        : undefined,
-      next_run_at: job.nextRunAt
-        ? new Date(job.nextRunAt).toISOString()
-        : undefined,
-      created_at: new Date(job._creationTime).toISOString(),
-      updated_at: new Date(job._creationTime).toISOString(),
-    }));
+    const response = await fetchBackendApi<{ data: Array<Record<string, unknown>> }>(
+      `/api/crawl-jobs?${backendParams.toString()}`,
+      { method: 'GET' },
+    );
+
+    const jobs = response.data.map(normalizeCrawlJob);
 
     return NextResponse.json({
-      data: transformedJobs,
+      data: jobs,
       pagination: {
-        total: transformedJobs.length,
+        total: jobs.length,
         limit,
         offset: 0,
       },
@@ -71,15 +52,24 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const jobId = await client.mutation(api.crawlJobs.create, {
-      name: body.name,
-      platform: body.platform,
-      jobType: body.job_type || 'full',
-      config: body.config || {},
-      scheduleCron: body.schedule_cron,
-    });
+    const response = await fetchBackendApi<{ data: Record<string, unknown> }>(
+      '/api/crawl-jobs',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          name: body.name,
+          platform: body.platform,
+          jobType: body.job_type || 'full',
+          config: body.config || {},
+          scheduleCron: body.schedule_cron,
+        }),
+      },
+    );
 
-    return NextResponse.json({ id: jobId }, { status: 201 });
+    return NextResponse.json(
+      { data: normalizeCrawlJob(response.data) },
+      { status: 201 },
+    );
   }
   catch (error) {
     console.error('Error creating crawl job:', error);

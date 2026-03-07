@@ -3,7 +3,7 @@ import OSLog
 
 /// Service type for API routing
 enum APIServiceType {
-  case convex      // CRUD operations - guides, chat sessions, translations data, etc.
+  case api         // CRUD operations - guides, chat sessions, translations data, etc.
   case aiService   // AI/LLM, weather, transport, translations AI, PDF export
 }
 
@@ -12,7 +12,7 @@ enum APIServiceType {
 actor NetworkClient {
   static let shared = NetworkClient()
 
-  let convexURL: URL
+  let apiBaseURL: URL
   let aiServiceURL: URL
   let session: URLSession
   let decoder: JSONDecoder
@@ -41,10 +41,10 @@ actor NetworkClient {
     "api/chat/query",
   ]
 
-  init(convexURL: String? = nil, aiServiceURL: String? = nil) {
-    let convexUrlString = convexURL ?? AppConfig.convexURL
+  init(apiBaseURL: String? = nil, aiServiceURL: String? = nil) {
+    let apiBaseUrlString = apiBaseURL ?? AppConfig.apiBaseURL
     let aiServiceUrlString = aiServiceURL ?? AppConfig.aiServiceURL
-    self.convexURL = URL(string: convexUrlString)!
+    self.apiBaseURL = URL(string: apiBaseUrlString)!
     self.aiServiceURL = URL(string: aiServiceUrlString)!
 
     let config = URLSessionConfiguration.default
@@ -63,14 +63,14 @@ actor NetworkClient {
         return .aiService
       }
     }
-    return .convex
+    return .api
   }
 
   /// Get base URL for a given path
   func baseURL(for path: String) -> URL {
     switch serviceType(for: path) {
-    case .convex:
-      return convexURL
+    case .api:
+      return apiBaseURL
     case .aiService:
       return aiServiceURL
     }
@@ -78,7 +78,7 @@ actor NetworkClient {
 
   /// Default baseURL - points to API server for CRUD operations
   var baseURL: URL {
-    convexURL
+    apiBaseURL
   }
 
   /// Construct full URL for a given path, routing to the appropriate service
@@ -598,7 +598,7 @@ extension NetworkClient {
   /// Path should be like "comments", "notifications", etc. (without api/ prefix)
   func fetch<T: Decodable & Sendable>(path: String, queryItems: [URLQueryItem] = []) async throws -> T {
     var components = URLComponents(
-      url: convexURL.appendingPathComponent("api/\(path)"),
+      url: apiBaseURL.appendingPathComponent("api/\(path)"),
       resolvingAgainstBaseURL: false
     )!
 
@@ -616,7 +616,7 @@ extension NetworkClient {
 
   /// Generic POST request with path and body (Dictionary)
   func post<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "POST"
@@ -642,14 +642,14 @@ extension NetworkClient {
 
   /// Generic POST request with path and Encodable body
   func post<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
     let data = try await postWithRetry(url: url, body: body)
     return try decoder.decode(T.self, from: data)
   }
 
   /// POST request that doesn't return a value
   func postVoid(path: String, body: [String: Any]) async throws {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "POST"
@@ -673,7 +673,7 @@ extension NetworkClient {
 
   /// Generic PUT request with path and body (Dictionary)
   func put<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "PUT"
@@ -699,14 +699,14 @@ extension NetworkClient {
 
   /// Generic PUT request with path and Encodable body
   func putWithBody<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
     let data = try await putWithRetry(url: url, body: body)
     return try decoder.decode(T.self, from: data)
   }
 
   /// Generic PATCH request with path and body (Dictionary)
   func patch<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "PATCH"
@@ -732,20 +732,20 @@ extension NetworkClient {
 
   /// Generic PATCH request with path and Encodable body
   func patchWithBody<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
     let data = try await patchWithRetry(url: url, body: body)
     return try decoder.decode(T.self, from: data)
   }
 
   /// Generic DELETE request with path
   func delete(path: String) async throws {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
     _ = try await deleteWithRetry(url: url)
   }
 
   /// Generic DELETE request with path and body (Dictionary)
   func delete(path: String, body: [String: Any]) async throws {
-    let url = convexURL.appendingPathComponent("api/\(path)")
+    let url = apiBaseURL.appendingPathComponent("api/\(path)")
 
     var request = await createRequest(url: url)
     request.httpMethod = "DELETE"

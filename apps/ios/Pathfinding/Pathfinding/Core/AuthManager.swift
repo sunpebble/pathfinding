@@ -2,12 +2,12 @@ import Foundation
 import OSLog
 import Security
 
-/// Authentication manager for Convex Auth integration
+/// Authentication manager for API auth integration
 /// Handles sign in, sign up, session management, and secure token storage
 actor AuthManager {
   static let shared = AuthManager()
 
-  private let convexURL: URL
+  private let apiBaseURL: URL
   private let session: URLSession
   private let decoder: JSONDecoder
   private let encoder: JSONEncoder
@@ -41,8 +41,9 @@ actor AuthManager {
     AuthManager._sharedCachedUserId
   }
 
-  init(convexURL: String = "https://convex.kunish.org") {
-    self.convexURL = URL(string: convexURL)!
+  init(apiBaseURL: String? = nil) {
+    let apiBaseUrlString = apiBaseURL ?? AppConfig.apiBaseURL
+    self.apiBaseURL = URL(string: apiBaseUrlString)!
 
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = AppConfig.networkTimeoutRequest
@@ -62,7 +63,7 @@ actor AuthManager {
 
   /// Sign in with email and password
   func signIn(email: String, password: String) async throws {
-    let url = convexURL.appendingPathComponent("http/api/auth/signin/password")
+    let url = apiBaseURL.appendingPathComponent("api/auth/signin/password")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -84,7 +85,7 @@ actor AuthManager {
 
   /// Sign up with email and password
   func signUp(email: String, password: String, name: String? = nil) async throws {
-    let url = convexURL.appendingPathComponent("http/api/auth/signin/password")
+    let url = apiBaseURL.appendingPathComponent("api/auth/signin/password")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -112,7 +113,7 @@ actor AuthManager {
   func signInWithOAuth(provider: OAuthProvider) async throws {
     // OAuth flow typically requires web-based authentication
     // This is a placeholder for the OAuth URL that would be opened in a web view
-    _ = convexURL.appendingPathComponent("api/auth/signin/\(provider.rawValue)")
+    _ = apiBaseURL.appendingPathComponent("api/auth/signin/\(provider.rawValue)")
 
     logger.info("Initiating OAuth sign in with \(provider.rawValue)")
 
@@ -129,7 +130,7 @@ actor AuthManager {
       throw AuthError.invalidPhoneNumber
     }
 
-    let url = convexURL.appendingPathComponent("http/api/auth/sms/send")
+    let url = apiBaseURL.appendingPathComponent("api/auth/sms/send")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -166,7 +167,7 @@ actor AuthManager {
       throw AuthError.invalidVerificationCode
     }
 
-    let url = convexURL.appendingPathComponent("http/api/auth/signin/phone")
+    let url = apiBaseURL.appendingPathComponent("api/auth/signin/phone")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -198,7 +199,7 @@ actor AuthManager {
 
     // Call sign out endpoint if we have a token
     if let token = accessToken {
-      let url = convexURL.appendingPathComponent("http/api/auth/signout")
+      let url = apiBaseURL.appendingPathComponent("api/auth/signout")
 
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
@@ -228,7 +229,7 @@ actor AuthManager {
 
     logger.info("Refreshing access token")
 
-    let url = convexURL.appendingPathComponent("http/api/auth/refresh")
+    let url = apiBaseURL.appendingPathComponent("api/auth/refresh")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"

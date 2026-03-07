@@ -20,6 +20,7 @@ import guidesRoutes from './routes/guides.js';
 // Route modules
 import healthRoutes from './routes/health.js';
 import itinerariesRoutes from './routes/itineraries.js';
+import itineraryCollaboratorsRoutes from './routes/itinerary-collaborators.js';
 import likesRoutes from './routes/likes.js';
 import notificationsRoutes from './routes/notifications.js';
 import poisRoutes from './routes/pois.js';
@@ -73,6 +74,7 @@ export function createApp() {
   app.route('/api/guides', guidesRoutes);
   app.route('/api/pois', poisRoutes);
   app.route('/api/itineraries', itinerariesRoutes);
+  app.route('/api/itinerary-collaborators', itineraryCollaboratorsRoutes);
   app.route('/api/chat', chatRoutes);
   app.route('/api/users', usersRoutes);
   app.route('/api/notifications', notificationsRoutes);
