@@ -1,11 +1,6 @@
-import type { Id } from '@pathfinding/convex-client/dataModel';
 import type { NextRequest } from 'next/server';
-import { api } from '@pathfinding/convex-client/api';
-import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
-
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
-const client = new ConvexHttpClient(CONVEX_URL);
+import { fetchBackendApi, normalizeCrawlJob } from '@/lib/api';
 
 export async function GET(
   _request: NextRequest,
@@ -17,50 +12,27 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // Parse slug: [id] or [id, action]
   const [id, action] = slug;
-
-  // If action is specified (like 'start' or 'cancel'), skip - those have their own routes
+  if (!id) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   if (action) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   try {
-    const job = await client.query(api.crawlJobs.getById, {
-      id: id as Id<'crawlJobs'>,
-    });
+    const response = await fetchBackendApi<{ data: Record<string, unknown> }>(
+      `/api/crawl-jobs/job?id=${encodeURIComponent(id)}`,
+      { method: 'GET' },
+    );
 
-    if (!job) {
+    return NextResponse.json({ data: normalizeCrawlJob(response.data) });
+  }
+  catch (error) {
+    if (error instanceof Error && /任务不存在|Job not found/i.test(error.message)) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
-    // Transform to snake_case
-    const transformedJob = {
-      id: job._id,
-      name: job.name,
-      platform: job.platform,
-      job_type: job.jobType,
-      status: job.status,
-      config: job.config,
-      statistics: job.statistics,
-      schedule_cron: job.scheduleCron,
-      started_at: job.startedAt
-        ? new Date(job.startedAt).toISOString()
-        : undefined,
-      completed_at: job.completedAt
-        ? new Date(job.completedAt).toISOString()
-        : undefined,
-      next_run_at: job.nextRunAt
-        ? new Date(job.nextRunAt).toISOString()
-        : undefined,
-      error_message: job.errorMessage,
-      created_at: new Date(job._creationTime).toISOString(),
-      updated_at: new Date(job._creationTime).toISOString(),
-    };
-
-    return NextResponse.json({ data: transformedJob });
-  }
-  catch (error) {
     console.error('Error fetching crawl job:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -80,6 +52,9 @@ export async function POST(
   }
 
   const [id, action] = slug;
+  if (!id) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
 
   if (!action) {
     return NextResponse.json({ error: 'Action required' }, { status: 400 });
@@ -87,35 +62,35 @@ export async function POST(
 
   try {
     if (action === 'start') {
-      const job = await client.mutation(api.crawlJobs.start, {
-        id: id as Id<'crawlJobs'>,
+      const response = await fetchBackendApi<{ data: Record<string, unknown> }>(
+        '/api/crawl-jobs/start',
+        {
+          method: 'POST',
+          body: JSON.stringify({ id }),
+        },
+      );
+
+      return NextResponse.json({ data: normalizeCrawlJob(response.data) });
+    }
+
+    if (action === 'cancel') {
+      await fetchBackendApi<{ success: boolean }>('/api/crawl-jobs', {
+        method: 'DELETE',
+        body: JSON.stringify({ id }),
       });
-      if (!job) {
-        return NextResponse.json({ error: 'Job not found' }, { status: 404 });
-      }
+
+      const timestamp = new Date().toISOString();
       return NextResponse.json({
-        id: job._id,
-        status: job.status,
-        started_at: job.startedAt
-          ? new Date(job.startedAt).toISOString()
-          : undefined,
+        data: normalizeCrawlJob({
+          id,
+          status: 'cancelled',
+          created_at: timestamp,
+          updated_at: timestamp,
+        }),
       });
     }
-    else if (action === 'cancel') {
-      const job = await client.mutation(api.crawlJobs.cancel, {
-        id: id as Id<'crawlJobs'>,
-      });
-      if (!job) {
-        return NextResponse.json({ error: 'Job not found' }, { status: 404 });
-      }
-      return NextResponse.json({
-        id: job._id,
-        status: job.status,
-      });
-    }
-    else {
-      return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
-    }
+
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   }
   catch (error) {
     console.error(`Error ${action} crawl job:`, error);

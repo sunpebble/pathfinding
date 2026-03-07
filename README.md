@@ -20,7 +20,7 @@ A mobile-first travel itinerary planning application with offline support, POI r
 
 **Tech Stack**:
 
-- **Backend**: Convex (self-hosted) - handles all data storage, queries, and real-time sync via HTTP Actions
+- **Backend API**: Hono + TiDB - handles CRUD, auth, and shared data APIs
 - **AI Service**: Hono (Node.js/TypeScript) - AI/LLM, weather, transport, PDF export
 - **Frontend**: Next.js (Dashboard), SwiftUI (iOS)
 - **AI**: Ollama with Gemma 3 model
@@ -42,7 +42,8 @@ apps/
             └── Features/ # SwiftUI views
 
 packages/
-├── convex/    # Convex database schema, functions, and HTTP Actions
+├── api/       # Shared backend API
+├── database/  # TiDB schema and database access
 ├── types/     # Shared TypeScript types
 ├── utils/     # Shared utility functions
 └── constants/ # Shared constants
@@ -52,31 +53,32 @@ packages/
 
 ### Service URLs
 
-| Service    | Port | Description                                            |
-| ---------- | ---- | ------------------------------------------------------ |
-| Convex     | -    | CRUD operations via HTTP Actions (`convex.kunish.org`) |
-| AI Service | 3001 | AI/LLM, weather, transport, PDF export                 |
-| Dashboard  | 3002 | Admin dashboard (Next.js)                              |
+| Service    | Port | Description                            |
+| ---------- | ---- | -------------------------------------- |
+| API        | 3000 | CRUD operations backed by TiDB         |
+| AI Service | 3001 | AI/LLM, weather, transport, PDF export |
+| Dashboard  | 3002 | Admin dashboard (Next.js)              |
 
 ### Base URLs
 
-- **Convex (CRUD)**: `https://convex.kunish.org/api`
+- **API (Local)**: `http://localhost:3000/api`
+- **API (Production)**: `https://api.pathfinding.org/api`
 - **AI Service (Local)**: `http://localhost:3001/api`
 - **AI Service (Production)**: `https://ai.pathfinding.org/api`
 
 ### Authentication
 
-All protected endpoints require JWT Bearer token from Convex Auth.
+All protected endpoints require JWT Bearer token from the shared auth service.
 
 ```bash
-curl -H "Authorization: Bearer <token>" https://convex.kunish.org/api/guides
+curl -H "Authorization: Bearer <token>" http://localhost:3000/api/guides
 ```
 
 ---
 
-## Convex HTTP Actions (CRUD)
+## Core API Endpoints
 
-The primary backend for all data operations. All CRUD endpoints are served via Convex HTTP Actions:
+The primary backend for data operations is the shared API service:
 
 - `/api/guides/*` - Travel guides
 - `/api/chat/sessions/*` - Chat session management
@@ -91,7 +93,7 @@ The primary backend for all data operations. All CRUD endpoints are served via C
 - `/api/collections/*` - Collections
 - `/api/share/*` - Share events
 
-See [packages/convex/http.ts](./packages/convex/http.ts) for all HTTP Actions.
+See `packages/api/src/routes/` for route implementations.
 
 ---
 
@@ -301,12 +303,12 @@ All error responses follow this format:
 3. **Start Backend Services**:
 
    ```bash
-   pnpm dev              # Starts Dashboard
-   pnpm dev:ai-service   # Starts AI Service (separate terminal)
-   pnpm dev:convex       # Starts Convex dev server (separate terminal)
+    pnpm dev              # Starts Dashboard
+    pnpm dev:api          # Starts API service (separate terminal)
+    pnpm dev:ai-service   # Starts AI Service (separate terminal)
    ```
 
-   - Convex: `https://convex.kunish.org`
+   - API: `http://localhost:3000`
    - AI Service: `http://localhost:3001`
    - Dashboard: `http://localhost:3002`
 
@@ -334,7 +336,7 @@ All error responses follow this format:
 
    ```bash
    cp .env.example .env
-   # Edit .env with your Convex credentials
+   # Edit .env with your local service credentials
    ```
 
 2. **Start all services**:
@@ -379,7 +381,7 @@ docker compose up -d
 
 ## Database Schema
 
-The application uses Convex with the following main tables:
+The application uses TiDB with the following main tables:
 
 - **users**: User profiles and authentication
 - **cities**: Reference data for destinations
@@ -390,7 +392,7 @@ The application uses Convex with the following main tables:
 - **reminders**: Scheduled reminders for items
 - **travelGuides**: Crawled travel guide content with AI enrichment
 
-See [packages/convex/schema.ts](./packages/convex/schema.ts) for detailed schema.
+See `packages/database/src/schema/` for detailed schema.
 
 ---
 
@@ -406,8 +408,8 @@ See [packages/convex/schema.ts](./packages/convex/schema.ts) for detailed schema
 
 ## Security
 
-- All API endpoints require Convex Auth JWT authentication
-- Convex functions enforce data access control
+- All API endpoints require JWT authentication
+- API handlers enforce data access control
 - HTTPS in production
 - Input validation with Zod
 - CORS configured for trusted origins

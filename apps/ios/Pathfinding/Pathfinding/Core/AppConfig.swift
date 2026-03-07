@@ -46,10 +46,10 @@ enum AppConfig {
 
   // MARK: - API Configuration
 
-  /// API URL for CRUD operations (guides, chat sessions, translations data, etc.)
-  static var convexURL: String {
+  /// API base URL for CRUD operations (guides, chat sessions, translations data, etc.)
+  static var apiBaseURL: String {
     // Read from Info.plist (set via xcconfig)
-    if let url = infoPlistString(forKey: "PFConvexURL"), !url.isEmpty {
+    if let url = infoPlistString(forKey: "PFAPIBaseURL"), !url.isEmpty {
       return url
     }
     // Fallback based on environment
@@ -57,9 +57,9 @@ enum AppConfig {
     case .development:
       return "http://127.0.0.1:3000"
     case .staging:
-      return "https://convex.kunish.org"
+      return "https://api.pathfinding.org"
     case .production:
-      return "https://convex.kunish.org"
+      return "https://api.pathfinding.org"
     }
   }
 
@@ -78,12 +78,6 @@ enum AppConfig {
     case .production:
       return "https://ai.pathfinding.org"
     }
-  }
-
-  /// Legacy apiBaseURL - points to Convex for backwards compatibility
-  @available(*, deprecated, message: "Use convexURL or aiServiceURL instead")
-  static var apiBaseURL: String {
-    convexURL
   }
 
   // MARK: - Feature Flags
@@ -161,7 +155,7 @@ enum AppConfig {
       ║           Pathfinding Configuration           ║
       ╠═══════════════════════════════════════════════╣
       ║ Environment: \(Environment.current.rawValue.padding(toLength: 30, withPad: " ", startingAt: 0)) ║
-      ║ Convex URL: \(convexURL.prefix(31).padding(toLength: 31, withPad: " ", startingAt: 0)) ║
+      ║ API Base URL: \(apiBaseURL.prefix(28).padding(toLength: 28, withPad: " ", startingAt: 0)) ║
       ║ AI Service URL: \(aiServiceURL.prefix(27).padding(toLength: 27, withPad: " ", startingAt: 0)) ║
       ║ Version: \(fullVersionString.padding(toLength: 34, withPad: " ", startingAt: 0)) ║
       ║ Debug Logging: \(isDebugLoggingEnabled ? "Enabled " : "Disabled")                       ║

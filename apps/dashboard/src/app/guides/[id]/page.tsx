@@ -566,6 +566,7 @@ export default function GuideDetailPage() {
       {/* POI Editor Modal */}
       {editingPoi && (
         <PoiEditor
+          key={`${editingPoi.dayNumber}-${editingPoi.poiIndex}-${editingPoi.poi.latitude}-${editingPoi.poi.longitude}`}
           isOpen={true}
           onClose={() => {
             setEditingPoi(null);

@@ -24,7 +24,6 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=mysql://root@tidb:4000/pathfinding
-      # - CONVEX_URL=${CONVEX_URL}  # Deprecated: replaced by TiDB
     healthcheck:
       test:
         - CMD
@@ -52,7 +51,6 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=mysql://root@tidb:4000/pathfinding
-      # - CONVEX_URL=${CONVEX_URL}  # Deprecated: replaced by TiDB
       - AMAP_API_KEY=${AMAP_API_KEY}
       - OVERPASS_API_URL=${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
     volumes:

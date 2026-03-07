@@ -18,8 +18,8 @@ actor APIClient {
 
   // MARK: - Delegate Properties to NetworkClient
 
-  var convexURL: URL {
-    network.convexURL
+  var apiBaseURL: URL {
+    network.apiBaseURL
   }
 
   var aiServiceURL: URL {
@@ -110,8 +110,8 @@ extension APIClient {
   }
 
   nonisolated func post<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.convexURL)!
-    let url = baseURL.appendingPathComponent("http/api/\(path)")
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -141,8 +141,8 @@ extension APIClient {
   }
 
   nonisolated func postVoid(path: String, body: [String: Any]) async throws {
-    let baseURL = URL(string: AppConfig.convexURL)!
-    let url = baseURL.appendingPathComponent("http/api/\(path)")
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -166,8 +166,8 @@ extension APIClient {
   }
 
   nonisolated func put<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.convexURL)!
-    let url = baseURL.appendingPathComponent("http/api/\(path)")
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "PUT"
@@ -197,8 +197,8 @@ extension APIClient {
   }
 
   nonisolated func patch<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.convexURL)!
-    let url = baseURL.appendingPathComponent("http/api/\(path)")
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "PATCH"
@@ -232,8 +232,8 @@ extension APIClient {
   }
 
   nonisolated func delete(path: String, body: [String: Any]) async throws {
-    let baseURL = URL(string: AppConfig.convexURL)!
-    let url = baseURL.appendingPathComponent("http/api/\(path)")
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
+    let url = baseURL.appendingPathComponent("api/\(path)")
 
     var request = URLRequest(url: url)
     request.httpMethod = "DELETE"
