@@ -3,6 +3,8 @@ import Foundation
 /// App configuration that reads from build settings via Info.plist
 /// Values are set in .xcconfig files and passed through at compile time
 enum AppConfig {
+  private static let processEnvironment = ProcessInfo.processInfo.environment
+
   // MARK: - Environment
 
   enum Environment: String {
@@ -48,6 +50,10 @@ enum AppConfig {
 
   /// API base URL for CRUD operations (guides, chat sessions, translations data, etc.)
   static var apiBaseURL: String {
+    if let url = processEnvironment["PF_API_BASE_URL"], !url.isEmpty {
+      return url
+    }
+
     // Read from Info.plist (set via xcconfig)
     if let url = infoPlistString(forKey: "PFAPIBaseURL"), !url.isEmpty {
       return url
@@ -65,6 +71,10 @@ enum AppConfig {
 
   /// AI Service URL for AI/LLM, weather, transport, translations AI, PDF export
   static var aiServiceURL: String {
+    if let url = processEnvironment["PF_AI_SERVICE_URL"], !url.isEmpty {
+      return url
+    }
+
     // Read from Info.plist (set via xcconfig)
     if let url = infoPlistString(forKey: "PFAIServiceURL"), !url.isEmpty {
       return url

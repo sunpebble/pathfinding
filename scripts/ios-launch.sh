@@ -11,6 +11,8 @@ set -euo pipefail
 SIMULATOR_NAME="${IOS_SIMULATOR:-iPhone 17 Pro Max}"
 SCHEME="${IOS_SCHEME:-Pathfinding-Debug}"
 BUNDLE_ID="${IOS_BUNDLE_ID:-org.pathfinding.app.debug}"
+API_BASE_URL_OVERRIDE="${IOS_API_BASE_URL:-}"
+AI_SERVICE_URL_OVERRIDE="${IOS_AI_SERVICE_URL:-}"
 DERIVED_DATA="/tmp/pathfinding-build"
 PROJECT_DIR="apps/ios/Pathfinding"
 XCODEPROJ="$PROJECT_DIR/Pathfinding.xcodeproj"
@@ -53,6 +55,8 @@ ${BOLD}环境变量:${NC}
   IOS_SIMULATOR   模拟器名称 (同 --device)
   IOS_SCHEME      构建 scheme
   IOS_BUNDLE_ID   App Bundle ID
+  IOS_API_BASE_URL  覆盖 PF_API_BASE_URL
+  IOS_AI_SERVICE_URL 覆盖 PF_AI_SERVICE_URL
 EOF
 	exit 0
 }
@@ -107,6 +111,12 @@ echo -e "${NC}"
 info "Scheme:    $SCHEME"
 info "设备:      $SIMULATOR_NAME"
 info "Bundle ID: $BUNDLE_ID"
+if [ -n "$API_BASE_URL_OVERRIDE" ]; then
+	info "API URL:   $API_BASE_URL_OVERRIDE"
+fi
+if [ -n "$AI_SERVICE_URL_OVERRIDE" ]; then
+	info "AI URL:    $AI_SERVICE_URL_OVERRIDE"
+fi
 
 # ── 1. 环境检查 ──────────────────────────────────────────────────────────────
 step "检查开发环境"
@@ -190,11 +200,23 @@ step "编译项目 ($SCHEME)"
 
 BUILD_START=$(date +%s)
 
+XCODEBUILD_ARGS=(
+	-project "$XCODEPROJ"
+	-scheme "$SCHEME"
+	-destination "platform=iOS Simulator,name=$SIMULATOR_NAME"
+	-derivedDataPath "$DERIVED_DATA"
+)
+
+if [ -n "$API_BASE_URL_OVERRIDE" ]; then
+	XCODEBUILD_ARGS+=("PF_API_BASE_URL=$API_BASE_URL_OVERRIDE")
+fi
+
+if [ -n "$AI_SERVICE_URL_OVERRIDE" ]; then
+	XCODEBUILD_ARGS+=("PF_AI_SERVICE_URL=$AI_SERVICE_URL_OVERRIDE")
+fi
+
 xcodebuild \
-	-project "$XCODEPROJ" \
-	-scheme "$SCHEME" \
-	-destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
-	-derivedDataPath "$DERIVED_DATA" \
+	"${XCODEBUILD_ARGS[@]}" \
 	-quiet \
 	build 2>&1 | while IFS= read -r line; do
 	# 仅输出错误和警告（bash 内置正则，避免每行 fork 子进程）

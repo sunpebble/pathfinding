@@ -7,6 +7,27 @@ import Security
 actor AuthManager {
   static let shared = AuthManager()
 
+  nonisolated static func resetPersistedSessionForTesting() {
+    let keychainService = "org.pathfinding.app"
+    let keys = [
+      "auth.accessToken",
+      "auth.refreshToken",
+      "auth.userId",
+      "auth.userEmail",
+    ]
+
+    for key in keys {
+      let query: [String: Any] = [
+        kSecClass as String: kSecClassGenericPassword,
+        kSecAttrService as String: keychainService,
+        kSecAttrAccount as String: key,
+      ]
+      SecItemDelete(query as CFDictionary)
+    }
+
+    _sharedCachedUserId = nil
+  }
+
   private let apiBaseURL: URL
   private let session: URLSession
   private let decoder: JSONDecoder
@@ -63,17 +84,7 @@ actor AuthManager {
 
   /// Sign in with email and password
   func signIn(email: String, password: String) async throws {
-    let url = apiBaseURL.appendingPathComponent("api/auth/signin/password")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    let body: [String: String] = [
-      "email": email,
-      "password": password,
-    ]
-    request.httpBody = try encoder.encode(body)
+    let request = try makeEmailSignInRequest(email: email, password: password)
 
     logger.info("Signing in with email: \(email)")
 
@@ -85,21 +96,7 @@ actor AuthManager {
 
   /// Sign up with email and password
   func signUp(email: String, password: String, name: String? = nil) async throws {
-    let url = apiBaseURL.appendingPathComponent("api/auth/signin/password")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    var body: [String: String] = [
-      "email": email,
-      "password": password,
-      "flow": "signUp",
-    ]
-    if let name = name {
-      body["name"] = name
-    }
-    request.httpBody = try encoder.encode(body)
+    let request = try makeEmailSignUpRequest(email: email, password: password, name: name)
 
     logger.info("Signing up with email: \(email)")
 
@@ -370,6 +367,38 @@ actor AuthManager {
     }
   }
 
+  func makeEmailSignInRequest(email: String, password: String) throws -> URLRequest {
+    try makeEmailAuthRequest(
+      payload: EmailAuthRequestPayload(
+        email: email,
+        password: password,
+        flow: "signIn",
+        name: nil
+      )
+    )
+  }
+
+  func makeEmailSignUpRequest(email: String, password: String, name: String?) throws -> URLRequest {
+    try makeEmailAuthRequest(
+      payload: EmailAuthRequestPayload(
+        email: email,
+        password: password,
+        flow: "signUp",
+        name: name
+      )
+    )
+  }
+
+  private func makeEmailAuthRequest(payload: EmailAuthRequestPayload) throws -> URLRequest {
+    let url = apiBaseURL.appendingPathComponent("api/auth/signin")
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try encoder.encode(payload)
+    return request
+  }
+
   private func updateSession(from response: AuthResponse, email: String?) async throws {
     self.accessToken = response.token
     self.refreshToken = response.refreshToken
@@ -579,6 +608,13 @@ private struct AuthResponse: Codable {
   let refreshToken: String?
   let userId: String?
   let email: String?
+}
+
+struct EmailAuthRequestPayload: Codable {
+  let email: String
+  let password: String
+  let flow: String
+  let name: String?
 }
 
 private struct ErrorResponse: Codable {

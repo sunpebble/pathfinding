@@ -79,6 +79,7 @@ struct LoginView: View {
             }
           }
           .pickerStyle(.segmented)
+          .accessibilityIdentifier("login-method-picker")
           .padding(.horizontal, DesignTokens.Spacing.lg)
 
           // MARK: - Login Form
@@ -121,6 +122,7 @@ struct LoginView: View {
             .padding(.vertical, DesignTokens.Spacing.sm)
             .background(isLoginDisabled ? DesignTokens.Colors.textTertiary : DesignTokens.Colors.accent)
             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+            .accessibilityIdentifier("login-submit-button")
             .disabled(isLoginDisabled)
             .padding(.top, DesignTokens.Spacing.xs)
           }
@@ -200,12 +202,14 @@ struct LoginView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(Color.accentColor)
             }
+            .accessibilityIdentifier("show-signup-button")
           }
           .padding(.top, DesignTokens.Spacing.sm)
 
           Spacer()
         }
       }
+      .accessibilityIdentifier("login-screen")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
@@ -307,6 +311,7 @@ struct LoginView: View {
           .textInputAutocapitalization(.never)
           .keyboardType(.emailAddress)
           .autocorrectionDisabled()
+          .accessibilityIdentifier("login-email-field")
           .padding()
           .background(DesignTokens.Colors.fillQuaternary)
           .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
@@ -321,6 +326,7 @@ struct LoginView: View {
         SecureField("输入密码", text: $password)
           .textInputAutocapitalization(.never)
           .autocorrectionDisabled()
+          .accessibilityIdentifier("login-password-field")
           .padding()
           .background(DesignTokens.Colors.fillQuaternary)
           .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))

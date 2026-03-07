@@ -3,32 +3,48 @@
  * Returns the health status of the Dashboard and its dependent services
  */
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
+
+async function checkService(url: string) {
+  const start = Date.now();
+  const response = await fetch(`${url}/health`, {
+    signal: AbortSignal.timeout(5000),
+  });
+
+  if (!response.ok) {
+    return { status: 'error' };
+  }
+
+  return {
+    status: 'ok',
+    latency: Date.now() - start,
+  };
+}
 
 export async function GET() {
   const checks: Record<string, { status: string; latency?: number }> = {};
 
-  // Check AI Service health
+  // Check backend API health
   try {
-    const start = Date.now();
-    const response = await fetch(`${AI_SERVICE_URL}/health`, {
-      signal: AbortSignal.timeout(5000),
-    });
-    const latency = Date.now() - start;
+    checks.api = await checkService(API_URL);
+  }
+  catch {
+    checks.api = { status: 'error' };
+  }
 
-    if (response.ok) {
-      checks.aiService = { status: 'ok', latency };
+  // Check AI Service health when configured
+  if (AI_SERVICE_URL) {
+    try {
+      checks.aiService = await checkService(AI_SERVICE_URL);
     }
-    else {
+    catch {
       checks.aiService = { status: 'error' };
     }
   }
-  catch {
-    checks.aiService = { status: 'error' };
-  }
 
-  // Overall status is ok if AI Service is healthy
-  const overallStatus = checks.aiService?.status === 'ok' ? 'ok' : 'degraded';
+  // Overall status is ok if the primary backend API is healthy
+  const overallStatus = checks.api?.status === 'ok' ? 'ok' : 'degraded';
 
   return Response.json(
     {

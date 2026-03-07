@@ -62,6 +62,7 @@ struct SignupView: View {
                 .textInputAutocapitalization(.never)
                 .keyboardType(.emailAddress)
                 .autocorrectionDisabled()
+                .accessibilityIdentifier("signup-email-field")
                 .padding()
                 .background(Color(.systemGray6))
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
@@ -76,6 +77,7 @@ struct SignupView: View {
               SecureField("输入密码（至少8个字符）", text: $password)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .accessibilityIdentifier("signup-password-field")
                 .padding()
                 .background(Color(.systemGray6))
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
@@ -96,6 +98,7 @@ struct SignupView: View {
               SecureField("再次输入密码", text: $confirmPassword)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .accessibilityIdentifier("signup-confirm-password-field")
                 .padding()
                 .background(Color(.systemGray6))
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
@@ -131,6 +134,7 @@ struct SignupView: View {
               .frame(maxWidth: .infinity)
             }
             .buttonStyle(.primary)
+            .accessibilityIdentifier("signup-submit-button")
             .disabled(isLoading || !isFormValid)
             .padding(.top, DesignTokens.Spacing.xs)
           }
@@ -215,7 +219,8 @@ struct SignupView: View {
 
           Spacer()
         }
-      }
+        }
+        .accessibilityIdentifier("signup-screen")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
