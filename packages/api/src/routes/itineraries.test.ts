@@ -16,6 +16,7 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
+    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -430,7 +431,7 @@ describe('itinerary mutation routes', () => {
     });
 
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: 'Itinerary item not found' });
+    await expect(response.json()).resolves.toEqual({ error: '行程项目不存在' });
     expect(mockDb.update).not.toHaveBeenCalled();
   });
 
@@ -449,7 +450,7 @@ describe('itinerary mutation routes', () => {
     }, { userId: '2' });
 
     expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toEqual({ error: 'Itinerary not found or access denied' });
+    await expect(response.json()).resolves.toEqual({ error: '行程不存在或无权访问' });
     expect(mockDb.update).not.toHaveBeenCalled();
   });
 
@@ -468,7 +469,7 @@ describe('itinerary mutation routes', () => {
     });
 
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: 'Itinerary item not found' });
+    await expect(response.json()).resolves.toEqual({ error: '行程项目不存在' });
     expect(mockDb.delete).not.toHaveBeenCalled();
   });
 
@@ -500,7 +501,7 @@ describe('itinerary mutation routes', () => {
     });
 
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: 'One or more itinerary items were not found' });
+    await expect(response.json()).resolves.toEqual({ error: '一个或多个行程项目未找到' });
     expect(mockDb.update).not.toHaveBeenCalled();
     expect(mockDb.transaction).not.toHaveBeenCalled();
   });
@@ -518,7 +519,7 @@ describe('itinerary mutation routes', () => {
     });
 
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: 'Itinerary day not found' });
+    await expect(response.json()).resolves.toEqual({ error: '行程日不存在' });
     expect(mockDb.transaction).not.toHaveBeenCalled();
   });
 
@@ -537,7 +538,7 @@ describe('itinerary mutation routes', () => {
     }, { userId: '2' });
 
     expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toEqual({ error: 'Itinerary not found or access denied' });
+    await expect(response.json()).resolves.toEqual({ error: '行程不存在或无权访问' });
     expect(mockDb.update).not.toHaveBeenCalled();
     expect(mockDb.transaction).not.toHaveBeenCalled();
   });
@@ -616,7 +617,7 @@ describe('itinerary read routes', () => {
     const response = await createApp().request('/api/itineraries/9');
 
     expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toEqual({ error: 'Authorization token is required' });
+    await expect(response.json()).resolves.toEqual({ error: '需要授权令牌' });
   });
 
   it('returns all visibilities for the authenticated owner itinerary list', async () => {
@@ -643,7 +644,7 @@ describe('itinerary read routes', () => {
     const response = await requestWithAuth(createApp(), '/api/itineraries?userId=2');
 
     expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toEqual({ error: 'Itinerary access denied' });
+    await expect(response.json()).resolves.toEqual({ error: '行程访问被拒绝' });
     expect(mockDb.select).not.toHaveBeenCalled();
   });
 

@@ -16,6 +16,7 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
+    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -138,7 +139,7 @@ describe('itinerary collaborator routes', () => {
     });
 
     expect(response.status).toBe(409);
-    await expect(response.json()).resolves.toEqual({ error: 'Collaborator already exists' });
+    await expect(response.json()).resolves.toEqual({ error: '协作者已存在' });
   });
 
   it('lists collaborators with the owner role included', async () => {

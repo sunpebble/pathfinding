@@ -7,14 +7,17 @@ const mockWhere = vi.fn(() => ({ limit: mockLimit }));
 const mockFrom = vi.fn(() => ({ where: mockWhere }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
+const mockDb = {
+  select: mockSelect,
+};
+
 vi.mock('@pathfinding/database', async () => {
   const actual = await vi.importActual<typeof import('@pathfinding/database')>('@pathfinding/database');
 
   return {
     ...actual,
-    createDb: vi.fn(() => ({
-      select: mockSelect,
-    })),
+    createDb: vi.fn(() => mockDb),
+    getDb: vi.fn(() => mockDb),
   };
 });
 
