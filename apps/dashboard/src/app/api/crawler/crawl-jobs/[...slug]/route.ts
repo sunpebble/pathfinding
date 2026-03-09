@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { fetchBackendApi, normalizeCrawlJob } from '@/lib/api';
+import { fetchBackendApi, normalizeCrawlJob } from '@/lib/api/backend';
 
 export async function GET(
   _request: NextRequest,

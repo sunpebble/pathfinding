@@ -1,4 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
+import { zValidator } from '@hono/zod-validator';
 import {
   commentReports,
   getDb,
@@ -11,6 +12,7 @@ import { and, desc, eq, sql } from 'drizzle-orm';
  * Mirrors the Convex /api/comments/* HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
@@ -70,14 +72,15 @@ app.get('/', async (c) => {
 });
 
 // ── POST / — Create comment ────────────────────────────
-app.post('/', authRequired(), async (c) => {
-  const userId = c.get('userId');
-  const body = await c.req.json();
-  const { itineraryId, content, parentId } = body;
+const createCommentSchema = z.object({
+  itineraryId: z.number(),
+  content: z.string().min(1),
+  parentId: z.number().optional(),
+});
 
-  if (!itineraryId || !content) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/', authRequired(), zValidator('json', createCommentSchema), async (c) => {
+  const userId = c.get('userId');
+  const { itineraryId, content, parentId } = c.req.valid('json');
 
   const db = getDb();
   const guideId = Number(itineraryId);
@@ -115,14 +118,14 @@ app.post('/', authRequired(), async (c) => {
 });
 
 // ── PATCH / — Update comment ───────────────────────────
-app.patch('/', authRequired(), async (c) => {
-  const userId = c.get('userId');
-  const body = await c.req.json();
-  const { id, content } = body;
+const updateCommentSchema = z.object({
+  id: z.number(),
+  content: z.string().min(1),
+});
 
-  if (!id || !content) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.patch('/', authRequired(), zValidator('json', updateCommentSchema), async (c) => {
+  const userId = c.get('userId');
+  const { id, content } = c.req.valid('json');
 
   const db = getDb();
   const commentId = Number(id);
@@ -153,14 +156,13 @@ app.patch('/', authRequired(), async (c) => {
 });
 
 // ── DELETE / — Delete comment ──────────────────────────
-app.delete('/', authRequired(), async (c) => {
-  const userId = c.get('userId');
-  const body = await c.req.json();
-  const { id } = body;
+const deleteCommentSchema = z.object({
+  id: z.number(),
+});
 
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.delete('/', authRequired(), zValidator('json', deleteCommentSchema), async (c) => {
+  const userId = c.get('userId');
+  const { id } = c.req.valid('json');
 
   const db = getDb();
   const commentId = Number(id);
@@ -205,14 +207,13 @@ app.get('/replies', async (c) => {
 });
 
 // ── POST /like — Toggle like on a comment ──────────────
-app.post('/like', authRequired(), async (c) => {
-  const userId = c.get('userId');
-  const body = await c.req.json();
-  const { commentId } = body;
+const likeCommentSchema = z.object({
+  commentId: z.number(),
+});
 
-  if (!commentId) {
-    throw new ApiError(400, '缺少commentId参数');
-  }
+app.post('/like', authRequired(), zValidator('json', likeCommentSchema), async (c) => {
+  const userId = c.get('userId');
+  const { commentId } = c.req.valid('json');
 
   const db = getDb();
   const cid = Number(commentId);
@@ -274,14 +275,15 @@ app.post('/like', authRequired(), async (c) => {
 });
 
 // ── POST /report — Report a comment ────────────────────
-app.post('/report', authRequired(), async (c) => {
-  const userId = c.get('userId');
-  const body = await c.req.json();
-  const { commentId, reason, description } = body;
+const reportCommentSchema = z.object({
+  commentId: z.number(),
+  reason: z.string().min(1),
+  description: z.string().optional(),
+});
 
-  if (!commentId || !reason) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/report', authRequired(), zValidator('json', reportCommentSchema), async (c) => {
+  const userId = c.get('userId');
+  const { commentId, reason, description } = c.req.valid('json');
 
   const db = getDb();
 

@@ -1,4 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
+import { zValidator } from '@hono/zod-validator';
 import { dataQualityReports, getDb } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
@@ -6,13 +7,27 @@ import { and, desc, eq, sql } from 'drizzle-orm';
  * Mirrors the Convex /api/quality-reports/* HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
+
+// ── Zod schemas ────────────────────────────────────────
+const createReportSchema = z.object({
+  reportType: z.string().min(1),
+  metrics: z.any(),
+  datasetId: z.number().optional(),
+  issues: z.any().optional(),
+});
+
+const deleteReportSchema = z.object({
+  id: z.number(),
+});
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
 // ── GET / — List quality reports ───────────────────────
-app.get('/', async (c) => {
+app.get('/', adminRequired(), async (c) => {
   const datasetId = c.req.query('datasetId');
   const reportType = c.req.query('reportType');
   const limit = Number.parseInt(c.req.query('limit') ?? '20', 10);
@@ -57,13 +72,8 @@ app.get('/', async (c) => {
 });
 
 // ── POST / — Create a quality report ───────────────────
-app.post('/', async (c) => {
-  const body = await c.req.json();
-  const { datasetId, reportType, metrics, issues } = body;
-
-  if (!reportType || !metrics) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/', adminRequired(), zValidator('json', createReportSchema), async (c) => {
+  const { datasetId, reportType, metrics, issues } = c.req.valid('json');
 
   const db = getDb();
 
@@ -86,7 +96,7 @@ app.post('/', async (c) => {
 });
 
 // ── GET /report — Get a quality report by ID ───────────
-app.get('/report', async (c) => {
+app.get('/report', adminRequired(), async (c) => {
   const id = c.req.query('id');
 
   if (!id) {
@@ -108,13 +118,8 @@ app.get('/report', async (c) => {
 });
 
 // ── DELETE / — Delete a quality report ─────────────────
-app.delete('/', async (c) => {
-  const body = await c.req.json();
-  const { id } = body;
-
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.delete('/', adminRequired(), zValidator('json', deleteReportSchema), async (c) => {
+  const { id } = c.req.valid('json');
 
   const db = getDb();
   await db
@@ -125,7 +130,7 @@ app.delete('/', async (c) => {
 });
 
 // ── GET /summary — Get quality reports summary ─────────
-app.get('/summary', async (c) => {
+app.get('/summary', adminRequired(), async (c) => {
   const db = getDb();
 
   const [totalResult, byTypeResult] = await Promise.all([

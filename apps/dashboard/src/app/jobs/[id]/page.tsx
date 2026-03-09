@@ -4,8 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   BarChart3,
-  CheckCircle,
-  Clock,
   Loader2,
   MapPin,
   Play,
@@ -15,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { use } from 'react';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { cancelCrawlJob, getCrawlJob, startCrawlJob } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 
@@ -124,7 +123,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
             <button
               onClick={() => {
                 // eslint-disable-next-line no-alert
-                if (confirm('Cancel this job?')) {
+                if (window.confirm('Are you sure you want to cancel this job? This action cannot be undone.')) {
                   cancelMutation.mutate(job.id);
                 }
               }}
@@ -135,7 +134,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
               Cancel Job
             </button>
           )}
-          <StatusBadge status={job.status} />
+          <StatusBadge status={job.status} size="lg" />
         </div>
       </div>
 
@@ -262,43 +261,6 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
         </div>
       </div>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { icon: React.ReactNode; className: string }> = {
-    pending: {
-      icon: <Clock className="h-4 w-4" />,
-      className: 'bg-amber-50 text-amber-600 border-amber-200',
-    },
-    running: {
-      icon: <Loader2 className="h-4 w-4 animate-spin" />,
-      className: 'bg-blue-50 text-blue-600 border-blue-200',
-    },
-    completed: {
-      icon: <CheckCircle className="h-4 w-4" />,
-      className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-    },
-    failed: {
-      icon: <XCircle className="h-4 w-4" />,
-      className: 'bg-red-50 text-red-600 border-red-200',
-    },
-    cancelled: {
-      icon: <XCircle className="h-4 w-4" />,
-      className: 'bg-gray-50 text-gray-600 border-gray-200',
-    },
-  };
-
-  const statusConfig = (config[status] || config.cancelled)!;
-  const { icon, className } = statusConfig;
-
-  return (
-    <span
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium ${className}`}
-    >
-      {icon}
-      {status}
-    </span>
   );
 }
 

@@ -77,7 +77,7 @@ app.get('/', authOptional(), async (c) => {
   let results: ItineraryRow[];
   if (userId) {
     if (!authUserId || authUserId !== userId) {
-      return c.json({ error: 'Itinerary access denied' }, 403);
+      return c.json({ error: '行程访问被拒绝' }, 403);
     }
 
     const whereClause = visibility && visibility !== 'all'
@@ -124,18 +124,18 @@ app.get('/:id', authOptional(), async (c) => {
     .limit(1);
 
   if (result.length === 0) {
-    return c.json({ error: 'Itinerary not found' }, 404);
+    return c.json({ error: '行程不存在' }, 404);
   }
 
   const itinerary = result[0]!;
   if (itinerary.visibility !== 'public') {
     if (!authUserId) {
-      throw new ApiError(401, 'Authorization token is required');
+      throw new ApiError(401, '需要授权令牌');
     }
 
     const access = await findAccessible(itinerary.id, Number.parseInt(authUserId, 10));
     if (!access) {
-      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+      return c.json({ error: '行程不存在或无权访问' }, 403);
     }
   }
 
@@ -220,12 +220,12 @@ app.patch(
     const db = getDb();
 
     if (!Number.isInteger(authUserId) || authUserId <= 0) {
-      return c.json({ error: 'Invalid authenticated user' }, 401);
+      return c.json({ error: '无效的认证用户' }, 401);
     }
 
     const itineraryId = Number.parseInt(id, 10);
     if (!Number.isInteger(itineraryId) || itineraryId <= 0) {
-      return c.json({ error: 'Invalid itinerary ID' }, 400);
+      return c.json({ error: '无效的行程ID' }, 400);
     }
 
     const ownedItinerary = await db
@@ -240,7 +240,7 @@ app.patch(
       .limit(1);
 
     if (!ownedItinerary[0]) {
-      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+      return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
     const updates: Record<string, unknown> = {};
@@ -256,7 +256,7 @@ app.patch(
       updates.coverImageUrl = body.coverImageUrl;
 
     if (Object.keys(updates).length === 0) {
-      return c.json({ error: 'No fields to update' }, 400);
+      return c.json({ error: '没有需要更新的字段' }, 400);
     }
 
     await db
@@ -275,12 +275,12 @@ app.delete('/:id', authRequired(), async (c) => {
   const db = getDb();
 
   if (!Number.isInteger(authUserId) || authUserId <= 0) {
-    return c.json({ error: 'Invalid authenticated user' }, 401);
+    return c.json({ error: '无效的认证用户' }, 401);
   }
 
   const itineraryId = Number.parseInt(id, 10);
   if (!Number.isInteger(itineraryId) || itineraryId <= 0) {
-    return c.json({ error: 'Invalid itinerary ID' }, 400);
+    return c.json({ error: '无效的行程ID' }, 400);
   }
 
   const ownedItinerary = await db
@@ -295,7 +295,7 @@ app.delete('/:id', authRequired(), async (c) => {
     .limit(1);
 
   if (!ownedItinerary[0]) {
-    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
   const days = await db
@@ -332,17 +332,17 @@ app.post('/:id/days', authRequired(), zValidator('json', createDaySchema), async
   const db = getDb();
 
   if (!authUserId) {
-    return c.json({ error: 'Invalid authenticated user' }, 401);
+    return c.json({ error: '无效的认证用户' }, 401);
   }
 
   const itineraryId = parsePositiveInt(id);
   if (!itineraryId) {
-    return c.json({ error: 'Invalid itinerary ID' }, 400);
+    return c.json({ error: '无效的行程ID' }, 400);
   }
 
   const editableItinerary = await findEditable(itineraryId, authUserId);
   if (!editableItinerary) {
-    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
   const [result] = await db
@@ -379,21 +379,21 @@ app.post(
     const db = getDb();
 
     if (!authUserId) {
-      return c.json({ error: 'Invalid authenticated user' }, 401);
+      return c.json({ error: '无效的认证用户' }, 401);
     }
 
     if (!itineraryId || !dayId) {
-      return c.json({ error: 'Invalid itinerary item path' }, 400);
+      return c.json({ error: '无效的行程项目路径' }, 400);
     }
 
     const editableItinerary = await findEditable(itineraryId, authUserId);
     if (!editableItinerary) {
-      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+      return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
     const scopedDay = await findScopedDay(itineraryId, dayId);
     if (!scopedDay) {
-      return c.json({ error: 'Itinerary day not found' }, 404);
+      return c.json({ error: '行程日不存在' }, 404);
     }
 
     const [result] = await db
@@ -437,26 +437,26 @@ app.patch(
     const body = c.req.valid('json');
 
     if (!authUserId) {
-      return c.json({ error: 'Invalid authenticated user' }, 401);
+      return c.json({ error: '无效的认证用户' }, 401);
     }
 
     if (!itineraryId || !dayId) {
-      return c.json({ error: 'Invalid itinerary item path' }, 400);
+      return c.json({ error: '无效的行程项目路径' }, 400);
     }
 
     const editableItinerary = await findEditable(itineraryId, authUserId);
     if (!editableItinerary) {
-      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+      return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
     const scopedDay = await findScopedDay(itineraryId, dayId);
     if (!scopedDay) {
-      return c.json({ error: 'Itinerary day not found' }, 404);
+      return c.json({ error: '行程日不存在' }, 404);
     }
 
     const scopedItems = await findScopedItems(dayId, body.itemIds);
     if (scopedItems.length !== body.itemIds.length) {
-      return c.json({ error: 'One or more itinerary items were not found' }, 404);
+      return c.json({ error: '一个或多个行程项目未找到' }, 404);
     }
 
     const db = getDb();
@@ -486,26 +486,26 @@ app.patch(
     const body = c.req.valid('json');
 
     if (!authUserId) {
-      return c.json({ error: 'Invalid authenticated user' }, 401);
+      return c.json({ error: '无效的认证用户' }, 401);
     }
 
     if (!itineraryId || !dayId || !itemId) {
-      return c.json({ error: 'Invalid itinerary item path' }, 400);
+      return c.json({ error: '无效的行程项目路径' }, 400);
     }
 
     const editableItinerary = await findEditable(itineraryId, authUserId);
     if (!editableItinerary) {
-      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+      return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
     const scopedDay = await findScopedDay(itineraryId, dayId);
     if (!scopedDay) {
-      return c.json({ error: 'Itinerary day not found' }, 404);
+      return c.json({ error: '行程日不存在' }, 404);
     }
 
     const scopedItem = await findScopedItem(dayId, itemId);
     if (!scopedItem) {
-      return c.json({ error: 'Itinerary item not found' }, 404);
+      return c.json({ error: '行程项目不存在' }, 404);
     }
 
     const updates: Record<string, unknown> = {};
@@ -523,7 +523,7 @@ app.patch(
       updates.notes = body.notes;
 
     if (Object.keys(updates).length === 0) {
-      return c.json({ error: 'No fields to update' }, 400);
+      return c.json({ error: '没有需要更新的字段' }, 400);
     }
 
     const db = getDb();
@@ -544,26 +544,26 @@ app.delete('/:id/days/:dayId/items/:itemId', authRequired(), async (c) => {
   const authUserId = parsePositiveInt(c.get('userId'));
 
   if (!authUserId) {
-    return c.json({ error: 'Invalid authenticated user' }, 401);
+    return c.json({ error: '无效的认证用户' }, 401);
   }
 
   if (!itineraryId || !dayId || !itemId) {
-    return c.json({ error: 'Invalid itinerary item path' }, 400);
+    return c.json({ error: '无效的行程项目路径' }, 400);
   }
 
   const editableItinerary = await findEditable(itineraryId, authUserId);
   if (!editableItinerary) {
-    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
   const scopedDay = await findScopedDay(itineraryId, dayId);
   if (!scopedDay) {
-    return c.json({ error: 'Itinerary day not found' }, 404);
+    return c.json({ error: '行程日不存在' }, 404);
   }
 
   const scopedItem = await findScopedItem(dayId, itemId);
   if (!scopedItem) {
-    return c.json({ error: 'Itinerary item not found' }, 404);
+    return c.json({ error: '行程项目不存在' }, 404);
   }
 
   const db = getDb();
@@ -579,21 +579,21 @@ app.delete('/:id/days/:dayId', authRequired(), async (c) => {
   const authUserId = parsePositiveInt(c.get('userId'));
 
   if (!authUserId) {
-    return c.json({ error: 'Invalid authenticated user' }, 401);
+    return c.json({ error: '无效的认证用户' }, 401);
   }
 
   if (!itineraryId || !dayId) {
-    return c.json({ error: 'Invalid itinerary day path' }, 400);
+    return c.json({ error: '无效的行程日路径' }, 400);
   }
 
   const editableItinerary = await findEditable(itineraryId, authUserId);
   if (!editableItinerary) {
-    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
   const scopedDay = await findScopedDay(itineraryId, dayId);
   if (!scopedDay) {
-    return c.json({ error: 'Itinerary day not found' }, 404);
+    return c.json({ error: '行程日不存在' }, 404);
   }
 
   const db = getDb();

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { PlatformBadge } from '@/components/ui/platform-badge';
 import { getTravelGuides } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -25,35 +26,6 @@ const PLATFORMS = [
   { value: 'mafengwo', label: '马蜂窝' },
   { value: 'qunar', label: '去哪儿' },
 ];
-
-function PlatformBadge({ platform }: { platform: string }) {
-  const colors: Record<string, string> = {
-    ctrip: 'bg-blue-100 text-blue-800',
-    xiaohongshu: 'bg-red-100 text-red-800',
-    weibo: 'bg-orange-100 text-orange-800',
-    tongcheng: 'bg-purple-100 text-purple-800',
-    mafengwo: 'bg-yellow-100 text-yellow-800',
-    qunar: 'bg-green-100 text-green-800',
-  };
-  const names: Record<string, string> = {
-    ctrip: '携程',
-    xiaohongshu: '小红书',
-    weibo: '微博',
-    tongcheng: '同程旅行',
-    mafengwo: '马蜂窝',
-    qunar: '去哪儿',
-  };
-  return (
-    <span
-      className={cn(
-        'px-2 py-0.5 rounded-full text-xs font-medium',
-        colors[platform] || 'bg-gray-100 text-gray-800',
-      )}
-    >
-      {names[platform] || platform}
-    </span>
-  );
-}
 
 function QualityScore({ score }: { score: number }) {
   const percentage = Math.round(score * 100);

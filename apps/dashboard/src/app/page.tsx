@@ -11,6 +11,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { useHealthStatus } from '@/hooks/use-health-status';
 import { getCrawlJobs, getPOIs, getTrainingDatasets } from '@/lib/api';
 
@@ -196,7 +197,7 @@ export default function OverviewPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <StatusBadge status={job.status} />
+                      <StatusBadge status={job.status} showIcon={false} />
                       <Link
                         href={`/jobs/${job.id}`}
                         className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
@@ -226,22 +227,4 @@ function StatusIcon({ status }: { status: string }) {
     default:
       return <Clock className="h-5 w-5 text-gray-400" />;
   }
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    pending: 'bg-amber-50 text-amber-600 border border-amber-200',
-    running: 'bg-blue-50 text-blue-600 border border-blue-200',
-    completed: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
-    failed: 'bg-red-50 text-red-600 border border-red-200',
-    cancelled: 'bg-gray-50 text-gray-600 border border-gray-200',
-  };
-
-  return (
-    <span
-      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || styles.cancelled}`}
-    >
-      {status}
-    </span>
-  );
 }

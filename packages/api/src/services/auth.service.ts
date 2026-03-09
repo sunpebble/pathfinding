@@ -8,11 +8,16 @@
  * Interface surface:
  *   hashPassword(plain) → hash
  *   verifyPassword(plain, stored) → boolean
- *   generateToken(userId, email) → JWT
+ *   generateToken(userId, email, sessionId?) → JWT
  *   verifyToken(token) → payload
+ *   createSession(userId) → sessionId
+ *   deleteSession(sessionId) → void
+ *   isSessionValid(sessionId) → boolean
  */
 import { Buffer } from 'node:buffer';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { authSessions, getDb } from '@pathfinding/database';
+import { and, eq, gt } from 'drizzle-orm';
 import * as jose from 'jose';
 
 // ---------------------------------------------------------------------------
@@ -91,6 +96,65 @@ export function needsPasswordMigration(storedSecret: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Session management
+// ---------------------------------------------------------------------------
+
+const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days (matches JWT)
+
+/**
+ * Create a new server-side session for the user.
+ * Returns the numeric session ID to embed in the JWT.
+ */
+export async function createSession(userId: string): Promise<string> {
+  const db = getDb();
+  const expirationTime = new Date(Date.now() + SESSION_DURATION_MS);
+
+  const [result] = await db.insert(authSessions).values({
+    userId: Number(userId),
+    expirationTime,
+  }).$returningId();
+
+  return String(result!.id);
+}
+
+/**
+ * Delete a session (logout / revocation).
+ */
+export async function deleteSession(sessionId: string): Promise<void> {
+  const db = getDb();
+  await db.delete(authSessions).where(eq(authSessions.id, Number(sessionId)));
+}
+
+/**
+ * Delete all sessions for a user (e.g. "log out everywhere").
+ */
+export async function deleteAllSessions(userId: string): Promise<void> {
+  const db = getDb();
+  await db.delete(authSessions).where(eq(authSessions.userId, Number(userId)));
+}
+
+/**
+ * Check whether a session exists and hasn't expired.
+ */
+export async function isSessionValid(sessionId: string): Promise<boolean> {
+  const db = getDb();
+  const now = new Date();
+
+  const rows = await db
+    .select({ id: authSessions.id })
+    .from(authSessions)
+    .where(
+      and(
+        eq(authSessions.id, Number(sessionId)),
+        gt(authSessions.expirationTime, now),
+      ),
+    )
+    .limit(1);
+
+  return rows.length > 0;
+}
+
+// ---------------------------------------------------------------------------
 // JWT token management
 // ---------------------------------------------------------------------------
 
@@ -99,12 +163,22 @@ const JWT_EXPIRATION = '30d';
 
 /**
  * Generate a signed JWT for the given user.
+ *
+ * If a `sessionId` is provided it is included as the `sid` claim,
+ * enabling server-side revocation. Tokens without `sid` remain valid
+ * but cannot be revoked (backward compatibility).
  */
 export async function generateToken(
   userId: string,
   email: string,
+  sessionId?: string,
 ): Promise<string> {
-  return new jose.SignJWT({ sub: userId, email })
+  const claims: Record<string, unknown> = { sub: userId, email };
+  if (sessionId) {
+    claims.sid = sessionId;
+  }
+
+  return new jose.SignJWT(claims)
     .setProtectedHeader({ alg: JWT_ALGORITHM })
     .setIssuedAt()
     .setExpirationTime(JWT_EXPIRATION)

@@ -57,7 +57,7 @@ app.get('/nearby', async (c) => {
   const category = c.req.query('category');
 
   if (lat === 0 && lng === 0) {
-    return c.json({ error: 'Missing lat/lng parameters' }, 400);
+    return c.json({ error: '缺少lat/lng参数' }, 400);
   }
 
   const db = getDb();
@@ -122,7 +122,7 @@ app.get('/:id', async (c) => {
     .limit(1);
 
   if (result.length === 0) {
-    return c.json({ error: 'POI not found' }, 404);
+    return c.json({ error: '兴趣点不存在' }, 404);
   }
 
   return c.json({ data: convertKeysToSnakeCase(result[0]) });

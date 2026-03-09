@@ -12,24 +12,21 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { authRequired } from '../middleware/auth.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
 // ── GET / — List user's notifications ──────────────────
-app.get('/', async (c) => {
-  const userId = c.req.query('userId');
+app.get('/', authRequired(), async (c) => {
+  const userId = Number(c.get('userId'));
   const page = Number.parseInt(c.req.query('page') ?? '1', 10);
   const pageSize = Number.parseInt(c.req.query('pageSize') ?? '20', 10);
   const unreadOnly = c.req.query('unreadOnly') === 'true';
   const offset = (page - 1) * pageSize;
 
-  if (!userId) {
-    return c.json({ error: 'Missing userId parameter' }, 400);
-  }
-
   const db = getDb();
 
-  const conditions = [eq(notifications.userId, Number(userId))];
+  const conditions = [eq(notifications.userId, userId)];
   if (unreadOnly) {
     conditions.push(eq(notifications.isRead, false));
   }
@@ -49,11 +46,8 @@ app.get('/', async (c) => {
 });
 
 // ── GET /unread-count — Get unread count ───────────────
-app.get('/unread-count', async (c) => {
-  const userId = c.req.query('userId');
-  if (!userId) {
-    return c.json({ error: 'Missing userId parameter' }, 400);
-  }
+app.get('/unread-count', authRequired(), async (c) => {
+  const userId = Number(c.get('userId'));
 
   const db = getDb();
 
@@ -62,7 +56,7 @@ app.get('/unread-count', async (c) => {
     .from(notifications)
     .where(
       and(
-        eq(notifications.userId, Number(userId)),
+        eq(notifications.userId, userId),
         eq(notifications.isRead, false),
       ),
     );
@@ -73,11 +67,11 @@ app.get('/unread-count', async (c) => {
 // ── POST /read — Mark notification as read ─────────────
 const markReadSchema = z.object({
   notificationId: z.number(),
-  userId: z.number(),
 });
 
-app.post('/read', zValidator('json', markReadSchema), async (c) => {
-  const { notificationId, userId } = c.req.valid('json');
+app.post('/read', authRequired(), zValidator('json', markReadSchema), async (c) => {
+  const { notificationId } = c.req.valid('json');
+  const userId = Number(c.get('userId'));
   const db = getDb();
 
   await db
@@ -94,12 +88,10 @@ app.post('/read', zValidator('json', markReadSchema), async (c) => {
 });
 
 // ── POST /read-all — Mark all notifications as read ────
-const markAllReadSchema = z.object({
-  userId: z.number(),
-});
+const markAllReadSchema = z.object({});
 
-app.post('/read-all', zValidator('json', markAllReadSchema), async (c) => {
-  const { userId } = c.req.valid('json');
+app.post('/read-all', authRequired(), zValidator('json', markAllReadSchema), async (c) => {
+  const userId = Number(c.get('userId'));
   const db = getDb();
 
   await db
@@ -116,18 +108,15 @@ app.post('/read-all', zValidator('json', markAllReadSchema), async (c) => {
 });
 
 // ── GET /settings — Get notification settings ──────────
-app.get('/settings', async (c) => {
-  const userId = c.req.query('userId');
-  if (!userId) {
-    return c.json({ error: 'Missing userId parameter' }, 400);
-  }
+app.get('/settings', authRequired(), async (c) => {
+  const userId = Number(c.get('userId'));
 
   const db = getDb();
 
   const result = await db
     .select()
     .from(notificationSettings)
-    .where(eq(notificationSettings.userId, Number(userId)))
+    .where(eq(notificationSettings.userId, userId))
     .limit(1);
 
   if (result.length === 0) {
@@ -148,7 +137,6 @@ app.get('/settings', async (c) => {
 
 // ── PUT /settings — Update notification settings ───────
 const updateSettingsSchema = z.object({
-  userId: z.number(),
   pushEnabled: z.boolean().optional(),
   emailEnabled: z.boolean().optional(),
   quietHoursStart: z.string().optional(),
@@ -156,19 +144,20 @@ const updateSettingsSchema = z.object({
   categories: z.any().optional(),
 });
 
-app.put('/settings', zValidator('json', updateSettingsSchema), async (c) => {
+app.put('/settings', authRequired(), zValidator('json', updateSettingsSchema), async (c) => {
   const body = c.req.valid('json');
+  const userId = Number(c.get('userId'));
   const db = getDb();
 
   const existing = await db
     .select()
     .from(notificationSettings)
-    .where(eq(notificationSettings.userId, body.userId))
+    .where(eq(notificationSettings.userId, userId))
     .limit(1);
 
   if (existing.length === 0) {
     await db.insert(notificationSettings).values({
-      userId: body.userId,
+      userId,
       pushEnabled: body.pushEnabled ?? true,
       emailEnabled: body.emailEnabled ?? false,
       quietHoursStart: body.quietHoursStart ?? null,
@@ -193,7 +182,7 @@ app.put('/settings', zValidator('json', updateSettingsSchema), async (c) => {
       await db
         .update(notificationSettings)
         .set(updates)
-        .where(eq(notificationSettings.userId, body.userId));
+        .where(eq(notificationSettings.userId, userId));
     }
   }
 

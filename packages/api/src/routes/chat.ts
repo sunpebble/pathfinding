@@ -25,19 +25,10 @@ function parsePositiveInt(
 }
 
 // ── GET /sessions — List user's chat sessions ──────────
-app.get('/sessions', async (c) => {
-  const userId = c.req.query('userId');
+app.get('/sessions', authRequired(), async (c) => {
+  const userId = Number(c.get('userId'));
   const includeArchived = c.req.query('includeArchived') === 'true';
   const limit = parsePositiveInt(c.req.query('limit'), 50, 200);
-
-  if (!userId) {
-    return c.json({ error: 'Missing userId parameter' }, 400);
-  }
-
-  const parsedUserId = Number.parseInt(userId, 10);
-  if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
-    return c.json({ error: 'Invalid userId parameter' }, 400);
-  }
 
   const db = getDb();
 
@@ -45,7 +36,7 @@ app.get('/sessions', async (c) => {
     ? await db
         .select()
         .from(chatSessions)
-        .where(eq(chatSessions.userId, parsedUserId))
+        .where(eq(chatSessions.userId, userId))
         .orderBy(desc(chatSessions.lastMessageAt))
         .limit(limit)
     : await db
@@ -53,7 +44,7 @@ app.get('/sessions', async (c) => {
         .from(chatSessions)
         .where(
           and(
-            eq(chatSessions.userId, parsedUserId),
+            eq(chatSessions.userId, userId),
             eq(chatSessions.isArchived, false),
           ),
         )
@@ -65,19 +56,18 @@ app.get('/sessions', async (c) => {
 
 // ── POST /sessions — Create a new chat session ─────────
 const createSessionSchema = z.object({
-  userId: z.number(),
-  title: z.string().default('New Conversation'),
+  title: z.string().default('新对话'),
   context: z.any().optional(),
 });
 
-app.post('/sessions', zValidator('json', createSessionSchema), async (c) => {
+app.post('/sessions', authRequired(), zValidator('json', createSessionSchema), async (c) => {
   const body = c.req.valid('json');
   const db = getDb();
 
   const [result] = await db
     .insert(chatSessions)
     .values({
-      userId: body.userId,
+      userId: Number(c.get('userId')),
       title: body.title,
       metadata: body.context ?? null,
     })
@@ -93,17 +83,17 @@ app.post('/sessions', zValidator('json', createSessionSchema), async (c) => {
 });
 
 // ── GET /messages — Get messages for a session ─────────
-app.get('/messages', async (c) => {
+app.get('/messages', authRequired(), async (c) => {
   const sessionId = c.req.query('sessionId');
   const limit = parsePositiveInt(c.req.query('limit'), 50, 200);
 
   if (!sessionId) {
-    return c.json({ error: 'Missing sessionId parameter' }, 400);
+    return c.json({ error: '缺少sessionId参数' }, 400);
   }
 
   const parsedSessionId = Number.parseInt(sessionId, 10);
   if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
-    return c.json({ error: 'Invalid sessionId parameter' }, 400);
+    return c.json({ error: '无效的sessionId参数' }, 400);
   }
 
   const db = getDb();
@@ -125,7 +115,7 @@ const createMessageSchema = z.object({
   content: z.string(),
 });
 
-app.post('/messages', zValidator('json', createMessageSchema), async (c) => {
+app.post('/messages', authRequired(), zValidator('json', createMessageSchema), async (c) => {
   const body = c.req.valid('json');
   const db = getDb();
 

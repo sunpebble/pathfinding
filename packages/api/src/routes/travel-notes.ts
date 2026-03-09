@@ -1,4 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
+import { zValidator } from '@hono/zod-validator';
 import { getDb, travelNotes } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
@@ -6,14 +7,15 @@ import { and, desc, eq, sql } from 'drizzle-orm';
  * Mirrors the Convex /api/travel-notes HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
-import { ApiError } from '../middleware/error-handler.js';
+import { authOptional, authRequired } from '../middleware/auth.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
 // ── GET / — List travel notes ──────────────────────────
-app.get('/', async (c) => {
-  const userId = c.req.query('userId');
+app.get('/', authOptional(), async (c) => {
+  const userId = c.get('userId');
   const page = Number.parseInt(c.req.query('page') ?? '1', 10);
   const pageSize = Number.parseInt(c.req.query('pageSize') ?? '20', 10);
   const visibility = c.req.query('visibility') ?? 'public';
@@ -62,18 +64,20 @@ app.get('/', async (c) => {
 });
 
 // ── POST / — Create a travel note ──────────────────────
-app.post('/', async (c) => {
-  const body = await c.req.json();
-  const { userId, title, content, visibility, destination: _destination } = body;
+const createNoteSchema = z.object({
+  title: z.string().min(1),
+  content: z.string().min(1),
+  visibility: z.enum(['public', 'followers', 'private']).optional(),
+  destination: z.string().optional(),
+});
 
-  if (!userId || !title || !content) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/', authRequired(), zValidator('json', createNoteSchema), async (c) => {
+  const { title, content, visibility } = c.req.valid('json');
 
   const db = getDb();
 
   const result = await db.insert(travelNotes).values({
-    authorId: Number(userId),
+    authorId: Number(c.get('userId')),
     title,
     content,
     visibility: visibility ?? 'public',

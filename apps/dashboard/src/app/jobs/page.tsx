@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  CheckCircle,
   Clock,
   Eye,
   Loader2,
@@ -10,11 +9,11 @@ import {
   Plus,
   RefreshCw,
   StopCircle,
-  XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
+import { StatusBadge } from '@/components/ui/status-badge';
 import {
   cancelCrawlJob,
   getCrawlJobs,
@@ -371,8 +370,8 @@ export default function JobsPage() {
                               {job.status === 'running' && (
                                 <button
                                   onClick={() => {
-                                  // eslint-disable-next-line no-alert
-                                    if (confirm('Cancel this job?')) {
+                                    // eslint-disable-next-line no-alert
+                                    if (window.confirm('Are you sure you want to cancel this job? This action cannot be undone.')) {
                                       cancelMutation.mutate(job.id);
                                     }
                                   }}
@@ -401,48 +400,3 @@ export default function JobsPage() {
     </div>
   );
 }
-
-// Status config moved outside component to avoid recreation on each render
-const STATUS_CONFIG: Record<
-  string,
-  { icon: React.ReactNode; className: string }
-> = {
-  pending: {
-    icon: <Clock className="h-3.5 w-3.5" />,
-    className: 'bg-amber-50 text-amber-600 border-amber-200',
-  },
-  running: {
-    icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-    className: 'bg-blue-50 text-blue-600 border-blue-200',
-  },
-  completed: {
-    icon: <CheckCircle className="h-3.5 w-3.5" />,
-    className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-  },
-  failed: {
-    icon: <XCircle className="h-3.5 w-3.5" />,
-    className: 'bg-red-50 text-red-600 border-red-200',
-  },
-  cancelled: {
-    icon: <XCircle className="h-3.5 w-3.5" />,
-    className: 'bg-gray-50 text-gray-600 border-gray-200',
-  },
-};
-
-const StatusBadge = React.memo(({
-  status,
-}: {
-  status: string;
-}) => {
-  const statusConfig = STATUS_CONFIG[status] ?? STATUS_CONFIG.cancelled!;
-  const { icon, className } = statusConfig;
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}
-    >
-      {icon}
-      {status}
-    </span>
-  );
-});

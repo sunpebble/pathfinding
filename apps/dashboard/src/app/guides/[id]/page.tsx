@@ -21,6 +21,8 @@ import * as React from 'react';
 import { useState } from 'react';
 import { GeocodingConfidenceBadge } from '@/components/geocoding-confidence-badge';
 import { PoiEditor } from '@/components/poi-editor';
+import { SafeHtml } from '@/components/safe-html';
+import { PlatformBadge } from '@/components/ui/platform-badge';
 import { getTravelGuide } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -29,35 +31,6 @@ const FALLBACK_IMAGE_SRC
 
 function handleImageError(e: React.SyntheticEvent<HTMLImageElement>) {
   e.currentTarget.src = FALLBACK_IMAGE_SRC;
-}
-
-function PlatformBadge({ platform }: { platform: string }) {
-  const colors: Record<string, string> = {
-    ctrip: 'bg-blue-100 text-blue-800 border-blue-200',
-    xiaohongshu: 'bg-red-100 text-red-800 border-red-200',
-    weibo: 'bg-orange-100 text-orange-800 border-orange-200',
-    tongcheng: 'bg-purple-100 text-purple-800 border-purple-200',
-    mafengwo: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    qunar: 'bg-green-100 text-green-800 border-green-200',
-  };
-  const names: Record<string, string> = {
-    ctrip: '携程',
-    xiaohongshu: '小红书',
-    weibo: '微博',
-    tongcheng: '同程旅行',
-    mafengwo: '马蜂窝',
-    qunar: '去哪儿',
-  };
-  return (
-    <span
-      className={cn(
-        'px-3 py-1 rounded-full text-sm font-medium border',
-        colors[platform] || 'bg-gray-100 text-gray-800 border-gray-200',
-      )}
-    >
-      {names[platform] || platform}
-    </span>
-  );
 }
 
 function StatCard({
@@ -194,7 +167,7 @@ export default function GuideDetailPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
-              <PlatformBadge platform={guide.source_platform} />
+              <PlatformBadge platform={guide.source_platform} size="lg" />
               <div className="flex items-center gap-1 text-amber-500">
                 <Star className="h-4 w-4 fill-current" />
                 <span className="text-sm font-medium">
@@ -373,11 +346,10 @@ export default function GuideDetailPage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Content</h2>
         {guide.content_html
           ? (
-              // Render rich text HTML content
-              <div
+              // Render rich text HTML content safely
+              <SafeHtml
+                html={guide.content_html}
                 className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
-                // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
-                dangerouslySetInnerHTML={{ __html: guide.content_html }}
               />
             )
           : guide.content

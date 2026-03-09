@@ -29,7 +29,7 @@ const inviteCollaboratorSchema = z
     role: z.enum(['viewer', 'editor']),
   })
   .refine(body => body.userId !== undefined || body.email !== undefined, {
-    message: 'userId or email is required',
+    message: '需要提供userId或email',
   });
 
 const updateCollaboratorSchema = z.object({
@@ -41,16 +41,16 @@ app.get('/', authRequired(), async (c) => {
   const authUserId = parsePositiveInt(c.get('userId'));
 
   if (!authUserId) {
-    return c.json({ error: 'Invalid authenticated user' }, 401);
+    return c.json({ error: '无效的认证用户' }, 401);
   }
 
   if (!itineraryId) {
-    return c.json({ error: 'Invalid itinerary ID' }, 400);
+    return c.json({ error: '无效的行程ID' }, 400);
   }
 
   const accessResult = await findAccessible(itineraryId, authUserId);
   if (!accessResult?.itinerary) {
-    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
   const accessibleItinerary = accessResult.itinerary;
@@ -105,12 +105,12 @@ app.post(
     const body = c.req.valid('json');
 
     if (!authUserId) {
-      return c.json({ error: 'Invalid authenticated user' }, 401);
+      return c.json({ error: '无效的认证用户' }, 401);
     }
 
     const ownedItinerary = await findOwned(body.itineraryId, authUserId);
     if (!ownedItinerary) {
-      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+      return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
     const db = getDb();
@@ -126,11 +126,11 @@ app.post(
     const targetUser = matchedUsers[0];
 
     if (!targetUser) {
-      return c.json({ error: 'User not found' }, 404);
+      return c.json({ error: '用户不存在' }, 404);
     }
 
     if (targetUser.id === ownedItinerary.userId) {
-      return c.json({ error: 'Owner is already a collaborator' }, 400);
+      return c.json({ error: '所有者已是协作者' }, 400);
     }
 
     const existingCollaborator = await db
@@ -145,7 +145,7 @@ app.post(
       .limit(1);
 
     if (existingCollaborator[0]) {
-      return c.json({ error: 'Collaborator already exists' }, 409);
+      return c.json({ error: '协作者已存在' }, 409);
     }
 
     let result: { id: number } | undefined;
@@ -162,7 +162,7 @@ app.post(
     }
     catch (error) {
       if (isDuplicateError(error)) {
-        return c.json({ error: 'Collaborator already exists' }, 409);
+        return c.json({ error: '协作者已存在' }, 409);
       }
 
       throw error;
@@ -192,11 +192,11 @@ app.patch(
     const body = c.req.valid('json');
 
     if (!authUserId) {
-      return c.json({ error: 'Invalid authenticated user' }, 401);
+      return c.json({ error: '无效的认证用户' }, 401);
     }
 
     if (!collaboratorId) {
-      return c.json({ error: 'Invalid collaborator ID' }, 400);
+      return c.json({ error: '无效的协作者ID' }, 400);
     }
 
     const db = getDb();
@@ -208,12 +208,12 @@ app.patch(
     const collaborator = collaboratorRows[0];
 
     if (!collaborator) {
-      return c.json({ error: 'Collaborator not found' }, 404);
+      return c.json({ error: '协作者不存在' }, 404);
     }
 
     const ownedItinerary = await findOwned(collaborator.itineraryId, authUserId);
     if (!ownedItinerary) {
-      return c.json({ error: 'Itinerary not found or access denied' }, 403);
+      return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
     await db
@@ -235,11 +235,11 @@ app.delete('/:id', authRequired(), async (c) => {
   const authUserId = parsePositiveInt(c.get('userId'));
 
   if (!authUserId) {
-    return c.json({ error: 'Invalid authenticated user' }, 401);
+    return c.json({ error: '无效的认证用户' }, 401);
   }
 
   if (!collaboratorId) {
-    return c.json({ error: 'Invalid collaborator ID' }, 400);
+    return c.json({ error: '无效的协作者ID' }, 400);
   }
 
   const db = getDb();
@@ -251,12 +251,12 @@ app.delete('/:id', authRequired(), async (c) => {
   const collaborator = collaboratorRows[0];
 
   if (!collaborator) {
-    return c.json({ error: 'Collaborator not found' }, 404);
+    return c.json({ error: '协作者不存在' }, 404);
   }
 
   const ownedItinerary = await findOwned(collaborator.itineraryId, authUserId);
   if (!ownedItinerary) {
-    return c.json({ error: 'Itinerary not found or access denied' }, 403);
+    return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
   await db

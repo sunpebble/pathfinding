@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { fetchBackendApi, normalizeTravelGuide } from '@/lib/api';
+import { fetchBackendApi, normalizeTravelGuide } from '@/lib/api/backend';
 
 type Platform
   = | 'xiaohongshu'

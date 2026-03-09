@@ -1,4 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
+import { zValidator } from '@hono/zod-validator';
 import { getDb, itineraryBudgets } from '@pathfinding/database';
 import { eq } from 'drizzle-orm';
 /**
@@ -6,13 +7,15 @@ import { eq } from 'drizzle-orm';
  * Mirrors the Convex /api/budgets and /api/expenses HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
 // ── GET /budgets — Get budget for an itinerary ─────────
-app.get('/', async (c) => {
+app.get('/', authRequired(), async (c) => {
   const itineraryId = c.req.query('itineraryId');
 
   if (!itineraryId) {
@@ -32,17 +35,19 @@ app.get('/', async (c) => {
 });
 
 // ── POST /budgets — Create or update budget ────────────
-app.post('/', async (c) => {
-  const body = await c.req.json();
-  const { itineraryId, userId, totalBudget, currency, categoryBudgets } = body;
+const createBudgetSchema = z.object({
+  itineraryId: z.number(),
+  totalBudget: z.number(),
+  currency: z.string().optional(),
+  categoryBudgets: z.any().optional(),
+});
 
-  if (!itineraryId || totalBudget === undefined || !userId) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/', authRequired(), zValidator('json', createBudgetSchema), async (c) => {
+  const { itineraryId, totalBudget, currency, categoryBudgets } = c.req.valid('json');
 
   const db = getDb();
   const iid = Number(itineraryId);
-  const uid = Number(userId);
+  const uid = Number(c.get('userId'));
 
   // Upsert: check if budget exists
   const existing = await db

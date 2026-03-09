@@ -7,20 +7,14 @@ import { desc, eq } from 'drizzle-orm';
  */
 import { Hono } from 'hono';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
-import { ApiError } from '../middleware/error-handler.js';
+import { authRequired } from '../middleware/auth.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
 // ── GET / — List user's favorite collections ───────────
-app.get('/', async (c) => {
-  const userId = c.req.query('userId');
-
-  if (!userId) {
-    throw new ApiError(400, '缺少userId参数');
-  }
-
+app.get('/', authRequired(), async (c) => {
   const db = getDb();
-  const uid = Number(userId);
+  const uid = Number(c.get('userId'));
 
   const collections = await db
     .select()

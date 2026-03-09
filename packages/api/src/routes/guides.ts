@@ -196,7 +196,7 @@ app.get('/destinations', async (c) => {
 app.get('/by-id', async (c) => {
   const id = c.req.query('id');
   if (!id)
-    return c.json({ error: 'Missing id parameter' }, 400);
+    return c.json({ error: '缺少id参数' }, 400);
 
   const db = getDb();
   const result = await db
@@ -206,7 +206,7 @@ app.get('/by-id', async (c) => {
     .limit(1);
 
   if (result.length === 0) {
-    return c.json({ error: 'Guide not found' }, 404);
+    return c.json({ error: '攻略不存在' }, 404);
   }
 
   return c.json(toClientGuide(result[0]!));
@@ -246,7 +246,7 @@ app.get('/:id', async (c) => {
     .limit(1);
 
   if (result.length === 0) {
-    return c.json({ error: 'Guide not found' }, 404);
+    return c.json({ error: '攻略不存在' }, 404);
   }
 
   return c.json({ data: toClientGuide(result[0]!) });
@@ -320,7 +320,7 @@ app.patch('/:id', zValidator('json', updateGuideSchema), async (c) => {
     updates.tags = body.tags;
 
   if (Object.keys(updates).length === 0) {
-    return c.json({ error: 'No fields to update' }, 400);
+    return c.json({ error: '没有需要更新的字段' }, 400);
   }
 
   await db
@@ -337,7 +337,7 @@ app.patch('/:id/poi-coordinates', zValidator('json', updateGuidePoiCoordinatesSc
   const guideId = Number.parseInt(id, 10);
 
   if (!Number.isInteger(guideId) || guideId <= 0) {
-    return c.json({ error: 'Invalid guide ID' }, 400);
+    return c.json({ error: '无效的攻略ID' }, 400);
   }
 
   const db = getDb();
@@ -349,18 +349,18 @@ app.patch('/:id/poi-coordinates', zValidator('json', updateGuidePoiCoordinatesSc
 
   const guide = result[0];
   if (!guide) {
-    return c.json({ error: 'Guide not found' }, 404);
+    return c.json({ error: '攻略不存在' }, 404);
   }
 
   const dayItineraries = Array.isArray(guide.dayItineraries) ? structuredClone(guide.dayItineraries) as Array<Record<string, unknown>> : [];
   const dayIndex = dayItineraries.findIndex(day => Number(day.dayNumber) === body.dayNumber);
   if (dayIndex === -1) {
-    return c.json({ error: 'Guide day not found' }, 404);
+    return c.json({ error: '攻略日程不存在' }, 404);
   }
 
   const pois = Array.isArray(dayItineraries[dayIndex]?.pois) ? [...(dayItineraries[dayIndex]!.pois as Array<Record<string, unknown>>)] : [];
   if (!pois[body.poiIndex]) {
-    return c.json({ error: 'Guide POI not found' }, 404);
+    return c.json({ error: '攻略兴趣点不存在' }, 404);
   }
 
   pois[body.poiIndex] = {

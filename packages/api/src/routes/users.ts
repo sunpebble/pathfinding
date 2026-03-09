@@ -29,7 +29,7 @@ app.get('/:id', async (c) => {
     .limit(1);
 
   if (userRows.length === 0) {
-    return c.json({ error: 'User not found' }, 404);
+    return c.json({ error: '用户不存在' }, 404);
   }
 
   // Also fetch profile
@@ -72,6 +72,13 @@ app.patch(
   zValidator('json', updateProfileSchema),
   async (c) => {
     const { id } = c.req.param();
+
+    // Verify the authenticated user can only update their own profile
+    const authenticatedUserId = c.get('userId');
+    if (authenticatedUserId !== id) {
+      return c.json({ error: '只能修改自己的个人资料' }, 403);
+    }
+
     const body = c.req.valid('json');
     const db = getDb();
 
@@ -193,7 +200,7 @@ app.post(
       .limit(1);
 
     if (existing.length > 0) {
-      return c.json({ error: 'Already following' }, 409);
+      return c.json({ error: '已关注该用户' }, 409);
     }
 
     await db.insert(userFollows).values({
@@ -256,7 +263,7 @@ app.get('/:id/follow/status', async (c) => {
   const followingId = c.req.query('followingId');
 
   if (!followingId) {
-    return c.json({ error: 'Missing followingId parameter' }, 400);
+    return c.json({ error: '缺少followingId参数' }, 400);
   }
 
   const db = getDb();

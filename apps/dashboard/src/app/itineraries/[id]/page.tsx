@@ -20,6 +20,8 @@ import { useEffect, useState } from 'react';
 import { CollaboratorPanel } from '@/components/collaborator-panel';
 import { InviteDialog } from '@/components/invite-dialog';
 import { ItineraryEditor } from '@/components/itinerary-editor';
+import { ItineraryMap } from '@/components/itinerary-map';
+import { PdfExportButton } from '@/components/pdf-export-button';
 import { useAuth } from '@/hooks/use-auth';
 import { getCollaborators } from '@/lib/api/collaborators';
 import {
@@ -358,7 +360,10 @@ export default function ItineraryDetailPage() {
                 </span>
               </div>
             </div>
-            <VisibilityBadge visibility={itinerary.visibility} />
+            <div className="flex items-center gap-3">
+              <PdfExportButton itineraryId={id} />
+              <VisibilityBadge visibility={itinerary.visibility} />
+            </div>
           </div>
         </div>
       </div>
@@ -405,6 +410,20 @@ export default function ItineraryDetailPage() {
           />
         </div>
       </div>
+
+      {/* Interactive Map */}
+      {itinerary.days.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <MapPin className="h-5 w-5 text-emerald-600" />
+            地图概览
+          </h2>
+          <ItineraryMap
+            days={itinerary.days}
+            className="h-[400px] rounded-xl border border-gray-200"
+          />
+        </div>
+      )}
 
       {/* Days and POIs */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">

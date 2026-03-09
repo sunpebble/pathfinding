@@ -1,5 +1,6 @@
 import type { SQL } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
+import { zValidator } from '@hono/zod-validator';
 import { getDb, poiAnswers, poiQuestions } from '@pathfinding/database';
 import { asc, desc, eq, sql } from 'drizzle-orm';
 /**
@@ -7,7 +8,9 @@ import { asc, desc, eq, sql } from 'drizzle-orm';
  * Mirrors the Convex /api/qa/* HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
@@ -67,19 +70,21 @@ app.get('/questions', async (c) => {
 });
 
 // ── POST /questions — Create a question ────────────────
-app.post('/questions', async (c) => {
-  const body = await c.req.json();
-  const { poiId, userId, title, content, tags } = body;
+const createQuestionSchema = z.object({
+  poiId: z.number(),
+  title: z.string().min(1),
+  content: z.string().optional(),
+  tags: z.any().optional(),
+});
 
-  if (!poiId || !userId || !title) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/questions', authRequired(), zValidator('json', createQuestionSchema), async (c) => {
+  const { poiId, title, content, tags } = c.req.valid('json');
 
   const db = getDb();
 
   const result = await db.insert(poiQuestions).values({
-    poiId: Number(poiId),
-    userId: Number(userId),
+    poiId,
+    userId: Number(c.get('userId')),
     title,
     content: content ?? '',
     category: 'general',
@@ -132,19 +137,19 @@ app.get('/answers', async (c) => {
 });
 
 // ── POST /answers — Create an answer ───────────────────
-app.post('/answers', async (c) => {
-  const body = await c.req.json();
-  const { questionId, userId, content } = body;
+const createAnswerSchema = z.object({
+  questionId: z.number(),
+  content: z.string().min(1),
+});
 
-  if (!questionId || !userId || !content) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/answers', authRequired(), zValidator('json', createAnswerSchema), async (c) => {
+  const { questionId, content } = c.req.valid('json');
 
   const db = getDb();
 
   const result = await db.insert(poiAnswers).values({
-    questionId: Number(questionId),
-    userId: Number(userId),
+    questionId,
+    userId: Number(c.get('userId')),
     content,
   });
 
@@ -155,7 +160,7 @@ app.post('/answers', async (c) => {
       answersCount: sql`${poiQuestions.answersCount} + 1`,
       lastActivityAt: new Date(),
     })
-    .where(eq(poiQuestions.id, Number(questionId)));
+    .where(eq(poiQuestions.id, questionId));
 
   return c.json({ id: Number(result[0].insertId) }, 201);
 });

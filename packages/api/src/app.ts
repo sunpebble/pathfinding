@@ -6,6 +6,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger as honoLogger } from 'hono/logger';
 import { errorHandler } from './middleware/error-handler.js';
+import { rateLimit } from './middleware/rate-limit.js';
+import { securityHeaders } from './middleware/security-headers.js';
 
 import authRoutes from './routes/auth.js';
 import budgetsRoutes from './routes/budgets.js';
@@ -14,6 +16,7 @@ import collectionsRoutes from './routes/collections.js';
 import commentsRoutes from './routes/comments.js';
 import crawlJobsRoutes from './routes/crawl-jobs.js';
 import currencyRoutes from './routes/currency.js';
+import expenseSplittingRoutes from './routes/expense-splitting.js';
 import expensesRoutes from './routes/expenses.js';
 import favoritesRoutes from './routes/favorites.js';
 import guidesRoutes from './routes/guides.js';
@@ -24,12 +27,14 @@ import itineraryCollaboratorsRoutes from './routes/itinerary-collaborators.js';
 import likesRoutes from './routes/likes.js';
 import notificationsRoutes from './routes/notifications.js';
 import poisRoutes from './routes/pois.js';
+import pushTokensRoutes from './routes/push-tokens.js';
 import qaRoutes from './routes/qa.js';
 import qualityReportsRoutes from './routes/quality-reports.js';
 import sharingRoutes from './routes/sharing.js';
 import trainingDatasetsRoutes from './routes/training-datasets.js';
 import translationsRoutes from './routes/translations.js';
 import travelNotesRoutes from './routes/travel-notes.js';
+import uploadsRoutes from './routes/uploads.js';
 import usersRoutes from './routes/users.js';
 
 const log = createLogger('api');
@@ -61,6 +66,12 @@ export function createApp() {
     }),
   );
 
+  // Security headers
+  app.use('*', securityHeaders());
+
+  // Rate limiting for auth routes
+  app.use('/api/auth/*', rateLimit({ max: 20, windowSec: 60 }));
+
   // Request logging (uses Hono built-in, writes to stdout)
   app.use('*', honoLogger(msg => log.info(msg)));
 
@@ -78,6 +89,7 @@ export function createApp() {
   app.route('/api/chat', chatRoutes);
   app.route('/api/users', usersRoutes);
   app.route('/api/notifications', notificationsRoutes);
+  app.route('/api/push-tokens', pushTokensRoutes);
   app.route('/api/comments', commentsRoutes);
   app.route('/api/collections', collectionsRoutes);
   app.route('/api/favorites', favoritesRoutes);
@@ -85,9 +97,11 @@ export function createApp() {
   app.route('/api/travel-notes', travelNotesRoutes);
   app.route('/api/budgets', budgetsRoutes);
   app.route('/api/expenses', expensesRoutes);
+  app.route('/api/expense-splitting', expenseSplittingRoutes);
   app.route('/api/qa', qaRoutes);
   app.route('/api/sharing', sharingRoutes);
   app.route('/api/translations', translationsRoutes);
+  app.route('/api/uploads', uploadsRoutes);
   app.route('/api/crawl-jobs', crawlJobsRoutes);
   app.route('/api/quality-reports', qualityReportsRoutes);
   app.route('/api/training-datasets', trainingDatasetsRoutes);
