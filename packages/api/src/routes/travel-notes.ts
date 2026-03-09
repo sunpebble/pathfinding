@@ -1,5 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, travelNotes } from '@pathfinding/database';
+import { getDb, travelNotes } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
  * Travel Notes routes — list, create.
@@ -10,10 +10,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET / — List travel notes ──────────────────────────
 app.get('/', async (c) => {

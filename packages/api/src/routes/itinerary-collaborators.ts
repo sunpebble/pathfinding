@@ -1,8 +1,7 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  createDb,
-  itineraries,
+  getDb,
   itineraryCollaborators,
   users,
 } from '@pathfinding/database';
@@ -10,67 +9,11 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePositiveInt } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
+import { findAccessible, findOwned } from '../services/itinerary-access.service.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
-
-async function getOwnedItinerary(
-  itineraryId: number,
-  userId: number,
-) {
-  const db = getDb();
-
-  const result = await db
-    .select()
-    .from(itineraries)
-    .where(and(eq(itineraries.id, itineraryId), eq(itineraries.userId, userId)))
-    .limit(1);
-
-  return result[0] ?? null;
-}
-
-async function getAccessibleItinerary(
-  itineraryId: number,
-  userId: number,
-) {
-  const ownedItinerary = await getOwnedItinerary(itineraryId, userId);
-  if (ownedItinerary) {
-    return ownedItinerary;
-  }
-
-  const db = getDb();
-  const collaboratorRows = await db
-    .select()
-    .from(itineraryCollaborators)
-    .where(
-      and(
-        eq(itineraryCollaborators.itineraryId, itineraryId),
-        eq(itineraryCollaborators.userId, userId),
-      ),
-    )
-    .limit(1);
-
-  if (!collaboratorRows[0]) {
-    return null;
-  }
-
-  const itineraryRows = await db
-    .select()
-    .from(itineraries)
-    .where(eq(itineraries.id, itineraryId))
-    .limit(1);
-
-  return itineraryRows[0] ?? null;
-}
-
-function parsePositiveInt(value: string) {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
 
 function isDuplicateError(error: unknown) {
   return error instanceof Error
@@ -105,10 +48,12 @@ app.get('/', authRequired(), async (c) => {
     return c.json({ error: 'Invalid itinerary ID' }, 400);
   }
 
-  const accessibleItinerary = await getAccessibleItinerary(itineraryId, authUserId);
-  if (!accessibleItinerary) {
+  const accessResult = await findAccessible(itineraryId, authUserId);
+  if (!accessResult?.itinerary) {
     return c.json({ error: 'Itinerary not found or access denied' }, 403);
   }
+
+  const accessibleItinerary = accessResult.itinerary;
 
   const db = getDb();
   const ownerRows = await db
@@ -163,7 +108,7 @@ app.post(
       return c.json({ error: 'Invalid authenticated user' }, 401);
     }
 
-    const ownedItinerary = await getOwnedItinerary(body.itineraryId, authUserId);
+    const ownedItinerary = await findOwned(body.itineraryId, authUserId);
     if (!ownedItinerary) {
       return c.json({ error: 'Itinerary not found or access denied' }, 403);
     }
@@ -266,7 +211,7 @@ app.patch(
       return c.json({ error: 'Collaborator not found' }, 404);
     }
 
-    const ownedItinerary = await getOwnedItinerary(collaborator.itineraryId, authUserId);
+    const ownedItinerary = await findOwned(collaborator.itineraryId, authUserId);
     if (!ownedItinerary) {
       return c.json({ error: 'Itinerary not found or access denied' }, 403);
     }
@@ -309,7 +254,7 @@ app.delete('/:id', authRequired(), async (c) => {
     return c.json({ error: 'Collaborator not found' }, 404);
   }
 
-  const ownedItinerary = await getOwnedItinerary(collaborator.itineraryId, authUserId);
+  const ownedItinerary = await findOwned(collaborator.itineraryId, authUserId);
   if (!ownedItinerary) {
     return c.json({ error: 'Itinerary not found or access denied' }, 403);
   }

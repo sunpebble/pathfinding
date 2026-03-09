@@ -1,7 +1,7 @@
 import type { InferSelectModel } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
-import { createDb, travelGuides } from '@pathfinding/database';
+import { getDb, travelGuides } from '@pathfinding/database';
 import { and, desc, eq, gte, like, sql } from 'drizzle-orm';
 /**
  * Guides routes — list, get by ID, search, destinations, stats.
@@ -13,10 +13,6 @@ import { z } from 'zod';
 type Guide = InferSelectModel<typeof travelGuides>;
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 /**
  * Convert a DB guide row to the iOS-compatible response format.

@@ -1,7 +1,7 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  createDb,
+  getDb,
   profiles,
   userFollows,
   users,
@@ -16,10 +16,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET /:id — Get user profile ────────────────────────
 app.get('/:id', async (c) => {

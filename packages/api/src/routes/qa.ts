@@ -1,6 +1,6 @@
 import type { SQL } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, poiAnswers, poiQuestions } from '@pathfinding/database';
+import { getDb, poiAnswers, poiQuestions } from '@pathfinding/database';
 import { asc, desc, eq, sql } from 'drizzle-orm';
 /**
  * POI Q&A routes — questions and answers.
@@ -11,10 +11,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET /questions — List questions for a POI ──────────
 app.get('/questions', async (c) => {

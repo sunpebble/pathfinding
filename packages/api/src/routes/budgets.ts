@@ -1,5 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, itineraryBudgets } from '@pathfinding/database';
+import { getDb, itineraryBudgets } from '@pathfinding/database';
 import { eq } from 'drizzle-orm';
 /**
  * Budgets & Expenses routes.
@@ -10,10 +10,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET /budgets — Get budget for an itinerary ─────────
 app.get('/', async (c) => {

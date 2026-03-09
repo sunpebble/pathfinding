@@ -1,4 +1,4 @@
-import { createDb, pois } from '@pathfinding/database';
+import { getDb, pois } from '@pathfinding/database';
 import { and, eq, like, sql } from 'drizzle-orm';
 /**
  * POI routes — list, get by ID, search, nearby.
@@ -7,10 +7,6 @@ import { Hono } from 'hono';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 
 const app = new Hono();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET / — Search/list POIs ───────────────────────────
 app.get('/', async (c) => {

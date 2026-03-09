@@ -1,7 +1,7 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import {
   commentReports,
-  createDb,
+  getDb,
   guideCommentLikes,
   guideComments,
 } from '@pathfinding/database';
@@ -16,10 +16,6 @@ import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET / — List comments for a guide ──────────────────
 app.get('/', async (c) => {

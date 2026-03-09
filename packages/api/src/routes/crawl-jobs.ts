@@ -1,5 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { crawlJobs, createDb } from '@pathfinding/database';
+import { crawlJobs, getDb } from '@pathfinding/database';
 import { and, desc, eq } from 'drizzle-orm';
 /**
  * Crawl Jobs routes — dashboard crawl job management.
@@ -10,10 +10,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET / — List crawl jobs ────────────────────────────
 app.get('/', async (c) => {

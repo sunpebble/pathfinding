@@ -1,6 +1,6 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import {
-  createDb,
+  getDb,
   offlineTranslationPacks,
   savedTranslations,
   translationPhrases,
@@ -15,10 +15,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET /categories — List translation categories ──────
 app.get('/categories', async (c) => {

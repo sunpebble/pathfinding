@@ -1,7 +1,7 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import { randomBytes } from 'node:crypto';
 import {
-  createDb,
+  getDb,
   shareEventLogs,
   shareEvents,
   shareLinks,
@@ -17,10 +17,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 function generateShareCode(): string {
   return randomBytes(6).toString('base64url');

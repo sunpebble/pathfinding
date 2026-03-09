@@ -1,5 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, favoriteCollections } from '@pathfinding/database';
+import { favoriteCollections, getDb } from '@pathfinding/database';
 import { desc, eq } from 'drizzle-orm';
 /**
  * Collections routes — user favorite collections.
@@ -10,10 +10,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET / — List user's favorite collections ───────────
 app.get('/', async (c) => {

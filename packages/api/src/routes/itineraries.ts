@@ -1,9 +1,8 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  createDb,
+  getDb,
   itineraries,
-  itineraryCollaborators,
   itineraryDays,
   itineraryItems,
 } from '@pathfinding/database';
@@ -14,142 +13,19 @@ import { and, desc, eq, inArray } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePositiveInt } from '../lib/params.js';
 import { authOptional, authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
+import {
+  findAccessible,
+  findEditable,
+  findScopedDay,
+  findScopedItem,
+  findScopedItems,
+} from '../services/itinerary-access.service.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 type ItineraryRow = typeof itineraries.$inferSelect;
-
-function getDb() {
-  return createDb();
-}
-
-function parsePositiveInt(value: string) {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-async function getOwnedItinerary(itineraryId: number, userId: number) {
-  const db = getDb();
-
-  const result = await db
-    .select()
-    .from(itineraries)
-    .where(
-      and(
-        eq(itineraries.id, itineraryId),
-        eq(itineraries.userId, userId),
-      ),
-    )
-    .limit(1);
-
-  return result[0] ?? null;
-}
-
-async function getCollaboratorAccess(
-  itineraryId: number,
-  userId: number,
-  allowedRoles: Array<'viewer' | 'editor' | 'owner'>,
-) {
-  const db = getDb();
-
-  const result = await db
-    .select()
-    .from(itineraryCollaborators)
-    .where(
-      and(
-        eq(itineraryCollaborators.itineraryId, itineraryId),
-        eq(itineraryCollaborators.userId, userId),
-      ),
-    )
-    .limit(1);
-
-  const collaborator = result[0] ?? null;
-  if (!collaborator) {
-    return null;
-  }
-
-  return allowedRoles.includes(collaborator.role as 'viewer' | 'editor' | 'owner')
-    ? collaborator
-    : null;
-}
-
-async function getAccessibleItinerary(itineraryId: number, userId: number) {
-  const ownedItinerary = await getOwnedItinerary(itineraryId, userId);
-  if (ownedItinerary) {
-    return { itinerary: ownedItinerary, access: 'owner' as const };
-  }
-
-  const collaborator = await getCollaboratorAccess(itineraryId, userId, ['viewer', 'editor']);
-  if (!collaborator) {
-    return null;
-  }
-
-  return { itinerary: null, access: collaborator.role };
-}
-
-async function getEditableItinerary(itineraryId: number, userId: number) {
-  const ownedItinerary = await getOwnedItinerary(itineraryId, userId);
-  if (ownedItinerary) {
-    return { itinerary: ownedItinerary, access: 'owner' as const };
-  }
-
-  const collaborator = await getCollaboratorAccess(itineraryId, userId, ['editor']);
-  if (!collaborator) {
-    return null;
-  }
-
-  return { itinerary: null, access: collaborator.role };
-}
-
-async function getScopedDay(itineraryId: number, dayId: number) {
-  const db = getDb();
-
-  const result = await db
-    .select()
-    .from(itineraryDays)
-    .where(
-      and(
-        eq(itineraryDays.id, dayId),
-        eq(itineraryDays.itineraryId, itineraryId),
-      ),
-    )
-    .limit(1);
-
-  return result[0] ?? null;
-}
-
-async function getScopedItem(dayId: number, itemId: number) {
-  const db = getDb();
-
-  const result = await db
-    .select()
-    .from(itineraryItems)
-    .where(
-      and(
-        eq(itineraryItems.id, itemId),
-        eq(itineraryItems.dayId, dayId),
-      ),
-    )
-    .limit(1);
-
-  return result[0] ?? null;
-}
-
-async function getScopedItems(dayId: number, itemIds: number[]) {
-  const db = getDb();
-
-  return db
-    .select()
-    .from(itineraryItems)
-    .where(
-      and(
-        eq(itineraryItems.dayId, dayId),
-        inArray(itineraryItems.id, itemIds),
-      ),
-    )
-    .limit(itemIds.length);
-}
 
 async function getItineraryDto(itineraryId: number) {
   const db = getDb();
@@ -257,7 +133,7 @@ app.get('/:id', authOptional(), async (c) => {
       throw new ApiError(401, 'Authorization token is required');
     }
 
-    const access = await getAccessibleItinerary(itinerary.id, Number.parseInt(authUserId, 10));
+    const access = await findAccessible(itinerary.id, Number.parseInt(authUserId, 10));
     if (!access) {
       return c.json({ error: 'Itinerary not found or access denied' }, 403);
     }
@@ -464,7 +340,7 @@ app.post('/:id/days', authRequired(), zValidator('json', createDaySchema), async
     return c.json({ error: 'Invalid itinerary ID' }, 400);
   }
 
-  const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+  const editableItinerary = await findEditable(itineraryId, authUserId);
   if (!editableItinerary) {
     return c.json({ error: 'Itinerary not found or access denied' }, 403);
   }
@@ -510,12 +386,12 @@ app.post(
       return c.json({ error: 'Invalid itinerary item path' }, 400);
     }
 
-    const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+    const editableItinerary = await findEditable(itineraryId, authUserId);
     if (!editableItinerary) {
       return c.json({ error: 'Itinerary not found or access denied' }, 403);
     }
 
-    const scopedDay = await getScopedDay(itineraryId, dayId);
+    const scopedDay = await findScopedDay(itineraryId, dayId);
     if (!scopedDay) {
       return c.json({ error: 'Itinerary day not found' }, 404);
     }
@@ -568,17 +444,17 @@ app.patch(
       return c.json({ error: 'Invalid itinerary item path' }, 400);
     }
 
-    const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+    const editableItinerary = await findEditable(itineraryId, authUserId);
     if (!editableItinerary) {
       return c.json({ error: 'Itinerary not found or access denied' }, 403);
     }
 
-    const scopedDay = await getScopedDay(itineraryId, dayId);
+    const scopedDay = await findScopedDay(itineraryId, dayId);
     if (!scopedDay) {
       return c.json({ error: 'Itinerary day not found' }, 404);
     }
 
-    const scopedItems = await getScopedItems(dayId, body.itemIds);
+    const scopedItems = await findScopedItems(dayId, body.itemIds);
     if (scopedItems.length !== body.itemIds.length) {
       return c.json({ error: 'One or more itinerary items were not found' }, 404);
     }
@@ -617,17 +493,17 @@ app.patch(
       return c.json({ error: 'Invalid itinerary item path' }, 400);
     }
 
-    const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+    const editableItinerary = await findEditable(itineraryId, authUserId);
     if (!editableItinerary) {
       return c.json({ error: 'Itinerary not found or access denied' }, 403);
     }
 
-    const scopedDay = await getScopedDay(itineraryId, dayId);
+    const scopedDay = await findScopedDay(itineraryId, dayId);
     if (!scopedDay) {
       return c.json({ error: 'Itinerary day not found' }, 404);
     }
 
-    const scopedItem = await getScopedItem(dayId, itemId);
+    const scopedItem = await findScopedItem(dayId, itemId);
     if (!scopedItem) {
       return c.json({ error: 'Itinerary item not found' }, 404);
     }
@@ -675,17 +551,17 @@ app.delete('/:id/days/:dayId/items/:itemId', authRequired(), async (c) => {
     return c.json({ error: 'Invalid itinerary item path' }, 400);
   }
 
-  const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+  const editableItinerary = await findEditable(itineraryId, authUserId);
   if (!editableItinerary) {
     return c.json({ error: 'Itinerary not found or access denied' }, 403);
   }
 
-  const scopedDay = await getScopedDay(itineraryId, dayId);
+  const scopedDay = await findScopedDay(itineraryId, dayId);
   if (!scopedDay) {
     return c.json({ error: 'Itinerary day not found' }, 404);
   }
 
-  const scopedItem = await getScopedItem(dayId, itemId);
+  const scopedItem = await findScopedItem(dayId, itemId);
   if (!scopedItem) {
     return c.json({ error: 'Itinerary item not found' }, 404);
   }
@@ -710,12 +586,12 @@ app.delete('/:id/days/:dayId', authRequired(), async (c) => {
     return c.json({ error: 'Invalid itinerary day path' }, 400);
   }
 
-  const editableItinerary = await getEditableItinerary(itineraryId, authUserId);
+  const editableItinerary = await findEditable(itineraryId, authUserId);
   if (!editableItinerary) {
     return c.json({ error: 'Itinerary not found or access denied' }, 403);
   }
 
-  const scopedDay = await getScopedDay(itineraryId, dayId);
+  const scopedDay = await findScopedDay(itineraryId, dayId);
   if (!scopedDay) {
     return c.json({ error: 'Itinerary day not found' }, 404);
   }

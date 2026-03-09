@@ -1,15 +1,18 @@
 import { createLogger } from '@pathfinding/logger';
 /**
- * JWT-based authentication middleware using jose.
+ * JWT-based authentication middleware.
  *
  * Supports two modes:
  *   - `authRequired()` — request MUST have a valid Bearer token
  *   - `authOptional()` — token is decoded if present, but request proceeds either way
  *
  * On success, sets `c.set('userId', ...)` for downstream handlers.
+ *
+ * Token verification is delegated to the centralised auth service;
+ * this module only handles HTTP-level concerns (header extraction, error mapping).
  */
 import { createMiddleware } from 'hono/factory';
-import * as jose from 'jose';
+import { verifyToken } from '../services/auth.service.js';
 import { ApiError } from './error-handler.js';
 
 const log = createLogger('auth');
@@ -23,27 +26,11 @@ export interface AuthVariables {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required');
-  }
-  return new TextEncoder().encode(secret);
-}
-
 function extractToken(authHeader: string | undefined): string | null {
   if (!authHeader?.startsWith('Bearer ')) {
     return null;
   }
   return authHeader.substring(7);
-}
-
-async function verifyToken(token: string) {
-  const secret = getJwtSecret();
-  const { payload } = await jose.jwtVerify(token, secret, {
-    algorithms: ['HS256'],
-  });
-  return payload;
 }
 
 // ---------------------------------------------------------------------------

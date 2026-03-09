@@ -1,5 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, trainingDatasets } from '@pathfinding/database';
+import { getDb, trainingDatasets } from '@pathfinding/database';
 import { and, desc, eq, like, sql } from 'drizzle-orm';
 /**
  * Training Datasets routes — dashboard training dataset management.
@@ -10,10 +10,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET / — List training datasets ─────────────────────
 app.get('/', async (c) => {

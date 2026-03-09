@@ -1,6 +1,6 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
-import { chatMessages, chatSessions, createDb } from '@pathfinding/database';
+import { chatMessages, chatSessions, getDb } from '@pathfinding/database';
 import { and, desc, eq } from 'drizzle-orm';
 /**
  * Chat routes — sessions and messages.
@@ -11,10 +11,6 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 function parsePositiveInt(
   value: string | undefined,

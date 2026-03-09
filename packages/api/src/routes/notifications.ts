@@ -1,7 +1,7 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  createDb,
+  getDb,
   notifications,
   notificationSettings,
 } from '@pathfinding/database';
@@ -14,10 +14,6 @@ import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET / — List user's notifications ──────────────────
 app.get('/', async (c) => {

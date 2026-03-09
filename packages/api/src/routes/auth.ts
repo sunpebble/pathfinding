@@ -1,55 +1,21 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { Buffer } from 'node:buffer';
-import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { zValidator } from '@hono/zod-validator';
-import { authAccounts, createDb, users } from '@pathfinding/database';
+import { authAccounts, getDb, users } from '@pathfinding/database';
 import { and, eq } from 'drizzle-orm';
 /**
  * Auth routes — login, logout, verify session, current user.
  */
 import { Hono } from 'hono';
-import * as jose from 'jose';
 import { z } from 'zod';
 import { authRequired } from '../middleware/auth.js';
+import {
+  generateToken,
+  hashPassword,
+  needsPasswordMigration,
+  verifyPassword,
+} from '../services/auth.service.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
-
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
-  if (!secret)
-    throw new Error('JWT_SECRET is required');
-  return new TextEncoder().encode(secret);
-}
-
-function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString('hex');
-  const hash = scryptSync(password, salt, 64).toString('hex');
-  return `scrypt:${salt}:${hash}`;
-}
-
-function verifyPassword(password: string, storedSecret: string): boolean {
-  if (storedSecret.startsWith('scrypt:')) {
-    const [, salt, storedHashHex] = storedSecret.split(':');
-    if (!salt || !storedHashHex) {
-      return false;
-    }
-
-    const expectedHash = Buffer.from(storedHashHex, 'hex');
-    const actualHash = scryptSync(password, salt, expectedHash.length);
-
-    return (
-      expectedHash.length === actualHash.length
-      && timingSafeEqual(expectedHash, actualHash)
-    );
-  }
-
-  // Backward compatibility for legacy plain-text secrets.
-  return storedSecret === password;
-}
 
 // ── POST /signin — Email/password sign-in ──────────────
 const signinSchema = z.object({
@@ -92,11 +58,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
     });
 
     // Generate JWT
-    const token = await new jose.SignJWT({ sub: userId, email })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('30d')
-      .sign(getJwtSecret());
+    const token = await generateToken(userId, email);
 
     return c.json({
       token,
@@ -141,7 +103,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
   }
 
   // Migrate legacy plain-text secrets after successful authentication.
-  if (!account.secret.startsWith('scrypt:')) {
+  if (needsPasswordMigration(account.secret)) {
     await db
       .update(authAccounts)
       .set({ secret: hashPassword(password) })
@@ -151,11 +113,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
   const userId = String(user.id);
 
   // Generate JWT
-  const token = await new jose.SignJWT({ sub: userId, email })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('30d')
-    .sign(getJwtSecret());
+  const token = await generateToken(userId, email);
 
   return c.json({
     token,
