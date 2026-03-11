@@ -28,13 +28,12 @@ actor AIPlannerAPIClient {
         logger.info("Starting planning session: \(sessionId)")
 
         let data = try await network.postWithRetry(url: url, body: request)
-        var response = try await network.decoder.decode(AIPlanStartResponse.self, from: data)
+        var response = try network.decoder.decode(AIPlanStartResponse.self, from: data)
 
         // Inject sessionId into plan if it exists
         if var plan = response.plan {
-            var updatedPlan = plan
-            updatedPlan.sessionId = sessionId
-            response.plan = updatedPlan
+            plan.sessionId = sessionId
+            response.plan = plan
         }
 
         return response
@@ -53,13 +52,12 @@ actor AIPlannerAPIClient {
         logger.info("Submitting feedback for session: \(sessionId)")
 
         let data = try await network.postWithRetry(url: url, body: request)
-        var response = try await network.decoder.decode(AIPlanFeedbackResponse.self, from: data)
+        var response = try network.decoder.decode(AIPlanFeedbackResponse.self, from: data)
 
         // Inject sessionId into plan if it exists
         if var plan = response.plan {
-            var updatedPlan = plan
-            updatedPlan.sessionId = sessionId
-            response.plan = updatedPlan
+            plan.sessionId = sessionId
+            response.plan = plan
         }
 
         return response
@@ -73,7 +71,7 @@ actor AIPlannerAPIClient {
         logger.debug("Getting status for session: \(sessionId)")
 
         let data = try await network.fetchWithRetry(url: url)
-        return try await network.decoder.decode(AIPlanStatusResponse.self, from: data)
+        return try network.decoder.decode(AIPlanStatusResponse.self, from: data)
     }
 
     // MARK: - Get Final Result
@@ -84,12 +82,12 @@ actor AIPlannerAPIClient {
         logger.info("Getting result for session: \(sessionId)")
 
         let data = try await network.fetchWithRetry(url: url)
-        var response = try await network.decoder.decode(AIPlanResultResponse.self, from: data)
+        var response = try network.decoder.decode(AIPlanResultResponse.self, from: data)
 
         // Inject sessionId into plan
-        var updatedPlan = response.plan
-        updatedPlan.sessionId = sessionId
-        response.plan = updatedPlan
+        var plan = response.plan
+        plan.sessionId = sessionId
+        response.plan = plan
 
         return response
     }

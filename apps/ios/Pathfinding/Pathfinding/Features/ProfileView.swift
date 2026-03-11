@@ -102,6 +102,8 @@ struct ProfileView: View {
                 index: 2
               )
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(favoriteStore.totalFavoritesCount) 个收藏，\(favoriteStore.totalLikesCount) 个喜欢，0 个足迹")
 
             ExplorerDivider(style: .topographic, color: .purple.opacity(0.3))
               .padding(.horizontal, DesignTokens.Spacing.md)
@@ -131,6 +133,9 @@ struct ProfileView: View {
               }
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(followStats?.followersCount ?? 0) 个关注者，\(followStats?.followingCount ?? 0) 个关注")
+            .accessibilityHint("双击管理关注")
           }
           .padding(.vertical, DesignTokens.Spacing.xs)
         }
@@ -315,7 +320,7 @@ struct ProfileView: View {
             ExplorerSettingsRow(
               icon: "server.rack",
               title: "profile.api_config".localized,
-              subtitle: AppConfig.convexURL,
+              subtitle: AppConfig.apiBaseURL,
               iconColor: .blue,
               terrainColor: DesignTokens.Colors.Terrain.ocean,
               showChevron: true
@@ -865,7 +870,7 @@ struct SettingsRow: View {
 
 struct APISettingsSheet: View {
   @Environment(\.dismiss) private var dismiss
-  @State private var apiURL = AppConfig.convexURL
+  @State private var apiURL = AppConfig.apiBaseURL
 
   var body: some View {
     NavigationStack {

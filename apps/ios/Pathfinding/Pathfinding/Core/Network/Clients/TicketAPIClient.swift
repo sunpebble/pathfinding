@@ -5,7 +5,7 @@ actor TicketAPIClient {
   static let shared = TicketAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -28,7 +28,7 @@ actor TicketAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(PoiTicketListResponse.self, from: data)
+    let result = try decoder.decode(PoiTicketListResponse.self, from: data)
     return result.data
   }
 
@@ -37,7 +37,7 @@ actor TicketAPIClient {
     let url = await baseURL.appendingPathComponent("v1/pois/\(poiId)/tickets/price-range")
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(TicketPriceRangeResponse.self, from: data)
+    let result = try decoder.decode(TicketPriceRangeResponse.self, from: data)
     return result.data
   }
 
@@ -57,7 +57,7 @@ actor TicketAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(PoiTicketListResponse.self, from: data)
+    let result = try decoder.decode(PoiTicketListResponse.self, from: data)
     return result.data
   }
 
@@ -66,7 +66,7 @@ actor TicketAPIClient {
     let url = await baseURL.appendingPathComponent("v1/tickets/\(ticketId)")
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(PoiTicketResponse.self, from: data)
+    let result = try decoder.decode(PoiTicketResponse.self, from: data)
     return result.data
   }
 
@@ -87,7 +87,7 @@ actor TicketAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(TicketReminderListResponse.self, from: data)
+    let result = try decoder.decode(TicketReminderListResponse.self, from: data)
     return result.data
   }
 
@@ -107,7 +107,7 @@ actor TicketAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(TicketReminderListResponse.self, from: data)
+    let result = try decoder.decode(TicketReminderListResponse.self, from: data)
     return result.data
   }
 
@@ -116,7 +116,7 @@ actor TicketAPIClient {
     let url = await baseURL.appendingPathComponent("v1/ticket-reminders/unread-count")
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try await decoder.decode(TicketUnreadCountResponse.self, from: data)
+    let result = try decoder.decode(TicketUnreadCountResponse.self, from: data)
     return result.data.count
   }
 
@@ -125,7 +125,7 @@ actor TicketAPIClient {
     let url = await baseURL.appendingPathComponent("v1/ticket-reminders")
 
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(TicketReminderResponse.self, from: data)
+    let result = try decoder.decode(TicketReminderResponse.self, from: data)
     return result.data
   }
 
@@ -134,7 +134,7 @@ actor TicketAPIClient {
     let url = await baseURL.appendingPathComponent("v1/ticket-reminders/\(reminderId)")
 
     let data = try await network.patchWithRetry(url: url, body: request)
-    let result = try await decoder.decode(TicketReminderResponse.self, from: data)
+    let result = try decoder.decode(TicketReminderResponse.self, from: data)
     return result.data
   }
 
@@ -143,7 +143,7 @@ actor TicketAPIClient {
     let url = await baseURL.appendingPathComponent("v1/ticket-reminders/\(reminderId)/read")
 
     let data = try await network.postWithRetry(url: url, body: EmptyBody())
-    let result = try await decoder.decode(TicketReminderResponse.self, from: data)
+    let result = try decoder.decode(TicketReminderResponse.self, from: data)
     return result.data
   }
 
@@ -152,7 +152,7 @@ actor TicketAPIClient {
     let url = await baseURL.appendingPathComponent("v1/ticket-reminders/read-all")
 
     let data = try await network.postWithRetry(url: url, body: EmptyBody())
-    let result = try await decoder.decode(MarkAllReadResponse.self, from: data)
+    let result = try decoder.decode(MarkAllReadResponse.self, from: data)
     return result.data.count
   }
 

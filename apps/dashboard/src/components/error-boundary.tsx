@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
   override render() {
     if (this.state.hasError) {
       return (
-        this.props.fallback || (
+        this.props.fallback ?? (
           <div className="flex min-h-[400px] flex-col items-center justify-center p-8">
             <h2 className="text-xl font-semibold text-red-600">
               Something went wrong

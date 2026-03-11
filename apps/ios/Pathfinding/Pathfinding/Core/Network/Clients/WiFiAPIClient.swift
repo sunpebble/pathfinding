@@ -5,7 +5,7 @@ actor WiFiAPIClient {
   static let shared = WiFiAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -38,7 +38,7 @@ actor WiFiAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiSpotListResponse.self, from: data)
+    let result = try decoder.decode(WiFiSpotListResponse.self, from: data)
     return result.data
   }
 
@@ -73,7 +73,7 @@ actor WiFiAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiSpotListResponse.self, from: data)
+    let result = try decoder.decode(WiFiSpotListResponse.self, from: data)
     return result.data
   }
 
@@ -100,7 +100,7 @@ actor WiFiAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiSpotListResponse.self, from: data)
+    let result = try decoder.decode(WiFiSpotListResponse.self, from: data)
     return result.data
   }
 
@@ -108,7 +108,7 @@ actor WiFiAPIClient {
   func fetchWiFiSpot(id: String) async throws -> WiFiSpot {
     let url = await baseURL.appendingPathComponent("v1/wifi/spots/\(id)")
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiSpotResponse.self, from: data)
+    let result = try decoder.decode(WiFiSpotResponse.self, from: data)
     return result.data
   }
 
@@ -116,7 +116,7 @@ actor WiFiAPIClient {
   func createWiFiSpot(_ request: CreateWiFiSpotRequest) async throws -> String {
     let url = await baseURL.appendingPathComponent("v1/wifi/spots")
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(WiFiCreateResponse.self, from: data)
+    let result = try decoder.decode(WiFiCreateResponse.self, from: data)
     return result.data.id
   }
 
@@ -124,7 +124,7 @@ actor WiFiAPIClient {
   func fetchWiFiCredentials() async throws -> [WiFiCredential] {
     let url = await baseURL.appendingPathComponent("v1/wifi/credentials")
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiCredentialListResponse.self, from: data)
+    let result = try decoder.decode(WiFiCredentialListResponse.self, from: data)
     return result.data
   }
 
@@ -132,7 +132,7 @@ actor WiFiAPIClient {
   func fetchWiFiCredentialForSpot(spotId: String) async throws -> WiFiCredential? {
     let url = await baseURL.appendingPathComponent("v1/wifi/spots/\(spotId)/credential")
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiCredentialResponse.self, from: data)
+    let result = try decoder.decode(WiFiCredentialResponse.self, from: data)
     return result.data
   }
 
@@ -140,7 +140,7 @@ actor WiFiAPIClient {
   func fetchSharedWiFiCredentials() async throws -> [WiFiCredential] {
     let url = await baseURL.appendingPathComponent("v1/wifi/credentials/shared")
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiCredentialListResponse.self, from: data)
+    let result = try decoder.decode(WiFiCredentialListResponse.self, from: data)
     return result.data
   }
 
@@ -148,7 +148,7 @@ actor WiFiAPIClient {
   func createWiFiCredential(_ request: CreateWiFiCredentialRequest) async throws -> String {
     let url = await baseURL.appendingPathComponent("v1/wifi/credentials")
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(WiFiCreateResponse.self, from: data)
+    let result = try decoder.decode(WiFiCreateResponse.self, from: data)
     return result.data.id
   }
 
@@ -187,7 +187,7 @@ actor WiFiAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiReviewListResponse.self, from: data)
+    let result = try decoder.decode(WiFiReviewListResponse.self, from: data)
     return result.data
   }
 
@@ -195,7 +195,7 @@ actor WiFiAPIClient {
   func fetchUserWiFiReview(spotId: String) async throws -> WiFiReview? {
     let url = await baseURL.appendingPathComponent("v1/wifi/spots/\(spotId)/reviews/me")
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(WiFiReviewResponse.self, from: data)
+    let result = try decoder.decode(WiFiReviewResponse.self, from: data)
     return result.data
   }
 
@@ -203,7 +203,7 @@ actor WiFiAPIClient {
   func createWiFiReview(_ request: CreateWiFiReviewRequest) async throws -> String {
     let url = await baseURL.appendingPathComponent("v1/wifi/reviews")
     let data = try await network.postWithRetry(url: url, body: request)
-    let result = try await decoder.decode(WiFiCreateResponse.self, from: data)
+    let result = try decoder.decode(WiFiCreateResponse.self, from: data)
     return result.data.id
   }
 

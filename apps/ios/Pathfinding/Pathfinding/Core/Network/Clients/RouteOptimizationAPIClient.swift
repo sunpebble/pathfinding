@@ -5,7 +5,7 @@ actor RouteOptimizationAPIClient {
   static let shared = RouteOptimizationAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -18,7 +18,7 @@ actor RouteOptimizationAPIClient {
 
     let body = OptimizeDayRequest(day: day, options: options)
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(OptimizedRouteResponse.self, from: data)
+    let result = try decoder.decode(OptimizedRouteResponse.self, from: data)
     return result.data
   }
 
@@ -28,7 +28,7 @@ actor RouteOptimizationAPIClient {
 
     let body = OptimizeItineraryRequest(days: days, options: options)
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(OptimizedItineraryResponse.self, from: data)
+    let result = try decoder.decode(OptimizedItineraryResponse.self, from: data)
     return result.data
   }
 
@@ -38,7 +38,7 @@ actor RouteOptimizationAPIClient {
 
     let body = OptimizeDayRequest(day: day, options: options)
     let data = try await network.postWithRetry(url: url, body: body)
-    let result = try await decoder.decode(RouteComparisonResponse.self, from: data)
+    let result = try decoder.decode(RouteComparisonResponse.self, from: data)
     return result.data
   }
 
@@ -46,7 +46,7 @@ actor RouteOptimizationAPIClient {
   func getTransportModes() async throws -> [RouteTransportModeInfo] {
     let url = await baseURL.appendingPathComponent("v1/route-optimization/transport-modes")
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(TransportModesResponse.self, from: data)
+    let result = try decoder.decode(TransportModesResponse.self, from: data)
     return result.data
   }
 }

@@ -697,6 +697,8 @@ private struct ShareCardFooter: View {
       title: "东京5日深度游攻略 | 小众景点+美食推荐",
       authorName: "旅行达人小明",
       content: nil,
+      contentHtml: nil,
+      contentMarkdown: nil,
       summary: nil,
       coverImageUrl: nil,
       imageUrls: nil,

@@ -21,6 +21,8 @@ import * as React from 'react';
 import { useState } from 'react';
 import { GeocodingConfidenceBadge } from '@/components/geocoding-confidence-badge';
 import { PoiEditor } from '@/components/poi-editor';
+import { SafeHtml } from '@/components/safe-html';
+import { PlatformBadge } from '@/components/ui/platform-badge';
 import { getTravelGuide } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -29,35 +31,6 @@ const FALLBACK_IMAGE_SRC
 
 function handleImageError(e: React.SyntheticEvent<HTMLImageElement>) {
   e.currentTarget.src = FALLBACK_IMAGE_SRC;
-}
-
-function PlatformBadge({ platform }: { platform: string }) {
-  const colors: Record<string, string> = {
-    ctrip: 'bg-blue-100 text-blue-800 border-blue-200',
-    xiaohongshu: 'bg-red-100 text-red-800 border-red-200',
-    weibo: 'bg-orange-100 text-orange-800 border-orange-200',
-    tongcheng: 'bg-purple-100 text-purple-800 border-purple-200',
-    mafengwo: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    qunar: 'bg-green-100 text-green-800 border-green-200',
-  };
-  const names: Record<string, string> = {
-    ctrip: '携程',
-    xiaohongshu: '小红书',
-    weibo: '微博',
-    tongcheng: '同程旅行',
-    mafengwo: '马蜂窝',
-    qunar: '去哪儿',
-  };
-  return (
-    <span
-      className={cn(
-        'px-3 py-1 rounded-full text-sm font-medium border',
-        colors[platform] || 'bg-gray-100 text-gray-800 border-gray-200',
-      )}
-    >
-      {names[platform] || platform}
-    </span>
-  );
 }
 
 function StatCard({
@@ -114,6 +87,39 @@ export default function GuideDetailPage() {
   });
 
   const guide = data?.data as unknown as GuideWithAI | undefined;
+  const aiTips = guide?.aiTips ?? guide?.ai_tips;
+
+  const aiTipsWithKeys = React.useMemo(() => {
+    if (!aiTips)
+      return [] as Array<{ key: string; tip: string }>;
+
+    const occurrences = new Map<string, number>();
+    return aiTips.map((tip) => {
+      const currentCount = occurrences.get(tip) ?? 0;
+      occurrences.set(tip, currentCount + 1);
+      return {
+        key: `${tip}-${currentCount}`,
+        tip,
+      };
+    });
+  }, [aiTips]);
+
+  const contentParagraphsWithKeys = React.useMemo(() => {
+    if (!guide?.content)
+      return [] as Array<{ key: string; paragraph: string }>;
+
+    const occurrences = new Map<string, number>();
+    return guide.content.split(/\n{2,}/).map((paragraph) => {
+      const trimmedParagraph = paragraph.trim();
+      const currentCount = occurrences.get(trimmedParagraph) ?? 0;
+      occurrences.set(trimmedParagraph, currentCount + 1);
+
+      return {
+        key: `${trimmedParagraph}-${currentCount}`,
+        paragraph: trimmedParagraph,
+      };
+    });
+  }, [guide?.content]);
 
   if (isLoading) {
     return (
@@ -161,7 +167,7 @@ export default function GuideDetailPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
-              <PlatformBadge platform={guide.source_platform} />
+              <PlatformBadge platform={guide.source_platform} size="lg" />
               <div className="flex items-center gap-1 text-amber-500">
                 <Star className="h-4 w-4 fill-current" />
                 <span className="text-sm font-medium">
@@ -282,24 +288,84 @@ export default function GuideDetailPage() {
         )}
       </div>
 
+      {/* AI Summary & Tips */}
+      {(guide.aiSummary || guide.ai_summary || guide.aiTips || guide.ai_tips || guide.aiBestTime || guide.ai_best_time) && (
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <span className="text-purple-600">✨</span>
+            AI 分析摘要
+          </h2>
+
+          {(guide.aiSummary || guide.ai_summary) && (
+            <div className="mb-4">
+              <p className="text-gray-700 leading-relaxed">
+                {guide.aiSummary || guide.ai_summary}
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {(guide.aiDuration || guide.ai_duration) && (
+              <div className="bg-white/80 rounded-lg p-3 border border-purple-100">
+                <div className="text-xs text-gray-500 mb-1">⏱ 建议行程</div>
+                <div className="font-medium text-gray-900">{guide.aiDuration || guide.ai_duration}</div>
+              </div>
+            )}
+            {(guide.aiBudget || guide.ai_budget) && (
+              <div className="bg-white/80 rounded-lg p-3 border border-purple-100">
+                <div className="text-xs text-gray-500 mb-1">💰 预算参考</div>
+                <div className="font-medium text-gray-900">{guide.aiBudget || guide.ai_budget}</div>
+              </div>
+            )}
+            {(guide.aiBestTime || guide.ai_best_time) && (
+              <div className="bg-white/80 rounded-lg p-3 border border-purple-100">
+                <div className="text-xs text-gray-500 mb-1">📅 最佳时间</div>
+                <div className="font-medium text-gray-900">{guide.aiBestTime || guide.ai_best_time}</div>
+              </div>
+            )}
+          </div>
+
+          {aiTipsWithKeys.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">💡 实用贴士</h3>
+              <ul className="space-y-1.5">
+                {aiTipsWithKeys.map(({ key, tip }) => (
+                  <li key={key} className="flex items-start gap-2 text-sm text-gray-600">
+                    <span className="text-purple-400 mt-0.5 flex-shrink-0">•</span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Content */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Content</h2>
-        {guide.content_html ? (
-          // Render rich text HTML content
-          <div
-            className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
-            // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
-            dangerouslySetInnerHTML={{ __html: guide.content_html }}
-          />
-        ) : (
-          // Fallback to plain text
-          <div className="prose prose-gray max-w-none">
-            <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-              {guide.content || 'No content available'}
-            </p>
-          </div>
-        )}
+        {guide.content_html
+          ? (
+              // Render rich text HTML content safely
+              <SafeHtml
+                html={guide.content_html}
+                className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
+              />
+            )
+          : guide.content
+            ? (
+                // Plain text with paragraph formatting
+                <div className="prose prose-gray max-w-none">
+                  {contentParagraphsWithKeys.map(({ key, paragraph }) => (
+                    <p key={key} className="text-gray-700 leading-relaxed mb-4">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              )
+            : (
+                <p className="text-gray-400 italic">暂无内容</p>
+              )}
       </div>
 
       {/* Images */}
@@ -390,6 +456,14 @@ export default function GuideDetailPage() {
                     const isLowConfidence
                       = poi.geocodeConfidence !== undefined
                         && poi.geocodeConfidence < 0.5;
+                    const latitudeText
+                      = typeof poi.latitude === 'number'
+                        ? poi.latitude.toFixed(6)
+                        : 'N/A';
+                    const longitudeText
+                      = typeof poi.longitude === 'number'
+                        ? poi.longitude.toFixed(6)
+                        : 'N/A';
 
                     return (
                       <div
@@ -427,10 +501,10 @@ export default function GuideDetailPage() {
                                 </p>
                               )}
                               <p className="text-xs text-gray-400 mt-1 font-mono">
-                                {poi.latitude.toFixed(6)}
+                                {latitudeText}
                                 ,
                                 {' '}
-                                {poi.longitude.toFixed(6)}
+                                {longitudeText}
                               </p>
                             </div>
 
@@ -464,6 +538,7 @@ export default function GuideDetailPage() {
       {/* POI Editor Modal */}
       {editingPoi && (
         <PoiEditor
+          key={`${editingPoi.dayNumber}-${editingPoi.poiIndex}-${editingPoi.poi.latitude}-${editingPoi.poi.longitude}`}
           isOpen={true}
           onClose={() => {
             setEditingPoi(null);

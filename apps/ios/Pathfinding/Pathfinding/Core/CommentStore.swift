@@ -151,23 +151,23 @@ final class CommentStore {
         await fetchReplies(commentId: parentId)
         // Update local repliesCount for the parent comment
         if let index = comments.firstIndex(where: { $0.id == parentId }) {
-          var updated = comments[index]
+          let existing = comments[index]
           // Create a new comment with incremented repliesCount
           comments[index] = ItineraryComment(
-            id: updated.id,
-            itineraryId: updated.itineraryId,
-            userId: updated.userId,
-            parentId: updated.parentId,
-            content: updated.content,
-            likesCount: updated.likesCount,
-            repliesCount: updated.repliesCount + 1,
-            isEdited: updated.isEdited,
-            isDeleted: updated.isDeleted,
-            createdAt: updated.createdAt,
-            updatedAt: updated.updatedAt,
-            authorName: updated.authorName,
-            authorAvatar: updated.authorAvatar,
-            isLikedByUser: updated.isLikedByUser
+            id: existing.id,
+            itineraryId: existing.itineraryId,
+            userId: existing.userId,
+            parentId: existing.parentId,
+            content: existing.content,
+            likesCount: existing.likesCount,
+            repliesCount: existing.repliesCount + 1,
+            isEdited: existing.isEdited,
+            isDeleted: existing.isDeleted,
+            createdAt: existing.createdAt,
+            updatedAt: existing.updatedAt,
+            authorName: existing.authorName,
+            authorAvatar: existing.authorAvatar,
+            isLikedByUser: existing.isLikedByUser
           )
         }
       } else {
@@ -233,22 +233,22 @@ final class CommentStore {
           replies[parentId]?.remove(at: index)
           // Update parent's repliesCount
           if let parentIndex = comments.firstIndex(where: { $0.id == parentId }) {
-            var updated = comments[parentIndex]
+            let existing = comments[parentIndex]
             comments[parentIndex] = ItineraryComment(
-              id: updated.id,
-              itineraryId: updated.itineraryId,
-              userId: updated.userId,
-              parentId: updated.parentId,
-              content: updated.content,
-              likesCount: updated.likesCount,
-              repliesCount: max(0, updated.repliesCount - 1),
-              isEdited: updated.isEdited,
-              isDeleted: updated.isDeleted,
-              createdAt: updated.createdAt,
-              updatedAt: updated.updatedAt,
-              authorName: updated.authorName,
-              authorAvatar: updated.authorAvatar,
-              isLikedByUser: updated.isLikedByUser
+              id: existing.id,
+              itineraryId: existing.itineraryId,
+              userId: existing.userId,
+              parentId: existing.parentId,
+              content: existing.content,
+              likesCount: existing.likesCount,
+              repliesCount: max(0, existing.repliesCount - 1),
+              isEdited: existing.isEdited,
+              isDeleted: existing.isDeleted,
+              createdAt: existing.createdAt,
+              updatedAt: existing.updatedAt,
+              authorName: existing.authorName,
+              authorAvatar: existing.authorAvatar,
+              isLikedByUser: existing.isLikedByUser
             )
           }
           break

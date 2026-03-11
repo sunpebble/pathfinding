@@ -184,10 +184,17 @@ function MessageBubble({
 }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = useCallback((text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = useCallback(async (text: string) => {
+    if (!text || !navigator.clipboard?.writeText) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+    catch {}
   }, []);
 
   // Get the full text content for copy action

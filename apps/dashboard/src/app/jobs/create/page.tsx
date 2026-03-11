@@ -32,6 +32,14 @@ export default function CreateJobPage() {
 
     const categories = formData.get('categories') as string;
     const cities = formData.get('cities') as string;
+    const parsedCategories = categories
+      .split(',')
+      .map(c => c.trim())
+      .filter(Boolean);
+    const parsedCities = cities
+      .split(',')
+      .map(c => c.trim())
+      .filter(Boolean);
 
     const input: CreateCrawlJobInput = {
       name: formData.get('name') as string,
@@ -39,11 +47,11 @@ export default function CreateJobPage() {
       job_type: (formData.get('job_type') as string) || 'full',
       schedule_cron: (formData.get('schedule_cron') as string) || undefined,
       config: {
-        categories: categories
-          ? categories.split(',').map(c => c.trim())
+        categories: parsedCategories.length > 0
+          ? parsedCategories
           : undefined,
-        geographic_scope: cities
-          ? { cities: cities.split(',').map(c => c.trim()) }
+        geographic_scope: parsedCities.length > 0
+          ? { cities: parsedCities }
           : undefined,
         rate_limit: {
           requests_per_second:

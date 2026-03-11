@@ -20,6 +20,7 @@ struct BlogDetailView: View {
   @State private var mapCameraPosition: MapCameraPosition = .automatic
   @State private var mapCameraInitialized = false
   @State private var selectedMapPoi: AiPoi?
+  @State private var isArticleExpanded = true
 
   private var displayImages: [String] {
     if let images = guide.imageUrls, !images.isEmpty {
@@ -157,6 +158,9 @@ struct BlogDetailView: View {
             aiSummarySection(summary)
           }
 
+          // Article Content (Rich Text or Plain Text)
+          articleContentSection
+
           // Itinerary Days
           if let days = guide.aiDays, !days.isEmpty {
             itinerarySection(days)
@@ -195,6 +199,8 @@ struct BlogDetailView: View {
             .foregroundStyle(isLiked ? .red : .secondary)
             .symbolEffect(.bounce, value: isLiked)
         }
+        .accessibilityLabel(isLiked ? "取消喜欢" : "喜欢")
+        .accessibilityHint(isLiked ? "取消喜欢这篇攻略" : "标记喜欢这篇攻略")
 
         Button {
           withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
@@ -205,12 +211,16 @@ struct BlogDetailView: View {
             .foregroundStyle(isSaved ? .orange : .secondary)
             .symbolEffect(.bounce, value: isSaved)
         }
+        .accessibilityLabel(isSaved ? "取消收藏" : "收藏")
+        .accessibilityHint(isSaved ? "取消收藏这篇攻略" : "收藏这篇攻略")
 
         Button {
           showShareSheet = true
         } label: {
           Image(systemName: "square.and.arrow.up")
         }
+        .accessibilityLabel("分享")
+        .accessibilityHint("分享这篇攻略")
 
         // PDF Export button
         if guide.aiDays != nil {
@@ -219,6 +229,8 @@ struct BlogDetailView: View {
           } label: {
             Image(systemName: "doc.richtext")
           }
+          .accessibilityLabel("导出 PDF")
+          .accessibilityHint("将攻略导出为 PDF 文件")
         }
       }
     }
@@ -559,6 +571,37 @@ struct BlogDetailView: View {
         .fill(DesignTokens.Colors.aiPurple.opacity(0.08))
     )
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+  }
+
+  // MARK: - Article Content Section
+
+  @ViewBuilder
+  private var articleContentSection: some View {
+    if let contentMarkdown = guide.contentMarkdown, !contentMarkdown.isEmpty {
+      DisclosureGroup(isExpanded: $isArticleExpanded) {
+        MarkdownContentView(markdown: contentMarkdown)
+          .padding(.top, DesignTokens.Spacing.sm)
+      } label: {
+        Label("原文内容", systemImage: "doc.richtext")
+          .font(.headline)
+      }
+    } else if let contentHtml = guide.contentHtml, !contentHtml.isEmpty {
+      DisclosureGroup(isExpanded: $isArticleExpanded) {
+        RichTextContentView(html: contentHtml)
+          .padding(.top, DesignTokens.Spacing.sm)
+      } label: {
+        Label("原文内容", systemImage: "doc.richtext")
+          .font(.headline)
+      }
+    } else if let content = guide.content, !content.isEmpty {
+      DisclosureGroup(isExpanded: $isArticleExpanded) {
+        PlainTextContentView(content: content)
+          .padding(.top, DesignTokens.Spacing.sm)
+      } label: {
+        Label("原文内容", systemImage: "doc.text")
+          .font(.headline)
+      }
+    }
   }
 
   // MARK: - Itinerary Section

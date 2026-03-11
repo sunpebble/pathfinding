@@ -5,7 +5,7 @@ actor GuideAPIClient {
   static let shared = GuideAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -28,7 +28,7 @@ actor GuideAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url, forceRefresh: forceRefresh)
-    let result = try await decoder.decode(BlogListResponse.self, from: data)
+    let result = try decoder.decode(BlogListResponse.self, from: data)
     return result.data
   }
 
@@ -47,7 +47,7 @@ actor GuideAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    return try await decoder.decode(BlogPost.self, from: data)
+    return try decoder.decode(BlogPost.self, from: data)
   }
 
   /// Search guides with filters
@@ -85,7 +85,7 @@ actor GuideAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(BlogListResponse.self, from: data)
+    let result = try decoder.decode(BlogListResponse.self, from: data)
     return result.data
   }
 
@@ -107,7 +107,7 @@ actor GuideAPIClient {
       let data: [PopularDestination]
     }
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(Response.self, from: data)
+    let result = try decoder.decode(Response.self, from: data)
     return result.data
   }
 }

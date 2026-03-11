@@ -25,28 +25,30 @@ struct ItineraryListView: View {
       .navigationTitle("我的行程")
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          HStack(spacing: DesignTokens.Spacing.sm) {
+          Menu {
             Button {
               showAIPlanner = true
             } label: {
-              Image(systemName: "sparkles")
-                .symbolRenderingMode(.hierarchical)
+              Label("AI 规划", systemImage: "sparkles")
             }
 
             Button {
               showVoiceItinerary = true
             } label: {
-              Image(systemName: "mic.fill")
-                .symbolRenderingMode(.hierarchical)
+              Label("语音输入", systemImage: "mic.fill")
             }
 
             Button {
               showDiscovery = true
             } label: {
-              Image(systemName: "globe")
-                .symbolRenderingMode(.hierarchical)
+              Label("发现公共行程", systemImage: "globe")
             }
+          } label: {
+            Image(systemName: "ellipsis.circle")
+              .symbolRenderingMode(.hierarchical)
           }
+          .accessibilityLabel("更多操作")
+          .accessibilityHint("打开菜单，包含 AI 规划、语音输入和发现公共行程")
         }
         ToolbarItem(placement: .topBarTrailing) {
           Button {
@@ -55,6 +57,8 @@ struct ItineraryListView: View {
             Image(systemName: "plus.circle.fill")
               .symbolRenderingMode(.hierarchical)
           }
+          .accessibilityLabel("新建行程")
+          .accessibilityHint("创建一个新的旅行行程")
         }
       }
       .sheet(isPresented: $showCreateSheet) {
@@ -309,20 +313,56 @@ struct CreateItinerarySheet: View {
   @State private var destination = ""
   @State private var startDate = Date()
   @State private var endDate = Date().addingTimeInterval(3 * 24 * 60 * 60)
-  
+  @State private var hasAttemptedSubmit = false
+
   let onCreate: (SavedItinerary) -> Void
-  
+
+  private let titleMaxLength = 30
+
+  private var isDateRangeValid: Bool {
+    endDate >= startDate
+  }
+
+  private var isTitleEmpty: Bool {
+    title.trimmingCharacters(in: .whitespaces).isEmpty
+  }
+
+  private var isFormValid: Bool {
+    !isTitleEmpty && isDateRangeValid
+  }
+
   var body: some View {
     NavigationStack {
       Form {
         Section("基本信息") {
           TextField("行程名称", text: $title)
+            .onChange(of: title) { _, newValue in
+              if newValue.count > titleMaxLength {
+                title = String(newValue.prefix(titleMaxLength))
+              }
+            }
+          HStack {
+            if hasAttemptedSubmit && isTitleEmpty {
+              Text("请输入行程名称")
+                .font(.caption)
+                .foregroundStyle(.red)
+            }
+            Spacer()
+            Text("\(title.count)/\(titleMaxLength)")
+              .font(.caption)
+              .foregroundStyle(title.count > titleMaxLength * 9 / 10 ? (title.count >= titleMaxLength ? .red : .orange) : .secondary)
+          }
           TextField("目的地", text: $destination)
         }
-        
+
         Section("时间安排") {
           DatePicker("开始日期", selection: $startDate, displayedComponents: .date)
           DatePicker("结束日期", selection: $endDate, displayedComponents: .date)
+          if !isDateRangeValid {
+            Text("结束日期不能早于开始日期")
+              .font(.caption)
+              .foregroundStyle(.red)
+          }
         }
       }
       .navigationTitle("新建行程")
@@ -333,6 +373,8 @@ struct CreateItinerarySheet: View {
         }
         ToolbarItem(placement: .topBarTrailing) {
           Button("创建") {
+            hasAttemptedSubmit = true
+            guard isFormValid else { return }
             let daysInfo = Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 1
             let itinerary = SavedItinerary(
               title: title.isEmpty ? "我的行程" : title,
@@ -343,7 +385,7 @@ struct CreateItinerarySheet: View {
             dismiss()
           }
           .fontWeight(.semibold)
-          .disabled(title.isEmpty)
+          .disabled(!isFormValid)
         }
       }
     }
@@ -519,6 +561,10 @@ struct SavedItineraryDetailView: View {
                             }
                           }
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("第 \(poiIndex + 1) 站，\(poi.name)")
+                        .accessibilityValue(isSelected ? "已选中" : "")
+                        .accessibilityHint("双击在地图上定位")
                       }
                     }
                     .padding(.leading, 4)

@@ -8,6 +8,8 @@ struct ChatSessionListView: View {
   @State private var showNewSessionSheet = false
   @State private var showDeleteAlert = false
   @State private var sessionToDelete: ChatSession?
+  @State private var swipeHintOffset: CGFloat = 0
+  @AppStorage("hasShownSwipeHint") private var hasShownSwipeHint = false
 
   let userId: String
 
@@ -37,6 +39,8 @@ struct ChatSessionListView: View {
           } label: {
             Image(systemName: "plus.circle.fill")
           }
+          .accessibilityLabel("新建对话")
+          .accessibilityHint("创建一个新的聊天对话")
         }
       }
       .task {
@@ -69,12 +73,13 @@ struct ChatSessionListView: View {
 
   private var sessionsList: some View {
     List {
-      ForEach(store.sessions) { session in
+      ForEach(Array(store.sessions.enumerated()), id: \.element.id) { index, session in
         NavigationLink {
           ChatConversationView(session: session, store: store)
         } label: {
           SessionRow(session: session)
         }
+        .offset(x: index == 0 ? swipeHintOffset : 0)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
           Button(role: .destructive) {
             sessionToDelete = session
@@ -92,9 +97,39 @@ struct ChatSessionListView: View {
           }
           .tint(.orange)
         }
+        .contextMenu {
+          Button {
+            Task {
+              _ = await store.archiveSession(session)
+            }
+          } label: {
+            Label("归档", systemImage: "archivebox")
+          }
+
+          Button(role: .destructive) {
+            sessionToDelete = session
+            showDeleteAlert = true
+          } label: {
+            Label("删除", systemImage: "trash")
+          }
+        }
       }
     }
     .listStyle(.insetGrouped)
+    .onAppear {
+      guard !hasShownSwipeHint, !store.sessions.isEmpty else { return }
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+        withAnimation(.easeInOut(duration: 0.4)) {
+          swipeHintOffset = -40
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+          withAnimation(.easeInOut(duration: 0.3)) {
+            swipeHintOffset = 0
+          }
+          hasShownSwipeHint = true
+        }
+      }
+    }
   }
 }
 
@@ -367,6 +402,8 @@ struct ChatConversationView: View {
         } label: {
           Image(systemName: "ellipsis.circle")
         }
+        .accessibilityLabel("更多操作")
+        .accessibilityHint("打开菜单，包含清空对话等选项")
       }
     }
     .task {

@@ -1,4 +1,20 @@
 services:
+  tidb:
+    image: pingcap/tidb:v8.5.0
+    ports:
+      - '4000:4000' # MySQL protocol port
+      - '10080:10080' # TiDB status port
+    volumes:
+      - tidb-data:/tmp/tidb
+    environment:
+      - TIDB_ENABLE_TELEMETRY=0
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1, -P, '4000', -u, root]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: .
@@ -9,7 +25,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=8000
-      - CONVEX_URL=${CONVEX_URL}
+      - DATABASE_URL=mysql://root@tidb:4000/pathfinding
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
     healthcheck:
@@ -26,6 +42,9 @@ services:
       start_period: 5s
       retries: 3
     restart: unless-stopped
+    depends_on:
+      tidb:
+        condition: service_healthy
 
   crawler:
     build:
@@ -37,7 +56,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3001
-      - CONVEX_URL=${CONVEX_URL}
+      - DATABASE_URL=mysql://root@tidb:4000/pathfinding
       - AMAP_API_KEY=${AMAP_API_KEY:-}
       - AMAP_SECRET_KEY=${AMAP_SECRET_KEY:-}
       - OVERPASS_API_URL=${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
@@ -76,6 +95,8 @@ services:
       retries: 3
     restart: unless-stopped
     depends_on:
+      tidb:
+        condition: service_healthy
       ollama:
         condition: service_healthy
       n8n:
@@ -137,7 +158,7 @@ services:
       - GENERIC_TIMEZONE=${TZ:-Asia/Shanghai}
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-your-encryption-key-here}
       # External service connections
-      - CONVEX_URL=${CONVEX_URL}
+      - DATABASE_URL=mysql://root@tidb:4000/pathfinding
       - CRAWLER_API_URL=http://crawler:3001
     volumes:
       - n8n-data:/home/node/.n8n
@@ -149,6 +170,9 @@ services:
       start_period: 30s
       retries: 3
     restart: unless-stopped
+    depends_on:
+      tidb:
+        condition: service_healthy
 
   # ComfyUI - AI image generation for travel guide illustrations
   comfyui:
@@ -177,6 +201,7 @@ services:
               capabilities: [gpu]
 
 volumes:
+  tidb-data:
   crawler-storage:
   ollama-models:
   n8n-data:

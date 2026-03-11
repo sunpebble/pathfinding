@@ -5,7 +5,7 @@ actor CityAPIClient {
   static let shared = CityAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -17,7 +17,7 @@ actor CityAPIClient {
     let url = await baseURL.appendingPathComponent("v1/cities/\(cityId)/encyclopedia")
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(CityEncyclopediaResponse.self, from: data)
+    let result = try decoder.decode(CityEncyclopediaResponse.self, from: data)
     return result.data
   }
 
@@ -44,7 +44,7 @@ actor CityAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(CitiesWithEncyclopediaResponse.self, from: data)
+    let result = try decoder.decode(CitiesWithEncyclopediaResponse.self, from: data)
     return result.data
   }
 
@@ -64,7 +64,7 @@ actor CityAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(CitiesWithEncyclopediaResponse.self, from: data)
+    let result = try decoder.decode(CitiesWithEncyclopediaResponse.self, from: data)
     return result.data
   }
 
@@ -73,7 +73,7 @@ actor CityAPIClient {
     let url = await baseURL.appendingPathComponent("v1/cities/country/\(countryCode)")
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(CitiesWithEncyclopediaResponse.self, from: data)
+    let result = try decoder.decode(CitiesWithEncyclopediaResponse.self, from: data)
     return result.data
   }
 }

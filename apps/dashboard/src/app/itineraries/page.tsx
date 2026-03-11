@@ -1,36 +1,28 @@
 'use client';
 
-import { api } from '@pathfinding/convex-client';
-import { useQuery } from 'convex/react';
+import type { ItinerarySummary } from '@/lib/api/itineraries';
+import { useQuery } from '@tanstack/react-query';
 import { Calendar, Eye, MapPin, Search, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import {
+  getItineraries,
+
+  normalizeItinerariesResponse,
+} from '@/lib/api/itineraries';
 import { cn } from '@/lib/utils';
-
-// For development - in production this would come from auth
-const TEST_USER_ID = 'test-user-1';
-
-interface Itinerary {
-  _id: string;
-  title: string;
-  cityName?: string;
-  startDate: string;
-  endDate: string;
-  visibility: 'private' | 'team' | 'public';
-  coverImageUrl?: string;
-  daysCount: number;
-  _creationTime: number;
-}
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
   const colors: Record<string, string> = {
     private: 'bg-gray-100 text-gray-800',
-    team: 'bg-blue-100 text-blue-800',
+    friends: 'bg-blue-100 text-blue-800',
     public: 'bg-green-100 text-green-800',
   };
   const labels: Record<string, string> = {
     private: 'Private',
-    team: 'Team',
+    friends: 'Friends',
     public: 'Public',
   };
   return (
@@ -62,9 +54,9 @@ function formatDateRange(startDate: string, endDate: string) {
   return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
 }
 
-function ItineraryCard({ itinerary }: { itinerary: Itinerary }) {
+function ItineraryCard({ itinerary }: { itinerary: ItinerarySummary }) {
   return (
-    <Link href={`/itineraries/${itinerary._id}`}>
+    <Link href={`/itineraries/${itinerary.id}`}>
       <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer">
         <div className="flex gap-4">
           {/* Cover Image */}
@@ -121,18 +113,34 @@ function ItineraryCard({ itinerary }: { itinerary: Itinerary }) {
 }
 
 export default function ItinerariesPage() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  const result = useQuery(api.itineraries.listByUser, {
-    userId: TEST_USER_ID,
-    page,
-    pageSize,
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace('/auth/signin');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  const result = useQuery({
+    queryKey: ['itineraries', user?.id, page, pageSize],
+    enabled: Boolean(isAuthenticated && user?.id),
+    queryFn: () => getItineraries({
+      userId: user!.id,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    }),
   });
 
-  const itineraries = result?.data || [];
-  const total = result?.total || 0;
+  const normalizedResult = result.data
+    ? normalizeItinerariesResponse(result.data)
+    : undefined;
+
+  const itineraries = normalizedResult?.data ?? [];
+  const total = normalizedResult?.pagination.total ?? 0;
   const totalPages = Math.ceil(total / pageSize);
 
   // Client-side search filter
@@ -144,7 +152,11 @@ export default function ItinerariesPage() {
       )
     : itineraries;
 
-  const isLoading = result === undefined;
+  const isLoading = authLoading || (isAuthenticated && result.isLoading);
+
+  if (!authLoading && !isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
@@ -221,7 +233,7 @@ export default function ItinerariesPage() {
       {!isLoading && filteredItineraries.length > 0 && (
         <div className="space-y-4">
           {filteredItineraries.map(itinerary => (
-            <ItineraryCard key={itinerary._id} itinerary={itinerary} />
+            <ItineraryCard key={itinerary.id} itinerary={itinerary} />
           ))}
         </div>
       )}
@@ -230,6 +242,7 @@ export default function ItinerariesPage() {
       {!isLoading && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-4">
           <button
+            type="button"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -246,6 +259,7 @@ export default function ItinerariesPage() {
             {totalPages}
           </span>
           <button
+            type="button"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"

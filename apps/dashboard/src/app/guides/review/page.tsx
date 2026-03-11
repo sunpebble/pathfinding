@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { PlatformBadge } from '@/components/ui/platform-badge';
 import { getTravelGuides } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -25,35 +26,6 @@ const PLATFORMS = [
   { value: 'mafengwo', label: '马蜂窝' },
   { value: 'qunar', label: '去哪儿' },
 ];
-
-function PlatformBadge({ platform }: { platform: string }) {
-  const colors: Record<string, string> = {
-    ctrip: 'bg-blue-100 text-blue-800',
-    xiaohongshu: 'bg-red-100 text-red-800',
-    weibo: 'bg-orange-100 text-orange-800',
-    tongcheng: 'bg-purple-100 text-purple-800',
-    mafengwo: 'bg-yellow-100 text-yellow-800',
-    qunar: 'bg-green-100 text-green-800',
-  };
-  const names: Record<string, string> = {
-    ctrip: '携程',
-    xiaohongshu: '小红书',
-    weibo: '微博',
-    tongcheng: '同程旅行',
-    mafengwo: '马蜂窝',
-    qunar: '去哪儿',
-  };
-  return (
-    <span
-      className={cn(
-        'px-2 py-0.5 rounded-full text-xs font-medium',
-        colors[platform] || 'bg-gray-100 text-gray-800',
-      )}
-    >
-      {names[platform] || platform}
-    </span>
-  );
-}
 
 function QualityScore({ score }: { score: number }) {
   const percentage = Math.round(score * 100);
@@ -173,7 +145,7 @@ export default function ReviewGuidesPage() {
     queryFn: () =>
       getTravelGuides({
         platforms: platform || undefined,
-        min_quality: 0.5,
+        max_quality: 0.5,
         limit: pageSize,
         offset: page * pageSize,
         sort: 'quality_score',
@@ -246,68 +218,74 @@ export default function ReviewGuidesPage() {
       </div>
 
       {/* Content */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
-          Failed to load guides. Please try again.
-        </div>
-      ) : guides.length === 0 ? (
-        <div className="text-center py-12">
-          <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No guides need review</p>
-          <p className="text-sm text-gray-400 mt-1">
-            All guides have acceptable quality scores
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* Guides Grid */}
-          <div className="grid gap-4 md:grid-cols-2">
-            {guides.map(guide => (
-              <Link key={guide.id} href={`/guides/${guide.id}`}>
-                <GuideCard guide={guide} />
-              </Link>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-              <p className="text-sm text-gray-500">
-                Showing
-                {' '}
-                {page * pageSize + 1}
-                {' '}
-                -
-                {' '}
-                {Math.min((page + 1) * pageSize, total)}
-                {' '}
-                of
-                {total}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage(Math.max(0, page - 1))}
-                  disabled={page === 0}
-                  className="px-3 py-1.5 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-                  disabled={page >= totalPages - 1}
-                  className="px-3 py-1.5 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
-                  Next
-                </button>
-              </div>
+      {isLoading
+        ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
             </div>
-          )}
-        </>
-      )}
+          )
+        : error
+          ? (
+              <div className="bg-red-50 text-red-700 p-4 rounded-lg">
+                Failed to load guides. Please try again.
+              </div>
+            )
+          : guides.length === 0
+            ? (
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No guides need review</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    All guides have acceptable quality scores
+                  </p>
+                </div>
+              )
+            : (
+                <>
+                  {/* Guides Grid */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {guides.map(guide => (
+                      <Link key={guide.id} href={`/guides/${guide.id}`}>
+                        <GuideCard guide={guide} />
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+                      <p className="text-sm text-gray-500">
+                        Showing
+                        {' '}
+                        {page * pageSize + 1}
+                        {' '}
+                        -
+                        {' '}
+                        {Math.min((page + 1) * pageSize, total)}
+                        {' '}
+                        of
+                        {total}
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setPage(Math.max(0, page - 1))}
+                          disabled={page === 0}
+                          className="px-3 py-1.5 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+                          disabled={page >= totalPages - 1}
+                          className="px-3 py-1.5 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
     </div>
   );
 }

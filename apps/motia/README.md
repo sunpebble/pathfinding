@@ -20,11 +20,22 @@ pnpm start
 cp .env.example .env
 ```
 
-| 变量 | 必需 | 说明 |
-|------|------|------|
-| `KERNEL_API_KEY` | 马蜂窝爬虫 | Kernel.sh 云浏览器 API Key |
-| `OPENAI_API_KEY` | 可选 | AI 功能增强 |
-| `CONVEX_URL` | 数据存储 | Convex 部署 URL |
+| 变量              | 必需       | 说明                                |
+| ----------------- | ---------- | ----------------------------------- |
+| `KERNEL_API_KEY`  | 马蜂窝爬虫 | Kernel.sh 云浏览器 API Key          |
+| `OPENAI_API_KEY`  | 可选       | AI 功能增强                         |
+| `DATABASE_URL`    | 必需       | TiDB 连接字符串                     |
+| `API_BASE_URL`    | 推荐       | Pathfinding API 地址，默认本地 3000 |
+| `OLLAMA_BASE_URL` | 可选       | Ollama 服务地址                     |
+
+## 健康检查
+
+`GET /health` 现在验证两项运行时依赖：
+
+- TiDB 是否已配置（`DATABASE_URL`）
+- Pathfinding API 是否可达（`API_BASE_URL`，默认 `http://localhost:3000`）
+
+当 TiDB 配置缺失或 API 不可达时，健康检查返回 `503`。
 
 ## API 端点
 
@@ -46,6 +57,7 @@ curl -X POST http://localhost:3000/api/crawler/mafengwo/list \
 ```
 
 响应：
+
 ```json
 {
   "success": true,
@@ -64,6 +76,7 @@ curl -X POST http://localhost:3000/api/crawler/mafengwo/detail \
 ```
 
 响应：
+
 ```json
 {
   "success": true,
@@ -79,11 +92,11 @@ curl -X POST http://localhost:3000/api/crawler/mafengwo/detail \
 
 ## 事件
 
-| 事件 | 触发时机 |
-|------|----------|
-| `crawler.mafengwo.list.completed` | 列表爬取完成 |
+| 事件                                | 触发时机     |
+| ----------------------------------- | ------------ |
+| `crawler.mafengwo.list.completed`   | 列表爬取完成 |
 | `crawler.mafengwo.detail.completed` | 详情爬取完成 |
-| `crawler.mafengwo.saved` | 数据存储完成 |
+| `crawler.mafengwo.saved`            | 数据存储完成 |
 
 ## 测试
 

@@ -1,3 +1,109 @@
+export interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+  created_at?: string;
+}
+
+export interface SignInInput {
+  email: string;
+  password: string;
+}
+
+export interface SignUpInput extends SignInInput {
+  name?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  userId: string;
+  email: string;
+}
+
+export interface AuthContextValue {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  signIn: (input: SignInInput) => Promise<void>;
+  signUp: (input: SignUpInput) => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
+
+export interface Poi {
+  id: string;
+  name: string;
+  category?: string;
+  address?: string | null;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface ItineraryItemDto {
+  id: string;
+  day_id?: string;
+  poi_id?: string | null;
+  order_index?: number;
+  start_time?: string | null;
+  end_time?: string | null;
+  notes?: string | null;
+}
+
+export interface ItineraryDayDto {
+  id: string;
+  day_number: number;
+  date?: string | null;
+  items: ItineraryItemDto[];
+}
+
+export interface Itinerary {
+  id: string;
+  user_id?: string;
+  title?: string;
+  name?: string;
+  visibility?: string;
+  days?: ItineraryDayDto[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CollaboratorUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+}
+
+export interface Collaborator {
+  id: string;
+  itinerary_id: string | number;
+  user_id: string | number;
+  role: 'owner' | 'viewer' | 'editor';
+  user?: CollaboratorUser | null;
+}
+
+export interface InviteCollaboratorInput {
+  itineraryId: number;
+  userId?: number;
+  email?: string;
+  role: 'viewer' | 'editor';
+}
+
+export interface UpdateCollaboratorInput {
+  role: 'viewer' | 'editor';
+}
+
 /**
  * Travel guide from REST API (uses snake_case)
  */
@@ -23,15 +129,21 @@ export interface GuideWithAI {
   quality_score: number;
   destinations?: string[];
   tags?: string[];
-  // AI enriched fields
+  // AI enriched fields (camelCase)
   aiSummary?: string;
   aiTips?: string[];
   aiBestTime?: string;
   aiDuration?: string;
   aiBudget?: string;
   aiDays?: AiDay[];
-  ai_days?: AiDay[]; // Duplicate for snake_case compatibility
   aiProcessedAt?: number;
+  // AI enriched fields (snake_case duplicates for API compatibility)
+  ai_summary?: string;
+  ai_tips?: string[];
+  ai_best_time?: string;
+  ai_duration?: string;
+  ai_budget?: string;
+  ai_days?: AiDay[];
   geocoding_metrics?: {
     total_pois: number;
     average_confidence: number;

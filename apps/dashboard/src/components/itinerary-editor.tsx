@@ -1,7 +1,7 @@
 'use client';
 
-import { api } from '@pathfinding/convex-client';
-import { useMutation, useQuery } from 'convex/react';
+import type { ItineraryDay as ApiDay, ItineraryItem as ApiItem } from '@/lib/api/itineraries';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Calendar,
   CheckCircle2,
@@ -14,10 +14,18 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
+import {
+
+  createItineraryItem,
+  getItinerary,
+  normalizeItineraryResponse,
+  removeItineraryItem,
+  reorderItineraryItems,
+  updateItineraryItem,
+} from '@/lib/api/itineraries';
+import { searchPois } from '@/lib/api/pois';
 import { cn } from '@/lib/utils';
-import { toConvexId } from '@/types/convex';
 
 interface PoiOption {
   id: string;
@@ -30,7 +38,7 @@ interface PoiOption {
 }
 
 interface Item {
-  _id: string;
+  id: string;
   poiId: string;
   orderIndex: number;
   startTime?: string;
@@ -41,17 +49,35 @@ interface Item {
 }
 
 interface Day {
+  id: string;
+  dayNumber: number;
+  date: string;
+  items: Item[];
+}
+
+interface LegacyItem {
+  _id: string;
+  poiId: string;
+  orderIndex: number;
+  startTime?: string;
+  endTime?: string;
+  transportMode?: string;
+  notes?: string;
+  poi: PoiOption | null;
+}
+
+interface LegacyDay {
   _id: string;
   dayNumber: number;
   date: string;
-  items?: Item[];
+  items?: LegacyItem[];
 }
 
 interface ItineraryEditorProps {
   isOpen: boolean;
   onClose: () => void;
   itineraryId: string;
-  days: Day[];
+  days: LegacyDay[];
   userId: string;
 }
 
@@ -74,6 +100,74 @@ function formatDate(dateString: string) {
   catch {
     return dateString;
   }
+}
+
+function normalizeItem(item: Item | LegacyItem): Item {
+  return {
+    id: 'id' in item ? item.id : item._id,
+    poiId: item.poiId,
+    orderIndex: item.orderIndex,
+    startTime: item.startTime,
+    endTime: item.endTime,
+    transportMode: item.transportMode,
+    notes: item.notes,
+    poi: item.poi,
+  };
+}
+
+function normalizeApiItem(item: ApiItem): Item {
+  return {
+    id: item.id,
+    poiId: item.poiId,
+    orderIndex: item.orderIndex,
+    startTime: item.startTime,
+    endTime: item.endTime,
+    transportMode: item.transportMode,
+    notes: item.notes,
+    poi: item.poi
+      ? {
+          id: item.poi.id,
+          name: item.poi.name,
+          category: item.poi.category || 'other',
+          address: item.poi.address,
+          rating: item.poi.rating,
+          latitude: item.poi.latitude ?? 0,
+          longitude: item.poi.longitude ?? 0,
+        }
+      : null,
+  };
+}
+
+function normalizeApiDay(day: ApiDay): Day {
+  return {
+    id: day.id,
+    dayNumber: day.dayNumber,
+    date: day.date,
+    items: day.items.map(normalizeApiItem),
+  };
+}
+
+function normalizeDay(day: Day | LegacyDay): Day {
+  return {
+    id: 'id' in day ? day.id : day._id,
+    dayNumber: day.dayNumber,
+    date: day.date,
+    items: (day.items ?? []).map(normalizeItem),
+  };
+}
+
+function reorderItemIds(items: Item[], itemId: string, newOrderIndex: number) {
+  const orderedItems = [...items].sort((left, right) => left.orderIndex - right.orderIndex);
+  const currentIndex = orderedItems.findIndex(item => item.id === itemId);
+
+  if (currentIndex === -1) {
+    return orderedItems.map(item => item.id);
+  }
+
+  const [movedItem] = orderedItems.splice(currentIndex, 1);
+  orderedItems.splice(newOrderIndex, 0, movedItem!);
+
+  return orderedItems.map(item => item.id);
 }
 
 function ItemEditor({
@@ -99,9 +193,7 @@ function ItemEditor({
   const [localStartTime, setLocalStartTime] = useState(item.startTime || '');
   const [localEndTime, setLocalEndTime] = useState(item.endTime || '');
   const [localNotes, setLocalNotes] = useState(item.notes || '');
-  const [localTransportMode, setLocalTransportMode] = useState(
-    item.transportMode || 'walking',
-  );
+  const [localTransportMode, setLocalTransportMode] = useState(item.transportMode || 'walking');
 
   const poi = item.poi;
 
@@ -125,7 +217,6 @@ function ItemEditor({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      {/* Header */}
       <div className="p-3 flex items-center justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-gray-900 truncate">{poi.name}</h4>
@@ -134,6 +225,7 @@ function ItemEditor({
         <div className="flex items-center gap-1">
           {canMoveUp && (
             <button
+              type="button"
               onClick={onMoveUp}
               disabled={isSaving}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
@@ -144,6 +236,7 @@ function ItemEditor({
           )}
           {canMoveDown && (
             <button
+              type="button"
               onClick={onMoveDown}
               disabled={isSaving}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
@@ -153,18 +246,15 @@ function ItemEditor({
             </button>
           )}
           <button
+            type="button"
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 transition-transform',
-                isExpanded && 'rotate-180',
-              )}
-            />
+            <ChevronDown className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')} />
           </button>
           <button
+            type="button"
             onClick={onRemove}
             disabled={isSaving}
             className="p-1 text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
@@ -175,16 +265,15 @@ function ItemEditor({
         </div>
       </div>
 
-      {/* Expanded Details */}
       {isExpanded && (
         <div className="border-t border-gray-200 p-4 bg-gray-50 space-y-4">
-          {/* Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">
+              <label htmlFor={`start-time-${item.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
                 Start Time
               </label>
               <input
+                id={`start-time-${item.id}`}
                 type="time"
                 value={localStartTime}
                 onChange={e => setLocalStartTime(e.target.value)}
@@ -192,10 +281,11 @@ function ItemEditor({
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-700 mb-1 block">
+              <label htmlFor={`end-time-${item.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
                 End Time
               </label>
               <input
+                id={`end-time-${item.id}`}
                 type="time"
                 value={localEndTime}
                 onChange={e => setLocalEndTime(e.target.value)}
@@ -204,12 +294,12 @@ function ItemEditor({
             </div>
           </div>
 
-          {/* Transport Mode */}
           <div>
-            <label className="text-xs font-medium text-gray-700 mb-1 block">
+            <label htmlFor={`transport-mode-${item.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
               Transport Mode
             </label>
             <select
+              id={`transport-mode-${item.id}`}
               value={localTransportMode}
               onChange={e => setLocalTransportMode(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -224,12 +314,12 @@ function ItemEditor({
             </select>
           </div>
 
-          {/* Notes */}
           <div>
-            <label className="text-xs font-medium text-gray-700 mb-1 block">
+            <label htmlFor={`notes-${item.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
               Notes
             </label>
             <textarea
+              id={`notes-${item.id}`}
               value={localNotes}
               onChange={e => setLocalNotes(e.target.value)}
               rows={2}
@@ -238,7 +328,6 @@ function ItemEditor({
             />
           </div>
 
-          {/* POI Details */}
           <div className="pt-2 border-t border-gray-200">
             {poi.address && (
               <p className="text-xs text-gray-600 flex items-start gap-1 mb-1">
@@ -254,9 +343,9 @@ function ItemEditor({
             )}
           </div>
 
-          {/* Save Button */}
           <div className="flex justify-end pt-2">
             <button
+              type="button"
               onClick={handleSaveChanges}
               disabled={isSaving}
               className={cn(
@@ -278,72 +367,85 @@ function ItemEditor({
 function DayEditor({
   day,
   items,
-  userId,
+  itineraryId,
   cityId,
-  onItemsChange,
+  onRefresh,
 }: {
   day: Day;
   items: Item[];
-  userId: string;
+  itineraryId: string;
   cityId?: string;
-  onItemsChange: () => void;
+  onRefresh: () => Promise<void>;
 }) {
+  const queryClient = useQueryClient();
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
 
-  const createItem = useMutation(api.itineraryItems.create);
-  const updateItem = useMutation(api.itineraryItems.update);
-  const removeItem = useMutation(api.itineraryItems.remove);
-  const reorderItem = useMutation(api.itineraryItems.reorder);
+  const poisQuery = useQuery({
+    queryKey: ['pois-search', cityId, searchQuery, selectedCategory, isSearching],
+    enabled: Boolean(cityId && isSearching),
+    queryFn: () => searchPois({
+      q: searchQuery || undefined,
+      cityId,
+      category: selectedCategory || undefined,
+      limit: 20,
+    }),
+  });
 
-  // Search POIs
-  const poisQuery = useQuery(
-    api.pois.search,
-    cityId && isSearching
-      ? {
-          query: searchQuery || '',
-          cityId: toConvexId<'cities'>(cityId),
-          category: selectedCategory as
-          | 'attraction'
-          | 'restaurant'
-          | 'hotel'
-          | 'shopping'
-          | 'other'
-          | undefined,
-          limit: 20,
-        }
-      : 'skip',
-  );
+  const createItemMutation = useMutation({
+    mutationFn: (poiId: string) => createItineraryItem(itineraryId, day.id, {
+      poiId,
+      orderIndex: items.length,
+    }),
+  });
+  const updateItemMutation = useMutation({
+    mutationFn: ({ itemId, updates }: { itemId: string; updates: Partial<Item> }) => updateItineraryItem(itineraryId, day.id, itemId, {
+      startTime: updates.startTime,
+      endTime: updates.endTime,
+      notes: updates.notes,
+      transportMode: updates.transportMode,
+    }),
+  });
+  const reorderItemMutation = useMutation({
+    mutationFn: ({ itemId, newOrderIndex }: { itemId: string; newOrderIndex: number }) => reorderItineraryItems(
+      itineraryId,
+      day.id,
+      reorderItemIds(items, itemId, newOrderIndex),
+    ),
+  });
+  const removeItemMutation = useMutation({
+    mutationFn: (itemId: string) => removeItineraryItem(itineraryId, day.id, itemId),
+  });
 
   const pois = useMemo(
-    () =>
-      (poisQuery || []).map(poi => ({
-        id: poi._id,
-        name: poi.name,
-        category: poi.category,
-        address: poi.address,
-        rating: poi.rating,
-        latitude: poi.latitude,
-        longitude: poi.longitude,
-      })),
-    [poisQuery],
+    () => (poisQuery.data?.data ?? []).map(poi => ({
+      id: String(poi.id),
+      name: poi.name,
+      category: poi.category || 'other',
+      address: poi.address || undefined,
+      rating: undefined,
+      latitude: poi.latitude ?? 0,
+      longitude: poi.longitude ?? 0,
+    })),
+    [poisQuery.data],
   );
+
+  const refreshEditor = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['itinerary', itineraryId] });
+    await onRefresh();
+  }, [itineraryId, onRefresh, queryClient]);
 
   const handleAddPoi = async (poiId: string) => {
     setIsSaving(true);
     setError('');
     try {
-      await createItem({
-        dayId: toConvexId<'itineraryDays'>(day._id),
-        userId,
-        poiId: toConvexId<'pois'>(poiId),
-      });
+      await createItemMutation.mutateAsync(poiId);
       setIsSearching(false);
       setSearchQuery('');
-      onItemsChange();
+      await refreshEditor();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add POI');
@@ -357,21 +459,8 @@ function DayEditor({
     setIsSaving(true);
     setError('');
     try {
-      await updateItem({
-        id: toConvexId<'itineraryItems'>(itemId),
-        userId,
-        startTime: updates.startTime,
-        endTime: updates.endTime,
-        notes: updates.notes,
-        transportMode: updates.transportMode as
-        | 'walking'
-        | 'driving'
-        | 'transit'
-        | 'cycling'
-        | 'taxi'
-        | undefined,
-      });
-      onItemsChange();
+      await updateItemMutation.mutateAsync({ itemId, updates });
+      await refreshEditor();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update item');
@@ -385,11 +474,8 @@ function DayEditor({
     setIsSaving(true);
     setError('');
     try {
-      await removeItem({
-        id: toConvexId<'itineraryItems'>(itemId),
-        userId,
-      });
-      onItemsChange();
+      await removeItemMutation.mutateAsync(itemId);
+      await refreshEditor();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove item');
@@ -400,18 +486,15 @@ function DayEditor({
   };
 
   const handleMoveUp = async (item: Item) => {
-    if (item.orderIndex === 0)
+    if (item.orderIndex === 0) {
       return;
+    }
 
     setIsSaving(true);
     setError('');
     try {
-      await reorderItem({
-        itemId: toConvexId<'itineraryItems'>(item._id),
-        userId,
-        newOrderIndex: item.orderIndex - 1,
-      });
-      onItemsChange();
+      await reorderItemMutation.mutateAsync({ itemId: item.id, newOrderIndex: item.orderIndex - 1 });
+      await refreshEditor();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder item');
@@ -422,18 +505,15 @@ function DayEditor({
   };
 
   const handleMoveDown = async (item: Item) => {
-    if (item.orderIndex >= items.length - 1)
+    if (item.orderIndex >= items.length - 1) {
       return;
+    }
 
     setIsSaving(true);
     setError('');
     try {
-      await reorderItem({
-        itemId: toConvexId<'itineraryItems'>(item._id),
-        userId,
-        newOrderIndex: item.orderIndex + 1,
-      });
-      onItemsChange();
+      await reorderItemMutation.mutateAsync({ itemId: item.id, newOrderIndex: item.orderIndex + 1 });
+      await refreshEditor();
     }
     catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder item');
@@ -445,7 +525,6 @@ function DayEditor({
 
   return (
     <div className="space-y-3">
-      {/* Day Header */}
       <div className="flex items-center gap-3">
         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm">
           {day.dayNumber}
@@ -458,13 +537,12 @@ function DayEditor({
           <p className="text-xs text-gray-500">{formatDate(day.date)}</p>
         </div>
         <button
+          type="button"
           onClick={() => setIsSearching(!isSearching)}
           disabled={isSaving}
           className={cn(
             'px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5',
-            isSearching
-              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              : 'bg-emerald-600 text-white hover:bg-emerald-700',
+            isSearching ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-emerald-600 text-white hover:bg-emerald-700',
             'disabled:opacity-50 disabled:cursor-not-allowed',
           )}
         >
@@ -484,7 +562,6 @@ function DayEditor({
         </button>
       </div>
 
-      {/* POI Search */}
       {isSearching && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
           <div className="flex gap-2">
@@ -512,17 +589,15 @@ function DayEditor({
             </select>
           </div>
 
-          {/* Results */}
           <div className="max-h-60 overflow-y-auto space-y-2">
             {pois.length === 0
               ? (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    {cityId ? 'No POIs found' : 'City not specified for itinerary'}
-                  </p>
+                  <p className="text-sm text-gray-500 text-center py-4">{cityId ? 'No POIs found' : 'City not specified for itinerary'}</p>
                 )
               : (
-                  pois.map((poi: PoiOption) => (
+                  pois.map(poi => (
                     <button
+                      type="button"
                       key={poi.id}
                       onClick={() => handleAddPoi(poi.id)}
                       disabled={isSaving}
@@ -530,26 +605,10 @@ function DayEditor({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 text-sm truncate">
-                            {poi.name}
-                          </h4>
-                          <p className="text-xs text-gray-500 capitalize">
-                            {poi.category}
-                          </p>
-                          {poi.address && (
-                            <p className="text-xs text-gray-600 mt-1 truncate">
-                              {poi.address}
-                            </p>
-                          )}
+                          <h4 className="font-medium text-gray-900 text-sm truncate">{poi.name}</h4>
+                          <p className="text-xs text-gray-500 capitalize">{poi.category}</p>
+                          {poi.address && <p className="text-xs text-gray-600 mt-1 truncate">{poi.address}</p>}
                         </div>
-                        {poi.rating && (
-                          <div className="flex items-center gap-1 text-xs">
-                            <span className="text-amber-500">★</span>
-                            <span className="font-medium">
-                              {poi.rating.toFixed(1)}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </button>
                   ))
@@ -558,30 +617,26 @@ function DayEditor({
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
-      {/* Items List */}
       <div className="space-y-2">
         {items.length === 0
           ? (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-500">
-                  No activities planned for this day
-                </p>
+                <p className="text-sm text-gray-500">No activities planned for this day</p>
               </div>
             )
           : (
               items.map((item, index) => (
                 <ItemEditor
-                  key={item._id}
+                  key={`${item.id}-${item.startTime ?? ''}-${item.endTime ?? ''}-${item.notes ?? ''}-${item.transportMode ?? ''}`}
                   item={item}
-                  onUpdate={updates => handleUpdateItem(item._id, updates)}
-                  onRemove={() => handleRemoveItem(item._id)}
+                  onUpdate={updates => handleUpdateItem(item.id, updates)}
+                  onRemove={() => handleRemoveItem(item.id)}
                   onMoveUp={() => handleMoveUp(item)}
                   onMoveDown={() => handleMoveDown(item)}
                   canMoveUp={index > 0}
@@ -600,48 +655,46 @@ export function ItineraryEditor({
   onClose,
   itineraryId,
   days,
-  userId,
 }: ItineraryEditorProps) {
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Fetch itinerary to get cityId
-  const itinerary = useQuery(api.itineraries.getById, {
-    id: toConvexId<'itineraries'>(itineraryId),
+  const itineraryQuery = useQuery({
+    queryKey: ['itinerary', itineraryId],
+    enabled: Boolean(isOpen && itineraryId),
+    queryFn: async () => normalizeItineraryResponse(await getItinerary(itineraryId)).data,
   });
 
-  const handleItemsChange = useCallback(() => {
+  const editorDays = useMemo(
+    () => (itineraryQuery.data?.days ? itineraryQuery.data.days.map(normalizeApiDay) : days.map(normalizeDay)),
+    [days, itineraryQuery.data?.days],
+  );
+
+  const handleRefresh = useCallback(async () => {
     setRefreshKey(prev => prev + 1);
-  }, []);
+    await itineraryQuery.refetch();
+  }, [itineraryQuery]);
 
-  if (!isOpen)
+  if (!isOpen) {
     return null;
+  }
 
-  const cityId = itinerary?.cityId;
-  const enrichedDays = itinerary?.days || days;
+  const cityId = itineraryQuery.data?.cityId;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="relative bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
         <div className="flex-shrink-0 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Edit Itinerary</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Add, edit, and organize activities for each day
-            </p>
+            <p className="text-sm text-gray-500 mt-1">Add, edit, and organize activities for each day</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Close"
-          >
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          {enrichedDays.length === 0
+          {editorDays.length === 0
             ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
                   <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
@@ -649,22 +702,22 @@ export function ItineraryEditor({
                 </div>
               )
             : (
-                enrichedDays.map((day: Day) => (
+                editorDays.map(day => (
                   <DayEditor
-                    key={`${day._id}-${refreshKey}`}
+                    key={`${day.id}-${refreshKey}`}
                     day={day}
-                    items={day.items || []}
-                    userId={userId}
+                    items={day.items}
+                    itineraryId={itineraryId}
                     cityId={cityId}
-                    onItemsChange={handleItemsChange}
+                    onRefresh={handleRefresh}
                   />
                 ))
               )}
         </div>
 
-        {/* Footer */}
         <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
             className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2"
           >

@@ -50,6 +50,11 @@ final class GuideStore {
       return
     }
 
+    // If already loading and force refresh requested, reset to allow retry
+    if isLoading && forceRefresh {
+      isLoading = false
+    }
+
     guard !isLoading else {
       logger.debug("Fetch already in progress, skipping")
       return
@@ -57,12 +62,15 @@ final class GuideStore {
 
     isLoading = true
     error = nil
+    defer { isLoading = false }
 
     do {
       let fetchedGuides = try await APIClient.shared.fetchGuides(limit: 30)
       guides = fetchedGuides
       lastFetchedAt = Date()
       logger.info("Fetched \(fetchedGuides.count) guides")
+    } catch is CancellationError {
+      logger.debug("Fetch guides cancelled")
     } catch let urlError as URLError {
       error = .network(urlError)
       logger.error("Network error: \(urlError.localizedDescription)")
@@ -73,8 +81,6 @@ final class GuideStore {
       self.error = .unknown(error)
       logger.error("Unknown error: \(error.localizedDescription)")
     }
-
-    isLoading = false
   }
 
   /// Get a single guide by ID
@@ -108,6 +114,7 @@ final class GuideStore {
     guard !isSearching else { return }
 
     isSearching = true
+    defer { isSearching = false }
 
     do {
       searchResults = try await APIClient.shared.searchGuides(
@@ -117,12 +124,12 @@ final class GuideStore {
         daysAgo: daysAgo
       )
       logger.info("Search returned \(self.searchResults.count) results")
+    } catch is CancellationError {
+      logger.debug("Search cancelled")
     } catch {
       logger.error("Search error: \(error.localizedDescription)")
       searchResults = []
     }
-
-    isSearching = false
   }
 
   /// Fetch popular destinations

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { PlatformBadge } from '@/components/ui/platform-badge';
 import { getTravelGuides } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -25,35 +26,6 @@ const PLATFORMS = [
   { value: 'mafengwo', label: '马蜂窝' },
   { value: 'qunar', label: '去哪儿' },
 ];
-
-function PlatformBadge({ platform }: { platform: string }) {
-  const colors: Record<string, string> = {
-    ctrip: 'bg-blue-100 text-blue-800',
-    xiaohongshu: 'bg-red-100 text-red-800',
-    weibo: 'bg-orange-100 text-orange-800',
-    tongcheng: 'bg-purple-100 text-purple-800',
-    mafengwo: 'bg-yellow-100 text-yellow-800',
-    qunar: 'bg-green-100 text-green-800',
-  };
-  const names: Record<string, string> = {
-    ctrip: '携程',
-    xiaohongshu: '小红书',
-    weibo: '微博',
-    tongcheng: '同程旅行',
-    mafengwo: '马蜂窝',
-    qunar: '去哪儿',
-  };
-  return (
-    <span
-      className={cn(
-        'px-2 py-0.5 rounded-full text-xs font-medium',
-        colors[platform] || 'bg-gray-100 text-gray-800',
-      )}
-    >
-      {names[platform] || platform}
-    </span>
-  );
-}
 
 function QualityScore({ score }: { score: number }) {
   const percentage = Math.round(score * 100);
@@ -172,10 +144,11 @@ export default function GuidesPage() {
   const pageSize = 20;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['guides', platform, page],
+    queryKey: ['guides', platform, page, searchQuery],
     queryFn: () =>
       getTravelGuides({
         platforms: platform || undefined,
+        search: searchQuery || undefined,
         limit: pageSize,
         offset: page * pageSize,
         sort: 'quality_score',
@@ -213,7 +186,10 @@ export default function GuidesPage() {
             type="text"
             placeholder="Search guides..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(0);
+            }}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -236,15 +212,17 @@ export default function GuidesPage() {
       </div>
 
       {/* Content */}
-      {isLoading ? (
+      {isLoading && (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
         </div>
-      ) : error ? (
+      )}
+      {!isLoading && error && (
         <div className="bg-red-50 text-red-700 p-4 rounded-lg">
           Failed to load guides. Please try again.
         </div>
-      ) : guides.length === 0 ? (
+      )}
+      {!isLoading && !error && guides.length === 0 && (
         <div className="text-center py-12">
           <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500">No guides found</p>
@@ -252,7 +230,8 @@ export default function GuidesPage() {
             Start a crawl job to collect travel guides
           </p>
         </div>
-      ) : (
+      )}
+      {!isLoading && !error && guides.length > 0 && (
         <>
           {/* Guides Grid */}
           <div className="grid gap-4 md:grid-cols-2">

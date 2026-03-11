@@ -1,4 +1,20 @@
 services:
+  tidb:
+    image: pingcap/tidb:v8.5.0
+    ports:
+      - '4000:4000' # MySQL protocol port
+      - '10080:10080' # TiDB status port
+    volumes:
+      - tidb-data:/tmp/tidb
+    environment:
+      - TIDB_ENABLE_TELEMETRY=0
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1, -P, '4000', -u, root]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: .
@@ -7,7 +23,7 @@ services:
       - '8000:8000'
     environment:
       - NODE_ENV=development
-      - CONVEX_URL=${CONVEX_URL}
+      - DATABASE_URL=mysql://root@tidb:4000/pathfinding
     healthcheck:
       test:
         - CMD
@@ -22,6 +38,9 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+    depends_on:
+      tidb:
+        condition: service_healthy
 
   crawler:
     build:
@@ -31,7 +50,7 @@ services:
       - '3001:3001'
     environment:
       - NODE_ENV=development
-      - CONVEX_URL=${CONVEX_URL}
+      - DATABASE_URL=mysql://root@tidb:4000/pathfinding
       - AMAP_API_KEY=${AMAP_API_KEY}
       - OVERPASS_API_URL=${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
     volumes:
@@ -50,6 +69,10 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+    depends_on:
+      tidb:
+        condition: service_healthy
 
 volumes:
+  tidb-data:
   crawler-storage:

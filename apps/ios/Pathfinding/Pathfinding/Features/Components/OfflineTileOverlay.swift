@@ -70,20 +70,21 @@ final class OfflineTileOverlay: MKTileOverlay {
     var request = URLRequest(url: url)
     request.setValue("Pathfinding-iOS/1.0", forHTTPHeaderField: "User-Agent")
 
+    nonisolated(unsafe) let callback = result
     URLSession.shared.dataTask(with: request) { data, response, error in
       if let error = error {
-        result(nil, error)
+        callback(nil, error)
         return
       }
 
       guard let httpResponse = response as? HTTPURLResponse,
             httpResponse.statusCode == 200,
             let data = data else {
-        result(nil, nil)
+        callback(nil, nil)
         return
       }
 
-      result(data, nil)
+      callback(data, nil)
     }.resume()
   }
 }

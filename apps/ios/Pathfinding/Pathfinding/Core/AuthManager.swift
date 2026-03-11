@@ -2,12 +2,33 @@ import Foundation
 import OSLog
 import Security
 
-/// Authentication manager for Convex Auth integration
+/// Authentication manager for API auth integration
 /// Handles sign in, sign up, session management, and secure token storage
 actor AuthManager {
   static let shared = AuthManager()
 
-  private let convexURL: URL
+  nonisolated static func resetPersistedSessionForTesting() {
+    let keychainService = "org.pathfinding.app"
+    let keys = [
+      "auth.accessToken",
+      "auth.refreshToken",
+      "auth.userId",
+      "auth.userEmail",
+    ]
+
+    for key in keys {
+      let query: [String: Any] = [
+        kSecClass as String: kSecClassGenericPassword,
+        kSecAttrService as String: keychainService,
+        kSecAttrAccount as String: key,
+      ]
+      SecItemDelete(query as CFDictionary)
+    }
+
+    _sharedCachedUserId = nil
+  }
+
+  private let apiBaseURL: URL
   private let session: URLSession
   private let decoder: JSONDecoder
   private let encoder: JSONEncoder
@@ -41,8 +62,9 @@ actor AuthManager {
     AuthManager._sharedCachedUserId
   }
 
-  init(convexURL: String = "https://convex.kunish.org") {
-    self.convexURL = URL(string: convexURL)!
+  init(apiBaseURL: String? = nil) {
+    let apiBaseUrlString = apiBaseURL ?? AppConfig.apiBaseURL
+    self.apiBaseURL = URL(string: apiBaseUrlString)!
 
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = AppConfig.networkTimeoutRequest
@@ -62,17 +84,7 @@ actor AuthManager {
 
   /// Sign in with email and password
   func signIn(email: String, password: String) async throws {
-    let url = convexURL.appendingPathComponent("http/api/auth/signin/password")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    let body: [String: String] = [
-      "email": email,
-      "password": password,
-    ]
-    request.httpBody = try encoder.encode(body)
+    let request = try makeEmailSignInRequest(email: email, password: password)
 
     logger.info("Signing in with email: \(email)")
 
@@ -84,21 +96,7 @@ actor AuthManager {
 
   /// Sign up with email and password
   func signUp(email: String, password: String, name: String? = nil) async throws {
-    let url = convexURL.appendingPathComponent("http/api/auth/signin/password")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    var body: [String: String] = [
-      "email": email,
-      "password": password,
-      "flow": "signUp",
-    ]
-    if let name = name {
-      body["name"] = name
-    }
-    request.httpBody = try encoder.encode(body)
+    let request = try makeEmailSignUpRequest(email: email, password: password, name: name)
 
     logger.info("Signing up with email: \(email)")
 
@@ -112,7 +110,7 @@ actor AuthManager {
   func signInWithOAuth(provider: OAuthProvider) async throws {
     // OAuth flow typically requires web-based authentication
     // This is a placeholder for the OAuth URL that would be opened in a web view
-    _ = convexURL.appendingPathComponent("api/auth/signin/\(provider.rawValue)")
+    _ = apiBaseURL.appendingPathComponent("api/auth/signin/\(provider.rawValue)")
 
     logger.info("Initiating OAuth sign in with \(provider.rawValue)")
 
@@ -129,7 +127,7 @@ actor AuthManager {
       throw AuthError.invalidPhoneNumber
     }
 
-    let url = convexURL.appendingPathComponent("http/api/auth/sms/send")
+    let url = apiBaseURL.appendingPathComponent("api/auth/sms/send")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -166,7 +164,7 @@ actor AuthManager {
       throw AuthError.invalidVerificationCode
     }
 
-    let url = convexURL.appendingPathComponent("http/api/auth/signin/phone")
+    let url = apiBaseURL.appendingPathComponent("api/auth/signin/phone")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -198,7 +196,7 @@ actor AuthManager {
 
     // Call sign out endpoint if we have a token
     if let token = accessToken {
-      let url = convexURL.appendingPathComponent("http/api/auth/signout")
+      let url = apiBaseURL.appendingPathComponent("api/auth/signout")
 
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
@@ -228,7 +226,7 @@ actor AuthManager {
 
     logger.info("Refreshing access token")
 
-    let url = convexURL.appendingPathComponent("http/api/auth/refresh")
+    let url = apiBaseURL.appendingPathComponent("api/auth/refresh")
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -367,6 +365,38 @@ actor AuthManager {
     default:
       throw AuthError.httpError(httpResponse.statusCode)
     }
+  }
+
+  func makeEmailSignInRequest(email: String, password: String) throws -> URLRequest {
+    try makeEmailAuthRequest(
+      payload: EmailAuthRequestPayload(
+        email: email,
+        password: password,
+        flow: "signIn",
+        name: nil
+      )
+    )
+  }
+
+  func makeEmailSignUpRequest(email: String, password: String, name: String?) throws -> URLRequest {
+    try makeEmailAuthRequest(
+      payload: EmailAuthRequestPayload(
+        email: email,
+        password: password,
+        flow: "signUp",
+        name: name
+      )
+    )
+  }
+
+  private func makeEmailAuthRequest(payload: EmailAuthRequestPayload) throws -> URLRequest {
+    let url = apiBaseURL.appendingPathComponent("api/auth/signin")
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try encoder.encode(payload)
+    return request
   }
 
   private func updateSession(from response: AuthResponse, email: String?) async throws {
@@ -578,6 +608,13 @@ private struct AuthResponse: Codable {
   let refreshToken: String?
   let userId: String?
   let email: String?
+}
+
+struct EmailAuthRequestPayload: Codable {
+  let email: String
+  let password: String
+  let flow: String
+  let name: String?
 }
 
 private struct ErrorResponse: Codable {

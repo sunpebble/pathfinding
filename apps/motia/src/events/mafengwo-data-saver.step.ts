@@ -1,11 +1,18 @@
 /**
  * 马蜂窝数据保存事件处理器
- * 监听各类爬取完成事件，将数据存储到 Convex
+ * 监听各类爬取完成事件，将数据存储到 TiDB
  */
 
-import { ConvexHttpClient } from 'convex/browser';
+import {
+  createDb,
+  mafengwoDestinations,
+  mafengwoGuides,
+  mafengwoPois,
+  mafengwoQa,
+  mafengwoRankings,
+} from '@pathfinding/database';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { api } from '../../../../convex/_generated/api.js';
 
 // ============================================
 // Schema 定义
@@ -127,7 +134,7 @@ const rankingDataSchema = z.object({
 export const config = {
   type: 'event',
   name: 'MafengwoDataSaver',
-  description: '保存马蜂窝爬取数据到 Convex',
+  description: '保存马蜂窝爬取数据到 TiDB',
   subscribes: [
     'crawler.mafengwo.destination.completed',
     'crawler.mafengwo.poi.detail.completed',
@@ -148,14 +155,10 @@ interface HandlerContext {
 }
 
 /**
- * 获取 Convex client
+ * 获取数据库连接
  */
-function getConvexClient(): ConvexHttpClient {
-  const url = process.env.CONVEX_URL;
-  if (!url) {
-    throw new Error('CONVEX_URL environment variable is not set');
-  }
-  return new ConvexHttpClient(url);
+function getDb() {
+  return createDb();
 }
 
 /**
@@ -212,8 +215,8 @@ export async function handler(
   logger.info('Processing crawl event', { topic });
 
   try {
-    const client = getConvexClient();
-    let savedId: string | undefined;
+    const db = getDb();
+    let savedId: number | undefined;
     let dataType: string = '';
 
     switch (topic) {
@@ -225,23 +228,43 @@ export async function handler(
         }
 
         const dest = parsed.data.destination;
-        savedId = await client.mutation(api.mafengwo.upsertDestination, {
+        const now = new Date();
+
+        // Upsert: 检查是否已存在
+        const existing = await db
+          .select({ id: mafengwoDestinations.id })
+          .from(mafengwoDestinations)
+          .where(eq(mafengwoDestinations.mddId, dest.mddId))
+          .limit(1);
+
+        const destData = {
           mddId: dest.mddId,
           sourceUrl: dest.sourceUrl,
           name: dest.name,
-          nameEn: dest.nameEn,
-          country: dest.country,
-          province: dest.province,
-          description: dest.description,
-          coverImageUrl: dest.coverImage,
+          nameEn: dest.nameEn ?? null,
+          country: dest.country ?? null,
+          province: dest.province ?? null,
+          description: dest.description ?? null,
+          coverImageUrl: dest.coverImage ?? null,
           imageUrls: dest.images,
-          bestTravelTime: dest.bestTravelTime,
-          avgStayDays: dest.avgStayDays,
-          climate: dest.climate,
+          bestTravelTime: dest.bestTravelTime ?? null,
+          avgStayDays: dest.avgStayDays ?? null,
+          climate: dest.climate ?? null,
           travelNotesCount: dest.travelNotesCount,
           poisCount: dest.poisCount,
           questionsCount: dest.questionsCount,
-        });
+          crawledAt: now,
+          updatedAt: now,
+        };
+
+        if (existing.length > 0) {
+          await db.update(mafengwoDestinations).set(destData).where(eq(mafengwoDestinations.id, existing[0]!.id));
+          savedId = existing[0]!.id;
+        }
+        else {
+          const [result] = await db.insert(mafengwoDestinations).values(destData).$returningId();
+          savedId = result!.id;
+        }
         dataType = 'destination';
         break;
       }
@@ -264,36 +287,54 @@ export async function handler(
           images: poi.images,
           rating: poi.rating,
         });
+        const now = new Date();
 
-        savedId = await client.mutation(api.mafengwo.upsertPoi, {
+        const existing = await db
+          .select({ id: mafengwoPois.id })
+          .from(mafengwoPois)
+          .where(eq(mafengwoPois.poiId, poi.poiId))
+          .limit(1);
+
+        const poiData = {
           poiId: poi.poiId,
           sourceUrl: parsed.data.sourceUrl,
           name: poi.name,
-          nameEn: poi.nameEn,
-          category: poi.category as 'attraction' | 'restaurant' | 'hotel' | 'shopping' | 'entertainment' | 'transport',
-          address: poi.address,
-          latitude: poi.latitude,
-          longitude: poi.longitude,
-          rating: poi.rating,
+          nameEn: poi.nameEn ?? null,
+          category: poi.category,
+          address: poi.address ?? null,
+          latitude: poi.latitude ?? null,
+          longitude: poi.longitude ?? null,
+          rating: poi.rating ?? null,
           ratingCount: poi.ratingCount,
-          priceRange: poi.priceRange,
-          ticketPrice: poi.ticketPrice,
-          openingHours: poi.openingHours,
-          phone: poi.phone,
-          description: poi.description,
+          priceRange: poi.priceRange ?? null,
+          ticketPrice: poi.ticketPrice ?? null,
+          openingHours: poi.openingHours ?? null,
+          phone: poi.phone ?? null,
+          description: poi.description ?? null,
           tips: poi.tips,
           highlights: poi.highlights,
-          coverImageUrl: poi.coverImage,
+          coverImageUrl: poi.coverImage ?? null,
           imageUrls: poi.images,
           reviewsCount: poi.reviewsCount,
           savesCount: poi.savesCount,
           tags: poi.tags,
-          cuisineType: poi.cuisineType,
+          cuisineType: poi.cuisineType ?? null,
           signatureDishes: poi.signatureDishes,
-          starRating: poi.starRating,
+          starRating: poi.starRating ?? null,
           amenities: poi.amenities,
-          qualityScore,
-        });
+          qualityScore: Math.round(qualityScore * 100),
+          crawledAt: now,
+          updatedAt: now,
+        };
+
+        if (existing.length > 0) {
+          await db.update(mafengwoPois).set(poiData).where(eq(mafengwoPois.id, existing[0]!.id));
+          savedId = existing[0]!.id;
+        }
+        else {
+          const [result] = await db.insert(mafengwoPois).values(poiData).$returningId();
+          savedId = result!.id;
+        }
         dataType = 'poi';
         break;
       }
@@ -315,27 +356,46 @@ export async function handler(
           content: guide.content,
           images: guide.images,
         });
+        const now = new Date();
 
-        savedId = await client.mutation(api.mafengwo.upsertGuide, {
+        const existing = await db
+          .select({ id: mafengwoGuides.id })
+          .from(mafengwoGuides)
+          .where(eq(mafengwoGuides.guideId, guide.guideId))
+          .limit(1);
+
+        const guideData = {
           guideId: guide.guideId,
           sourceUrl: parsed.data.sourceUrl,
           title: guide.title,
-          destinationName: guide.destinationName,
-          authorName: guide.authorName,
-          authorId: guide.authorId,
-          summary: guide.summary,
+          destinationName: guide.destinationName ?? null,
+          authorName: guide.authorName ?? null,
+          authorId: guide.authorId ?? null,
+          summary: guide.summary ?? null,
           content: guide.content,
-          contentHtml: guide.contentHtml,
+          contentHtml: guide.contentHtml ?? null,
           sections: guide.sections,
-          coverImageUrl: guide.coverImage,
+          coverImageUrl: guide.coverImage ?? null,
           imageUrls: guide.images,
           viewsCount: guide.viewsCount,
           likesCount: guide.likesCount,
           savesCount: guide.savesCount,
           commentsCount: guide.commentsCount,
           tags: guide.tags,
-          qualityScore,
-        });
+          publishedAt: guide.publishedAt ? new Date(guide.publishedAt) : null,
+          qualityScore: Math.round(qualityScore * 100),
+          crawledAt: now,
+          updatedAt: now,
+        };
+
+        if (existing.length > 0) {
+          await db.update(mafengwoGuides).set(guideData).where(eq(mafengwoGuides.id, existing[0]!.id));
+          savedId = existing[0]!.id;
+        }
+        else {
+          const [result] = await db.insert(mafengwoGuides).values(guideData).$returningId();
+          savedId = result!.id;
+        }
         dataType = 'guide';
         break;
       }
@@ -352,14 +412,22 @@ export async function handler(
         }
 
         const qa = parsed.data.qa;
-        savedId = await client.mutation(api.mafengwo.upsertQa, {
+        const now = new Date();
+
+        const existing = await db
+          .select({ id: mafengwoQa.id })
+          .from(mafengwoQa)
+          .where(eq(mafengwoQa.questionId, qa.questionId))
+          .limit(1);
+
+        const qaData = {
           questionId: qa.questionId,
           sourceUrl: parsed.data.sourceUrl,
           title: qa.title,
           content: qa.content,
-          destinationName: qa.destinationName,
-          authorName: qa.authorName,
-          authorId: qa.authorId,
+          destinationName: qa.destinationName ?? null,
+          authorName: qa.authorName ?? null,
+          authorId: qa.authorId ?? null,
           answersCount: qa.answersCount,
           viewsCount: qa.viewsCount,
           tags: qa.tags,
@@ -370,8 +438,19 @@ export async function handler(
                 authorId: qa.bestAnswer.authorId,
                 likesCount: qa.bestAnswer.likesCount,
               }
-            : undefined,
-        });
+            : null,
+          questionCreatedAt: qa.createdAt ? new Date(qa.createdAt) : null,
+          crawledAt: now,
+        };
+
+        if (existing.length > 0) {
+          await db.update(mafengwoQa).set(qaData).where(eq(mafengwoQa.id, existing[0]!.id));
+          savedId = existing[0]!.id;
+        }
+        else {
+          const [result] = await db.insert(mafengwoQa).values(qaData).$returningId();
+          savedId = result!.id;
+        }
         dataType = 'qa';
         break;
       }
@@ -388,14 +467,22 @@ export async function handler(
         }
 
         const ranking = parsed.data.ranking;
-        savedId = await client.mutation(api.mafengwo.upsertRanking, {
+        const now = new Date();
+
+        const existing = await db
+          .select({ id: mafengwoRankings.id })
+          .from(mafengwoRankings)
+          .where(eq(mafengwoRankings.rankingId, ranking.rankingId))
+          .limit(1);
+
+        const rankingData = {
           rankingId: ranking.rankingId,
           sourceUrl: parsed.data.sourceUrl,
-          rankingType: ranking.rankingType as 'must_visit' | 'food' | 'hotel' | 'shopping' | 'hidden_gem',
+          rankingType: ranking.rankingType,
           title: ranking.title,
           destinationId: ranking.destinationId,
-          destinationName: ranking.destinationName,
-          description: ranking.description,
+          destinationName: ranking.destinationName ?? null,
+          description: ranking.description ?? null,
           items: ranking.items.map(item => ({
             rank: item.rank,
             poiExternalId: item.poiId,
@@ -406,7 +493,18 @@ export async function handler(
             coverImageUrl: item.coverImage,
             reason: item.reason,
           })),
-        });
+          crawledAt: now,
+          updatedAt: now,
+        };
+
+        if (existing.length > 0) {
+          await db.update(mafengwoRankings).set(rankingData).where(eq(mafengwoRankings.id, existing[0]!.id));
+          savedId = existing[0]!.id;
+        }
+        else {
+          const [result] = await db.insert(mafengwoRankings).values(rankingData).$returningId();
+          savedId = result!.id;
+        }
         dataType = 'ranking';
         break;
       }

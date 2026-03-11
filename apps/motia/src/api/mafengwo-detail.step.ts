@@ -4,9 +4,11 @@
  *
  * 使用 Kernel.sh 云浏览器爬取游记详情
  * 支持 DOM 选择器提取（默认）和 AI 提取（可选）
+ * 提取后自动执行内容清洗（去除广告/推广/个人信息）
  */
 
 import type { KernelBrowserSession } from '../lib/kernel-browser.js';
+import { cleanContent } from '@pathfinding/crawler-types';
 import { z } from 'zod';
 import {
   closeKernelBrowser,
@@ -38,6 +40,7 @@ export const config = {
 interface GuideData {
   title: string;
   content: string;
+  contentHtml?: string;
   author?: string;
   views?: string;
   likes?: string;
@@ -124,6 +127,7 @@ export async function handler(
         data = {
           title: aiData.title,
           content: aiData.content,
+          contentHtml: selectorData.contentHtml,
           author: aiData.author,
           views: selectorData.views,
           likes: selectorData.likes,
@@ -151,6 +155,19 @@ export async function handler(
         session = null;
         continue;
       }
+
+      // 清洗内容：去除广告/推广/个人信息/平台噪音
+      const cleanResult = cleanContent(data.content, {
+        categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+        preserveParagraphs: true,
+      });
+      data.content = cleanResult.content;
+
+      logger.info('Content cleaned', {
+        originalLength: cleanResult.originalLength,
+        cleanedLength: cleanResult.cleanedLength,
+        removedTypes: cleanResult.removedTypes,
+      });
 
       logger.info('Extraction complete', {
         title: data.title?.slice(0, 50),

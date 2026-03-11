@@ -162,6 +162,18 @@ struct ExplorerFeaturedCard: View {
         isVisible = true
       }
     }
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel(cardAccessibilityLabel)
+    .accessibilityHint("双击查看详情")
+  }
+
+  private var cardAccessibilityLabel: String {
+    var parts = [guide.title]
+    if let author = guide.author { parts.append("作者 \(author)") }
+    if let destinations = guide.destinations, !destinations.isEmpty {
+      parts.append("目的地 \(destinations.prefix(3).joined(separator: "、"))")
+    }
+    return parts.joined(separator: "，")
   }
 
   private func formatNumber(_ num: Int) -> String {
@@ -417,6 +429,18 @@ struct ExplorerGuideRow: View {
     .scaleEffect(isPressed ? 0.98 : 1)
     .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
     .staggeredAnimation(index: index, baseDelay: 0.03)
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel(rowAccessibilityLabel)
+    .accessibilityHint("双击查看详情")
+  }
+
+  private var rowAccessibilityLabel: String {
+    var parts = [guide.title]
+    if let author = guide.author { parts.append("作者 \(author)") }
+    if let destinations = guide.destinations, !destinations.isEmpty {
+      parts.append("目的地 \(destinations.prefix(3).joined(separator: "、"))")
+    }
+    return parts.joined(separator: "，")
   }
 
   private func formatNumber(_ num: Int) -> String {
@@ -676,6 +700,8 @@ private let previewGuide = BlogPost(
   title: "京都赏樱三日游攻略",
   authorName: "旅行达人",
   content: nil,
+  contentHtml: nil,
+  contentMarkdown: nil,
   summary: nil,
   coverImageUrl: nil,
   imageUrls: nil,

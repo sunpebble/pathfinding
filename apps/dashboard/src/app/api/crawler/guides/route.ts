@@ -1,10 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { api } from '@pathfinding/convex-client/api';
-import { ConvexHttpClient } from 'convex/browser';
 import { NextResponse } from 'next/server';
-
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
-const client = new ConvexHttpClient(CONVEX_URL);
+import { fetchBackendApi, normalizeTravelGuide } from '@/lib/api/backend';
 
 type Platform
   = | 'xiaohongshu'
@@ -14,77 +10,95 @@ type Platform
     | 'tripadvisor'
     | 'qunar'
     | 'tongcheng'
-    | 'mafengwo';
+    | 'mafengwo'
+    | 'qyer';
+
+function getValidPlatform(platform: string | null): Platform | undefined {
+  const validPlatforms: Platform[] = [
+    'xiaohongshu',
+    'weibo',
+    'ctrip',
+    'douyin',
+    'tripadvisor',
+    'qunar',
+    'tongcheng',
+    'mafengwo',
+    'qyer',
+  ];
+
+  if (platform && validPlatforms.includes(platform as Platform)) {
+    return platform as Platform;
+  }
+
+  return undefined;
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const limit = Number.parseInt(searchParams.get('limit') || '20');
+  const rawLimit = Number.parseInt(searchParams.get('limit') || '20', 10);
+  const limit
+    = Number.isFinite(rawLimit) && rawLimit > 0
+      ? Math.min(rawLimit, 100)
+      : 20;
   const platform
     = searchParams.get('platforms') || searchParams.get('platform');
   const sort = searchParams.get('sort');
   const order = searchParams.get('order');
+  const rawMinQuality = searchParams.get('min_quality');
+  const parsedMinQuality
+    = rawMinQuality === null ? Number.NaN : Number.parseFloat(rawMinQuality);
+  const minQuality
+    = Number.isFinite(parsedMinQuality) && parsedMinQuality >= 0
+      ? parsedMinQuality
+      : undefined;
+  const rawMaxQuality = searchParams.get('max_quality');
+  const parsedMaxQuality
+    = rawMaxQuality === null ? Number.NaN : Number.parseFloat(rawMaxQuality);
+  const maxQuality
+    = Number.isFinite(parsedMaxQuality) && parsedMaxQuality >= 0
+      ? parsedMaxQuality
+      : undefined;
 
   try {
-    const validPlatforms: Platform[] = [
-      'xiaohongshu',
-      'weibo',
-      'ctrip',
-      'douyin',
-      'tripadvisor',
-      'qunar',
-      'tongcheng',
-      'mafengwo',
-    ];
-    const validPlatform
-      = platform && validPlatforms.includes(platform as Platform)
-        ? (platform as Platform)
-        : undefined;
+    const backendParams = new URLSearchParams();
+    const validPlatform = getValidPlatform(platform);
+    if (validPlatform) {
+      backendParams.set('platform', validPlatform);
+    }
+    backendParams.set('limit', String(limit));
 
-    const guides = await client.query(api.travelGuides.list, {
-      platform: validPlatform,
-      limit,
-    });
+    const response = await fetchBackendApi<{ data: Array<Record<string, unknown>> }>(
+      `/api/guides?${backendParams.toString()}`,
+      { method: 'GET' },
+    );
 
-    // Sort if requested
-    const sortedGuides = [...guides];
+    const normalizedGuides = response.data.map(normalizeTravelGuide);
+    const sortedGuides = [...normalizedGuides];
+
     if (sort === 'quality_score') {
       sortedGuides.sort((a, b) => {
-        const aScore = a.qualityScore || 0;
-        const bScore = b.qualityScore || 0;
+        const aScore = typeof a.quality_score === 'number' ? a.quality_score : 0;
+        const bScore = typeof b.quality_score === 'number' ? b.quality_score : 0;
         return order === 'asc' ? aScore - bScore : bScore - aScore;
       });
     }
 
-    // Transform camelCase to snake_case for frontend compatibility
-    const transformedGuides = sortedGuides.map(guide => ({
-      id: guide._id,
-      source_platform: guide.sourcePlatform,
-      source_external_id: guide.sourceExternalId,
-      source_url: guide.sourceUrl,
-      title: guide.title,
-      content: guide.content,
-      content_html: guide.contentHtml,
-      author_name: guide.authorName,
-      author_id: guide.authorId,
-      destinations: guide.destinations || [],
-      tags: guide.tags || [],
-      likes_count: guide.likesCount ?? 0,
-      saves_count: guide.savesCount ?? 0,
-      comments_count: guide.commentsCount ?? 0,
-      views_count: guide.viewsCount ?? 0,
-      cover_image_url: guide.coverImageUrl,
-      image_urls: guide.imageUrls || [],
-      published_at: guide.publishedAt,
-      crawled_at: guide.crawledAt,
-      quality_score: guide.qualityScore ?? 0,
-      created_at: guide._creationTime,
-      updated_at: guide._creationTime,
-    }));
+    let filteredGuides = sortedGuides;
+    if (minQuality !== undefined) {
+      filteredGuides = filteredGuides.filter(
+        guide => (typeof guide.quality_score === 'number' ? guide.quality_score : 0) >= minQuality,
+      );
+    }
+    if (maxQuality !== undefined) {
+      filteredGuides = filteredGuides.filter(
+        guide => (typeof guide.quality_score === 'number' ? guide.quality_score : 0) <= maxQuality,
+      );
+    }
 
     return NextResponse.json({
-      data: transformedGuides,
+      data: filteredGuides.slice(0, limit),
       pagination: {
-        total: transformedGuides.length,
+        total: filteredGuides.length,
         limit,
         offset: 0,
       },
@@ -93,7 +107,7 @@ export async function GET(request: NextRequest) {
   catch (error) {
     console.error('Error fetching guides:', error);
     return NextResponse.json(
-      { error: 'Internal server error', message: String(error) },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

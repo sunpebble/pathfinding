@@ -11,6 +11,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { useHealthStatus } from '@/hooks/use-health-status';
 import { getCrawlJobs, getPOIs, getTrainingDatasets } from '@/lib/api';
 
@@ -33,8 +34,6 @@ export default function OverviewPage() {
   const jobs = jobsData?.data || [];
   const runningJobs = jobs.filter(j => j.status === 'running').length;
   const completedJobs = jobs.filter(j => j.status === 'completed').length;
-  const _failedJobs = jobs.filter(j => j.status === 'failed').length;
-
   return (
     <div className="space-y-6">
       {/* Page Title */}
@@ -53,7 +52,7 @@ export default function OverviewPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Total Jobs</p>
               <p className="mt-1 text-3xl font-bold text-gray-900">
-                {jobsData?.pagination.total ?? '-'}
+                {jobsData?.pagination?.total ?? '-'}
               </p>
             </div>
             <div className="rounded-full bg-blue-100 p-3">
@@ -84,7 +83,7 @@ export default function OverviewPage() {
                 Normalized POIs
               </p>
               <p className="mt-1 text-3xl font-bold text-gray-900">
-                {poisData?.pagination.total ?? '-'}
+                {poisData?.pagination?.total ?? '-'}
               </p>
             </div>
             <div className="rounded-full bg-emerald-100 p-3">
@@ -105,7 +104,7 @@ export default function OverviewPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Datasets</p>
               <p className="mt-1 text-3xl font-bold text-gray-900">
-                {datasetsData?.pagination.total ?? '-'}
+                {datasetsData?.pagination?.total ?? '-'}
               </p>
             </div>
             <div className="rounded-full bg-purple-100 p-3">
@@ -128,15 +127,19 @@ export default function OverviewPage() {
                 Service Status
               </p>
               <p className="mt-1 text-3xl font-bold text-gray-900">
-                {health?.status === 'healthy' ? 'Online' : 'Offline'}
+                {health?.status === 'ok' || health?.status === 'healthy'
+                  ? 'Online'
+                  : 'Offline'}
               </p>
             </div>
             <div
               className={`rounded-full p-3 ${
-                health?.status === 'healthy' ? 'bg-emerald-100' : 'bg-red-100'
+                health?.status === 'ok' || health?.status === 'healthy'
+                  ? 'bg-emerald-100'
+                  : 'bg-red-100'
               }`}
             >
-              {health?.status === 'healthy'
+              {health?.status === 'ok' || health?.status === 'healthy'
                 ? (
                     <CheckCircle className="h-6 w-6 text-emerald-600" />
                   )
@@ -194,7 +197,7 @@ export default function OverviewPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <StatusBadge status={job.status} />
+                      <StatusBadge status={job.status} showIcon={false} />
                       <Link
                         href={`/jobs/${job.id}`}
                         className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
@@ -224,22 +227,4 @@ function StatusIcon({ status }: { status: string }) {
     default:
       return <Clock className="h-5 w-5 text-gray-400" />;
   }
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    pending: 'bg-amber-50 text-amber-600 border border-amber-200',
-    running: 'bg-blue-50 text-blue-600 border border-blue-200',
-    completed: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
-    failed: 'bg-red-50 text-red-600 border border-red-200',
-    cancelled: 'bg-gray-50 text-gray-600 border border-gray-200',
-  };
-
-  return (
-    <span
-      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || styles.cancelled}`}
-    >
-      {status}
-    </span>
-  );
 }

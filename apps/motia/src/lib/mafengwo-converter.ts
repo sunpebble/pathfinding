@@ -3,6 +3,8 @@
  * 将爬取的原始数据转换为 TravelGuide 格式
  */
 
+import { cleanContent } from '@pathfinding/crawler-types';
+
 /**
  * 数据完整度级别
  */
@@ -163,21 +165,32 @@ export function determineCompletenessLevel(
 
 /**
  * 将爬取数据转换为 Convex 存储格式
+ * 在转换过程中自动执行内容清洗
  */
 export function convertToConvexFormat(
   url: string,
   rawData: MafengwoRawGuide,
 ): MafengwoGuideForConvex {
   const sourceExternalId = extractSourceExternalId(url);
-  const qualityScore = calculateQualityScore(rawData);
-  const completenessLevel = determineCompletenessLevel(rawData, qualityScore);
+
+  // 清洗内容：去除广告、推广、个人信息、平台噪音
+  const cleanResult = cleanContent(rawData.content || '', {
+    categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
+    preserveParagraphs: true,
+  });
+  const cleanedContent = cleanResult.content;
+
+  // 使用清洗后的内容计算质量分数
+  const cleanedRawData = { ...rawData, content: cleanedContent };
+  const qualityScore = calculateQualityScore(cleanedRawData);
+  const completenessLevel = determineCompletenessLevel(cleanedRawData, qualityScore);
 
   return {
     sourcePlatform: 'mafengwo',
     sourceExternalId,
     sourceUrl: url,
     title: rawData.title || undefined,
-    content: rawData.content || '',
+    content: cleanedContent,
     authorName: rawData.author || undefined,
     destinations: [], // 需要后续 AI 提取
     tags: [], // 需要后续 AI 提取

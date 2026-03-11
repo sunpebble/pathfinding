@@ -1,5 +1,3 @@
-export * from './mocks/index';
-
 // Re-export vitest utilities for convenience
 export {
   afterAll,

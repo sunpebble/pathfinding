@@ -2,15 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import {
-  CheckCircle,
-  Clock,
   Database,
   Download,
   Loader2,
   RefreshCw,
-  XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { getTrainingDatasets } from '@/lib/api';
 import { formatDateTime, shortId } from '@/lib/utils';
 
@@ -77,7 +75,7 @@ export default function DatasetsPage() {
           <option value="failed">Failed</option>
         </select>
         <span className="text-sm text-gray-500">
-          {datasetsData?.pagination.total ?? 0}
+          {datasetsData?.pagination?.total ?? 0}
           {' '}
           datasets total
         </span>
@@ -160,6 +158,11 @@ export default function DatasetsPage() {
                         <td className="whitespace-nowrap px-6 py-4 text-right">
                           {dataset.status === 'completed' && dataset.file_path && (
                             <button
+                              onClick={() => {
+                                // Trigger download via API
+                                const url = `/api/training-datasets/download?id=${dataset.id}`;
+                                window.open(url, '_blank');
+                              }}
                               className="rounded-lg bg-blue-100 p-2 text-blue-600 hover:bg-blue-200"
                               title="Download dataset"
                             >
@@ -174,37 +177,5 @@ export default function DatasetsPage() {
         </table>
       </div>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { icon: React.ReactNode; className: string }> = {
-    pending: {
-      icon: <Clock className="h-3.5 w-3.5" />,
-      className: 'bg-amber-50 text-amber-600 border-amber-200',
-    },
-    generating: {
-      icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-      className: 'bg-blue-50 text-blue-600 border-blue-200',
-    },
-    completed: {
-      icon: <CheckCircle className="h-3.5 w-3.5" />,
-      className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-    },
-    failed: {
-      icon: <XCircle className="h-3.5 w-3.5" />,
-      className: 'bg-red-50 text-red-600 border-red-200',
-    },
-  };
-
-  const { icon, className } = config[status] ?? config.pending!;
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}
-    >
-      {icon}
-      {status}
-    </span>
   );
 }

@@ -5,7 +5,7 @@ actor AstronomyAPIClient {
   static let shared = AstronomyAPIClient()
 
   private let network = NetworkClient.shared
-  private var decoder: JSONDecoder { get async { await network.decoder } }
+  private var decoder: JSONDecoder { network.decoder }
   private var baseURL: URL { get async { await network.baseURL } }
 
   private init() {}
@@ -41,7 +41,7 @@ actor AstronomyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(SunTimesResponse.self, from: data)
+    let result = try decoder.decode(SunTimesResponse.self, from: data)
     return result.data
   }
 
@@ -74,7 +74,7 @@ actor AstronomyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(SunTimesRangeResponse.self, from: data)
+    let result = try decoder.decode(SunTimesRangeResponse.self, from: data)
     return result.data
   }
 
@@ -94,7 +94,7 @@ actor AstronomyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(MoonPhaseResponse.self, from: data)
+    let result = try decoder.decode(MoonPhaseResponse.self, from: data)
     return result.data
   }
 
@@ -115,7 +115,7 @@ actor AstronomyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(MoonPhasesResponse.self, from: data)
+    let result = try decoder.decode(MoonPhasesResponse.self, from: data)
     return result.data
   }
 
@@ -147,7 +147,7 @@ actor AstronomyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(AstronomicalEventsResponse.self, from: data)
+    let result = try decoder.decode(AstronomicalEventsResponse.self, from: data)
     return result.data
   }
 
@@ -175,7 +175,7 @@ actor AstronomyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(StargazingSpotsResponse.self, from: data)
+    let result = try decoder.decode(StargazingSpotsResponse.self, from: data)
     return result.data
   }
 
@@ -212,7 +212,7 @@ actor AstronomyAPIClient {
     }
 
     let data = try await network.fetchWithRetry(url: url)
-    let result = try await decoder.decode(AstronomyDataResponse.self, from: data)
+    let result = try decoder.decode(AstronomyDataResponse.self, from: data)
     return result.data
   }
 }
