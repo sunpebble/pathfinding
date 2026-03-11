@@ -109,14 +109,24 @@ enum AppConfig {
   // MARK: - Network Configuration
 
   static var networkTimeoutRequest: TimeInterval {
-    TimeInterval(infoPlistInt(forKey: "PFAPITimeout") ?? 30)
+    #if DEBUG
+      return TimeInterval(infoPlistInt(forKey: "PFAPITimeout") ?? 5)
+    #else
+      return TimeInterval(infoPlistInt(forKey: "PFAPITimeout") ?? 30)
+    #endif
   }
 
   static var networkTimeoutResource: TimeInterval {
     networkTimeoutRequest * 2
   }
 
-  static let maxRetryAttempts = 3
+  static var maxRetryAttempts: Int {
+    #if DEBUG
+      return 1
+    #else
+      return 3
+    #endif
+  }
 
   // MARK: - Performance Configuration
 

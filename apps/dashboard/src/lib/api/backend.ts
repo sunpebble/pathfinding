@@ -9,6 +9,7 @@
  */
 
 import type { CrawlJob } from './crawler';
+import { getMockResponse } from './mock-data';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -105,21 +106,34 @@ export async function fetchBackendApi<T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(`${getBackendApiBaseUrl()}${endpoint}`, {
-    method: options?.method ?? 'GET',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
+  try {
+    const res = await fetch(`${getBackendApiBaseUrl()}${endpoint}`, {
+      method: options?.method ?? 'GET',
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      signal: AbortSignal.timeout(5000),
+    });
 
-  if (!res.ok) {
-    const error = await parseJsonResponse<unknown>(res).catch(() => undefined);
-    throw new Error(parseErrorMessage(error, res.status));
+    if (!res.ok) {
+      const error = await parseJsonResponse<unknown>(res).catch(() => undefined);
+      throw new Error(parseErrorMessage(error, res.status));
+    }
+
+    return parseJsonResponse<T>(res);
   }
-
-  return parseJsonResponse<T>(res);
+  catch {
+    // Fall back to mock data when the backend is unreachable
+    const method = options?.method ?? 'GET';
+    const mock = getMockResponse(endpoint, method);
+    if (mock) {
+      console.warn(`[mock] Backend unavailable, returning mock data for ${method} ${endpoint}`);
+      return mock as T;
+    }
+    throw new Error(`Backend unavailable and no mock data for ${method} ${endpoint}`);
+  }
 }
 
 /**

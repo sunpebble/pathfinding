@@ -44,11 +44,6 @@ const nextConfig: NextConfig = {
         source: '/api/ai-service/:path*',
         destination: `${aiServiceUrl}/api/:path*`,
       },
-      // Health check for AI Service
-      {
-        source: '/api/health',
-        destination: `${aiServiceUrl}/health`,
-      },
     ];
   },
 };

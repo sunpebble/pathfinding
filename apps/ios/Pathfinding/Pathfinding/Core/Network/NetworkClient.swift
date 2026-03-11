@@ -50,7 +50,11 @@ actor NetworkClient {
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = AppConfig.networkTimeoutRequest
     config.timeoutIntervalForResource = AppConfig.networkTimeoutResource
-    config.waitsForConnectivity = true
+    #if DEBUG
+      config.waitsForConnectivity = false
+    #else
+      config.waitsForConnectivity = true
+    #endif
     self.session = URLSession(configuration: config)
 
     self.decoder = JSONDecoder()

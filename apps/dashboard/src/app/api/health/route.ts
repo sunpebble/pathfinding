@@ -9,7 +9,7 @@ const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
 async function checkService(url: string) {
   const start = Date.now();
   const response = await fetch(`${url}/health`, {
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(2000),
   });
 
   if (!response.ok) {

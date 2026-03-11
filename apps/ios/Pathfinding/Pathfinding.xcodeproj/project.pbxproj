@@ -168,6 +168,7 @@
 		AE1294CB7C251EBBDDE6B7EF /* InsuranceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D735D6A5B0E012C1150CF3B /* InsuranceStore.swift */; };
 		B0FC362885A6ABFCEFF165FA /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611F45696040CC4865B5AEEA /* StatsView.swift */; };
 		B25BA6FFF6456A481498CEDA /* SimCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F4D3AB38152BC902762E8C /* SimCard.swift */; };
+		B4F2917D6D65FE17AB8B3096 /* EnhancedBackgrounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF55E6617D542D4A8B036D9 /* EnhancedBackgrounds.swift */; };
 		B536399C0BCFD14F54B7B163 /* RichTextContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D81559B19C33A8820A8F18 /* RichTextContentView.swift */; };
 		B6760B3B3C204B809B24C24B /* PlainTextContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A08A7993D15AB3341C118E /* PlainTextContentView.swift */; };
 		B7DC0A894605BF8ADD83EC6B /* FollowViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40FBF55D02BA97F4577222D1 /* FollowViews.swift */; };
@@ -253,6 +254,7 @@
 		077E45AEFD3DD10D928CD204 /* FlightListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightListView.swift; sourceTree = "<group>"; };
 		0874DFDB23D30F0DFAC99401 /* PDFAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFAPIClient.swift; sourceTree = "<group>"; };
 		08C22D18715DAE2244022C97 /* CopyItinerarySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyItinerarySheet.swift; sourceTree = "<group>"; };
+		0AF55E6617D542D4A8B036D9 /* EnhancedBackgrounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancedBackgrounds.swift; sourceTree = "<group>"; };
 		0F9C4D9885656593374D8FE7 /* PoiEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiEditView.swift; sourceTree = "<group>"; };
 		0FC3544E0004E07D487EE3BD /* PathfindingTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PathfindingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1155EC587C26AD4399113BBA /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
@@ -982,6 +984,7 @@
 				48BE61BE7DF8534E61248AEE /* ARComponents.swift */,
 				150DD530C2F4383B398260A8 /* CachedAsyncImage.swift */,
 				4F941316940938FD8267380E /* DesignSystem.swift */,
+				0AF55E6617D542D4A8B036D9 /* EnhancedBackgrounds.swift */,
 				ADCE5553363AC937CD1E2570 /* ExplorerCards.swift */,
 				B759B286F348275629CF6D99 /* ExplorerComponents.swift */,
 				31EDD45876CADDD73FBDB5ED /* GuideComponents.swift */,
@@ -1185,6 +1188,7 @@
 				E8CE944BDEE799DD2C7348F4 /* DesignSystem.swift in Sources */,
 				2149C6EE339A1749A6163C16 /* DiscoverView.swift in Sources */,
 				5E8B83A21046D96829003E64 /* EditBudgetView.swift in Sources */,
+				B4F2917D6D65FE17AB8B3096 /* EnhancedBackgrounds.swift in Sources */,
 				38263948E16017F49C319761 /* EnhancedDiscoverView.swift in Sources */,
 				7E52564C035441D32FB49C14 /* ExpenseListView.swift in Sources */,
 				E7EDEA42A1B8A6DD3238ADF9 /* ExplorerCards.swift in Sources */,
