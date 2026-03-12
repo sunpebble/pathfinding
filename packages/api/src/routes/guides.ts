@@ -1,3 +1,4 @@
+import type { DayItinerary } from '@pathfinding/database/schema';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
@@ -9,6 +10,9 @@ import { and, desc, eq, gte, like, sql } from 'drizzle-orm';
  */
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { escapeLikePattern, parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonList, jsonOk } from '../lib/response.js';
+import { authRequired } from '../middleware/auth.js';
 
 type Guide = InferSelectModel<typeof travelGuides>;
 
@@ -60,16 +64,10 @@ app.get('/', async (c) => {
     = Number.isFinite(parsedMinQuality) && parsedMinQuality >= 0
       ? parsedMinQuality
       : 0;
-  const parsedLimit = Number.parseInt(c.req.query('limit') ?? '20', 10);
-  const limit
-    = Number.isInteger(parsedLimit) && parsedLimit > 0
-      ? Math.min(parsedLimit, 100)
-      : 20;
-  const parsedOffset = Number.parseInt(c.req.query('offset') ?? '0', 10);
-  const offset
-    = Number.isInteger(parsedOffset) && parsedOffset >= 0
-      ? parsedOffset
-      : 0;
+  const { limit, offset } = parsePagination(
+    c.req.query('limit'),
+    c.req.query('offset'),
+  );
 
   const db = getDb();
 
@@ -104,21 +102,15 @@ app.get('/', async (c) => {
     results = await query;
   }
 
-  return c.json({
-    data: results.map(toClientGuide),
-    pagination: { limit, offset, total: results.length },
-  });
+  // TODO: Replace with a parallel COUNT(*) query for accurate total
+  return jsonList(c, results.map(toClientGuide), { limit, offset }, results.length);
 });
 
 // ── GET /search — Search guides ────────────────────────
 app.get('/search', async (c) => {
   const q = c.req.query('q');
   const destination = c.req.query('destination');
-  const parsedLimit = Number.parseInt(c.req.query('limit') ?? '30', 10);
-  const limit
-    = Number.isInteger(parsedLimit) && parsedLimit > 0
-      ? Math.min(parsedLimit, 100)
-      : 30;
+  const { limit } = parsePagination(c.req.query('limit'), undefined, 30);
 
   const db = getDb();
 
@@ -127,7 +119,7 @@ app.get('/search', async (c) => {
     results = await db
       .select()
       .from(travelGuides)
-      .where(like(travelGuides.title, `%${q}%`))
+      .where(like(travelGuides.title, `%${escapeLikePattern(q)}%`))
       .orderBy(desc(travelGuides.qualityScore))
       .limit(limit);
   }
@@ -150,19 +142,13 @@ app.get('/search', async (c) => {
       .limit(limit);
   }
 
-  return c.json({
-    data: results.map(toClientGuide),
-    pagination: { total: results.length, limit, offset: 0 },
-  });
+  // TODO: Replace with a parallel COUNT(*) query for accurate total
+  return jsonList(c, results.map(toClientGuide), { limit, offset: 0 }, results.length);
 });
 
 // ── GET /destinations — Popular destinations ───────────
 app.get('/destinations', async (c) => {
-  const parsedLimit = Number.parseInt(c.req.query('limit') ?? '10', 10);
-  const limit
-    = Number.isInteger(parsedLimit) && parsedLimit > 0
-      ? Math.min(parsedLimit, 100)
-      : 10;
+  const { limit } = parsePagination(c.req.query('limit'), undefined, 10);
   const db = getDb();
 
   // Use JSON_TABLE or a simpler aggregation depending on MySQL/TiDB version.
@@ -189,12 +175,12 @@ app.get('/destinations', async (c) => {
     .slice(0, limit)
     .map(([name, count]) => ({ name, count }));
 
-  return c.json({ data: topDestinations });
+  return jsonData(c, topDestinations);
 });
 
 // ── GET /by-id — Get guide by ID ───────────────────────
 app.get('/by-id', async (c) => {
-  const id = c.req.query('id');
+  const id = parsePositiveInt(c.req.query('id'));
   if (!id)
     return c.json({ error: '缺少id参数' }, 400);
 
@@ -202,7 +188,7 @@ app.get('/by-id', async (c) => {
   const result = await db
     .select()
     .from(travelGuides)
-    .where(eq(travelGuides.id, Number(id)))
+    .where(eq(travelGuides.id, id))
     .limit(1);
 
   if (result.length === 0) {
@@ -236,35 +222,43 @@ app.get('/stats', async (c) => {
 
 // ── GET /:id — Get guide by ID (path param) ────────────
 app.get('/:id', async (c) => {
-  const { id } = c.req.param();
+  const id = parsePositiveInt(c.req.param('id'));
+  if (!id)
+    return c.json({ error: 'Invalid ID' }, 400);
   const db = getDb();
 
   const result = await db
     .select()
     .from(travelGuides)
-    .where(eq(travelGuides.id, Number(id)))
+    .where(eq(travelGuides.id, id))
     .limit(1);
 
   if (result.length === 0) {
     return c.json({ error: '攻略不存在' }, 404);
   }
 
-  return c.json({ data: toClientGuide(result[0]!) });
+  return jsonData(c, toClientGuide(result[0]!));
 });
 
 // ── POST / — Create a guide ───────────────────────────
+const destinationSchema = z.object({
+  name: z.string(),
+  country: z.string().optional(),
+  coordinates: z.object({ lat: z.number(), lng: z.number() }).optional(),
+});
+
 const createGuideSchema = z.object({
   platform: z.string(),
   title: z.string(),
   content: z.string().optional(),
   authorName: z.string().optional(),
   sourceUrl: z.string().optional(),
-  destinations: z.array(z.string()).optional(),
+  destinations: z.array(destinationSchema).optional(),
   tags: z.array(z.string()).optional(),
   category: z.string().optional(),
 });
 
-app.post('/', zValidator('json', createGuideSchema), async (c) => {
+app.post('/', authRequired(), zValidator('json', createGuideSchema), async (c) => {
   const body = c.req.valid('json');
   const db = getDb();
 
@@ -282,7 +276,7 @@ app.post('/', zValidator('json', createGuideSchema), async (c) => {
     })
     .$returningId();
 
-  return c.json({ data: { id: result!.id } }, 201);
+  return jsonData(c, { id: result!.id }, 201);
 });
 
 // ── PATCH /:id — Update a guide ────────────────────────
@@ -290,7 +284,7 @@ const updateGuideSchema = z.object({
   title: z.string().optional(),
   content: z.string().optional(),
   category: z.string().optional(),
-  destinations: z.array(z.string()).optional(),
+  destinations: z.array(destinationSchema).optional(),
   tags: z.array(z.string()).optional(),
 });
 
@@ -302,8 +296,10 @@ const updateGuidePoiCoordinatesSchema = z.object({
   verifiedBy: z.string().optional(),
 });
 
-app.patch('/:id', zValidator('json', updateGuideSchema), async (c) => {
-  const { id } = c.req.param();
+app.patch('/:id', authRequired(), zValidator('json', updateGuideSchema), async (c) => {
+  const id = parsePositiveInt(c.req.param('id'));
+  if (!id)
+    return c.json({ error: 'Invalid ID' }, 400);
   const body = c.req.valid('json');
   const db = getDb();
 
@@ -326,18 +322,17 @@ app.patch('/:id', zValidator('json', updateGuideSchema), async (c) => {
   await db
     .update(travelGuides)
     .set(updates)
-    .where(eq(travelGuides.id, Number(id)));
+    .where(eq(travelGuides.id, id));
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
-app.patch('/:id/poi-coordinates', zValidator('json', updateGuidePoiCoordinatesSchema), async (c) => {
-  const { id } = c.req.param();
+app.patch('/:id/poi-coordinates', authRequired(), zValidator('json', updateGuidePoiCoordinatesSchema), async (c) => {
+  const guideId = parsePositiveInt(c.req.param('id'));
   const body = c.req.valid('json');
-  const guideId = Number.parseInt(id, 10);
 
-  if (!Number.isInteger(guideId) || guideId <= 0) {
-    return c.json({ error: '无效的攻略ID' }, 400);
+  if (!guideId) {
+    return c.json({ error: 'Invalid ID' }, 400);
   }
 
   const db = getDb();
@@ -352,28 +347,27 @@ app.patch('/:id/poi-coordinates', zValidator('json', updateGuidePoiCoordinatesSc
     return c.json({ error: '攻略不存在' }, 404);
   }
 
-  const dayItineraries = Array.isArray(guide.dayItineraries) ? structuredClone(guide.dayItineraries) as Array<Record<string, unknown>> : [];
-  const dayIndex = dayItineraries.findIndex(day => Number(day.dayNumber) === body.dayNumber);
+  const dayItineraries: DayItinerary[] = Array.isArray(guide.dayItineraries) ? structuredClone(guide.dayItineraries) : [];
+  const dayIndex = dayItineraries.findIndex(day => Number(day.day) === body.dayNumber);
   if (dayIndex === -1) {
     return c.json({ error: '攻略日程不存在' }, 404);
   }
 
-  const pois = Array.isArray(dayItineraries[dayIndex]?.pois) ? [...(dayItineraries[dayIndex]!.pois as Array<Record<string, unknown>>)] : [];
+  const pois = Array.isArray(dayItineraries[dayIndex]?.pois) ? [...dayItineraries[dayIndex]!.pois] : [];
   if (!pois[body.poiIndex]) {
     return c.json({ error: '攻略兴趣点不存在' }, 404);
   }
 
   pois[body.poiIndex] = {
     ...pois[body.poiIndex],
-    latitude: body.latitude,
-    longitude: body.longitude,
-    isManuallyVerified: true,
-    verifiedAt: Date.now(),
-    verifiedBy: body.verifiedBy ?? null,
+    name: pois[body.poiIndex]!.name,
+    lat: body.latitude,
+    lng: body.longitude,
   };
 
   dayItineraries[dayIndex] = {
     ...dayItineraries[dayIndex],
+    day: dayItineraries[dayIndex]!.day,
     pois,
   };
 
@@ -382,7 +376,7 @@ app.patch('/:id/poi-coordinates', zValidator('json', updateGuidePoiCoordinatesSc
     .set({ dayItineraries })
     .where(eq(travelGuides.id, guideId));
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
 export default app;

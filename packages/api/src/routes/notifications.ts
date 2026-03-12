@@ -141,7 +141,7 @@ const updateSettingsSchema = z.object({
   emailEnabled: z.boolean().optional(),
   quietHoursStart: z.string().optional(),
   quietHoursEnd: z.string().optional(),
-  categories: z.any().optional(),
+  categories: z.array(z.string()).optional(),
 });
 
 app.put('/settings', authRequired(), zValidator('json', updateSettingsSchema), async (c) => {

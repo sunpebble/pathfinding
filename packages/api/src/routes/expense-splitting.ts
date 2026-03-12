@@ -14,6 +14,7 @@ import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePositiveInt } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
@@ -67,9 +68,9 @@ app.post('/members', authRequired(), zValidator('json', createMemberSchema), asy
 
 // ── DELETE /members/:id — Remove a trip member ─────────────
 app.delete('/members/:id', authRequired(), async (c) => {
-  const id = Number(c.req.param('id'));
+  const id = parsePositiveInt(c.req.param('id'));
 
-  if (Number.isNaN(id)) {
+  if (!id) {
     throw new ApiError(400, '无效的成员ID');
   }
 
@@ -192,9 +193,9 @@ app.post('/expenses', authRequired(), zValidator('json', createExpenseSchema), a
 
 // ── DELETE /expenses/:id — Delete shared expense ───────────
 app.delete('/expenses/:id', authRequired(), async (c) => {
-  const id = Number(c.req.param('id'));
+  const id = parsePositiveInt(c.req.param('id'));
 
-  if (Number.isNaN(id)) {
+  if (!id) {
     throw new ApiError(400, '无效的费用ID');
   }
 
@@ -267,9 +268,9 @@ app.post('/settlements', authRequired(), zValidator('json', createSettlementSche
 
 // ── PATCH /settlements/:id/settle — Mark as settled ────────
 app.patch('/settlements/:id/settle', authRequired(), async (c) => {
-  const id = Number(c.req.param('id'));
+  const id = parsePositiveInt(c.req.param('id'));
 
-  if (Number.isNaN(id)) {
+  if (!id) {
     throw new ApiError(400, '无效的结算ID');
   }
 

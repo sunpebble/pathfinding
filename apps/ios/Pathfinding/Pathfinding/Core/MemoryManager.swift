@@ -1,7 +1,9 @@
 import Foundation
 
-/// Memory management utility for monitoring app memory usage
-final class MemoryManager: @unchecked Sendable {
+/// Memory management utility for monitoring app memory usage.
+/// This type is safe to use across concurrency boundaries because it holds no
+/// mutable state — all methods read from the OS kernel or create local values.
+final class MemoryManager: Sendable {
   // MARK: - Shared Instance
 
   static let shared = MemoryManager()

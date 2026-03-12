@@ -10,6 +10,7 @@ import {
   mysqlTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
 import { createdAt, fk, id, updatedAt } from './columns';
@@ -50,7 +51,7 @@ export const userFollows = mysqlTable(
   t => [
     index('user_follows_follower_idx').on(t.followerId),
     index('user_follows_following_idx').on(t.followingId),
-    index('user_follows_pair_idx').on(t.followerId, t.followingId),
+    uniqueIndex('user_follows_uniq').on(t.followerId, t.followingId),
   ],
 );
 

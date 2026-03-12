@@ -9,21 +9,50 @@ import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { Pagination } from './params.js';
 
+/** Shape of a paginated list response. */
+export interface ListResponse<T> {
+  data: T[];
+  pagination: Pagination & { total: number };
+}
+
+/** Shape of a single-resource response. */
+export interface DataResponse<T> {
+  data: T;
+}
+
+/** Shape of a success-only response (typically for mutations). */
+export interface OkResponse {
+  success: true;
+}
+
 /**
  * Return a paginated list response.
  *
- * ```json
- * { "data": [...], "pagination": { "limit": 20, "offset": 0, "total": 5 } }
+ * @param c      - Hono context
+ * @param data   - Array of items to return
+ * @param pagination - Pagination parameters used in the query
+ * @param total  - Total number of matching rows (from COUNT query)
+ * @param status - HTTP status code (defaults to 200)
+ *
+ * @example
+ * ```ts
+ * const { limit, offset } = parsePagination(...)
+ * const [items, countResult] = await Promise.all([
+ *   db.select().from(table).limit(limit).offset(offset),
+ *   db.select({ count: sql<number>`count(*)` }).from(table),
+ * ])
+ * return jsonList(c, items, { limit, offset }, countResult[0]?.count ?? 0)
  * ```
  */
 export function jsonList<T>(
   c: Context,
   data: T[],
   pagination: Pagination,
+  total: number,
   status: ContentfulStatusCode = 200,
 ) {
   return c.json(
-    { data, pagination: { ...pagination, total: data.length } },
+    { data, pagination: { ...pagination, total } } satisfies ListResponse<T>,
     status,
   );
 }
@@ -31,8 +60,14 @@ export function jsonList<T>(
 /**
  * Return a single-resource response.
  *
- * ```json
- * { "data": { ... } }
+ * @param c      - Hono context
+ * @param data   - The resource to return
+ * @param status - HTTP status code (defaults to 200)
+ *
+ * @example
+ * ```ts
+ * const user = await db.select().from(users).where(eq(users.id, id))
+ * return jsonData(c, user)
  * ```
  */
 export function jsonData<T>(
@@ -40,16 +75,20 @@ export function jsonData<T>(
   data: T,
   status: ContentfulStatusCode = 200,
 ) {
-  return c.json({ data }, status);
+  return c.json({ data } satisfies DataResponse<T>, status);
 }
 
 /**
- * Return a success response (typically for mutations).
+ * Return a success response (typically for mutations like DELETE).
  *
- * ```json
- * { "success": true }
+ * @param c - Hono context
+ *
+ * @example
+ * ```ts
+ * await db.delete(items).where(eq(items.id, id))
+ * return jsonOk(c)
  * ```
  */
 export function jsonOk(c: Context) {
-  return c.json({ success: true });
+  return c.json({ success: true } satisfies OkResponse);
 }

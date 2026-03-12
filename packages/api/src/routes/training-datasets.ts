@@ -9,6 +9,8 @@ import { and, desc, eq, like, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonOk } from '../lib/response.js';
 import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
@@ -16,10 +18,10 @@ import { ApiError } from '../middleware/error-handler.js';
 const createDatasetSchema = z.object({
   name: z.string().min(1),
   version: z.number(),
-  generationParams: z.any().optional(),
-  outputFormats: z.any().optional(),
+  generationParams: z.record(z.unknown()).optional(),
+  outputFormats: z.record(z.unknown()).optional(),
   status: z.string().optional(),
-  statistics: z.any().optional(),
+  statistics: z.record(z.unknown()).optional(),
 });
 
 const deleteDatasetSchema = z.object({
@@ -29,8 +31,8 @@ const deleteDatasetSchema = z.object({
 const updateDatasetSchema = z.object({
   id: z.number(),
   status: z.string().optional(),
-  statistics: z.any().optional(),
-  storagePaths: z.any().optional(),
+  statistics: z.record(z.unknown()).optional(),
+  storagePaths: z.record(z.unknown()).optional(),
   generatedAt: z.string().optional(),
 });
 
@@ -40,8 +42,10 @@ const app = new Hono<{ Variables: AuthVariables }>();
 app.get('/', adminRequired(), async (c) => {
   const name = c.req.query('name');
   const status = c.req.query('status');
-  const limit = Number.parseInt(c.req.query('limit') ?? '20', 10);
-  const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
+  const { limit, offset } = parsePagination(
+    c.req.query('limit'),
+    c.req.query('offset'),
+  );
 
   const db = getDb();
 
@@ -103,12 +107,12 @@ app.post('/', adminRequired(), zValidator('json', createDatasetSchema), async (c
     .where(eq(trainingDatasets.id, datasetId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(dataset[0]) }, 201);
+  return jsonData(c, convertKeysToSnakeCase(dataset[0]), 201);
 });
 
 // ── GET /dataset — Get a training dataset by ID ────────
 app.get('/dataset', adminRequired(), async (c) => {
-  const id = c.req.query('id');
+  const id = parsePositiveInt(c.req.query('id'));
 
   if (!id) {
     throw new ApiError(400, '缺少id参数');
@@ -118,14 +122,14 @@ app.get('/dataset', adminRequired(), async (c) => {
   const dataset = await db
     .select()
     .from(trainingDatasets)
-    .where(eq(trainingDatasets.id, Number(id)))
+    .where(eq(trainingDatasets.id, id))
     .limit(1);
 
   if (!dataset[0]) {
     throw new ApiError(404, '数据集不存在');
   }
 
-  return c.json({ data: convertKeysToSnakeCase(dataset[0]) });
+  return jsonData(c, convertKeysToSnakeCase(dataset[0]));
 });
 
 // ── DELETE / — Delete a training dataset ───────────────
@@ -135,7 +139,7 @@ app.delete('/', adminRequired(), zValidator('json', deleteDatasetSchema), async 
   const db = getDb();
   await db.delete(trainingDatasets).where(eq(trainingDatasets.id, Number(id)));
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
 // ── PATCH / — Update a training dataset ────────────────
@@ -160,7 +164,7 @@ app.patch('/', adminRequired(), zValidator('json', updateDatasetSchema), async (
     .where(eq(trainingDatasets.id, datasetId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(dataset[0]) });
+  return jsonData(c, convertKeysToSnakeCase(dataset[0]));
 });
 
 export default app;

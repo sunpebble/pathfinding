@@ -3,8 +3,8 @@
  * Returns the health status of the Dashboard and its dependent services
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const AI_SERVICE_URL = process.env.NEXT_PUBLIC_AI_SERVICE_URL;
 
 async function checkService(url: string) {
   const start = Date.now();

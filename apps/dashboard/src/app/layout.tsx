@@ -1,3 +1,10 @@
+/**
+ * Root layout for the dashboard app.
+ *
+ * Wraps all pages with the global providers, sidebar navigation,
+ * header, and error boundary.
+ */
+
 import type { Metadata } from 'next';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Header } from '@/components/header';

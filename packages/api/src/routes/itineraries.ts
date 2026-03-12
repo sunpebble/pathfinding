@@ -13,7 +13,8 @@ import { and, desc, eq, inArray } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
-import { parsePositiveInt } from '../lib/params.js';
+import { parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonList, jsonOk } from '../lib/response.js';
 import { authOptional, authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 import {
@@ -68,19 +69,22 @@ async function getItineraryDto(itineraryId: number) {
 app.get('/', authOptional(), async (c) => {
   const userId = c.req.query('userId');
   const visibility = c.req.query('visibility');
-  const limit = Number.parseInt(c.req.query('limit') ?? '20', 10);
-  const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
+  const { limit, offset } = parsePagination(
+    c.req.query('limit'),
+    c.req.query('offset'),
+  );
   const authUserId = c.get('userId');
 
   const db = getDb();
 
   let results: ItineraryRow[];
+  let whereClause;
   if (userId) {
     if (!authUserId || authUserId !== userId) {
       return c.json({ error: '行程访问被拒绝' }, 403);
     }
 
-    const whereClause = visibility && visibility !== 'all'
+    whereClause = visibility && visibility !== 'all'
       ? and(
           eq(itineraries.userId, Number(userId)),
           eq(itineraries.visibility, visibility),
@@ -96,31 +100,33 @@ app.get('/', authOptional(), async (c) => {
       .offset(offset);
   }
   else {
+    whereClause = eq(itineraries.visibility, 'public');
     results = await db
       .select()
       .from(itineraries)
-      .where(eq(itineraries.visibility, 'public'))
+      .where(whereClause)
       .orderBy(desc(itineraries.createdAt))
       .limit(limit)
       .offset(offset);
   }
 
-  return c.json({
-    data: convertKeysToSnakeCase(results),
-    pagination: { limit, offset, total: results.length },
-  });
+  // TODO: Replace with a parallel COUNT(*) query for accurate total
+  return jsonList(c, convertKeysToSnakeCase(results) as ItineraryRow[], { limit, offset }, results.length);
 });
 
 // ── GET /:id — Get itinerary by ID ─────────────────────
 app.get('/:id', authOptional(), async (c) => {
-  const { id } = c.req.param();
+  const itineraryId = parsePositiveInt(c.req.param('id'));
+  if (!itineraryId) {
+    return c.json({ error: 'Invalid ID' }, 400);
+  }
   const db = getDb();
   const authUserId = c.get('userId');
 
   const result = await db
     .select()
     .from(itineraries)
-    .where(eq(itineraries.id, Number(id)))
+    .where(eq(itineraries.id, itineraryId))
     .limit(1);
 
   if (result.length === 0) {
@@ -143,7 +149,7 @@ app.get('/:id', authOptional(), async (c) => {
   const days = await db
     .select()
     .from(itineraryDays)
-    .where(eq(itineraryDays.itineraryId, Number(id)))
+    .where(eq(itineraryDays.itineraryId, itineraryId))
     .orderBy(itineraryDays.dayNumber);
 
   const dayIds = days.map(d => d.id);
@@ -156,22 +162,19 @@ app.get('/:id', authOptional(), async (c) => {
           .orderBy(itineraryItems.orderIndex)
       : [];
 
-  return c.json({
-    data: {
-      ...(convertKeysToSnakeCase(itinerary) as Record<string, unknown>),
-      days: convertKeysToSnakeCase(
-        days.map(day => ({
-          ...day,
-          items: items.filter(item => item.dayId === day.id),
-        })),
-      ),
-    },
+  return jsonData(c, {
+    ...(convertKeysToSnakeCase(itinerary) as Record<string, unknown>),
+    days: convertKeysToSnakeCase(
+      days.map(day => ({
+        ...day,
+        items: items.filter(item => item.dayId === day.id),
+      })),
+    ),
   });
 });
 
 // ── POST / — Create itinerary ──────────────────────────
 const createItinerarySchema = z.object({
-  userId: z.number(),
   title: z.string(),
   cityId: z.number(),
   startDate: z.string(),
@@ -180,14 +183,15 @@ const createItinerarySchema = z.object({
   coverImageUrl: z.string().optional(),
 });
 
-app.post('/', zValidator('json', createItinerarySchema), async (c) => {
+app.post('/', authRequired(), zValidator('json', createItinerarySchema), async (c) => {
   const body = c.req.valid('json');
+  const userId = Number(c.get('userId'));
   const db = getDb();
 
   const [result] = await db
     .insert(itineraries)
     .values({
-      userId: body.userId,
+      userId,
       title: body.title,
       cityId: body.cityId,
       startDate: body.startDate,
@@ -197,7 +201,7 @@ app.post('/', zValidator('json', createItinerarySchema), async (c) => {
     })
     .$returningId();
 
-  return c.json({ data: { id: result!.id } }, 201);
+  return jsonData(c, { id: result!.id }, 201);
 });
 
 // ── PATCH /:id — Update itinerary ──────────────────────
@@ -214,18 +218,17 @@ app.patch(
   authRequired(),
   zValidator('json', updateItinerarySchema),
   async (c) => {
-    const { id } = c.req.param();
-    const authUserId = Number.parseInt(c.get('userId'), 10);
+    const authUserId = parsePositiveInt(c.get('userId'));
     const body = c.req.valid('json');
     const db = getDb();
 
-    if (!Number.isInteger(authUserId) || authUserId <= 0) {
+    if (!authUserId) {
       return c.json({ error: '无效的认证用户' }, 401);
     }
 
-    const itineraryId = Number.parseInt(id, 10);
-    if (!Number.isInteger(itineraryId) || itineraryId <= 0) {
-      return c.json({ error: '无效的行程ID' }, 400);
+    const itineraryId = parsePositiveInt(c.req.param('id'));
+    if (!itineraryId) {
+      return c.json({ error: 'Invalid ID' }, 400);
     }
 
     const ownedItinerary = await db
@@ -264,23 +267,22 @@ app.patch(
       .set(updates)
       .where(eq(itineraries.id, itineraryId));
 
-    return c.json({ success: true });
+    return jsonOk(c);
   },
 );
 
 // ── DELETE /:id — Delete itinerary ─────────────────────
 app.delete('/:id', authRequired(), async (c) => {
-  const { id } = c.req.param();
-  const authUserId = Number.parseInt(c.get('userId'), 10);
+  const authUserId = parsePositiveInt(c.get('userId'));
   const db = getDb();
 
-  if (!Number.isInteger(authUserId) || authUserId <= 0) {
+  if (!authUserId) {
     return c.json({ error: '无效的认证用户' }, 401);
   }
 
-  const itineraryId = Number.parseInt(id, 10);
-  if (!Number.isInteger(itineraryId) || itineraryId <= 0) {
-    return c.json({ error: '无效的行程ID' }, 400);
+  const itineraryId = parsePositiveInt(c.req.param('id'));
+  if (!itineraryId) {
+    return c.json({ error: 'Invalid ID' }, 400);
   }
 
   const ownedItinerary = await db
@@ -316,7 +318,7 @@ app.delete('/:id', authRequired(), async (c) => {
     await tx.delete(itineraries).where(eq(itineraries.id, itineraryId));
   });
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
 // ── POST /:id/days — Add a day to itinerary ────────────
@@ -354,7 +356,7 @@ app.post('/:id/days', authRequired(), zValidator('json', createDaySchema), async
     })
     .$returningId();
 
-  return c.json({ data: { id: result!.id } }, 201);
+  return jsonData(c, { id: result!.id }, 201);
 });
 
 // ── POST /:id/days/:dayId/items — Add item to day ──────
@@ -409,7 +411,7 @@ app.post(
       })
       .$returningId();
 
-    return c.json({ data: { id: result!.id } }, 201);
+    return jsonData(c, { id: result!.id }, 201);
   },
 );
 
@@ -470,7 +472,7 @@ app.patch(
     });
 
     const itinerary = await getItineraryDto(itineraryId);
-    return c.json({ data: itinerary });
+    return jsonData(c, itinerary);
   },
 );
 
@@ -533,7 +535,7 @@ app.patch(
       .where(eq(itineraryItems.id, itemId));
 
     const itinerary = await getItineraryDto(itineraryId);
-    return c.json({ data: itinerary });
+    return jsonData(c, itinerary);
   },
 );
 

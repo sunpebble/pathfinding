@@ -13,19 +13,23 @@ import { and, eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonList, jsonOk } from '../lib/response.js';
 import { authRequired } from '../middleware/auth.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
 // ── GET /:id — Get user profile ────────────────────────
 app.get('/:id', async (c) => {
-  const { id } = c.req.param();
+  const id = parsePositiveInt(c.req.param('id'));
+  if (!id)
+    return c.json({ error: 'Invalid ID' }, 400);
   const db = getDb();
 
   const userRows = await db
     .select()
     .from(users)
-    .where(eq(users.id, Number(id)))
+    .where(eq(users.id, id))
     .limit(1);
 
   if (userRows.length === 0) {
@@ -36,26 +40,24 @@ app.get('/:id', async (c) => {
   const profileRows = await db
     .select()
     .from(profiles)
-    .where(eq(profiles.userId, Number(id)))
+    .where(eq(profiles.userId, id))
     .limit(1);
 
   const user = userRows[0]!;
   const profile = profileRows[0];
 
-  return c.json({
-    data: convertKeysToSnakeCase({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      image: user.image,
-      displayName: profile?.displayName ?? user.name,
-      avatarUrl: profile?.avatarUrl ?? user.image,
-      bio: profile?.bio,
-      followersCount: profile?.followersCount ?? 0,
-      followingCount: profile?.followingCount ?? 0,
-      createdAt: user.createdAt,
-    }),
-  });
+  return jsonData(c, convertKeysToSnakeCase({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    image: user.image,
+    displayName: profile?.displayName ?? user.name,
+    avatarUrl: profile?.avatarUrl ?? user.image,
+    bio: profile?.bio,
+    followersCount: profile?.followersCount ?? 0,
+    followingCount: profile?.followingCount ?? 0,
+    createdAt: user.createdAt,
+  }));
 });
 
 // ── PATCH /:id — Update user profile ───────────────────
@@ -71,11 +73,13 @@ app.patch(
   authRequired(),
   zValidator('json', updateProfileSchema),
   async (c) => {
-    const { id } = c.req.param();
+    const id = parsePositiveInt(c.req.param('id'));
+    if (!id)
+      return c.json({ error: 'Invalid ID' }, 400);
 
     // Verify the authenticated user can only update their own profile
     const authenticatedUserId = c.get('userId');
-    if (authenticatedUserId !== id) {
+    if (authenticatedUserId !== c.req.param('id')) {
       return c.json({ error: '只能修改自己的个人资料' }, 403);
     }
 
@@ -86,7 +90,7 @@ app.patch(
     const existing = await db
       .select()
       .from(profiles)
-      .where(eq(profiles.userId, Number(id)))
+      .where(eq(profiles.userId, id))
       .limit(1);
 
     if (existing.length === 0) {
@@ -94,11 +98,11 @@ app.patch(
       const user = await db
         .select({ email: users.email })
         .from(users)
-        .where(eq(users.id, Number(id)))
+        .where(eq(users.id, id))
         .limit(1);
 
       await db.insert(profiles).values({
-        userId: Number(id),
+        userId: id,
         email: user[0]?.email ?? '',
         displayName: body.displayName ?? null,
         bio: body.bio ?? null,
@@ -121,56 +125,58 @@ app.patch(
         await db
           .update(profiles)
           .set(updates)
-          .where(eq(profiles.userId, Number(id)));
+          .where(eq(profiles.userId, id));
       }
     }
 
-    return c.json({ success: true });
+    return jsonOk(c);
   },
 );
 
 // ── GET /:id/followers — Get user's followers ──────────
 app.get('/:id/followers', async (c) => {
-  const { id } = c.req.param();
-  const page = Number.parseInt(c.req.query('page') ?? '1', 10);
-  const pageSize = Number.parseInt(c.req.query('pageSize') ?? '20', 10);
-  const offset = (page - 1) * pageSize;
+  const id = parsePositiveInt(c.req.param('id'));
+  if (!id)
+    return c.json({ error: 'Invalid ID' }, 400);
+  const { limit, offset } = parsePagination(
+    c.req.query('pageSize') ?? c.req.query('limit'),
+    c.req.query('offset'),
+  );
 
   const db = getDb();
 
   const results = await db
     .select()
     .from(userFollows)
-    .where(eq(userFollows.followingId, Number(id)))
-    .limit(pageSize)
+    .where(eq(userFollows.followingId, id))
+    .limit(limit)
     .offset(offset);
 
-  return c.json({
-    data: convertKeysToSnakeCase(results),
-    meta: { page, page_size: pageSize },
-  });
+  // TODO: Replace with a parallel COUNT(*) query for accurate total
+  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, results.length);
 });
 
 // ── GET /:id/following — Get users that user follows ───
 app.get('/:id/following', async (c) => {
-  const { id } = c.req.param();
-  const page = Number.parseInt(c.req.query('page') ?? '1', 10);
-  const pageSize = Number.parseInt(c.req.query('pageSize') ?? '20', 10);
-  const offset = (page - 1) * pageSize;
+  const id = parsePositiveInt(c.req.param('id'));
+  if (!id)
+    return c.json({ error: 'Invalid ID' }, 400);
+  const { limit, offset } = parsePagination(
+    c.req.query('pageSize') ?? c.req.query('limit'),
+    c.req.query('offset'),
+  );
 
   const db = getDb();
 
   const results = await db
     .select()
     .from(userFollows)
-    .where(eq(userFollows.followerId, Number(id)))
-    .limit(pageSize)
+    .where(eq(userFollows.followerId, id))
+    .limit(limit)
     .offset(offset);
 
-  return c.json({
-    data: convertKeysToSnakeCase(results),
-    meta: { page, page_size: pageSize },
-  });
+  // TODO: Replace with a parallel COUNT(*) query for accurate total
+  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, results.length);
 });
 
 // ── POST /:id/follow — Follow a user ──────────────────
@@ -183,9 +189,14 @@ app.post(
   authRequired(),
   zValidator('json', followSchema),
   async (c) => {
-    const { id } = c.req.param();
     const { followingId } = c.req.valid('json');
+    const followerId = Number(c.get('userId'));
     const db = getDb();
+
+    // Prevent self-follow
+    if (followerId === followingId) {
+      return c.json({ error: '不能关注自己' }, 400);
+    }
 
     // Check if already following
     const existing = await db
@@ -193,7 +204,7 @@ app.post(
       .from(userFollows)
       .where(
         and(
-          eq(userFollows.followerId, Number(id)),
+          eq(userFollows.followerId, followerId),
           eq(userFollows.followingId, followingId),
         ),
       )
@@ -203,21 +214,23 @@ app.post(
       return c.json({ error: '已关注该用户' }, 409);
     }
 
-    await db.insert(userFollows).values({
-      followerId: Number(id),
-      followingId,
+    await db.transaction(async (tx) => {
+      await tx.insert(userFollows).values({
+        followerId,
+        followingId,
+      });
+
+      // Update follower/following counts
+      await tx
+        .update(profiles)
+        .set({ followingCount: sql`${profiles.followingCount} + 1` })
+        .where(eq(profiles.userId, followerId));
+
+      await tx
+        .update(profiles)
+        .set({ followersCount: sql`${profiles.followersCount} + 1` })
+        .where(eq(profiles.userId, followingId));
     });
-
-    // Update follower/following counts
-    await db
-      .update(profiles)
-      .set({ followingCount: sql`${profiles.followingCount} + 1` })
-      .where(eq(profiles.userId, Number(id)));
-
-    await db
-      .update(profiles)
-      .set({ followersCount: sql`${profiles.followersCount} + 1` })
-      .where(eq(profiles.userId, followingId));
 
     return c.json({ success: true }, 201);
   },
@@ -229,38 +242,42 @@ app.delete(
   authRequired(),
   zValidator('json', followSchema),
   async (c) => {
-    const { id } = c.req.param();
     const { followingId } = c.req.valid('json');
+    const followerId = Number(c.get('userId'));
     const db = getDb();
 
-    await db
-      .delete(userFollows)
-      .where(
-        and(
-          eq(userFollows.followerId, Number(id)),
-          eq(userFollows.followingId, followingId),
-        ),
-      );
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(userFollows)
+        .where(
+          and(
+            eq(userFollows.followerId, followerId),
+            eq(userFollows.followingId, followingId),
+          ),
+        );
 
-    // Update counts
-    await db
-      .update(profiles)
-      .set({ followingCount: sql`GREATEST(${profiles.followingCount} - 1, 0)` })
-      .where(eq(profiles.userId, Number(id)));
+      // Update counts
+      await tx
+        .update(profiles)
+        .set({ followingCount: sql`GREATEST(${profiles.followingCount} - 1, 0)` })
+        .where(eq(profiles.userId, followerId));
 
-    await db
-      .update(profiles)
-      .set({ followersCount: sql`GREATEST(${profiles.followersCount} - 1, 0)` })
-      .where(eq(profiles.userId, followingId));
+      await tx
+        .update(profiles)
+        .set({ followersCount: sql`GREATEST(${profiles.followersCount} - 1, 0)` })
+        .where(eq(profiles.userId, followingId));
+    });
 
-    return c.json({ success: true });
+    return jsonOk(c);
   },
 );
 
 // ── GET /:id/follow/status — Check follow status ───────
 app.get('/:id/follow/status', async (c) => {
-  const { id } = c.req.param();
-  const followingId = c.req.query('followingId');
+  const id = parsePositiveInt(c.req.param('id'));
+  if (!id)
+    return c.json({ error: 'Invalid ID' }, 400);
+  const followingId = parsePositiveInt(c.req.query('followingId'));
 
   if (!followingId) {
     return c.json({ error: '缺少followingId参数' }, 400);
@@ -273,8 +290,8 @@ app.get('/:id/follow/status', async (c) => {
     .from(userFollows)
     .where(
       and(
-        eq(userFollows.followerId, Number(id)),
-        eq(userFollows.followingId, Number(followingId)),
+        eq(userFollows.followerId, id),
+        eq(userFollows.followingId, followingId),
       ),
     )
     .limit(1);

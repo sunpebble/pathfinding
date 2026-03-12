@@ -67,6 +67,12 @@
     "playwright": "^1.58.2",
     "tencentcloud-sdk-nodejs": "^4.1.188"
   },
+  "__dependency_notes__": [
+    "TODO: cheerio, playwright, tencentcloud-sdk-nodejs likely belong in specific packages, not at root level.",
+    "- cheerio: should move to the crawler/scraping package that uses it",
+    "- playwright: should move to the package/app that uses it (e.g., crawler or e2e tests)",
+    "- tencentcloud-sdk-nodejs: should move to the specific service package that calls Tencent APIs"
+  ],
   "devDependencies": {
     "@antfu/eslint-config": "^7.6.1",
     "@commitlint/cli": "^20.4.2",

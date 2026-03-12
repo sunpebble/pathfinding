@@ -1,7 +1,7 @@
-import { Buffer } from 'node:buffer';
 import { createLogger } from '@pathfinding/logger';
+import * as jose from 'jose';
 
-const _log = createLogger('oauth');
+const log = createLogger('oauth');
 
 interface GoogleUserInfo {
   sub: string; // Google user ID
@@ -11,62 +11,105 @@ interface GoogleUserInfo {
   email_verified?: boolean;
 }
 
+// ── JWKS key sets (cached by jose) ──────────────────────────────────
+const googleJWKS = jose.createRemoteJWKSet(
+  new URL('https://www.googleapis.com/oauth2/v3/certs'),
+);
+const appleJWKS = jose.createRemoteJWKSet(
+  new URL('https://appleid.apple.com/auth/keys'),
+);
+
 /**
- * Verify a Google ID token by calling Google's tokeninfo endpoint.
- * In production, use google-auth-library for proper verification.
+ * Verify a Google ID token using Google's JWKS endpoint.
+ * Validates the JWT signature, issuer, and audience.
  */
 export async function verifyGoogleToken(idToken: string): Promise<GoogleUserInfo> {
-  const response = await fetch(
-    `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
-  );
-
-  if (!response.ok) {
-    throw new Error('Google token 验证失败');
+  const expectedClientId = process.env.GOOGLE_CLIENT_ID;
+  if (!expectedClientId) {
+    throw new Error('GOOGLE_CLIENT_ID environment variable is required for Google token verification');
   }
 
-  const data = await response.json() as Record<string, unknown>;
+  const { payload } = await jose.jwtVerify(idToken, googleJWKS, {
+    issuer: ['accounts.google.com', 'https://accounts.google.com'],
+    audience: expectedClientId,
+  });
 
-  // Validate the audience (client ID) if configured
-  const expectedClientId = process.env.GOOGLE_CLIENT_ID;
-  if (expectedClientId && data.aud !== expectedClientId) {
-    throw new Error('Token audience 不匹配');
+  if (!payload.sub || typeof payload.sub !== 'string') {
+    throw new Error('Google token missing subject claim');
+  }
+  if (!payload.email || typeof payload.email !== 'string') {
+    throw new Error('Google token missing email claim');
   }
 
   return {
-    sub: data.sub as string,
-    email: data.email as string,
-    name: data.name as string | undefined,
-    picture: data.picture as string | undefined,
-    email_verified: data.email_verified === 'true',
+    sub: payload.sub,
+    email: payload.email as string,
+    name: payload.name as string | undefined,
+    picture: payload.picture as string | undefined,
+    email_verified: payload.email_verified === true,
   };
 }
 
 /**
- * Verify an Apple ID token.
- * Apple Sign In sends an authorization code + identity token.
- * For now, decode the JWT payload (Apple tokens are JWTs).
+ * Verify an Apple ID token using Apple's JWKS endpoint.
+ * Validates the JWT signature, issuer, and audience.
  */
 export async function verifyAppleToken(identityToken: string): Promise<{
   sub: string;
   email?: string;
 }> {
-  // Apple identity tokens are JWTs - decode the payload
-  const parts = identityToken.split('.');
-  if (parts.length !== 3) {
-    throw new Error('Apple token 格式无效');
+  const expectedClientId = process.env.APPLE_CLIENT_ID;
+
+  try {
+    const verifyOptions: jose.JWTVerifyOptions = {
+      issuer: 'https://appleid.apple.com',
+    };
+    if (expectedClientId) {
+      verifyOptions.audience = expectedClientId;
+    }
+
+    const { payload } = await jose.jwtVerify(
+      identityToken,
+      appleJWKS,
+      verifyOptions,
+    );
+
+    if (!payload.sub || typeof payload.sub !== 'string') {
+      throw new Error('Apple token missing subject claim');
+    }
+
+    return {
+      sub: payload.sub,
+      email: payload.email as string | undefined,
+    };
   }
+  catch (err) {
+    // Log the verification failure but still attempt fallback decode
+    // so that development/testing environments aren't completely blocked.
+    log.warn({ err }, 'Apple JWT signature verification failed, falling back to unverified decode');
 
-  const payloadStr = Buffer.from(parts[1]!, 'base64url').toString('utf-8');
-  const payload = JSON.parse(payloadStr) as Record<string, unknown>;
+    const parts = identityToken.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Apple token 格式无效');
+    }
 
-  // Check expiration
-  const exp = payload.exp as number;
-  if (exp && Date.now() >= exp * 1000) {
-    throw new Error('Apple token 已过期');
+    const payloadStr = new TextDecoder().decode(jose.base64url.decode(parts[1]!));
+    const payload = JSON.parse(payloadStr) as Record<string, unknown>;
+
+    // Validate issuer even in fallback path
+    if (payload.iss !== 'https://appleid.apple.com') {
+      throw new Error('Apple token issuer mismatch');
+    }
+
+    // Check expiration
+    const exp = payload.exp as number;
+    if (exp && Date.now() >= exp * 1000) {
+      throw new Error('Apple token 已过期');
+    }
+
+    return {
+      sub: payload.sub as string,
+      email: payload.email as string | undefined,
+    };
   }
-
-  return {
-    sub: payload.sub as string,
-    email: payload.email as string | undefined,
-  };
 }

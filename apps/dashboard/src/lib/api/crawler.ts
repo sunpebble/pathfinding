@@ -9,6 +9,8 @@
  * (string dates, flat structure) — intentionally separate from
  * the canonical `@pathfinding/crawler-types` package which uses
  * Date objects and richer nested structures.
+ *
+ * @module
  */
 
 // ---------------------------------------------------------------------------
@@ -42,6 +44,12 @@ async function parseJsonResponse<T>(res: Response): Promise<T> {
   return JSON.parse(text) as T;
 }
 
+/**
+ * Internal fetch wrapper for the crawler proxy routes.
+ *
+ * Automatically sets JSON content-type, parses responses, and
+ * throws descriptive errors on non-2xx status codes.
+ */
 async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit,
@@ -62,6 +70,7 @@ async function fetchApi<T>(
   return parseJsonResponse<T>(res);
 }
 
+/** Build a query string from a flat params object, omitting undefined/empty values. */
 function buildQuery(params: Record<string, string | number | undefined>): string {
   const sp = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -77,10 +86,12 @@ function buildQuery(params: Record<string, string | number | undefined>): string
 // Shared response types
 // ---------------------------------------------------------------------------
 
+/** Internal envelope used by endpoints that return a single item. */
 interface ApiEnvelope<T> {
   data: T;
 }
 
+/** Paginated list response shape used across crawler endpoints. */
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {
@@ -94,6 +105,12 @@ export interface PaginatedResponse<T> {
 // Health
 // ---------------------------------------------------------------------------
 
+/**
+ * Check the health of the dashboard backend.
+ *
+ * Returns `{ status: 'error' }` on network failures rather than throwing,
+ * making it safe for use in polling hooks.
+ */
 export async function getHealth(): Promise<{ status: string }> {
   const res = await fetch('/api/health');
   if (!res.ok) {
@@ -106,6 +123,7 @@ export async function getHealth(): Promise<{ status: string }> {
 // Crawl Jobs
 // ---------------------------------------------------------------------------
 
+/** A crawl job record from the crawler backend. */
 export interface CrawlJob {
   id: string;
   name: string;
@@ -147,6 +165,7 @@ export interface CrawlJob {
   updated_at: string;
 }
 
+/** Input for creating a new crawl job. */
 export interface CreateCrawlJobInput {
   name: string;
   platform: string;
@@ -155,6 +174,11 @@ export interface CreateCrawlJobInput {
   config?: CrawlJob['config'];
 }
 
+/**
+ * List crawl jobs with optional filters.
+ *
+ * @param params - Optional filter/pagination parameters.
+ */
 export async function getCrawlJobs(params?: {
   status?: string;
   platform?: string;
@@ -169,11 +193,21 @@ export async function getCrawlJobs(params?: {
   })}`);
 }
 
+/**
+ * Fetch a single crawl job by ID.
+ *
+ * @param id - Crawl job identifier.
+ */
 export async function getCrawlJob(id: string): Promise<CrawlJob> {
   const response = await fetchApi<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}`);
   return response.data;
 }
 
+/**
+ * Create a new crawl job.
+ *
+ * @param input - Job configuration.
+ */
 export async function createCrawlJob(
   input: CreateCrawlJobInput,
 ): Promise<CrawlJob> {
@@ -184,11 +218,21 @@ export async function createCrawlJob(
   return response.data;
 }
 
+/**
+ * Start a pending crawl job.
+ *
+ * @param id - Crawl job identifier.
+ */
 export async function startCrawlJob(id: string): Promise<CrawlJob> {
   const response = await fetchApi<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}/start`, { method: 'POST' });
   return response.data;
 }
 
+/**
+ * Cancel a running crawl job.
+ *
+ * @param id - Crawl job identifier.
+ */
 export async function cancelCrawlJob(id: string): Promise<CrawlJob> {
   const response = await fetchApi<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}/cancel`, { method: 'POST' });
   return response.data;
@@ -198,6 +242,7 @@ export async function cancelCrawlJob(id: string): Promise<CrawlJob> {
 // Scheduler
 // ---------------------------------------------------------------------------
 
+/** Scheduler status including registered tasks and worker info. */
 export interface SchedulerStatus {
   tasks: Array<{
     name: string;
@@ -214,6 +259,7 @@ export interface SchedulerStatus {
   };
 }
 
+/** Fetch the current scheduler status and worker info. */
 export async function getSchedulerStatus(): Promise<SchedulerStatus> {
   const response = await fetchApi<ApiEnvelope<SchedulerStatus>>(
     '/crawl-jobs/scheduler/status',
@@ -221,6 +267,11 @@ export async function getSchedulerStatus(): Promise<SchedulerStatus> {
   return response.data;
 }
 
+/**
+ * Start a named scheduled task.
+ *
+ * @param name - Task name as registered in the scheduler.
+ */
 export async function startScheduledTask(
   name: string,
 ): Promise<{ message: string }> {
@@ -229,6 +280,11 @@ export async function startScheduledTask(
   });
 }
 
+/**
+ * Stop a named scheduled task.
+ *
+ * @param name - Task name as registered in the scheduler.
+ */
 export async function stopScheduledTask(
   name: string,
 ): Promise<{ message: string }> {
@@ -241,6 +297,7 @@ export async function stopScheduledTask(
 // POIs
 // ---------------------------------------------------------------------------
 
+/** A normalized POI record from the crawler backend. */
 export interface NormalizedPOI {
   id: string;
   canonical_id?: string;
@@ -282,6 +339,11 @@ export interface NormalizedPOI {
   updated_at: string;
 }
 
+/**
+ * List POIs from the crawler backend with optional filters.
+ *
+ * @param params - Optional filter/pagination parameters.
+ */
 export async function getPOIs(params?: {
   query?: string;
   category?: string;
@@ -300,10 +362,16 @@ export async function getPOIs(params?: {
   })}`);
 }
 
+/**
+ * Fetch a single POI by ID.
+ *
+ * @param id - POI identifier.
+ */
 export async function getPOI(id: string): Promise<NormalizedPOI> {
   return fetchApi(`/pois/${id}`);
 }
 
+/** Trigger POI normalization and return statistics. */
 export async function normalizePOIs(): Promise<{
   success: boolean;
   stats: { normalized: number; skipped: number; failed: number };
@@ -315,6 +383,7 @@ export async function normalizePOIs(): Promise<{
 // Training Datasets
 // ---------------------------------------------------------------------------
 
+/** A training dataset record. */
 export interface TrainingDataset {
   id: string;
   name: string;
@@ -330,6 +399,11 @@ export interface TrainingDataset {
   updated_at: string;
 }
 
+/**
+ * List training datasets with optional filters.
+ *
+ * @param params - Optional filter/pagination parameters.
+ */
 export async function getTrainingDatasets(params?: {
   type?: string;
   status?: string;
@@ -344,6 +418,11 @@ export async function getTrainingDatasets(params?: {
   })}`);
 }
 
+/**
+ * Fetch a single training dataset by ID.
+ *
+ * @param id - Dataset identifier.
+ */
 export async function getTrainingDataset(id: string): Promise<TrainingDataset> {
   return fetchApi(`/training-datasets/${id}`);
 }
@@ -352,6 +431,7 @@ export async function getTrainingDataset(id: string): Promise<TrainingDataset> {
 // Travel Guides
 // ---------------------------------------------------------------------------
 
+/** A travel guide record from the crawler backend. */
 export interface TravelGuide {
   id: string;
   source_platform: 'xiaohongshu' | 'weibo' | 'ctrip';
@@ -377,6 +457,11 @@ export interface TravelGuide {
   updated_at: string;
 }
 
+/**
+ * List travel guides with optional filters and sorting.
+ *
+ * @param params - Optional filter/pagination/sort parameters.
+ */
 export async function getTravelGuides(params?: {
   platforms?: string;
   destinations?: string;
@@ -401,12 +486,22 @@ export async function getTravelGuides(params?: {
   })}`);
 }
 
+/**
+ * Fetch a single travel guide by ID.
+ *
+ * @param id - Guide identifier.
+ */
 export async function getTravelGuide(
   id: string,
 ): Promise<{ data: TravelGuide }> {
   return fetchApi(`/guides/${id}`);
 }
 
+/**
+ * Fetch guide recommendations based on destinations, tags, or platforms.
+ *
+ * @param params - Optional recommendation filters.
+ */
 export async function getGuideRecommendations(params?: {
   destinations?: string;
   tags?: string;
@@ -423,6 +518,11 @@ export async function getGuideRecommendations(params?: {
   })}`);
 }
 
+/**
+ * Fetch trending guides over a time period.
+ *
+ * @param params - Optional period and platform filters.
+ */
 export async function getTrendingGuides(params?: {
   days?: number;
   platforms?: string;
@@ -435,6 +535,11 @@ export async function getTrendingGuides(params?: {
   })}`);
 }
 
+/**
+ * Full-text search across travel guides.
+ *
+ * @param params - Search query and optional filters.
+ */
 export async function searchGuides(params: {
   q: string;
   platforms?: string;

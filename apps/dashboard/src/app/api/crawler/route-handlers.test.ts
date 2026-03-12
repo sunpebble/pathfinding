@@ -42,7 +42,9 @@ describe('crawler route handlers', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const { GET } = await import('./guides/route');
-    const request = new NextRequest('http://localhost/api/crawler/guides?platforms=weibo&limit=1');
+    const request = new NextRequest('http://localhost/api/crawler/guides?platforms=weibo&limit=1', {
+      headers: { Authorization: 'Bearer test-token' },
+    });
 
     const response = await GET(request);
     const payload = await response.json();
@@ -130,7 +132,9 @@ describe('crawler route handlers', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const { GET } = await import('./crawl-jobs/route');
-    const request = new NextRequest('http://localhost/api/crawler/crawl-jobs?status=running&limit=5');
+    const request = new NextRequest('http://localhost/api/crawler/crawl-jobs?status=running&limit=5', {
+      headers: { Authorization: 'Bearer test-token' },
+    });
 
     const response = await GET(request);
     const payload = await response.json();
@@ -182,7 +186,10 @@ describe('crawler route handlers', () => {
         job_type: 'incremental',
         config: { keyword: 'museum' },
       }),
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-token',
+      },
     });
 
     const response = await POST(request);

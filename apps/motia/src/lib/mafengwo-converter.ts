@@ -25,9 +25,9 @@ export interface MafengwoRawGuide {
 }
 
 /**
- * 转换后的游记数据（用于 Convex upsert）
+ * 转换后的游记数据（用于 TiDB upsert）
  */
-export interface MafengwoGuideForConvex {
+export interface MafengwoGuideForDB {
   sourcePlatform: 'mafengwo';
   sourceExternalId: string;
   sourceUrl: string;
@@ -164,13 +164,13 @@ export function determineCompletenessLevel(
 }
 
 /**
- * 将爬取数据转换为 Convex 存储格式
+ * 将爬取数据转换为数据库存储格式
  * 在转换过程中自动执行内容清洗
  */
-export function convertToConvexFormat(
+export function convertToDBFormat(
   url: string,
   rawData: MafengwoRawGuide,
-): MafengwoGuideForConvex {
+): MafengwoGuideForDB {
   const sourceExternalId = extractSourceExternalId(url);
 
   // 清洗内容：去除广告、推广、个人信息、平台噪音
@@ -205,3 +205,9 @@ export function convertToConvexFormat(
     crawledAt: Date.now(),
   };
 }
+
+// Backward-compatible aliases (deprecated — use MafengwoGuideForDB / convertToDBFormat)
+/** @deprecated Use `MafengwoGuideForDB` instead */
+export type MafengwoGuideForConvex = MafengwoGuideForDB;
+/** @deprecated Use `convertToDBFormat` instead */
+export const convertToConvexFormat = convertToDBFormat;

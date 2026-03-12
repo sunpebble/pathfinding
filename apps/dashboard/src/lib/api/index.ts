@@ -4,12 +4,18 @@
  * Re-exports all API sub-modules so consumers can use a single
  * import path (`@/lib/api`) while the implementation is split
  * into focused deep modules.
+ *
+ * @module
  */
 
+// ---------------------------------------------------------------------------
 // Auth
+// ---------------------------------------------------------------------------
 export { getCurrentUser, signIn, signOut, signUp } from './auth';
 
+// ---------------------------------------------------------------------------
 // Crawler backend proxy (server-side only)
+// ---------------------------------------------------------------------------
 export {
   fetchBackendApi,
   getBackendApiBaseUrl,
@@ -17,10 +23,22 @@ export {
   normalizeTravelGuide,
 } from './backend';
 
+// ---------------------------------------------------------------------------
 // Client-side authenticated API transport
-export { ApiError, clearStoredAuthToken, createApiClient, getStoredAuthToken, setStoredAuthToken } from './client';
+// ---------------------------------------------------------------------------
+export {
+  ApiError,
+  clearStoredAuthToken,
+  createApiClient,
+  getStoredAuthToken,
+  setStoredAuthToken,
+} from './client';
 
+export type { ApiClient } from './client';
+
+// ---------------------------------------------------------------------------
 // Collaborators
+// ---------------------------------------------------------------------------
 export {
   getCollaborators,
   inviteCollaborator,
@@ -30,7 +48,9 @@ export {
 
 export type { InviteCollaboratorRequest } from './collaborators';
 
+// ---------------------------------------------------------------------------
 // Crawler (client-side, via Next.js proxy routes)
+// ---------------------------------------------------------------------------
 export {
   cancelCrawlJob,
   createCrawlJob,
@@ -53,7 +73,6 @@ export {
   stopScheduledTask,
 } from './crawler';
 
-// Re-export types
 export type {
   CrawlJob,
   CreateCrawlJobInput,
@@ -64,7 +83,9 @@ export type {
   TravelGuide,
 } from './crawler';
 
+// ---------------------------------------------------------------------------
 // Itineraries
+// ---------------------------------------------------------------------------
 export {
   createItineraryItem,
   getItineraries,
@@ -89,7 +110,9 @@ export type {
   UpdateItineraryItemInput,
 } from './itineraries';
 
+// ---------------------------------------------------------------------------
 // POIs (authenticated)
+// ---------------------------------------------------------------------------
 export { getPoi, getPois, searchPois, updateGuidePoiCoordinates } from './pois';
 
 export type { UpdateGuidePoiCoordinatesInput } from './pois';

@@ -1,5 +1,19 @@
 'use client';
 
+/**
+ * Authentication provider and context hook.
+ *
+ * Manages the JWT token lifecycle (storage, refresh, clear) and
+ * exposes sign-in / sign-up / sign-out actions to the component tree
+ * via React context.
+ *
+ * On mount, if a token exists in localStorage the provider will
+ * attempt to validate it by fetching the current user profile.
+ * If validation fails the token is silently cleared.
+ *
+ * @module
+ */
+
 import type { ReactNode } from 'react';
 import type { AuthContextValue, AuthResponse, SignInInput, SignUpInput, User } from '@/types/api';
 import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
@@ -17,12 +31,23 @@ export { AUTH_TOKEN_STORAGE_KEY };
 
 const AUTH_BOOTSTRAP_ERROR_MESSAGE = 'Failed to load authenticated user';
 
+/**
+ * Provides authentication state and actions to the component tree.
+ *
+ * Must wrap any component that uses {@link useAuthContext} or the
+ * `useAuth` convenience hook.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => getStoredAuthToken());
   const [isLoading, setIsLoading] = useState(() => getStoredAuthToken() !== null);
 
-  const refreshUser = useCallback(async () => {
+  /**
+   * Re-validate the stored token by fetching the current user.
+   *
+   * Returns the user on success or `null` if the token is invalid/missing.
+   */
+  const refreshUser = useCallback(async (): Promise<User | null> => {
     const nextToken = getStoredAuthToken();
 
     if (!nextToken) {
@@ -51,11 +76,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Validate token on mount
   useEffect(() => {
     void refreshUser();
   }, [refreshUser]);
 
-  const finalizeAuthentication = useCallback(async (response: AuthResponse) => {
+  /**
+   * Store the token from a successful auth response and load the user profile.
+   *
+   * @throws If the user profile cannot be loaded after storing the token.
+   */
+  const finalizeAuthentication = useCallback(async (response: AuthResponse): Promise<void> => {
     setStoredAuthToken(response.token);
     setToken(response.token);
 
@@ -66,7 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshUser]);
 
-  const signIn = useCallback(async (input: SignInInput) => {
+  /** Sign in with email and password. */
+  const signIn = useCallback(async (input: SignInInput): Promise<void> => {
     setIsLoading(true);
 
     try {
@@ -78,7 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [finalizeAuthentication]);
 
-  const signUp = useCallback(async (input: SignUpInput) => {
+  /** Register a new account. */
+  const signUp = useCallback(async (input: SignUpInput): Promise<void> => {
     setIsLoading(true);
 
     try {
@@ -90,7 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [finalizeAuthentication]);
 
-  const signOut = useCallback(async () => {
+  /** Sign out and clear all auth state. */
+  const signOut = useCallback(async (): Promise<void> => {
     try {
       await signOutRequest();
     }
@@ -116,7 +150,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext value={value}>{children}</AuthContext>;
 }
 
-export function useAuthContext() {
+/**
+ * Access the auth context from within the `<AuthProvider>` tree.
+ *
+ * @throws If called outside of an `<AuthProvider>`.
+ */
+export function useAuthContext(): AuthContextValue {
   const value = use(AuthContext);
 
   if (!value) {

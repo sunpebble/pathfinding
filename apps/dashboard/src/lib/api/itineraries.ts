@@ -1,7 +1,25 @@
+/**
+ * Itinerary API client.
+ *
+ * Provides CRUD operations for itineraries and their day/item
+ * sub-resources via the dashboard's `/api/itineraries` proxy.
+ *
+ * Raw responses from the backend use snake_case and nullable fields;
+ * the normalizer functions convert them to clean camelCase shapes
+ * defined by the exported interfaces.
+ *
+ * @module
+ */
+
 import type { PaginatedResponse } from '@/types/api';
+import { toNumericId } from '@/lib/utils';
 import { createApiClient } from './client';
 
 const itinerariesClient = createApiClient('/api/itineraries');
+
+// ---------------------------------------------------------------------------
+// Raw backend types (snake_case, nullable)
+// ---------------------------------------------------------------------------
 
 type RawItineraryPoi = {
   id?: string | number | null;
@@ -61,6 +79,11 @@ type RawCollaborator = {
   user?: RawCollaboratorUser;
 } | null;
 
+// ---------------------------------------------------------------------------
+// Normalized public types (camelCase, non-nullable where possible)
+// ---------------------------------------------------------------------------
+
+/** A point of interest attached to an itinerary item. */
 export interface ItineraryPoi {
   id: string;
   name: string;
@@ -71,6 +94,7 @@ export interface ItineraryPoi {
   rating?: number;
 }
 
+/** A single item within an itinerary day (a visit to a POI). */
 export interface ItineraryItem {
   id: string;
   poiId: string;
@@ -82,6 +106,7 @@ export interface ItineraryItem {
   poi: ItineraryPoi | null;
 }
 
+/** A single day within an itinerary, containing ordered items. */
 export interface ItineraryDay {
   id: string;
   dayNumber: number;
@@ -89,6 +114,7 @@ export interface ItineraryDay {
   items: ItineraryItem[];
 }
 
+/** Summary view of an itinerary (list/index pages). */
 export interface ItinerarySummary {
   id: string;
   userId?: string;
@@ -105,6 +131,7 @@ export interface ItinerarySummary {
   daysCount: number;
 }
 
+/** User info attached to a collaborator record. */
 export interface ItineraryCollaboratorUser {
   id: string;
   email?: string;
@@ -112,6 +139,7 @@ export interface ItineraryCollaboratorUser {
   image?: string;
 }
 
+/** A collaborator on an itinerary with role and invitation status. */
 export interface ItineraryCollaborator {
   id: string;
   userId: string;
@@ -120,9 +148,14 @@ export interface ItineraryCollaborator {
   user: ItineraryCollaboratorUser | null;
 }
 
+/** Detailed view of an itinerary including collaborators. */
 export interface ItineraryDetail extends ItinerarySummary {
   collaborators: ItineraryCollaborator[];
 }
+
+// ---------------------------------------------------------------------------
+// Internal normalizer helpers
+// ---------------------------------------------------------------------------
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -132,7 +165,7 @@ function toArray<T>(value: T[] | null | undefined): T[] {
   return Array.isArray(value) ? value : [];
 }
 
-function toId(value: string | number | null | undefined, fallback: string) {
+function toId(value: string | number | null | undefined, fallback: string): string {
   if (value === null || value === undefined || value === '') {
     return fallback;
   }
@@ -238,6 +271,16 @@ function normalizeCollaborator(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Public normalizer functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalize a paginated list of raw itineraries from the backend.
+ *
+ * Converts snake_case fields to camelCase and provides fallback defaults
+ * for missing/null values.
+ */
 export function normalizeItinerariesResponse(
   response: PaginatedResponse<RawItinerary>,
 ): PaginatedResponse<ItinerarySummary> {
@@ -249,13 +292,19 @@ export function normalizeItinerariesResponse(
   };
 }
 
-export function normalizeItineraryResponse(response: { data: RawItinerary }) {
+/**
+ * Normalize a single raw itinerary response from the backend.
+ */
+export function normalizeItineraryResponse(response: { data: RawItinerary }): { data: ItinerarySummary } {
   return {
     data: normalizeItinerary(response.data),
   };
 }
 
-export function normalizeCollaboratorsResponse(response: { data: RawCollaborator[] }) {
+/**
+ * Normalize a list of raw collaborators from the backend.
+ */
+export function normalizeCollaboratorsResponse(response: { data: RawCollaborator[] }): { data: ItineraryCollaborator[] } {
   const data = isRecord(response) ? toArray(response.data) : [];
 
   return {
@@ -263,7 +312,16 @@ export function normalizeCollaboratorsResponse(response: { data: RawCollaborator
   };
 }
 
-export function getItineraries(query?: Record<string, string | number | undefined>) {
+// ---------------------------------------------------------------------------
+// Public API functions
+// ---------------------------------------------------------------------------
+
+/**
+ * List itineraries for the current user with optional query params.
+ *
+ * @param query - Key-value pairs appended as query string parameters.
+ */
+export function getItineraries(query?: Record<string, string | number | undefined>): Promise<PaginatedResponse<RawItinerary>> {
   const searchParams = new URLSearchParams();
 
   for (const [key, value] of Object.entries(query ?? {})) {
@@ -276,20 +334,16 @@ export function getItineraries(query?: Record<string, string | number | undefine
   return itinerariesClient.get<PaginatedResponse<RawItinerary>>(`/${suffix}`);
 }
 
-export function getItinerary(id: string | number) {
+/**
+ * Fetch a single itinerary by ID.
+ *
+ * @param id - Itinerary identifier.
+ */
+export function getItinerary(id: string | number): Promise<{ data: RawItinerary }> {
   return itinerariesClient.get<{ data: RawItinerary }>(`/${id}`);
 }
 
-function toNumericId(value: string | number) {
-  const parsed = typeof value === 'number' ? value : Number.parseInt(value, 10);
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`Invalid numeric ID: ${value}`);
-  }
-
-  return parsed;
-}
-
+/** Input for creating a new itinerary item. */
 export interface CreateItineraryItemInput {
   poiId: string | number;
   orderIndex: number;
@@ -299,6 +353,7 @@ export interface CreateItineraryItemInput {
   notes?: string;
 }
 
+/** Input for updating an existing itinerary item. */
 export interface UpdateItineraryItemInput {
   poiId?: string | number;
   orderIndex?: number;
@@ -308,11 +363,18 @@ export interface UpdateItineraryItemInput {
   notes?: string;
 }
 
+/**
+ * Add a new item to an itinerary day.
+ *
+ * @param itineraryId - Parent itinerary ID.
+ * @param dayId - Day within the itinerary.
+ * @param input - Item data including POI reference.
+ */
 export function createItineraryItem(
   itineraryId: string | number,
   dayId: string | number,
   input: CreateItineraryItemInput,
-) {
+): Promise<{ data: { id: string | number } }> {
   return itinerariesClient.post<{ data: { id: string | number } }>(
     `/${toNumericId(itineraryId)}/days/${toNumericId(dayId)}/items`,
     {
@@ -326,12 +388,20 @@ export function createItineraryItem(
   );
 }
 
+/**
+ * Update an existing item within an itinerary day.
+ *
+ * @param itineraryId - Parent itinerary ID.
+ * @param dayId - Day within the itinerary.
+ * @param itemId - Item to update.
+ * @param input - Fields to update (all optional).
+ */
 export function updateItineraryItem(
   itineraryId: string | number,
   dayId: string | number,
   itemId: string | number,
   input: UpdateItineraryItemInput,
-) {
+): Promise<{ data: RawItinerary }> {
   return itinerariesClient.patch<{ data: RawItinerary }>(
     `/${toNumericId(itineraryId)}/days/${toNumericId(dayId)}/items/${toNumericId(itemId)}`,
     {
@@ -345,11 +415,18 @@ export function updateItineraryItem(
   );
 }
 
+/**
+ * Reorder items within an itinerary day.
+ *
+ * @param itineraryId - Parent itinerary ID.
+ * @param dayId - Day within the itinerary.
+ * @param itemIds - Item IDs in the desired order.
+ */
 export function reorderItineraryItems(
   itineraryId: string | number,
   dayId: string | number,
   itemIds: Array<string | number>,
-) {
+): Promise<{ data: RawItinerary }> {
   return itinerariesClient.patch<{ data: RawItinerary }>(
     `/${toNumericId(itineraryId)}/days/${toNumericId(dayId)}/items/reorder`,
     {
@@ -358,11 +435,18 @@ export function reorderItineraryItems(
   );
 }
 
+/**
+ * Remove an item from an itinerary day.
+ *
+ * @param itineraryId - Parent itinerary ID.
+ * @param dayId - Day within the itinerary.
+ * @param itemId - Item to remove.
+ */
 export function removeItineraryItem(
   itineraryId: string | number,
   dayId: string | number,
   itemId: string | number,
-) {
+): Promise<{ success: boolean; data?: RawItinerary }> {
   return itinerariesClient.delete<{ success: boolean; data?: RawItinerary }>(
     `/${toNumericId(itineraryId)}/days/${toNumericId(dayId)}/items/${toNumericId(itemId)}`,
   );

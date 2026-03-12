@@ -9,6 +9,8 @@ import { and, desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonOk } from '../lib/response.js';
 import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
@@ -16,7 +18,7 @@ import { ApiError } from '../middleware/error-handler.js';
 const createJobSchema = z.object({
   name: z.string().min(1),
   platform: z.string().min(1),
-  config: z.any(),
+  config: z.record(z.unknown()),
   jobType: z.string().optional(),
   scheduleCron: z.string().optional(),
 });
@@ -31,13 +33,13 @@ const startJobSchema = z.object({
 
 const completeJobSchema = z.object({
   id: z.number(),
-  statistics: z.any().optional(),
+  statistics: z.record(z.unknown()).optional(),
 });
 
 const failJobSchema = z.object({
   id: z.number(),
   errorMessage: z.string().min(1),
-  statistics: z.any().optional(),
+  statistics: z.record(z.unknown()).optional(),
 });
 
 const app = new Hono<{ Variables: AuthVariables }>();
@@ -46,11 +48,7 @@ const app = new Hono<{ Variables: AuthVariables }>();
 app.get('/', adminRequired(), async (c) => {
   const status = c.req.query('status');
   const platform = c.req.query('platform');
-  const parsedLimit = Number.parseInt(c.req.query('limit') ?? '50', 10);
-  const limit
-    = Number.isInteger(parsedLimit) && parsedLimit > 0
-      ? Math.min(parsedLimit, 200)
-      : 50;
+  const { limit } = parsePagination(c.req.query('limit'), undefined, 50);
 
   const db = getDb();
 
@@ -71,7 +69,7 @@ app.get('/', adminRequired(), async (c) => {
     .orderBy(desc(crawlJobs.createdAt))
     .limit(limit);
 
-  return c.json({ data: convertKeysToSnakeCase(jobs) });
+  return jsonData(c, convertKeysToSnakeCase(jobs));
 });
 
 // ── POST / — Create a new crawl job ───────────────────
@@ -94,12 +92,12 @@ app.post('/', adminRequired(), zValidator('json', createJobSchema), async (c) =>
     .where(eq(crawlJobs.id, jobId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) }, 201);
+  return jsonData(c, convertKeysToSnakeCase(job[0]), 201);
 });
 
 // ── GET /job — Get a crawl job by ID ───────────────────
 app.get('/job', adminRequired(), async (c) => {
-  const id = c.req.query('id');
+  const id = parsePositiveInt(c.req.query('id'));
 
   if (!id) {
     throw new ApiError(400, '缺少id参数');
@@ -109,14 +107,14 @@ app.get('/job', adminRequired(), async (c) => {
   const job = await db
     .select()
     .from(crawlJobs)
-    .where(eq(crawlJobs.id, Number(id)))
+    .where(eq(crawlJobs.id, id))
     .limit(1);
 
   if (!job[0]) {
     throw new ApiError(404, '任务不存在');
   }
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) });
+  return jsonData(c, convertKeysToSnakeCase(job[0]));
 });
 
 // ── DELETE / — Delete a crawl job ──────────────────────
@@ -126,7 +124,7 @@ app.delete('/', adminRequired(), zValidator('json', deleteJobSchema), async (c) 
   const db = getDb();
   await db.delete(crawlJobs).where(eq(crawlJobs.id, Number(id)));
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
 // ── POST /start — Start a crawl job ───────────────────
@@ -147,7 +145,7 @@ app.post('/start', adminRequired(), zValidator('json', startJobSchema), async (c
     .where(eq(crawlJobs.id, jobId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) });
+  return jsonData(c, convertKeysToSnakeCase(job[0]));
 });
 
 // ── POST /complete — Complete a crawl job ──────────────
@@ -173,7 +171,7 @@ app.post('/complete', adminRequired(), zValidator('json', completeJobSchema), as
     .where(eq(crawlJobs.id, jobId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) });
+  return jsonData(c, convertKeysToSnakeCase(job[0]));
 });
 
 // ── POST /fail — Mark a crawl job as failed ────────────
@@ -200,7 +198,7 @@ app.post('/fail', adminRequired(), zValidator('json', failJobSchema), async (c) 
     .where(eq(crawlJobs.id, jobId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) });
+  return jsonData(c, convertKeysToSnakeCase(job[0]));
 });
 
 export default app;

@@ -74,7 +74,7 @@ const createQuestionSchema = z.object({
   poiId: z.number(),
   title: z.string().min(1),
   content: z.string().optional(),
-  tags: z.any().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 app.post('/questions', authRequired(), zValidator('json', createQuestionSchema), async (c) => {

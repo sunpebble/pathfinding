@@ -90,7 +90,7 @@ actor NetworkClient {
     baseURL(for: path).appendingPathComponent(path)
   }
 
-  // MARK: - Request Methods
+  // MARK: - Request Building
 
   /// Create URLRequest with authentication header if available
   func createRequest(url: URL) async -> URLRequest {
@@ -104,18 +104,27 @@ actor NetworkClient {
     return request
   }
 
-  /// GET request with retry logic and caching
-  func fetchWithRetry(
+  // MARK: - Core Request Engine
+
+  /// Generic request with retry logic, 401 token refresh, and rate limit handling.
+  /// All HTTP method helpers (`fetchWithRetry`, `postWithRetry`, etc.) delegate here.
+  ///
+  /// - Parameters:
+  ///   - url: The request URL
+  ///   - configureRequest: Closure to set httpMethod, headers, and body on the request
+  ///   - cacheKey: If non-nil, the response will be cached/read from cache under this key
+  ///   - maxRetries: Maximum retry attempts
+  /// - Returns: Response data
+  private func performRequest(
     url: URL,
-    forceRefresh: Bool = false,
+    configureRequest: @Sendable (inout URLRequest) throws -> Void,
+    cacheKey: String? = nil,
     maxRetries: Int = AppConfig.maxRetryAttempts
   ) async throws -> Data {
     try Task.checkCancellation()
 
-    let cacheKey = url.absoluteString
-
-    // Check cache first
-    if !forceRefresh, let cached = responseCache[cacheKey] {
+    // Check cache first (GET requests only)
+    if let cacheKey, let cached = responseCache[cacheKey] {
       let age = Date().timeIntervalSince(cached.cachedAt)
       if age < AppConfig.apiCacheValiditySeconds {
         logger.debug("Using cached response for \(url.path)")
@@ -131,9 +140,11 @@ actor NetworkClient {
       }
 
       do {
-        logger.debug("Fetching \(url.path) (attempt \(attempt)/\(maxRetries))")
+        logger.debug("Request \(url.path) (attempt \(attempt)/\(maxRetries))")
 
-        let request = await createRequest(url: url)
+        var request = await createRequest(url: url)
+        try configureRequest(&request)
+
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -142,21 +153,27 @@ actor NetworkClient {
 
         switch httpResponse.statusCode {
         case 200...299:
-          responseCache[cacheKey] = CachedResponse(data: data, cachedAt: Date())
+          if let cacheKey {
+            responseCache[cacheKey] = CachedResponse(data: data, cachedAt: Date())
+          }
           return data
 
         case 401:
           logger.warning("Received 401, attempting token refresh")
           do {
             try await authManager.refreshToken()
-            let retryRequest = await createRequest(url: url)
+            var retryRequest = await createRequest(url: url)
+            try configureRequest(&retryRequest)
+
             let (retryData, retryResponse) = try await session.data(for: retryRequest)
             guard let retryHttpResponse = retryResponse as? HTTPURLResponse,
                   retryHttpResponse.statusCode >= 200 && retryHttpResponse.statusCode < 300
             else {
               throw APIError.unauthorized
             }
-            responseCache[cacheKey] = CachedResponse(data: retryData, cachedAt: Date())
+            if let cacheKey {
+              responseCache[cacheKey] = CachedResponse(data: retryData, cachedAt: Date())
+            }
             return retryData
           } catch {
             logger.error("Token refresh failed: \(String(describing: error))")
@@ -202,6 +219,22 @@ actor NetworkClient {
     }
 
     throw lastError ?? APIError.unknown
+  }
+
+  // MARK: - HTTP Method Helpers
+
+  /// GET request with retry logic and caching
+  func fetchWithRetry(
+    url: URL,
+    forceRefresh: Bool = false,
+    maxRetries: Int = AppConfig.maxRetryAttempts
+  ) async throws -> Data {
+    try await performRequest(
+      url: url,
+      configureRequest: { _ in /* GET is default, no configuration needed */ },
+      cacheKey: forceRefresh ? nil : url.absoluteString,
+      maxRetries: maxRetries
+    )
   }
 
   /// POST request with retry logic
@@ -210,93 +243,16 @@ actor NetworkClient {
     body: T,
     maxRetries: Int = AppConfig.maxRetryAttempts
   ) async throws -> Data {
-    try Task.checkCancellation()
-
-    var lastError: Error?
-
-    for attempt in 1...maxRetries {
-      if Task.isCancelled {
-        throw APIError.cancelled
-      }
-
-      do {
-        logger.debug("POST \(url.path) (attempt \(attempt)/\(maxRetries))")
-
-        var request = await createRequest(url: url)
+    let bodyData = try JSONEncoder().encode(body)
+    return try await performRequest(
+      url: url,
+      configureRequest: { request in
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(body)
-
-        let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-          throw APIError.invalidResponse
-        }
-
-        switch httpResponse.statusCode {
-        case 200...299:
-          return data
-
-        case 401:
-          logger.warning("Received 401 on POST, attempting token refresh")
-          do {
-            try await authManager.refreshToken()
-            var retryRequest = await createRequest(url: url)
-            retryRequest.httpMethod = "POST"
-            retryRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            retryRequest.httpBody = try JSONEncoder().encode(body)
-
-            let (retryData, retryResponse) = try await session.data(for: retryRequest)
-            guard let retryHttpResponse = retryResponse as? HTTPURLResponse,
-                  retryHttpResponse.statusCode >= 200 && retryHttpResponse.statusCode < 300
-            else {
-              throw APIError.unauthorized
-            }
-            return retryData
-          } catch {
-            logger.error("Token refresh failed: \(String(describing: error))")
-            throw APIError.unauthorized
-          }
-
-        case 404:
-          throw APIError.notFound
-
-        case 429:
-          let waitTime = Double(attempt) * 2
-          try await Task.sleep(for: .seconds(waitTime))
-          continue
-
-        case 500...599:
-          throw APIError.serverError(httpResponse.statusCode)
-
-        default:
-          throw APIError.httpError(httpResponse.statusCode)
-        }
-      } catch is CancellationError {
-        throw APIError.cancelled
-      } catch let error as APIError {
-        if !error.isRecoverable {
-          throw error
-        }
-        lastError = error
-        if attempt < maxRetries {
-          let waitTime = Double(attempt) * 1.5
-          try? await Task.sleep(for: .seconds(waitTime))
-        }
-      } catch {
-        lastError = error
-        if attempt < maxRetries {
-          let waitTime = Double(attempt) * 1.5
-          do {
-            try await Task.sleep(for: .seconds(waitTime))
-          } catch {
-            throw APIError.cancelled
-          }
-        }
-      }
-    }
-
-    throw lastError ?? APIError.unknown
+        request.httpBody = bodyData
+      },
+      maxRetries: maxRetries
+    )
   }
 
   /// PUT request with retry logic
@@ -305,93 +261,16 @@ actor NetworkClient {
     body: T,
     maxRetries: Int = AppConfig.maxRetryAttempts
   ) async throws -> Data {
-    try Task.checkCancellation()
-
-    var lastError: Error?
-
-    for attempt in 1...maxRetries {
-      if Task.isCancelled {
-        throw APIError.cancelled
-      }
-
-      do {
-        logger.debug("PUT \(url.path) (attempt \(attempt)/\(maxRetries))")
-
-        var request = await createRequest(url: url)
+    let bodyData = try JSONEncoder().encode(body)
+    return try await performRequest(
+      url: url,
+      configureRequest: { request in
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(body)
-
-        let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-          throw APIError.invalidResponse
-        }
-
-        switch httpResponse.statusCode {
-        case 200...299:
-          return data
-
-        case 401:
-          logger.warning("Received 401 on PUT, attempting token refresh")
-          do {
-            try await authManager.refreshToken()
-            var retryRequest = await createRequest(url: url)
-            retryRequest.httpMethod = "PUT"
-            retryRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            retryRequest.httpBody = try JSONEncoder().encode(body)
-
-            let (retryData, retryResponse) = try await session.data(for: retryRequest)
-            guard let retryHttpResponse = retryResponse as? HTTPURLResponse,
-                  retryHttpResponse.statusCode >= 200 && retryHttpResponse.statusCode < 300
-            else {
-              throw APIError.unauthorized
-            }
-            return retryData
-          } catch {
-            logger.error("Token refresh failed: \(String(describing: error))")
-            throw APIError.unauthorized
-          }
-
-        case 404:
-          throw APIError.notFound
-
-        case 429:
-          let waitTime = Double(attempt) * 2
-          try await Task.sleep(for: .seconds(waitTime))
-          continue
-
-        case 500...599:
-          throw APIError.serverError(httpResponse.statusCode)
-
-        default:
-          throw APIError.httpError(httpResponse.statusCode)
-        }
-      } catch is CancellationError {
-        throw APIError.cancelled
-      } catch let error as APIError {
-        if !error.isRecoverable {
-          throw error
-        }
-        lastError = error
-        if attempt < maxRetries {
-          let waitTime = Double(attempt) * 1.5
-          try? await Task.sleep(for: .seconds(waitTime))
-        }
-      } catch {
-        lastError = error
-        if attempt < maxRetries {
-          let waitTime = Double(attempt) * 1.5
-          do {
-            try await Task.sleep(for: .seconds(waitTime))
-          } catch {
-            throw APIError.cancelled
-          }
-        }
-      }
-    }
-
-    throw lastError ?? APIError.unknown
+        request.httpBody = bodyData
+      },
+      maxRetries: maxRetries
+    )
   }
 
   /// PATCH request with retry logic
@@ -400,93 +279,16 @@ actor NetworkClient {
     body: T,
     maxRetries: Int = AppConfig.maxRetryAttempts
   ) async throws -> Data {
-    try Task.checkCancellation()
-
-    var lastError: Error?
-
-    for attempt in 1...maxRetries {
-      if Task.isCancelled {
-        throw APIError.cancelled
-      }
-
-      do {
-        logger.debug("PATCH \(url.path) (attempt \(attempt)/\(maxRetries))")
-
-        var request = await createRequest(url: url)
+    let bodyData = try JSONEncoder().encode(body)
+    return try await performRequest(
+      url: url,
+      configureRequest: { request in
         request.httpMethod = "PATCH"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(body)
-
-        let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-          throw APIError.invalidResponse
-        }
-
-        switch httpResponse.statusCode {
-        case 200...299:
-          return data
-
-        case 401:
-          logger.warning("Received 401 on PATCH, attempting token refresh")
-          do {
-            try await authManager.refreshToken()
-            var retryRequest = await createRequest(url: url)
-            retryRequest.httpMethod = "PATCH"
-            retryRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            retryRequest.httpBody = try JSONEncoder().encode(body)
-
-            let (retryData, retryResponse) = try await session.data(for: retryRequest)
-            guard let retryHttpResponse = retryResponse as? HTTPURLResponse,
-                  retryHttpResponse.statusCode >= 200 && retryHttpResponse.statusCode < 300
-            else {
-              throw APIError.unauthorized
-            }
-            return retryData
-          } catch {
-            logger.error("Token refresh failed: \(String(describing: error))")
-            throw APIError.unauthorized
-          }
-
-        case 404:
-          throw APIError.notFound
-
-        case 429:
-          let waitTime = Double(attempt) * 2
-          try await Task.sleep(for: .seconds(waitTime))
-          continue
-
-        case 500...599:
-          throw APIError.serverError(httpResponse.statusCode)
-
-        default:
-          throw APIError.httpError(httpResponse.statusCode)
-        }
-      } catch is CancellationError {
-        throw APIError.cancelled
-      } catch let error as APIError {
-        if !error.isRecoverable {
-          throw error
-        }
-        lastError = error
-        if attempt < maxRetries {
-          let waitTime = Double(attempt) * 1.5
-          try? await Task.sleep(for: .seconds(waitTime))
-        }
-      } catch {
-        lastError = error
-        if attempt < maxRetries {
-          let waitTime = Double(attempt) * 1.5
-          do {
-            try await Task.sleep(for: .seconds(waitTime))
-          } catch {
-            throw APIError.cancelled
-          }
-        }
-      }
-    }
-
-    throw lastError ?? APIError.unknown
+        request.httpBody = bodyData
+      },
+      maxRetries: maxRetries
+    )
   }
 
   /// DELETE request with retry logic
@@ -494,89 +296,13 @@ actor NetworkClient {
     url: URL,
     maxRetries: Int = AppConfig.maxRetryAttempts
   ) async throws -> Data {
-    try Task.checkCancellation()
-
-    var lastError: Error?
-
-    for attempt in 1...maxRetries {
-      if Task.isCancelled {
-        throw APIError.cancelled
-      }
-
-      do {
-        logger.debug("DELETE \(url.path) (attempt \(attempt)/\(maxRetries))")
-
-        var request = await createRequest(url: url)
+    try await performRequest(
+      url: url,
+      configureRequest: { request in
         request.httpMethod = "DELETE"
-
-        let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-          throw APIError.invalidResponse
-        }
-
-        switch httpResponse.statusCode {
-        case 200...299:
-          return data
-
-        case 401:
-          logger.warning("Received 401 on DELETE, attempting token refresh")
-          do {
-            try await authManager.refreshToken()
-            var retryRequest = await createRequest(url: url)
-            retryRequest.httpMethod = "DELETE"
-
-            let (retryData, retryResponse) = try await session.data(for: retryRequest)
-            guard let retryHttpResponse = retryResponse as? HTTPURLResponse,
-                  retryHttpResponse.statusCode >= 200 && retryHttpResponse.statusCode < 300
-            else {
-              throw APIError.unauthorized
-            }
-            return retryData
-          } catch {
-            logger.error("Token refresh failed: \(String(describing: error))")
-            throw APIError.unauthorized
-          }
-
-        case 404:
-          throw APIError.notFound
-
-        case 429:
-          let waitTime = Double(attempt) * 2
-          try await Task.sleep(for: .seconds(waitTime))
-          continue
-
-        case 500...599:
-          throw APIError.serverError(httpResponse.statusCode)
-
-        default:
-          throw APIError.httpError(httpResponse.statusCode)
-        }
-      } catch is CancellationError {
-        throw APIError.cancelled
-      } catch let error as APIError {
-        if !error.isRecoverable {
-          throw error
-        }
-        lastError = error
-        if attempt < maxRetries {
-          let waitTime = Double(attempt) * 1.5
-          try? await Task.sleep(for: .seconds(waitTime))
-        }
-      } catch {
-        lastError = error
-        if attempt < maxRetries {
-          let waitTime = Double(attempt) * 1.5
-          do {
-            try await Task.sleep(for: .seconds(waitTime))
-          } catch {
-            throw APIError.cancelled
-          }
-        }
-      }
-    }
-
-    throw lastError ?? APIError.unknown
+      },
+      maxRetries: maxRetries
+    )
   }
 
   /// Clear response cache

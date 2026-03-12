@@ -1,4 +1,5 @@
 services:
+  # WARNING: Configure TIDB_PASSWORD for production use
   tidb:
     image: pingcap/tidb:v8.5.0
     ports:
@@ -14,6 +15,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
   api:
     build:
@@ -45,6 +51,11 @@ services:
     depends_on:
       tidb:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
   crawler:
     build:
@@ -101,6 +112,11 @@ services:
         condition: service_healthy
       n8n:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
   # Ollama - Local LLM with Gemma3 for content extraction and summarization
   ollama:
@@ -126,6 +142,11 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
   # Ollama model initialization - pulls Gemma3 model on startup
   ollama-init:
@@ -141,6 +162,11 @@ services:
     environment:
       - OLLAMA_HOST=http://ollama:11434
     restart: no
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
   # n8n - Workflow automation for crawl scheduling and notifications
   n8n:
@@ -150,13 +176,13 @@ services:
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-changeme}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:?N8N_BASIC_AUTH_PASSWORD must be set}
       - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
       - GENERIC_TIMEZONE=${TZ:-Asia/Shanghai}
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-your-encryption-key-here}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:?N8N_ENCRYPTION_KEY must be set}
       # External service connections
       - DATABASE_URL=mysql://root@tidb:4000/pathfinding
       - CRAWLER_API_URL=http://crawler:3001
@@ -173,6 +199,11 @@ services:
     depends_on:
       tidb:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
   # ComfyUI - AI image generation for travel guide illustrations
   comfyui:
@@ -199,6 +230,11 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
 volumes:
   tidb-data:

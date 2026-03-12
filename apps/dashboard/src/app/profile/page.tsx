@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface UserProfile {
   id: number;
@@ -15,6 +16,7 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
+  const { user, token, isAuthenticated, isLoading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -24,15 +26,17 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    // TODO: Get actual user ID from auth context
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect -- initial load guard
+    if (authLoading)
+      return;
+
+    if (!isAuthenticated || !user) {
       setLoading(false);
       return;
     }
 
-    fetch(`/api/users/${userId}`)
+    fetch(`/api/users/${user.id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then(res => res.json())
       .then((data) => {
         setProfile(data.data);
@@ -43,16 +47,14 @@ export default function ProfilePage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading, isAuthenticated, user, token]);
 
   const handleSave = async () => {
-    const userId = localStorage.getItem('userId');
-    if (!userId)
+    if (!user || !token)
       return;
 
-    const token = localStorage.getItem('token');
     try {
-      await fetch(`/api/users/${userId}`, {
+      await fetch(`/api/users/${user.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -62,7 +64,9 @@ export default function ProfilePage() {
       });
       setEditing(false);
       // Refresh profile
-      const res = await fetch(`/api/users/${userId}`);
+      const res = await fetch(`/api/users/${user.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       setProfile(data.data);
     }
@@ -71,7 +75,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />

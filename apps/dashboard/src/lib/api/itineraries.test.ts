@@ -14,12 +14,12 @@ describe('itinerary api normalization', () => {
     expect(() => normalizeItinerariesResponse({
       data: null,
       pagination: { total: 0, limit: 20, offset: 0 },
-    } as NormalizeItinerariesInput)).not.toThrow();
+    } as unknown as NormalizeItinerariesInput)).not.toThrow();
 
     expect(normalizeItinerariesResponse({
       data: null,
       pagination: { total: 0, limit: 20, offset: 0 },
-    } as NormalizeItinerariesInput)).toEqual({
+    } as unknown as NormalizeItinerariesInput)).toEqual({
       data: [],
       pagination: { total: 0, limit: 20, offset: 0 },
     });
@@ -78,9 +78,9 @@ describe('itinerary api normalization', () => {
   });
 
   it('handles null or malformed collaborator payloads without crashing', () => {
-    expect(() => normalizeCollaboratorsResponse({ data: null } as NormalizeCollaboratorsInput)).not.toThrow();
+    expect(() => normalizeCollaboratorsResponse({ data: null } as unknown as NormalizeCollaboratorsInput)).not.toThrow();
 
-    expect(normalizeCollaboratorsResponse({ data: null } as NormalizeCollaboratorsInput)).toEqual({
+    expect(normalizeCollaboratorsResponse({ data: null } as unknown as NormalizeCollaboratorsInput)).toEqual({
       data: [],
     });
 

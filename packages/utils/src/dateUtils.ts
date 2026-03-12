@@ -4,6 +4,10 @@
 
 /**
  * Convert a date to a specific timezone
+ *
+ * @warning This returns a Date whose UTC values don't match the timezone.
+ * The local time values approximate the target timezone.
+ * For accurate timezone handling, use Temporal API or date-fns-tz.
  */
 export function toTimezone(date: Date | string, timezone: string): Date {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -47,22 +51,17 @@ export function formatTime(date: Date | string): string {
 }
 
 /**
- * Parse time string (HH:mm) to hours and minutes
+ * Parse time string (HH:mm) to hours and minutes.
+ * Returns null for invalid input instead of silently falling back to 00:00.
  */
-export function parseTime(timeStr: string): { hours: number; minutes: number } {
-  const parts = timeStr.split(':');
-  const hours = Number(parts[0]);
-  const minutes = Number(parts[1]);
-  if (
-    Number.isNaN(hours)
-    || Number.isNaN(minutes)
-    || hours < 0
-    || hours > 23
-    || minutes < 0
-    || minutes > 59
-  ) {
-    return { hours: 0, minutes: 0 };
-  }
+export function parseTime(timeStr: string): { hours: number; minutes: number } | null {
+  const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match)
+    return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59)
+    return null;
   return { hours, minutes };
 }
 
@@ -75,7 +74,9 @@ export function combineDateAndTime(
   timezone?: string,
 ): Date {
   const d = typeof date === 'string' ? new Date(date) : date;
-  const { hours, minutes } = parseTime(timeStr);
+  const parsed = parseTime(timeStr);
+  const hours = parsed?.hours ?? 0;
+  const minutes = parsed?.minutes ?? 0;
 
   const result = new Date(d);
   result.setHours(hours, minutes, 0, 0);
@@ -96,7 +97,8 @@ export function combineDateAndTime(
 }
 
 /**
- * Get number of days between two dates (inclusive)
+ * Get number of days between two dates (inclusive).
+ * Uses UTC-based calculation to avoid DST issues.
  */
 export function getDaysBetween(
   startDate: Date | string,
@@ -104,16 +106,9 @@ export function getDaysBetween(
 ): number {
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
-  const startDay = new Date(
-    start.getFullYear(),
-    start.getMonth(),
-    start.getDate(),
-  );
-  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-  const diffDays = Math.round(
-    Math.abs(endDay.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24),
-  );
-  return diffDays + 1;
+  const utcStart = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const utcEnd = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+  return Math.round((utcEnd - utcStart) / 86_400_000) + 1;
 }
 
 /**
@@ -125,6 +120,9 @@ export function getDateRange(
 ): Date[] {
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+
+  if (start > end)
+    return [];
 
   const dates: Date[] = [];
   const current = new Date(start);
@@ -158,9 +156,9 @@ export function isDateInRange(
 export function getRelativeTime(
   date: Date | string,
   locale: 'zh' | 'en' = 'zh',
+  now: Date = new Date(),
 ): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
   const diffMs = now.getTime() - d.getTime();
 
   if (diffMs < 0) {

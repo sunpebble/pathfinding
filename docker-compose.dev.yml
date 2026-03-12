@@ -15,6 +15,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # TODO: apps/api/Dockerfile does not exist yet. Create it before enabling this service.
   api:
     build:
       context: .
@@ -31,7 +32,7 @@ services:
         - --no-verbose
         - --tries=1
         - --spider
-        - 'http://localhost:8000/api/health'
+        - 'http://localhost:8000/health'
 
       interval: 30s
       timeout: 10s
@@ -42,6 +43,7 @@ services:
       tidb:
         condition: service_healthy
 
+  # TODO: apps/crawler/Dockerfile does not exist yet. Create it before enabling this service.
   crawler:
     build:
       context: .

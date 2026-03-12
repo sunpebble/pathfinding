@@ -84,7 +84,16 @@ export function verifyPassword(password: string, storedSecret: string): boolean 
   }
 
   // Backward compatibility for legacy plain-text secrets.
-  return storedSecret === password;
+  // Use timing-safe comparison to prevent timing attacks.
+  const passwordBuf = Buffer.from(password, 'utf-8');
+  const storedBuf = Buffer.from(storedSecret, 'utf-8');
+
+  // timingSafeEqual requires equal-length buffers, so hash both
+  // with a fixed-length output to normalise the comparison.
+  const passwordHash = scryptSync(passwordBuf, 'legacy-compare', 32);
+  const storedHash = scryptSync(storedBuf, 'legacy-compare', 32);
+
+  return timingSafeEqual(passwordHash, storedHash);
 }
 
 /**

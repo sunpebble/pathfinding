@@ -156,6 +156,10 @@ export interface TransportSegment {
   selectedMode?: TransportMode;
 }
 
+// TODO: Move runtime functions (formatDuration, formatDistance, formatCost)
+// to @pathfinding/utils or @pathfinding/constants.
+// The @pathfinding/types package should only export type definitions.
+
 /**
  * Transport mode metadata — ordered list for UI iteration.
  *

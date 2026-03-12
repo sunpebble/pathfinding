@@ -9,6 +9,7 @@ import {
   mysqlTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
 import { createdAt, fk, id, updatedAt } from './columns';
@@ -29,7 +30,7 @@ export const users = mysqlTable(
     updatedAt: updatedAt(),
   },
   t => [
-    index('users_email_idx').on(t.email),
+    uniqueIndex('users_email_uniq').on(t.email),
     index('users_phone_idx').on(t.phone),
   ],
 );

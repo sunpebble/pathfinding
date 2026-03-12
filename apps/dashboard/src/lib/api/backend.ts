@@ -1,11 +1,14 @@
 /**
- * Crawler backend proxy — server-side only
+ * Crawler backend proxy — server-side only.
  *
  * Deep module that hides HTTP transport, response parsing, and
- * data normalization behind two simple exports:
- *   fetchBackendApi<T>(endpoint, init?)  — typed fetch against the crawler backend
- *   normalizeTravelGuide(raw)            — snake_case / camelCase field normalizer
- *   normalizeCrawlJob(raw)               — same for crawl jobs
+ * data normalization behind simple exports:
+ *
+ * - {@link fetchBackendApi} — typed fetch against the crawler backend
+ * - {@link normalizeTravelGuide} — snake_case / camelCase field normalizer
+ * - {@link normalizeCrawlJob} — same for crawl jobs
+ *
+ * @module
  */
 
 import type { CrawlJob } from './crawler';
@@ -15,8 +18,10 @@ import { getMockResponse } from './mock-data';
 // Config
 // ---------------------------------------------------------------------------
 
+/** Default backend URL when `NEXT_PUBLIC_API_URL` is not set. */
 const DEFAULT_BACKEND_API_URL = 'http://localhost:3001';
 
+/** Resolve the crawler backend base URL from the environment. */
 export function getBackendApiBaseUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL || DEFAULT_BACKEND_API_URL;
 }
@@ -25,6 +30,7 @@ export function getBackendApiBaseUrl(): string {
 // Internals
 // ---------------------------------------------------------------------------
 
+/** Extract a human-readable error message from a parsed error response. */
 function parseErrorMessage(error: unknown, status: number): string {
   if (error && typeof error === 'object') {
     const message = 'message' in error ? error.message : undefined;
@@ -41,6 +47,7 @@ function parseErrorMessage(error: unknown, status: number): string {
   return `HTTP error ${status}`;
 }
 
+/** Safely parse a JSON response body, returning `undefined` for empty bodies. */
 async function parseJsonResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   if (!text) {
@@ -50,6 +57,7 @@ async function parseJsonResponse<T>(res: Response): Promise<T> {
   return JSON.parse(text) as T;
 }
 
+/** Convert a value to a string if non-empty, or `undefined`. */
 function toStringOrUndefined(value: unknown): string | undefined {
   if (typeof value === 'string' && value.length > 0) {
     return value;
@@ -62,6 +70,7 @@ function toStringOrUndefined(value: unknown): string | undefined {
   return undefined;
 }
 
+/** Convert a value to a number, falling back to a default. */
 function toNumberOrDefault(value: unknown, fallback = 0): number {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value;
@@ -77,6 +86,7 @@ function toNumberOrDefault(value: unknown, fallback = 0): number {
   return fallback;
 }
 
+/** Filter an unknown value to an array of strings. */
 function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -85,6 +95,7 @@ function toStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string');
 }
 
+/** Narrow an unknown value to a plain object, or return `undefined`. */
 function toRecord(value: unknown): Record<string, unknown> | undefined {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -124,8 +135,13 @@ export async function fetchBackendApi<T>(
 
     return parseJsonResponse<T>(res);
   }
-  catch {
-    // Fall back to mock data when the backend is unreachable
+  catch (error) {
+    // In production, never fall back to mock data — re-throw immediately
+    if (process.env.NODE_ENV === 'production') {
+      throw error;
+    }
+
+    // Fall back to mock data only in development when the backend is unreachable
     const method = options?.method ?? 'GET';
     const mock = getMockResponse(endpoint, method);
     if (mock) {

@@ -8,6 +8,7 @@ import { and, eq } from 'drizzle-orm';
  */
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { jsonData, jsonOk } from '../lib/response.js';
 import { authRequired } from '../middleware/auth.js';
 import {
   createSession,
@@ -164,7 +165,7 @@ app.post('/signout', authRequired(), zValidator('json', signoutSchema), async (c
     }
   }
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
 // ── POST /social — Social login (Google/Apple) ─────────
@@ -295,14 +296,12 @@ app.get('/me', authRequired(), async (c) => {
   }
 
   const user = userRows[0]!;
-  return c.json({
-    data: {
-      id: String(user.id),
-      name: user.name,
-      email: user.email,
-      image: user.image,
-      created_at: user.createdAt,
-    },
+  return jsonData(c, {
+    id: String(user.id),
+    name: user.name,
+    email: user.email,
+    image: user.image,
+    created_at: user.createdAt,
   });
 });
 

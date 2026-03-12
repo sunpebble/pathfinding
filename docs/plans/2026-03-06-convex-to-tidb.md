@@ -13,6 +13,7 @@
 ### Task 1: Add API test harness and collaborator route skeleton
 
 **Files:**
+
 - Modify: `packages/api/package.json`
 - Modify: `packages/api/src/app.ts`
 - Create: `packages/api/vitest.config.ts`
@@ -86,6 +87,7 @@ git commit -m "test: add api migration harness"
 ### Task 2: Implement collaborator and missing itinerary mutation APIs
 
 **Files:**
+
 - Modify: `packages/api/src/routes/itineraries.ts`
 - Modify: `packages/api/src/routes/itinerary-collaborators.ts`
 - Modify: `packages/api/src/routes/itinerary-collaborators.test.ts`
@@ -166,6 +168,7 @@ git commit -m "feat: add tiDB itinerary collaboration api"
 ### Task 3: Create dashboard API client and auth provider
 
 **Files:**
+
 - Modify: `apps/dashboard/src/app/providers.tsx`
 - Modify: `apps/dashboard/src/hooks/use-auth.ts`
 - Modify: `apps/dashboard/next.config.ts`
@@ -242,6 +245,7 @@ git commit -m "feat: add dashboard api and auth foundation"
 ### Task 4: Replace dashboard sign-in, sign-up, and user menu
 
 **Files:**
+
 - Modify: `apps/dashboard/src/app/auth/signin/page.tsx`
 - Modify: `apps/dashboard/src/app/auth/signup/page.tsx`
 - Modify: `apps/dashboard/src/components/auth-button.tsx`
@@ -295,6 +299,7 @@ git commit -m "feat: migrate dashboard auth from convex"
 ### Task 5: Replace itinerary list and detail pages with React Query
 
 **Files:**
+
 - Modify: `apps/dashboard/src/app/itineraries/page.tsx`
 - Modify: `apps/dashboard/src/app/itineraries/[id]/page.tsx`
 - Modify: `apps/dashboard/src/lib/api/itineraries.ts`
@@ -347,6 +352,7 @@ git commit -m "feat: migrate itinerary pages to tiDB api"
 ### Task 6: Replace itinerary editor, POI editor, invite dialog, and collaborator panel
 
 **Files:**
+
 - Modify: `apps/dashboard/src/components/itinerary-editor.tsx`
 - Modify: `apps/dashboard/src/components/poi-editor.tsx`
 - Modify: `apps/dashboard/src/components/invite-dialog.tsx`
@@ -408,6 +414,7 @@ git commit -m "feat: migrate itinerary editing and collaboration"
 ### Task 7: Replace crawler proxy routes and remaining scripts
 
 **Files:**
+
 - Modify: `apps/dashboard/src/app/api/crawler/guides/route.ts`
 - Modify: `apps/dashboard/src/app/api/crawler/guides/[id]/route.ts`
 - Modify: `apps/dashboard/src/app/api/crawler/crawl-jobs/route.ts`
@@ -452,6 +459,7 @@ git commit -m "refactor: remove convex crawler integrations"
 ### Task 8: Remove Convex packages, mocks, configs, and dead code
 
 **Files:**
+
 - Modify: `apps/dashboard/package.json`
 - Modify: `package.json`
 - Modify: `apps/dashboard/src/test/setup.ts`

@@ -39,7 +39,7 @@ const createBudgetSchema = z.object({
   itineraryId: z.number(),
   totalBudget: z.number(),
   currency: z.string().optional(),
-  categoryBudgets: z.any().optional(),
+  categoryBudgets: z.record(z.number()).optional(),
 });
 
 app.post('/', authRequired(), zValidator('json', createBudgetSchema), async (c) => {
@@ -64,7 +64,7 @@ app.post('/', authRequired(), zValidator('json', createBudgetSchema), async (c) 
       .set({
         totalBudget,
         currency: currency ?? 'CNY',
-        categoryBudgets: categoryBudgets ?? [],
+        categoryBudgets: categoryBudgets ?? {},
         updatedAt: new Date(),
       })
       .where(eq(itineraryBudgets.id, existing[0].id));
@@ -76,7 +76,7 @@ app.post('/', authRequired(), zValidator('json', createBudgetSchema), async (c) 
       userId: uid,
       totalBudget,
       currency: currency ?? 'CNY',
-      categoryBudgets: categoryBudgets ?? [],
+      categoryBudgets: categoryBudgets ?? {},
     });
     budgetId = Number(result[0].insertId);
   }

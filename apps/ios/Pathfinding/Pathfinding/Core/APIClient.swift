@@ -109,118 +109,28 @@ extension APIClient {
     try await network.fetch(path: path, queryItems: queryItems)
   }
 
-  nonisolated func post<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("api/\(path)")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
-    else {
-      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
-      if statusCode == 401 { throw APIError.unauthorized }
-      if statusCode == 404 { throw APIError.notFound }
-      throw APIError.httpError(statusCode)
-    }
-
-    return try JSONDecoder().decode(T.self, from: data)
+  func post<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
+    try await network.post(path: path, body: body)
   }
 
   func post<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
     try await network.post(path: path, body: body)
   }
 
-  nonisolated func postVoid(path: String, body: [String: Any]) async throws {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("api/\(path)")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (_, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
-    else {
-      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
-      if statusCode == 401 { throw APIError.unauthorized }
-      if statusCode == 404 { throw APIError.notFound }
-      throw APIError.httpError(statusCode)
-    }
+  func postVoid(path: String, body: [String: Any]) async throws {
+    try await network.postVoid(path: path, body: body)
   }
 
-  nonisolated func put<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("api/\(path)")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "PUT"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
-    else {
-      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
-      if statusCode == 401 { throw APIError.unauthorized }
-      if statusCode == 404 { throw APIError.notFound }
-      throw APIError.httpError(statusCode)
-    }
-
-    return try JSONDecoder().decode(T.self, from: data)
+  func put<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
+    try await network.put(path: path, body: body)
   }
 
   func putWithBody<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
     try await network.putWithBody(path: path, body: body)
   }
 
-  nonisolated func patch<T: Decodable>(path: String, body: [String: Any]) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("api/\(path)")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "PATCH"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
-    else {
-      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
-      if statusCode == 401 { throw APIError.unauthorized }
-      if statusCode == 404 { throw APIError.notFound }
-      throw APIError.httpError(statusCode)
-    }
-
-    return try JSONDecoder().decode(T.self, from: data)
+  func patch<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
+    try await network.patch(path: path, body: body)
   }
 
   func patchWithBody<T: Decodable & Sendable, B: Encodable & Sendable>(path: String, body: B) async throws -> T {
@@ -231,29 +141,8 @@ extension APIClient {
     try await network.delete(path: path)
   }
 
-  nonisolated func delete(path: String, body: [String: Any]) async throws {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("api/\(path)")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "DELETE"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (_, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
-    else {
-      let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 500
-      if statusCode == 401 { throw APIError.unauthorized }
-      if statusCode == 404 { throw APIError.notFound }
-      throw APIError.httpError(statusCode)
-    }
+  func delete(path: String, body: [String: Any]) async throws {
+    try await network.delete(path: path, body: body)
   }
 
   func createAuthenticatedRequest(url: URL) async -> URLRequest {

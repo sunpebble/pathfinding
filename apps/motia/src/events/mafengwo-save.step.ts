@@ -8,7 +8,7 @@ import { createDb, travelGuides } from '@pathfinding/database';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import {
-  convertToConvexFormat,
+  convertToDBFormat,
 } from '../lib/mafengwo-converter.js';
 
 const eventDataSchema = z.object({
@@ -54,7 +54,7 @@ function getDb() {
  * Upsert 游记到 TiDB
  */
 async function upsertGuide(
-  data: ReturnType<typeof convertToConvexFormat>,
+  data: ReturnType<typeof convertToDBFormat>,
   contentHtml?: string,
 ) {
   const db = getDb();
@@ -123,7 +123,7 @@ export async function handler(
     logger.info('Saving guide to TiDB', { url });
 
     // 转换格式
-    const guideData = convertToConvexFormat(url, guide as MafengwoRawGuide);
+    const guideData = convertToDBFormat(url, guide as MafengwoRawGuide);
 
     // Upsert 到 TiDB
     const guideId = await upsertGuide(guideData, guide.contentHtml);
@@ -171,7 +171,7 @@ export async function saveBatch(
 
   for (const { url, guide } of guides) {
     try {
-      const guideData = convertToConvexFormat(url, guide);
+      const guideData = convertToDBFormat(url, guide);
       await upsertGuide(guideData);
 
       success++;

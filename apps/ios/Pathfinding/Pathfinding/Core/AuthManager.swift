@@ -1,4 +1,5 @@
 import Foundation
+import os
 import OSLog
 import Security
 
@@ -25,7 +26,7 @@ actor AuthManager {
       SecItemDelete(query as CFDictionary)
     }
 
-    _sharedCachedUserId = nil
+    _cachedUserIdLock.withLock { $0 = nil }
   }
 
   private let apiBaseURL: URL
@@ -49,18 +50,14 @@ actor AuthManager {
   private(set) var isAuthenticated: Bool = false
   private var sessionLoaded: Bool = false
 
-  /// Synchronous access to current user ID (cached value)
+  /// Synchronous access to current user ID (cached value).
+  /// Uses `OSAllocatedUnfairLock` for thread-safe access without data races.
   nonisolated var currentUserId: String? {
-    // Use Task to get the value synchronously from the cache
-    // This is a workaround for accessing actor-isolated state from non-async context
-    return _cachedUserId
+    Self._cachedUserIdLock.withLock { $0 }
   }
 
-  /// Cached user ID for synchronous access
-  private nonisolated(unsafe) static var _sharedCachedUserId: String?
-  private nonisolated var _cachedUserId: String? {
-    AuthManager._sharedCachedUserId
-  }
+  /// Thread-safe cached user ID storage using os_unfair_lock wrapper
+  private nonisolated static let _cachedUserIdLock = OSAllocatedUnfairLock<String?>(initialState: nil)
 
   init(apiBaseURL: String? = nil) {
     let apiBaseUrlString = apiBaseURL ?? AppConfig.apiBaseURL
@@ -410,7 +407,7 @@ actor AuthManager {
     self.userId = resolvedUserId
     
     // Update cached userId for synchronous access
-    AuthManager._sharedCachedUserId = resolvedUserId
+    AuthManager._cachedUserIdLock.withLock { $0 = resolvedUserId }
 
     // Persist to Keychain
     try saveToKeychain(response.token, key: accessTokenKey)
@@ -450,7 +447,7 @@ actor AuthManager {
       self.isAuthenticated = true
 
       // Update cached userId for synchronous access
-      AuthManager._sharedCachedUserId = storedUserId
+      AuthManager._cachedUserIdLock.withLock { $0 = storedUserId }
 
       logger.info("Restored session from Keychain")
     }
@@ -466,7 +463,7 @@ actor AuthManager {
     self.isAuthenticated = false
 
     // Clear cached userId for synchronous access
-    AuthManager._sharedCachedUserId = nil
+    AuthManager._cachedUserIdLock.withLock { $0 = nil }
 
     // Clear from Keychain
     deleteFromKeychain(key: accessTokenKey)

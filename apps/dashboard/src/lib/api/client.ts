@@ -1,10 +1,29 @@
 'use client';
 
+/**
+ * Client-side authenticated API transport.
+ *
+ * Provides a thin wrapper around `fetch` that automatically attaches
+ * the stored JWT token, serializes request bodies, and parses JSON
+ * responses with proper error handling via {@link ApiError}.
+ *
+ * @module
+ */
+
+/** localStorage key used to persist the JWT auth token. */
 export const AUTH_TOKEN_STORAGE_KEY = 'pathfinding.dashboard.auth.token';
 
+/**
+ * Structured error thrown when a non-2xx response is received.
+ *
+ * Consumers can inspect {@link status} for HTTP status code and
+ * {@link data} for the parsed response body (if any).
+ */
 export class ApiError extends Error {
-  status: number;
-  data: unknown;
+  /** HTTP status code of the failed response. */
+  readonly status: number;
+  /** Parsed response body, if available. */
+  readonly data: unknown;
 
   constructor(message: string, status: number, data: unknown) {
     super(message);
@@ -14,7 +33,11 @@ export class ApiError extends Error {
   }
 }
 
-function readTokenFromStorage() {
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+function readTokenFromStorage(): string | null {
   if (typeof window === 'undefined') {
     return null;
   }
@@ -22,15 +45,15 @@ function readTokenFromStorage() {
   return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
 }
 
-function buildUrl(basePath: string, path: string) {
+function buildUrl(basePath: string, path: string): string {
   const normalizedBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${normalizedBase}${normalizedPath}`;
 }
 
-function normalizeHeaders(headers?: HeadersInit) {
+function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
   if (!headers) {
-    return {} as Record<string, string>;
+    return {};
   }
 
   if (headers instanceof Headers) {
@@ -61,7 +84,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return JSON.parse(text) as T;
 }
 
-function serializeBody(body: unknown) {
+function serializeBody(body: unknown): BodyInit | undefined {
   if (body === undefined) {
     return undefined;
   }
@@ -79,24 +102,69 @@ function serializeBody(body: unknown) {
   return JSON.stringify(body);
 }
 
-export function getStoredAuthToken() {
+function extractErrorMessage(data: unknown, statusText: string): string {
+  if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
+    return data.error;
+  }
+
+  return statusText || 'Request failed';
+}
+
+// ---------------------------------------------------------------------------
+// Public API — token management
+// ---------------------------------------------------------------------------
+
+/** Read the stored JWT token from localStorage (returns `null` on the server). */
+export function getStoredAuthToken(): string | null {
   return readTokenFromStorage();
 }
 
-export function setStoredAuthToken(token: string) {
+/** Persist a JWT token to localStorage. No-op on the server. */
+export function setStoredAuthToken(token: string): void {
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
   }
 }
 
-export function clearStoredAuthToken() {
+/** Remove the stored JWT token from localStorage. No-op on the server. */
+export function clearStoredAuthToken(): void {
   if (typeof window !== 'undefined') {
     window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
   }
 }
 
-export function createApiClient(basePath: string) {
-  async function request<T>(path: string, init: RequestInit = {}) {
+// ---------------------------------------------------------------------------
+// Public API — client factory
+// ---------------------------------------------------------------------------
+
+/** Return type of {@link createApiClient}. */
+export interface ApiClient {
+  /** Execute an arbitrary request against the base path. */
+  request: <T>(path: string, init?: RequestInit) => Promise<T>;
+  /** `GET` request. */
+  get: <T>(path: string, init?: RequestInit) => Promise<T>;
+  /** `POST` request with optional JSON body. */
+  post: <T>(path: string, body?: unknown, init?: RequestInit) => Promise<T>;
+  /** `PATCH` request with optional JSON body. */
+  patch: <T>(path: string, body?: unknown, init?: RequestInit) => Promise<T>;
+  /** `DELETE` request. */
+  delete: <T>(path: string, init?: RequestInit) => Promise<T>;
+}
+
+/**
+ * Create an API client bound to a given base path.
+ *
+ * The client automatically:
+ * - attaches the stored JWT `Authorization` header,
+ * - sets `Content-Type: application/json` for non-FormData bodies,
+ * - parses JSON responses,
+ * - throws {@link ApiError} on non-2xx responses.
+ *
+ * @param basePath - URL prefix for all requests (e.g. `/api/auth`).
+ * @returns An {@link ApiClient} with convenience methods for common HTTP verbs.
+ */
+export function createApiClient(basePath: string): ApiClient {
+  async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const headers = normalizeHeaders(init.headers);
     const token = getStoredAuthToken();
 
@@ -116,12 +184,11 @@ export function createApiClient(basePath: string) {
     const data = await parseResponse<unknown>(response);
 
     if (!response.ok) {
-      const message
-        = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
-          ? data.error
-          : response.statusText || 'Request failed';
-
-      throw new ApiError(message, response.status, data);
+      throw new ApiError(
+        extractErrorMessage(data, response.statusText),
+        response.status,
+        data,
+      );
     }
 
     return data as T;

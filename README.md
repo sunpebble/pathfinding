@@ -1,7 +1,6 @@
 # 探路 Pathfinding - Travel Itinerary Platform
 
 [![CI](https://github.com/kunish-homelab/pathfinding/actions/workflows/ci.yml/badge.svg)](https://github.com/kunish-homelab/pathfinding/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-60%25-yellow.svg)](https://github.com/kunish-homelab/pathfinding)
 
 A mobile-first travel itinerary planning application with offline support, POI recommendations, and community sharing features.
 
@@ -21,8 +20,8 @@ A mobile-first travel itinerary planning application with offline support, POI r
 **Tech Stack**:
 
 - **Backend API**: Hono + TiDB - handles CRUD, auth, and shared data APIs
-- **AI Service**: Hono (Node.js/TypeScript) - AI/LLM, weather, transport, PDF export
 - **Frontend**: Next.js (Dashboard), SwiftUI (iOS)
+- **Workflow**: Motia - workflow automation engine
 - **AI**: Ollama with Gemma 3 model
 - **Geocoding**: Nominatim (OpenStreetMap)
 - **Build**: pnpm workspaces + nx
@@ -31,47 +30,49 @@ A mobile-first travel itinerary planning application with offline support, POI r
 
 ```
 apps/
-├── ai-service/       # AI/LLM, weather, transport, PDF export (port 3001)
-├── dashboard/        # Next.js admin dashboard (port 3002)
-└── ios/              # SwiftUI iOS app (iOS 17+)
-    └── Pathfinding/
-        ├── Config/   # xcconfig files (Debug/Staging/Release)
-        └── Pathfinding/
-            ├── Core/     # APIClient, AppConfig, AuthManager
-            ├── Models/   # Data models
-            └── Features/ # SwiftUI views
+├── dashboard/        # Next.js admin dashboard
+├── ios/              # SwiftUI iOS app (iOS 17+)
+│   └── Pathfinding/
+│       ├── Config/   # xcconfig files (Debug/Staging/Release)
+│       └── Pathfinding/
+│           ├── Core/     # APIClient, AppConfig, AuthManager
+│           ├── Models/   # Data models
+│           └── Features/ # SwiftUI views
+└── motia/            # Motia workflow engine
 
 packages/
-├── api/       # Shared backend API
-├── database/  # TiDB schema and database access
-├── types/     # Shared TypeScript types
-├── utils/     # Shared utility functions
-└── constants/ # Shared constants
+├── api/              # Shared backend API
+├── constants/        # Shared constants
+├── convex-client/    # Convex client utilities
+├── convex/           # Convex schema and functions
+├── crawler-types/    # Crawler type definitions
+├── database/         # TiDB schema and database access
+├── logger/           # Shared logging utilities
+├── test-utils/       # Shared test utilities
+├── types/            # Shared TypeScript types
+└── utils/            # Shared utility functions
 ```
 
 ## 📚 API Documentation
 
 ### Service URLs
 
-| Service    | Port | Description                            |
-| ---------- | ---- | -------------------------------------- |
-| API        | 3000 | CRUD operations backed by TiDB         |
-| AI Service | 3001 | AI/LLM, weather, transport, PDF export |
-| Dashboard  | 3002 | Admin dashboard (Next.js)              |
+| Service   | Port | Description                    |
+| --------- | ---- | ------------------------------ |
+| API       | 8000 | CRUD operations backed by TiDB |
+| Dashboard | 3000 | Admin dashboard (Next.js)      |
 
 ### Base URLs
 
-- **API (Local)**: `http://localhost:3000/api`
+- **API (Local)**: `http://localhost:8000/api`
 - **API (Production)**: `https://api.pathfinding.org/api`
-- **AI Service (Local)**: `http://localhost:3001/api`
-- **AI Service (Production)**: `https://ai.pathfinding.org/api`
 
 ### Authentication
 
 All protected endpoints require JWT Bearer token from the shared auth service.
 
 ```bash
-curl -H "Authorization: Bearer <token>" http://localhost:3000/api/guides
+curl -H "Authorization: Bearer <token>" http://localhost:8000/api/guides
 ```
 
 ---
@@ -94,20 +95,6 @@ The primary backend for data operations is the shared API service:
 - `/api/share/*` - Share events
 
 See `packages/api/src/routes/` for route implementations.
-
----
-
-## AI Service Endpoints
-
-The AI Service handles external API integrations:
-
-- `/api/ai/*` - AI processing (Ollama)
-- `/api/weather/*` - Weather data (OpenWeatherMap)
-- `/api/transport/*` - Transport routing (高德地图)
-- `/api/pdf/*` - PDF export
-- `/api/flights/*` - Flight lookup
-- `/api/translations/text` - AI translation
-- `/api/chat/query` - AI chat query
 
 ---
 
@@ -287,7 +274,7 @@ All error responses follow this format:
 1. **Install Prerequisites**:
 
    ```bash
-   # Node.js 20+, pnpm 10+
+   # Node.js 22+, pnpm 10+
    node --version
    pnpm --version
    ```
@@ -300,35 +287,40 @@ All error responses follow this format:
    pnpm install
    ```
 
-3. **Start Backend Services**:
+3. **Start Database**:
+
+   ```bash
+   docker compose -f docker-compose.dev.yml up tidb -d
+   ```
+
+4. **Start Development Servers**:
 
    ```bash
     pnpm dev              # Starts Dashboard
     pnpm dev:api          # Starts API service (separate terminal)
-    pnpm dev:ai-service   # Starts AI Service (separate terminal)
    ```
 
-   - API: `http://localhost:3000`
-   - AI Service: `http://localhost:3001`
-   - Dashboard: `http://localhost:3002`
+   - API: `http://localhost:8000`
+   - Dashboard: `http://localhost:3000`
 
-4. **Start iOS App**:
+5. **Start iOS App**:
 
    ```bash
    pnpm ios       # Build and launch in simulator
    pnpm ios:open  # Open in Xcode
    ```
 
-5. **Run Tests**:
+6. **Run Tests**:
    ```bash
-   pnpm lint      # Lint all packages
-   pnpm format    # Format with Prettier
+   pnpm lint      # Lint all packages (includes formatting via eslint-plugin-format)
    pnpm test      # Run tests
    ```
 
 ---
 
 ## 🐳 Docker
+
+> **Note**: Docker setup is a work-in-progress. Dockerfiles for `apps/api` and `apps/crawler` have not been created yet. Currently only the TiDB database service is fully functional in Docker.
 
 ### Quick Start with Docker Compose
 
@@ -339,43 +331,28 @@ All error responses follow this format:
    # Edit .env with your local service credentials
    ```
 
-2. **Start all services**:
+2. **Start database for development**:
+
+   ```bash
+   docker compose -f docker-compose.dev.yml up tidb -d
+   ```
+
+3. **Start all services (production)**:
 
    ```bash
    docker compose up -d
    ```
 
-   - AI Service: `http://localhost:3001`
-
-3. **View logs**:
+4. **View logs**:
 
    ```bash
    docker compose logs -f
    ```
 
-4. **Stop services**:
+5. **Stop services**:
    ```bash
    docker compose down
    ```
-
-### Building Individual Images
-
-```bash
-# Build AI Service image
-docker build -f apps/ai-service/Dockerfile -t pathfinding-ai-service .
-```
-
-### Production Deployment
-
-Pre-built images are available from GitHub Container Registry:
-
-```bash
-# Pull latest images
-docker pull ghcr.io/kunish-homelab/pathfinding-ai-service:latest
-
-# Run with docker compose
-docker compose up -d
-```
 
 ---
 
@@ -401,7 +378,6 @@ See `packages/database/src/schema/` for detailed schema.
 - API response time: < 500ms (p95)
 - Mobile app load: < 2s
 - Offline sync: < 5s
-- Timeline rendering: 60fps (React Native Reanimated)
 - Maximum bundle size: < 50MB
 
 ---
@@ -419,14 +395,10 @@ See `packages/database/src/schema/` for detailed schema.
 
 ## Contributing
 
-1. Follow the setup in [specs/001-travel-itinerary/quickstart.md](./specs/001-travel-itinerary/quickstart.md)
-2. Create feature branch from `main`
-3. Make changes following ESLint/Prettier rules (auto-fixed with pre-commit)
-4. Run tests: `pnpm lint && pnpm test`
-5. Submit PR with description of changes
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
 
 ---
 
 ## License
 
-Proprietary - Pathfinding Team 2026
+ISC License
