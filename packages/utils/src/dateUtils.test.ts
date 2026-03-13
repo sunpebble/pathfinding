@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  combineDateAndTime,
   formatDate,
   formatDateRange,
   formatLocalizedDate,
@@ -9,7 +10,23 @@ import {
   getRelativeTime,
   isDateInRange,
   parseTime,
+  toTimezone,
 } from './dateUtils';
+
+describe('toTimezone', () => {
+  it('should convert date string to timezone', () => {
+    // Note: JS Date.toLocaleString with timeZone returns localized string, we're just checking it runs
+    const date = new Date('2024-01-15T10:30:00Z');
+    const result = toTimezone(date, 'America/New_York');
+    expect(result).toBeInstanceOf(Date);
+  });
+
+  it('should handle Date object input', () => {
+    const date = new Date('2024-01-15T10:30:00Z');
+    const result = toTimezone(date, 'Asia/Tokyo');
+    expect(result).toBeInstanceOf(Date);
+  });
+});
 
 describe('formatDate', () => {
   it('should format Date object as YYYY-MM-DD', () => {
@@ -90,6 +107,26 @@ describe('parseTime', () => {
   });
 });
 
+describe('combineDateAndTime', () => {
+  it('should combine date string and time string', () => {
+    const result = combineDateAndTime('2024-01-15', '14:30');
+    expect(result.getHours()).toBe(14);
+    expect(result.getMinutes()).toBe(30);
+  });
+
+  it('should combine Date object and time string', () => {
+    const date = new Date('2024-01-15');
+    const result = combineDateAndTime(date, '09:05');
+    expect(result.getHours()).toBe(9);
+    expect(result.getMinutes()).toBe(5);
+  });
+
+  it('should adjust for timezone if provided', () => {
+    const result = combineDateAndTime('2024-01-15', '14:30', 'America/New_York');
+    expect(result).toBeInstanceOf(Date);
+  });
+});
+
 describe('getDaysBetween', () => {
   it('should return 1 for same day', () => {
     const result = getDaysBetween('2024-01-15', '2024-01-15');
@@ -148,6 +185,98 @@ describe('isDateInRange', () => {
   });
 });
 
+describe('getRelativeTime', () => {
+  const setupMockDate = (minutesAgo: number) => {
+    const now = new Date();
+    return new Date(now.getTime() - minutesAgo * 60 * 1000);
+  };
+
+  describe('chinese locale', () => {
+    it('should return just now', () => {
+      const date = setupMockDate(0);
+      expect(getRelativeTime(date, 'zh')).toBe('刚刚');
+    });
+
+    it('should return minutes ago', () => {
+      const date = setupMockDate(30);
+      expect(getRelativeTime(date, 'zh')).toBe('30分钟前');
+    });
+
+    it('should return hours ago', () => {
+      const date = setupMockDate(60 * 2);
+      expect(getRelativeTime(date, 'zh')).toBe('2小时前');
+    });
+
+    it('should return days ago', () => {
+      const date = setupMockDate(60 * 24 * 2);
+      expect(getRelativeTime(date, 'zh')).toBe('2天前');
+    });
+
+    it('should return weeks ago', () => {
+      const date = setupMockDate(60 * 24 * 14);
+      expect(getRelativeTime(date, 'zh')).toBe('2周前');
+    });
+
+    it('should return months ago', () => {
+      const date = setupMockDate(60 * 24 * 60);
+      expect(getRelativeTime(date, 'zh')).toBe('2个月前');
+    });
+
+    it('should return years ago', () => {
+      const date = setupMockDate(60 * 24 * 400);
+      expect(getRelativeTime(date, 'zh')).toBe('1年前');
+    });
+  });
+
+  describe('english locale', () => {
+    it('should return just now', () => {
+      const date = setupMockDate(0);
+      expect(getRelativeTime(date, 'en')).toBe('just now');
+    });
+
+    it('should return minutes ago', () => {
+      const date = setupMockDate(30);
+      expect(getRelativeTime(date, 'en')).toBe('30 min ago');
+    });
+
+    it('should return hours ago', () => {
+      const date = setupMockDate(60 * 2);
+      expect(getRelativeTime(date, 'en')).toBe('2h ago');
+    });
+
+    it('should return days ago', () => {
+      const date = setupMockDate(60 * 24 * 2);
+      expect(getRelativeTime(date, 'en')).toBe('2d ago');
+    });
+
+    it('should return weeks ago', () => {
+      const date = setupMockDate(60 * 24 * 14);
+      expect(getRelativeTime(date, 'en')).toBe('2w ago');
+    });
+
+    it('should return months ago', () => {
+      const date = setupMockDate(60 * 24 * 60);
+      expect(getRelativeTime(date, 'en')).toBe('2mo ago');
+    });
+
+    it('should return years ago', () => {
+      const date = setupMockDate(60 * 24 * 400);
+      expect(getRelativeTime(date, 'en')).toBe('1y ago');
+    });
+  });
+
+  it('should handle string dates', () => {
+    const dateStr = setupMockDate(30).toISOString();
+    expect(getRelativeTime(dateStr, 'en')).toBe('30 min ago');
+  });
+
+  it('should return "upcoming" for future dates', () => {
+    const now = new Date('2024-06-15T12:00:00');
+    const date = new Date('2024-06-16T12:00:00');
+    expect(getRelativeTime(date, 'en', now)).toBe('upcoming');
+  });
+});
+
 describe('formatLocalizedDate', () => {
   it('should format date with English locale', () => {
     const result = formatLocalizedDate('2024-01-15', 'en');
@@ -164,6 +293,11 @@ describe('formatLocalizedDate', () => {
     const result = formatLocalizedDate('invalid-date', 'en');
     expect(result).toBe('invalid-date');
   });
+
+  it('should format date with options', () => {
+    const result = formatLocalizedDate('2024-01-15', 'en', { year: '2-digit' });
+    expect(result).toContain('24');
+  });
 });
 
 describe('formatDateRange', () => {
@@ -177,42 +311,10 @@ describe('formatDateRange', () => {
     expect(result).toContain('-');
     expect(result).toContain('2024');
   });
-});
 
-describe('getRelativeTime', () => {
-  it('should return "just now" for recent dates', () => {
-    const now = new Date('2024-06-15T12:00:00');
-    const date = new Date('2024-06-15T11:59:45');
-    expect(getRelativeTime(date, 'en', now)).toBe('just now');
-  });
-
-  it('should return minutes ago', () => {
-    const now = new Date('2024-06-15T12:00:00');
-    const date = new Date('2024-06-15T11:45:00');
-    expect(getRelativeTime(date, 'en', now)).toBe('15 min ago');
-  });
-
-  it('should return hours ago', () => {
-    const now = new Date('2024-06-15T12:00:00');
-    const date = new Date('2024-06-15T09:00:00');
-    expect(getRelativeTime(date, 'en', now)).toBe('3h ago');
-  });
-
-  it('should return days ago', () => {
-    const now = new Date('2024-06-15T12:00:00');
-    const date = new Date('2024-06-13T12:00:00');
-    expect(getRelativeTime(date, 'en', now)).toBe('2d ago');
-  });
-
-  it('should return "upcoming" for future dates', () => {
-    const now = new Date('2024-06-15T12:00:00');
-    const date = new Date('2024-06-16T12:00:00');
-    expect(getRelativeTime(date, 'en', now)).toBe('upcoming');
-  });
-
-  it('should work with Chinese locale', () => {
-    const now = new Date('2024-06-15T12:00:00');
-    const date = new Date('2024-06-15T11:59:45');
-    expect(getRelativeTime(date, 'zh', now)).toBe('刚刚');
+  it('should handle chinese locale for ranges', () => {
+    const result = formatDateRange('2024-01-15', '2024-01-20', 'zh');
+    expect(result).toContain('-');
+    expect(result).toContain('2024');
   });
 });
