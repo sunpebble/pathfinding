@@ -19,6 +19,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { messages, sessionId } = body;
 
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Messages must be a non-empty array' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
     // Get the last user message
     const lastMessage = messages[messages.length - 1] as RequestUIMessage;
     if (!lastMessage || lastMessage.role !== 'user') {

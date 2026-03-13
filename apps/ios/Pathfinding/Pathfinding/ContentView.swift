@@ -71,6 +71,7 @@ struct ContentView: View {
           Label(Tab.profile.title, systemImage: appState.selectedTab == .profile ? Tab.profile.selectedIcon : Tab.profile.icon)
         }
     }
+    .accessibilityIdentifier("authenticated-root")
     .tint(ThemeManager.shared.accentColor.color)
     .animation(DesignTokens.Animation.smooth, value: appState.selectedTab)
     .sensoryFeedback(.selection, trigger: appState.selectedTab)

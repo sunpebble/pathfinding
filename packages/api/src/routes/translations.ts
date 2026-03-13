@@ -1,6 +1,7 @@
 import type { AuthVariables } from '../middleware/auth.js';
+import { zValidator } from '@hono/zod-validator';
 import {
-  createDb,
+  getDb,
   offlineTranslationPacks,
   savedTranslations,
   translationPhrases,
@@ -11,14 +12,12 @@ import { and, desc, eq, like, sql } from 'drizzle-orm';
  * Mirrors the Convex /api/translations/* HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET /categories — List translation categories ──────
 app.get('/categories', async (c) => {
@@ -102,21 +101,16 @@ app.get('/phrases/search', async (c) => {
 });
 
 // ── GET /saved — List saved translations ───────────────
-app.get('/saved', async (c) => {
-  const userId = c.req.query('userId');
+app.get('/saved', authRequired(), async (c) => {
+  const userId = Number(c.get('userId'));
   const translationType = c.req.query('type');
   const favoritesOnly = c.req.query('favoritesOnly') === 'true';
   const limit = Number.parseInt(c.req.query('limit') ?? '50', 10);
   const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
 
-  if (!userId) {
-    throw new ApiError(400, '缺少userId参数');
-  }
-
   const db = getDb();
-  const uid = Number(userId);
 
-  const conditions = [eq(savedTranslations.userId, uid)];
+  const conditions = [eq(savedTranslations.userId, userId)];
   if (translationType) {
     conditions.push(eq(savedTranslations.translationType, translationType));
   }
@@ -136,25 +130,21 @@ app.get('/saved', async (c) => {
 });
 
 // ── POST /saved — Save a translation ───────────────────
-app.post('/saved', async (c) => {
-  const body = await c.req.json();
-  const {
-    userId,
-    sourceText,
-    sourceLang,
-    targetText,
-    targetLang,
-    translationType,
-  } = body;
+const saveTranslationSchema = z.object({
+  sourceText: z.string().min(1),
+  sourceLang: z.string().min(1),
+  targetText: z.string().min(1),
+  targetLang: z.string().min(1),
+  translationType: z.string().min(1),
+});
 
-  if (!userId || !sourceText || !sourceLang || !targetText || !targetLang || !translationType) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/saved', authRequired(), zValidator('json', saveTranslationSchema), async (c) => {
+  const { sourceText, sourceLang, targetText, targetLang, translationType } = c.req.valid('json');
 
   const db = getDb();
 
   const result = await db.insert(savedTranslations).values({
-    userId: Number(userId),
+    userId: Number(c.get('userId')),
     sourceText,
     translatedText: targetText,
     sourceLanguage: sourceLang,
@@ -166,36 +156,33 @@ app.post('/saved', async (c) => {
 });
 
 // ── DELETE /saved — Delete a saved translation ─────────
-app.delete('/saved', async (c) => {
-  const body = await c.req.json();
-  const { id } = body;
+const deleteTranslationSchema = z.object({
+  id: z.number(),
+});
 
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.delete('/saved', authRequired(), zValidator('json', deleteTranslationSchema), async (c) => {
+  const { id } = c.req.valid('json');
 
   const db = getDb();
-  await db.delete(savedTranslations).where(eq(savedTranslations.id, Number(id)));
+  await db.delete(savedTranslations).where(eq(savedTranslations.id, id));
 
   return c.json({ success: true });
 });
 
 // ── POST /saved/favorite — Toggle favorite ─────────────
-app.post('/saved/favorite', async (c) => {
-  const body = await c.req.json();
-  const { id } = body;
+const favoriteTranslationSchema = z.object({
+  id: z.number(),
+});
 
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.post('/saved/favorite', authRequired(), zValidator('json', favoriteTranslationSchema), async (c) => {
+  const { id } = c.req.valid('json');
 
   const db = getDb();
-  const tid = Number(id);
 
   const existing = await db
     .select()
     .from(savedTranslations)
-    .where(eq(savedTranslations.id, tid))
+    .where(eq(savedTranslations.id, id))
     .limit(1);
 
   if (!existing[0]) {
@@ -206,7 +193,7 @@ app.post('/saved/favorite', async (c) => {
   await db
     .update(savedTranslations)
     .set({ isFavorite: newFavorite, updatedAt: new Date() })
-    .where(eq(savedTranslations.id, tid));
+    .where(eq(savedTranslations.id, id));
 
   return c.json({ isFavorite: newFavorite });
 });

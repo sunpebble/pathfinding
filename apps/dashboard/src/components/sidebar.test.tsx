@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sidebar } from './sidebar';
 
 vi.mock('next/navigation', () => ({
-  usePathname: vi.fn(() => '/'),
+  usePathname: vi.fn(() => '/overview'),
 }));
 
 vi.mock('next/link', () => ({
@@ -26,7 +26,7 @@ vi.mock('next/link', () => ({
 describe('sidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(usePathname).mockReturnValue('/');
+    vi.mocked(usePathname).mockReturnValue('/overview');
   });
 
   afterEach(() => {
@@ -35,60 +35,60 @@ describe('sidebar', () => {
 
   it('renders the logo and brand name', () => {
     render(<Sidebar />);
-    expect(screen.getByText('Crawler')).toBeDefined();
+    expect(screen.getByText('探路')).toBeDefined();
   });
 
   it('renders all main navigation items', () => {
     render(<Sidebar />);
-    expect(screen.getByText('Overview')).toBeDefined();
+    expect(screen.getByText('总览')).toBeDefined();
     expect(screen.getByText('AI 助手')).toBeDefined();
-    expect(screen.getByText('Crawl Jobs')).toBeDefined();
-    expect(screen.getByText('POIs')).toBeDefined();
-    expect(screen.getByText('Travel Guides')).toBeDefined();
-    expect(screen.getByText('Itineraries')).toBeDefined();
-    expect(screen.getByText('Training Datasets')).toBeDefined();
-    expect(screen.getByText('Create Job')).toBeDefined();
+    expect(screen.getByText('爬取任务')).toBeDefined();
+    expect(screen.getByText('兴趣点')).toBeDefined();
+    expect(screen.getByText('旅行攻略')).toBeDefined();
+    expect(screen.getByText('行程计划')).toBeDefined();
+    expect(screen.getByText('训练数据')).toBeDefined();
+    expect(screen.getByText('创建任务')).toBeDefined();
   });
 
   it('renders secondary navigation items', () => {
     render(<Sidebar />);
-    expect(screen.getByText('Settings')).toBeDefined();
+    expect(screen.getByText('设置')).toBeDefined();
   });
 
-  it('highlights active navigation item for root path', () => {
-    vi.mocked(usePathname).mockReturnValue('/');
+  it('highlights active navigation item for overview path', () => {
+    vi.mocked(usePathname).mockReturnValue('/overview');
     render(<Sidebar />);
-    const overviewLink = screen.getByText('Overview').closest('a');
+    const overviewLink = screen.getByText('总览').closest('a');
     expect(overviewLink?.className).toContain('bg-gray-800');
   });
 
   it('highlights active navigation item for jobs path', () => {
     vi.mocked(usePathname).mockReturnValue('/jobs');
     render(<Sidebar />);
-    const jobsLink = screen.getByText('Crawl Jobs').closest('a');
+    const jobsLink = screen.getByText('爬取任务').closest('a');
     expect(jobsLink?.className).toContain('bg-gray-800');
   });
 
   it('highlights active navigation item for nested jobs path', () => {
     vi.mocked(usePathname).mockReturnValue('/jobs/123');
     render(<Sidebar />);
-    const jobsLink = screen.getByText('Crawl Jobs').closest('a');
+    const jobsLink = screen.getByText('爬取任务').closest('a');
     expect(jobsLink?.className).toContain('bg-gray-800');
   });
 
   it('renders correct hrefs for navigation links', () => {
     render(<Sidebar />);
     expect(
-      screen.getByText('Overview').closest('a')?.getAttribute('href'),
-    ).toBe('/');
+      screen.getByText('总览').closest('a')?.getAttribute('href'),
+    ).toBe('/overview');
     expect(
-      screen.getByText('Crawl Jobs').closest('a')?.getAttribute('href'),
+      screen.getByText('爬取任务').closest('a')?.getAttribute('href'),
     ).toBe('/jobs');
-    expect(screen.getByText('POIs').closest('a')?.getAttribute('href')).toBe(
+    expect(screen.getByText('兴趣点').closest('a')?.getAttribute('href')).toBe(
       '/pois',
     );
     expect(
-      screen.getByText('Settings').closest('a')?.getAttribute('href'),
+      screen.getByText('设置').closest('a')?.getAttribute('href'),
     ).toBe('/settings');
   });
 });

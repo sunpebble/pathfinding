@@ -1,5 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, currencyHistory, currencyRates } from '@pathfinding/database';
+import { currencyHistory, currencyRates, getDb } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
  * Currency routes — exchange rates, history, cache stats.
@@ -9,10 +9,6 @@ import { Hono } from 'hono';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET /rates — Get cached exchange rates ─────────────
 app.get('/rates', async (c) => {

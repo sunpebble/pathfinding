@@ -2,7 +2,7 @@
  * Luggage schema - luggage tracking, loss report templates.
  */
 import { double, index, json, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const luggage = mysqlTable('luggage', {
   id: id(),

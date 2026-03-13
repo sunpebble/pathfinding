@@ -12,7 +12,7 @@ import {
   timestamp,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { id } from './columns.js';
+import { id } from './columns';
 
 // ── Mafengwo Destinations (马蜂窝目的地) ───────────────
 export const mafengwoDestinations = mysqlTable(

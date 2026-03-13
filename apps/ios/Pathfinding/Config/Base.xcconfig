@@ -17,6 +17,9 @@ TARGETED_DEVICE_FAMILY = 1,2
 SWIFT_VERSION = 6.0
 SWIFT_STRICT_CONCURRENCY = complete
 
+// Helpers
+SLASH = /
+
 // Code Signing
 CODE_SIGN_STYLE = Automatic
 DEVELOPMENT_TEAM =
@@ -32,3 +35,4 @@ ENABLE_BITCODE = NO
 // Info.plist Preprocessor
 INFOPLIST_FILE = Pathfinding/Info.plist
 INFOPLIST_PREPROCESS = YES
+INFOPLIST_OTHER_PREPROCESSOR_FLAGS = -traditional

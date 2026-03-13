@@ -9,9 +9,10 @@ import {
   json,
   mysqlTable,
   text,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const simCards = mysqlTable(
   'sim_cards',
@@ -90,7 +91,7 @@ export const simCardReviewVotes = mysqlTable(
   t => [
     index('sim_review_votes_review_idx').on(t.reviewId),
     index('sim_review_votes_user_idx').on(t.userId),
-    index('sim_review_votes_pair_idx').on(t.reviewId, t.userId),
+    uniqueIndex('sim_review_votes_uniq').on(t.reviewId, t.userId),
   ],
 );
 
@@ -105,6 +106,6 @@ export const favoriteSimCards = mysqlTable(
   t => [
     index('fav_sim_user_idx').on(t.userId),
     index('fav_sim_card_idx').on(t.simCardId),
-    index('fav_sim_pair_idx').on(t.userId, t.simCardId),
+    uniqueIndex('fav_sim_uniq').on(t.userId, t.simCardId),
   ],
 );

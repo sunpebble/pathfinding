@@ -1,26 +1,19 @@
 /**
- * 为历史游记生成图文混排 HTML
- * 将纯文本 content + imageUrls 合并为 contentHtml
+ * Generates rich HTML content for historical guides.
+ * Combines plain text content and image URLs into contentHtml.
  */
 
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api.js';
+import { createDb, travelGuides } from '@pathfinding/database';
+import { asc, eq } from 'drizzle-orm';
 
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
-const client = new ConvexHttpClient(CONVEX_URL);
+const BATCH_SIZE = 50;
 
-/**
- * 将纯文本+图片列表合成图文混排 HTML
- * 策略：将文本按段落分割，图片均匀插入段落之间
- */
 function generateContentHtml(content: string, imageUrls: string[]): string {
   if (!content || content.trim().length === 0)
     return '';
 
-  // 按段落分割（双换行或多换行）
   let paragraphs = content.split(/\n{2,}/).map(p => p.trim()).filter(p => p.length > 0);
 
-  // 如果只有一段（没有换行），按句号分段
   if (paragraphs.length <= 1 && content.length > 200) {
     const sentences: string[] = [];
     let current = '';
@@ -34,10 +27,9 @@ function generateContentHtml(content: string, imageUrls: string[]): string {
     if (current.trim())
       sentences.push(current.trim());
 
-    // 每 3 句合成一段
     paragraphs = [];
-    for (let i = 0; i < sentences.length; i += 3) {
-      const group = sentences.slice(i, i + 3).join('');
+    for (let index = 0; index < sentences.length; index += 3) {
+      const group = sentences.slice(index, index + 3).join('');
       if (group)
         paragraphs.push(group);
     }
@@ -52,33 +44,29 @@ function generateContentHtml(content: string, imageUrls: string[]): string {
   );
 
   if (validImages.length === 0) {
-    // 无图片，纯文本段落
     return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('\n');
   }
 
-  // 计算图片插入间隔
   const interval = Math.max(1, Math.floor(paragraphs.length / (validImages.length + 1)));
   const parts: string[] = [];
-  let imgIdx = 0;
+  let imageIndex = 0;
 
-  for (let i = 0; i < paragraphs.length; i++) {
-    parts.push(`<p>${escapeHtml(paragraphs[i])}</p>`);
+  for (let index = 0; index < paragraphs.length; index++) {
+    parts.push(`<p>${escapeHtml(paragraphs[index])}</p>`);
 
-    // 在合适位置插入图片
-    if (imgIdx < validImages.length && (i + 1) % interval === 0) {
+    if (imageIndex < validImages.length && (index + 1) % interval === 0) {
       parts.push(
-        `<img src="${escapeHtml(validImages[imgIdx])}" style="max-width:100%;height:auto;border-radius:8px;margin:12px 0;" />`,
+        `<img src="${escapeHtml(validImages[imageIndex])}" style="max-width:100%;height:auto;border-radius:8px;margin:12px 0;" />`,
       );
-      imgIdx++;
+      imageIndex++;
     }
   }
 
-  // 剩余未插入的图片追加到末尾
-  while (imgIdx < validImages.length) {
+  while (imageIndex < validImages.length) {
     parts.push(
-      `<img src="${escapeHtml(validImages[imgIdx])}" style="max-width:100%;height:auto;border-radius:8px;margin:12px 0;" />`,
+      `<img src="${escapeHtml(validImages[imageIndex])}" style="max-width:100%;height:auto;border-radius:8px;margin:12px 0;" />`,
     );
-    imgIdx++;
+    imageIndex++;
   }
 
   return parts.join('\n');
@@ -93,41 +81,47 @@ function escapeHtml(str: string): string {
 }
 
 async function main() {
-  console.log('🖼️  为历史游记生成图文混排 HTML...');
-  console.log(`Convex: ${CONVEX_URL}\n`);
+  console.warn('Generating mixed-media HTML for historical guides...');
 
-  let cursor: string | undefined;
+  const db = createDb();
+  let offset = 0;
   let totalProcessed = 0;
   let totalUpdated = 0;
   let totalSkipped = 0;
 
   while (true) {
-    const result = await client.query(api.travelGuides.listIds, {
-      cursor,
-      limit: 50,
-    });
+    const guides = await db
+      .select({
+        id: travelGuides.id,
+        title: travelGuides.title,
+        externalId: travelGuides.externalId,
+        content: travelGuides.content,
+        imageUrls: travelGuides.imageUrls,
+        enrichedData: travelGuides.enrichedData,
+      })
+      .from(travelGuides)
+      .orderBy(asc(travelGuides.id))
+      .limit(BATCH_SIZE)
+      .offset(offset);
 
-    if (!result.items || result.items.length === 0)
+    if (guides.length === 0) {
       break;
+    }
 
-    for (const item of result.items) {
+    for (const guide of guides) {
       totalProcessed++;
 
       try {
-        const guide = await client.query(api.travelGuides.getById, {
-          id: item._id,
-        });
+        const enrichedData
+          = guide.enrichedData && typeof guide.enrichedData === 'object' && !Array.isArray(guide.enrichedData)
+            ? { ...guide.enrichedData as Record<string, unknown> }
+            : {};
+        const existingHtml = typeof enrichedData.contentHtml === 'string' ? enrichedData.contentHtml : null;
 
-        if (!guide) {
-          totalSkipped++;
-          continue;
-        }
-
-        // 跳过已有 contentHtml 的
-        if (guide.contentHtml && guide.contentHtml.length > 50) {
+        if (existingHtml && existingHtml.length > 50) {
           totalSkipped++;
           if (totalProcessed % 20 === 0) {
-            console.log(`⏭️  [${totalProcessed}] 已跳过（已有 contentHtml）`);
+            console.warn(`[${totalProcessed}] skipped guide with existing contentHtml`);
           }
           continue;
         }
@@ -137,60 +131,40 @@ async function main() {
           continue;
         }
 
-        const contentHtml = generateContentHtml(guide.content, guide.imageUrls || []);
-
-        if (contentHtml.length > 0) {
-          await client.mutation(api.travelGuides.update, {
-            id: item._id,
-            content: guide.content, // keep existing
-          });
-
-          // Use a direct patch for contentHtml since update mutation is limited
-          // We'll use the upsert approach
-          await client.mutation(api.travelGuides.upsert, {
-            // eslint-disable-next-line ts/no-explicit-any
-            sourcePlatform: guide.sourcePlatform as any,
-            sourceExternalId: guide.sourceExternalId,
-            sourceUrl: guide.sourceUrl,
-            title: guide.title,
-            content: guide.content,
-            contentHtml,
-            authorName: guide.authorName,
-            destinations: guide.destinations || [],
-            tags: guide.tags || [],
-            likesCount: guide.likesCount,
-            savesCount: guide.savesCount,
-            commentsCount: guide.commentsCount,
-            viewsCount: guide.viewsCount,
-            coverImageUrl: guide.coverImageUrl,
-            imageUrls: guide.imageUrls || [],
-            qualityScore: guide.qualityScore,
-          });
-
-          totalUpdated++;
-          const imgCount = (guide.imageUrls || []).length;
-          console.log(
-            `✅ [${totalProcessed}] ${guide.title?.slice(0, 35) || guide.sourceExternalId} — ${imgCount} 张图片混排`,
-          );
-        }
-        else {
+        const contentHtml = generateContentHtml(guide.content, Array.isArray(guide.imageUrls) ? guide.imageUrls.filter((url): url is string => typeof url === 'string') : []);
+        if (!contentHtml) {
           totalSkipped++;
+          continue;
         }
+
+        await db
+          .update(travelGuides)
+          .set({
+            enrichedData: {
+              ...enrichedData,
+              contentHtml,
+            },
+          })
+          .where(eq(travelGuides.id, guide.id));
+
+        totalUpdated++;
+        const imageCount = Array.isArray(guide.imageUrls) ? guide.imageUrls.length : 0;
+        console.warn(
+          `[${totalProcessed}] generated contentHtml for ${guide.title?.slice(0, 35) || guide.externalId || guide.id} (${imageCount} images)`,
+        );
       }
-      catch (err) {
-        console.error(`❌ [${totalProcessed}] ${item._id}: ${err}`);
+      catch (error) {
+        console.error(`[${totalProcessed}] guide ${guide.id} failed:`, error);
       }
     }
 
-    if (result.isDone)
-      break;
-    cursor = result.cursor;
+    offset += guides.length;
   }
 
-  console.log(`\n🎉 图文混排生成完成！`);
-  console.log(`   总计处理: ${totalProcessed}`);
-  console.log(`   已更新:   ${totalUpdated}`);
-  console.log(`   已跳过:   ${totalSkipped}`);
+  console.warn('HTML generation complete');
+  console.warn(`Processed: ${totalProcessed}`);
+  console.warn(`Updated:   ${totalUpdated}`);
+  console.warn(`Skipped:   ${totalSkipped}`);
 }
 
 main().catch(console.error);

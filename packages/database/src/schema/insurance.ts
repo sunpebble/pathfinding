@@ -2,7 +2,7 @@
  * Insurance schema - products, user insurance, risk profiles, claim guides.
  */
 import { boolean, double, index, int, json, mysqlTable, text, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const insuranceProducts = mysqlTable('insurance_products', {
   id: id(),

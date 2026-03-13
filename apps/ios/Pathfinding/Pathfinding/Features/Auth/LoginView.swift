@@ -11,11 +11,19 @@ enum LoginMethod: String, CaseIterable {
     case .email: return "邮箱登录"
     }
   }
+
+  var icon: String {
+    switch self {
+    case .phone: return "phone.fill"
+    case .email: return "envelope.fill"
+    }
+  }
 }
 
 struct LoginView: View {
   @EnvironmentObject private var authViewModel: AuthViewModel
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.colorScheme) private var colorScheme
 
   // Login method state
   @State private var loginMethod: LoginMethod = .phone
@@ -39,189 +47,304 @@ struct LoginView: View {
   // Timer for countdown
   @State private var countdownTimer: Timer?
 
+  // Animation
+  @State private var headerAppeared = false
+  @State private var formAppeared = false
+
   var body: some View {
     NavigationStack {
       ZStack {
-        // Explorer background
-        ExplorerPageBackground(style: .immersive, accentColor: .indigo)
+        // Full-screen explorer background
+        Color(.systemGroupedBackground)
+          .ignoresSafeArea()
 
-        ScrollView {
-        VStack(spacing: DesignTokens.Spacing.xl) {
-          // MARK: - Header
-          VStack(spacing: DesignTokens.Spacing.sm) {
-            // App Icon
-            ZStack {
-              RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
-                .fill(DesignTokens.Colors.primaryGradient)
-                .frame(width: 80, height: 80)
+        // Full-screen teal gradient (top → bottom)
+        LinearGradient(
+          colors: [
+            Color.teal.opacity(colorScheme == .dark ? 0.18 : 0.10),
+            Color.teal.opacity(colorScheme == .dark ? 0.06 : 0.03),
+            Color.teal.opacity(colorScheme == .dark ? 0.02 : 0.01)
+          ],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+        .ignoresSafeArea()
 
-              Image(systemName: "map.fill")
-                .font(DesignTokens.Typography.Display.small)
-                .foregroundStyle(.white)
-            }
-            .shadow(color: DesignTokens.Colors.accent.opacity(0.3), radius: 20, y: 10)
-            .padding(.top, DesignTokens.Spacing.xl)
+        // Topographic lines — full screen
+        TopographicLinesView(
+          lineCount: 8,
+          lineColor: Color.teal.opacity(colorScheme == .dark ? 0.08 : 0.04)
+        )
+        .ignoresSafeArea()
 
-            Text("欢迎回来")
-              .font(.title)
-              .fontWeight(.bold)
-
-            Text("登录 Pathfinding 继续你的旅程")
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
+        // Compass decoration (top-right)
+        VStack {
+          HStack {
+            Spacer()
+            CompassRoseDecoration(
+              size: 180,
+              color: .teal,
+              opacity: colorScheme == .dark ? 0.08 : 0.05
+            )
           }
-          .padding(.bottom, DesignTokens.Spacing.lg)
-
-          // MARK: - Login Method Picker
-          Picker("登录方式", selection: $loginMethod) {
-            ForEach(LoginMethod.allCases, id: \.self) { method in
-              Text(method.title).tag(method)
-            }
-          }
-          .pickerStyle(.segmented)
-          .padding(.horizontal, DesignTokens.Spacing.lg)
-
-          // MARK: - Login Form
-          VStack(spacing: DesignTokens.Spacing.md) {
-            if loginMethod == .phone {
-              phoneLoginForm
-            } else {
-              emailLoginForm
-            }
-
-            // Error Message
-            if let errorMessage {
-              HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "exclamationmark.circle.fill")
-                .foregroundStyle(DesignTokens.Colors.error)
-                Text(errorMessage)
-                  .font(.caption)
-                .foregroundStyle(DesignTokens.Colors.error)
-              }
-              .padding(.vertical, DesignTokens.Spacing.xs)
-            }
-
-            // Login Button
-            Button {
-              Task {
-                await handleLogin()
-              }
-            } label: {
-              if isLoading {
-                ProgressView()
-                  .progressViewStyle(.circular)
-                  .tint(.white)
-              } else {
-                Text("登录")
-                  .fontWeight(.semibold)
-              }
-            }
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(isLoginDisabled ? DesignTokens.Colors.textTertiary : DesignTokens.Colors.accent)
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-            .disabled(isLoginDisabled)
-            .padding(.top, DesignTokens.Spacing.xs)
-          }
-          .padding(.horizontal, DesignTokens.Spacing.lg)
-
-          // MARK: - Divider
-          HStack(spacing: DesignTokens.Spacing.sm) {
-            Rectangle()
-              .fill(DesignTokens.Colors.border)
-              .frame(height: 1)
-
-            Text("或")
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
-
-            Rectangle()
-              .fill(DesignTokens.Colors.border)
-              .frame(height: 1)
-          }
-          .padding(.horizontal, DesignTokens.Spacing.lg)
-
-          // MARK: - Social Login
-          VStack(spacing: DesignTokens.Spacing.sm) {
-            // WeChat Sign In
-            Button {
-              Task {
-                await handleSocialLogin(.wechat)
-              }
-            } label: {
-              HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "message.fill")
-                  .font(.title3)
-                Text("使用微信登录")
-                  .fontWeight(.medium)
-              }
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, DesignTokens.Spacing.sm)
-              .background(Color(red: 0.07, green: 0.73, blue: 0.31)) // WeChat green
-              .foregroundStyle(.white)
-              .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-            }
-            .disabled(isLoading)
-
-            // Apple Sign In
-            Button {
-              Task {
-                await handleSocialLogin(.apple)
-              }
-            } label: {
-              HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "apple.logo")
-                  .font(.title3)
-                Text("使用 Apple 登录")
-                  .fontWeight(.medium)
-              }
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, DesignTokens.Spacing.sm)
-              .background(.black)
-              .foregroundStyle(.white)
-              .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-            }
-            .disabled(isLoading)
-          }
-          .padding(.horizontal, DesignTokens.Spacing.lg)
-
-          // MARK: - Sign Up Link
-          HStack(spacing: DesignTokens.Spacing.xxs) {
-            Text("还没有账号？")
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
-
-            Button {
-              showSignup = true
-            } label: {
-              Text("注册")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(Color.accentColor)
-            }
-          }
-          .padding(.top, DesignTokens.Spacing.sm)
-
+          .padding(.trailing, -40)
+          .padding(.top, 60)
           Spacer()
         }
-      }
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("跳过") {
-            authViewModel.continueAsGuest()
+        .ignoresSafeArea()
+
+        // Noise texture overlay
+        NoiseTextureOverlay(opacity: colorScheme == .dark ? 0.02 : 0.015)
+          .ignoresSafeArea()
+
+        ScrollView {
+          VStack(spacing: 0) {
+            // MARK: - Hero Header
+            VStack(spacing: DesignTokens.Spacing.md) {
+              // App Icon — Compass
+              ZStack {
+                Circle()
+                  .fill(
+                    LinearGradient(
+                      colors: [
+                        Color(red: 0.05, green: 0.60, blue: 0.45),
+                        Color(red: 0.10, green: 0.75, blue: 0.55)
+                      ],
+                      startPoint: .topLeading,
+                      endPoint: .bottomTrailing
+                    )
+                  )
+                  .frame(width: 76, height: 76)
+
+                Image(systemName: "safari.fill")
+                  .font(.system(size: 34, weight: .medium))
+                  .foregroundStyle(.white)
+              }
+              .shadow(color: Color.teal.opacity(0.3), radius: 20, y: 10)
+              .padding(.top, DesignTokens.Spacing.xxl)
+
+              VStack(spacing: DesignTokens.Spacing.xs) {
+                Text("欢迎回来")
+                  .font(DesignTokens.Typography.Display.compact)
+                  .fontWeight(.bold)
+
+                Text("登录探路，继续你的冒险旅程")
+                  .font(.subheadline)
+                  .foregroundStyle(.secondary)
+              }
+            }
+            .padding(.bottom, DesignTokens.Spacing.xxl)
+            .opacity(headerAppeared ? 1 : 0)
+            .offset(y: headerAppeared ? 0 : 15)
+
+            // MARK: - Form Card
+            VStack(spacing: DesignTokens.Spacing.lg) {
+              // Login Method Picker
+              HStack(spacing: 0) {
+                ForEach(LoginMethod.allCases, id: \.self) { method in
+                  Button {
+                    withAnimation(DesignTokens.Animation.standard) {
+                      loginMethod = method
+                    }
+                  } label: {
+                    HStack(spacing: DesignTokens.Spacing.xs) {
+                      Image(systemName: method.icon)
+                        .font(.caption)
+                      Text(method.title)
+                        .font(.subheadline)
+                        .fontWeight(loginMethod == method ? .semibold : .regular)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignTokens.Spacing.sm)
+                    .background(
+                      loginMethod == method
+                        ? DesignTokens.Colors.cardBackground
+                        : Color.clear
+                    )
+                    .foregroundStyle(
+                      loginMethod == method
+                        ? DesignTokens.Colors.textPrimary
+                        : DesignTokens.Colors.textTertiary
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+                  }
+                }
+              }
+              .padding(3)
+              .background(DesignTokens.Colors.fillQuaternary)
+              .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+              .accessibilityIdentifier("login-method-picker")
+
+              // Login Form Fields
+              VStack(spacing: DesignTokens.Spacing.md) {
+                if loginMethod == .phone {
+                  phoneLoginForm
+                } else {
+                  emailLoginForm
+                }
+              }
+              .transition(.opacity.combined(with: .move(edge: .leading)))
+
+              // Error Message
+              if let errorMessage {
+                HStack(spacing: DesignTokens.Spacing.xs) {
+                  Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(DesignTokens.Colors.error)
+                  Text(errorMessage)
+                    .font(.caption)
+                    .foregroundStyle(DesignTokens.Colors.error)
+                }
+                .padding(DesignTokens.Spacing.sm)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(DesignTokens.Colors.error.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+              }
+
+              // Login Button
+              Button {
+                Task {
+                  await handleLogin()
+                }
+              } label: {
+                HStack {
+                  if isLoading {
+                    ProgressView()
+                      .progressViewStyle(.circular)
+                      .tint(.white)
+                  }
+                  Text(isLoading ? "登录中..." : "登录")
+                    .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+              }
+              .buttonStyle(.primary)
+              .accessibilityIdentifier("login-submit-button")
+              .disabled(isLoginDisabled)
+            }
+            .padding(DesignTokens.Spacing.lg)
+            .background(
+              RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
+                .fill(DesignTokens.Colors.cardBackground)
+                .shadow(
+                  color: colorScheme == .dark ? .clear : .black.opacity(0.04),
+                  radius: 12, y: 4
+                )
+            )
+            .overlay(
+              RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
+                .stroke(DesignTokens.Colors.cardBorder(for: colorScheme), lineWidth: 1)
+            )
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .opacity(formAppeared ? 1 : 0)
+            .offset(y: formAppeared ? 0 : 20)
+
+            // MARK: - Divider
+            HStack(spacing: DesignTokens.Spacing.sm) {
+              Rectangle()
+                .fill(DesignTokens.Colors.separator)
+                .frame(height: 0.5)
+
+              Text("其他方式")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+
+              Rectangle()
+                .fill(DesignTokens.Colors.separator)
+                .frame(height: 0.5)
+            }
+            .padding(.horizontal, DesignTokens.Spacing.xxl)
+            .padding(.vertical, DesignTokens.Spacing.lg)
+
+            // MARK: - Social Login
+            VStack(spacing: DesignTokens.Spacing.sm) {
+              // WeChat Sign In
+              Button {
+                Task {
+                  await handleSocialLogin(.wechat)
+                }
+              } label: {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                  Image(systemName: "message.fill")
+                    .font(.body)
+                  Text("微信登录")
+                    .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DesignTokens.Spacing.sm)
+                .background(Color(red: 0.07, green: 0.73, blue: 0.31))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+              }
+              .disabled(isLoading)
+
+              // Apple Sign In
+              Button {
+                Task {
+                  await handleSocialLogin(.apple)
+                }
+              } label: {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                  Image(systemName: "apple.logo")
+                    .font(.body)
+                  Text("Apple 登录")
+                    .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DesignTokens.Spacing.sm)
+                .background(colorScheme == .dark ? .white : .black)
+                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+              }
+              .disabled(isLoading)
+            }
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+
+            // MARK: - Sign Up Link
+            HStack(spacing: DesignTokens.Spacing.xxs) {
+              Text("还没有账号？")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+              Button {
+                showSignup = true
+              } label: {
+                Text("注册")
+                  .font(.subheadline)
+                  .fontWeight(.semibold)
+                  .foregroundStyle(Color.teal)
+              }
+              .accessibilityIdentifier("show-signup-button")
+            }
+            .padding(.top, DesignTokens.Spacing.lg)
+            .padding(.bottom, DesignTokens.Spacing.xxl)
           }
-          .foregroundStyle(.secondary)
+        }
+        .accessibilityIdentifier("login-screen")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+          ToolbarItem(placement: .topBarTrailing) {
+            Button("跳过") {
+              authViewModel.continueAsGuest()
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+          }
+        }
+        .sheet(isPresented: $showSignup) {
+          SignupView()
+        }
+        .onDisappear {
+          countdownTimer?.invalidate()
+        }
+        .onAppear {
+          withAnimation(DesignTokens.Animation.smooth.delay(0.1)) {
+            headerAppeared = true
+          }
+          withAnimation(DesignTokens.Animation.smooth.delay(0.3)) {
+            formAppeared = true
+          }
         }
       }
-      .sheet(isPresented: $showSignup) {
-        SignupView()
-      }
-      .onDisappear {
-        countdownTimer?.invalidate()
-      }
-      } // end ZStack
     }
   }
 
@@ -234,11 +357,13 @@ struct LoginView: View {
         Text("手机号")
           .font(.subheadline)
           .fontWeight(.medium)
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
 
-        HStack {
+        HStack(spacing: 0) {
           Text("+86")
-            .foregroundStyle(.secondary)
-            .padding(.leading, DesignTokens.Spacing.sm)
+            .font(.subheadline)
+            .foregroundStyle(DesignTokens.Colors.textSecondary)
+            .padding(.horizontal, DesignTokens.Spacing.sm)
 
           Divider()
             .frame(height: 20)
@@ -247,11 +372,15 @@ struct LoginView: View {
             .textInputAutocapitalization(.never)
             .keyboardType(.phonePad)
             .autocorrectionDisabled()
+            .padding(.horizontal, DesignTokens.Spacing.sm)
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
-        .padding(.horizontal, DesignTokens.Spacing.xs)
         .background(DesignTokens.Colors.fillQuaternary)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+        .overlay(
+          RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+            .stroke(DesignTokens.Colors.border.opacity(0.5), lineWidth: 0.5)
+        )
       }
 
       // Verification Code Field
@@ -259,13 +388,15 @@ struct LoginView: View {
         Text("验证码")
           .font(.subheadline)
           .fontWeight(.medium)
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
 
         HStack {
           TextField("输入验证码", text: $verificationCode)
             .textInputAutocapitalization(.never)
             .keyboardType(.numberPad)
             .autocorrectionDisabled()
-            .padding()
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .padding(.vertical, DesignTokens.Spacing.sm)
 
           Button {
             Task {
@@ -277,18 +408,22 @@ struct LoginView: View {
                 .progressViewStyle(.circular)
                 .frame(width: 100)
             } else {
-              Text(countdown > 0 ? "\(countdown)s 后重发" : "获取验证码")
+              Text(countdown > 0 ? "\(countdown)s" : "获取验证码")
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .frame(width: 100)
             }
           }
           .disabled(countdown > 0 || !isValidPhoneNumber || isSendingCode)
-          .foregroundStyle(countdown > 0 || !isValidPhoneNumber ? .secondary : Color.accentColor)
-          .padding(.trailing, DesignTokens.Spacing.sm)
+          .foregroundStyle(countdown > 0 || !isValidPhoneNumber ? .secondary : Color.teal)
+          .padding(.trailing, DesignTokens.Spacing.xs)
         }
         .background(DesignTokens.Colors.fillQuaternary)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+        .overlay(
+          RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+            .stroke(DesignTokens.Colors.border.opacity(0.5), lineWidth: 0.5)
+        )
       }
     }
   }
@@ -302,40 +437,52 @@ struct LoginView: View {
         Text("邮箱")
           .font(.subheadline)
           .fontWeight(.medium)
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
 
         TextField("输入邮箱地址", text: $email)
           .textInputAutocapitalization(.never)
           .keyboardType(.emailAddress)
           .autocorrectionDisabled()
-          .padding()
+          .accessibilityIdentifier("login-email-field")
+          .padding(DesignTokens.Spacing.sm)
           .background(DesignTokens.Colors.fillQuaternary)
           .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+          .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+              .stroke(DesignTokens.Colors.border.opacity(0.5), lineWidth: 0.5)
+          )
       }
 
       // Password Field
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text("密码")
-          .font(.subheadline)
-          .fontWeight(.medium)
+        HStack {
+          Text("密码")
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundStyle(DesignTokens.Colors.textSecondary)
+
+          Spacer()
+
+          Button {
+            // TODO: Implement forgot password
+          } label: {
+            Text("忘记密码？")
+              .font(.caption)
+              .foregroundStyle(Color.teal)
+          }
+        }
 
         SecureField("输入密码", text: $password)
           .textInputAutocapitalization(.never)
           .autocorrectionDisabled()
-          .padding()
+          .accessibilityIdentifier("login-password-field")
+          .padding(DesignTokens.Spacing.sm)
           .background(DesignTokens.Colors.fillQuaternary)
           .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-      }
-
-      // Forgot Password
-      HStack {
-        Spacer()
-        Button {
-          // TODO: Implement forgot password
-        } label: {
-          Text("忘记密码？")
-            .font(.subheadline)
-            .foregroundStyle(Color.accentColor)
-        }
+          .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+              .stroke(DesignTokens.Colors.border.opacity(0.5), lineWidth: 0.5)
+          )
       }
     }
   }

@@ -15,7 +15,7 @@ export interface ItineraryItem {
   startTime?: string; // HH:mm format
   endTime?: string; // HH:mm format
   notes?: string;
-  transportMode?: string; // Optional in Convex
+  transportMode?: TransportMode;
   transportMinutes?: number;
   // Populated relation
   poi?: Partial<Poi> | null;
