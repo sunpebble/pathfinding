@@ -1,3 +1,8 @@
+## 2024-03-24 - [Optimize getByDestination to use auxiliary table]
+
+**Learning:** Performing substring filtering on a large table (`travelGuides`) requires a full table scan, which is highly inefficient for memory and CPU. This codebase uses an auxiliary table (`guideDestinations`) that maps destinations to `guideId`s.
+**Action:** When a query needs to filter by substring and no full-text search index is available, always check if an auxiliary lightweight table exists. Fetch the lightweight table first, perform the filtering and map to IDs, then fetch the heavy documents in a batch.
+
 ## 2024-06-18 - Optimize Convex Memory Filter & N+1 Loop Queries
 
 **Learning:** Using `.take(limit)` before filtering `.filter(...)` is an anti-pattern in Convex because it fetches excess records from the database only to filter them out in memory, risking incomplete results or memory issues. If an index exists, `.withIndex()` should be used before `.take()`. However, if an index does not exist for the filtered field, it is still better to use Convex's query builder `.filter(q => q.eq(q.field('...'), ...))` _before_ `.take(limit)` rather than an in-memory JS `.filter()`. Also, using undefined indexes in `.withIndex()` will break compilation and runtime. Additionally, repetitive fetching of the same ID (e.g., `ctx.db.get(itinerary.cityId)`) inside a search loop leads to severe N+1 query problems.

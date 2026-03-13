@@ -35,7 +35,7 @@ export interface Poi {
   cityId: string;
   name: string;
   nameEn?: string;
-  category: string; // More flexible - Convex stores as string
+  category: PoiCategory;
   subcategory?: string;
   description?: string;
   descriptionEn?: string;
@@ -44,7 +44,7 @@ export interface Poi {
   longitude: number;
   rating?: number;
   priceLevel?: number;
-  openingHours?: unknown; // Convex uses v.any()
+  openingHours?: BusinessHours;
   phone?: string;
   website?: string;
   imageUrls?: string[];

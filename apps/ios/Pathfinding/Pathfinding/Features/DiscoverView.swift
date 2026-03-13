@@ -129,43 +129,40 @@ struct DiscoverView: View {
           .ignoresSafeArea()
       }
 
-      // Top gradient decoration
+      // Full-page gradient decoration
+      LinearGradient(
+        colors: [
+          DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.15 : 0.08),
+          DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.06 : 0.03),
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+      )
+      .ignoresSafeArea()
+
+      // Topographic lines (top area)
       VStack {
-        ZStack {
-          // Gradient
-          LinearGradient(
-            colors: [
-              DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.15 : 0.08),
-              .clear
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-          )
-          .frame(height: 300)
+        TopographicLinesView(
+          lineCount: 5,
+          lineColor: DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.08 : 0.02)
+        )
+        .frame(height: 400)
+        Spacer()
+      }
+      .ignoresSafeArea()
 
-          // Topographic lines
-          TopographicLinesView(
-            lineCount: 5,
-            lineColor: DesignTokens.Colors.accent.opacity(colorScheme == .dark ? 0.08 : 0.02)
+      // Compass decoration (top-right)
+      VStack {
+        HStack {
+          Spacer()
+          CompassRoseDecoration(
+            size: 150,
+            color: DesignTokens.Colors.accent,
+            opacity: colorScheme == .dark ? 0.06 : 0.02
           )
-          .frame(height: 300)
-
-          // Compass decoration
-          HStack {
-            Spacer()
-            VStack {
-              CompassRoseDecoration(
-                size: 150,
-                color: DesignTokens.Colors.accent,
-                opacity: colorScheme == .dark ? 0.06 : 0.02
-              )
-              Spacer()
-            }
-          }
-          .padding(.trailing, -30)
-          .padding(.top, 50)
         }
-
+        .padding(.trailing, -30)
+        .padding(.top, 50)
         Spacer()
       }
       .ignoresSafeArea()

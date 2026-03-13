@@ -404,7 +404,7 @@ final class ShareStore {
 
 extension APIClient {
   func patchData(endpoint: String, body: [String: Any]) async throws -> Data {
-    let url = URL(string: AppConfig.convexURL)!
+    let url = URL(string: AppConfig.apiBaseURL)!
       .appendingPathComponent("v1")
       .appendingPathComponent(endpoint)
 
@@ -429,7 +429,7 @@ extension APIClient {
   }
 
   func deleteData(endpoint: String) async throws -> Data {
-    let url = URL(string: AppConfig.convexURL)!
+    let url = URL(string: AppConfig.apiBaseURL)!
       .appendingPathComponent("v1")
       .appendingPathComponent(endpoint)
 

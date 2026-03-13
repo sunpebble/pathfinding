@@ -39,9 +39,7 @@ struct CommentSectionView: View {
             .frame(maxWidth: .infinity, alignment: .center)
             .padding()
         } else if store.comments.isEmpty {
-          EmptyCommentView {
-            showCommentSheet = true
-          }
+          EmptyCommentView()
         } else {
           LazyVStack(spacing: DesignTokens.Spacing.sm) {
             ForEach(store.comments) { comment in
@@ -492,8 +490,6 @@ struct ReplyRow: View {
 // MARK: - Empty Comment View
 
 struct EmptyCommentView: View {
-  let onAddComment: () -> Void
-
   var body: some View {
     VStack(spacing: DesignTokens.Spacing.md) {
       Image(systemName: "bubble.left.and.bubble.right")
@@ -507,9 +503,6 @@ struct EmptyCommentView: View {
       Text("Be the first to share your thoughts!")
         .font(.subheadline)
         .foregroundStyle(.tertiary)
-
-      Button("Add Comment", action: onAddComment)
-        .buttonStyle(.primary)
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, DesignTokens.Spacing.xl)
@@ -739,6 +732,6 @@ struct ReportCommentSheet: View {
 }
 
 #Preview("Empty Comments") {
-  EmptyCommentView {}
+  EmptyCommentView()
     .padding()
 }

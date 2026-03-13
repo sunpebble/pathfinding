@@ -8,7 +8,7 @@ import {
   timestamp,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { fk, id } from './columns';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Agent Sessions ─────────────────────────────────────
 export const agentSessions = mysqlTable(
@@ -31,8 +31,8 @@ export const agentSessions = mysqlTable(
     currentNode: varchar('current_node', { length: 255 }),
     /** Data passed to interrupt() */
     interruptData: json('interrupt_data'),
-    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow().onUpdateNow(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
     /** Optional session expiry */
     expiresAt: timestamp('expires_at', { mode: 'date' }),
   },
@@ -68,7 +68,7 @@ export const agentCheckpoints = mysqlTable(
     pendingSends: json('pending_sends'),
     /** Checkpoint metadata */
     metadata: json('metadata'),
-    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+    createdAt: createdAt(),
   },
   t => [
     index('agent_checkpoints_thread_idx').on(t.threadId),

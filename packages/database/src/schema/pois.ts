@@ -10,9 +10,18 @@ import {
   mysqlTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
 import { createdAt, fk, id, updatedAt } from './columns';
+
+// ── JSON column type definitions ───────────────────────
+/** Business hours per day of week */
+export type BusinessHours = Record<string, { open: string; close: string } | null>;
+/** Best time to visit a POI */
+export interface BestVisitTime { season?: string; timeOfDay?: string; notes?: string }
+/** Local recommendation details */
+export interface LocalRecommendation { tip?: string; reason?: string; source?: string }
 
 // ── POIs ───────────────────────────────────────────────
 export const pois = mysqlTable(
@@ -30,21 +39,21 @@ export const pois = mysqlTable(
     rating: double('rating'),
     ratingCount: int('rating_count').notNull().default(0),
     priceLevel: int('price_level'),
-    businessHours: json('business_hours'),
-    bestVisitTime: json('best_visit_time'),
+    businessHours: json('business_hours').$type<BusinessHours>(),
+    bestVisitTime: json('best_visit_time').$type<BestVisitTime>(),
     phone: varchar('phone', { length: 50 }),
-    imageUrls: json('image_urls'),
+    imageUrls: json('image_urls').$type<string[]>(),
     source: varchar('source', { length: 100 }).notNull(),
     isHiddenGem: boolean('is_hidden_gem'),
     hiddenGemScore: double('hidden_gem_score'),
     hiddenGemRating: double('hidden_gem_rating'),
     hiddenGemRatingCount: int('hidden_gem_rating_count'),
-    localRecommendation: json('local_recommendation'),
+    localRecommendation: json('local_recommendation').$type<LocalRecommendation>(),
     popularityLevel: varchar('popularity_level', { length: 20 }),
     cuisineType: varchar('cuisine_type', { length: 100 }),
     isLocalFavorite: boolean('is_local_favorite'),
-    signatureDishes: json('signature_dishes'),
-    dietaryOptions: json('dietary_options'),
+    signatureDishes: json('signature_dishes').$type<string[]>(),
+    dietaryOptions: json('dietary_options').$type<string[]>(),
     averagePrice: double('average_price'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -77,9 +86,9 @@ export const userSubmittedPois = mysqlTable(
     localTips: text('local_tips'),
     bestTimeToVisit: varchar('best_time_to_visit', { length: 255 }),
     priceRange: varchar('price_range', { length: 100 }),
-    imageUrls: json('image_urls'),
+    imageUrls: json('image_urls').$type<string[]>(),
     howDiscovered: text('how_discovered'),
-    localSecrets: json('local_secrets'),
+    localSecrets: json('local_secrets').$type<string[]>(),
     avoidTimes: varchar('avoid_times', { length: 255 }),
     status: varchar('status', { length: 20 }).notNull().default('pending'),
     moderatorNotes: text('moderator_notes'),
@@ -115,7 +124,7 @@ export const userSubmittedPoiVotes = mysqlTable(
   t => [
     index('user_poi_votes_poi_idx').on(t.poiId),
     index('user_poi_votes_user_idx').on(t.userId),
-    index('user_poi_votes_pair_idx').on(t.poiId, t.userId),
+    uniqueIndex('user_poi_votes_uniq').on(t.poiId, t.userId),
   ],
 );
 
@@ -136,7 +145,7 @@ export const hiddenGemRatings = mysqlTable(
   t => [
     index('gem_ratings_poi_idx').on(t.poiId),
     index('gem_ratings_user_idx').on(t.userId),
-    index('gem_ratings_pair_idx').on(t.poiId, t.userId),
+    uniqueIndex('gem_ratings_uniq').on(t.poiId, t.userId),
     index('gem_ratings_rating_idx').on(t.rating),
   ],
 );
@@ -203,7 +212,7 @@ export const poiTickets = mysqlTable(
     discountInfo: text('discount_info'),
     discountPercentage: double('discount_percentage'),
     eligibilityRequirements: text('eligibility_requirements'),
-    ageRange: json('age_range'),
+    ageRange: json('age_range').$type<{ min?: number; max?: number }>(),
     validFrom: timestamp('valid_from', { mode: 'date' }),
     validUntil: timestamp('valid_until', { mode: 'date' }),
     validDays: int('valid_days'),
@@ -214,8 +223,8 @@ export const poiTickets = mysqlTable(
     reservationTips: text('reservation_tips'),
     advanceBookingDays: int('advance_booking_days'),
     usageInstructions: text('usage_instructions'),
-    includedServices: json('included_services'),
-    excludedServices: json('excluded_services'),
+    includedServices: json('included_services').$type<string[]>(),
+    excludedServices: json('excluded_services').$type<string[]>(),
     isActive: boolean('is_active').notNull(),
     stockStatus: varchar('stock_status', { length: 20 }),
     sortOrder: int('sort_order').notNull().default(0),
@@ -332,8 +341,8 @@ export const poiQuestions = mysqlTable(
     title: varchar('title', { length: 500 }).notNull(),
     content: text('content').notNull(),
     category: varchar('category', { length: 30 }).notNull(),
-    tags: json('tags'),
-    imageUrls: json('image_urls'),
+    tags: json('tags').$type<string[]>(),
+    imageUrls: json('image_urls').$type<string[]>(),
     viewsCount: int('views_count').notNull().default(0),
     answersCount: int('answers_count').notNull().default(0),
     followersCount: int('followers_count').notNull().default(0),
@@ -376,7 +385,7 @@ export const poiAnswers = mysqlTable(
     poiId: fk('poi_id'),
     userId: fk('user_id').notNull(),
     content: text('content').notNull(),
-    imageUrls: json('image_urls'),
+    imageUrls: json('image_urls').$type<string[]>(),
     authorName: varchar('author_name', { length: 255 }),
     authorAvatarUrl: text('author_avatar_url'),
     upvotesCount: int('upvotes_count').notNull().default(0),
@@ -415,7 +424,7 @@ export const answerVotes = mysqlTable(
   t => [
     index('answer_votes_answer_idx').on(t.answerId),
     index('answer_votes_user_idx').on(t.userId),
-    index('answer_votes_pair_idx').on(t.answerId, t.userId),
+    uniqueIndex('answer_votes_uniq').on(t.answerId, t.userId),
   ],
 );
 
@@ -454,7 +463,7 @@ export const questionFollowers = mysqlTable(
   t => [
     index('q_followers_question_idx').on(t.questionId),
     index('q_followers_user_idx').on(t.userId),
-    index('q_followers_pair_idx').on(t.questionId, t.userId),
+    uniqueIndex('q_followers_uniq').on(t.questionId, t.userId),
   ],
 );
 
@@ -474,7 +483,7 @@ export const questionReports = mysqlTable(
     index('q_reports_question_idx').on(t.questionId),
     index('q_reports_user_idx').on(t.userId),
     index('q_reports_status_idx').on(t.status),
-    index('q_reports_pair_idx').on(t.questionId, t.userId),
+    uniqueIndex('q_reports_uniq').on(t.questionId, t.userId),
   ],
 );
 
@@ -494,7 +503,7 @@ export const answerReports = mysqlTable(
     index('a_reports_answer_idx').on(t.answerId),
     index('a_reports_user_idx').on(t.userId),
     index('a_reports_status_idx').on(t.status),
-    index('a_reports_pair_idx').on(t.answerId, t.userId),
+    uniqueIndex('a_reports_uniq').on(t.answerId, t.userId),
   ],
 );
 
@@ -511,7 +520,7 @@ export const poiQuestionVotes = mysqlTable(
   t => [
     index('poi_q_votes_question_idx').on(t.questionId),
     index('poi_q_votes_user_idx').on(t.userId),
-    index('poi_q_votes_pair_idx').on(t.questionId, t.userId),
+    uniqueIndex('poi_q_votes_uniq').on(t.questionId, t.userId),
   ],
 );
 
@@ -528,7 +537,7 @@ export const poiAnswerVotes = mysqlTable(
   t => [
     index('poi_a_votes_answer_idx').on(t.answerId),
     index('poi_a_votes_user_idx').on(t.userId),
-    index('poi_a_votes_pair_idx').on(t.answerId, t.userId),
+    uniqueIndex('poi_a_votes_uniq').on(t.answerId, t.userId),
   ],
 );
 
@@ -608,7 +617,7 @@ export const poiPhotoLikes = mysqlTable(
   t => [
     index('poi_photo_likes_photo_idx').on(t.photoId),
     index('poi_photo_likes_user_idx').on(t.userId),
-    index('poi_photo_likes_pair_idx').on(t.photoId, t.userId),
+    uniqueIndex('poi_photo_likes_uniq').on(t.photoId, t.userId),
   ],
 );
 
@@ -622,12 +631,12 @@ export const foodReviews = mysqlTable(
     rating: double('rating').notNull(),
     title: varchar('title', { length: 500 }),
     content: text('content'),
-    dishesOrdered: json('dishes_ordered'),
-    recommendedDishes: json('recommended_dishes'),
+    dishesOrdered: json('dishes_ordered').$type<string[]>(),
+    recommendedDishes: json('recommended_dishes').$type<string[]>(),
     pricePerPerson: double('price_per_person'),
     visitDate: varchar('visit_date', { length: 10 }),
-    imageUrls: json('image_urls'),
-    tags: json('tags'),
+    imageUrls: json('image_urls').$type<string[]>(),
+    tags: json('tags').$type<string[]>(),
     wouldRecommend: boolean('would_recommend').notNull(),
     helpfulCount: int('helpful_count').default(0),
     createdAt: createdAt(),
@@ -651,7 +660,7 @@ export const foodReviewHelpful = mysqlTable(
   },
   t => [
     index('food_review_help_review_idx').on(t.reviewId),
-    index('food_review_help_pair_idx').on(t.reviewId, t.userId),
+    uniqueIndex('food_review_help_uniq').on(t.reviewId, t.userId),
     index('food_review_help_user_idx').on(t.userId),
   ],
 );
@@ -669,7 +678,7 @@ export const foodFavorites = mysqlTable(
   },
   t => [
     index('food_favs_user_idx').on(t.userId),
-    index('food_favs_pair_idx').on(t.userId, t.restaurantId),
+    uniqueIndex('food_favs_uniq').on(t.userId, t.restaurantId),
     index('food_favs_collection_idx').on(t.collectionId),
   ],
 );

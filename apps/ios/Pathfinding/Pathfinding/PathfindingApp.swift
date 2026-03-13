@@ -7,6 +7,7 @@ struct PathfindingApp: App {
   @State private var localizationManager = LocalizationManager.shared
 
   init() {
+    applyUITestLaunchOverrides()
     configureAppearance()
   }
 
@@ -42,6 +43,19 @@ struct PathfindingApp: App {
 
     UITabBar.appearance().standardAppearance = tabBarAppearance
     UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+  }
+
+  private func applyUITestLaunchOverrides() {
+    let environment = ProcessInfo.processInfo.environment
+    guard environment["PATHFINDING_UI_TEST_RESET_STATE"] == "1" else {
+      return
+    }
+
+    if let bundleIdentifier = Bundle.main.bundleIdentifier {
+      UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
+    }
+    UserDefaults.standard.synchronize()
+    AuthManager.resetPersistedSessionForTesting()
   }
 }
 
