@@ -1,26 +1,41 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, dataQualityReports } from '@pathfinding/database';
+import { zValidator } from '@hono/zod-validator';
+import { dataQualityReports, getDb } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
  * Data Quality Reports routes — dashboard quality report management.
  * Mirrors the Convex /api/quality-reports/* HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonOk } from '../lib/response.js';
+import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
+
+// ── Zod schemas ────────────────────────────────────────
+const createReportSchema = z.object({
+  reportType: z.string().min(1),
+  metrics: z.record(z.unknown()),
+  datasetId: z.number().optional(),
+  issues: z.array(z.record(z.unknown())).optional(),
+});
+
+const deleteReportSchema = z.object({
+  id: z.number(),
+});
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
-function getDb() {
-  return createDb();
-}
-
 // ── GET / — List quality reports ───────────────────────
-app.get('/', async (c) => {
+app.get('/', adminRequired(), async (c) => {
   const datasetId = c.req.query('datasetId');
   const reportType = c.req.query('reportType');
-  const limit = Number.parseInt(c.req.query('limit') ?? '20', 10);
-  const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
+  const { limit, offset } = parsePagination(
+    c.req.query('limit'),
+    c.req.query('offset'),
+  );
 
   const db = getDb();
 
@@ -61,13 +76,8 @@ app.get('/', async (c) => {
 });
 
 // ── POST / — Create a quality report ───────────────────
-app.post('/', async (c) => {
-  const body = await c.req.json();
-  const { datasetId, reportType, metrics, issues } = body;
-
-  if (!reportType || !metrics) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/', adminRequired(), zValidator('json', createReportSchema), async (c) => {
+  const { datasetId, reportType, metrics, issues } = c.req.valid('json');
 
   const db = getDb();
 
@@ -86,12 +96,12 @@ app.post('/', async (c) => {
     .where(eq(dataQualityReports.id, reportId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(report[0]) }, 201);
+  return jsonData(c, convertKeysToSnakeCase(report[0]), 201);
 });
 
 // ── GET /report — Get a quality report by ID ───────────
-app.get('/report', async (c) => {
-  const id = c.req.query('id');
+app.get('/report', adminRequired(), async (c) => {
+  const id = parsePositiveInt(c.req.query('id'));
 
   if (!id) {
     throw new ApiError(400, '缺少id参数');
@@ -101,35 +111,30 @@ app.get('/report', async (c) => {
   const report = await db
     .select()
     .from(dataQualityReports)
-    .where(eq(dataQualityReports.id, Number(id)))
+    .where(eq(dataQualityReports.id, id))
     .limit(1);
 
   if (!report[0]) {
     throw new ApiError(404, '报告不存在');
   }
 
-  return c.json({ data: convertKeysToSnakeCase(report[0]) });
+  return jsonData(c, convertKeysToSnakeCase(report[0]));
 });
 
 // ── DELETE / — Delete a quality report ─────────────────
-app.delete('/', async (c) => {
-  const body = await c.req.json();
-  const { id } = body;
-
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.delete('/', adminRequired(), zValidator('json', deleteReportSchema), async (c) => {
+  const { id } = c.req.valid('json');
 
   const db = getDb();
   await db
     .delete(dataQualityReports)
     .where(eq(dataQualityReports.id, Number(id)));
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
 // ── GET /summary — Get quality reports summary ─────────
-app.get('/summary', async (c) => {
+app.get('/summary', adminRequired(), async (c) => {
   const db = getDb();
 
   const [totalResult, byTypeResult] = await Promise.all([
@@ -145,12 +150,10 @@ app.get('/summary', async (c) => {
       .groupBy(dataQualityReports.reportType),
   ]);
 
-  return c.json({
-    data: convertKeysToSnakeCase({
-      totalReports: totalResult[0]?.count ?? 0,
-      byType: byTypeResult,
-    }),
-  });
+  return jsonData(c, convertKeysToSnakeCase({
+    totalReports: totalResult[0]?.count ?? 0,
+    byType: byTypeResult,
+  }));
 });
 
 export default app;

@@ -1,8 +1,22 @@
 'use client';
 
+/**
+ * Top-level client providers for the dashboard app.
+ *
+ * Wraps children with:
+ * 1. **React Query** — data fetching and caching (1-minute stale time).
+ * 2. **AuthProvider** — JWT-based authentication context.
+ *
+ * The `QueryClient` is created once per component lifecycle via
+ * `useState` to avoid re-creating it on every render.
+ */
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ConvexClientProvider } from '@/providers/convex-provider';
+import { AuthProvider } from '@/providers/auth-provider';
+
+/** Default stale time for React Query queries (1 minute). */
+const DEFAULT_STALE_TIME_MS = 60_000;
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -10,7 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60, // 1 minute
+            staleTime: DEFAULT_STALE_TIME_MS,
             refetchOnWindowFocus: false,
           },
         },
@@ -18,8 +32,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ConvexClientProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </ConvexClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
   );
 }

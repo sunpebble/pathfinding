@@ -2,7 +2,7 @@
  * Currency schema - exchange rates, history.
  */
 import { double, index, int, json, mysqlTable, timestamp, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, id } from './columns.js';
+import { createdAt, id } from './columns';
 
 export const currencyRates = mysqlTable('currency_rates', {
   id: id(),

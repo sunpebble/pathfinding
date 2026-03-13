@@ -54,15 +54,9 @@ export const TRANSPORT_MODES: Record<
 /**
  * All transport mode values
  */
-export const TRANSPORT_MODE_VALUES: TransportMode[] = [
-  'walking',
-  'driving',
-  'transit',
-  'cycling',
-  'taxi',
-  'bus',
-  'subway',
-];
+export const TRANSPORT_MODE_VALUES = Object.keys(
+  TRANSPORT_MODES,
+) as TransportMode[];
 
 /**
  * Default transport mode

@@ -1,59 +1,59 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, shareEventLogs, shareEvents, shareLinks } from '@pathfinding/database';
+import { randomBytes } from 'node:crypto';
+import { zValidator } from '@hono/zod-validator';
+import {
+  getDb,
+  shareEventLogs,
+  shareEvents,
+  shareLinks,
+} from '@pathfinding/database';
 import { and, eq, sql } from 'drizzle-orm';
 /**
  * Sharing routes — share links, tracking, stats.
  * Mirrors the Convex /api/share/* HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+
+import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
-function getDb() {
-  return createDb();
-}
-
-/** Generate a random share code */
 function generateShareCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  return randomBytes(6).toString('base64url');
 }
 
 // ── POST /link — Generate a share link ─────────────────
-app.post('/link', async (c) => {
-  const body = await c.req.json();
-  const { resourceType, resourceId, userId, platform } = body;
+const createShareLinkSchema = z.object({
+  resourceType: z.string().min(1),
+  resourceId: z.number(),
+  platform: z.string().optional(),
+});
 
-  if (!resourceType || !resourceId) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/link', authRequired(), zValidator('json', createShareLinkSchema), async (c) => {
+  const { resourceType, resourceId, platform } = c.req.valid('json');
 
+  const userId = Number(c.get('userId'));
   const db = getDb();
   const shareCode = generateShareCode();
 
   const result = await db.insert(shareLinks).values({
     shareCode,
     resourceType,
-    resourceId: Number(resourceId),
-    ownerId: userId ? Number(userId) : 0,
+    resourceId,
+    ownerId: userId,
   });
 
   // Also create a share event
-  if (userId) {
-    await db.insert(shareEvents).values({
-      resourceType,
-      resourceId: Number(resourceId),
-      sharerId: Number(userId),
-      platform: platform ?? null,
-      eventType: 'created',
-    });
-  }
+  await db.insert(shareEvents).values({
+    resourceType,
+    resourceId,
+    sharerId: userId,
+    platform: platform ?? null,
+    eventType: 'created',
+  });
 
   return c.json(
     convertKeysToSnakeCase({
@@ -67,13 +67,13 @@ app.post('/link', async (c) => {
 });
 
 // ── POST /track — Track a share event ──────────────────
-app.post('/track', async (c) => {
-  const body = await c.req.json();
-  const { shareCode, eventType } = body;
+const trackShareSchema = z.object({
+  shareCode: z.string().min(1),
+  eventType: z.string().min(1),
+});
 
-  if (!shareCode || !eventType) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/track', zValidator('json', trackShareSchema), async (c) => {
+  const { shareCode, eventType } = c.req.valid('json');
 
   const db = getDb();
 
@@ -127,7 +127,10 @@ app.get('/stats', async (c) => {
       ),
     );
 
-  const totalViews = links.reduce((sum, link) => sum + (link.viewCount ?? 0), 0);
+  const totalViews = links.reduce(
+    (sum, link) => sum + (link.viewCount ?? 0),
+    0,
+  );
 
   return c.json(
     convertKeysToSnakeCase({

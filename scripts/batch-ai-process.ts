@@ -8,22 +8,20 @@
  *   npx tsx scripts/batch-ai-process.ts --all
  *
  * 环境变量:
- *   CONVEX_URL - Convex 部署 URL
+ *   DATABASE_URL - TiDB 连接字符串
  *   AI_BASE_URL - AI API 基础 URL (默认: https://o.kunish.org)
  *   AI_API_KEY - AI API 密钥
  *   AI_MODEL - 使用的模型 (默认: gemini-3-pro-high)
  */
 
-import type { Id } from '../convex/_generated/dataModel';
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api';
+import { createDb, travelGuideAiData, travelGuides } from '@pathfinding/database';
+import { eq, isNull } from 'drizzle-orm';
 
 // ============================================
 // 配置
 // ============================================
 
 const config = {
-  convexUrl: process.env.CONVEX_URL || 'https://convex.kunish.org',
   aiBaseUrl: process.env.AI_BASE_URL || 'https://o.kunish.org',
   aiApiKey: process.env.AI_API_KEY || '',
   aiModel: process.env.AI_MODEL || 'gemini-3-pro-high',
@@ -36,11 +34,11 @@ const config = {
 // ============================================
 
 interface Guide {
-  _id: Id<'travelGuides'>;
-  title?: string;
-  content: string;
-  destinations: string[];
-  sourcePlatform: string;
+  id: number;
+  title: string;
+  content: string | null;
+  destinations: unknown;
+  platform: string;
 }
 
 interface POI {
@@ -291,61 +289,60 @@ ${content.slice(0, 15000)}
 // ============================================
 
 async function processGuide(
-  client: ConvexHttpClient,
+  db: ReturnType<typeof createDb>,
   guide: Guide,
 ): Promise<boolean> {
-  log(`Processing guide: ${guide._id}`, {
+  log(`Processing guide: ${guide.id}`, {
     title: guide.title?.slice(0, 50),
     contentLength: guide.content?.length,
   });
 
-  // 标记为处理中
-  await client.mutation(api.travelGuides.updateEnrichmentStatus, {
-    id: guide._id,
-    status: 'processing',
-  });
-
   try {
     // 调用 AI
-    const aiResult = await callAI(guide.content, guide.title);
+    const aiResult = await callAI(guide.content ?? '', guide.title);
 
     if (!aiResult) {
-      // 标记为失败
-      await client.mutation(api.travelGuides.updateEnrichmentStatus, {
-        id: guide._id,
-        status: 'failed',
-        error: 'AI processing returned null',
-      });
       return false;
     }
 
-    // 保存结果
-    await client.mutation(api.migrations.batchAiProcess.updateAiData, {
-      guideId: guide._id,
-      contentMarkdown: aiResult.contentMarkdown,
+    // 保存 AI 处理结果到 travel_guide_ai_data 表
+    await db.insert(travelGuideAiData).values({
+      guideId: guide.id,
+      version: 1,
+      aiSummary: aiResult.aiSummary ?? null,
+      aiTags: aiResult.aiTips ?? null,
+      aiCategories: null,
+      aiQualityNotes: null,
+      processedAt: new Date(),
+    });
+
+    // 更新 enrichedData 到 travelGuides 表
+    const enrichedData = {
       aiSummary: aiResult.aiSummary,
       aiTips: aiResult.aiTips,
       aiBestTime: aiResult.aiBestTime,
       aiDuration: aiResult.aiDuration,
       aiBudget: aiResult.aiBudget,
       aiDays: aiResult.aiDays,
-    });
+      contentMarkdown: aiResult.contentMarkdown,
+    };
 
-    log(`Guide processed successfully: ${guide._id}`);
+    await db
+      .update(travelGuides)
+      .set({
+        enrichedData,
+        dayItineraries: aiResult.aiDays ?? null,
+        lastUpdatedAt: new Date(),
+      })
+      .where(eq(travelGuides.id, guide.id));
+
+    log(`Guide processed successfully: ${guide.id}`);
     return true;
   }
   catch (error) {
-    log(`Failed to process guide: ${guide._id}`, {
+    log(`Failed to process guide: ${guide.id}`, {
       error: error instanceof Error ? error.message : error,
     });
-
-    // 标记为失败
-    await client.mutation(api.travelGuides.updateEnrichmentStatus, {
-      id: guide._id,
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-
     return false;
   }
 }
@@ -372,62 +369,48 @@ async function main() {
     process.exit(1);
   }
 
+  if (!process.env.DATABASE_URL) {
+    console.error('Error: DATABASE_URL environment variable is required');
+    process.exit(1);
+  }
+
   log('Starting batch AI processing', {
     aiBaseUrl: config.aiBaseUrl,
     aiModel: config.aiModel,
     limit: processAll ? 'all' : limit,
   });
 
-  // 创建 Convex 客户端
-  const client = new ConvexHttpClient(config.convexUrl);
+  // 创建数据库连接
+  const db = createDb();
 
-  let cursor: string | undefined;
   let totalProcessed = 0;
   let totalFailed = 0;
+  let offset = 0;
 
   do {
-    // 获取待处理的游记
-    const result = await client.query(
-      api.migrations.batchAiProcess.getPending,
-      {
-        cursor,
-        limit,
-      },
-    );
+    // 获取未经 AI 处理的游记（enrichedData 为 null 的）
+    const pendingGuides = await db
+      .select({
+        id: travelGuides.id,
+        title: travelGuides.title,
+        content: travelGuides.content,
+        destinations: travelGuides.destinations,
+        platform: travelGuides.platform,
+      })
+      .from(travelGuides)
+      .where(isNull(travelGuides.enrichedData))
+      .limit(limit)
+      .offset(offset);
 
-    log(`Fetched ${result.guides.length} pending guides`, {
-      totalInBatch: result.totalInBatch,
-      pendingInBatch: result.pendingInBatch,
-      isDone: result.isDone,
-    });
+    log(`Fetched ${pendingGuides.length} pending guides`);
 
-    if (result.guides.length === 0) {
-      if (result.isDone) {
-        log('No more pending guides to process');
-        break;
-      }
-      cursor = result.nextCursor;
-      continue;
+    if (pendingGuides.length === 0) {
+      log('No more pending guides to process');
+      break;
     }
 
-    // 获取完整游记内容
-    for (const guideMeta of result.guides) {
-      const fullGuide = await client.query(api.travelGuides.getById, {
-        id: guideMeta._id,
-      });
-
-      if (!fullGuide) {
-        log(`Guide not found: ${guideMeta._id}`);
-        continue;
-      }
-
-      const success = await processGuide(client, {
-        _id: fullGuide._id,
-        title: fullGuide.title,
-        content: fullGuide.content,
-        destinations: fullGuide.destinations,
-        sourcePlatform: fullGuide.sourcePlatform,
-      });
+    for (const guide of pendingGuides) {
+      const success = await processGuide(db, guide);
 
       if (success) {
         totalProcessed++;
@@ -445,8 +428,8 @@ async function main() {
       }
     }
 
-    cursor = result.nextCursor;
-  } while (processAll && cursor);
+    offset += pendingGuides.length;
+  } while (processAll);
 
   log('Batch processing complete', {
     totalProcessed,

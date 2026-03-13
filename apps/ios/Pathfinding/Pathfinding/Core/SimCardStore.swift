@@ -68,7 +68,7 @@ final class SimCardStore {
   private let encoder: JSONEncoder
 
   private init() {
-    let urlString = AppConfig.convexURL.replacingOccurrences(of: ":3001", with: ":8000")
+    let urlString = AppConfig.apiBaseURL.replacingOccurrences(of: ":3001", with: ":8000")
     self.baseURL = URL(string: urlString)!
 
     let config = URLSessionConfiguration.default

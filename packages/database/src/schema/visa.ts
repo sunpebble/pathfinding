@@ -12,7 +12,7 @@ import {
   timestamp,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const visaRequirements = mysqlTable(
   'visa_requirements',

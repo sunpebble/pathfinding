@@ -1,27 +1,36 @@
 /**
  * Content Cleaner Module
- * 清洗爬取的游记内容：去除广告、推广、个人信息、平台噪音
+ * Cleans crawled travel guide content by removing ads, promotions,
+ * personal info (WeChat IDs, phone numbers), and platform noise.
+ *
+ * All regex patterns are optimized for Chinese social media platforms
+ * (Xiaohongshu, Weibo, Douyin, Mafengwo, etc.).
  */
 
 // ============================================================================
 // Types
 // ============================================================================
 
+/** Result of a content cleaning operation */
 export interface CleaningResult {
-  /** 清洗后的内容 */
+  /** Cleaned text content */
   content: string;
-  /** 清洗后的 HTML 内容 */
+  /** Cleaned HTML content (if HTML cleaning was requested) */
   contentHtml?: string;
-  /** 移除的内容片段数 */
+  /** Number of distinct pattern matches removed */
   removedCount: number;
-  /** 移除的内容类型 */
+  /** Categories of content that were removed */
   removedTypes: CleaningCategory[];
-  /** 原始内容长度 */
+  /** Character length of the original content */
   originalLength: number;
-  /** 清洗后内容长度 */
+  /** Character length after cleaning */
   cleanedLength: number;
 }
 
+/**
+ * Category of unwanted content to be cleaned.
+ * Each category maps to a set of regex patterns.
+ */
 export type CleaningCategory
   = | 'ad' // 广告
     | 'promotion' // 推广/软广
@@ -31,14 +40,15 @@ export type CleaningCategory
     | 'boilerplate' // 模板文字
     | 'whitespace'; // 多余空白
 
+/** Options for controlling the cleaning pipeline */
 export interface CleaningOptions {
-  /** 要执行的清洗类别，默认全部 */
+  /** Categories to clean (defaults to all) */
   categories?: CleaningCategory[];
-  /** 是否同时清洗 HTML */
+  /** Whether to also clean HTML content */
   cleanHtml?: boolean;
-  /** 是否保留段落结构 */
+  /** Whether to preserve paragraph structure (double newlines) */
   preserveParagraphs?: boolean;
-  /** 自定义过滤规则 */
+  /** Additional custom regex patterns to remove */
   customPatterns?: RegExp[];
 }
 
@@ -47,7 +57,7 @@ export interface CleaningOptions {
 // ============================================================================
 
 /**
- * 广告相关模式
+ * Patterns matching advertisement content (e-commerce links, coupons, ad markers).
  */
 export const AD_PATTERNS: RegExp[] = [
   // 淘宝/天猫/京东链接
@@ -63,7 +73,7 @@ export const AD_PATTERNS: RegExp[] = [
 ];
 
 /**
- * 推广/软广模式
+ * Patterns matching soft promotions and product placements.
  */
 export const PROMOTION_PATTERNS: RegExp[] = [
   // 产品推荐夹带
@@ -75,7 +85,7 @@ export const PROMOTION_PATTERNS: RegExp[] = [
 ];
 
 /**
- * 个人信息模式
+ * Patterns matching personal contact information (WeChat, phone, email, etc.).
  */
 export const PERSONAL_INFO_PATTERNS: RegExp[] = [
   // 微信号
@@ -102,7 +112,7 @@ export const PERSONAL_INFO_PATTERNS: RegExp[] = [
 ];
 
 /**
- * 平台噪音模式
+ * Patterns matching platform UI noise (like/follow prompts, image placeholders, etc.).
  */
 export const PLATFORM_NOISE_PATTERNS: RegExp[] = [
   // 关注/点赞/收藏提示
@@ -126,7 +136,7 @@ export const PLATFORM_NOISE_PATTERNS: RegExp[] = [
 ];
 
 /**
- * 版权声明模式
+ * Patterns matching copyright notices and reprint restrictions.
  */
 export const COPYRIGHT_PATTERNS: RegExp[] = [
   /(?:版权|著作权)(?:所有|归|属于).*/g,
@@ -138,7 +148,7 @@ export const COPYRIGHT_PATTERNS: RegExp[] = [
 ];
 
 /**
- * 模板/套话模式
+ * Patterns matching boilerplate / filler text (greetings, sign-offs, related links).
  */
 export const BOILERPLATE_PATTERNS: RegExp[] = [
   // 开头套话
@@ -156,12 +166,17 @@ export const BOILERPLATE_PATTERNS: RegExp[] = [
 // ============================================================================
 
 /**
- * 清洗文本内容
+ * Clean text content by removing unwanted patterns category-by-category.
+ * Whitespace normalization is always performed last.
+ *
+ * @param content - Raw text content to clean
+ * @param options - Cleaning configuration
+ * @returns Cleaning result with cleaned content and statistics
  *
  * @example
- * const result = cleanContent('游记正文...关注我的微信号abc123获取更多攻略');
- * // result.content === '游记正文...'
- * // result.removedTypes === ['personal', 'platform']
+ * const result = cleanContent('Travel guide body... Follow my WeChat abc123 for more tips');
+ * // result.content => 'Travel guide body...'
+ * // result.removedTypes => ['personal', 'platform']
  */
 export function cleanContent(
   content: string,
@@ -178,7 +193,7 @@ export function cleanContent(
   let removedCount = 0;
   const removedTypes = new Set<CleaningCategory>();
 
-  // 按类别逐步清洗
+  // Apply patterns for each requested category
   const categoryPatterns: Record<CleaningCategory, RegExp[]> = {
     ad: AD_PATTERNS,
     promotion: PROMOTION_PATTERNS,
@@ -186,16 +201,16 @@ export function cleanContent(
     platform: PLATFORM_NOISE_PATTERNS,
     copyright: COPYRIGHT_PATTERNS,
     boilerplate: BOILERPLATE_PATTERNS,
-    whitespace: [], // 特殊处理
+    whitespace: [], // Handled separately below
   };
 
   for (const category of categories) {
     if (category === 'whitespace')
-      continue; // 最后处理
+      continue; // Whitespace is processed last
 
     const patterns = categoryPatterns[category] || [];
     for (const pattern of patterns) {
-      // 确保使用新的 RegExp 实例（避免 lastIndex 问题）
+      // Create a fresh RegExp instance to avoid stale lastIndex
       const regex = new RegExp(pattern.source, pattern.flags);
       const before = cleaned;
       cleaned = cleaned.replace(regex, '');
@@ -206,7 +221,7 @@ export function cleanContent(
     }
   }
 
-  // 自定义模式
+  // Apply custom patterns
   for (const pattern of customPatterns) {
     const regex = new RegExp(pattern.source, pattern.flags);
     const before = cleaned;
@@ -216,7 +231,7 @@ export function cleanContent(
     }
   }
 
-  // 空白处理（最后执行）
+  // Whitespace normalization (always last)
   if (categories.includes('whitespace')) {
     const before = cleaned;
     cleaned = normalizeWhitespace(cleaned, preserveParagraphs);
@@ -235,45 +250,49 @@ export function cleanContent(
 }
 
 /**
- * 清洗 HTML 内容
- * 移除广告相关的 DOM 元素和不安全内容
+ * Clean HTML content by removing unsafe elements and ad-related DOM nodes.
+ * Strips script/style/iframe tags, inline event handlers (XSS prevention),
+ * tracking attributes, hidden elements, and empty tags.
+ *
+ * @param html - Raw HTML string to clean
+ * @returns Sanitized HTML string
  */
 export function cleanHtmlContent(html: string): string {
   let cleaned = html;
 
-  // 移除 script/style/iframe 标签
+  // Remove script/style/iframe tags
   cleaned = cleaned.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   cleaned = cleaned.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
   cleaned = cleaned.replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, '');
   cleaned = cleaned.replace(/<object\b[^>]*>.*?<\/object>/gi, '');
   cleaned = cleaned.replace(/<embed\b[^>]*>/gi, '');
 
-  // 移除广告相关 class/id 的元素
+  // Remove elements with ad-related class/id attributes
   const adSelectors = [
     /class\s*=\s*["'][^"']*(?:ad-container|advertisement|sponsor|promotion|banner-ad|popup|modal)[^"']*["']/gi,
     /id\s*=\s*["'][^"']*(?:ad-|ads-|advertisement|sponsor|banner)[^"']*["']/gi,
   ];
   for (const selector of adSelectors) {
-    // 移除匹配的整个标签及其内容
+    // Remove the entire tag and its content
     cleaned = cleaned.replace(
       new RegExp(`<div\\b[^>]*${selector.source}[^>]*>.*?</div>`, 'gis'),
       '',
     );
   }
 
-  // 移除事件处理属性 (XSS prevention)
+  // Remove inline event handler attributes (XSS prevention)
   cleaned = cleaned.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '');
 
-  // 移除 data-track 等跟踪属性
+  // Remove tracking data attributes
   cleaned = cleaned.replace(/\s+data-(?:track|ad|click|monitor)[\w-]*\s*=\s*["'][^"']*["']/gi, '');
 
-  // 移除 display:none 的元素
+  // Remove display:none elements
   cleaned = cleaned.replace(
     /<[^>]+style\s*=\s*["'][^"']*display\s*:\s*none[^"']*["'][^>]*>.*?<\/\w+>/gis,
     '',
   );
 
-  // 移除空标签（递归清理）
+  // Recursively remove empty tags
   let prev = '';
   while (prev !== cleaned) {
     prev = cleaned;
@@ -284,7 +303,12 @@ export function cleanHtmlContent(html: string): string {
 }
 
 /**
- * 标准化空白字符
+ * Normalize whitespace characters in text content.
+ *
+ * @param content - Text to normalize
+ * @param preserveParagraphs - If true, keeps double-newline paragraph breaks;
+ *   if false, collapses all whitespace to single spaces
+ * @returns Normalized text with trimmed edges
  */
 export function normalizeWhitespace(
   content: string,
@@ -292,20 +316,20 @@ export function normalizeWhitespace(
 ): string {
   let cleaned = content;
 
-  // 统一换行符
+  // Normalize line endings
   cleaned = cleaned.replace(/\r\n/g, '\n');
   cleaned = cleaned.replace(/\r/g, '\n');
 
   if (preserveParagraphs) {
-    // 保留段落分隔（双换行），但规范化
+    // Collapse 3+ newlines into paragraph separator (double newline)
     cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-    // 行内多余空格
+    // Collapse inline whitespace
     cleaned = cleaned.replace(/[^\S\n]+/g, ' ');
-    // 段落开头/结尾空格
+    // Trim leading/trailing spaces per line
     cleaned = cleaned.replace(/^ +| +$/gm, '');
   }
   else {
-    // 所有连续空白替换为单空格
+    // Collapse all whitespace into single space
     cleaned = cleaned.replace(/\s+/g, ' ');
   }
 
@@ -313,12 +337,16 @@ export function normalizeWhitespace(
 }
 
 /**
- * 检测内容中的广告/推广密度
- * 返回 0-1 的分数，0 = 无广告，1 = 全是广告
+ * Detect the ratio of ad/promotion/personal-info content in a text.
+ *
+ * @param content - Text content to analyze
+ * @returns Ad density score (0 = no ads, 1 = entirely ads).
+ *   Note: overlapping pattern matches may cause slight over-counting,
+ *   but the result is clamped to [0, 1].
  *
  * @example
- * const density = detectAdDensity('正常内容加上微信号abc123');
- * // density > 0 表示含有广告内容
+ * const density = detectAdDensity('Normal content plus WeChat ID abc123');
+ * // density > 0 indicates ad content was detected
  */
 export function detectAdDensity(content: string): number {
   if (!content || content.length === 0)
@@ -340,13 +368,16 @@ export function detectAdDensity(content: string): number {
     }
   }
 
-  // 避免重复计算（同一文字可能被多个规则匹配）
+  // Clamp to [0, 1] — overlapping matches may exceed actual length
   return Math.min(1, matchedLength / content.length);
 }
 
 /**
- * 从内容中提取纯正文（去除所有非正文内容）
- * 比 cleanContent 更激进，适合 AI 处理前的预处理
+ * Extract pure article body by aggressively removing all non-content material.
+ * More aggressive than {@link cleanContent} — suitable for AI pre-processing.
+ *
+ * @param content - Raw text content
+ * @returns Cleaned text with only article body remaining
  */
 export function extractPureContent(content: string): string {
   const result = cleanContent(content, {
@@ -358,7 +389,12 @@ export function extractPureContent(content: string): string {
 }
 
 /**
- * 判断内容是否为低质量（广告含量高或内容过短）
+ * Check whether content is low quality (too short or ad-heavy).
+ *
+ * @param content - Text content to evaluate
+ * @param options.minLength - Minimum acceptable length after cleaning (default: 100)
+ * @param options.maxAdDensity - Maximum acceptable ad density ratio (default: 0.3)
+ * @returns `true` if the content is considered low quality
  */
 export function isLowQualityContent(
   content: string,
@@ -384,7 +420,11 @@ export function isLowQualityContent(
 }
 
 /**
- * 批量清洗多个内容
+ * Clean multiple content strings in a single call.
+ *
+ * @param contents - Array of raw text strings
+ * @param options - Shared cleaning configuration
+ * @returns Array of cleaning results (same order as input)
  */
 export function cleanContentBatch(
   contents: string[],

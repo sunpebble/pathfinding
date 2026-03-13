@@ -1,8 +1,8 @@
 /**
  * Local Events schema - events, favorites, reminders, reviews, review votes.
  */
-import { boolean, double, index, json, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { boolean, double, index, json, mysqlTable, text, timestamp, uniqueIndex, varchar } from 'drizzle-orm/mysql-core';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const localEvents = mysqlTable('local_events', {
   id: id(),
@@ -50,7 +50,7 @@ export const eventFavorites = mysqlTable('event_favorites', {
 }, t => [
   index('event_favs_user_idx').on(t.userId),
   index('event_favs_event_idx').on(t.eventId),
-  index('event_favs_pair_idx').on(t.userId, t.eventId),
+  uniqueIndex('event_favs_uniq').on(t.userId, t.eventId),
   index('event_favs_user_created_idx').on(t.userId, t.createdAt),
 ]);
 
@@ -100,5 +100,5 @@ export const eventReviewVotes = mysqlTable('event_review_votes', {
 }, t => [
   index('event_rv_review_idx').on(t.reviewId),
   index('event_rv_user_idx').on(t.userId),
-  index('event_rv_pair_idx').on(t.reviewId, t.userId),
+  uniqueIndex('event_rv_uniq').on(t.reviewId, t.userId),
 ]);

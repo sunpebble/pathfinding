@@ -313,21 +313,21 @@ final class TimezoneStore {
   // MARK: - API Calls
 
   private func fetchWorldClock() async throws -> WorldClockResponse {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/world-clock")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/world-clock")
     let data = try await apiClient.fetchData(url: url)
     let response = try JSONDecoder().decode(WorldClockDataResponse.self, from: data)
     return response.data
   }
 
   private func fetchCities() async throws -> [City] {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/cities")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/cities")
     let data = try await apiClient.fetchData(url: url)
     let response = try JSONDecoder().decode(CitiesResponse.self, from: data)
     return response.data
   }
 
   private func fetchCitySearch(query: String) async throws -> [City] {
-    var components = URLComponents(string: AppConfig.convexURL)!
+    var components = URLComponents(string: AppConfig.apiBaseURL)!
     components.path += "/v1/timezones/cities/search"
     components.queryItems = [URLQueryItem(name: "q", value: query)]
 
@@ -339,7 +339,7 @@ final class TimezoneStore {
   }
 
   private func postAddClock(cityId: String, label: String?) async throws -> String {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/world-clock/cities")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/world-clock/cities")
     var body: [String: Any] = ["cityId": cityId]
     if let label = label {
       body["label"] = label
@@ -350,14 +350,14 @@ final class TimezoneStore {
   }
 
   private func deleteRemoveClock(cityId: String) async throws -> String {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/world-clock/cities/\(cityId)")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/world-clock/cities/\(cityId)")
     let data = try await apiClient.deleteData(url: url)
     let response = try JSONDecoder().decode(TimezoneIdResponse.self, from: data)
     return response.data.id
   }
 
   private func patchUpdateClockLabel(cityId: String, label: String?) async throws -> String {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/world-clock/cities/\(cityId)")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/world-clock/cities/\(cityId)")
     var body: [String: Any] = [:]
     if let label = label {
       body["label"] = label
@@ -368,7 +368,7 @@ final class TimezoneStore {
   }
 
   private func putReorderClocks(orderedCityIds: [String]) async throws -> String {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/world-clock/order")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/world-clock/order")
     let body: [String: Any] = ["orderedCityIds": orderedCityIds]
     let data = try await apiClient.putData(url: url, body: body)
     let response = try JSONDecoder().decode(TimezoneIdResponse.self, from: data)
@@ -376,7 +376,7 @@ final class TimezoneStore {
   }
 
   private func patchUpdateHomeTimezone(timezone: String, cityId: String?) async throws -> String {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/settings/home")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/settings/home")
     var body: [String: Any] = ["homeTimezone": timezone]
     if let cityId = cityId {
       body["homeCityId"] = cityId
@@ -387,7 +387,7 @@ final class TimezoneStore {
   }
 
   private func patchUpdateDisplayFormat(format: TimeDisplayFormat, showSeconds: Bool?) async throws -> String {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/settings/display")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/settings/display")
     var body: [String: Any] = ["displayFormat": format.rawValue]
     if let showSeconds = showSeconds {
       body["showSeconds"] = showSeconds
@@ -398,7 +398,7 @@ final class TimezoneStore {
   }
 
   private func fetchTimeConversion(from: String, to: String, time: Date?) async throws -> TimeConversionResult {
-    var components = URLComponents(string: AppConfig.convexURL)!
+    var components = URLComponents(string: AppConfig.apiBaseURL)!
     components.path += "/v1/timezones/convert"
     var queryItems = [
       URLQueryItem(name: "from", value: from),
@@ -418,7 +418,7 @@ final class TimezoneStore {
   }
 
   private func postCurrentTimes(timezones: [String], format: TimeDisplayFormat) async throws -> [CurrentTimeResult] {
-    let url = URL(string: AppConfig.convexURL)!.appendingPathComponent("v1/timezones/current")
+    let url = URL(string: AppConfig.apiBaseURL)!.appendingPathComponent("v1/timezones/current")
     let body: [String: Any] = [
       "timezones": timezones,
       "format": format.rawValue

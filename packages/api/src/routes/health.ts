@@ -15,9 +15,12 @@ app.get('/', (c) => {
 
 /** GET /ready — readiness probe (could check DB connectivity). */
 app.get('/ready', (c) => {
+  const appVersion
+    = typeof process !== 'undefined' ? process.env.APP_VERSION : undefined;
+
   return c.json({
     status: 'ready',
-    version: process.env.APP_VERSION ?? '0.0.1',
+    version: appVersion ?? '0.0.1',
     timestamp: new Date().toISOString(),
   });
 });
