@@ -2,7 +2,7 @@
  * Packing schema - packing lists, items, templates.
  */
 import { boolean, index, int, json, mysqlTable, text, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const packingLists = mysqlTable('packing_lists', {
   id: id(),

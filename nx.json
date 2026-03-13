@@ -15,7 +15,13 @@
       "default",
       "!{projectRoot}/**/*.spec.ts",
       "!{projectRoot}/**/*.test.ts",
-      "!{projectRoot}/**/__tests__/**/*"
+      "!{projectRoot}/**/__tests__/**/*",
+      "!{projectRoot}/vitest.config.*",
+      "!{projectRoot}/tsconfig.*.json"
+    ],
+    "testing": [
+      "default",
+      "{workspaceRoot}/vitest.config.*"
     ]
   },
   "targetDefaults": {
@@ -33,19 +39,22 @@
     "lint": {
       "inputs": [
         "default",
-        "{workspaceRoot}/.eslintrc*",
         "{workspaceRoot}/eslint.config.*"
       ],
       "cache": true
     },
     "typecheck": {
       "dependsOn": ["^build"],
-      "inputs": ["default", "^default"],
+      "inputs": [
+        "default",
+        "^default",
+        "{projectRoot}/tsconfig*.json"
+      ],
       "cache": true
     },
     "test": {
       "dependsOn": ["^build"],
-      "inputs": ["default", "^production"],
+      "inputs": ["testing", "^production"],
       "cache": true
     }
   },

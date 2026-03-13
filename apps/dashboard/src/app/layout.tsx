@@ -1,13 +1,20 @@
+/**
+ * Root layout for the dashboard app.
+ *
+ * Wraps all pages with the global providers, sidebar navigation,
+ * header, and error boundary.
+ *
+ * Auth pages (/auth/*) and the landing page (/) use a clean layout
+ * without the sidebar/header chrome.
+ */
+
 import type { Metadata } from 'next';
-import { ErrorBoundary } from '@/components/error-boundary';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
 import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Pathfinding Crawler Dashboard',
-  description: 'Manage and monitor data crawling jobs',
+  title: '探路 Pathfinding — 智能旅行规划',
+  description: '用 AI 驱动的旅行规划平台，让每一段旅程都成为独特的探索之旅',
 };
 
 export default function RootLayout({
@@ -16,19 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        <Providers>
-          <div className="flex h-screen bg-gray-100">
-            <Sidebar />
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <Header />
-              <main className="flex-1 overflow-y-auto p-6">
-                <ErrorBoundary>{children}</ErrorBoundary>
-              </main>
-            </div>
-          </div>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

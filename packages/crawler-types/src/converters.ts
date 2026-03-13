@@ -1,6 +1,7 @@
 /**
  * Type Converters
- * Bidirectional conversion between snake_case and camelCase
+ * Bidirectional conversion between snake_case (database/API) and camelCase (TypeScript).
+ * Provides both compile-time type utilities and runtime conversion functions.
  */
 
 // ============================================================================
@@ -50,16 +51,20 @@ export type CamelToSnakeObject<T> = T extends Array<infer U>
 // ============================================================================
 
 /**
- * Convert a snake_case string to camelCase
- * @example snakeToCamel('source_platform') => 'sourcePlatform'
+ * Convert a snake_case string to camelCase at runtime.
+ * @param str - The snake_case string to convert
+ * @returns The camelCase equivalent
+ * @example snakeToCamel('source_platform') // => 'sourcePlatform'
  */
 export function snakeToCamel(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
 /**
- * Convert a camelCase string to snake_case
- * @example camelToSnake('sourcePlatform') => 'source_platform'
+ * Convert a camelCase string to snake_case at runtime.
+ * @param str - The camelCase string to convert
+ * @returns The snake_case equivalent
+ * @example camelToSnake('sourcePlatform') // => 'source_platform'
  */
 export function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
@@ -79,7 +84,11 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Recursively convert all keys in an object from snake_case to camelCase
+ * Recursively convert all keys in an object from snake_case to camelCase.
+ * Handles nested objects and arrays. Leaves Date, RegExp, and primitives untouched.
+ *
+ * @param obj - Input object with snake_case keys
+ * @returns New object with camelCase keys (type-level transformation via {@link SnakeToCamelObject})
  *
  * @example
  * toCamelCase({ source_platform: 'xiaohongshu', source_external_id: '123' })
@@ -107,7 +116,11 @@ export function toCamelCase<T>(obj: T): SnakeToCamelObject<T> {
 }
 
 /**
- * Recursively convert all keys in an object from camelCase to snake_case
+ * Recursively convert all keys in an object from camelCase to snake_case.
+ * Handles nested objects and arrays. Leaves Date, RegExp, and primitives untouched.
+ *
+ * @param obj - Input object with camelCase keys
+ * @returns New object with snake_case keys (type-level transformation via {@link CamelToSnakeObject})
  *
  * @example
  * toSnakeCase({ sourcePlatform: 'xiaohongshu', sourceExternalId: '123' })

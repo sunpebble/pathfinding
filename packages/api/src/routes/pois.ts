@@ -1,33 +1,36 @@
-import { createDb, pois } from '@pathfinding/database';
+import { getDb, pois } from '@pathfinding/database';
 import { and, eq, like, sql } from 'drizzle-orm';
 /**
  * POI routes — list, get by ID, search, nearby.
  */
 import { Hono } from 'hono';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { escapeLikePattern, parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonList } from '../lib/response.js';
 
 const app = new Hono();
-
-function getDb() {
-  return createDb();
-}
 
 // ── GET / — Search/list POIs ───────────────────────────
 app.get('/', async (c) => {
   const q = c.req.query('q');
   const cityId = c.req.query('cityId');
   const category = c.req.query('category');
-  const limit = Number.parseInt(c.req.query('limit') ?? '20', 10);
-  const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
+  const { limit, offset } = parsePagination(
+    c.req.query('limit'),
+    c.req.query('offset'),
+  );
 
   const db = getDb();
 
   const conditions = [];
   if (q) {
-    conditions.push(like(pois.name, `%${q}%`));
+    conditions.push(like(pois.name, `%${escapeLikePattern(q)}%`));
   }
   if (cityId) {
-    conditions.push(eq(pois.cityId, Number(cityId)));
+    const parsedCityId = parsePositiveInt(cityId);
+    if (!parsedCityId)
+      return c.json({ error: 'Invalid cityId' }, 400);
+    conditions.push(eq(pois.cityId, parsedCityId));
   }
   if (category) {
     conditions.push(eq(pois.category, category));
@@ -46,10 +49,8 @@ app.get('/', async (c) => {
     results = await db.select().from(pois).limit(limit).offset(offset);
   }
 
-  return c.json({
-    data: convertKeysToSnakeCase(results),
-    pagination: { limit, offset, total: results.length },
-  });
+  // TODO: Replace with a parallel COUNT(*) query for accurate total
+  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, results.length);
 });
 
 // ── GET /nearby — Find nearby POIs ─────────────────────
@@ -61,7 +62,7 @@ app.get('/nearby', async (c) => {
   const category = c.req.query('category');
 
   if (lat === 0 && lng === 0) {
-    return c.json({ error: 'Missing lat/lng parameters' }, 400);
+    return c.json({ error: '缺少lat/lng参数' }, 400);
   }
 
   const db = getDb();
@@ -116,20 +117,22 @@ app.get('/nearby', async (c) => {
 
 // ── GET /:id — Get POI by ID ───────────────────────────
 app.get('/:id', async (c) => {
-  const { id } = c.req.param();
+  const id = parsePositiveInt(c.req.param('id'));
+  if (!id)
+    return c.json({ error: 'Invalid ID' }, 400);
   const db = getDb();
 
   const result = await db
     .select()
     .from(pois)
-    .where(eq(pois.id, Number(id)))
+    .where(eq(pois.id, id))
     .limit(1);
 
   if (result.length === 0) {
-    return c.json({ error: 'POI not found' }, 404);
+    return c.json({ error: '兴趣点不存在' }, 404);
   }
 
-  return c.json({ data: convertKeysToSnakeCase(result[0]) });
+  return jsonData(c, convertKeysToSnakeCase(result[0]));
 });
 
 export default app;

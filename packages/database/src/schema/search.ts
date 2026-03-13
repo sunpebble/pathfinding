@@ -7,7 +7,7 @@ import {
   mysqlTable,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id } from './columns.js';
+import { createdAt, fk, id } from './columns';
 
 export const searchHistory = mysqlTable(
   'search_history',

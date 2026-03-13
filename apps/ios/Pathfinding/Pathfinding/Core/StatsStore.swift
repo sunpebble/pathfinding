@@ -197,7 +197,7 @@ final class StatsStore {
 
 extension APIClient {
   func fetchData(endpoint: String) async throws -> Data {
-    let url = URL(string: AppConfig.convexURL)!
+    let url = URL(string: AppConfig.apiBaseURL)!
       .appendingPathComponent("v1")
       .appendingPathComponent(endpoint)
 
@@ -225,7 +225,7 @@ extension APIClient {
   }
 
   func postDataWithBody(endpoint: String, bodyData: Data) async throws -> Data {
-    let url = URL(string: AppConfig.convexURL)!
+    let url = URL(string: AppConfig.apiBaseURL)!
       .appendingPathComponent("v1")
       .appendingPathComponent(endpoint)
 

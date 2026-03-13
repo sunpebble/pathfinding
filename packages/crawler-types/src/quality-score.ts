@@ -1,48 +1,63 @@
 /**
  * Quality Score Module
- * 统一的数据质量评分逻辑，供所有爬虫和数据处理管线使用
+ * Unified data quality scoring logic used by all crawlers and data pipelines.
  */
 
 // ============================================================================
 // Types
 // ============================================================================
 
+/** Input fields used to calculate a quality score */
 export interface QualityScoreInput {
+  /** Article / guide title */
   title?: string;
+  /** Body content text */
   content?: string;
+  /** Author display name */
   authorName?: string;
+  /** List of image URLs */
   images?: string[];
+  /** Cover image URL */
   coverImage?: string;
+  /** View count */
   views?: number;
+  /** Like count */
   likes?: number;
+  /** Save / bookmark count */
   saves?: number;
+  /** Comment count */
   comments?: number;
+  /** Overall rating (e.g. 1–5) */
   rating?: number;
+  /** Associated destination names */
   destinations?: string[];
+  /** Content tags */
   tags?: string[];
 }
 
+/** Result of a quality score calculation */
 export interface QualityScoreResult {
-  /** 总分 0-1 */
+  /** Overall quality score (0–1) */
   score: number;
-  /** 各维度得分明细 */
+  /** Per-dimension score breakdown */
   breakdown: QualityBreakdown;
-  /** 建议改进项 */
+  /** Actionable improvement suggestions */
   suggestions: string[];
 }
 
+/** Per-dimension score breakdown (each value is weighted) */
 export interface QualityBreakdown {
-  /** 标题得分 (0-0.15) */
+  /** Title score (0–0.15) */
   title: number;
-  /** 内容得分 (0-0.35) */
+  /** Content score (0–0.35) */
   content: number;
-  /** 作者得分 (0-0.05) */
+  /** Author score (0–0.05) */
   author: number;
-  /** 图片得分 (0-0.15) */
+  /** Images score (0–0.15) */
   images: number;
-  /** 互动数据得分 (0-0.15) */
+  /** Engagement score (0–0.15) */
   engagement: number;
-  /** 元数据得分 (0-0.15) */
+  /** Metadata score (0–0.15) */
   metadata: number;
 }
 
@@ -50,7 +65,7 @@ export interface QualityBreakdown {
 // Constants
 // ============================================================================
 
-/** 各维度权重 */
+/** Dimension weights (must sum to 1.0) */
 const WEIGHTS = {
   title: 0.15,
   content: 0.35,
@@ -65,25 +80,28 @@ const WEIGHTS = {
 // ============================================================================
 
 /**
- * 计算数据质量分数（统一版）
+ * Calculate a unified data quality score.
  *
- * 评分维度及权重：
- * - 标题 (15%): 存在、长度、可读性
- * - 内容 (35%): 长度、丰富度
- * - 作者 (5%): 是否有作者信息
- * - 图片 (15%): 数量、封面图
- * - 互动 (15%): 浏览量/点赞/收藏/评论
- * - 元数据 (15%): 目的地/标签
+ * Scoring dimensions and weights:
+ * - **Title** (15%): presence, length, readability
+ * - **Content** (35%): length tiers (100 / 200 / 500 / 1000 chars)
+ * - **Author** (5%): presence of author info
+ * - **Images** (15%): count and cover image presence
+ * - **Engagement** (15%): views / likes / saves / comments presence + bonus for high engagement
+ * - **Metadata** (15%): destinations / tags / rating presence
+ *
+ * @param input - Data fields to evaluate
+ * @returns Quality score result with overall score, breakdown, and suggestions
  *
  * @example
  * const result = calculateQualityScoreUnified({
- *   title: '北京三日游攻略',
- *   content: '详细内容...',
+ *   title: 'Beijing 3-Day Travel Guide',
+ *   content: 'Detailed content here...',
  *   images: ['url1', 'url2'],
  *   views: 1000,
  *   likes: 50,
  * });
- * // result.score === 0.72
+ * // result.score => 0.72
  */
 export function calculateQualityScoreUnified(
   input: QualityScoreInput,
@@ -98,17 +116,17 @@ export function calculateQualityScoreUnified(
   };
   const suggestions: string[] = [];
 
-  // === 标题评分 ===
+  // === Title scoring ===
   if (input.title && input.title.trim().length > 0) {
     const titleLen = input.title.trim().length;
     if (titleLen >= 10) {
-      breakdown.title = WEIGHTS.title; // 完整标题
+      breakdown.title = WEIGHTS.title; // Full title
     }
     else if (titleLen >= 5) {
-      breakdown.title = WEIGHTS.title * 0.7; // 短标题
+      breakdown.title = WEIGHTS.title * 0.7; // Short title
     }
     else {
-      breakdown.title = WEIGHTS.title * 0.3; // 很短的标题
+      breakdown.title = WEIGHTS.title * 0.3; // Very short title
       suggestions.push('标题过短，建议至少10个字');
     }
   }
@@ -116,7 +134,7 @@ export function calculateQualityScoreUnified(
     suggestions.push('缺少标题');
   }
 
-  // === 内容评分 ===
+  // === Content scoring ===
   const contentLength = input.content?.length || 0;
   if (contentLength >= 1000) {
     breakdown.content = WEIGHTS.content;
@@ -135,7 +153,7 @@ export function calculateQualityScoreUnified(
     suggestions.push('内容过短或缺失');
   }
 
-  // === 作者评分 ===
+  // === Author scoring ===
   if (input.authorName && input.authorName.trim().length > 0) {
     breakdown.author = WEIGHTS.author;
   }
@@ -143,7 +161,7 @@ export function calculateQualityScoreUnified(
     suggestions.push('缺少作者信息');
   }
 
-  // === 图片评分 ===
+  // === Image scoring ===
   const imageCount = input.images?.length || 0;
   const hasCover = !!input.coverImage;
   if (imageCount >= 5 && hasCover) {
@@ -159,7 +177,7 @@ export function calculateQualityScoreUnified(
     suggestions.push('缺少图片');
   }
 
-  // === 互动数据评分 ===
+  // === Engagement scoring ===
   const hasViews = (input.views ?? 0) > 0;
   const hasLikes = (input.likes ?? 0) > 0;
   const hasSaves = (input.saves ?? 0) > 0;
@@ -179,12 +197,12 @@ export function calculateQualityScoreUnified(
     suggestions.push('缺少互动数据');
   }
 
-  // 高互动额外加分
+  // Bonus for high engagement
   if ((input.likes ?? 0) >= 100 || (input.views ?? 0) >= 10000) {
     breakdown.engagement = Math.min(WEIGHTS.engagement, breakdown.engagement * 1.2);
   }
 
-  // === 元数据评分 ===
+  // === Metadata scoring ===
   const hasDestinations = (input.destinations?.length ?? 0) > 0;
   const hasTags = (input.tags?.length ?? 0) > 0;
   const hasRating = (input.rating ?? 0) > 0;
@@ -200,7 +218,7 @@ export function calculateQualityScoreUnified(
     suggestions.push('缺少目的地和标签信息');
   }
 
-  // === 总分 ===
+  // === Final score (rounded to 2 decimal places, clamped to [0, 1]) ===
   const score = Math.min(
     1,
     Math.round(

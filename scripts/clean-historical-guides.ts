@@ -1,90 +1,85 @@
 /**
- * 历史数据清洗脚本
- * 从 Convex 拉取所有游记，用 content-cleaner 清洗后回写
+ * Historical guide cleanup script.
+ * Reads guides from TiDB, cleans their content, and writes updates back.
  */
 
-import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api.js';
+import { createDb, travelGuides } from '@pathfinding/database';
+import { asc, eq } from 'drizzle-orm';
 import { cleanContent } from '../packages/crawler-types/src/content-cleaner.js';
 
-const CONVEX_URL = process.env.CONVEX_URL || 'https://convex.kunish.org';
-const client = new ConvexHttpClient(CONVEX_URL);
+const BATCH_SIZE = 50;
 
 async function main() {
-  console.log('🧹 开始清洗历史游记数据...');
-  console.log(`Convex: ${CONVEX_URL}\n`);
+  console.warn('Starting historical guide cleanup...');
 
-  let cursor: string | undefined;
+  const db = createDb();
+  let offset = 0;
   let totalProcessed = 0;
   let totalCleaned = 0;
   let totalSkipped = 0;
 
-  // 分页遍历所有游记
   while (true) {
-    const result = await client.query(api.travelGuides.listIds, {
-      cursor,
-      limit: 50,
-    });
+    const guides = await db
+      .select({
+        id: travelGuides.id,
+        title: travelGuides.title,
+        externalId: travelGuides.externalId,
+        content: travelGuides.content,
+      })
+      .from(travelGuides)
+      .orderBy(asc(travelGuides.id))
+      .limit(BATCH_SIZE)
+      .offset(offset);
 
-    if (!result.items || result.items.length === 0) {
+    if (guides.length === 0) {
       break;
     }
 
-    // 逐条处理
-    for (const item of result.items) {
+    for (const guide of guides) {
       totalProcessed++;
 
       try {
-        // 获取完整 guide
-        const guide = await client.query(api.travelGuides.getById, {
-          id: item._id,
-        });
-
-        if (!guide || !guide.content) {
+        if (!guide.content) {
           totalSkipped++;
           continue;
         }
 
-        // 清洗内容
         const cleanResult = cleanContent(guide.content, {
           categories: ['ad', 'promotion', 'personal', 'platform', 'copyright', 'boilerplate', 'whitespace'],
           preserveParagraphs: true,
         });
 
-        // 如果清洗后内容有变化，回写
-        if (cleanResult.cleanedLength !== cleanResult.originalLength) {
-          await client.mutation(api.travelGuides.update, {
-            id: item._id,
-            content: cleanResult.content,
-          });
-
-          totalCleaned++;
-          const pct = Math.round((1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100);
-          console.log(
-            `✅ [${totalProcessed}] ${item.title?.slice(0, 30) || item.sourceExternalId} — 清除 ${pct}% 噪音 (${cleanResult.originalLength} → ${cleanResult.cleanedLength}) [${cleanResult.removedTypes.join(', ')}]`,
-          );
-        }
-        else {
+        if (cleanResult.cleanedLength === cleanResult.originalLength) {
           totalSkipped++;
           if (totalProcessed % 20 === 0) {
-            console.log(`⏭️  [${totalProcessed}] 已跳过（无需清洗）`);
+            console.warn(`[${totalProcessed}] skipped unchanged guide`);
           }
+          continue;
         }
+
+        await db
+          .update(travelGuides)
+          .set({ content: cleanResult.content })
+          .where(eq(travelGuides.id, guide.id));
+
+        totalCleaned++;
+        const pct = Math.round((1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100);
+        console.warn(
+          `[${totalProcessed}] cleaned ${guide.title?.slice(0, 30) || guide.externalId || guide.id} (${cleanResult.originalLength} -> ${cleanResult.cleanedLength}, ${pct}% removed)`,
+        );
       }
-      catch (err) {
-        console.error(`❌ [${totalProcessed}] ${item._id}: ${err}`);
+      catch (error) {
+        console.error(`[${totalProcessed}] guide ${guide.id} failed:`, error);
       }
     }
 
-    if (result.isDone)
-      break;
-    cursor = result.cursor;
+    offset += guides.length;
   }
 
-  console.log(`\n🎉 清洗完成！`);
-  console.log(`   总计处理: ${totalProcessed}`);
-  console.log(`   已清洗:   ${totalCleaned}`);
-  console.log(`   已跳过:   ${totalSkipped}`);
+  console.warn('Cleanup complete');
+  console.warn(`Processed: ${totalProcessed}`);
+  console.warn(`Cleaned:   ${totalCleaned}`);
+  console.warn(`Skipped:   ${totalSkipped}`);
 }
 
 main().catch(console.error);

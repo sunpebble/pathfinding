@@ -10,9 +10,26 @@ import {
   mysqlTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
+
+// ── JSON column type definitions ───────────────────────
+/** Cursor position for real-time collaboration */
+export interface CursorPosition { x: number; y: number; elementId?: string }
+/** Edit operation changes payload */
+export type EditChanges = Record<string, unknown>;
+/** Conflict resolution metadata */
+export interface ConflictResolution { strategy: string; resolvedBy?: string; mergedChanges?: Record<string, unknown> }
+/** Day structure in itinerary templates/drafts */
+export interface ItineraryDaySnapshot {
+  dayNumber: number;
+  date?: string;
+  items: Array<{ poiId: number; orderIndex: number; startTime?: string; endTime?: string; transportMode: string; notes?: string }>;
+}
+/** Category budget breakdown */
+export type CategoryBudgets = Record<string, number>;
 
 // ── Itineraries ────────────────────────────────────────
 export const itineraries = mysqlTable(
@@ -85,7 +102,7 @@ export const itineraryCollaborators = mysqlTable(
   t => [
     index('itinerary_collabs_itinerary_idx').on(t.itineraryId),
     index('itinerary_collabs_user_idx').on(t.userId),
-    index('itinerary_collabs_pair_idx').on(t.itineraryId, t.userId),
+    uniqueIndex('itinerary_collabs_uniq').on(t.itineraryId, t.userId),
   ],
 );
 
@@ -103,8 +120,8 @@ export const collaboratorPresence = mysqlTable(
     isOnline: boolean('is_online').notNull().default(false),
     currentDayId: fk('current_day_id'),
     currentItemId: fk('current_item_id'),
-    cursorPosition: json('cursor_position'),
-    selectedElements: json('selected_elements'),
+    cursorPosition: json('cursor_position').$type<CursorPosition>(),
+    selectedElements: json('selected_elements').$type<string[]>(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -126,11 +143,11 @@ export const editOperations = mysqlTable(
     operationType: varchar('operation_type', { length: 20 }).notNull(),
     targetType: varchar('target_type', { length: 20 }).notNull(),
     targetId: fk('target_id').notNull(),
-    changes: json('changes'),
+    changes: json('changes').$type<EditChanges>(),
     timestamp: timestamp('timestamp', { mode: 'date' }).notNull(),
     version: int('version').notNull(),
     status: varchar('status', { length: 20 }).notNull().default('pending'),
-    conflictResolution: json('conflict_resolution'),
+    conflictResolution: json('conflict_resolution').$type<ConflictResolution>(),
     createdAt: createdAt(),
   },
   t => [
@@ -149,7 +166,7 @@ export const itineraryCopyHistory = mysqlTable(
     copiedItineraryId: fk('copied_itinerary_id').notNull(),
     userId: fk('user_id').notNull(),
     copyType: varchar('copy_type', { length: 20 }).notNull(),
-    selectedDays: json('selected_days'),
+    selectedDays: json('selected_days').$type<number[]>(),
     originalStartDate: varchar('original_start_date', { length: 10 }).notNull(),
     newStartDate: varchar('new_start_date', { length: 10 }).notNull(),
     dateOffset: int('date_offset').notNull(),
@@ -200,7 +217,7 @@ export const commentLikes = mysqlTable(
   t => [
     index('comment_likes_comment_idx').on(t.commentId),
     index('comment_likes_user_idx').on(t.userId),
-    index('comment_likes_pair_idx').on(t.commentId, t.userId),
+    uniqueIndex('comment_likes_uniq').on(t.commentId, t.userId),
   ],
 );
 
@@ -222,7 +239,7 @@ export const commentReports = mysqlTable(
     index('comment_reports_comment_idx').on(t.commentId),
     index('comment_reports_user_idx').on(t.userId),
     index('comment_reports_status_idx').on(t.status),
-    index('comment_reports_pair_idx').on(t.commentId, t.userId),
+    uniqueIndex('comment_reports_uniq').on(t.commentId, t.userId),
   ],
 );
 
@@ -238,7 +255,7 @@ export const itineraryLikes = mysqlTable(
   t => [
     index('itin_likes_user_idx').on(t.userId),
     index('itin_likes_itinerary_idx').on(t.itineraryId),
-    index('itin_likes_pair_idx').on(t.userId, t.itineraryId),
+    uniqueIndex('itin_likes_uniq').on(t.userId, t.itineraryId),
   ],
 );
 
@@ -278,7 +295,7 @@ export const itineraryFavorites = mysqlTable(
     index('itin_favs_user_idx').on(t.userId),
     index('itin_favs_itinerary_idx').on(t.itineraryId),
     index('itin_favs_collection_idx').on(t.collectionId),
-    index('itin_favs_pair_idx').on(t.userId, t.itineraryId),
+    uniqueIndex('itin_favs_uniq').on(t.userId, t.itineraryId),
     index('itin_favs_user_collection_idx').on(t.userId, t.collectionId),
   ],
 );
@@ -318,7 +335,7 @@ export const itineraryDrafts = mysqlTable(
     endDate: varchar('end_date', { length: 10 }),
     visibility: varchar('visibility', { length: 20 }),
     coverImageUrl: text('cover_image_url'),
-    days: json('days'),
+    days: json('days').$type<ItineraryDaySnapshot[]>(),
     lastModifiedAt: timestamp('last_modified_at', { mode: 'date' }).notNull(),
     expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
     deviceId: varchar('device_id', { length: 255 }),
@@ -343,9 +360,9 @@ export const itineraryVersions = mysqlTable(
     userId: fk('user_id').notNull(),
     versionNumber: int('version_number').notNull(),
     versionNote: text('version_note'),
-    snapshot: json('snapshot').notNull(),
+    snapshot: json('snapshot').$type<ItineraryDaySnapshot[]>().notNull(),
     changesSummary: text('changes_summary'),
-    changesCount: json('changes_count'),
+    changesCount: json('changes_count').$type<Record<string, number>>(),
     createdAt: createdAt(),
   },
   t => [
@@ -368,8 +385,8 @@ export const itineraryTemplates = mysqlTable(
     description: text('description'),
     coverImageUrl: text('cover_image_url'),
     cityId: fk('city_id'),
-    days: json('days'),
-    tags: json('tags'),
+    days: json('days').$type<ItineraryDaySnapshot[]>(),
+    tags: json('tags').$type<string[]>(),
     visibility: varchar('visibility', { length: 20 }).notNull().default('public'),
     isPublished: boolean('is_published').notNull().default(false),
     useCount: int('use_count').notNull().default(0),
@@ -403,7 +420,7 @@ export const templateLikes = mysqlTable(
   t => [
     index('template_likes_template_idx').on(t.templateId),
     index('template_likes_user_idx').on(t.userId),
-    index('template_likes_pair_idx').on(t.templateId, t.userId),
+    uniqueIndex('template_likes_uniq').on(t.templateId, t.userId),
   ],
 );
 
@@ -419,7 +436,7 @@ export const templateSaves = mysqlTable(
   t => [
     index('template_saves_template_idx').on(t.templateId),
     index('template_saves_user_idx').on(t.userId),
-    index('template_saves_pair_idx').on(t.templateId, t.userId),
+    uniqueIndex('template_saves_uniq').on(t.templateId, t.userId),
   ],
 );
 
@@ -432,7 +449,7 @@ export const itineraryBudgets = mysqlTable(
     userId: fk('user_id').notNull(),
     totalBudget: double('total_budget'),
     currency: varchar('currency', { length: 10 }).notNull().default('CNY'),
-    categoryBudgets: json('category_budgets'),
+    categoryBudgets: json('category_budgets').$type<CategoryBudgets>(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -476,14 +493,14 @@ export const calendarSyncs = mysqlTable(
     savedItineraryLocalId: varchar('saved_itinerary_local_id', { length: 255 }),
     calendarProvider: varchar('calendar_provider', { length: 20 }).notNull(),
     calendarId: varchar('calendar_id', { length: 255 }),
-    calendarEventIds: json('calendar_event_ids'),
+    calendarEventIds: json('calendar_event_ids').$type<string[]>(),
     syncStatus: varchar('sync_status', { length: 20 }).notNull().default('pending'),
     lastSyncedAt: timestamp('last_synced_at', { mode: 'date' }),
     syncError: text('sync_error'),
     enableReminders: boolean('enable_reminders').notNull().default(true),
     reminderMinutesBefore: int('reminder_minutes_before'),
     syncAllDays: boolean('sync_all_days').notNull().default(true),
-    syncedDayNumbers: json('synced_day_numbers'),
+    syncedDayNumbers: json('synced_day_numbers').$type<number[]>(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

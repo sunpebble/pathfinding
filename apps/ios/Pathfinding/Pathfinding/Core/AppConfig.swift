@@ -3,6 +3,8 @@ import Foundation
 /// App configuration that reads from build settings via Info.plist
 /// Values are set in .xcconfig files and passed through at compile time
 enum AppConfig {
+  private static let processEnvironment = ProcessInfo.processInfo.environment
+
   // MARK: - Environment
 
   enum Environment: String {
@@ -46,25 +48,33 @@ enum AppConfig {
 
   // MARK: - API Configuration
 
-  /// Convex URL for CRUD operations (guides, chat sessions, translations data, etc.)
-  static var convexURL: String {
+  /// API base URL for CRUD operations (guides, chat sessions, translations data, etc.)
+  static var apiBaseURL: String {
+    if let url = processEnvironment["PF_API_BASE_URL"], !url.isEmpty {
+      return url
+    }
+
     // Read from Info.plist (set via xcconfig)
-    if let url = infoPlistString(forKey: "PFConvexURL"), !url.isEmpty {
+    if let url = infoPlistString(forKey: "PFAPIBaseURL"), !url.isEmpty {
       return url
     }
     // Fallback based on environment
     switch Environment.current {
     case .development:
-      return "https://convex.kunish.org"
+      return "http://127.0.0.1:3000"
     case .staging:
-      return "https://convex.kunish.org"
+      return "https://api.pathfinding.org"
     case .production:
-      return "https://convex.kunish.org"
+      return "https://api.pathfinding.org"
     }
   }
 
   /// AI Service URL for AI/LLM, weather, transport, translations AI, PDF export
   static var aiServiceURL: String {
+    if let url = processEnvironment["PF_AI_SERVICE_URL"], !url.isEmpty {
+      return url
+    }
+
     // Read from Info.plist (set via xcconfig)
     if let url = infoPlistString(forKey: "PFAIServiceURL"), !url.isEmpty {
       return url
@@ -78,12 +88,6 @@ enum AppConfig {
     case .production:
       return "https://ai.pathfinding.org"
     }
-  }
-
-  /// Legacy apiBaseURL - points to Convex for backwards compatibility
-  @available(*, deprecated, message: "Use convexURL or aiServiceURL instead")
-  static var apiBaseURL: String {
-    convexURL
   }
 
   // MARK: - Feature Flags
@@ -105,14 +109,24 @@ enum AppConfig {
   // MARK: - Network Configuration
 
   static var networkTimeoutRequest: TimeInterval {
-    TimeInterval(infoPlistInt(forKey: "PFAPITimeout") ?? 30)
+    #if DEBUG
+      return TimeInterval(infoPlistInt(forKey: "PFAPITimeout") ?? 5)
+    #else
+      return TimeInterval(infoPlistInt(forKey: "PFAPITimeout") ?? 30)
+    #endif
   }
 
   static var networkTimeoutResource: TimeInterval {
     networkTimeoutRequest * 2
   }
 
-  static let maxRetryAttempts = 3
+  static var maxRetryAttempts: Int {
+    #if DEBUG
+      return 1
+    #else
+      return 3
+    #endif
+  }
 
   // MARK: - Performance Configuration
 
@@ -161,7 +175,7 @@ enum AppConfig {
       ║           Pathfinding Configuration           ║
       ╠═══════════════════════════════════════════════╣
       ║ Environment: \(Environment.current.rawValue.padding(toLength: 30, withPad: " ", startingAt: 0)) ║
-      ║ Convex URL: \(convexURL.prefix(31).padding(toLength: 31, withPad: " ", startingAt: 0)) ║
+      ║ API Base URL: \(apiBaseURL.prefix(28).padding(toLength: 28, withPad: " ", startingAt: 0)) ║
       ║ AI Service URL: \(aiServiceURL.prefix(27).padding(toLength: 27, withPad: " ", startingAt: 0)) ║
       ║ Version: \(fullVersionString.padding(toLength: 34, withPad: " ", startingAt: 0)) ║
       ║ Debug Logging: \(isDebugLoggingEnabled ? "Enabled " : "Disabled")                       ║

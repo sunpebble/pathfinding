@@ -2,11 +2,20 @@
 
 感谢你对 Pathfinding 项目的贡献！本文档提供了开发规范和指南。
 
+## 前置条件
+
+- **Node.js** >= 22 (see `.node-version`)
+- **pnpm** >= 10 (`corepack enable` to install)
+- **Docker** (optional, for running TiDB locally)
+
 ## 开发环境设置
 
 ```bash
 # 安装依赖
 pnpm install
+
+# 启动数据库 (需要 Docker)
+docker compose -f docker-compose.dev.yml up tidb -d
 
 # 运行开发服务器
 pnpm dev
@@ -14,6 +23,17 @@ pnpm dev
 # 运行测试
 pnpm test
 ```
+
+## 分支命名规范
+
+请使用以下前缀命名分支：
+
+- `feat/xxx` - 新功能
+- `fix/xxx` - Bug 修复
+- `docs/xxx` - 文档更新
+- `refactor/xxx` - 代码重构
+- `test/xxx` - 测试相关
+- `chore/xxx` - 构建/工具链变更
 
 ## 测试编写规范
 
@@ -108,7 +128,7 @@ describe('Module with env vars', () => {
 运行覆盖率检查：
 
 ```bash
-pnpm test --coverage
+pnpm test:coverage
 ```
 
 ### 测试类型
@@ -185,7 +205,7 @@ docs: update API documentation
 
 - 所有 PR 需要至少一个审批
 - CI 检查必须通过（包括测试和覆盖率）
-- 保持代码风格一致（使用 ESLint + Prettier）
+- 保持代码风格一致（使用 ESLint + eslint-plugin-format）
 
 ## 问题反馈
 

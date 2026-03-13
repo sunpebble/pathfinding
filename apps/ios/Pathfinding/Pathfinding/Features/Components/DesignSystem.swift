@@ -185,6 +185,44 @@ enum DesignTokens {
     }
   }
 
+  // MARK: - Premium Typography (高端排版)
+
+  enum PremiumTypography {
+    static var heroTitle: Font { .system(size: 34, weight: .bold, design: .rounded) }
+    static var subtitle: Font { .system(size: 17, weight: .medium, design: .rounded) }
+    static var badge: Font { .system(size: 11, weight: .bold, design: .rounded) }
+  }
+
+  // MARK: - Expedition Colors (探索主题色)
+
+  enum Expedition {
+    static let deepIndigo = Color(red: 0.08, green: 0.05, blue: 0.20)
+    static let copper = Color(red: 0.80, green: 0.58, blue: 0.36)
+    static let premiumText = Color.white
+    static let mutedText = Color.white.opacity(0.7)
+    static let copperGlow: [Color] = [
+      Color(red: 0.80, green: 0.58, blue: 0.36),
+      Color(red: 0.90, green: 0.70, blue: 0.50),
+      Color(red: 0.80, green: 0.58, blue: 0.36),
+    ]
+    static let auroraGradient: [Color] = [
+      Color(red: 0.10, green: 0.80, blue: 0.60),
+      Color(red: 0.20, green: 0.50, blue: 0.90),
+      Color(red: 0.60, green: 0.20, blue: 0.80),
+      Color(red: 0.10, green: 0.70, blue: 0.90),
+    ]
+  }
+
+  // MARK: - Gradient Presets (渐变预设)
+
+  enum GradientPresets {
+    static let premium: [Color] = [
+      Color(red: 0.30, green: 0.20, blue: 0.80),
+      Color(red: 0.60, green: 0.20, blue: 0.60),
+      Color(red: 0.80, green: 0.30, blue: 0.40),
+    ]
+  }
+
   // MARK: - Semantic Colors (Adaptive for Light/Dark Mode)
 
   enum Colors {
@@ -846,7 +884,7 @@ extension View {
   }
 
   /// Apply animation that respects Reduce Motion accessibility setting
-  func adaptiveAnimation(_ animation: Animation = DesignTokens.Animation.standard, value: some Equatable) -> some View {
+  func adaptiveAnimation(_ animation: Animation = DesignTokens.Animation.standard, value: some Hashable) -> some View {
     modifier(AdaptiveAnimationModifier(animation: animation, trigger: AnyHashableEquatable(value)))
   }
 
@@ -891,12 +929,12 @@ struct AppleShadowModifier: ViewModifier {
 
 // MARK: - Adaptive Animation Modifier
 
-private struct AnyHashableEquatable: Equatable {
+fileprivate struct AnyHashableEquatable: Equatable {
   let value: AnyHashable
   init<T: Hashable>(_ value: T) { self.value = AnyHashable(value) }
 }
 
-struct AdaptiveAnimationModifier: ViewModifier {
+fileprivate struct AdaptiveAnimationModifier: ViewModifier {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   let animation: Animation
   let trigger: AnyHashableEquatable

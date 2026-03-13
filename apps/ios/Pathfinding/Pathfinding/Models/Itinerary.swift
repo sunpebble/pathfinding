@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - API Itinerary Model
 
-/// Itinerary model from API (Convex)
+/// Itinerary model from the shared API
 struct APIItinerary: Codable, Identifiable, Hashable {
   let id: String
   let userId: String

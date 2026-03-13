@@ -692,7 +692,7 @@ struct UpdateCommentResponse: Codable {
 extension APIClient {
   /// POST request with Codable body
   func postCodable<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
-    let baseURL = URL(string: AppConfig.convexURL)!
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
     let url = baseURL.appendingPathComponent("v1/\(path)")
     var request = await createAuthenticatedRequest(url: url)
     request.httpMethod = "POST"
@@ -712,7 +712,7 @@ extension APIClient {
 
   /// PATCH request with Codable body
   func patchCodable<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
-    let baseURL = URL(string: AppConfig.convexURL)!
+    let baseURL = URL(string: AppConfig.apiBaseURL)!
     let url = baseURL.appendingPathComponent("v1/\(path)")
     var request = await createAuthenticatedRequest(url: url)
     request.httpMethod = "PATCH"

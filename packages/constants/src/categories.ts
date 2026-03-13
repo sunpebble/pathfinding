@@ -67,19 +67,7 @@ export const POI_CATEGORIES: Record<
 /**
  * All POI category values
  */
-export const POI_CATEGORY_VALUES: PoiCategory[] = [
-  'attraction',
-  'restaurant',
-  'hotel',
-  'shopping',
-  'cafe',
-  'bar',
-  'museum',
-  'park',
-  'entertainment',
-  'transport',
-  'other',
-];
+export const POI_CATEGORY_VALUES = Object.keys(POI_CATEGORIES) as PoiCategory[];
 
 /**
  * Get category display label
@@ -89,6 +77,8 @@ export function getCategoryLabel(
   locale: 'zh' | 'en' = 'zh',
 ): string {
   const cat = POI_CATEGORIES[category];
+  if (!cat)
+    return category;
   return locale === 'zh' ? cat.label : cat.labelEn;
 }
 
@@ -96,5 +86,5 @@ export function getCategoryLabel(
  * Get category icon name
  */
 export function getCategoryIcon(category: PoiCategory): string {
-  return POI_CATEGORIES[category].icon;
+  return POI_CATEGORIES[category]?.icon ?? 'map-pin';
 }

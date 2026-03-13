@@ -49,6 +49,37 @@ targets:
       Release: Config/Release.xcconfig
       Staging: Config/Staging.xcconfig
 
+  PathfindingTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - PathfindingTests
+    dependencies:
+      - target: Pathfinding
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_NAME: PathfindingTests
+        PRODUCT_MODULE_NAME: PathfindingTests
+        PRODUCT_BUNDLE_IDENTIFIER: org.pathfinding.app.tests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Pathfinding.app/Pathfinding
+        BUNDLE_LOADER: $(TEST_HOST)
+
+  PathfindingUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - PathfindingUITests
+    dependencies:
+      - target: Pathfinding
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_NAME: PathfindingUITests
+        PRODUCT_MODULE_NAME: PathfindingUITests
+        PRODUCT_BUNDLE_IDENTIFIER: org.pathfinding.app.uitests
+        TEST_TARGET_NAME: Pathfinding
+
 schemes:
   Pathfinding-Debug:
     build:
@@ -58,6 +89,9 @@ schemes:
       config: Debug
     test:
       config: Debug
+      targets:
+        - PathfindingTests
+        - PathfindingUITests
     profile:
       config: Release
     analyze:
@@ -73,6 +107,9 @@ schemes:
       config: Release
     test:
       config: Release
+      targets:
+        - PathfindingTests
+        - PathfindingUITests
     profile:
       config: Release
     analyze:

@@ -64,7 +64,8 @@ export function getBoundingBox(
 ): { minLat: number; maxLat: number; minLon: number; maxLon: number } {
   // Approximate degrees per km
   const latDelta = radiusKm / 111;
-  const lonDelta = radiusKm / (111 * Math.cos(toRadians(centerLat)));
+  const cosLat = Math.cos(toRadians(centerLat));
+  const lonDelta = cosLat > 1e-10 ? radiusKm / (111 * cosLat) : 180;
 
   return {
     minLat: centerLat - latDelta,
