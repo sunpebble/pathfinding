@@ -286,7 +286,7 @@ actor HiddenGemsAPIClient {
   private let authManager = AuthManager.shared
 
   init() {
-    self.baseURL = URL(string: AppConfig.convexURL)!
+    self.baseURL = URL(string: AppConfig.apiBaseURL)!
 
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = AppConfig.networkTimeoutRequest

@@ -39,6 +39,28 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DF1DC9C73AD33F46F0809EAB"
+               BuildableName = "PathfindingTests.xctest"
+               BlueprintName = "PathfindingTests"
+               ReferencedContainer = "container:Pathfinding.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "493C15AFC09F20C91AABBA79"
+               BuildableName = "PathfindingUITests.xctest"
+               BlueprintName = "PathfindingUITests"
+               ReferencedContainer = "container:Pathfinding.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

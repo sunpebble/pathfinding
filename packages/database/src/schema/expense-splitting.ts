@@ -2,7 +2,7 @@
  * Expense Splitting schema - trip members, shared expenses, participants, settlements.
  */
 import { boolean, double, index, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 export const tripMembers = mysqlTable('trip_members', {
   id: id(),

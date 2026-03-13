@@ -7,9 +7,10 @@ import {
   int,
   mysqlTable,
   text,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { createdAt, fk, id, updatedAt } from './columns.js';
+import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Travel Notes ───────────────────────────────────────
 export const travelNotes = mysqlTable(
@@ -99,7 +100,7 @@ export const noteLikes = mysqlTable(
   t => [
     index('note_likes_user_idx').on(t.userId),
     index('note_likes_note_idx').on(t.noteId),
-    index('note_likes_pair_idx').on(t.userId, t.noteId),
+    uniqueIndex('note_likes_uniq').on(t.userId, t.noteId),
   ],
 );
 
@@ -138,7 +139,7 @@ export const noteCommentLikes = mysqlTable(
   t => [
     index('note_clikes_comment_idx').on(t.commentId),
     index('note_clikes_user_idx').on(t.userId),
-    index('note_clikes_pair_idx').on(t.commentId, t.userId),
+    uniqueIndex('note_clikes_uniq').on(t.commentId, t.userId),
   ],
 );
 
@@ -155,7 +156,7 @@ export const noteSaves = mysqlTable(
   t => [
     index('note_saves_user_idx').on(t.userId),
     index('note_saves_note_idx').on(t.noteId),
-    index('note_saves_pair_idx').on(t.userId, t.noteId),
+    uniqueIndex('note_saves_uniq').on(t.userId, t.noteId),
     index('note_saves_collection_idx').on(t.collectionId),
   ],
 );

@@ -1,39 +1,52 @@
 /**
- * Crawler Types Package
- * Shared TypeScript types for the data crawler service
+ * @module @pathfinding/crawler-types
+ * Shared TypeScript types and utilities for the data crawler service.
+ *
+ * Architecture follows a medallion data lakehouse pattern:
+ * - Bronze Layer: Raw crawl records and job management
+ * - Silver Layer: Normalized, deduplicated POI and review data
+ * - Gold Layer: ML training datasets and quality reports
  */
 
-// Categories
+// ============================================================================
+// Category Taxonomy
+// ============================================================================
+
 export * from './categories.js';
 
-// Content Cleaning
+// ============================================================================
+// Bronze Layer — Raw Crawl Data
+// ============================================================================
+
 export * from './content-cleaner.js';
-
-// Converters
 export * from './converters.js';
-// Bronze Layer
-export * from './crawl-job.js';
 
-// Mafengwo Types
+// ============================================================================
+// Silver Layer — Normalized & Enriched Data
+// ============================================================================
+
+export * from './crawl-job.js';
 export * from './mafengwo.js';
-// Silver Layer
 export * from './normalized-poi.js';
 
-export * from './poi-review.js';
+// ============================================================================
+// Gold Layer — ML Training & Quality Reports
+// ============================================================================
 
-// Quality Reports
+export * from './poi-review.js';
 export * from './quality-report.js';
 
-// Quality Score
+// ============================================================================
+// Platform-Specific Types (Mafengwo)
+// ============================================================================
+
 export * from './quality-score.js';
 
+// ============================================================================
+// Utilities — Validation, Conversion, Cleaning, Scoring
+// ============================================================================
+
 export * from './raw-record.js';
-
-// Gold Layer
 export * from './training-dataset.js';
-
-// Travel Guides
 export * from './travel-guide.js';
-
-// Validators
 export * from './validators.js';

@@ -1,26 +1,51 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, trainingDatasets } from '@pathfinding/database';
+import { zValidator } from '@hono/zod-validator';
+import { getDb, trainingDatasets } from '@pathfinding/database';
 import { and, desc, eq, like, sql } from 'drizzle-orm';
 /**
  * Training Datasets routes — dashboard training dataset management.
  * Mirrors the Convex /api/training-datasets/* HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonOk } from '../lib/response.js';
+import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
+
+// ── Zod schemas ────────────────────────────────────────
+const createDatasetSchema = z.object({
+  name: z.string().min(1),
+  version: z.number(),
+  generationParams: z.record(z.unknown()).optional(),
+  outputFormats: z.record(z.unknown()).optional(),
+  status: z.string().optional(),
+  statistics: z.record(z.unknown()).optional(),
+});
+
+const deleteDatasetSchema = z.object({
+  id: z.number(),
+});
+
+const updateDatasetSchema = z.object({
+  id: z.number(),
+  status: z.string().optional(),
+  statistics: z.record(z.unknown()).optional(),
+  storagePaths: z.record(z.unknown()).optional(),
+  generatedAt: z.string().optional(),
+});
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
-function getDb() {
-  return createDb();
-}
-
 // ── GET / — List training datasets ─────────────────────
-app.get('/', async (c) => {
+app.get('/', adminRequired(), async (c) => {
   const name = c.req.query('name');
   const status = c.req.query('status');
-  const limit = Number.parseInt(c.req.query('limit') ?? '20', 10);
-  const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
+  const { limit, offset } = parsePagination(
+    c.req.query('limit'),
+    c.req.query('offset'),
+  );
 
   const db = getDb();
 
@@ -61,14 +86,9 @@ app.get('/', async (c) => {
 });
 
 // ── POST / — Create a training dataset ─────────────────
-app.post('/', async (c) => {
-  const body = await c.req.json();
+app.post('/', adminRequired(), zValidator('json', createDatasetSchema), async (c) => {
   const { name, version, generationParams, outputFormats: _outputFormats, status, statistics: _statistics }
-    = body;
-
-  if (!name || !version) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+    = c.req.valid('json');
 
   const db = getDb();
 
@@ -87,12 +107,12 @@ app.post('/', async (c) => {
     .where(eq(trainingDatasets.id, datasetId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(dataset[0]) }, 201);
+  return jsonData(c, convertKeysToSnakeCase(dataset[0]), 201);
 });
 
 // ── GET /dataset — Get a training dataset by ID ────────
-app.get('/dataset', async (c) => {
-  const id = c.req.query('id');
+app.get('/dataset', adminRequired(), async (c) => {
+  const id = parsePositiveInt(c.req.query('id'));
 
   if (!id) {
     throw new ApiError(400, '缺少id参数');
@@ -102,39 +122,29 @@ app.get('/dataset', async (c) => {
   const dataset = await db
     .select()
     .from(trainingDatasets)
-    .where(eq(trainingDatasets.id, Number(id)))
+    .where(eq(trainingDatasets.id, id))
     .limit(1);
 
   if (!dataset[0]) {
     throw new ApiError(404, '数据集不存在');
   }
 
-  return c.json({ data: convertKeysToSnakeCase(dataset[0]) });
+  return jsonData(c, convertKeysToSnakeCase(dataset[0]));
 });
 
 // ── DELETE / — Delete a training dataset ───────────────
-app.delete('/', async (c) => {
-  const body = await c.req.json();
-  const { id } = body;
-
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.delete('/', adminRequired(), zValidator('json', deleteDatasetSchema), async (c) => {
+  const { id } = c.req.valid('json');
 
   const db = getDb();
   await db.delete(trainingDatasets).where(eq(trainingDatasets.id, Number(id)));
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
 // ── PATCH / — Update a training dataset ────────────────
-app.patch('/', async (c) => {
-  const body = await c.req.json();
-  const { id, status, statistics: _statistics, storagePaths: _storagePaths, generatedAt: _generatedAt } = body;
-
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.patch('/', adminRequired(), zValidator('json', updateDatasetSchema), async (c) => {
+  const { id, status, statistics: _statistics, storagePaths: _storagePaths, generatedAt: _generatedAt } = c.req.valid('json');
 
   const db = getDb();
   const datasetId = Number(id);
@@ -154,7 +164,7 @@ app.patch('/', async (c) => {
     .where(eq(trainingDatasets.id, datasetId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(dataset[0]) });
+  return jsonData(c, convertKeysToSnakeCase(dataset[0]));
 });
 
 export default app;

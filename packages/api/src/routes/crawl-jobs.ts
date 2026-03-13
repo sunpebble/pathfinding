@@ -1,25 +1,54 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { crawlJobs, createDb } from '@pathfinding/database';
+import { zValidator } from '@hono/zod-validator';
+import { crawlJobs, getDb } from '@pathfinding/database';
 import { and, desc, eq } from 'drizzle-orm';
 /**
  * Crawl Jobs routes — dashboard crawl job management.
  * Mirrors the Convex /api/crawl-jobs/* HTTP endpoints.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePagination, parsePositiveInt } from '../lib/params.js';
+import { jsonData, jsonOk } from '../lib/response.js';
+import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
+
+// ── Zod schemas ────────────────────────────────────────
+const createJobSchema = z.object({
+  name: z.string().min(1),
+  platform: z.string().min(1),
+  config: z.record(z.unknown()),
+  jobType: z.string().optional(),
+  scheduleCron: z.string().optional(),
+});
+
+const deleteJobSchema = z.object({
+  id: z.number(),
+});
+
+const startJobSchema = z.object({
+  id: z.number(),
+});
+
+const completeJobSchema = z.object({
+  id: z.number(),
+  statistics: z.record(z.unknown()).optional(),
+});
+
+const failJobSchema = z.object({
+  id: z.number(),
+  errorMessage: z.string().min(1),
+  statistics: z.record(z.unknown()).optional(),
+});
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
-function getDb() {
-  return createDb();
-}
-
 // ── GET / — List crawl jobs ────────────────────────────
-app.get('/', async (c) => {
+app.get('/', adminRequired(), async (c) => {
   const status = c.req.query('status');
   const platform = c.req.query('platform');
-  const limit = Number.parseInt(c.req.query('limit') ?? '50', 10);
+  const { limit } = parsePagination(c.req.query('limit'), undefined, 50);
 
   const db = getDb();
 
@@ -40,17 +69,12 @@ app.get('/', async (c) => {
     .orderBy(desc(crawlJobs.createdAt))
     .limit(limit);
 
-  return c.json({ data: convertKeysToSnakeCase(jobs) });
+  return jsonData(c, convertKeysToSnakeCase(jobs));
 });
 
 // ── POST / — Create a new crawl job ───────────────────
-app.post('/', async (c) => {
-  const body = await c.req.json();
-  const { name, platform, jobType, config, scheduleCron: _scheduleCron } = body;
-
-  if (!name || !platform || !config) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/', adminRequired(), zValidator('json', createJobSchema), async (c) => {
+  const { name: _name, platform, jobType, config, scheduleCron: _scheduleCron } = c.req.valid('json');
 
   const db = getDb();
 
@@ -68,12 +92,12 @@ app.post('/', async (c) => {
     .where(eq(crawlJobs.id, jobId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) }, 201);
+  return jsonData(c, convertKeysToSnakeCase(job[0]), 201);
 });
 
 // ── GET /job — Get a crawl job by ID ───────────────────
-app.get('/job', async (c) => {
-  const id = c.req.query('id');
+app.get('/job', adminRequired(), async (c) => {
+  const id = parsePositiveInt(c.req.query('id'));
 
   if (!id) {
     throw new ApiError(400, '缺少id参数');
@@ -83,39 +107,29 @@ app.get('/job', async (c) => {
   const job = await db
     .select()
     .from(crawlJobs)
-    .where(eq(crawlJobs.id, Number(id)))
+    .where(eq(crawlJobs.id, id))
     .limit(1);
 
   if (!job[0]) {
     throw new ApiError(404, '任务不存在');
   }
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) });
+  return jsonData(c, convertKeysToSnakeCase(job[0]));
 });
 
 // ── DELETE / — Delete a crawl job ──────────────────────
-app.delete('/', async (c) => {
-  const body = await c.req.json();
-  const { id } = body;
-
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.delete('/', adminRequired(), zValidator('json', deleteJobSchema), async (c) => {
+  const { id } = c.req.valid('json');
 
   const db = getDb();
   await db.delete(crawlJobs).where(eq(crawlJobs.id, Number(id)));
 
-  return c.json({ success: true });
+  return jsonOk(c);
 });
 
 // ── POST /start — Start a crawl job ───────────────────
-app.post('/start', async (c) => {
-  const body = await c.req.json();
-  const { id } = body;
-
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.post('/start', adminRequired(), zValidator('json', startJobSchema), async (c) => {
+  const { id } = c.req.valid('json');
 
   const db = getDb();
   const jobId = Number(id);
@@ -131,17 +145,12 @@ app.post('/start', async (c) => {
     .where(eq(crawlJobs.id, jobId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) });
+  return jsonData(c, convertKeysToSnakeCase(job[0]));
 });
 
 // ── POST /complete — Complete a crawl job ──────────────
-app.post('/complete', async (c) => {
-  const body = await c.req.json();
-  const { id, statistics } = body;
-
-  if (!id) {
-    throw new ApiError(400, '缺少id参数');
-  }
+app.post('/complete', adminRequired(), zValidator('json', completeJobSchema), async (c) => {
+  const { id, statistics } = c.req.valid('json');
 
   const db = getDb();
   const jobId = Number(id);
@@ -162,17 +171,12 @@ app.post('/complete', async (c) => {
     .where(eq(crawlJobs.id, jobId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) });
+  return jsonData(c, convertKeysToSnakeCase(job[0]));
 });
 
 // ── POST /fail — Mark a crawl job as failed ────────────
-app.post('/fail', async (c) => {
-  const body = await c.req.json();
-  const { id, errorMessage, statistics } = body;
-
-  if (!id || !errorMessage) {
-    throw new ApiError(400, '缺少必要参数');
-  }
+app.post('/fail', adminRequired(), zValidator('json', failJobSchema), async (c) => {
+  const { id, errorMessage, statistics } = c.req.valid('json');
 
   const db = getDb();
   const jobId = Number(id);
@@ -194,7 +198,7 @@ app.post('/fail', async (c) => {
     .where(eq(crawlJobs.id, jobId))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(job[0]) });
+  return jsonData(c, convertKeysToSnakeCase(job[0]));
 });
 
 export default app;
