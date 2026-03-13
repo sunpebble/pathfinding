@@ -3,12 +3,12 @@ import { AUTH_TOKEN_STORAGE_KEY, createApiClient } from './client';
 
 describe('createApiClient', () => {
   beforeEach(() => {
-    localStorage.clear();
+    window.localStorage.clear();
     vi.restoreAllMocks();
   });
 
   it('adds Authorization header when token exists', async () => {
-    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
 
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ data: { ok: true } }), {

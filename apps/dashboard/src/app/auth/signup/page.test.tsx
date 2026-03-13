@@ -24,8 +24,8 @@ describe('signUpPage', () => {
 
     render(<SignUpPage />);
 
-    expect(screen.queryByLabelText('Email address')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Sign up with Email' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('邮箱地址')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '注册' })).not.toBeInTheDocument();
   });
 
   it('validates password requirements before email sign-up', async () => {
@@ -38,18 +38,18 @@ describe('signUpPage', () => {
     expect(screen.queryByText('Continue with Google')).not.toBeInTheDocument();
     expect(screen.queryByText('Continue with Apple')).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Email address'), {
+    fireEvent.change(screen.getByLabelText('邮箱地址'), {
       target: { value: 'owner@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), {
+    fireEvent.change(screen.getByLabelText('密码'), {
       target: { value: 'short' },
     });
-    fireEvent.change(screen.getByLabelText('Confirm Password'), {
+    fireEvent.change(screen.getByLabelText('确认密码'), {
       target: { value: 'short' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Sign up with Email' }));
+    fireEvent.click(screen.getByRole('button', { name: '注册' }));
 
-    expect(screen.getByText('Password must be at least 8 characters long')).toBeInTheDocument();
+    expect(screen.getByText('密码长度至少为 8 位')).toBeInTheDocument();
     expect(signUp).not.toHaveBeenCalled();
   });
 
@@ -59,16 +59,16 @@ describe('signUpPage', () => {
 
     render(<SignUpPage />);
 
-    fireEvent.change(screen.getByLabelText('Email address'), {
+    fireEvent.change(screen.getByLabelText('邮箱地址'), {
       target: { value: 'owner@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), {
+    fireEvent.change(screen.getByLabelText('密码'), {
       target: { value: 'Password123' },
     });
-    fireEvent.change(screen.getByLabelText('Confirm Password'), {
+    fireEvent.change(screen.getByLabelText('确认密码'), {
       target: { value: 'Password123' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Sign up with Email' }));
+    fireEvent.click(screen.getByRole('button', { name: '注册' }));
 
     await waitFor(() => {
       expect(signUp).toHaveBeenCalledWith({
@@ -77,7 +77,7 @@ describe('signUpPage', () => {
       });
     });
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/');
+      expect(mockRouter.push).toHaveBeenCalledWith('/overview');
     });
   });
 });

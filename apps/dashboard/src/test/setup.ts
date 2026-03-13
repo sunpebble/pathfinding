@@ -3,6 +3,23 @@ import * as React from 'react';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 
+// Node.js 22+ exposes a built-in `localStorage` that lacks methods like
+// `clear()`.  Override the global with a simple in-memory implementation so
+// that tests can call `window.localStorage.clear()` without errors.
+function createStorageMock(): Storage {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = String(value); },
+    removeItem: (key: string) => { delete store[key]; },
+    clear: () => { store = {}; },
+    get length() { return Object.keys(store).length; },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+  };
+}
+
+vi.stubGlobal('localStorage', createStorageMock());
+
 export const mockRouter = {
   push: vi.fn(),
   replace: vi.fn(),

@@ -12,7 +12,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 
 describe('authButton', () => {
   beforeEach(() => {
-    localStorage.clear();
+    window.localStorage.clear();
     mockRouter.push.mockReset();
     mockRouter.replace.mockReset();
     mockRouter.prefetch.mockReset();
@@ -23,11 +23,11 @@ describe('authButton', () => {
   it('shows Sign In when unauthenticated', () => {
     render(<AuthButton />, { wrapper: Wrapper });
 
-    expect(screen.getByRole('link', { name: 'Sign In' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '登录' })).toBeInTheDocument();
   });
 
   it('shows the user menu when authenticated', async () => {
-    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
 
     vi.stubGlobal(
       'fetch',
@@ -56,7 +56,7 @@ describe('authButton', () => {
   });
 
   it('signs out, clears auth, and redirects', async () => {
-    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
 
     const fetchMock = vi
       .fn()
@@ -89,14 +89,14 @@ describe('authButton', () => {
     render(<AuthButton />, { wrapper: Wrapper });
 
     fireEvent.click(await screen.findByRole('button', { name: /Owner/i }));
-    fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
+    fireEvent.click(screen.getByRole('button', { name: '退出登录' }));
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/auth/signin');
+      expect(mockRouter.push).toHaveBeenCalledWith('/');
     });
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'Sign In' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: '登录' })).toBeInTheDocument();
     });
-    expect(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBeNull();
   });
 });
