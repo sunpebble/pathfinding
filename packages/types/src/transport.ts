@@ -156,10 +156,17 @@ export interface TransportSegment {
   selectedMode?: TransportMode;
 }
 
+// TODO: Move runtime functions (formatDuration, formatDistance, formatCost)
+// to @pathfinding/utils or @pathfinding/constants.
+// The @pathfinding/types package should only export type definitions.
+
 /**
- * Transport mode metadata
+ * Transport mode metadata — ordered list for UI iteration.
+ *
+ * For a keyed lookup table with speed/label data, use
+ * `TRANSPORT_MODES` from `@pathfinding/constants` instead.
  */
-export const TRANSPORT_MODES: TransportModeInfo[] = [
+export const TRANSPORT_MODE_LIST: TransportModeInfo[] = [
   {
     mode: 'walking',
     name: 'Walking',
@@ -217,7 +224,7 @@ export const TRANSPORT_MODES: TransportModeInfo[] = [
 export function getTransportModeInfo(
   mode: TransportMode,
 ): TransportModeInfo | undefined {
-  return TRANSPORT_MODES.find(m => m.mode === mode);
+  return TRANSPORT_MODE_LIST.find((m: TransportModeInfo) => m.mode === mode);
 }
 
 /**

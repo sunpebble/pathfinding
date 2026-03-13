@@ -69,14 +69,41 @@ describe('parseTime', () => {
     expect(result).toEqual({ hours: 14, minutes: 30 });
   });
 
-  it('should handle single digit values', () => {
-    const result = parseTime('9:5');
+  it('should parse single digit hour with two digit minutes', () => {
+    const result = parseTime('9:05');
     expect(result).toEqual({ hours: 9, minutes: 5 });
   });
 
-  it('should return 0 for invalid input', () => {
-    const result = parseTime('invalid');
-    expect(result).toEqual({ hours: 0, minutes: 0 });
+  it('should return null for completely invalid input', () => {
+    expect(parseTime('invalid')).toBeNull();
+  });
+
+  it('should return null for malformed time string (single digit minutes)', () => {
+    expect(parseTime('9:5')).toBeNull();
+  });
+
+  it('should return null for empty string', () => {
+    expect(parseTime('')).toBeNull();
+  });
+
+  it('should return null for out-of-range hours', () => {
+    expect(parseTime('25:00')).toBeNull();
+  });
+
+  it('should return null for out-of-range minutes', () => {
+    expect(parseTime('12:60')).toBeNull();
+  });
+
+  it('should return null for negative-like input', () => {
+    expect(parseTime('-1:30')).toBeNull();
+  });
+
+  it('should parse midnight correctly', () => {
+    expect(parseTime('00:00')).toEqual({ hours: 0, minutes: 0 });
+  });
+
+  it('should parse end-of-day correctly', () => {
+    expect(parseTime('23:59')).toEqual({ hours: 23, minutes: 59 });
   });
 });
 
@@ -128,6 +155,11 @@ describe('getDateRange', () => {
   it('should return single date when start equals end', () => {
     const result = getDateRange('2024-01-15', '2024-01-15');
     expect(result).toHaveLength(1);
+  });
+
+  it('should return empty array when start is after end', () => {
+    const result = getDateRange('2024-01-20', '2024-01-15');
+    expect(result).toEqual([]);
   });
 });
 
@@ -236,6 +268,12 @@ describe('getRelativeTime', () => {
   it('should handle string dates', () => {
     const dateStr = setupMockDate(30).toISOString();
     expect(getRelativeTime(dateStr, 'en')).toBe('30 min ago');
+  });
+
+  it('should return "upcoming" for future dates', () => {
+    const now = new Date('2024-06-15T12:00:00');
+    const date = new Date('2024-06-16T12:00:00');
+    expect(getRelativeTime(date, 'en', now)).toBe('upcoming');
   });
 });
 

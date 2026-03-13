@@ -66,7 +66,7 @@ docker compose up -d
 docker compose logs -f ollama-init
 
 # 检查服务状态
-curl http://localhost:3001/api/ai/health
+curl http://localhost:3000/health
 ```
 
 ### 3. 导入 n8n 工作流
@@ -199,7 +199,7 @@ docker run --rm --gpus all nvidia/cuda:12.0-base nvidia-smi
 
 ### 修改 AI 提示词
 
-编辑 `apps/crawler/src/services/ollama.service.ts` 中的 prompt 模板。
+编辑 `apps/motia/src/api/ai-chat.step.ts` 中的 prompt 模板。
 
 ### 配置通知渠道
 

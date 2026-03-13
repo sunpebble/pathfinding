@@ -1,8 +1,13 @@
 /**
  * POI Category Taxonomy
- * Unified category system for cross-platform POI normalization
+ * Unified category system for cross-platform POI normalization.
+ * Each category has bilingual names and a set of subcategories.
  */
 
+/**
+ * Master category definitions.
+ * Use `POICategory` for the key type and `POISubcategory<T>` for type-safe subcategory access.
+ */
 export const POI_CATEGORIES = {
   // Dining
   restaurant: {
@@ -124,7 +129,10 @@ export const POI_CATEGORIES = {
   },
 } as const;
 
+/** Union of all primary POI category keys */
 export type POICategory = keyof typeof POI_CATEGORIES;
+
+/** Type-safe subcategory values for a given primary category */
 export type POISubcategory<T extends POICategory>
   = (typeof POI_CATEGORIES)[T]['subcategories'][number];
 
@@ -191,7 +199,18 @@ export const PLATFORM_CATEGORY_MAPPINGS: Record<
 };
 
 /**
- * Get unified category from platform-specific category
+ * Map a platform-specific category to the unified taxonomy.
+ *
+ * @param platform - Platform identifier (e.g. 'amap', 'osm')
+ * @param platformCategory - Platform-specific category code or tag
+ * @returns Unified category/subcategory pair, or null if no mapping exists
+ *
+ * @example
+ * mapPlatformCategory('amap', '050000');
+ * // => { category: 'restaurant', subcategory: 'chinese' }
+ *
+ * mapPlatformCategory('osm', 'tourism=museum');
+ * // => { category: 'attraction', subcategory: 'museum' }
  */
 export function mapPlatformCategory(
   platform: string,
@@ -205,21 +224,25 @@ export function mapPlatformCategory(
 }
 
 /**
- * Get all valid categories
+ * Get all valid primary category keys.
+ * @returns Array of POICategory values
  */
 export function getAllCategories(): POICategory[] {
   return Object.keys(POI_CATEGORIES) as POICategory[];
 }
 
 /**
- * Get subcategories for a category
+ * Get the subcategory values for a given primary category.
+ * @param category - Primary POI category
+ * @returns Readonly array of subcategory string literals
  */
 export function getSubcategories(category: POICategory): readonly string[] {
   return POI_CATEGORIES[category]?.subcategories ?? [];
 }
 
 /**
- * Check if a category is valid
+ * Type guard: check if a string is a valid primary POI category.
+ * @param category - String to validate
  */
 export function isValidCategory(category: string): category is POICategory {
   return category in POI_CATEGORIES;

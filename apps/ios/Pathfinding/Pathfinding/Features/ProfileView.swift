@@ -320,7 +320,7 @@ struct ProfileView: View {
             ExplorerSettingsRow(
               icon: "server.rack",
               title: "profile.api_config".localized,
-              subtitle: AppConfig.convexURL,
+              subtitle: AppConfig.apiBaseURL,
               iconColor: .blue,
               terrainColor: DesignTokens.Colors.Terrain.ocean,
               showChevron: true
@@ -870,7 +870,7 @@ struct SettingsRow: View {
 
 struct APISettingsSheet: View {
   @Environment(\.dismiss) private var dismiss
-  @State private var apiURL = AppConfig.convexURL
+  @State private var apiURL = AppConfig.apiBaseURL
 
   var body: some View {
     NavigationStack {

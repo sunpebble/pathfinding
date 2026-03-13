@@ -105,4 +105,19 @@ describe('header', () => {
     fireEvent.click(refreshButton);
     expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
+
+  it('disables refresh button and adds aria-label when loading', () => {
+    vi.mocked(useHealthStatus).mockReturnValue({
+      data: null,
+      isLoading: true,
+      refetch: mockRefetch,
+    } as unknown as ReturnType<typeof useHealthStatus>);
+
+    render(<Header />);
+    const refreshButton = screen.getByLabelText('Refreshing status...') as HTMLButtonElement;
+    expect(refreshButton).toBeDefined();
+    expect(refreshButton.disabled).toBe(true);
+    expect(refreshButton.className).toContain('opacity-50');
+    expect(refreshButton.className).toContain('cursor-not-allowed');
+  });
 });

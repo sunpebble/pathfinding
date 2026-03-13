@@ -27,7 +27,12 @@ export default antfu({
     '.sisyphus/**',
     '.planning/**',
     'dist/**',
+    '**/dist/**',
     'node_modules/**',
+    '.nx/**',
+    '.next/**',
+    'coverage/**',
+    '**/coverage/**',
     'pnpm-workspace.yaml',
     '**/_generated/**',
     // Ignore auto-generated shadcn/ui and AI Elements components

@@ -2,10 +2,16 @@
 
 import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { useHealthStatus } from '@/hooks/use-health-status';
+import { cn } from '@/lib/utils';
 import { AuthButton } from './auth-button';
 
 export function Header() {
-  const { data: health, isLoading, refetch } = useHealthStatus();
+  const {
+    data: health,
+    isLoading,
+    isError,
+    refetch,
+  } = useHealthStatus();
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
@@ -22,28 +28,47 @@ export function Header() {
             ? (
                 <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
               )
-            : health?.status === 'ok' || health?.status === 'healthy'
-              ? (
-                  <>
-                    <Wifi className="h-4 w-4 text-emerald-500" />
-                    <span className="text-sm text-emerald-600">Connected</span>
-                  </>
-                )
-              : (
-                  <>
-                    <WifiOff className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-red-600">Disconnected</span>
-                  </>
-                )}
+            : isError || !health?.status
+              ? isError
+                ? (
+                    <>
+                      <WifiOff className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-500">Unknown</span>
+                    </>
+                  )
+                : (
+                    <>
+                      <WifiOff className="h-4 w-4 text-red-500" />
+                      <span className="text-sm text-red-600">Disconnected</span>
+                    </>
+                  )
+              : health.status === 'ok' || health.status === 'healthy'
+                ? (
+                    <>
+                      <Wifi className="h-4 w-4 text-emerald-500" />
+                      <span className="text-sm text-emerald-600">Connected</span>
+                    </>
+                  )
+                : (
+                    <>
+                      <WifiOff className="h-4 w-4 text-red-500" />
+                      <span className="text-sm text-red-600">Disconnected</span>
+                    </>
+                  )}
         </div>
 
         {/* Refresh Button */}
         <button
           onClick={() => refetch()}
-          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+          disabled={isLoading}
+          aria-label={isLoading ? 'Refreshing status...' : 'Refresh status'}
+          className={cn(
+            'rounded-lg p-2 text-gray-500 hover:bg-gray-100 transition-colors',
+            isLoading && 'opacity-50 cursor-not-allowed',
+          )}
           title="Refresh status"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
         </button>
 
         {/* Auth Button */}

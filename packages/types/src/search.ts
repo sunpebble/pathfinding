@@ -2,6 +2,7 @@
  * Search Types
  * Types for smart search functionality across POIs, itineraries, guides, and users
  */
+import type { PoiCategory } from './poi';
 
 // Search result types
 export type SearchResultType = 'poi' | 'itinerary' | 'guide' | 'user';
@@ -19,7 +20,7 @@ export interface PoiSearchResult extends BaseSearchResult {
   type: 'poi';
   name: string;
   nameEn?: string;
-  category: 'attraction' | 'restaurant' | 'hotel' | 'shopping' | 'other';
+  category: PoiCategory;
   cityId: string;
   cityName?: string;
   address?: string;

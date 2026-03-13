@@ -1,5 +1,5 @@
 import type { AuthVariables } from '../middleware/auth.js';
-import { createDb, itineraries, itineraryFavorites } from '@pathfinding/database';
+import { getDb, itineraries, itineraryFavorites } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
  * Favorites routes — user's favorited itineraries.
@@ -7,27 +7,18 @@ import { and, desc, eq, sql } from 'drizzle-orm';
  */
 import { Hono } from 'hono';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
-import { ApiError } from '../middleware/error-handler.js';
+import { authRequired } from '../middleware/auth.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
-function getDb() {
-  return createDb();
-}
-
 // ── GET / — List user's favorited itineraries ──────────
-app.get('/', async (c) => {
-  const userId = c.req.query('userId');
+app.get('/', authRequired(), async (c) => {
   const collectionId = c.req.query('collectionId');
   const page = Number.parseInt(c.req.query('page') ?? '1', 10);
   const pageSize = Number.parseInt(c.req.query('pageSize') ?? '20', 10);
 
-  if (!userId) {
-    throw new ApiError(400, '缺少userId参数');
-  }
-
   const db = getDb();
-  const uid = Number(userId);
+  const uid = Number(c.get('userId'));
   const offset = (page - 1) * pageSize;
 
   const conditions = [eq(itineraryFavorites.userId, uid)];
