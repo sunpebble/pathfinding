@@ -15,8 +15,9 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import {
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
   createItineraryItem,
   getItinerary,
   normalizeItineraryResponse,
@@ -224,44 +225,69 @@ function ItemEditor({
         </div>
         <div className="flex items-center gap-1">
           {canMoveUp && (
-            <button
-              type="button"
-              onClick={onMoveUp}
-              disabled={isSaving}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
-              aria-label="Move up"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onMoveUp}
+                  disabled={isSaving}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                  aria-label="Move up"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Move up</TooltipContent>
+            </Tooltip>
           )}
           {canMoveDown && (
-            <button
-              type="button"
-              onClick={onMoveDown}
-              disabled={isSaving}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
-              aria-label="Move down"
-            >
-              <ChevronDown className="h-4 w-4" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onMoveDown}
+                  disabled={isSaving}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                  aria-label="Move down"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Move down</TooltipContent>
+            </Tooltip>
           )}
-          <button
-            type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label={isExpanded ? 'Collapse' : 'Expand'}
-          >
-            <ChevronDown className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')} />
-          </button>
-          <button
-            type="button"
-            onClick={onRemove}
-            disabled={isSaving}
-            className="p-1 text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
-            aria-label="Remove"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label={isExpanded ? 'Collapse' : 'Expand'}
+              >
+                <ChevronDown
+                  className={cn(
+                    'h-4 w-4 transition-transform',
+                    isExpanded && 'rotate-180',
+                  )}
+                />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{isExpanded ? 'Collapse' : 'Expand'}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={onRemove}
+                disabled={isSaving}
+                className="p-1 text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                aria-label="Remove"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Remove</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
@@ -579,6 +605,7 @@ function DayEditor({
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              aria-label="Filter POIs by category"
             >
               <option value="">All Categories</option>
               <option value="attraction">Attraction</option>
@@ -688,9 +715,19 @@ export function ItineraryEditor({
             <h2 className="text-xl font-bold text-gray-900">Edit Itinerary</h2>
             <p className="text-sm text-gray-500 mt-1">Add, edit, and organize activities for each day</p>
           </div>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
-            <X className="h-6 w-6" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Close</TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
