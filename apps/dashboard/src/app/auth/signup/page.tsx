@@ -1,9 +1,10 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { Compass, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { TopographicBackground } from '@/components/ui/topographic-background';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function SignUpPage() {
@@ -17,14 +18,14 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.push('/overview');
     }
   }, [isAuthenticated, router]);
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-label="Loading auth state" />
+      <div className="flex min-h-screen items-center justify-center bg-stone-50">
+        <Compass className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
   }
@@ -32,20 +33,15 @@ export default function SignUpPage() {
   if (isAuthenticated)
     return null;
 
-  // Password validation
   const validatePassword = (pwd: string): string | null => {
-    if (pwd.length < 8) {
-      return 'Password must be at least 8 characters long';
-    }
-    if (!/[A-Z]/.test(pwd)) {
-      return 'Password must contain at least one uppercase letter';
-    }
-    if (!/[a-z]/.test(pwd)) {
-      return 'Password must contain at least one lowercase letter';
-    }
-    if (!/\d/.test(pwd)) {
-      return 'Password must contain at least one number';
-    }
+    if (pwd.length < 8)
+      return '密码长度至少为 8 位';
+    if (!/[A-Z]/.test(pwd))
+      return '密码需包含至少一个大写字母';
+    if (!/[a-z]/.test(pwd))
+      return '密码需包含至少一个小写字母';
+    if (!/\d/.test(pwd))
+      return '密码需包含至少一个数字';
     return null;
   };
 
@@ -53,16 +49,14 @@ export default function SignUpPage() {
     e.preventDefault();
     setError('');
 
-    // Validate password
     const passwordError = validatePassword(password);
     if (passwordError) {
       setError(passwordError);
       return;
     }
 
-    // Check password confirmation
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('两次输入的密码不一致');
       return;
     }
 
@@ -70,13 +64,11 @@ export default function SignUpPage() {
 
     try {
       await signUp({ email, password });
-      router.push('/');
+      router.push('/overview');
     }
     catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to sign up. Please try again.',
+        err instanceof Error ? err.message : '注册失败，请重试。',
       );
     }
     finally {
@@ -85,35 +77,39 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md space-y-8">
-        {/* Header */}
+    <div className="relative flex min-h-screen items-center justify-center bg-stone-50 px-4 py-12">
+      {/* Background */}
+      <TopographicBackground lineCount={10} className="opacity-40" />
+
+      <div className="relative z-10 w-full max-w-md space-y-8">
+        {/* Logo & Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Create your account
+          <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100">
+            <Compass className="h-8 w-8 text-emerald-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-stone-900">
+            创建账号
           </h1>
-          <p className="mt-2 text-gray-600">
-            Start planning your next adventure
+          <p className="mt-2 text-stone-500">
+            开始规划你的下一段冒险旅程
           </p>
         </div>
 
         {/* Sign Up Form */}
-        <div className="rounded-xl bg-white p-8 shadow-sm">
-          {/* Error Message */}
+        <div className="rounded-2xl border border-stone-200/60 bg-white p-8 shadow-sm">
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
 
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailSignUp} className="space-y-4">
+          <form onSubmit={handleEmailSignUp} className="space-y-5">
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Email address
+                邮箱地址
               </label>
               <input
                 id="email"
@@ -121,7 +117,7 @@ export default function SignUpPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1.5 block w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
                 placeholder="you@example.com"
                 disabled={isLoading}
               />
@@ -130,9 +126,9 @@ export default function SignUpPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Password
+                密码
               </label>
               <input
                 id="password"
@@ -140,21 +136,21 @@ export default function SignUpPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1.5 block w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
                 placeholder="••••••••"
                 disabled={isLoading}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                At least 8 characters with uppercase, lowercase, and number
+              <p className="mt-1.5 text-xs text-stone-400">
+                至少 8 位，包含大写字母、小写字母和数字
               </p>
             </div>
 
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Confirm Password
+                确认密码
               </label>
               <input
                 id="confirmPassword"
@@ -162,7 +158,7 @@ export default function SignUpPage() {
                 required
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1.5 block w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
                 placeholder="••••••••"
                 disabled={isLoading}
               />
@@ -171,21 +167,27 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-emerald-700 hover:shadow-md active:scale-[0.98] disabled:opacity-50"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Sign up with Email
+              {isLoading ? '注册中...' : '注册'}
             </button>
           </form>
 
-          {/* Sign In Link */}
-          <div className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?
+          <div className="mt-6 text-center text-sm text-stone-500">
+            已有账号？
             {' '}
-            <Link href="/auth/signin" className="text-blue-600 hover:underline">
-              Sign in
+            <Link href="/auth/signin" className="font-medium text-emerald-600 hover:text-emerald-700">
+              立即登录
             </Link>
           </div>
+        </div>
+
+        {/* Back to Landing */}
+        <div className="text-center">
+          <Link href="/" className="text-sm text-stone-400 hover:text-stone-600 transition-colors">
+            ← 返回首页
+          </Link>
         </div>
       </div>
     </div>

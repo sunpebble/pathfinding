@@ -33,7 +33,7 @@ export function AuthButton() {
     setIsMenuOpen(false);
     try {
       await signOut();
-      router.push('/auth/signin');
+      router.push('/');
     }
     catch (error) {
       console.error('Sign out failed:', error);
@@ -50,9 +50,9 @@ export function AuthButton() {
     return (
       <Link
         href="/auth/signin"
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
       >
-        Sign In
+        登录
       </Link>
     );
   }
@@ -72,7 +72,7 @@ export function AuthButton() {
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:bg-gray-50"
       >
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-medium text-white">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-medium text-white">
           {displayName.charAt(0).toUpperCase()}
         </div>
         <span className="text-gray-700">{displayName}</span>
@@ -104,7 +104,7 @@ export function AuthButton() {
               className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               <LogOut className="h-4 w-4" />
-              Sign Out
+              退出登录
             </button>
           </div>
         </div>

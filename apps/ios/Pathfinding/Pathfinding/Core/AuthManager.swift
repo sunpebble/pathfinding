@@ -447,7 +447,8 @@ actor AuthManager {
       self.isAuthenticated = true
 
       // Update cached userId for synchronous access
-      AuthManager._cachedUserIdLock.withLock { $0 = storedUserId }
+      let cachedId = storedUserId
+      AuthManager._cachedUserIdLock.withLock { $0 = cachedId }
 
       logger.info("Restored session from Keychain")
     }

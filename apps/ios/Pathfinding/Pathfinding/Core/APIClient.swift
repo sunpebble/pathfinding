@@ -109,7 +109,7 @@ extension APIClient {
     try await network.fetch(path: path, queryItems: queryItems)
   }
 
-  func post<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
+  func post<T: Decodable & Sendable>(path: String, body: sending [String: Any]) async throws -> T {
     try await network.post(path: path, body: body)
   }
 
@@ -117,11 +117,11 @@ extension APIClient {
     try await network.post(path: path, body: body)
   }
 
-  func postVoid(path: String, body: [String: Any]) async throws {
+  func postVoid(path: String, body: sending [String: Any]) async throws {
     try await network.postVoid(path: path, body: body)
   }
 
-  func put<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
+  func put<T: Decodable & Sendable>(path: String, body: sending [String: Any]) async throws -> T {
     try await network.put(path: path, body: body)
   }
 
@@ -129,7 +129,7 @@ extension APIClient {
     try await network.putWithBody(path: path, body: body)
   }
 
-  func patch<T: Decodable & Sendable>(path: String, body: [String: Any]) async throws -> T {
+  func patch<T: Decodable & Sendable>(path: String, body: sending [String: Any]) async throws -> T {
     try await network.patch(path: path, body: body)
   }
 
@@ -141,7 +141,7 @@ extension APIClient {
     try await network.delete(path: path)
   }
 
-  func delete(path: String, body: [String: Any]) async throws {
+  func delete(path: String, body: sending [String: Any]) async throws {
     try await network.delete(path: path, body: body)
   }
 

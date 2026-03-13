@@ -15,16 +15,21 @@ services:
       timeout: 5s
       retries: 5
 
-  # TODO: apps/api/Dockerfile does not exist yet. Create it before enabling this service.
-  api:
+  # Go backend — replaces old Motia TS backend
+  server:
     build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+      context: apps/server
+      dockerfile: Dockerfile
     ports:
-      - '8000:8000'
+      - '3000:3000'
     environment:
-      - NODE_ENV=development
       - DATABASE_URL=mysql://root@tidb:4000/pathfinding
+      - PORT=3000
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma3:latest}
+      - KERNEL_API_KEY=${KERNEL_API_KEY:-}
+      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     healthcheck:
       test:
         - CMD
@@ -32,44 +37,11 @@ services:
         - --no-verbose
         - --tries=1
         - --spider
-        - 'http://localhost:8000/health'
-
+        - 'http://localhost:3000/health'
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    depends_on:
-      tidb:
-        condition: service_healthy
-
-  # TODO: apps/crawler/Dockerfile does not exist yet. Create it before enabling this service.
-  crawler:
-    build:
-      context: .
-      dockerfile: apps/crawler/Dockerfile
-    ports:
-      - '3001:3001'
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=mysql://root@tidb:4000/pathfinding
-      - AMAP_API_KEY=${AMAP_API_KEY}
-      - OVERPASS_API_URL=${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
-    volumes:
-      - crawler-storage:/app/apps/crawler/storage
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - 'http://localhost:3001/health'
-
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      start_period: 5s
     restart: unless-stopped
     depends_on:
       tidb:
@@ -77,4 +49,3 @@ services:
 
 volumes:
   tidb-data:
-  crawler-storage:
