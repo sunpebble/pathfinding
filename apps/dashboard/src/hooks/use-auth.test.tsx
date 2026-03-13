@@ -12,7 +12,7 @@ function createWrapper() {
 
 describe('useAuth', () => {
   beforeEach(() => {
-    localStorage.clear();
+    window.localStorage.clear();
     vi.restoreAllMocks();
     vi.stubGlobal('fetch', vi.fn());
   });

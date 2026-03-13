@@ -55,13 +55,13 @@ function AuthActionHarness({ mode }: { mode: 'signIn' | 'signUp' }) {
 
 describe('authProvider', () => {
   beforeEach(() => {
-    localStorage.clear();
+    window.localStorage.clear();
     vi.restoreAllMocks();
     delete (window as Window & { __authError?: string }).__authError;
   });
 
   it('loads /api/auth/me with a stored token', async () => {
-    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
 
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
@@ -143,7 +143,7 @@ describe('authProvider', () => {
     expect(screen.getByTestId('user-email')).toHaveTextContent('none');
     expect(screen.getByTestId('is-authenticated')).toHaveTextContent('false');
     expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
-    expect(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBeNull();
   });
 
   it('rejects signUp when user bootstrap fails after token issuance', async () => {
@@ -186,6 +186,6 @@ describe('authProvider', () => {
     expect(screen.getByTestId('user-email')).toHaveTextContent('none');
     expect(screen.getByTestId('is-authenticated')).toHaveTextContent('false');
     expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
-    expect(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBeNull();
   });
 });

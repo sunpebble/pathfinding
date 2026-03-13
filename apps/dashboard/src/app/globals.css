@@ -1,20 +1,63 @@
 @import 'tailwindcss';
 
+/* ============================
+   探路 Pathfinding — Explorer Design System
+   Color palette inspired by iOS DesignSystem.swift
+   ============================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core backgrounds */
+  --background: #fafaf9;        /* stone-50 */
+  --foreground: #1c1917;        /* stone-900 */
+  --background-secondary: #f5f5f4; /* stone-100 */
+
+  /* Explorer accent — Terrain Emerald */
+  --accent: #059669;            /* emerald-600 */
+  --accent-light: #34d399;      /* emerald-400 */
+  --accent-bg: rgba(5, 150, 105, 0.08);
+
+  /* Terrain palette (from iOS DesignSystem Terrain colors) */
+  --terrain-forest: rgb(46, 125, 51);
+  --terrain-ocean: rgb(38, 107, 171);
+  --terrain-desert: rgb(209, 176, 120);
+  --terrain-mountain: rgb(115, 115, 133);
+
+  /* Card & surface */
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.05);
+
+  /* Sidebar */
+  --sidebar-bg: #1c1917;
+  --sidebar-text: #a8a29e;
+  --sidebar-active-bg: #292524;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0c0a09;        /* stone-950 */
+    --foreground: #e7e5e4;        /* stone-200 */
+    --background-secondary: #1c1917; /* stone-900 */
+
+    --accent: #34d399;            /* emerald-400 */
+    --accent-light: #6ee7b7;      /* emerald-300 */
+    --accent-bg: rgba(52, 211, 153, 0.1);
+
+    --card-bg: #1c1917;
+    --card-border: rgba(255, 255, 255, 0.08);
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Topographic drift animation for landing page */
+  --animate-topo-drift: topo-drift 30s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes topo-drift {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(1deg) scale(1.02); }
 }
 
 html,
@@ -25,26 +68,67 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
 }
 
-/* Status badge colors */
+/* ============================
+   Status badge colors
+   ============================ */
 .status-pending {
   @apply text-amber-600 bg-amber-50 border-amber-200;
 }
-
 .status-running {
   @apply text-blue-600 bg-blue-50 border-blue-200;
 }
-
 .status-completed {
   @apply text-emerald-600 bg-emerald-50 border-emerald-200;
 }
-
 .status-failed {
   @apply text-red-600 bg-red-50 border-red-200;
 }
-
 .status-cancelled {
   @apply text-gray-600 bg-gray-50 border-gray-200;
+}
+
+/* ============================
+   Explorer focus ring
+   ============================ */
+.focus-explorer:focus-visible {
+  @apply outline-none ring-2 ring-emerald-500/40 ring-offset-2;
+}
+
+/* ============================
+   Scrollbar styling
+   ============================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
 }

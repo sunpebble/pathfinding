@@ -24,8 +24,8 @@ describe('signInPage', () => {
 
     render(<SignInPage />);
 
-    expect(screen.queryByLabelText('Email address')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Sign in with Email' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('邮箱地址')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '登录' })).not.toBeInTheDocument();
   });
 
   it('submits email sign-in and redirects on success', async () => {
@@ -38,13 +38,13 @@ describe('signInPage', () => {
     expect(screen.queryByText('Continue with Google')).not.toBeInTheDocument();
     expect(screen.queryByText('Continue with Apple')).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Email address'), {
+    fireEvent.change(screen.getByLabelText('邮箱地址'), {
       target: { value: 'owner@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), {
+    fireEvent.change(screen.getByLabelText('密码'), {
       target: { value: 'Password123' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in with Email' }));
+    fireEvent.click(screen.getByRole('button', { name: '登录' }));
 
     await waitFor(() => {
       expect(signIn).toHaveBeenCalledWith({
@@ -53,7 +53,7 @@ describe('signInPage', () => {
       });
     });
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith('/');
+      expect(mockRouter.push).toHaveBeenCalledWith('/overview');
     });
   });
 
@@ -63,13 +63,13 @@ describe('signInPage', () => {
 
     render(<SignInPage />);
 
-    fireEvent.change(screen.getByLabelText('Email address'), {
+    fireEvent.change(screen.getByLabelText('邮箱地址'), {
       target: { value: 'owner@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), {
+    fireEvent.change(screen.getByLabelText('密码'), {
       target: { value: 'wrong-password' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in with Email' }));
+    fireEvent.click(screen.getByRole('button', { name: '登录' }));
 
     await waitFor(() => {
       expect(screen.getByText('Invalid email or password')).toBeInTheDocument();
