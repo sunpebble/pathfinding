@@ -165,6 +165,7 @@ export default function DatasetsPage() {
                               }}
                               className="rounded-lg bg-blue-100 p-2 text-blue-600 hover:bg-blue-200"
                               title="Download dataset"
+                              aria-label="Download dataset"
                             >
                               <Download className="h-4 w-4" />
                             </button>

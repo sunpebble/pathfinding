@@ -363,6 +363,7 @@ export default function JobsPage() {
                                   disabled={startMutation.isPending}
                                   className="rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:opacity-50"
                                   title="Start job"
+                                  aria-label="Start job"
                                 >
                                   <Play className="h-4 w-4" />
                                 </button>
@@ -378,6 +379,7 @@ export default function JobsPage() {
                                   disabled={cancelMutation.isPending}
                                   className="rounded-lg bg-red-500 p-2 text-white hover:bg-red-600 disabled:opacity-50"
                                   title="Cancel job"
+                                  aria-label="Cancel job"
                                 >
                                   <StopCircle className="h-4 w-4" />
                                 </button>
@@ -386,6 +388,7 @@ export default function JobsPage() {
                                 href={`/jobs/${job.id}`}
                                 className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
                                 title="View details"
+                                aria-label="View details"
                               >
                                 <Eye className="h-4 w-4" />
                               </Link>

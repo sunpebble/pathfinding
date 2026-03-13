@@ -211,6 +211,7 @@ export function CollaboratorPanel({
                     disabled={isRemoving}
                     className={cn('p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors', isRemoving && 'opacity-50 cursor-not-allowed')}
                     title="Remove collaborator"
+                    aria-label={isRemoving ? 'Removing collaborator' : 'Remove collaborator'}
                   >
                     {isRemoving
                       ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
