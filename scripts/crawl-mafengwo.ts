@@ -37,7 +37,9 @@ const CONFIG = {
   concurrency: Math.min(Number(process.env.CONCURRENCY) || 2, 4),
   delayBetweenPages: 3000,
   pageTimeout: 30000,
+  overallPageTimeout: 60000, // hard kill for entire loadPage call
   maxRetries: 2,
+  seedApiPages: Number(process.env.SEED_API_PAGES) || 10, // pages per destination in seed API
 };
 
 const MOBILE_UA
@@ -47,7 +49,9 @@ const MOBILE_UA
 // Destination list for seed collection
 // ============================================
 
+// Top destinations by mdd ID — from sitemap mdd-0.xml and popular pages
 const SEED_DESTINATIONS = [
+  // China
   { id: '10065', name: 'Beijing' },
   { id: '10099', name: 'Chengdu' },
   { id: '10088', name: 'Hangzhou' },
@@ -56,10 +60,45 @@ const SEED_DESTINATIONS = [
   { id: '10189', name: 'Xiamen' },
   { id: '10195', name: 'Sanya' },
   { id: '10156', name: 'Kunming' },
+  { id: '10009', name: 'HongKong' },
+  { id: '10206', name: 'Xian' },
+  { id: '10160', name: 'Lijiang' },
+  { id: '10067', name: 'Nanjing' },
+  { id: '10264', name: 'Guilin' },
+  { id: '10076', name: 'Suzhou' },
+  { id: '10186', name: 'Dali' },
+  { id: '10366', name: 'Zhangjiajie' },
+  { id: '10161', name: 'Shangri-La' },
+  { id: '10053', name: 'Qingdao' },
+  { id: '10101', name: 'Jiuzhaigou' },
+  { id: '10199', name: 'Gulangyu' },
+  { id: '10036', name: 'Tianjin' },
+  { id: '10059', name: 'Harbin' },
+  { id: '10212', name: 'Lhasa' },
+  { id: '10105', name: 'Luoyang' },
+  { id: '10013', name: 'Macau' },
+  { id: '10078', name: 'Wuxi' },
+  { id: '10376', name: 'Huangshan' },
+  { id: '10068', name: 'Yangzhou' },
+  // International
   { id: '10183', name: 'Tokyo' },
   { id: '10759', name: 'Bangkok' },
   { id: '10542', name: 'Seoul' },
   { id: '14107', name: 'Paris' },
+  { id: '10754', name: 'Singapore' },
+  { id: '11214', name: 'Osaka' },
+  { id: '10222', name: 'Taipei' },
+  { id: '10083', name: 'London' },
+  { id: '21536', name: 'Bali' },
+  { id: '10062', name: 'NewYork' },
+  { id: '10665', name: 'Phuket' },
+  { id: '11798', name: 'KualaLumpur' },
+  { id: '10680', name: 'ChiangMai' },
+  { id: '10046', name: 'Sydney' },
+  { id: '10190', name: 'Kyoto' },
+  { id: '10234', name: 'Rome' },
+  { id: '10044', name: 'Melbourne' },
+  { id: '21200', name: 'Santorini' },
 ];
 
 // ============================================
@@ -193,9 +232,19 @@ async function closeBrowser(): Promise<void> {
 
 /**
  * Navigate to a URL in a given context, wait for content to render,
- * return the full page HTML.
+ * return the full page HTML. Wrapped in an overall timeout to prevent hangs.
  */
 async function loadPage(contextIndex: number, url: string): Promise<string | null> {
+  return Promise.race([
+    _loadPageInner(contextIndex, url),
+    sleep(CONFIG.overallPageTimeout).then(() => {
+      log(`  Overall timeout (${CONFIG.overallPageTimeout}ms) for ${url}`);
+      return null;
+    }),
+  ]);
+}
+
+async function _loadPageInner(contextIndex: number, url: string): Promise<string | null> {
   const ctx = _contexts[contextIndex % _contexts.length];
 
   for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
@@ -205,11 +254,11 @@ async function loadPage(contextIndex: number, url: string): Promise<string | nul
       page.setDefaultTimeout(CONFIG.pageTimeout);
 
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: CONFIG.pageTimeout });
-      await sleep(4000); // wait for JS rendering
+      await sleep(3000); // wait for JS rendering
 
       // Scroll down to trigger lazy loading
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await sleep(2000);
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)).catch(() => {});
+      await sleep(1500);
 
       const html = await page.content();
 
@@ -387,12 +436,13 @@ async function saveToTiDB(
 async function main() {
   console.warn(`\n${'='.repeat(60)}`);
   console.warn('  Mafengwo crawler \u2014 full Playwright mode');
-  console.warn('  (all pages via browser, snowball URL discovery)');
+  console.warn('  (paginated API seeds + browser detail + snowball)');
   console.warn('='.repeat(60));
   console.warn(`  Max notes:    ${CONFIG.maxNotes === 0 ? 'unlimited' : CONFIG.maxNotes}`);
   console.warn(`  Headless:     ${CONFIG.headless}`);
   console.warn(`  Concurrency:  ${CONFIG.concurrency} tabs`);
   console.warn(`  Destinations: ${SEED_DESTINATIONS.length} seed cities`);
+  console.warn(`  API pages/dest: ${CONFIG.seedApiPages}`);
   console.warn(`${'='.repeat(60)}\n`);
 
   if (!process.env.DATABASE_URL) {
@@ -402,6 +452,18 @@ async function main() {
   }
 
   const db = createDb();
+  let shuttingDown = false;
+
+  // Graceful shutdown on SIGINT/SIGTERM
+  const handleSignal = (signal: string) => {
+    if (shuttingDown)
+      return;
+    shuttingDown = true;
+    log(`\nReceived ${signal}, finishing current batch and shutting down...`);
+  };
+  process.on('SIGINT', () => handleSignal('SIGINT'));
+  process.on('SIGTERM', () => handleSignal('SIGTERM'));
+
   const stats: CrawlStats = {
     seedsCollected: 0,
     detailsCrawled: 0,
@@ -435,20 +497,107 @@ async function main() {
     await initBrowser();
 
     // ================================================
-    // Phase 1: Collect seed URLs from entry pages
+    // Phase 1: Collect seed URLs via paginated API + sitemap
+    // The mobile SPA entry pages show the same 17 "hot" notes regardless
+    // of destination, so we use the JSON API for real destination-specific
+    // note listings, plus article sitemaps for bulk IDs.
     // ================================================
-    log('\n--- Phase 1: Seed collection from entry pages ---');
+    log('\n--- Phase 1: Seed collection ---');
 
+    // Phase 1a: Paginated note listing API (no WAF, returns HTML fragments)
+    // GET https://m.mafengwo.cn/note/index/more?mddid={id}&iPage={page}
+    log('  Phase 1a: Paginated API seed collection');
+    for (const dest of SEED_DESTINATIONS) {
+      let emptyPages = 0;
+      for (let page = 1; page <= CONFIG.seedApiPages; page++) {
+        if (emptyPages >= 2)
+          break; // stop if 2 consecutive empty pages
+
+        const apiUrl = `https://m.mafengwo.cn/note/index/more?mddid=${dest.id}&iPage=${page}`;
+        try {
+          const resp = await fetch(apiUrl, {
+            headers: { 'User-Agent': MOBILE_UA, 'Referer': `https://m.mafengwo.cn/note/l-${dest.id}.html` },
+          });
+          const text = await resp.text();
+          const ids = extractAllNoteIds(text);
+
+          if (ids.length === 0) {
+            emptyPages++;
+            continue;
+          }
+          emptyPages = 0;
+
+          let newCount = 0;
+          for (const id of ids) {
+            if (!seenIds.has(id)) {
+              seenIds.add(id);
+              queue.push(id);
+              newCount++;
+              stats.seedsCollected++;
+            }
+          }
+          if (newCount > 0) {
+            log(`    ${dest.name} p${page}: +${newCount} new (total queue: ${queue.length})`);
+          }
+        }
+        catch {
+          // API call failed, skip
+        }
+
+        await sleep(randomDelay(500, 500));
+      }
+    }
+    log(`  API seeds collected: ${stats.seedsCollected}, queue: ${queue.length}`);
+
+    // Phase 1b: Article sitemaps for bulk ID extraction
+    // Sitemaps at https://www.mafengwo.cn/sitemapIndex.xml contain article-{0-3}.xml
+    log('  Phase 1b: Sitemap bulk ID extraction');
+    for (let sitemapIdx = 0; sitemapIdx <= 3; sitemapIdx++) {
+      try {
+        const sitemapUrl = `https://www.mafengwo.cn/article-${sitemapIdx}.xml`;
+        const resp = await fetch(sitemapUrl, {
+          headers: { 'User-Agent': MOBILE_UA },
+        });
+        const xml = await resp.text();
+
+        // Extract note IDs from URLs like /i/12345.html or /note/12345.html
+        const urlIds: string[] = [];
+        for (const match of xml.matchAll(/\/i\/(\d+)\.html/g)) {
+          urlIds.push(match[1]);
+        }
+        // Also match /note/{id}.html pattern (desktop)
+        for (const match of xml.matchAll(/\/note\/(\d+)\.html/g)) {
+          urlIds.push(match[1]);
+        }
+
+        let newCount = 0;
+        for (const id of urlIds) {
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            queue.push(id);
+            newCount++;
+            stats.seedsCollected++;
+          }
+        }
+        log(`    article-${sitemapIdx}.xml: ${urlIds.length} IDs, ${newCount} new`);
+      }
+      catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log(`    article-${sitemapIdx}.xml: failed (${msg.slice(0, 60)})`);
+      }
+    }
+
+    // Phase 1c: Also load entry pages via browser as fallback seed source
+    log('  Phase 1c: Browser entry pages (fallback)');
     const entryUrls = [
       'https://m.mafengwo.cn/note/',
-      ...SEED_DESTINATIONS.map(d => `https://m.mafengwo.cn/note/l-${d.id}.html`),
     ];
 
     for (const entryUrl of entryUrls) {
-      log(`  Entry: ${entryUrl}`);
+      log(`    Entry: ${entryUrl}`);
       const html = await loadPage(0, entryUrl);
       if (!html) {
-        log('    Failed to load');
+        log('      Failed to load');
         continue;
       }
 
@@ -462,9 +611,7 @@ async function main() {
           stats.seedsCollected++;
         }
       }
-      log(`    Found ${ids.length} IDs, ${newCount} new. Queue: ${queue.length}`);
-
-      // Also scroll more to discover additional content
+      log(`      Found ${ids.length} IDs, ${newCount} new`);
       await sleep(randomDelay(2000, 1000));
     }
 
@@ -478,6 +625,10 @@ async function main() {
     let processedCount = 0;
 
     while (queue.length > 0) {
+      if (shuttingDown) {
+        log('Shutdown requested, stopping Phase 2...');
+        break;
+      }
       if (CONFIG.maxNotes > 0 && stats.detailsSaved >= CONFIG.maxNotes) {
         log(`Reached max notes limit (${CONFIG.maxNotes})`);
         break;
@@ -573,7 +724,7 @@ async function main() {
     // When snowball runs dry, probe sequential IDs near known valid notes.
     // Known ID range: ~1 to ~25,000,000
     // ================================================
-    if (CONFIG.maxNotes === 0 || stats.detailsSaved < CONFIG.maxNotes) {
+    if (!shuttingDown && (CONFIG.maxNotes === 0 || stats.detailsSaved < CONFIG.maxNotes)) {
       log('\n--- Phase 3: ID space probing ---');
 
       const knownIds = Array.from(seenIds).map(Number).filter(n => !Number.isNaN(n) && n > 0);
@@ -591,6 +742,10 @@ async function main() {
         log(`  Starting probe from ID ${probeId}, stepping by -${PROBE_STEP}`);
 
         while (probeId > 0) {
+          if (shuttingDown) {
+            log('Shutdown requested, stopping Phase 3...');
+            break;
+          }
           if (CONFIG.maxNotes > 0 && stats.detailsSaved >= CONFIG.maxNotes)
             break;
           if (emptyStreaks >= MAX_EMPTY_STREAKS) {
