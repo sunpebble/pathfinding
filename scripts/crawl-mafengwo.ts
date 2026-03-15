@@ -1,21 +1,30 @@
 #!/usr/bin/env npx tsx
 /**
- * Mafengwo travel note crawler — HTTP-only version
+ * Mafengwo travel note crawler — full Playwright mode
  *
- * Uses native fetch + cheerio instead of Playwright/Stagehand.
- * No browser binary, no cloud browser service, no heavy dependencies.
+ * Mafengwo deploys Tencent Chaos VM WAF on ALL pages (not just entry pages).
+ * WAF cookies are path-bound, so cookies from /note/ cannot be reused for
+ * /i/{id}.html detail pages. Therefore, ALL pages must be loaded via a real
+ * browser.
+ *
+ * Architecture:
+ *   - Single persistent Playwright browser with multiple contexts
+ *   - Phase 1: Visit entry pages, extract seed note IDs from rendered HTML
+ *   - Phase 2: Visit each note detail page, extract content + snowball IDs
+ *   - Contexts are reused across pages for cookie persistence
  *
  * Usage:
  *   DATABASE_URL="mysql://root@127.0.0.1:4000/pathfinding" npx tsx scripts/crawl-mafengwo.ts
  *
  * Options (env vars):
- *   MAX_NOTES=50        Max notes to crawl (default 50)
- *   SCROLL_COUNT=15     Paginated requests per entry URL (default 15)
- *   CONCURRENCY=3       Concurrent detail fetches (default 3)
+ *   MAX_NOTES=0          Max notes to crawl, 0 = unlimited (default 0)
+ *   HEADLESS=true        Hide browser during crawling (default true)
+ *   CONCURRENCY=2        Concurrent browser tabs (default 2, max 4)
  */
 
-import * as cheerio from 'cheerio';
+import type { Browser, BrowserContext, Page } from 'playwright';
 import { and, eq } from 'drizzle-orm';
+import { chromium } from 'playwright';
 import { createDb, travelGuides } from '../packages/database/src/index';
 
 // ============================================
@@ -23,52 +32,39 @@ import { createDb, travelGuides } from '../packages/database/src/index';
 // ============================================
 
 const CONFIG = {
-  maxNotes: Number(process.env.MAX_NOTES) || 50,
-  scrollCount: Number(process.env.SCROLL_COUNT) || 15,
-  concurrency: Number(process.env.CONCURRENCY) || 3,
-  delayBetweenRequests: 2000,
-  maxRetries: 3,
-  requestTimeout: 15000,
+  maxNotes: Number(process.env.MAX_NOTES) || 0,
+  headless: process.env.HEADLESS !== 'false',
+  concurrency: Math.min(Number(process.env.CONCURRENCY) || 2, 4),
+  delayBetweenPages: 3000,
+  pageTimeout: 30000,
+  maxRetries: 2,
 };
 
 const MOBILE_UA
   = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
 
-const COMMON_HEADERS: Record<string, string> = {
-  'User-Agent': MOBILE_UA,
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-  'Referer': 'https://m.mafengwo.cn/',
-};
+// ============================================
+// Destination list for seed collection
+// ============================================
 
-// Entry URLs — destination-specific note list pages
-const ENTRY_URLS = [
-  'https://m.mafengwo.cn/note/',
-  'https://m.mafengwo.cn/note/l-10065.html', // Beijing
-  'https://m.mafengwo.cn/note/l-10099.html', // Chengdu
-  'https://m.mafengwo.cn/note/l-10264.html', // Xi'an
-  'https://m.mafengwo.cn/note/l-10088.html', // Hangzhou
-  'https://m.mafengwo.cn/note/l-10208.html', // Chongqing
-  'https://m.mafengwo.cn/note/l-10161.html', // Lijiang
-  'https://m.mafengwo.cn/note/l-10189.html', // Xiamen
-  'https://m.mafengwo.cn/note/l-14947.html', // Dali
-  'https://m.mafengwo.cn/note/l-10183.html', // Tokyo
-  'https://m.mafengwo.cn/note/l-11042.html', // Osaka
-  'https://m.mafengwo.cn/note/l-10759.html', // Bangkok
-  'https://m.mafengwo.cn/note/l-10754.html', // Chiang Mai
-  'https://m.mafengwo.cn/note/l-11049.html', // Bali
-  'https://m.mafengwo.cn/note/l-10542.html', // Seoul
-  'https://m.mafengwo.cn/note/l-14107.html', // Paris
+const SEED_DESTINATIONS = [
+  { id: '10065', name: 'Beijing' },
+  { id: '10099', name: 'Chengdu' },
+  { id: '10088', name: 'Hangzhou' },
+  { id: '10208', name: 'Chongqing' },
+  { id: '10035', name: 'Shanghai' },
+  { id: '10189', name: 'Xiamen' },
+  { id: '10195', name: 'Sanya' },
+  { id: '10156', name: 'Kunming' },
+  { id: '10183', name: 'Tokyo' },
+  { id: '10759', name: 'Bangkok' },
+  { id: '10542', name: 'Seoul' },
+  { id: '14107', name: 'Paris' },
 ];
 
 // ============================================
 // Types
 // ============================================
-
-interface GuideListItem {
-  url: string;
-  externalId: string;
-}
 
 interface GuideDetail {
   title: string;
@@ -78,14 +74,16 @@ interface GuideDetail {
   likes?: string;
   coverImage?: string;
   images: string[];
+  relatedNoteIds: string[];
 }
 
 interface CrawlStats {
-  totalUrlsFound: number;
+  seedsCollected: number;
   detailsCrawled: number;
   detailsSaved: number;
   errors: number;
   skipped: number;
+  snowballDiscovered: number;
   startTime: number;
 }
 
@@ -93,19 +91,18 @@ interface CrawlStats {
 // Utilities
 // ============================================
 
-function log(message: string, data?: unknown) {
+function log(message: string) {
   const timestamp = new Date().toISOString().slice(11, 19);
-  if (data) {
-    console.warn(`[${timestamp}] ${message}`, typeof data === 'string' ? data : JSON.stringify(data));
-  }
-  else {
-    console.warn(`[${timestamp}] ${message}`);
-  }
+  console.warn(`[${timestamp}] ${message}`);
 }
 
-function extractExternalId(url: string): string | null {
-  const match = url.match(/\/i\/(\d+)\.html/);
-  return match ? match[1] : null;
+function extractAllNoteIds(html: string): string[] {
+  const ids = new Set<string>();
+  const regex = /\/i\/(\d+)\.html/g;
+  for (const match of html.matchAll(regex)) {
+    ids.add(match[1]);
+  }
+  return Array.from(ids);
 }
 
 function parseChineseNumber(str: string | undefined): number {
@@ -155,43 +152,89 @@ function randomDelay(base: number, variance: number = 1000): number {
 }
 
 // ============================================
-// HTTP fetch with retry
+// Browser pool
 // ============================================
 
-async function fetchHtml(url: string): Promise<string | null> {
+let _browser: Browser;
+const _contexts: BrowserContext[] = [];
+
+async function initBrowser(): Promise<void> {
+  _browser = await chromium.launch({
+    headless: CONFIG.headless,
+    args: ['--disable-blink-features=AutomationControlled', '--no-sandbox'],
+  });
+
+  // Create concurrent contexts (each has its own cookie jar)
+  for (let i = 0; i < CONFIG.concurrency; i++) {
+    const ctx = await _browser.newContext({
+      userAgent: MOBILE_UA,
+      viewport: { width: 390, height: 844 },
+      locale: 'zh-CN',
+      timezoneId: 'Asia/Shanghai',
+      deviceScaleFactor: 3,
+      isMobile: true,
+      hasTouch: true,
+    });
+    await ctx.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    });
+    _contexts.push(ctx);
+  }
+
+  log(`Browser initialized with ${CONFIG.concurrency} contexts`);
+}
+
+async function closeBrowser(): Promise<void> {
+  for (const ctx of _contexts) {
+    await ctx.close().catch(() => {});
+  }
+  await _browser?.close().catch(() => {});
+}
+
+/**
+ * Navigate to a URL in a given context, wait for content to render,
+ * return the full page HTML.
+ */
+async function loadPage(contextIndex: number, url: string): Promise<string | null> {
+  const ctx = _contexts[contextIndex % _contexts.length];
+
   for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
+    let page: Page | null = null;
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), CONFIG.requestTimeout);
+      page = await ctx.newPage();
+      page.setDefaultTimeout(CONFIG.pageTimeout);
 
-      const res = await fetch(url, {
-        headers: COMMON_HEADERS,
-        signal: controller.signal,
-        redirect: 'follow',
-      });
-      clearTimeout(timeout);
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: CONFIG.pageTimeout });
+      await sleep(4000); // wait for JS rendering
 
-      if (!res.ok) {
-        log(`  HTTP ${res.status} for ${url} (attempt ${attempt})`);
-        if (res.status === 429) {
-          // Rate limited — back off
-          await sleep(randomDelay(5000, 5000));
-          continue;
-        }
+      // Scroll down to trigger lazy loading
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await sleep(2000);
+
+      const html = await page.content();
+
+      // Check if we got WAF challenge
+      if (html.includes('__TENCENT_CHAOS_VM') || html.includes('probe.js')) {
+        log(`  WAF challenge on attempt ${attempt} for ${url}`);
+        await page.close();
+        page = null;
         if (attempt < CONFIG.maxRetries) {
-          await sleep(randomDelay(2000, 1000));
+          await sleep(randomDelay(5000, 3000));
           continue;
         }
         return null;
       }
 
-      return await res.text();
+      await page.close();
+      return html;
     }
     catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      log(`  Fetch error ${url} (attempt ${attempt}): ${message.slice(0, 80)}`);
+      log(`  Page load error (attempt ${attempt}): ${message.slice(0, 80)}`);
+      if (page)
+        await page.close().catch(() => {});
       if (attempt < CONFIG.maxRetries) {
-        await sleep(randomDelay(2000, 1000));
+        await sleep(randomDelay(3000, 2000));
       }
     }
   }
@@ -199,167 +242,88 @@ async function fetchHtml(url: string): Promise<string | null> {
 }
 
 // ============================================
-// List page scraping
-// ============================================
-
-async function collectNoteUrls(
-  entryUrls: string[],
-  maxTotal: number,
-): Promise<GuideListItem[]> {
-  const allItems: GuideListItem[] = [];
-  const seenIds = new Set<string>();
-
-  for (const entryUrl of entryUrls) {
-    if (allItems.length >= maxTotal)
-      break;
-
-    log(`Fetching entry page: ${entryUrl}`);
-
-    const html = await fetchHtml(entryUrl);
-    if (!html) {
-      log(`  Failed to fetch entry page`);
-      continue;
-    }
-
-    const $ = cheerio.load(html);
-
-    // Extract all note links matching /i/<digits>.html
-    $('a[href*="/i/"]').each((_i, el) => {
-      if (allItems.length >= maxTotal)
-        return false;
-
-      const href = $(el).attr('href');
-      if (!href)
-        return;
-
-      // Normalize to absolute URL
-      let fullUrl = href;
-      if (href.startsWith('/')) {
-        fullUrl = `https://m.mafengwo.cn${href}`;
-      }
-      else if (!href.startsWith('http')) {
-        return;
-      }
-
-      if (!/\/i\/\d+\.html/.test(fullUrl))
-        return;
-
-      const externalId = extractExternalId(fullUrl);
-      if (externalId && !seenIds.has(externalId)) {
-        seenIds.add(externalId);
-        allItems.push({ url: fullUrl, externalId });
-      }
-    });
-
-    log(`  Extracted ${allItems.length} unique URLs so far`);
-
-    // Polite delay between entry pages
-    await sleep(randomDelay(CONFIG.delayBetweenRequests, 1000));
-  }
-
-  return allItems.slice(0, maxTotal);
-}
-
-// ============================================
-// Detail page scraping
+// Detail page extraction
 // ============================================
 
 function extractDetail(html: string): GuideDetail | null {
-  const $ = cheerio.load(html);
+  // Use regex-based extraction (no cheerio needed since we have full rendered HTML)
 
-  // Title
-  const title
-    = $('meta[property="og:title"]').attr('content')?.trim()
-      || $('title').text().split('，')[0].split('|')[0].trim()
-      || '';
-
-  // Content — try multiple selectors
-  let content = '';
-
-  const chapterEl = $('.chapter-container');
-  if (chapterEl.length) {
-    // Remove noise elements
-    chapterEl.find('.copyright, .recommend-note, .accusation-container, [class*="ad-container"]').remove();
-    content = chapterEl.text().trim();
+  // Title: from <title> tag or og:title
+  let title = '';
+  const ogTitle = html.match(/property="og:title"\s+content="([^"]+)"/);
+  if (ogTitle) {
+    title = ogTitle[1];
   }
-
-  if (!content || content.length < 50) {
-    const noteContent = $('.note-content, .note-body, .article-content').first();
-    if (noteContent.length) {
-      noteContent.find('.copyright, .recommend-note, .accusation-container, [class*="author"], [class*="avatar"], [class*="ad-container"]').remove();
-      content = noteContent.text().trim();
+  else {
+    const titleTag = html.match(/<title>([^<]+)<\/title>/);
+    if (titleTag) {
+      title = titleTag[1].split('\uFF0C')[0].split('|')[0].trim();
     }
   }
 
-  // Clean up content
-  content = content
-    .replace(/图片占位符/g, '')
+  // Content: extract text from rendered body
+  // Remove HTML tags but keep text content
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if (!bodyMatch)
+    return null;
+
+  let content = bodyMatch[1]
+    // Remove script/style blocks
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    // Remove navigation, footer, ads
+    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+    // Remove HTML tags
+    .replace(/<[^>]+>/g, ' ')
+    // Decode entities
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    // Clean whitespace
     .replace(/\s+/g, ' ')
-    .replace(/加载更多内容/g, '')
-    .replace(/查看原文|展开全文|点击展开/g, '')
     .trim();
 
-  if (!content || content.length < 50) {
+  // Remove common noise
+  content = content
+    .replace(/\u56FE\u7247\u5360\u4F4D\u7B26/g, '')
+    .replace(/\u52A0\u8F7D\u66F4\u591A\u5185\u5BB9/g, '')
+    .replace(/\u67E5\u770B\u539F\u6587|\u5C55\u5F00\u5168\u6587|\u70B9\u51FB\u5C55\u5F00/g, '')
+    .replace(/\u9A6C\u8702\u7A9D.*?\u6E38\u8BB0/g, '') // 马蜂窝...游记
+    .trim();
+
+  if (content.length < 100)
     return null;
-  }
 
   // Author
-  const author
-    = $('.user-name, .author-name, .note-author').first().text().trim()
-      || $('meta[name="author"]').attr('content')?.trim()
-      || undefined;
+  const authorMatch = html.match(/class="[^"]*(?:user-name|author-name|note-author)[^"]*"[^>]*>([^<]+)</);
+  const author = authorMatch?.[1]?.trim() || undefined;
 
-  // Views / Likes — from page text
-  const pageText = $('body').text();
-  const viewsMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:浏览|阅读)/i);
+  // Views/Likes from rendered text
+  const viewsMatch = content.match(/(\d+(?:\.\d+)?[\u4E07k]?)\s*(?:\u6D4F\u89C8|\u9605\u8BFB)/i);
   const views = viewsMatch?.[1] || undefined;
-
-  const likesMatch = pageText.match(/(\d+(?:\.\d+)?[万k]?)\s*(?:赞|喜欢)/i);
+  const likesMatch = content.match(/(\d+(?:\.\d+)?[\u4E07k]?)\s*(?:\u8D5E|\u559C\u6B22)/i);
   const likes = likesMatch?.[1] || undefined;
 
   // Images
   const images: string[] = [];
-  const imgSelectors = [
-    '.chapter-container img[src]',
-    '.note-content img[src]',
-    '.article-content img[src]',
-    'img[src*="mafengwo"]',
-  ];
-
-  for (const selector of imgSelectors) {
-    $(selector).each((_i, el) => {
-      const src = $(el).attr('src') || $(el).attr('data-src') || '';
-      if (
-        src
-        && src.startsWith('http')
-        && !src.includes('avatar')
-        && !src.includes('icon')
-        && !src.includes('recommend')
-        && !src.includes('logo')
-        && !src.includes('emoji')
-        && !images.includes(src)
-      ) {
-        images.push(src);
-      }
-    });
-    if (images.length > 0)
-      break;
+  const imgRegex = /src="(https?:\/\/[^"]*mafengwo[^"]*\.(?:jpg|jpeg|png|webp)[^"]*)"/gi;
+  for (const imgMatch of html.matchAll(imgRegex)) {
+    const src = imgMatch[1];
+    if (!src.includes('avatar') && !src.includes('icon') && !src.includes('logo') && !src.includes('emoji') && !images.includes(src)) {
+      images.push(src);
+    }
   }
 
-  const coverImage
-    = $('meta[property="og:image"]').attr('content')
-      || images[0]
-      || undefined;
+  const coverMatch = html.match(/property="og:image"\s+content="([^"]+)"/);
+  const coverImage = coverMatch?.[1] || images[0] || undefined;
 
-  return { title, content, author, views, likes, coverImage, images };
-}
+  // Related note IDs (snowball)
+  const relatedNoteIds = extractAllNoteIds(html);
 
-async function crawlNoteDetail(item: GuideListItem): Promise<GuideDetail | null> {
-  const mobileUrl = item.url.replace('www.mafengwo.cn', 'm.mafengwo.cn');
-  const html = await fetchHtml(mobileUrl);
-  if (!html)
-    return null;
-  return extractDetail(html);
+  return { title, content, author, views, likes, coverImage, images, relatedNoteIds };
 }
 
 // ============================================
@@ -368,7 +332,8 @@ async function crawlNoteDetail(item: GuideListItem): Promise<GuideDetail | null>
 
 async function saveToTiDB(
   db: ReturnType<typeof createDb>,
-  item: GuideListItem,
+  externalId: string,
+  sourceUrl: string,
   detail: GuideDetail,
 ): Promise<boolean> {
   try {
@@ -376,11 +341,11 @@ async function saveToTiDB(
 
     const guideData = {
       platform: 'mafengwo',
-      externalId: item.externalId,
-      title: detail.title || item.externalId,
+      externalId,
+      title: detail.title || externalId,
       content: detail.content,
       authorName: detail.author ?? null,
-      sourceUrl: item.url,
+      sourceUrl,
       coverImageUrl: detail.coverImage ?? null,
       imageUrls: detail.images,
       destinations: [] as string[],
@@ -396,12 +361,7 @@ async function saveToTiDB(
     const existing = await db
       .select({ id: travelGuides.id })
       .from(travelGuides)
-      .where(
-        and(
-          eq(travelGuides.platform, 'mafengwo'),
-          eq(travelGuides.externalId, item.externalId),
-        ),
-      )
+      .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, externalId)))
       .limit(1);
 
     if (existing.length > 0) {
@@ -415,29 +375,9 @@ async function saveToTiDB(
   }
   catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    log(`  Save failed ${item.externalId}: ${message.slice(0, 80)}`);
+    log(`  Save failed ${externalId}: ${message.slice(0, 80)}`);
     return false;
   }
-}
-
-// ============================================
-// Concurrency helper
-// ============================================
-
-async function processInBatches<T, R>(
-  items: T[],
-  batchSize: number,
-  fn: (item: T, index: number) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = [];
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    const batchResults = await Promise.all(
-      batch.map((item, j) => fn(item, i + j)),
-    );
-    results.push(...batchResults);
-  }
-  return results;
 }
 
 // ============================================
@@ -445,13 +385,15 @@ async function processInBatches<T, R>(
 // ============================================
 
 async function main() {
-  console.warn(`\n${'='.repeat(50)}`);
-  console.warn('  Mafengwo crawler — HTTP-only (no browser)');
-  console.warn('='.repeat(50));
-  console.warn(`  Max notes:    ${CONFIG.maxNotes}`);
-  console.warn(`  Concurrency:  ${CONFIG.concurrency}`);
-  console.warn(`  Entry pages:  ${ENTRY_URLS.length}`);
-  console.warn(`${'='.repeat(50)}\n`);
+  console.warn(`\n${'='.repeat(60)}`);
+  console.warn('  Mafengwo crawler \u2014 full Playwright mode');
+  console.warn('  (all pages via browser, snowball URL discovery)');
+  console.warn('='.repeat(60));
+  console.warn(`  Max notes:    ${CONFIG.maxNotes === 0 ? 'unlimited' : CONFIG.maxNotes}`);
+  console.warn(`  Headless:     ${CONFIG.headless}`);
+  console.warn(`  Concurrency:  ${CONFIG.concurrency} tabs`);
+  console.warn(`  Destinations: ${SEED_DESTINATIONS.length} seed cities`);
+  console.warn(`${'='.repeat(60)}\n`);
 
   if (!process.env.DATABASE_URL) {
     console.error('ERROR: DATABASE_URL not set');
@@ -461,115 +403,355 @@ async function main() {
 
   const db = createDb();
   const stats: CrawlStats = {
-    totalUrlsFound: 0,
+    seedsCollected: 0,
     detailsCrawled: 0,
     detailsSaved: 0,
     errors: 0,
     skipped: 0,
+    snowballDiscovered: 0,
     startTime: Date.now(),
   };
 
-  try {
-    // Phase 1: Collect note URLs
-    log('\n--- Phase 1: Collecting note URLs ---');
-    const noteList = await collectNoteUrls(ENTRY_URLS, CONFIG.maxNotes);
-    stats.totalUrlsFound = noteList.length;
+  const seenIds = new Set<string>();
+  const queue: string[] = []; // queue of externalIds to crawl
 
-    if (noteList.length === 0) {
-      log('No note URLs found, exiting');
-      return;
+  // Load existing IDs from DB for dedup
+  log('Loading existing IDs from database...');
+  try {
+    const existingRows = await db
+      .select({ externalId: travelGuides.externalId })
+      .from(travelGuides)
+      .where(eq(travelGuides.platform, 'mafengwo'));
+    for (const row of existingRows) {
+      seenIds.add(row.externalId);
+    }
+    log(`Loaded ${seenIds.size} existing IDs`);
+  }
+  catch {
+    log('Failed to load existing IDs');
+  }
+
+  try {
+    await initBrowser();
+
+    // ================================================
+    // Phase 1: Collect seed URLs from entry pages
+    // ================================================
+    log('\n--- Phase 1: Seed collection from entry pages ---');
+
+    const entryUrls = [
+      'https://m.mafengwo.cn/note/',
+      ...SEED_DESTINATIONS.map(d => `https://m.mafengwo.cn/note/l-${d.id}.html`),
+    ];
+
+    for (const entryUrl of entryUrls) {
+      log(`  Entry: ${entryUrl}`);
+      const html = await loadPage(0, entryUrl);
+      if (!html) {
+        log('    Failed to load');
+        continue;
+      }
+
+      const ids = extractAllNoteIds(html);
+      let newCount = 0;
+      for (const id of ids) {
+        if (!seenIds.has(id)) {
+          seenIds.add(id);
+          queue.push(id);
+          newCount++;
+          stats.seedsCollected++;
+        }
+      }
+      log(`    Found ${ids.length} IDs, ${newCount} new. Queue: ${queue.length}`);
+
+      // Also scroll more to discover additional content
+      await sleep(randomDelay(2000, 1000));
     }
 
-    log(`\nCollected ${noteList.length} note URLs\n`);
+    log(`\nPhase 1 complete: ${queue.length} seed URLs in queue\n`);
 
-    // Phase 2: Crawl details in batches
-    log('--- Phase 2: Crawling note details ---');
+    // ================================================
+    // Phase 2: Crawl details with snowball discovery
+    // ================================================
+    log('--- Phase 2: Detail crawl + snowball ---');
 
-    await processInBatches(noteList, CONFIG.concurrency, async (item, i) => {
-      const progress = `[${i + 1}/${noteList.length}]`;
+    let processedCount = 0;
 
-      // Check if already exists
-      try {
-        const existing = await db
-          .select({ id: travelGuides.id })
-          .from(travelGuides)
-          .where(
-            and(
-              eq(travelGuides.platform, 'mafengwo'),
-              eq(travelGuides.externalId, item.externalId),
-            ),
-          )
-          .limit(1);
-
-        if (existing.length > 0) {
-          log(`${progress} Already exists, skipping: ${item.externalId}`);
-          stats.skipped++;
-          return;
-        }
-      }
-      catch {
-        // Query failed, proceed with crawl
+    while (queue.length > 0) {
+      if (CONFIG.maxNotes > 0 && stats.detailsSaved >= CONFIG.maxNotes) {
+        log(`Reached max notes limit (${CONFIG.maxNotes})`);
+        break;
       }
 
-      log(`${progress} Crawling: ${item.externalId}`);
+      // Process batch
+      const batchSize = Math.min(CONFIG.concurrency, queue.length);
+      const batch = queue.splice(0, batchSize);
 
-      const detail = await crawlNoteDetail(item);
+      await Promise.all(
+        batch.map(async (noteId, batchIdx) => {
+          processedCount++;
+          const progress = `[${processedCount} | Q:${queue.length} | S:${stats.detailsSaved}]`;
 
-      if (detail) {
-        stats.detailsCrawled++;
+          // Check if already in DB
+          try {
+            const existing = await db
+              .select({ id: travelGuides.id })
+              .from(travelGuides)
+              .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, noteId)))
+              .limit(1);
+            if (existing.length > 0) {
+              stats.skipped++;
+              return;
+            }
+          }
+          catch {
+            // continue
+          }
 
-        const saved = await saveToTiDB(db, item, detail);
-        if (saved) {
-          stats.detailsSaved++;
-          const titlePreview = detail.title?.slice(0, 40) || 'Untitled';
-          log(`${progress} OK ${titlePreview} (${detail.content.length} chars, ${detail.images.length} imgs)`);
-        }
-        else {
-          stats.errors++;
-        }
-      }
-      else {
-        stats.errors++;
-        log(`${progress} FAIL`);
-      }
+          log(`${progress} Crawling: ${noteId}`);
+          const url = `https://m.mafengwo.cn/i/${noteId}.html`;
+          const html = await loadPage(batchIdx, url);
 
-      // Polite delay
-      await sleep(randomDelay(CONFIG.delayBetweenRequests, 1000));
+          if (!html) {
+            stats.errors++;
+            log(`${progress} FAIL: no HTML`);
+            return;
+          }
 
-      // Progress report every 10 items
-      if ((i + 1) % 10 === 0) {
+          const detail = extractDetail(html);
+          if (!detail) {
+            stats.errors++;
+            log(`${progress} FAIL: no content extracted`);
+            return;
+          }
+
+          stats.detailsCrawled++;
+
+          const saved = await saveToTiDB(db, noteId, url, detail);
+          if (saved) {
+            stats.detailsSaved++;
+            const titlePreview = detail.title?.slice(0, 40) || 'Untitled';
+            log(`${progress} OK ${titlePreview} (${detail.content.length} chars, ${detail.images.length} imgs, +${detail.relatedNoteIds.length} links)`);
+          }
+          else {
+            stats.errors++;
+          }
+
+          // Snowball: add related note IDs
+          for (const relatedId of detail.relatedNoteIds) {
+            if (!seenIds.has(relatedId)) {
+              seenIds.add(relatedId);
+              queue.push(relatedId);
+              stats.snowballDiscovered++;
+            }
+          }
+        }),
+      );
+
+      await sleep(randomDelay(CONFIG.delayBetweenPages, 2000));
+
+      // Progress report every 25 items
+      if (processedCount % 25 === 0) {
         const elapsed = (Date.now() - stats.startTime) / 1000 / 60;
-        log(`\n--- Progress ---`);
-        log(`  Processed: ${i + 1}/${noteList.length}`);
-        log(`  Saved:     ${stats.detailsSaved}`);
-        log(`  Skipped:   ${stats.skipped}`);
-        log(`  Errors:    ${stats.errors}`);
-        log(`  Elapsed:   ${elapsed.toFixed(1)} min\n`);
+        log(`\n--- Progress Report ---`);
+        log(`  Processed:    ${processedCount}`);
+        log(`  Queue:        ${queue.length}`);
+        log(`  Saved:        ${stats.detailsSaved}`);
+        log(`  Skipped:      ${stats.skipped}`);
+        log(`  Errors:       ${stats.errors}`);
+        log(`  Snowball:     +${stats.snowballDiscovered}`);
+        log(`  Elapsed:      ${elapsed.toFixed(1)} min`);
+        if (stats.detailsSaved > 0) {
+          log(`  Speed:        ${(stats.detailsSaved / elapsed).toFixed(1)} notes/min`);
+        }
+        log('');
       }
-    });
+    }
+
+    // ================================================
+    // Phase 3: ID space probing
+    // When snowball runs dry, probe sequential IDs near known valid notes.
+    // Known ID range: ~1 to ~25,000,000
+    // ================================================
+    if (CONFIG.maxNotes === 0 || stats.detailsSaved < CONFIG.maxNotes) {
+      log('\n--- Phase 3: ID space probing ---');
+
+      const knownIds = Array.from(seenIds).map(Number).filter(n => !Number.isNaN(n) && n > 0);
+      if (knownIds.length > 0) {
+        knownIds.sort((a, b) => a - b);
+        const maxKnown = knownIds[knownIds.length - 1]!;
+
+        // Strategy: scan backwards from maxKnown in steps of 100
+        // Recent notes have higher IDs, so work backwards to find more valid content
+        const PROBE_STEP = 100;
+        const MAX_EMPTY_STREAKS = 10;
+        let emptyStreaks = 0;
+        let probeId = maxKnown - 1;
+
+        log(`  Starting probe from ID ${probeId}, stepping by -${PROBE_STEP}`);
+
+        while (probeId > 0) {
+          if (CONFIG.maxNotes > 0 && stats.detailsSaved >= CONFIG.maxNotes)
+            break;
+          if (emptyStreaks >= MAX_EMPTY_STREAKS) {
+            log(`  ${MAX_EMPTY_STREAKS} consecutive empty probes, jumping...`);
+            probeId -= PROBE_STEP * 50; // big jump
+            emptyStreaks = 0;
+            continue;
+          }
+
+          const noteId = String(probeId);
+          probeId -= PROBE_STEP;
+
+          if (seenIds.has(noteId))
+            continue;
+          seenIds.add(noteId);
+
+          processedCount++;
+          const progress = `[${processedCount} | PROBE:${probeId} | S:${stats.detailsSaved}]`;
+
+          log(`${progress} Probing: ${noteId}`);
+          const url = `https://m.mafengwo.cn/i/${noteId}.html`;
+          const html = await loadPage(0, url);
+
+          if (!html) {
+            emptyStreaks++;
+            continue;
+          }
+
+          const detail = extractDetail(html);
+          if (!detail) {
+            emptyStreaks++;
+            continue;
+          }
+
+          emptyStreaks = 0;
+          stats.detailsCrawled++;
+
+          const saved = await saveToTiDB(db, noteId, url, detail);
+          if (saved) {
+            stats.detailsSaved++;
+            const titlePreview = detail.title?.slice(0, 40) || 'Untitled';
+            log(`${progress} OK ${titlePreview} (${detail.content.length} chars)`);
+
+            // Add snowball discoveries from probe
+            for (const relatedId of detail.relatedNoteIds) {
+              if (!seenIds.has(relatedId)) {
+                seenIds.add(relatedId);
+                queue.push(relatedId);
+                stats.snowballDiscovered++;
+              }
+            }
+
+            // If snowball found new IDs, go process them first
+            if (queue.length > 0) {
+              log(`  Snowball found ${queue.length} new IDs, processing...`);
+              while (queue.length > 0) {
+                if (CONFIG.maxNotes > 0 && stats.detailsSaved >= CONFIG.maxNotes)
+                  break;
+
+                const batchSize = Math.min(CONFIG.concurrency, queue.length);
+                const batch = queue.splice(0, batchSize);
+
+                await Promise.all(
+                  batch.map(async (qId, bIdx) => {
+                    processedCount++;
+                    const qProgress = `[${processedCount} | Q:${queue.length} | S:${stats.detailsSaved}]`;
+
+                    try {
+                      const existing = await db
+                        .select({ id: travelGuides.id })
+                        .from(travelGuides)
+                        .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, qId)))
+                        .limit(1);
+                      if (existing.length > 0) {
+                        stats.skipped++;
+                        return;
+                      }
+                    }
+                    catch {}
+
+                    log(`${qProgress} Crawling: ${qId}`);
+                    const qUrl = `https://m.mafengwo.cn/i/${qId}.html`;
+                    const qHtml = await loadPage(bIdx, qUrl);
+                    if (!qHtml) {
+                      stats.errors++;
+                      return;
+                    }
+
+                    const qDetail = extractDetail(qHtml);
+                    if (!qDetail) {
+                      stats.errors++;
+                      return;
+                    }
+
+                    stats.detailsCrawled++;
+                    const qSaved = await saveToTiDB(db, qId, qUrl, qDetail);
+                    if (qSaved) {
+                      stats.detailsSaved++;
+                      log(`${qProgress} OK ${qDetail.title?.slice(0, 40)} (${qDetail.content.length} chars)`);
+                    }
+                    else {
+                      stats.errors++;
+                    }
+
+                    for (const rid of qDetail.relatedNoteIds) {
+                      if (!seenIds.has(rid)) {
+                        seenIds.add(rid);
+                        queue.push(rid);
+                        stats.snowballDiscovered++;
+                      }
+                    }
+                  }),
+                );
+
+                await sleep(randomDelay(CONFIG.delayBetweenPages, 2000));
+              }
+            }
+          }
+
+          await sleep(randomDelay(CONFIG.delayBetweenPages, 1000));
+
+          // Progress report
+          if (processedCount % 25 === 0) {
+            const elapsed = (Date.now() - stats.startTime) / 1000 / 60;
+            log(`\n--- Probe Progress ---`);
+            log(`  Current ID:   ${probeId}`);
+            log(`  Saved:        ${stats.detailsSaved}`);
+            log(`  Snowball:     +${stats.snowballDiscovered}`);
+            log(`  Elapsed:      ${elapsed.toFixed(1)} min\n`);
+          }
+        }
+      }
+    }
   }
   catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     log(`Fatal error: ${message}`);
     stats.errors++;
   }
+  finally {
+    await closeBrowser();
+  }
 
   // Final report
   const totalTime = (Date.now() - stats.startTime) / 1000 / 60;
 
-  console.warn(`\n${'='.repeat(50)}`);
+  console.warn(`\n${'='.repeat(60)}`);
   console.warn('  Crawl complete!');
-  console.warn('='.repeat(50));
-  console.warn(`  URLs found:   ${stats.totalUrlsFound}`);
-  console.warn(`  Crawled:      ${stats.detailsCrawled}`);
-  console.warn(`  Saved:        ${stats.detailsSaved}`);
-  console.warn(`  Skipped:      ${stats.skipped}`);
-  console.warn(`  Errors:       ${stats.errors}`);
-  console.warn(`  Total time:   ${totalTime.toFixed(1)} min`);
+  console.warn('='.repeat(60));
+  console.warn(`  Seeds:          ${stats.seedsCollected}`);
+  console.warn(`  Snowball:       +${stats.snowballDiscovered}`);
+  console.warn(`  Total unique:   ${seenIds.size}`);
+  console.warn(`  Crawled:        ${stats.detailsCrawled}`);
+  console.warn(`  Saved:          ${stats.detailsSaved}`);
+  console.warn(`  Skipped:        ${stats.skipped}`);
+  console.warn(`  Errors:         ${stats.errors}`);
+  console.warn(`  Total time:     ${totalTime.toFixed(1)} min`);
   if (stats.detailsSaved > 0) {
-    console.warn(`  Speed:        ${(stats.detailsSaved / totalTime).toFixed(1)} notes/min`);
+    console.warn(`  Speed:          ${(stats.detailsSaved / totalTime).toFixed(1)} notes/min`);
   }
-  console.warn(`${'='.repeat(50)}\n`);
+  console.warn(`${'='.repeat(60)}\n`);
 }
 
 main().then(() => {
