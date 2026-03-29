@@ -86,48 +86,49 @@ app.patch(
     const body = c.req.valid('json');
     const db = getDb();
 
-    // Upsert profile
-    const existing = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.userId, id))
-      .limit(1);
-
-    if (existing.length === 0) {
-      // Create profile
-      const user = await db
-        .select({ email: users.email })
-        .from(users)
-        .where(eq(users.id, id))
+    // Upsert profile within a transaction to prevent race conditions
+    await db.transaction(async (tx) => {
+      const existing = await tx
+        .select()
+        .from(profiles)
+        .where(eq(profiles.userId, id))
         .limit(1);
 
-      await db.insert(profiles).values({
-        userId: id,
-        email: user[0]?.email ?? '',
-        displayName: body.displayName ?? null,
-        bio: body.bio ?? null,
-        avatarUrl: body.avatarUrl ?? null,
-        phone: body.phone ?? null,
-      });
-    }
-    else {
-      const updates: Record<string, unknown> = {};
-      if (body.displayName !== undefined)
-        updates.displayName = body.displayName;
-      if (body.bio !== undefined)
-        updates.bio = body.bio;
-      if (body.avatarUrl !== undefined)
-        updates.avatarUrl = body.avatarUrl;
-      if (body.phone !== undefined)
-        updates.phone = body.phone;
+      if (existing.length === 0) {
+        const user = await tx
+          .select({ email: users.email })
+          .from(users)
+          .where(eq(users.id, id))
+          .limit(1);
 
-      if (Object.keys(updates).length > 0) {
-        await db
-          .update(profiles)
-          .set(updates)
-          .where(eq(profiles.userId, id));
+        await tx.insert(profiles).values({
+          userId: id,
+          email: user[0]?.email ?? '',
+          displayName: body.displayName ?? null,
+          bio: body.bio ?? null,
+          avatarUrl: body.avatarUrl ?? null,
+          phone: body.phone ?? null,
+        });
       }
-    }
+      else {
+        const updates: Record<string, unknown> = {};
+        if (body.displayName !== undefined)
+          updates.displayName = body.displayName;
+        if (body.bio !== undefined)
+          updates.bio = body.bio;
+        if (body.avatarUrl !== undefined)
+          updates.avatarUrl = body.avatarUrl;
+        if (body.phone !== undefined)
+          updates.phone = body.phone;
+
+        if (Object.keys(updates).length > 0) {
+          await tx
+            .update(profiles)
+            .set(updates)
+            .where(eq(profiles.userId, id));
+        }
+      }
+    });
 
     return jsonOk(c);
   },

@@ -1,6 +1,8 @@
 /**
  * Health check routes.
  */
+import { getDb } from '@pathfinding/database';
+import { sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 
 const app = new Hono();
@@ -13,10 +15,22 @@ app.get('/', (c) => {
   });
 });
 
-/** GET /ready — readiness probe (could check DB connectivity). */
-app.get('/ready', (c) => {
+/** GET /ready — readiness probe with DB connectivity check. */
+app.get('/ready', async (c) => {
   const appVersion
     = typeof process !== 'undefined' ? process.env.APP_VERSION : undefined;
+
+  try {
+    const db = getDb();
+    await db.execute(sql`SELECT 1`);
+  }
+  catch {
+    return c.json({
+      status: 'not_ready',
+      reason: 'database_unavailable',
+      timestamp: new Date().toISOString(),
+    }, 503);
+  }
 
   return c.json({
     status: 'ready',

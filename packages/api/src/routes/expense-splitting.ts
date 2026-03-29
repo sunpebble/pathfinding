@@ -7,7 +7,7 @@ import {
   sharedExpenses,
   tripMembers,
 } from '@pathfinding/database';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 /**
  * Expense Splitting routes — trip members, shared expenses, settlements.
  */
@@ -318,7 +318,7 @@ app.get('/balance', authRequired(), async (c) => {
     .from(tripMembers)
     .where(eq(tripMembers.itineraryId, iid));
 
-  // Fetch all expenses with participants
+  // Fetch all expenses for this itinerary
   const expenses = await db
     .select()
     .from(sharedExpenses)
@@ -331,18 +331,30 @@ app.get('/balance', authRequired(), async (c) => {
     balanceMap[member.id] = 0;
   }
 
-  for (const expense of expenses) {
-    const participants = await db
-      .select()
-      .from(expenseParticipants)
-      .where(eq(expenseParticipants.expenseId, expense.id));
+  // Batch-fetch all participants for the expenses in one query
+  const expenseIds = expenses.map(e => e.id);
+  const allParticipants = expenseIds.length > 0
+    ? await db
+        .select()
+        .from(expenseParticipants)
+        .where(inArray(expenseParticipants.expenseId, expenseIds))
+    : [];
 
+  const participantsByExpense = new Map<number, typeof allParticipants>();
+  for (const p of allParticipants) {
+    const list = participantsByExpense.get(p.expenseId) ?? [];
+    list.push(p);
+    participantsByExpense.set(p.expenseId, list);
+  }
+
+  for (const expense of expenses) {
     // Payer paid the full amount, so they are owed that amount
     if (balanceMap[expense.paidByMemberId] !== undefined) {
       balanceMap[expense.paidByMemberId]! += expense.amount;
     }
 
     // Each participant owes their share
+    const participants = participantsByExpense.get(expense.id) ?? [];
     for (const participant of participants) {
       if (balanceMap[participant.memberId] !== undefined) {
         balanceMap[participant.memberId]! -= participant.shareAmount;

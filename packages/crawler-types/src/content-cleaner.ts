@@ -392,6 +392,7 @@ export function extractPureContent(content: string): string {
  * Check whether content is low quality (too short or ad-heavy).
  *
  * @param content - Text content to evaluate
+ * @param options - Evaluation options
  * @param options.minLength - Minimum acceptable length after cleaning (default: 100)
  * @param options.maxAdDensity - Maximum acceptable ad density ratio (default: 0.3)
  * @returns `true` if the content is considered low quality

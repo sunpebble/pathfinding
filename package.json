@@ -23,7 +23,7 @@
     "build:apps": "nx run-many -t build --projects=dashboard",
     "dev": "nx run-many -t dev --projects=dashboard --parallel=1",
     "dev:api": "pnpm --filter @pathfinding/api dev",
-    "dev:ai-service": "cd apps/ai-service && pnpm dev",
+
     "dev:dashboard": "nx run dashboard:dev",
     "db:generate": "pnpm --filter @pathfinding/database drizzle-kit generate",
     "db:migrate": "pnpm --filter @pathfinding/database drizzle-kit migrate",
@@ -49,8 +49,7 @@
     "clean:dist": "find . -name 'dist' -type d -not -path './node_modules/*' -exec rm -rf {} + 2>/dev/null || true",
     "clean:all": "pnpm clean:dist && rm -rf node_modules **/node_modules .nx",
     "reset": "pnpm clean:all && pnpm install",
-    "health": "pnpm health:ai-service",
-    "health:ai-service": "curl -sf http://localhost:3001/health > /dev/null && echo 'AI Service: OK' || echo 'AI Service: DOWN'",
+    "health": "curl -sf http://localhost:3000/health > /dev/null && echo 'API: OK' || echo 'API: DOWN'",
     "docker:up": "docker-compose -f docker-compose.dev.yml up -d",
     "docker:down": "docker-compose -f docker-compose.dev.yml down",
     "docker:logs": "docker-compose -f docker-compose.dev.yml logs -f",
@@ -88,5 +87,9 @@
     "lint-staged": "^16.2.7",
     "nx": "^22.5.3",
     "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs}": "eslint --fix",
+    "*.{json,md,yml,yaml}": "prettier --write"
   }
 }

@@ -16,7 +16,7 @@ const log = createLogger('push-service');
  * @param userId  - Target user ID
  * @param title   - Notification title
  * @param body    - Notification body text
- * @param data    - Optional payload data
+ * @param _data   - Optional payload data
  * @returns Number of tokens the notification was sent to
  */
 export async function sendPushNotification(

@@ -174,11 +174,7 @@ export interface CreateCrawlJobInput {
   config?: CrawlJob['config'];
 }
 
-/**
- * List crawl jobs with optional filters.
- *
- * @param params - Optional filter/pagination parameters.
- */
+/** List crawl jobs with optional filters. */
 export async function getCrawlJobs(params?: {
   status?: string;
   platform?: string;
@@ -339,11 +335,7 @@ export interface NormalizedPOI {
   updated_at: string;
 }
 
-/**
- * List POIs from the crawler backend with optional filters.
- *
- * @param params - Optional filter/pagination parameters.
- */
+/** List POIs from the crawler backend with optional filters. */
 export async function getPOIs(params?: {
   query?: string;
   category?: string;
@@ -399,11 +391,7 @@ export interface TrainingDataset {
   updated_at: string;
 }
 
-/**
- * List training datasets with optional filters.
- *
- * @param params - Optional filter/pagination parameters.
- */
+/** List training datasets with optional filters. */
 export async function getTrainingDatasets(params?: {
   type?: string;
   status?: string;
@@ -457,11 +445,7 @@ export interface TravelGuide {
   updated_at: string;
 }
 
-/**
- * List travel guides with optional filters and sorting.
- *
- * @param params - Optional filter/pagination/sort parameters.
- */
+/** List travel guides with optional filters and sorting. */
 export async function getTravelGuides(params?: {
   platforms?: string;
   destinations?: string;
@@ -497,11 +481,7 @@ export async function getTravelGuide(
   return fetchApi(`/guides/${id}`);
 }
 
-/**
- * Fetch guide recommendations based on destinations, tags, or platforms.
- *
- * @param params - Optional recommendation filters.
- */
+/** Fetch guide recommendations based on destinations, tags, or platforms. */
 export async function getGuideRecommendations(params?: {
   destinations?: string;
   tags?: string;
@@ -518,11 +498,7 @@ export async function getGuideRecommendations(params?: {
   })}`);
 }
 
-/**
- * Fetch trending guides over a time period.
- *
- * @param params - Optional period and platform filters.
- */
+/** Fetch trending guides over a time period. */
 export async function getTrendingGuides(params?: {
   days?: number;
   platforms?: string;
@@ -535,11 +511,7 @@ export async function getTrendingGuides(params?: {
   })}`);
 }
 
-/**
- * Full-text search across travel guides.
- *
- * @param params - Search query and optional filters.
- */
+/** Full-text search across travel guides. */
 export async function searchGuides(params: {
   q: string;
   platforms?: string;

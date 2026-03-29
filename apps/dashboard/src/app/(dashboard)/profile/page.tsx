@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 interface UserProfile {
@@ -25,7 +25,7 @@ export default function ProfilePage() {
     bio: '',
   });
 
-  useEffect(() => {
+  const fetchProfile = useCallback(async () => {
     if (authLoading)
       return;
 
@@ -34,20 +34,28 @@ export default function ProfilePage() {
       return;
     }
 
-    fetch(`/api/users/${user.id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then(res => res.json())
-      .then((data) => {
-        setProfile(data.data);
-        setFormData({
-          displayName: data.data?.display_name ?? '',
-          bio: data.data?.bio ?? '',
-        });
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      setProfile(data.data);
+      setFormData({
+        displayName: data.data?.display_name ?? '',
+        bio: data.data?.bio ?? '',
+      });
+    }
+    catch (err) {
+      console.error(err);
+    }
+    finally {
+      setLoading(false);
+    }
   }, [authLoading, isAuthenticated, user, token]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleSave = async () => {
     if (!user || !token)

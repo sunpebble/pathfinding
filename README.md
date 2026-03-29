@@ -21,7 +21,7 @@ A mobile-first travel itinerary planning application with offline support, POI r
 
 - **Backend API**: Hono + TiDB - handles CRUD, auth, and shared data APIs
 - **Frontend**: Next.js (Dashboard), SwiftUI (iOS)
-- **Workflow**: Motia - workflow automation engine
+- **Backend Services**: Go (crawler & auxiliary HTTP server)
 - **AI**: Ollama with Gemma 3 model
 - **Geocoding**: Nominatim (OpenStreetMap)
 - **Build**: pnpm workspaces + nx
@@ -38,16 +38,14 @@ apps/
 │           ├── Core/     # APIClient, AppConfig, AuthManager
 │           ├── Models/   # Data models
 │           └── Features/ # SwiftUI views
-└── motia/            # Motia workflow engine
+└── server/           # Go backend (crawler & auxiliary HTTP)
 
 packages/
-├── api/              # Shared backend API
+├── api/              # Shared backend API (Hono)
 ├── constants/        # Shared constants
-├── convex-client/    # Convex client utilities
-├── convex/           # Convex schema and functions
 ├── crawler-types/    # Crawler type definitions
-├── database/         # TiDB schema and database access
-├── logger/           # Shared logging utilities
+├── database/         # TiDB schema and database access (Drizzle)
+├── logger/           # Shared logging utilities (Pino)
 ├── test-utils/       # Shared test utilities
 ├── types/            # Shared TypeScript types
 └── utils/            # Shared utility functions
@@ -59,12 +57,12 @@ packages/
 
 | Service   | Port | Description                    |
 | --------- | ---- | ------------------------------ |
-| API       | 8000 | CRUD operations backed by TiDB |
-| Dashboard | 3000 | Admin dashboard (Next.js)      |
+| API       | 3000 | CRUD operations backed by TiDB |
+| Dashboard | 3002 | Admin dashboard (Next.js)      |
 
 ### Base URLs
 
-- **API (Local)**: `http://localhost:8000/api`
+- **API (Local)**: `http://localhost:3000/api`
 - **API (Production)**: `https://api.pathfinding.org/api`
 
 ### Authentication
@@ -72,7 +70,7 @@ packages/
 All protected endpoints require JWT Bearer token from the shared auth service.
 
 ```bash
-curl -H "Authorization: Bearer <token>" http://localhost:8000/api/guides
+curl -H "Authorization: Bearer <token>" http://localhost:3000/api/guides
 ```
 
 ---
@@ -300,8 +298,8 @@ All error responses follow this format:
     pnpm dev:api          # Starts API service (separate terminal)
    ```
 
-   - API: `http://localhost:8000`
-   - Dashboard: `http://localhost:3000`
+   - API: `http://localhost:3000`
+   - Dashboard: `http://localhost:3002`
 
 5. **Start iOS App**:
 
@@ -320,7 +318,7 @@ All error responses follow this format:
 
 ## 🐳 Docker
 
-> **Note**: Docker setup is a work-in-progress. Dockerfiles for `apps/api` and `apps/crawler` have not been created yet. Currently only the TiDB database service is fully functional in Docker.
+> **Note**: Docker setup is a work-in-progress. Currently the TiDB database service and the Go server (`apps/server`) are available in Docker. The Node API (`packages/api`) runs natively via `pnpm dev:api`.
 
 ### Quick Start with Docker Compose
 
@@ -340,18 +338,18 @@ All error responses follow this format:
 3. **Start all services (production)**:
 
    ```bash
-   docker compose up -d
+   docker compose -f docker-compose.dev.yml up -d
    ```
 
 4. **View logs**:
 
    ```bash
-   docker compose logs -f
+   docker compose -f docker-compose.dev.yml logs -f
    ```
 
 5. **Stop services**:
    ```bash
-   docker compose down
+   docker compose -f docker-compose.dev.yml down
    ```
 
 ---
