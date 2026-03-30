@@ -88,9 +88,7 @@ app.post('/read', authRequired(), zValidator('json', markReadSchema), async (c) 
 });
 
 // ── POST /read-all — Mark all notifications as read ────
-const markAllReadSchema = z.object({});
-
-app.post('/read-all', authRequired(), zValidator('json', markAllReadSchema), async (c) => {
+app.post('/read-all', authRequired(), async (c) => {
   const userId = Number(c.get('userId'));
   const db = getDb();
 

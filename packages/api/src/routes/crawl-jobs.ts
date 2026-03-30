@@ -74,7 +74,7 @@ app.get('/', adminRequired(), async (c) => {
 
 // ── POST / — Create a new crawl job ───────────────────
 app.post('/', adminRequired(), zValidator('json', createJobSchema), async (c) => {
-  const { name: _name, platform, jobType, config, scheduleCron: _scheduleCron } = c.req.valid('json');
+  const { platform, jobType, config } = c.req.valid('json');
 
   const db = getDb();
 

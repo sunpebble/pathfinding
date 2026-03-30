@@ -162,7 +162,13 @@ export function rateLimit(options: RateLimitOptions): MiddlewareHandler {
 
         // Periodically clean up expired entries (1% chance per request)
         if (Math.random() < 0.01) {
-          db.delete(rateLimits).where(lt(rateLimits.expiresAt, now)).catch(() => {});
+          db.delete(rateLimits).where(lt(rateLimits.expiresAt, now)).catch((cleanupErr) => {
+            // Log cleanup failures but don't block the request
+            // This is a best-effort background operation
+            if (typeof console !== 'undefined') {
+              console.warn('Rate limit cleanup failed:', cleanupErr instanceof Error ? cleanupErr.message : cleanupErr);
+            }
+          });
         }
       }
       catch {

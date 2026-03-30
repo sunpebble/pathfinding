@@ -20,6 +20,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     displayName: '',
     bio: '',
@@ -38,15 +39,24 @@ export default function ProfilePage() {
       const res = await fetch(`/api/users/${user.id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          (errorData as Record<string, string> | null)?.error
+          ?? `Failed to load profile (${res.status})`,
+        );
+      }
       const data = await res.json();
       setProfile(data.data);
       setFormData({
         displayName: data.data?.display_name ?? '',
         bio: data.data?.bio ?? '',
       });
+      setError(null);
     }
     catch (err) {
-      console.error(err);
+      console.error('Failed to fetch profile:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load profile');
     }
     finally {
       setLoading(false);
@@ -62,7 +72,7 @@ export default function ProfilePage() {
       return;
 
     try {
-      await fetch(`/api/users/${user.id}`, {
+      const updateRes = await fetch(`/api/users/${user.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -70,16 +80,28 @@ export default function ProfilePage() {
         },
         body: JSON.stringify(formData),
       });
+      if (!updateRes.ok) {
+        const errorData = await updateRes.json().catch(() => null);
+        throw new Error(
+          (errorData as Record<string, string> | null)?.error
+          ?? `Failed to update profile (${updateRes.status})`,
+        );
+      }
       setEditing(false);
+      setError(null);
       // Refresh profile
       const res = await fetch(`/api/users/${user.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) {
+        throw new Error(`Failed to reload profile (${res.status})`);
+      }
       const data = await res.json();
       setProfile(data.data);
     }
     catch (err) {
       console.error('Failed to update profile:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
     }
   };
 
@@ -95,7 +117,9 @@ export default function ProfilePage() {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Profile</h1>
-        <p className="text-gray-500">Please sign in to view your profile.</p>
+        {error
+          ? <p className="text-red-600">{error}</p>
+          : <p className="text-gray-500">Please sign in to view your profile.</p>}
       </div>
     );
   }
@@ -103,6 +127,12 @@ export default function ProfilePage() {
   return (
     <div className="p-6 max-w-2xl">
       <h1 className="text-2xl font-bold mb-6">Profile</h1>
+
+      {error && (
+        <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="bg-white rounded-lg border p-6 space-y-6">
         {/* Avatar and name */}

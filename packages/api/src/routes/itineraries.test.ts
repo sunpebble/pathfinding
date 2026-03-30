@@ -555,14 +555,27 @@ describe('itinerary read permissions', () => {
   });
 
   it('allows a viewer collaborator to read a private itinerary', async () => {
+    // 1. GET /:id — select itinerary by id
     const itineraryChain = createSelectChain([{ id: 9, userId: 1, title: 'Kyoto', cityId: 88, visibility: 'private' }]);
+    // 2. findAccessible → findOwned(9, 2) — not owner
+    const notOwnerChain = createSelectChain([]);
+    // 3. findAccessible → findCollaboratorRole(9, 2) — viewer
     const collaboratorAccessChain = createSelectChain([{ id: 55, itineraryId: 9, userId: 2, role: 'viewer' }]);
+    // 4. findAccessible → fetch itinerary for return
+    const accessItineraryChain = createSelectChain([{ id: 9, userId: 1, title: 'Kyoto', cityId: 88, visibility: 'private' }]);
+    // 5. getItineraryDto → select itinerary
+    const dtoItineraryChain = createSelectChain([{ id: 9, userId: 1, title: 'Kyoto', cityId: 88, visibility: 'private' }]);
+    // 6. getItineraryDto → select days
     const daysChain = createSelectChain([{ id: 201, itineraryId: 9, dayNumber: 1, date: '2026-04-01' }]);
+    // 7. getItineraryDto → select items
     const itemsChain = createSelectChain([{ id: 301, dayId: 201, poiId: 401, orderIndex: 0 }]);
 
     mockDb.select
       .mockReturnValueOnce(itineraryChain)
+      .mockReturnValueOnce(notOwnerChain)
       .mockReturnValueOnce(collaboratorAccessChain)
+      .mockReturnValueOnce(accessItineraryChain)
+      .mockReturnValueOnce(dtoItineraryChain)
       .mockReturnValueOnce(daysChain)
       .mockReturnValueOnce(itemsChain);
 

@@ -1,7 +1,7 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
-import { getDb, itineraryBudgets } from '@pathfinding/database';
-import { eq } from 'drizzle-orm';
+import { getDb, itineraries, itineraryBudgets } from '@pathfinding/database';
+import { and, eq } from 'drizzle-orm';
 /**
  * Budgets & Expenses routes.
  * Mirrors the Convex /api/budgets and /api/expenses HTTP endpoints.
@@ -17,6 +17,7 @@ const app = new Hono<{ Variables: AuthVariables }>();
 // ── GET /budgets — Get budget for an itinerary ─────────
 app.get('/', authRequired(), async (c) => {
   const itineraryId = c.req.query('itineraryId');
+  const userId = Number(c.get('userId'));
 
   if (!itineraryId) {
     throw new ApiError(400, '缺少itineraryId参数');
@@ -24,6 +25,22 @@ app.get('/', authRequired(), async (c) => {
 
   const db = getDb();
   const iid = Number(itineraryId);
+
+  // Verify the user owns this itinerary
+  const itinerary = await db
+    .select({ id: itineraries.id })
+    .from(itineraries)
+    .where(
+      and(
+        eq(itineraries.id, iid),
+        eq(itineraries.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!itinerary[0]) {
+    throw new ApiError(403, '行程不存在或无权访问');
+  }
 
   const budget = await db
     .select()
@@ -48,6 +65,22 @@ app.post('/', authRequired(), zValidator('json', createBudgetSchema), async (c) 
   const db = getDb();
   const iid = Number(itineraryId);
   const uid = Number(c.get('userId'));
+
+  // Verify the user owns this itinerary
+  const itinerary = await db
+    .select({ id: itineraries.id })
+    .from(itineraries)
+    .where(
+      and(
+        eq(itineraries.id, iid),
+        eq(itineraries.userId, uid),
+      ),
+    )
+    .limit(1);
+
+  if (!itinerary[0]) {
+    throw new ApiError(403, '行程不存在或无权访问');
+  }
 
   // Upsert: check if budget exists
   const existing = await db

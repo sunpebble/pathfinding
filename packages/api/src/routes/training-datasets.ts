@@ -9,7 +9,7 @@ import { and, desc, eq, like, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
-import { parsePagination, parsePositiveInt } from '../lib/params.js';
+import { escapeLikePattern, parsePagination, parsePositiveInt } from '../lib/params.js';
 import { jsonData, jsonOk } from '../lib/response.js';
 import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
@@ -51,7 +51,7 @@ app.get('/', adminRequired(), async (c) => {
 
   const conditions = [];
   if (name) {
-    conditions.push(like(trainingDatasets.name, `%${name}%`));
+    conditions.push(like(trainingDatasets.name, `%${escapeLikePattern(name)}%`));
   }
   if (status) {
     conditions.push(eq(trainingDatasets.status, status));
@@ -87,7 +87,7 @@ app.get('/', adminRequired(), async (c) => {
 
 // ── POST / — Create a training dataset ─────────────────
 app.post('/', adminRequired(), zValidator('json', createDatasetSchema), async (c) => {
-  const { name, version, generationParams, outputFormats: _outputFormats, status, statistics: _statistics }
+  const { name, version, generationParams, status }
     = c.req.valid('json');
 
   const db = getDb();
@@ -144,7 +144,7 @@ app.delete('/', adminRequired(), zValidator('json', deleteDatasetSchema), async 
 
 // ── PATCH / — Update a training dataset ────────────────
 app.patch('/', adminRequired(), zValidator('json', updateDatasetSchema), async (c) => {
-  const { id, status, statistics: _statistics, storagePaths: _storagePaths, generatedAt: _generatedAt } = c.req.valid('json');
+  const { id, status } = c.req.valid('json');
 
   const db = getDb();
   const datasetId = Number(id);

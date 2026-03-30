@@ -1,3 +1,4 @@
+import type { JWTPayload } from 'jose';
 import { createLogger } from '@pathfinding/logger';
 /**
  * JWT-based authentication middleware.
@@ -51,6 +52,53 @@ async function verifySession(payload: Record<string, unknown>): Promise<void> {
   }
 }
 
+/**
+ * Extract and verify a Bearer token from the Authorization header.
+ *
+ * Shared by `authRequired()` and `adminRequired()` to avoid duplicating
+ * the token extraction → JWT verification → session check → error
+ * handling pipeline.
+ *
+ * @returns The verified JWT payload and the user ID.
+ * @throws ApiError on missing/invalid tokens or misconfigured secrets.
+ */
+async function requireValidToken(
+  authHeader: string | undefined,
+): Promise<{ payload: JWTPayload; userId: string }> {
+  const token = extractToken(authHeader);
+  if (!token) {
+    throw new ApiError(401, 'Authorization token is required');
+  }
+
+  try {
+    const payload = await verifyToken(token);
+    const userId = payload.sub;
+    if (!userId || typeof userId !== 'string') {
+      throw new ApiError(401, 'Invalid token: missing subject');
+    }
+
+    // Verify session hasn't been revoked
+    await verifySession(payload);
+
+    return { payload, userId };
+  }
+  catch (err) {
+    if (err instanceof ApiError)
+      throw err;
+
+    if (
+      err instanceof Error
+      && err.message.includes('JWT_SECRET environment variable is required')
+    ) {
+      log.error({ err }, 'JWT service misconfigured');
+      throw new ApiError(500, 'Authentication service misconfigured');
+    }
+
+    log.warn({ err }, 'JWT verification failed');
+    throw new ApiError(401, 'Invalid or expired token');
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Middleware factories
 // ---------------------------------------------------------------------------
@@ -60,39 +108,8 @@ async function verifySession(payload: Record<string, unknown>): Promise<void> {
  */
 export function authRequired() {
   return createMiddleware<{ Variables: AuthVariables }>(async (c, next) => {
-    const token = extractToken(c.req.header('Authorization'));
-    if (!token) {
-      throw new ApiError(401, 'Authorization token is required');
-    }
-
-    try {
-      const payload = await verifyToken(token);
-      const userId = payload.sub;
-      if (!userId || typeof userId !== 'string') {
-        throw new ApiError(401, 'Invalid token: missing subject');
-      }
-
-      // Verify session hasn't been revoked
-      await verifySession(payload);
-
-      c.set('userId', userId);
-    }
-    catch (err) {
-      if (err instanceof ApiError)
-        throw err;
-
-      if (
-        err instanceof Error
-        && err.message.includes('JWT_SECRET environment variable is required')
-      ) {
-        log.error({ err }, 'JWT service misconfigured');
-        throw new ApiError(500, 'Authentication service misconfigured');
-      }
-
-      log.warn({ err }, 'JWT verification failed');
-      throw new ApiError(401, 'Invalid or expired token');
-    }
-
+    const { userId } = await requireValidToken(c.req.header('Authorization'));
+    c.set('userId', userId);
     await next();
   });
 }
@@ -134,46 +151,16 @@ export function authOptional() {
  */
 export function adminRequired() {
   return createMiddleware<{ Variables: AuthVariables }>(async (c, next) => {
-    const token = extractToken(c.req.header('Authorization'));
-    if (!token) {
-      throw new ApiError(401, 'Authorization token is required');
-    }
+    const { payload, userId } = await requireValidToken(c.req.header('Authorization'));
+    c.set('userId', userId);
 
-    try {
-      const payload = await verifyToken(token);
-      const userId = payload.sub;
-      if (!userId || typeof userId !== 'string') {
-        throw new ApiError(401, 'Invalid token: missing subject');
-      }
+    // Check admin role via JWT claim or environment allowlist
+    const isAdminClaim = payload.role === 'admin';
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) ?? [];
+    const isAdminEmail = typeof payload.email === 'string' && adminEmails.includes(payload.email);
 
-      // Verify session hasn't been revoked
-      await verifySession(payload);
-
-      c.set('userId', userId);
-
-      // Check admin role via JWT claim or environment allowlist
-      const isAdminClaim = payload.role === 'admin';
-      const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) ?? [];
-      const isAdminEmail = typeof payload.email === 'string' && adminEmails.includes(payload.email);
-
-      if (!isAdminClaim && !isAdminEmail) {
-        throw new ApiError(403, 'Admin access required');
-      }
-    }
-    catch (err) {
-      if (err instanceof ApiError)
-        throw err;
-
-      if (
-        err instanceof Error
-        && err.message.includes('JWT_SECRET environment variable is required')
-      ) {
-        log.error({ err }, 'JWT service misconfigured');
-        throw new ApiError(500, 'Authentication service misconfigured');
-      }
-
-      log.warn({ err }, 'JWT verification failed');
-      throw new ApiError(401, 'Invalid or expired token');
+    if (!isAdminClaim && !isAdminEmail) {
+      throw new ApiError(403, 'Admin access required');
     }
 
     await next();

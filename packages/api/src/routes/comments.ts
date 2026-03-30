@@ -22,8 +22,12 @@ const app = new Hono<{ Variables: AuthVariables }>();
 // ── GET / — List comments for a guide ──────────────────
 app.get('/', async (c) => {
   const itineraryId = c.req.query('itineraryId');
-  const page = Number.parseInt(c.req.query('page') ?? '1', 10);
-  const pageSize = Number.parseInt(c.req.query('pageSize') ?? '20', 10);
+  const rawPage = Number.parseInt(c.req.query('page') ?? '1', 10);
+  const rawPageSize = Number.parseInt(c.req.query('pageSize') ?? '20', 10);
+
+  // Clamp pagination values to safe bounds
+  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
+  const pageSize = Number.isInteger(rawPageSize) && rawPageSize > 0 ? Math.min(rawPageSize, 100) : 20;
 
   if (!itineraryId) {
     throw new ApiError(400, '缺少itineraryId参数');

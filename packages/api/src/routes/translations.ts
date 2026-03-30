@@ -14,6 +14,7 @@ import { and, desc, eq, like, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { escapeLikePattern } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
@@ -83,7 +84,7 @@ app.get('/phrases/search', async (c) => {
 
   const db = getDb();
 
-  const conditions = [like(translationPhrases.sourceText, `%${query}%`)];
+  const conditions = [like(translationPhrases.sourceText, `%${escapeLikePattern(query)}%`)];
   if (category) {
     conditions.push(eq(translationPhrases.category, category));
   }
@@ -162,8 +163,26 @@ const deleteTranslationSchema = z.object({
 
 app.delete('/saved', authRequired(), zValidator('json', deleteTranslationSchema), async (c) => {
   const { id } = c.req.valid('json');
+  const userId = Number(c.get('userId'));
 
   const db = getDb();
+
+  // Verify ownership before deleting
+  const existing = await db
+    .select()
+    .from(savedTranslations)
+    .where(
+      and(
+        eq(savedTranslations.id, id),
+        eq(savedTranslations.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!existing[0]) {
+    throw new ApiError(404, '翻译不存在或无权删除');
+  }
+
   await db.delete(savedTranslations).where(eq(savedTranslations.id, id));
 
   return c.json({ success: true });
@@ -176,17 +195,24 @@ const favoriteTranslationSchema = z.object({
 
 app.post('/saved/favorite', authRequired(), zValidator('json', favoriteTranslationSchema), async (c) => {
   const { id } = c.req.valid('json');
+  const userId = Number(c.get('userId'));
 
   const db = getDb();
 
+  // Verify ownership before toggling favorite
   const existing = await db
     .select()
     .from(savedTranslations)
-    .where(eq(savedTranslations.id, id))
+    .where(
+      and(
+        eq(savedTranslations.id, id),
+        eq(savedTranslations.userId, userId),
+      ),
+    )
     .limit(1);
 
   if (!existing[0]) {
-    throw new ApiError(404, '翻译不存在');
+    throw new ApiError(404, '翻译不存在或无权操作');
   }
 
   const newFavorite = !existing[0].isFavorite;

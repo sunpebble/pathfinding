@@ -71,15 +71,6 @@ app.get('/', async (c) => {
 
   const db = getDb();
 
-  const query = db
-    .select()
-    .from(travelGuides)
-    .orderBy(desc(travelGuides.createdAt))
-    .limit(limit)
-    .offset(offset);
-
-  // Note: dynamic where clauses are appended via $dynamic() in Drizzle,
-  // but for simplicity we use conditional raw SQL approach.
   const conditions = [];
   if (platform) {
     conditions.push(eq(travelGuides.platform, platform));
@@ -88,19 +79,15 @@ app.get('/', async (c) => {
     conditions.push(gte(travelGuides.qualityScore, minQuality));
   }
 
-  let results: Guide[];
-  if (conditions.length > 0) {
-    results = await db
-      .select()
-      .from(travelGuides)
-      .where(and(...conditions))
-      .orderBy(desc(travelGuides.createdAt))
-      .limit(limit)
-      .offset(offset);
-  }
-  else {
-    results = await query;
-  }
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const results = await db
+    .select()
+    .from(travelGuides)
+    .where(where)
+    .orderBy(desc(travelGuides.createdAt))
+    .limit(limit)
+    .offset(offset);
 
   // TODO: Replace with a parallel COUNT(*) query for accurate total
   return jsonList(c, results.map(toClientGuide), { limit, offset }, results.length);
@@ -178,12 +165,11 @@ app.get('/destinations', async (c) => {
   return jsonData(c, topDestinations);
 });
 
-// ── GET /by-id — Get guide by ID ───────────────────────
-app.get('/by-id', async (c) => {
-  const id = parsePositiveInt(c.req.query('id'));
-  if (!id)
-    return c.json({ error: '缺少id参数' }, 400);
-
+/**
+ * Fetch a guide by ID and return its client representation.
+ * Returns `null` if not found.
+ */
+async function findGuideById(id: number): Promise<Record<string, unknown> | null> {
   const db = getDb();
   const result = await db
     .select()
@@ -191,11 +177,21 @@ app.get('/by-id', async (c) => {
     .where(eq(travelGuides.id, id))
     .limit(1);
 
-  if (result.length === 0) {
+  return result[0] ? toClientGuide(result[0]) : null;
+}
+
+// ── GET /by-id — Get guide by ID ───────────────────────
+app.get('/by-id', async (c) => {
+  const id = parsePositiveInt(c.req.query('id'));
+  if (!id)
+    return c.json({ error: '缺少id参数' }, 400);
+
+  const guide = await findGuideById(id);
+  if (!guide) {
     return c.json({ error: '攻略不存在' }, 404);
   }
 
-  return c.json(toClientGuide(result[0]!));
+  return c.json(guide);
 });
 
 // ── GET /stats — Guide statistics ──────────────────────
@@ -225,19 +221,13 @@ app.get('/:id', async (c) => {
   const id = parsePositiveInt(c.req.param('id'));
   if (!id)
     return c.json({ error: 'Invalid ID' }, 400);
-  const db = getDb();
 
-  const result = await db
-    .select()
-    .from(travelGuides)
-    .where(eq(travelGuides.id, id))
-    .limit(1);
-
-  if (result.length === 0) {
+  const guide = await findGuideById(id);
+  if (!guide) {
     return c.json({ error: '攻略不存在' }, 404);
   }
 
-  return jsonData(c, toClientGuide(result[0]!));
+  return jsonData(c, guide);
 });
 
 // ── POST / — Create a guide ───────────────────────────

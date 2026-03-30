@@ -6,17 +6,21 @@ import { and, eq } from 'drizzle-orm';
  */
 import { Hono } from 'hono';
 import { authRequired } from '../middleware/auth.js';
+import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
 // ── POST / — Register a push token ────────────────────
 app.post('/', authRequired(), async (c) => {
   const userId = Number(c.get('userId'));
-  const body = await c.req.json<{
-    token: string;
-    platform: string;
-    deviceId?: string;
-  }>();
+
+  let body: { token?: string; platform?: string; deviceId?: string };
+  try {
+    body = await c.req.json<{ token: string; platform: string; deviceId?: string }>();
+  }
+  catch {
+    throw new ApiError(400, '请求体格式无效，需要 JSON');
+  }
 
   if (!body.token || !body.platform) {
     return c.json({ error: '缺少必填字段：token 和 platform' }, 400);
@@ -67,7 +71,14 @@ app.post('/', authRequired(), async (c) => {
 // ── DELETE / — Deactivate a push token ─────────────────
 app.delete('/', authRequired(), async (c) => {
   const userId = Number(c.get('userId'));
-  const body = await c.req.json<{ token: string }>();
+
+  let body: { token?: string };
+  try {
+    body = await c.req.json<{ token: string }>();
+  }
+  catch {
+    throw new ApiError(400, '请求体格式无效，需要 JSON');
+  }
 
   if (!body.token) {
     return c.json({ error: '缺少必填字段：token' }, 400);

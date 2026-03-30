@@ -18,5 +18,6 @@ export function SafeHtml({ html, className }: SafeHtmlProps) {
     ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'target', 'rel'],
     ADD_ATTR: ['target'],
   });
+  // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- intentional: HTML is sanitized by DOMPurify above
   return <div className={className} dangerouslySetInnerHTML={{ __html: sanitized }} />;
 }

@@ -117,6 +117,10 @@ app.get('/stats', async (c) => {
   const db = getDb();
   const rid = Number(resourceId);
 
+  if (!Number.isFinite(rid) || rid <= 0) {
+    throw new ApiError(400, '无效的resourceId参数');
+  }
+
   const links = await db
     .select()
     .from(shareLinks)

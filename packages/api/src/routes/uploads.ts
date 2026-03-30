@@ -55,17 +55,37 @@ app.post('/', authRequired(), async (c) => {
     );
   }
 
-  const _ext = ALLOWED_TYPES[mimeType];
+  const ext = ALLOWED_TYPES[mimeType];
   const timestamp = Date.now();
-  const originalName = file.name.replace(/[^\w.-]/g, '_');
-  const filename = `${timestamp}-${originalName}`;
+  // Strip any path separators and non-safe characters from the original name
+  const safeName = path.basename(file.name).replace(/[^\w.-]/g, '_');
+  const filename = `${timestamp}-${safeName}${ext}`;
 
   const userDir = path.join(getUploadsDir(), userId);
-  fs.mkdirSync(userDir, { recursive: true });
+  try {
+    fs.mkdirSync(userDir, { recursive: true });
+  }
+  catch {
+    return c.json({ error: '无法创建上传目录' }, 500);
+  }
 
   const filePath = path.join(userDir, filename);
+
+  // Verify the resolved path is still within the user's upload directory
+  // to prevent path traversal attacks
+  const resolvedPath = path.resolve(filePath);
+  const resolvedUserDir = path.resolve(userDir);
+  if (!resolvedPath.startsWith(resolvedUserDir + path.sep) && resolvedPath !== resolvedUserDir) {
+    return c.json({ error: '无效的文件名' }, 400);
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer());
-  fs.writeFileSync(filePath, buffer);
+  try {
+    fs.writeFileSync(filePath, buffer);
+  }
+  catch {
+    return c.json({ error: '文件保存失败' }, 500);
+  }
 
   return c.json({
     url: `/api/uploads/${filename}`,
@@ -79,16 +99,32 @@ app.post('/', authRequired(), async (c) => {
 app.get('/:filename', authRequired(), async (c) => {
   const userId = c.get('userId');
   const filename = c.req.param('filename');
-  const filePath = path.join(getUploadsDir(), userId, filename);
+
+  // Sanitize filename: use only the basename to prevent path traversal
+  const safeFilename = path.basename(filename);
+  const filePath = path.join(getUploadsDir(), userId, safeFilename);
+
+  // Verify the resolved path is within the user's upload directory
+  const resolvedPath = path.resolve(filePath);
+  const resolvedUserDir = path.resolve(path.join(getUploadsDir(), userId));
+  if (!resolvedPath.startsWith(resolvedUserDir + path.sep) && resolvedPath !== resolvedUserDir) {
+    return c.json({ error: '无效的文件名' }, 400);
+  }
 
   if (!fs.existsSync(filePath)) {
     return c.json({ error: '文件不存在' }, 404);
   }
 
-  const ext = path.extname(filename).toLowerCase();
+  const ext = path.extname(safeFilename).toLowerCase();
   const contentType = EXTENSION_TO_CONTENT_TYPE[ext] ?? 'application/octet-stream';
 
-  const fileBuffer = fs.readFileSync(filePath);
+  let fileBuffer: Buffer;
+  try {
+    fileBuffer = fs.readFileSync(filePath);
+  }
+  catch {
+    return c.json({ error: '文件读取失败' }, 500);
+  }
   return new Response(fileBuffer, {
     headers: {
       'Content-Type': contentType,
@@ -101,13 +137,28 @@ app.get('/:filename', authRequired(), async (c) => {
 app.delete('/:filename', authRequired(), async (c) => {
   const userId = c.get('userId');
   const filename = c.req.param('filename');
-  const filePath = path.join(getUploadsDir(), userId, filename);
+
+  // Sanitize filename: use only the basename to prevent path traversal
+  const safeFilename = path.basename(filename);
+  const filePath = path.join(getUploadsDir(), userId, safeFilename);
+
+  // Verify the resolved path is within the user's upload directory
+  const resolvedPath = path.resolve(filePath);
+  const resolvedUserDir = path.resolve(path.join(getUploadsDir(), userId));
+  if (!resolvedPath.startsWith(resolvedUserDir + path.sep) && resolvedPath !== resolvedUserDir) {
+    return c.json({ error: '无效的文件名' }, 400);
+  }
 
   if (!fs.existsSync(filePath)) {
     return c.json({ error: '文件不存在' }, 404);
   }
 
-  fs.unlinkSync(filePath);
+  try {
+    fs.unlinkSync(filePath);
+  }
+  catch {
+    return c.json({ error: '文件删除失败' }, 500);
+  }
 
   return c.json({ success: true });
 });

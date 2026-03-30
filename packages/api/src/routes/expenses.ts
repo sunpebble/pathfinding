@@ -1,7 +1,7 @@
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
-import { expenses, getDb } from '@pathfinding/database';
-import { desc, eq } from 'drizzle-orm';
+import { expenses, getDb, itineraries } from '@pathfinding/database';
+import { and, desc, eq } from 'drizzle-orm';
 /**
  * Expenses routes.
  * Mirrors the Convex /api/expenses HTTP endpoints.
@@ -17,6 +17,7 @@ const app = new Hono<{ Variables: AuthVariables }>();
 // ── GET / — Get expenses for an itinerary ──────────────
 app.get('/', authRequired(), async (c) => {
   const itineraryId = c.req.query('itineraryId');
+  const userId = Number(c.get('userId'));
 
   if (!itineraryId) {
     throw new ApiError(400, '缺少itineraryId参数');
@@ -24,6 +25,22 @@ app.get('/', authRequired(), async (c) => {
 
   const db = getDb();
   const iid = Number(itineraryId);
+
+  // Verify the user owns or has access to this itinerary
+  const itinerary = await db
+    .select({ id: itineraries.id })
+    .from(itineraries)
+    .where(
+      and(
+        eq(itineraries.id, iid),
+        eq(itineraries.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!itinerary[0]) {
+    throw new ApiError(403, '行程不存在或无权访问');
+  }
 
   const items = await db
     .select()

@@ -37,6 +37,9 @@ export function AuthButton() {
     }
     catch (error) {
       console.error('Sign out failed:', error);
+      // Still redirect — the local auth state is cleared by the signOut function's
+      // finally block, so remaining on the page would show a broken state.
+      router.push('/');
     }
   };
 

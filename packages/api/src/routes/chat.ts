@@ -8,48 +8,48 @@ import { and, desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { parsePagination, parsePositiveInt } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
+import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
-function parsePaginationInt(
-  value: string | undefined,
-  fallback: number,
-  max: number,
-): number {
-  const parsed = Number.parseInt(value ?? '', 10);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return fallback;
+/**
+ * Verify that a chat session exists and belongs to the given user.
+ * Throws ApiError(403) if not found or owned by someone else.
+ */
+async function requireOwnedSession(sessionId: number, userId: number): Promise<void> {
+  const db = getDb();
+  const session = await db
+    .select({ userId: chatSessions.userId })
+    .from(chatSessions)
+    .where(eq(chatSessions.id, sessionId))
+    .limit(1);
+
+  if (session.length === 0 || session[0]!.userId !== userId) {
+    throw new ApiError(403, '会话不存在或无权访问');
   }
-  return Math.min(parsed, max);
 }
 
 // ── GET /sessions — List user's chat sessions ──────────
 app.get('/sessions', authRequired(), async (c) => {
   const userId = Number(c.get('userId'));
   const includeArchived = c.req.query('includeArchived') === 'true';
-  const limit = parsePaginationInt(c.req.query('limit'), 50, 200);
+  const { limit } = parsePagination(c.req.query('limit'), undefined, 50);
 
   const db = getDb();
 
-  const results = includeArchived
-    ? await db
-        .select()
-        .from(chatSessions)
-        .where(eq(chatSessions.userId, userId))
-        .orderBy(desc(chatSessions.lastMessageAt))
-        .limit(limit)
-    : await db
-        .select()
-        .from(chatSessions)
-        .where(
-          and(
-            eq(chatSessions.userId, userId),
-            eq(chatSessions.isArchived, false),
-          ),
-        )
-        .orderBy(desc(chatSessions.lastMessageAt))
-        .limit(limit);
+  const conditions = [eq(chatSessions.userId, userId)];
+  if (!includeArchived) {
+    conditions.push(eq(chatSessions.isArchived, false));
+  }
+
+  const results = await db
+    .select()
+    .from(chatSessions)
+    .where(and(...conditions))
+    .orderBy(desc(chatSessions.lastMessageAt))
+    .limit(limit);
 
   return c.json({ data: convertKeysToSnakeCase(results) });
 });
@@ -84,32 +84,17 @@ app.post('/sessions', authRequired(), zValidator('json', createSessionSchema), a
 
 // ── GET /messages — Get messages for a session ─────────
 app.get('/messages', authRequired(), async (c) => {
-  const sessionId = c.req.query('sessionId');
   const userId = Number(c.get('userId'));
-  const limit = parsePaginationInt(c.req.query('limit'), 50, 200);
+  const { limit } = parsePagination(c.req.query('limit'), undefined, 50);
 
-  if (!sessionId) {
-    return c.json({ error: '缺少sessionId参数' }, 400);
+  const parsedSessionId = parsePositiveInt(c.req.query('sessionId'));
+  if (!parsedSessionId) {
+    return c.json({ error: '缺少或无效的sessionId参数' }, 400);
   }
 
-  const parsedSessionId = Number.parseInt(sessionId, 10);
-  if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
-    return c.json({ error: '无效的sessionId参数' }, 400);
-  }
+  await requireOwnedSession(parsedSessionId, userId);
 
   const db = getDb();
-
-  // Verify session belongs to authenticated user
-  const session = await db
-    .select({ userId: chatSessions.userId })
-    .from(chatSessions)
-    .where(eq(chatSessions.id, parsedSessionId))
-    .limit(1);
-
-  if (session.length === 0 || session[0]!.userId !== userId) {
-    return c.json({ error: '会话不存在或无权访问' }, 403);
-  }
-
   const results = await db
     .select()
     .from(chatMessages)
@@ -130,19 +115,10 @@ const createMessageSchema = z.object({
 app.post('/messages', authRequired(), zValidator('json', createMessageSchema), async (c) => {
   const body = c.req.valid('json');
   const userId = Number(c.get('userId'));
+
+  await requireOwnedSession(body.sessionId, userId);
+
   const db = getDb();
-
-  // Verify session belongs to authenticated user
-  const session = await db
-    .select({ userId: chatSessions.userId })
-    .from(chatSessions)
-    .where(eq(chatSessions.id, body.sessionId))
-    .limit(1);
-
-  if (session.length === 0 || session[0]!.userId !== userId) {
-    return c.json({ error: '会话不存在或无权访问' }, 403);
-  }
-
   const [result] = await db
     .insert(chatMessages)
     .values({
@@ -163,27 +139,17 @@ app.post('/messages', authRequired(), zValidator('json', createMessageSchema), a
 
 // ── DELETE /sessions/:id — Archive/delete a session ────
 app.delete('/sessions/:id', authRequired(), async (c) => {
-  const { id } = c.req.param();
   const userId = Number(c.get('userId'));
-  const db = getDb();
 
-  const parsedId = Number.parseInt(id, 10);
-  if (!Number.isInteger(parsedId) || parsedId <= 0) {
+  const parsedId = parsePositiveInt(c.req.param('id'));
+  if (!parsedId) {
     return c.json({ error: '无效的会话ID' }, 400);
   }
 
-  // Verify session belongs to authenticated user
-  const session = await db
-    .select({ userId: chatSessions.userId })
-    .from(chatSessions)
-    .where(eq(chatSessions.id, parsedId))
-    .limit(1);
-
-  if (session.length === 0 || session[0]!.userId !== userId) {
-    return c.json({ error: '会话不存在或无权访问' }, 403);
-  }
+  await requireOwnedSession(parsedId, userId);
 
   // Soft-delete by archiving
+  const db = getDb();
   await db
     .update(chatSessions)
     .set({ isArchived: true })

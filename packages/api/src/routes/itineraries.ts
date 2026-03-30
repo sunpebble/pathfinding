@@ -77,7 +77,6 @@ app.get('/', authOptional(), async (c) => {
 
   const db = getDb();
 
-  let results: ItineraryRow[];
   let whereClause;
   if (userId) {
     if (!authUserId || authUserId !== userId) {
@@ -90,25 +89,18 @@ app.get('/', authOptional(), async (c) => {
           eq(itineraries.visibility, visibility),
         )
       : eq(itineraries.userId, Number(userId));
-
-    results = await db
-      .select()
-      .from(itineraries)
-      .where(whereClause)
-      .orderBy(desc(itineraries.createdAt))
-      .limit(limit)
-      .offset(offset);
   }
   else {
     whereClause = eq(itineraries.visibility, 'public');
-    results = await db
-      .select()
-      .from(itineraries)
-      .where(whereClause)
-      .orderBy(desc(itineraries.createdAt))
-      .limit(limit)
-      .offset(offset);
   }
+
+  const results = await db
+    .select()
+    .from(itineraries)
+    .where(whereClause)
+    .orderBy(desc(itineraries.createdAt))
+    .limit(limit)
+    .offset(offset);
 
   // TODO: Replace with a parallel COUNT(*) query for accurate total
   return jsonList(c, convertKeysToSnakeCase(results) as ItineraryRow[], { limit, offset }, results.length);
@@ -145,32 +137,8 @@ app.get('/:id', authOptional(), async (c) => {
     }
   }
 
-  // Fetch days and items
-  const days = await db
-    .select()
-    .from(itineraryDays)
-    .where(eq(itineraryDays.itineraryId, itineraryId))
-    .orderBy(itineraryDays.dayNumber);
-
-  const dayIds = days.map(d => d.id);
-  const items
-    = dayIds.length > 0
-      ? await db
-          .select()
-          .from(itineraryItems)
-          .where(inArray(itineraryItems.dayId, dayIds))
-          .orderBy(itineraryItems.orderIndex)
-      : [];
-
-  return jsonData(c, {
-    ...(convertKeysToSnakeCase(itinerary) as Record<string, unknown>),
-    days: convertKeysToSnakeCase(
-      days.map(day => ({
-        ...day,
-        items: items.filter(item => item.dayId === day.id),
-      })),
-    ),
-  });
+  const dto = await getItineraryDto(itineraryId);
+  return jsonData(c, dto);
 });
 
 // ── POST / — Create itinerary ──────────────────────────

@@ -36,18 +36,14 @@ app.get('/', async (c) => {
     conditions.push(eq(pois.category, category));
   }
 
-  let results;
-  if (conditions.length > 0) {
-    results = await db
-      .select()
-      .from(pois)
-      .where(conditions.length === 1 ? conditions[0]! : and(...conditions))
-      .limit(limit)
-      .offset(offset);
-  }
-  else {
-    results = await db.select().from(pois).limit(limit).offset(offset);
-  }
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const results = await db
+    .select()
+    .from(pois)
+    .where(where)
+    .limit(limit)
+    .offset(offset);
 
   // TODO: Replace with a parallel COUNT(*) query for accurate total
   return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, results.length);
@@ -78,34 +74,20 @@ app.get('/nearby', async (c) => {
     )
   )`;
 
-  let results;
+  const conditions = [sql`${distanceSql} < ${radius}`];
   if (category) {
-    results = await db
-      .select({
-        poi: pois,
-        distance: distanceSql.as('distance'),
-      })
-      .from(pois)
-      .where(
-        and(
-          sql`${distanceSql} < ${radius}`,
-          eq(pois.category, category),
-        ),
-      )
-      .orderBy(sql`distance`)
-      .limit(limit);
+    conditions.push(eq(pois.category, category));
   }
-  else {
-    results = await db
-      .select({
-        poi: pois,
-        distance: distanceSql.as('distance'),
-      })
-      .from(pois)
-      .where(sql`${distanceSql} < ${radius}`)
-      .orderBy(sql`distance`)
-      .limit(limit);
-  }
+
+  const results = await db
+    .select({
+      poi: pois,
+      distance: distanceSql.as('distance'),
+    })
+    .from(pois)
+    .where(and(...conditions))
+    .orderBy(sql`distance`)
+    .limit(limit);
 
   return c.json({
     data: results.map(r => ({

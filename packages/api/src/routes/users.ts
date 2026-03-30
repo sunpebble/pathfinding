@@ -49,7 +49,6 @@ app.get('/:id', async (c) => {
   return jsonData(c, convertKeysToSnakeCase({
     id: user.id,
     name: user.name,
-    email: user.email,
     image: user.image,
     displayName: profile?.displayName ?? user.name,
     avatarUrl: profile?.avatarUrl ?? user.image,
