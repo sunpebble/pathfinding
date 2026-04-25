@@ -109,6 +109,18 @@ describe('push-token routes', () => {
 
       expect(response.status).toBe(400);
     });
+
+    it('returns 400 when token is not a string', async () => {
+      const response = await requestWithAuth(createApp(), '/api/push-tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: 123, platform: 'ios' }),
+      });
+
+      expect(response.status).toBe(400);
+      expect(mockDb.select).not.toHaveBeenCalled();
+      expect(mockDb.insert).not.toHaveBeenCalled();
+    });
   });
 
   describe('dELETE /api/push-tokens', () => {
@@ -135,6 +147,17 @@ describe('push-token routes', () => {
       });
 
       expect(response.status).toBe(400);
+    });
+
+    it('returns 400 when token is not a string', async () => {
+      const response = await requestWithAuth(createApp(), '/api/push-tokens', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: 123 }),
+      });
+
+      expect(response.status).toBe(400);
+      expect(mockDb.update).not.toHaveBeenCalled();
     });
   });
 

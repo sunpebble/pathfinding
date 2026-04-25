@@ -68,6 +68,11 @@ describe('expense routes', () => {
   });
 
   it('pOST /api/expenses creates a new expense', async () => {
+    const ownershipLimit = vi.fn().mockResolvedValue([{ id: 5, userId: 1 }]);
+    const ownershipWhere = vi.fn().mockReturnValue({ limit: ownershipLimit });
+    const ownershipFrom = vi.fn().mockReturnValue({ where: ownershipWhere });
+    mockDb.select.mockReturnValueOnce({ from: ownershipFrom });
+
     const insertResult = vi.fn().mockResolvedValue([{ insertId: 77 }]);
     mockDb.insert.mockReturnValueOnce({ values: insertResult });
 
@@ -85,5 +90,30 @@ describe('expense routes', () => {
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body.id).toBe(77);
+  });
+
+  it('pOST /api/expenses rejects users without edit access', async () => {
+    const ownerCheck = createSelectChain([]);
+    const collaboratorCheck = createSelectChain([]);
+    mockDb.select
+      .mockReturnValueOnce(ownerCheck)
+      .mockReturnValueOnce(collaboratorCheck);
+
+    const insertResult = vi.fn().mockResolvedValue([{ insertId: 77 }]);
+    mockDb.insert.mockReturnValueOnce({ values: insertResult });
+
+    const response = await requestWithAuth(createApp(), '/api/expenses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        itineraryId: 5,
+        amount: 200,
+        category: 2,
+        description: 'Dinner',
+      }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(mockDb.insert).not.toHaveBeenCalled();
   });
 });

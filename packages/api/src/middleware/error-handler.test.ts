@@ -81,9 +81,10 @@ describe('errorHandler', () => {
 
   it('handles ZodError as 422', async () => {
     const app = createTestApp();
-    app.get('/test', () => {
+    app.get('/test', (c) => {
       const schema = z.object({ name: z.string().min(1), age: z.number() });
       schema.parse({ name: '', age: 'not-a-number' });
+      return c.text('unreachable');
     });
 
     const response = await app.request('/test');

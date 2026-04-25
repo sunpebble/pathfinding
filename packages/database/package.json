@@ -21,6 +21,7 @@
     "mysql2": "^3.14.0"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "drizzle-kit": "^0.31.0",
     "typescript": "^5.9.3"
   }

@@ -1,35 +1,30 @@
 import type { AuthVariables } from '../middleware/auth.js';
+import { zValidator } from '@hono/zod-validator';
 import { getDb, pushTokens } from '@pathfinding/database';
 import { and, eq } from 'drizzle-orm';
 /**
  * Push token routes — register, deactivate, and list push tokens.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { authRequired } from '../middleware/auth.js';
-import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
+const registerPushTokenSchema = z.object({
+  token: z.string().min(1),
+  platform: z.enum(['ios', 'android', 'web']),
+  deviceId: z.string().optional(),
+});
+
+const deletePushTokenSchema = z.object({
+  token: z.string().min(1),
+});
+
 // ── POST / — Register a push token ────────────────────
-app.post('/', authRequired(), async (c) => {
+app.post('/', authRequired(), zValidator('json', registerPushTokenSchema), async (c) => {
   const userId = Number(c.get('userId'));
-
-  let body: { token?: string; platform?: string; deviceId?: string };
-  try {
-    body = await c.req.json<{ token: string; platform: string; deviceId?: string }>();
-  }
-  catch {
-    throw new ApiError(400, '请求体格式无效，需要 JSON');
-  }
-
-  if (!body.token || !body.platform) {
-    return c.json({ error: '缺少必填字段：token 和 platform' }, 400);
-  }
-
-  const validPlatforms = ['ios', 'android', 'web'];
-  if (!validPlatforms.includes(body.platform)) {
-    return c.json({ error: '平台类型无效，仅支持 ios、android、web' }, 400);
-  }
+  const body = c.req.valid('json');
 
   const db = getDb();
 
@@ -69,20 +64,9 @@ app.post('/', authRequired(), async (c) => {
 });
 
 // ── DELETE / — Deactivate a push token ─────────────────
-app.delete('/', authRequired(), async (c) => {
+app.delete('/', authRequired(), zValidator('json', deletePushTokenSchema), async (c) => {
   const userId = Number(c.get('userId'));
-
-  let body: { token?: string };
-  try {
-    body = await c.req.json<{ token: string }>();
-  }
-  catch {
-    throw new ApiError(400, '请求体格式无效，需要 JSON');
-  }
-
-  if (!body.token) {
-    return c.json({ error: '缺少必填字段：token' }, 400);
-  }
+  const body = c.req.valid('json');
 
   const db = getDb();
 

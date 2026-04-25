@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
+import { findEditable } from '../services/itinerary-access.service.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
@@ -63,12 +64,18 @@ const createExpenseSchema = z.object({
 
 app.post('/', authRequired(), zValidator('json', createExpenseSchema), async (c) => {
   const { itineraryId, amount, category, description, date, currency } = c.req.valid('json');
+  const userId = Number(c.get('userId'));
 
   const db = getDb();
+  const editableItinerary = await findEditable(Number(itineraryId), userId);
+
+  if (!editableItinerary) {
+    throw new ApiError(403, '行程不存在或无权编辑');
+  }
 
   const result = await db.insert(expenses).values({
     itineraryId: Number(itineraryId),
-    userId: Number(c.get('userId')),
+    userId,
     categoryId: Number(category),
     amount,
     description: description ?? '',
