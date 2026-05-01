@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  BarChart3,
   Clock,
   Eye,
   Loader2,
@@ -101,6 +102,13 @@ export default function JobsPage() {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </button>
+          <Link
+            href="/jobs/backfill"
+            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Data Backfill
+          </Link>
           <Link
             href="/jobs/create"
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
