@@ -527,3 +527,51 @@ export async function searchGuides(params: {
     offset: params.offset,
   })}`);
 }
+
+// ---------------------------------------------------------------------------
+// Backfill Analysis
+// ---------------------------------------------------------------------------
+
+export interface FieldGap {
+  guideId: number;
+  title: string;
+  platform: string;
+  missingFields: string[];
+  missingCount: number;
+}
+
+export interface DestinationGap {
+  cityName: string;
+  countryCode: string;
+  guideCount: number;
+}
+
+export interface BackfillAnalysis {
+  fieldGaps: FieldGap[];
+  totalFieldGaps: number;
+  fieldMissingDistribution: Record<string, number>;
+  destinationGaps: DestinationGap[];
+  totalDestinationGaps: number;
+}
+
+export async function getBackfillAnalysis(): Promise<BackfillAnalysis> {
+  const response = await fetchApi<ApiEnvelope<BackfillAnalysis>>('/backfill-analysis', {
+    method: 'POST',
+  });
+  return response.data;
+}
+
+export interface CreateBackfillJobsInput {
+  fieldGapGuideIds?: number[];
+  destinationGapCities?: string[];
+}
+
+export async function createBackfillJobs(
+  input: CreateBackfillJobsInput,
+): Promise<{ jobsCreated: number }> {
+  const response = await fetchApi<ApiEnvelope<{ jobsCreated: number }>>('/backfill-jobs', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return response.data;
+}

@@ -53,7 +53,9 @@ export type { InviteCollaboratorRequest } from './collaborators';
 // ---------------------------------------------------------------------------
 export {
   cancelCrawlJob,
+  createBackfillJobs,
   createCrawlJob,
+  getBackfillAnalysis,
   getCrawlJob,
   getCrawlJobs,
   getGuideRecommendations,
@@ -74,8 +76,12 @@ export {
 } from './crawler';
 
 export type {
+  BackfillAnalysis,
   CrawlJob,
+  CreateBackfillJobsInput,
   CreateCrawlJobInput,
+  DestinationGap,
+  FieldGap,
   NormalizedPOI,
   PaginatedResponse,
   SchedulerStatus,
