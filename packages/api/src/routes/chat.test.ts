@@ -1,0 +1,152 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createApp } from '../app.js';
+import { requestWithAuth } from '../test/helpers.js';
+
+const mockDb = {
+  select: vi.fn(),
+  insert: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock('@pathfinding/database', async () => {
+  const actual = await vi.importActual<typeof import('@pathfinding/database')>('@pathfinding/database');
+
+  return {
+    ...actual,
+    createDb: vi.fn(() => mockDb),
+    getDb: vi.fn(() => mockDb),
+  };
+});
+
+function createSelectChain(result: unknown) {
+  const limit = vi.fn().mockResolvedValue(result);
+  const where = vi.fn().mockReturnValue({ limit });
+  const from = vi.fn().mockReturnValue({ where, limit });
+
+  return { from, where, limit };
+}
+
+function createOrderBySelectChain(result: unknown) {
+  const limit = vi.fn().mockResolvedValue(result);
+  const orderBy = vi.fn().mockReturnValue({ limit });
+  const where = vi.fn().mockReturnValue({ orderBy, limit });
+  const from = vi.fn().mockReturnValue({ where, orderBy, limit });
+
+  return { from, where, orderBy, limit };
+}
+
+function createInsertReturningChain(id: number) {
+  return {
+    values: vi.fn().mockReturnValue({
+      $returningId: vi.fn().mockResolvedValue([{ id }]),
+    }),
+  };
+}
+
+function createUpdateChain() {
+  return { set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }) };
+}
+
+describe('chat routes', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-jwt-secret';
+    mockDb.select.mockReset();
+    mockDb.insert.mockReset();
+    mockDb.update.mockReset();
+    mockDb.delete.mockReset();
+  });
+
+  describe('gET /api/chat/sessions', () => {
+    it('returns user sessions', async () => {
+      const chain = createOrderBySelectChain([
+        { id: 1, userId: 1, title: 'Session 1', isArchived: false },
+      ]);
+      mockDb.select.mockReturnValueOnce(chain);
+
+      const response = await requestWithAuth(createApp(), '/api/chat/sessions');
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data).toBeDefined();
+    });
+  });
+
+  describe('pOST /api/chat/sessions', () => {
+    it('creates a session', async () => {
+      mockDb.insert.mockReturnValueOnce(createInsertReturningChain(10));
+      const selectChain = createSelectChain([
+        { id: 10, userId: 1, title: '新对话', metadata: null },
+      ]);
+      mockDb.select.mockReturnValueOnce(selectChain);
+
+      const response = await requestWithAuth(createApp(), '/api/chat/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Test Session' }),
+      });
+
+      expect(response.status).toBe(201);
+    });
+  });
+
+  describe('gET /api/chat/messages', () => {
+    it('returns messages for a session', async () => {
+      const sessionChain = createSelectChain([{ userId: 1 }]);
+      const msgChain = createOrderBySelectChain([
+        { id: 1, sessionId: 1, role: 'user', content: 'Hello' },
+      ]);
+
+      mockDb.select
+        .mockReturnValueOnce(sessionChain)
+        .mockReturnValueOnce(msgChain);
+
+      const response = await requestWithAuth(createApp(), '/api/chat/messages?sessionId=1');
+      expect(response.status).toBe(200);
+    });
+
+    it('returns 400 for invalid sessionId', async () => {
+      const response = await requestWithAuth(createApp(), '/api/chat/messages?sessionId=abc');
+      expect(response.status).toBe(400);
+    });
+  });
+
+  describe('pOST /api/chat/messages', () => {
+    it('creates a message', async () => {
+      const sessionChain = createSelectChain([{ userId: 1 }]);
+      mockDb.select.mockReturnValueOnce(sessionChain);
+      mockDb.insert.mockReturnValueOnce(createInsertReturningChain(20));
+      mockDb.update.mockReturnValueOnce(createUpdateChain());
+
+      const response = await requestWithAuth(createApp(), '/api/chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: 1, role: 'user', content: 'Hello' }),
+      });
+
+      expect(response.status).toBe(201);
+      const body = await response.json();
+      expect(body.id).toBe(20);
+    });
+  });
+
+  describe('dELETE /api/chat/sessions/:id', () => {
+    it('archives a session', async () => {
+      const sessionChain = createSelectChain([{ userId: 1 }]);
+      mockDb.select.mockReturnValueOnce(sessionChain);
+      mockDb.update.mockReturnValueOnce(createUpdateChain());
+
+      const response = await requestWithAuth(createApp(), '/api/chat/sessions/1', {
+        method: 'DELETE',
+      });
+
+      expect(response.status).toBe(200);
+    });
+
+    it('returns 400 for invalid session ID', async () => {
+      const response = await requestWithAuth(createApp(), '/api/chat/sessions/abc', {
+        method: 'DELETE',
+      });
+      expect(response.status).toBe(400);
+    });
+  });
+});
