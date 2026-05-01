@@ -145,15 +145,20 @@ app.get('/:id/followers', async (c) => {
 
   const db = getDb();
 
-  const results = await db
-    .select()
-    .from(userFollows)
-    .where(eq(userFollows.followingId, id))
-    .limit(limit)
-    .offset(offset);
+  const [results, countResult] = await Promise.all([
+    db
+      .select()
+      .from(userFollows)
+      .where(eq(userFollows.followingId, id))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(userFollows)
+      .where(eq(userFollows.followingId, id)),
+  ]);
 
-  // TODO: Replace with a parallel COUNT(*) query for accurate total
-  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, results.length);
+  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, countResult[0]?.count ?? 0);
 });
 
 // ── GET /:id/following — Get users that user follows ───
@@ -168,15 +173,20 @@ app.get('/:id/following', async (c) => {
 
   const db = getDb();
 
-  const results = await db
-    .select()
-    .from(userFollows)
-    .where(eq(userFollows.followerId, id))
-    .limit(limit)
-    .offset(offset);
+  const [results, countResult] = await Promise.all([
+    db
+      .select()
+      .from(userFollows)
+      .where(eq(userFollows.followerId, id))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(userFollows)
+      .where(eq(userFollows.followerId, id)),
+  ]);
 
-  // TODO: Replace with a parallel COUNT(*) query for accurate total
-  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, results.length);
+  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, countResult[0]?.count ?? 0);
 });
 
 // ── POST /:id/follow — Follow a user ──────────────────

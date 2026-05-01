@@ -81,16 +81,21 @@ app.get('/', async (c) => {
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const results = await db
-    .select()
-    .from(travelGuides)
-    .where(where)
-    .orderBy(desc(travelGuides.createdAt))
-    .limit(limit)
-    .offset(offset);
+  const [results, countResult] = await Promise.all([
+    db
+      .select()
+      .from(travelGuides)
+      .where(where)
+      .orderBy(desc(travelGuides.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(travelGuides)
+      .where(where),
+  ]);
 
-  // TODO: Replace with a parallel COUNT(*) query for accurate total
-  return jsonList(c, results.map(toClientGuide), { limit, offset }, results.length);
+  return jsonList(c, results.map(toClientGuide), { limit, offset }, countResult[0]?.count ?? 0);
 });
 
 // ── GET /search — Search guides ────────────────────────
@@ -101,36 +106,28 @@ app.get('/search', async (c) => {
 
   const db = getDb();
 
-  let results: Guide[];
+  let whereClause;
   if (q) {
-    results = await db
-      .select()
-      .from(travelGuides)
-      .where(like(travelGuides.title, `%${escapeLikePattern(q)}%`))
-      .orderBy(desc(travelGuides.qualityScore))
-      .limit(limit);
+    whereClause = like(travelGuides.title, `%${escapeLikePattern(q)}%`);
   }
   else if (destination) {
-    // Search by destination via JSON column
-    results = await db
-      .select()
-      .from(travelGuides)
-      .where(
-        sql`JSON_CONTAINS(${travelGuides.destinations}, JSON_QUOTE(${destination}))`,
-      )
-      .orderBy(desc(travelGuides.qualityScore))
-      .limit(limit);
-  }
-  else {
-    results = await db
-      .select()
-      .from(travelGuides)
-      .orderBy(desc(travelGuides.qualityScore))
-      .limit(limit);
+    whereClause = sql`JSON_CONTAINS(${travelGuides.destinations}, JSON_QUOTE(${destination}))`;
   }
 
-  // TODO: Replace with a parallel COUNT(*) query for accurate total
-  return jsonList(c, results.map(toClientGuide), { limit, offset: 0 }, results.length);
+  const [results, countResult] = await Promise.all([
+    db
+      .select()
+      .from(travelGuides)
+      .where(whereClause)
+      .orderBy(desc(travelGuides.qualityScore))
+      .limit(limit),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(travelGuides)
+      .where(whereClause),
+  ]);
+
+  return jsonList(c, results.map(toClientGuide), { limit, offset: 0 }, countResult[0]?.count ?? 0);
 });
 
 // ── GET /destinations — Popular destinations ───────────

@@ -6,7 +6,7 @@ import {
   itineraryDays,
   itineraryItems,
 } from '@pathfinding/database';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 /**
  * Itineraries routes — CRUD for itineraries, days, and items.
  */
@@ -94,16 +94,21 @@ app.get('/', authOptional(), async (c) => {
     whereClause = eq(itineraries.visibility, 'public');
   }
 
-  const results = await db
-    .select()
-    .from(itineraries)
-    .where(whereClause)
-    .orderBy(desc(itineraries.createdAt))
-    .limit(limit)
-    .offset(offset);
+  const [results, countResult] = await Promise.all([
+    db
+      .select()
+      .from(itineraries)
+      .where(whereClause)
+      .orderBy(desc(itineraries.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(itineraries)
+      .where(whereClause),
+  ]);
 
-  // TODO: Replace with a parallel COUNT(*) query for accurate total
-  return jsonList(c, convertKeysToSnakeCase(results) as ItineraryRow[], { limit, offset }, results.length);
+  return jsonList(c, convertKeysToSnakeCase(results) as ItineraryRow[], { limit, offset }, countResult[0]?.count ?? 0);
 });
 
 // ── GET /:id — Get itinerary by ID ─────────────────────

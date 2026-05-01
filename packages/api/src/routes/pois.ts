@@ -38,15 +38,20 @@ app.get('/', async (c) => {
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const results = await db
-    .select()
-    .from(pois)
-    .where(where)
-    .limit(limit)
-    .offset(offset);
+  const [results, countResult] = await Promise.all([
+    db
+      .select()
+      .from(pois)
+      .where(where)
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(pois)
+      .where(where),
+  ]);
 
-  // TODO: Replace with a parallel COUNT(*) query for accurate total
-  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, results.length);
+  return jsonList(c, convertKeysToSnakeCase(results) as typeof results, { limit, offset }, countResult[0]?.count ?? 0);
 });
 
 // ── GET /nearby — Find nearby POIs ─────────────────────

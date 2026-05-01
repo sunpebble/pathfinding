@@ -45,6 +45,13 @@ function _createPaginatedSelectChain(result: unknown) {
   return { from, where, limit, offset };
 }
 
+function createCountChain(result: unknown) {
+  const where = vi.fn().mockResolvedValue(result);
+  const from = vi.fn().mockReturnValue({ where });
+
+  return { from, where };
+}
+
 describe('user routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-jwt-secret';
@@ -174,6 +181,50 @@ describe('user routes', () => {
     });
   });
 
+  describe('gET /api/users/:id/followers', () => {
+    it('returns followers', async () => {
+      const chain = _createPaginatedSelectChain([
+        { id: 1, followerId: 2, followingId: 1 },
+      ]);
+      const countChain = createCountChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      const response = await createApp().request('/api/users/1/followers');
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data).toBeDefined();
+    });
+
+    it('returns 400 for invalid user ID', async () => {
+      const response = await createApp().request('/api/users/abc/followers');
+      expect(response.status).toBe(400);
+    });
+  });
+
+  describe('gET /api/users/:id/following', () => {
+    it('returns following users', async () => {
+      const chain = _createPaginatedSelectChain([
+        { id: 1, followerId: 1, followingId: 2 },
+      ]);
+      const countChain = createCountChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      const response = await createApp().request('/api/users/1/following');
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data).toBeDefined();
+    });
+
+    it('returns 400 for invalid user ID', async () => {
+      const response = await createApp().request('/api/users/abc/following');
+      expect(response.status).toBe(400);
+    });
+  });
+
   describe('pOST /api/users/:id/follow', () => {
     it('prevents self-follow', async () => {
       const response = await requestWithAuth(createApp(), '/api/users/1/follow', {
@@ -198,6 +249,55 @@ describe('user routes', () => {
       });
 
       expect(response.status).toBe(409);
+    });
+
+    it('follows a user successfully', async () => {
+      const emptyChain = createSelectChain([]);
+      mockDb.select.mockReturnValueOnce(emptyChain);
+
+      mockDb.transaction.mockImplementation(async (callback: (tx: typeof mockDb) => Promise<void>) => {
+        await callback({
+          ...mockDb,
+          insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue([{ insertId: '1' }]) }),
+          update: vi.fn().mockReturnValue({
+            set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
+          }),
+        });
+      });
+
+      const response = await requestWithAuth(createApp(), '/api/users/1/follow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followingId: 2 }),
+      });
+
+      expect(response.status).toBe(201);
+      const body = await response.json();
+      expect(body.success).toBe(true);
+    });
+  });
+
+  describe('dELETE /api/users/:id/follow', () => {
+    it('unfollows a user', async () => {
+      mockDb.transaction.mockImplementation(async (callback: (tx: typeof mockDb) => Promise<void>) => {
+        await callback({
+          ...mockDb,
+          delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
+          update: vi.fn().mockReturnValue({
+            set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
+          }),
+        });
+      });
+
+      const response = await requestWithAuth(createApp(), '/api/users/1/follow', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followingId: 2 }),
+      });
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
     });
   });
 });

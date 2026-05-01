@@ -39,6 +39,13 @@ function createListSelectChain(result: unknown) {
   return { from, where, orderBy, limit, offset };
 }
 
+function createCountSelectChain(count: number) {
+  const where = vi.fn().mockResolvedValue([{ count }]);
+  const from = vi.fn().mockReturnValue({ where });
+
+  return { from, where };
+}
+
 function createUpdateChain(result: unknown) {
   const where = vi.fn().mockResolvedValue(result);
   const set = vi.fn().mockReturnValue({ where });
@@ -638,8 +645,9 @@ describe('itinerary read routes', () => {
       { id: 9, userId: 1, title: 'Private Kyoto', visibility: 'private' },
       { id: 10, userId: 1, title: 'Public Osaka', visibility: 'public' },
     ]);
+    const countChain = createCountSelectChain(2);
 
-    mockDb.select.mockReturnValueOnce(listChain);
+    mockDb.select.mockReturnValueOnce(listChain).mockReturnValueOnce(countChain);
 
     const response = await requestWithAuth(createApp(), '/api/itineraries?userId=1');
 
@@ -665,8 +673,9 @@ describe('itinerary read routes', () => {
     const listChain = createListSelectChain([
       { id: 10, userId: 1, title: 'Public Osaka', visibility: 'public' },
     ]);
+    const countChain = createCountSelectChain(1);
 
-    mockDb.select.mockReturnValueOnce(listChain);
+    mockDb.select.mockReturnValueOnce(listChain).mockReturnValueOnce(countChain);
 
     const response = await createApp().request('/api/itineraries?visibility=private');
 
