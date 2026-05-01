@@ -297,4 +297,37 @@ describe('guides routes', () => {
       expect(response.status).toBe(404);
     });
   });
+
+  describe('gET /api/guides/gap-report', () => {
+    it('returns gap summary', async () => {
+      const guidesFrom = vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([
+          { id: 1, title: 'Test', platform: 'xiaohongshu', content: '', imageUrls: null, destinations: null, dayItineraries: null, geoData: null, enrichedData: null, coverImageUrl: null },
+        ]),
+      });
+      const citiesFrom = vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([
+          { id: 1, name: 'Chengdu', countryCode: 'CN' },
+        ]),
+      });
+      const destGroupBy = vi.fn().mockResolvedValue([]);
+      const destFrom = vi.fn().mockReturnValue({ groupBy: destGroupBy });
+
+      let callCount = 0;
+      mockDb.select.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1)
+          return { from: guidesFrom };
+        if (callCount === 2)
+          return { from: citiesFrom };
+        return { from: destFrom };
+      });
+
+      const response = await createApp().request('/api/guides/gap-report');
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data.fieldGapCount).toBeDefined();
+      expect(body.data.destinationGapCount).toBeDefined();
+    });
+  });
 });

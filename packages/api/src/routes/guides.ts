@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { escapeLikePattern, parsePagination, parsePositiveInt } from '../lib/params.js';
 import { jsonData, jsonList, jsonOk } from '../lib/response.js';
 import { authRequired } from '../middleware/auth.js';
+import { runFullAnalysis } from '../services/backfill.service.js';
 
 type Guide = InferSelectModel<typeof travelGuides>;
 
@@ -211,6 +212,20 @@ app.get('/stats', async (c) => {
   }
 
   return c.json({ total, by_platform: byPlatform });
+});
+
+// ── GET /gap-report — Data gap summary ─────────────────
+app.get('/gap-report', async (c) => {
+  const analysis = await runFullAnalysis(100);
+
+  return jsonData(c, {
+    totalGuides: analysis.totalFieldGaps, // approximate; actual total requires separate count
+    fieldGapCount: analysis.totalFieldGaps,
+    destinationGapCount: analysis.totalDestinationGaps,
+    fieldMissingDistribution: analysis.fieldMissingDistribution,
+    topFieldGaps: analysis.fieldGaps.slice(0, 10),
+    topDestinationGaps: analysis.destinationGaps.slice(0, 10),
+  });
 });
 
 // ── GET /:id — Get guide by ID (path param) ────────────
