@@ -178,4 +178,71 @@ describe('crawl-jobs routes', () => {
       expect(response.status).toBe(200);
     });
   });
+
+  describe('pOST /api/crawl-jobs/backfill-analysis', () => {
+    it('returns backfill analysis', async () => {
+      // First select call: travelGuides
+      const guidesFrom = vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([
+          { id: 1, title: 'Test Guide', platform: 'xiaohongshu', content: '', imageUrls: null, destinations: null, dayItineraries: null, geoData: null, enrichedData: null, coverImageUrl: null },
+        ]),
+      });
+
+      // Second select call: cities
+      const citiesFrom = vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([
+          { id: 1, name: 'Chengdu', countryCode: 'CN' },
+        ]),
+      });
+
+      // Third select call: guideDestinations groupBy
+      const destGroupBy = vi.fn().mockResolvedValue([]);
+      const destFrom = vi.fn().mockReturnValue({ groupBy: destGroupBy });
+
+      let callCount = 0;
+      mockDb.select.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1)
+          return { from: guidesFrom };
+        if (callCount === 2)
+          return { from: citiesFrom };
+        return { from: destFrom };
+      });
+
+      const response = await requestWithAuth(createApp(), '/api/crawl-jobs/backfill-analysis', {
+        method: 'POST',
+      });
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data.totalFieldGaps).toBe(1);
+      expect(body.data.totalDestinationGaps).toBe(1);
+    });
+  });
+
+  describe('pOST /api/crawl-jobs/backfill-jobs', () => {
+    it('creates field backfill jobs', async () => {
+      mockDb.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
+
+      const response = await requestWithAuth(createApp(), '/api/crawl-jobs/backfill-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fieldGapGuideIds: [1, 2] }),
+      });
+
+      expect(response.status).toBe(201);
+      const body = await response.json();
+      expect(body.data.jobsCreated).toBe(1);
+    });
+
+    it('returns 400 when no targets selected', async () => {
+      const response = await requestWithAuth(createApp(), '/api/crawl-jobs/backfill-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      expect(response.status).toBe(400);
+    });
+  });
 });

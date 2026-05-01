@@ -13,6 +13,7 @@ import { parsePagination, parsePositiveInt } from '../lib/params.js';
 import { jsonData, jsonOk } from '../lib/response.js';
 import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
+import { generateBackfillJobs, runFullAnalysis } from '../services/backfill.service.js';
 
 // ── Zod schemas ────────────────────────────────────────
 const createJobSchema = z.object({
@@ -40,6 +41,11 @@ const failJobSchema = z.object({
   id: z.number(),
   errorMessage: z.string().min(1),
   statistics: z.record(z.unknown()).optional(),
+});
+
+const backfillJobsSchema = z.object({
+  fieldGapGuideIds: z.array(z.number()).optional(),
+  destinationGapCities: z.array(z.string()).optional(),
 });
 
 const app = new Hono<{ Variables: AuthVariables }>();
@@ -199,6 +205,26 @@ app.post('/fail', adminRequired(), zValidator('json', failJobSchema), async (c) 
     .limit(1);
 
   return jsonData(c, convertKeysToSnakeCase(job[0]));
+});
+
+// ── POST /backfill-analysis — Run gap analysis ─────────
+app.post('/backfill-analysis', adminRequired(), async (c) => {
+  const analysis = await runFullAnalysis(100);
+  return jsonData(c, analysis);
+});
+
+// ── POST /backfill-jobs — Create backfill crawl jobs ───
+app.post('/backfill-jobs', adminRequired(), zValidator('json', backfillJobsSchema), async (c) => {
+  const { fieldGapGuideIds, destinationGapCities } = c.req.valid('json');
+
+  if ((!fieldGapGuideIds || fieldGapGuideIds.length === 0)
+    && (!destinationGapCities || destinationGapCities.length === 0)) {
+    throw new ApiError(400, '至少需要选择一个补齐目标');
+  }
+
+  const result = await generateBackfillJobs(fieldGapGuideIds, destinationGapCities);
+
+  return jsonData(c, result, 201);
 });
 
 export default app;
