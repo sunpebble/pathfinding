@@ -128,6 +128,27 @@ func TestCleanContent_ContentShorterThanMaxLen(t *testing.T) {
 	}
 }
 
+func TestGenerateGuideMarkdownContent_AddsTitleAndImages(t *testing.T) {
+	got := GenerateGuideMarkdownContent(
+		"北京攻略",
+		"第一天到达北京，入住酒店后去了天安门广场。第二天游览故宫，建议提前预约。",
+		[]string{"https://img.example.com/1.jpg", "https://img.example.com/avatar.png"},
+	)
+
+	if !strings.Contains(got, "# 北京攻略") {
+		t.Errorf("应包含标题, got: %q", got)
+	}
+	if !strings.Contains(got, "第一天到达北京") {
+		t.Errorf("应包含正文, got: %q", got)
+	}
+	if !strings.Contains(got, "![游记图片 1](https://img.example.com/1.jpg)") {
+		t.Errorf("应包含有效图片 markdown, got: %q", got)
+	}
+	if strings.Contains(got, "avatar.png") {
+		t.Errorf("应过滤头像图片, got: %q", got)
+	}
+}
+
 // =============================================================================
 // ExtractTitle 测试
 // =============================================================================

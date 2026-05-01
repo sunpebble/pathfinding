@@ -29,7 +29,7 @@ describe('header', () => {
 
   it('renders the dashboard title', () => {
     render(<Header />);
-    expect(screen.getByText('Pathfinding Crawler Dashboard')).toBeDefined();
+    expect(screen.getByText('探路抓取仪表盘')).toBeDefined();
   });
 
   it('renders auth button', () => {
@@ -57,7 +57,9 @@ describe('header', () => {
     } as unknown as ReturnType<typeof useHealthStatus>);
 
     render(<Header />);
-    expect(screen.getByText('Connected')).toBeDefined();
+    const status = screen.getByText('已连接');
+    expect(status).toBeDefined();
+    expect(status.closest('[data-testid="service-status"]')?.className).toContain('bg-emerald-50');
   });
 
   it('shows connected status when health is healthy', () => {
@@ -68,7 +70,7 @@ describe('header', () => {
     } as unknown as ReturnType<typeof useHealthStatus>);
 
     render(<Header />);
-    expect(screen.getByText('Connected')).toBeDefined();
+    expect(screen.getByText('已连接')).toBeDefined();
   });
 
   it('shows disconnected status when health check fails', () => {
@@ -79,7 +81,9 @@ describe('header', () => {
     } as unknown as ReturnType<typeof useHealthStatus>);
 
     render(<Header />);
-    expect(screen.getByText('Disconnected')).toBeDefined();
+    const status = screen.getByText('已断开');
+    expect(status).toBeDefined();
+    expect(status.closest('[data-testid="service-status"]')?.className).toContain('bg-red-50');
   });
 
   it('shows disconnected status when no health data', () => {
@@ -90,7 +94,7 @@ describe('header', () => {
     } as unknown as ReturnType<typeof useHealthStatus>);
 
     render(<Header />);
-    expect(screen.getByText('Disconnected')).toBeDefined();
+    expect(screen.getByText('已断开')).toBeDefined();
   });
 
   it('calls refetch when refresh button is clicked', () => {
@@ -101,7 +105,7 @@ describe('header', () => {
     } as unknown as ReturnType<typeof useHealthStatus>);
 
     render(<Header />);
-    const refreshButton = screen.getByTitle('Refresh status');
+    const refreshButton = screen.getByTitle('刷新状态');
     fireEvent.click(refreshButton);
     expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
@@ -114,7 +118,7 @@ describe('header', () => {
     } as unknown as ReturnType<typeof useHealthStatus>);
 
     render(<Header />);
-    const refreshButton = screen.getByLabelText('Refreshing status...') as HTMLButtonElement;
+    const refreshButton = screen.getByLabelText('刷新状态中...') as HTMLButtonElement;
     expect(refreshButton).toBeDefined();
     expect(refreshButton.disabled).toBe(true);
     expect(refreshButton.className).toContain('opacity-50');

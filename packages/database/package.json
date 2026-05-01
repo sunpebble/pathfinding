@@ -14,6 +14,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "dev:ensure-db": "node scripts/ensure-dev-db.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -13,7 +13,9 @@ import { parsePagination, parsePositiveInt } from '../lib/params.js';
 import { jsonData, jsonOk } from '../lib/response.js';
 import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
+import { executeAllPendingBackfillJobs } from '../services/backfill-executor.service.js';
 import { generateBackfillJobs, runFullAnalysis } from '../services/backfill.service.js';
+import { batchImportGuides, discoverNewGuides } from '../services/guide-import.service.js';
 
 // ── Zod schemas ────────────────────────────────────────
 const createJobSchema = z.object({
@@ -46,6 +48,16 @@ const failJobSchema = z.object({
 const backfillJobsSchema = z.object({
   fieldGapGuideIds: z.array(z.number()).optional(),
   destinationGapCities: z.array(z.string()).optional(),
+});
+
+const discoverGuidesSchema = z.object({
+  platform: z.string().min(1),
+  city: z.string().min(1),
+});
+
+const importGuidesSchema = z.object({
+  platform: z.string().min(1),
+  urls: z.array(z.string().url()).min(1),
 });
 
 const app = new Hono<{ Variables: AuthVariables }>();
@@ -225,6 +237,54 @@ app.post('/backfill-jobs', adminRequired(), zValidator('json', backfillJobsSchem
   const result = await generateBackfillJobs(fieldGapGuideIds, destinationGapCities);
 
   return jsonData(c, result, 201);
+});
+
+// ── POST /backfill-execute — Execute pending backfill jobs ───
+app.post('/backfill-execute', adminRequired(), async (c) => {
+  const result = await executeAllPendingBackfillJobs();
+  return jsonData(c, result);
+});
+
+// ── POST /backfill-all — One-click full backfill (analyze + create + execute) ───
+app.post('/backfill-all', adminRequired(), async (c) => {
+  const analysis = await runFullAnalysis(100);
+  const guideIds = analysis.fieldGaps.map(g => g.guideId);
+  const cities = analysis.destinationGaps.map(g => g.cityName);
+
+  if (guideIds.length > 0 || cities.length > 0) {
+    await generateBackfillJobs(
+      guideIds.length > 0 ? guideIds : undefined,
+      cities.length > 0 ? cities : undefined,
+    );
+  }
+
+  const execution = await executeAllPendingBackfillJobs();
+
+  return jsonData(c, {
+    analysis: {
+      totalFieldGaps: analysis.totalFieldGaps,
+      totalDestinationGaps: analysis.totalDestinationGaps,
+    },
+    execution,
+  });
+});
+
+// ── POST /discover-guides — Discover new guides from a platform ───
+app.post('/discover-guides', adminRequired(), zValidator('json', discoverGuidesSchema), async (c) => {
+  const { platform, city } = c.req.valid('json');
+
+  const result = await discoverNewGuides(platform, city);
+
+  return jsonData(c, result);
+});
+
+// ── POST /import-guides — Batch import discovered guides ───
+app.post('/import-guides', adminRequired(), zValidator('json', importGuidesSchema), async (c) => {
+  const { platform, urls } = c.req.valid('json');
+
+  const result = await batchImportGuides(platform, urls);
+
+  return jsonData(c, result);
 });
 
 export default app;

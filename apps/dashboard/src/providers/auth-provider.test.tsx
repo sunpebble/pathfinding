@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from '@/hooks/use-auth';
 import { AUTH_TOKEN_STORAGE_KEY, AuthProvider } from './auth-provider';
@@ -53,11 +54,35 @@ function AuthActionHarness({ mode }: { mode: 'signIn' | 'signUp' }) {
   );
 }
 
+function AuthStateSnapshot() {
+  const auth = useAuth();
+
+  return (
+    <span>
+      {auth.token ?? 'none'}
+      :
+      {String(auth.isLoading)}
+    </span>
+  );
+}
+
 describe('authProvider', () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.restoreAllMocks();
     delete (window as Window & { __authError?: string }).__authError;
+  });
+
+  it('does not expose persisted auth during render', () => {
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, 'stored-token');
+
+    const html = renderToString(
+      <AuthProvider>
+        <AuthStateSnapshot />
+      </AuthProvider>,
+    );
+
+    expect(html.replaceAll('<!-- -->', '')).toContain('none:true');
   });
 
   it('loads /api/auth/me with a stored token', async () => {

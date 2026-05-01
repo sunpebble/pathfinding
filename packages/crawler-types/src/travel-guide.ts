@@ -31,6 +31,7 @@ export interface TravelGuideRaw {
   title?: string;
   content: string;
   content_html?: string; // HTML content for rich text rendering
+  content_markdown?: string; // Markdown content for structured rich text rendering
   author_name?: string;
   author_id?: string;
   likes_count?: number;
@@ -55,6 +56,7 @@ export interface TravelGuide {
   title?: string;
   content: string;
   content_html?: string; // HTML content for rich text rendering
+  content_markdown?: string; // Markdown content for structured rich text rendering
   author_name?: string;
   author_id?: string;
 

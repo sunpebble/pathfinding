@@ -68,14 +68,14 @@ describe('inviteDialog', () => {
       { wrapper: Wrapper },
     );
 
-    fireEvent.change(screen.getByLabelText(/user id or email/i), {
+    fireEvent.change(screen.getByLabelText(/用户 ID 或邮箱/i), {
       target: { value: 'guest@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Role'), {
+    fireEvent.change(screen.getByLabelText('角色'), {
       target: { value: 'viewer' },
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /send invitation/i }));
+      fireEvent.click(screen.getByRole('button', { name: /发送邀请/ }));
       await Promise.resolve();
     });
 
@@ -87,7 +87,7 @@ describe('inviteDialog', () => {
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['itinerary-collaborators', '42'],
     });
-    expect(screen.getByText('Successfully invited guest@example.com as viewer')).toBeInTheDocument();
+    expect(screen.getByText('成功邀请 guest@example.com 为 浏览者')).toBeInTheDocument();
 
     await act(async () => {
       vi.advanceTimersByTime(2100);
@@ -116,12 +116,12 @@ describe('inviteDialog', () => {
       { wrapper: Wrapper },
     );
 
-    fireEvent.change(screen.getByLabelText(/user id or email/i), {
+    fireEvent.change(screen.getByLabelText(/用户 ID 或邮箱/i), {
       target: { value: 'user-7' },
     });
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /send invitation/i }));
+      fireEvent.click(screen.getByRole('button', { name: /发送邀请/ }));
       await Promise.resolve();
     });
 

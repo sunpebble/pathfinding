@@ -30,7 +30,7 @@ export function getJwtSecret(): Uint8Array {
   if (!_jwtSecret) {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      throw new Error('JWT_SECRET environment variable is required');
+      throw new Error('JWT_SECRET 环境变量是必需的');
     }
     _jwtSecret = new TextEncoder().encode(secret);
   }

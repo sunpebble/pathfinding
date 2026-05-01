@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/pathfinding/server/internal/eventbus"
@@ -42,15 +43,16 @@ func (h *Handler) handleSaveTravelGuide(ctx context.Context, event eventbus.Even
 	var payload struct {
 		URL   string `json:"url"`
 		Guide struct {
-			Title       string   `json:"title"`
-			Content     string   `json:"content"`
-			ContentHTML string   `json:"contentHtml"`
-			Author      string   `json:"author"`
-			Views       int      `json:"views"`
-			Likes       int      `json:"likes"`
-			CoverImage  string   `json:"coverImage"`
-			Images      []string `json:"images"`
-			PublishedAt string   `json:"publishedAt"`
+			Title           string   `json:"title"`
+			Content         string   `json:"content"`
+			ContentHTML     string   `json:"contentHtml"`
+			ContentMarkdown string   `json:"contentMarkdown"`
+			Author          string   `json:"author"`
+			Views           int      `json:"views"`
+			Likes           int      `json:"likes"`
+			CoverImage      string   `json:"coverImage"`
+			Images          []string `json:"images"`
+			PublishedAt     string   `json:"publishedAt"`
 		} `json:"guide"`
 	}
 	if err := json.Unmarshal(data, &payload); err != nil {
@@ -65,20 +67,38 @@ func (h *Handler) handleSaveTravelGuide(ctx context.Context, event eventbus.Even
 	)
 
 	imagesJSON, _ := json.Marshal(payload.Guide.Images)
+	contentMarkdown := strings.TrimSpace(payload.Guide.ContentMarkdown)
+	if contentMarkdown == "" {
+		contentMarkdown = service.GenerateGuideMarkdownContent(
+			payload.Guide.Title,
+			payload.Guide.Content,
+			payload.Guide.Images,
+		)
+	}
+	enrichedData := map[string]any{
+		"contentFormatVersion": 1,
+	}
+	if strings.TrimSpace(payload.Guide.ContentHTML) != "" {
+		enrichedData["contentHtml"] = payload.Guide.ContentHTML
+	}
+	if contentMarkdown != "" {
+		enrichedData["contentMarkdown"] = contentMarkdown
+	}
+	enrichedDataJSON, _ := json.Marshal(enrichedData)
 	now := time.Now()
 
 	_, err = h.DB.ExecContext(ctx, `
 		INSERT INTO travel_guides (platform, external_id, title, content, author_name, source_url,
-			cover_image_url, image_urls, view_count, like_count, quality_score, crawled_at, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			cover_image_url, image_urls, enriched_data, view_count, like_count, quality_score, crawled_at, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
 			title = VALUES(title), content = VALUES(content), author_name = VALUES(author_name),
 			cover_image_url = VALUES(cover_image_url), image_urls = VALUES(image_urls),
-			view_count = VALUES(view_count), like_count = VALUES(like_count),
+			enriched_data = VALUES(enriched_data), view_count = VALUES(view_count), like_count = VALUES(like_count),
 			quality_score = VALUES(quality_score), updated_at = VALUES(updated_at)`,
 		"mafengwo", externalID, payload.Guide.Title, payload.Guide.Content,
 		payload.Guide.Author, payload.URL, payload.Guide.CoverImage, string(imagesJSON),
-		payload.Guide.Views, payload.Guide.Likes, qualityScore, now, now, now,
+		string(enrichedDataJSON), payload.Guide.Views, payload.Guide.Likes, qualityScore, now, now, now,
 	)
 	if err != nil {
 		slog.Error("Failed to save travel guide", "error", err, "externalId", externalID)

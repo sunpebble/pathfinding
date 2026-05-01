@@ -15,12 +15,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-950">
+    <div className="dashboard-pattern flex h-screen text-stone-900 dark:bg-stone-950">
       <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-6 pt-16 lg:pt-6">
-          <ErrorBoundary>{children}</ErrorBoundary>
+        <main className="flex-1 overflow-y-auto px-4 py-5 pt-20 sm:px-6 lg:px-8 lg:pt-6">
+          <div className="mx-auto w-full max-w-7xl">
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </div>
         </main>
       </div>
     </div>

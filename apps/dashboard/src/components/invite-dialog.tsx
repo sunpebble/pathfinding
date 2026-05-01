@@ -68,12 +68,12 @@ export function InviteDialog({
 
     const trimmedUserId = userId.trim();
     if (!trimmedUserId) {
-      setError('Please enter a user ID');
+      setError('请输入用户 ID');
       return;
     }
 
     if (trimmedUserId === currentUserId) {
-      setError('You cannot invite yourself');
+      setError('不能邀请自己');
       return;
     }
 
@@ -86,7 +86,7 @@ export function InviteDialog({
         queryKey: ['itinerary-collaborators', itineraryId],
       });
 
-      setSuccess(`Successfully invited ${trimmedUserId} as ${role}`);
+      setSuccess(`成功邀请 ${trimmedUserId} 为 ${role === 'editor' ? '编辑者' : '浏览者'}`);
       setUserId('');
       setRole('editor');
 
@@ -96,7 +96,7 @@ export function InviteDialog({
       }, 2000);
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send invitation');
+      setError(err instanceof Error ? err.message : '发送邀请失败');
     }
   };
 
@@ -111,15 +111,15 @@ export function InviteDialog({
           <div>
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-emerald-600" />
-              Invite Collaborator
+              邀请协作者
             </h2>
-            <p className="text-sm text-gray-500 mt-1">Add people to collaborate on this itinerary</p>
+            <p className="text-sm text-gray-500 mt-1">邀请他人协作编辑此行程</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Close"
+            aria-label="关闭"
           >
             <X className="h-6 w-6" />
           </button>
@@ -143,23 +143,23 @@ export function InviteDialog({
             <div className="space-y-2">
               <label htmlFor="userId" className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                User ID or Email
+                用户 ID 或邮箱
               </label>
               <input
                 id="userId"
                 type="text"
                 value={userId}
                 onChange={e => setUserId(e.target.value)}
-                placeholder="e.g., user-123 or email@example.com"
+                placeholder="例如：user-123 或 email@example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 disabled={inviteMutation.isPending}
               />
-              <p className="text-xs text-gray-500">Enter the user ID or email of the person you want to invite</p>
+              <p className="text-xs text-gray-500">输入你想邀请的人的用户 ID 或邮箱</p>
             </div>
 
             <div className="space-y-2">
               <label htmlFor="role" className="text-sm font-medium text-gray-700">
-                Role
+                角色
               </label>
               <select
                 id="role"
@@ -168,8 +168,8 @@ export function InviteDialog({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer"
                 disabled={inviteMutation.isPending}
               >
-                <option value="editor">Editor - Can add, edit, and remove POIs</option>
-                <option value="viewer">Viewer - Can only view the itinerary</option>
+                <option value="editor">编辑者 - 可以添加、编辑和移除兴趣点</option>
+                <option value="viewer">浏览者 - 只能查看行程</option>
               </select>
             </div>
 
@@ -185,13 +185,13 @@ export function InviteDialog({
                 ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Sending invitation...
+                      发送邀请中...
                     </>
                   )
                 : (
                     <>
                       <UserPlus className="h-4 w-4" />
-                      Send Invitation
+                      发送邀请
                     </>
                   )}
             </button>
@@ -199,8 +199,8 @@ export function InviteDialog({
 
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="text-xs text-amber-800">
-              Shareable links are temporarily disabled for security reasons.
-              Please invite collaborators by user ID or email.
+              出于安全原因，可分享链接暂时禁用。
+              请通过用户 ID 或邮箱邀请协作者。
             </p>
           </div>
         </div>
@@ -211,7 +211,7 @@ export function InviteDialog({
             onClick={onClose}
             className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Close
+            关闭
           </button>
         </div>
       </div>

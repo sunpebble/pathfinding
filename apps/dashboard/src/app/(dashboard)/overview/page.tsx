@@ -11,6 +11,12 @@ import {
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import {
+  DashboardCard,
+  DashboardPageHeader,
+  DashboardTableShell,
+  MetricCard,
+} from '@/components/ui/dashboard-primitives';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useHealthStatus } from '@/hooks/use-health-status';
 import { getCrawlJobs, getPOIs, getTrainingDatasets } from '@/lib/api';
@@ -37,162 +43,121 @@ export default function OverviewPage() {
   return (
     <div className="space-y-6">
       {/* Page Title */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-500">
-          Monitor your crawler service and data pipeline
-        </p>
-      </div>
+      <DashboardPageHeader
+        title="仪表盘概览"
+        description="监控抓取服务和数据管道"
+        icon={ListTodo}
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total Jobs */}
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Jobs</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
-                {jobsData?.pagination?.total ?? '-'}
-              </p>
+        <MetricCard
+          label="总任务数"
+          value={jobsData?.pagination?.total ?? '-'}
+          icon={ListTodo}
+          tone="blue"
+          footer={(
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1 text-emerald-600">
+                <CheckCircle className="h-4 w-4" />
+                {completedJobs}
+                {' '}
+                已完成
+              </span>
+              <span className="flex items-center gap-1 text-blue-600">
+                <Loader2 className="h-4 w-4" />
+                {runningJobs}
+                {' '}
+                运行中
+              </span>
             </div>
-            <div className="rounded-full bg-blue-100 p-3">
-              <ListTodo className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1 text-emerald-600">
-              <CheckCircle className="h-4 w-4" />
-              {completedJobs}
-              {' '}
-              completed
-            </span>
-            <span className="flex items-center gap-1 text-blue-600">
-              <Loader2 className="h-4 w-4" />
-              {runningJobs}
-              {' '}
-              running
-            </span>
-          </div>
-        </div>
+          )}
+        />
 
-        {/* Total POIs */}
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">
-                Normalized POIs
-              </p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
-                {poisData?.pagination?.total ?? '-'}
-              </p>
-            </div>
-            <div className="rounded-full bg-emerald-100 p-3">
-              <MapPin className="h-6 w-6 text-emerald-600" />
-            </div>
-          </div>
-          <Link
-            href="/pois"
-            className="mt-4 inline-block text-sm text-emerald-600 hover:underline"
-          >
-            View all POIs →
-          </Link>
-        </div>
-
-        {/* Training Datasets */}
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Datasets</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
-                {datasetsData?.pagination?.total ?? '-'}
-              </p>
-            </div>
-            <div className="rounded-full bg-purple-100 p-3">
-              <Database className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-          <Link
-            href="/datasets"
-            className="mt-4 inline-block text-sm text-purple-600 hover:underline"
-          >
-            View datasets →
-          </Link>
-        </div>
-
-        {/* Service Status */}
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">
-                Service Status
-              </p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
-                {health?.status === 'ok' || health?.status === 'healthy'
-                  ? 'Online'
-                  : 'Offline'}
-              </p>
-            </div>
-            <div
-              className={`rounded-full p-3 ${
-                health?.status === 'ok' || health?.status === 'healthy'
-                  ? 'bg-emerald-100'
-                  : 'bg-red-100'
-              }`}
+        <MetricCard
+          label="标准化兴趣点"
+          value={poisData?.pagination?.total ?? '-'}
+          icon={MapPin}
+          tone="emerald"
+          footer={(
+            <Link
+              href="/pois"
+              className="inline-block text-sm font-medium text-emerald-700 hover:underline"
             >
-              {health?.status === 'ok' || health?.status === 'healthy'
-                ? (
-                    <CheckCircle className="h-6 w-6 text-emerald-600" />
-                  )
-                : (
-                    <XCircle className="h-6 w-6 text-red-600" />
-                  )}
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-gray-500">
-            Crawler API at localhost:3001
-          </p>
-        </div>
+              查看全部兴趣点 →
+            </Link>
+          )}
+        />
+
+        <MetricCard
+          label="数据集"
+          value={datasetsData?.pagination?.total ?? '-'}
+          icon={Database}
+          tone="purple"
+          footer={(
+            <Link
+              href="/datasets"
+              className="inline-block text-sm font-medium text-purple-700 hover:underline"
+            >
+              查看数据集 →
+            </Link>
+          )}
+        />
+
+        <MetricCard
+          label="服务状态"
+          value={health?.status === 'ok' || health?.status === 'healthy'
+            ? '在线'
+            : '离线'}
+          icon={health?.status === 'ok' || health?.status === 'healthy' ? CheckCircle : XCircle}
+          tone={health?.status === 'ok' || health?.status === 'healthy' ? 'emerald' : 'red'}
+          footer={(
+            <p className="text-sm text-stone-500">
+              抓取 API 位于 localhost:3001
+            </p>
+          )}
+        />
       </div>
 
       {/* Recent Jobs */}
-      <div className="rounded-xl bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Jobs</h2>
-          <Link href="/jobs" className="text-sm text-blue-600 hover:underline">
-            View all →
+      <DashboardTableShell>
+        <div className="flex items-center justify-between border-b border-stone-200/70 p-6">
+          <h2 className="text-lg font-semibold text-stone-950">最近任务</h2>
+          <Link href="/jobs" className="text-sm font-medium text-emerald-700 hover:underline">
+            查看全部 →
           </Link>
         </div>
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-stone-100">
           {jobs.length === 0
             ? (
-                <div className="p-6 text-center text-gray-500">
-                  No jobs found.
+                <DashboardCard className="m-6 text-center text-stone-500">
+                  暂无任务。
                   {' '}
                   <Link
                     href="/jobs/create"
-                    className="text-blue-600 hover:underline"
+                    className="font-medium text-emerald-700 hover:underline"
                   >
-                    Create one
+                    创建一个
                   </Link>
-                </div>
+                </DashboardCard>
               )
             : (
                 jobs.map(job => (
                   <div
                     key={job.id}
-                    className="flex items-center justify-between p-4 hover:bg-gray-50"
+                    className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-emerald-50/40"
                   >
                     <div className="flex items-center gap-4">
                       <StatusIcon status={job.status} />
                       <div>
-                        <p className="font-medium text-gray-900">{job.name}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="font-medium text-stone-900">{job.name}</p>
+                        <p className="text-sm text-stone-500">
                           {job.platform}
                           {' '}
                           •
                           {job.statistics?.records_extracted ?? 0}
                           {' '}
-                          records
+                          条记录
                         </p>
                       </div>
                     </div>
@@ -200,16 +165,16 @@ export default function OverviewPage() {
                       <StatusBadge status={job.status} showIcon={false} />
                       <Link
                         href={`/jobs/${job.id}`}
-                        className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+                        className="rounded-xl px-3 py-1.5 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100"
                       >
-                        View
+                        查看
                       </Link>
                     </div>
                   </div>
                 ))
               )}
         </div>
-      </div>
+      </DashboardTableShell>
     </div>
   );
 }

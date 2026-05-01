@@ -81,7 +81,12 @@ async function parseResponse<T>(response: Response): Promise<T> {
     return undefined as T;
   }
 
-  return JSON.parse(text) as T;
+  try {
+    return JSON.parse(text) as T;
+  }
+  catch {
+    return text as T;
+  }
 }
 
 function serializeBody(body: unknown): BodyInit | undefined {
@@ -107,7 +112,14 @@ function extractErrorMessage(data: unknown, statusText: string): string {
     return data.error;
   }
 
-  return statusText || 'Request failed';
+  if (typeof data === 'string' && data.length > 0) {
+    if (data === 'Internal Server Error' || data === 'Internal server error') {
+      return '服务暂时不可用，请稍后重试';
+    }
+    return data;
+  }
+
+  return statusText || '请求失败，请重试';
 }
 
 // ---------------------------------------------------------------------------
@@ -176,10 +188,16 @@ export function createApiClient(basePath: string): ApiClient {
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(buildUrl(basePath, path), {
-      ...init,
-      headers,
-    });
+    let response: Response;
+    try {
+      response = await fetch(buildUrl(basePath, path), {
+        ...init,
+        headers,
+      });
+    }
+    catch {
+      throw new ApiError('服务暂时不可用，请稍后重试', 0, null);
+    }
 
     const data = await parseResponse<unknown>(response);
 

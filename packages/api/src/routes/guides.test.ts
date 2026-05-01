@@ -188,6 +188,27 @@ describe('guides routes', () => {
       expect(body.title).toBe('Paris Guide');
     });
 
+    it('returns structured content fields from enriched data', async () => {
+      const chain = createSelectChain([{
+        ...guideMock,
+        enrichedData: {
+          contentHtml: '<p>富文本内容</p>',
+          contentMarkdown: '## 富文本内容',
+          aiSummary: '结构化摘要',
+          aiTips: ['提前预约'],
+        },
+      }]);
+      mockDb.select.mockReturnValueOnce(chain);
+
+      const response = await createApp().request('/api/guides/by-id?id=1');
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.content_html).toBe('<p>富文本内容</p>');
+      expect(body.content_markdown).toBe('## 富文本内容');
+      expect(body.ai_summary).toBe('结构化摘要');
+      expect(body.ai_tips).toEqual(['提前预约']);
+    });
+
     it('returns 400 when id is missing', async () => {
       const response = await createApp().request('/api/guides/by-id');
       expect(response.status).toBe(400);

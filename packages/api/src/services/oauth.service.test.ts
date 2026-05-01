@@ -52,7 +52,7 @@ describe('oauth.service', () => {
         },
       });
 
-      await expect(verifyGoogleToken('token')).rejects.toThrow('missing subject');
+      await expect(verifyGoogleToken('token')).rejects.toThrow('缺少 subject');
     });
 
     it('throws when token is missing email claim', async () => {
@@ -63,7 +63,7 @@ describe('oauth.service', () => {
         },
       });
 
-      await expect(verifyGoogleToken('token')).rejects.toThrow('missing email');
+      await expect(verifyGoogleToken('token')).rejects.toThrow('缺少 email');
     });
   });
 
@@ -102,7 +102,7 @@ describe('oauth.service', () => {
         },
       });
 
-      await expect(verifyAppleToken('token')).rejects.toThrow('missing subject');
+      await expect(verifyAppleToken('token')).rejects.toThrow('缺少 subject');
     });
   });
 });

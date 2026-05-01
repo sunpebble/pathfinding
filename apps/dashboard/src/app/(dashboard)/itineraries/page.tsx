@@ -6,6 +6,13 @@ import { Calendar, Eye, MapPin, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import {
+  DashboardCard,
+  DashboardEmptyState,
+  DashboardLoadingState,
+  DashboardPageHeader,
+  DashboardToolbar,
+} from '@/components/ui/dashboard-primitives';
 import { useAuth } from '@/hooks/use-auth';
 import {
   getItineraries,
@@ -21,9 +28,9 @@ function VisibilityBadge({ visibility }: { visibility: string }) {
     public: 'bg-green-100 text-green-800',
   };
   const labels: Record<string, string> = {
-    private: 'Private',
-    friends: 'Friends',
-    public: 'Public',
+    private: '私有',
+    friends: '好友',
+    public: '公开',
   };
   return (
     <span
@@ -57,7 +64,7 @@ function formatDateRange(startDate: string, endDate: string) {
 function ItineraryCard({ itinerary }: { itinerary: ItinerarySummary }) {
   return (
     <Link href={`/itineraries/${itinerary.id}`}>
-      <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer">
+      <DashboardCard className="cursor-pointer p-4 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-[var(--dashboard-shadow)]">
         <div className="flex gap-4">
           {/* Cover Image */}
           {itinerary.coverImageUrl && (
@@ -65,7 +72,7 @@ function ItineraryCard({ itinerary }: { itinerary: ItinerarySummary }) {
               <img
                 src={itinerary.coverImageUrl}
                 alt={itinerary.title}
-                className="w-24 h-24 object-cover rounded-lg"
+                className="h-24 w-24 rounded-xl object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -76,14 +83,14 @@ function ItineraryCard({ itinerary }: { itinerary: ItinerarySummary }) {
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-medium text-gray-900 line-clamp-2">
+              <h3 className="line-clamp-2 font-medium text-stone-900">
                 {itinerary.title}
               </h3>
               <VisibilityBadge visibility={itinerary.visibility} />
             </div>
 
             {/* Location & Dates */}
-            <div className="flex items-center gap-3 mt-2 text-sm text-gray-600">
+            <div className="mt-2 flex items-center gap-3 text-sm text-stone-600">
               {itinerary.cityName && (
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
@@ -97,17 +104,17 @@ function ItineraryCard({ itinerary }: { itinerary: ItinerarySummary }) {
             </div>
 
             {/* Stats */}
-            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+            <div className="mt-3 flex items-center gap-4 text-xs text-stone-500">
               <span className="flex items-center gap-1">
                 <Eye className="h-3.5 w-3.5" />
                 {itinerary.daysCount}
                 {' '}
-                {itinerary.daysCount === 1 ? 'day' : 'days'}
+                {itinerary.daysCount === 1 ? '天' : '天'}
               </span>
             </div>
           </div>
         </div>
-      </div>
+      </DashboardCard>
     </Link>
   );
 }
@@ -161,72 +168,57 @@ export default function ItinerariesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="h-6 w-6 text-emerald-600" />
-            My Itineraries
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {total}
-            {' '}
-            {total === 1 ? 'itinerary' : 'itineraries'}
-            {' '}
-            total
-          </p>
-        </div>
-
-        <Link
-          href="/itineraries/new"
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-        >
-          Create Itinerary
-        </Link>
-      </div>
+      <DashboardPageHeader
+        title="我的行程"
+        icon={Users}
+        description={`${total} 个行程`}
+        actions={(
+          <Link
+            href="/itineraries/new"
+            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-emerald-900/10 transition-colors hover:bg-emerald-700 focus-explorer"
+          >
+            创建行程
+          </Link>
+        )}
+      />
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
+      <DashboardToolbar>
         {/* Search */}
-        <div className="relative flex-1 max-w-md">
+        <div className="relative w-full sm:max-w-md sm:flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search itineraries..."
+            placeholder="搜索行程..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="dashboard-control w-full py-2 pl-10 pr-4"
           />
         </div>
-      </div>
+      </DashboardToolbar>
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-        </div>
+        <DashboardLoadingState label="加载行程中" />
       )}
 
       {/* Empty State */}
       {!isLoading && filteredItineraries.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchQuery ? 'No itineraries found' : 'No itineraries yet'}
-          </h3>
-          <p className="text-gray-500 mb-4">
-            {searchQuery
-              ? 'Try adjusting your search query'
-              : 'Create your first itinerary to start planning your trip'}
-          </p>
-          {!searchQuery && (
+        <DashboardEmptyState
+          icon={Users}
+          title={searchQuery ? '未找到行程' : '暂无行程'}
+          description={searchQuery
+            ? '尝试调整搜索条件'
+            : '创建第一个行程开始规划你的旅行'}
+          action={!searchQuery && (
             <Link
               href="/itineraries/new"
-              className="inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+              className="inline-block rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 focus-explorer"
             >
-              Create Itinerary
+              创建行程
             </Link>
           )}
-        </div>
+        />
       )}
 
       {/* Itineraries Grid */}
@@ -240,31 +232,33 @@ export default function ItinerariesPage() {
 
       {/* Pagination */}
       {!isLoading && totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-4">
+        <div className="dashboard-surface mx-auto flex w-fit items-center justify-center gap-2 rounded-2xl px-3 py-2">
           <button
             type="button"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Previous
+            上一页
           </button>
-          <span className="text-sm text-gray-600">
-            Page
+          <span className="text-sm text-stone-600">
+            第
             {' '}
             {page}
             {' '}
-            of
+            页 / 共
             {' '}
             {totalPages}
+            {' '}
+            页
           </span>
           <button
             type="button"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Next
+            下一页
           </button>
         </div>
       )}

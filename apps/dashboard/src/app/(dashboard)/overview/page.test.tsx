@@ -75,29 +75,29 @@ describe('overviewPage', () => {
 
   it('renders the page title', () => {
     render(<OverviewPage />);
-    expect(screen.getByText('Dashboard Overview')).toBeDefined();
+    expect(screen.getByText('仪表盘概览')).toBeDefined();
   });
 
   it('renders the page description', () => {
     render(<OverviewPage />);
     expect(
-      screen.getByText('Monitor your crawler service and data pipeline'),
+      screen.getByText('监控抓取服务和数据管道'),
     ).toBeDefined();
   });
 
   it('renders stats cards', () => {
     render(<OverviewPage />);
-    expect(screen.getByText('Total Jobs')).toBeDefined();
-    expect(screen.getByText('Normalized POIs')).toBeDefined();
-    expect(screen.getByText('Datasets')).toBeDefined();
-    expect(screen.getByText('Service Status')).toBeDefined();
+    expect(screen.getByText('总任务数')).toBeDefined();
+    expect(screen.getByText('标准化兴趣点')).toBeDefined();
+    expect(screen.getByText('数据集')).toBeDefined();
+    expect(screen.getByText('服务状态')).toBeDefined();
   });
 
   it('displays job statistics', () => {
     render(<OverviewPage />);
     expect(screen.getByText('2')).toBeDefined();
-    expect(screen.getByText('1 completed')).toBeDefined();
-    expect(screen.getByText('1 running')).toBeDefined();
+    expect(screen.getByText(/已完成/)).toBeDefined();
+    expect(screen.getByText(/运行中/)).toBeDefined();
   });
 
   it('displays POI count', () => {
@@ -112,19 +112,19 @@ describe('overviewPage', () => {
 
   it('shows online status when healthy', () => {
     render(<OverviewPage />);
-    expect(screen.getByText('Online')).toBeDefined();
+    expect(screen.getByText('在线')).toBeDefined();
   });
 
   it('renders recent jobs section', () => {
     render(<OverviewPage />);
-    expect(screen.getByText('Recent Jobs')).toBeDefined();
+    expect(screen.getByText('最近任务')).toBeDefined();
     expect(screen.getByText('Test Job')).toBeDefined();
     expect(screen.getByText('Running Job')).toBeDefined();
   });
 
   it('renders view all links', () => {
     render(<OverviewPage />);
-    const viewAllLinks = screen.getAllByText(/View.*→/);
+    const viewAllLinks = screen.getAllByText(/查看.*→/);
     expect(viewAllLinks.length).toBeGreaterThan(0);
   });
 

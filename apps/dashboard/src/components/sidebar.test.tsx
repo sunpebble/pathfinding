@@ -59,21 +59,21 @@ describe('sidebar', () => {
     vi.mocked(usePathname).mockReturnValue('/overview');
     render(<Sidebar />);
     const overviewLink = screen.getByText('总览').closest('a');
-    expect(overviewLink?.className).toContain('bg-gray-800');
+    expect(overviewLink?.className).toContain('bg-emerald-500');
   });
 
   it('highlights active navigation item for jobs path', () => {
     vi.mocked(usePathname).mockReturnValue('/jobs');
     render(<Sidebar />);
     const jobsLink = screen.getByText('爬取任务').closest('a');
-    expect(jobsLink?.className).toContain('bg-gray-800');
+    expect(jobsLink?.className).toContain('bg-emerald-500');
   });
 
   it('highlights active navigation item for nested jobs path', () => {
     vi.mocked(usePathname).mockReturnValue('/jobs/123');
     render(<Sidebar />);
     const jobsLink = screen.getByText('爬取任务').closest('a');
-    expect(jobsLink?.className).toContain('bg-gray-800');
+    expect(jobsLink?.className).toContain('bg-emerald-500');
   });
 
   it('renders correct hrefs for navigation links', () => {

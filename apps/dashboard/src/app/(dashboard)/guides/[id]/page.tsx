@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import * as React from 'react';
 import { useState } from 'react';
+import { Streamdown } from 'streamdown';
 import { GeocodingConfidenceBadge } from '@/components/geocoding-confidence-badge';
 import { PoiEditor } from '@/components/poi-editor';
 import { SafeHtml } from '@/components/safe-html';
@@ -137,12 +138,12 @@ export default function GuideDetailPage() {
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Guides
+          返回游记列表
         </Link>
         <div className="bg-red-50 text-red-700 p-6 rounded-lg text-center">
-          <p className="font-medium">Guide not found</p>
+          <p className="font-medium">游记不存在</p>
           <p className="text-sm mt-1">
-            The guide you're looking for doesn't exist.
+            你要查找的游记不存在。
           </p>
         </div>
       </div>
@@ -150,6 +151,32 @@ export default function GuideDetailPage() {
   }
 
   const qualityPercent = Math.round(guide.quality_score * 100);
+  const contentBody = guide.content_markdown
+    ? (
+        <Streamdown className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900">
+          {guide.content_markdown}
+        </Streamdown>
+      )
+    : guide.content_html
+      ? (
+          <SafeHtml
+            html={guide.content_html}
+            className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
+          />
+        )
+      : guide.content
+        ? (
+            <div className="prose prose-gray max-w-none">
+              {contentParagraphsWithKeys.map(({ key, paragraph }) => (
+                <p key={key} className="text-gray-700 leading-relaxed mb-4">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          )
+        : (
+            <p className="text-gray-400 italic">暂无内容</p>
+          );
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -159,7 +186,7 @@ export default function GuideDetailPage() {
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Guides
+        返回游记列表
       </Link>
 
       {/* Header */}
@@ -177,7 +204,7 @@ export default function GuideDetailPage() {
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              {guide.title || 'Untitled Guide'}
+              {guide.title || '未命名游记'}
             </h1>
             <div className="flex items-center gap-4 text-sm text-gray-500">
               {guide.author_name && (
@@ -204,7 +231,7 @@ export default function GuideDetailPage() {
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
               <ExternalLink className="h-4 w-4" />
-              View Original
+              查看原文
             </a>
           )}
         </div>
@@ -214,25 +241,25 @@ export default function GuideDetailPage() {
       <div className="grid grid-cols-4 gap-4">
         <StatCard
           icon={Heart}
-          label="Likes"
+          label="点赞"
           value={guide.likes_count}
           color="text-red-500"
         />
         <StatCard
           icon={Eye}
-          label="Views"
+          label="浏览"
           value={guide.views_count}
           color="text-blue-500"
         />
         <StatCard
           icon={MessageCircle}
-          label="Comments"
+          label="评论"
           value={guide.comments_count}
           color="text-green-500"
         />
         <StatCard
           icon={Bookmark}
-          label="Saves"
+          label="收藏"
           value={guide.saves_count}
           color="text-purple-500"
         />
@@ -242,13 +269,13 @@ export default function GuideDetailPage() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-emerald-600" />
-          Destinations & Tags
+          目的地与标签
         </h2>
 
         {guide.destinations && guide.destinations.length > 0 && (
           <div className="mb-4">
             <h3 className="text-sm font-medium text-gray-700 mb-2">
-              Destinations
+              目的地
             </h3>
             <div className="flex flex-wrap gap-2">
               {guide.destinations.map((dest: string) => (
@@ -265,7 +292,7 @@ export default function GuideDetailPage() {
 
         {guide.tags && guide.tags.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">标签</h3>
             <div className="flex flex-wrap gap-2">
               {guide.tags.map((tag: string) => (
                 <span
@@ -283,7 +310,7 @@ export default function GuideDetailPage() {
         {(!guide.destinations || guide.destinations.length === 0)
           && (!guide.tags || guide.tags.length === 0) && (
           <p className="text-gray-500 text-sm">
-            No destinations or tags available
+            暂无目的地或标签
           </p>
         )}
       </div>
@@ -343,36 +370,15 @@ export default function GuideDetailPage() {
 
       {/* Content */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Content</h2>
-        {guide.content_html
-          ? (
-              // Render rich text HTML content safely
-              <SafeHtml
-                html={guide.content_html}
-                className="prose prose-gray max-w-none prose-img:rounded-lg prose-img:max-h-96 prose-img:object-cover prose-a:text-emerald-600 prose-headings:text-gray-900"
-              />
-            )
-          : guide.content
-            ? (
-                // Plain text with paragraph formatting
-                <div className="prose prose-gray max-w-none">
-                  {contentParagraphsWithKeys.map(({ key, paragraph }) => (
-                    <p key={key} className="text-gray-700 leading-relaxed mb-4">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-              )
-            : (
-                <p className="text-gray-400 italic">暂无内容</p>
-              )}
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">内容</h2>
+        {contentBody}
       </div>
 
       {/* Images */}
       {guide.image_urls && guide.image_urls.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Images (
+            图片 (
             {guide.image_urls.length}
             )
           </h2>
@@ -399,7 +405,7 @@ export default function GuideDetailPage() {
               +
               {guide.image_urls.length - 9}
               {' '}
-              more images
+              更多图片
             </p>
           )}
         </div>
@@ -412,13 +418,13 @@ export default function GuideDetailPage() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Route className="h-5 w-5 text-emerald-600" />
-                AI-Extracted Itinerary
+                AI 提取的行程
               </h2>
               {guide.geocoding_metrics && (
                 <p className="text-sm text-gray-500 mt-1">
                   {guide.geocoding_metrics.total_pois}
                   {' '}
-                  POIs •
+                  兴趣点 •
                   {' '}
                   {Math.round(guide.geocoding_metrics.average_confidence * 100)}
                   % avg confidence
@@ -426,7 +432,7 @@ export default function GuideDetailPage() {
                     <span className="text-amber-600 font-medium ml-2">
                       {guide.geocoding_metrics.low_confidence_count}
                       {' '}
-                      need review
+                      需审核
                     </span>
                   )}
                 </p>
@@ -442,9 +448,11 @@ export default function GuideDetailPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <div className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-lg text-sm">
-                    Day
+                    第
                     {' '}
                     {day.dayNumber}
+                    {' '}
+                    天
                   </div>
                   {day.theme && (
                     <span className="text-sm text-gray-600">{day.theme}</span>
@@ -555,30 +563,30 @@ export default function GuideDetailPage() {
 
       {/* Metadata */}
       <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
-        <h2 className="text-sm font-medium text-gray-500 mb-3">Metadata</h2>
+        <h2 className="text-sm font-medium text-gray-500 mb-3">元数据</h2>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <dt className="text-gray-500">Guide ID</dt>
+            <dt className="text-gray-500">游记 ID</dt>
             <dd className="font-mono text-gray-900">
               {(guide.id || guide._id).slice(0, 8)}
               ...
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">External ID</dt>
+            <dt className="text-gray-500">外部 ID</dt>
             <dd className="font-mono text-gray-900">
               {guide.source_external_id?.slice(0, 20) || 'N/A'}
               ...
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Crawled At</dt>
+            <dt className="text-gray-500">抓取时间</dt>
             <dd className="text-gray-900">
               {guide.crawled_at ? formatDate(guide.crawled_at) : 'N/A'}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Last Updated</dt>
+            <dt className="text-gray-500">最后更新</dt>
             <dd className="text-gray-900">
               {guide.updated_at ? formatDate(guide.updated_at) : 'N/A'}
             </dd>

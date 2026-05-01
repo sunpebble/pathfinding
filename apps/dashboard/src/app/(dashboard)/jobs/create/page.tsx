@@ -6,6 +6,8 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { DashboardPageHeader } from '@/components/ui/dashboard-primitives';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { createCrawlJob } from '@/lib/api';
 
 export default function CreateJobPage() {
@@ -68,22 +70,29 @@ export default function CreateJobPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/jobs"
-          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Crawl Job</h1>
-          <p className="text-gray-500">Configure a new data crawling task</p>
-        </div>
-      </div>
+      <DashboardPageHeader
+        title="创建抓取任务"
+        description="配置新的数据抓取任务"
+        actions={(
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/jobs"
+                className="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 shadow-sm transition-colors hover:bg-stone-50 focus-explorer"
+                aria-label="返回任务列表"
+                title="返回任务列表"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>返回任务列表</TooltipContent>
+          </Tooltip>
+        )}
+      />
 
       {/* Error Message */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
         </div>
       )}
@@ -91,7 +100,7 @@ export default function CreateJobPage() {
       {/* Form */}
       <form
         onSubmit={handleSubmit}
-        className="rounded-xl bg-white p-6 shadow-sm"
+        className="dashboard-surface rounded-2xl p-6 backdrop-blur-sm"
       >
         <div className="space-y-6">
           {/* Basic Info */}
@@ -99,33 +108,33 @@ export default function CreateJobPage() {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Job Name *
+                任务名称 *
               </label>
               <input
                 type="text"
                 id="name"
                 name="name"
                 required
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="e.g., Tokyo Restaurants Crawl"
+                className="dashboard-control mt-1 block w-full"
+                placeholder="例如：东京餐厅抓取"
               />
             </div>
             <div>
               <label
                 htmlFor="platform"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Platform *
+                平台 *
               </label>
               <select
                 id="platform"
                 name="platform"
                 required
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="dashboard-control mt-1 block w-full"
               >
-                <option value="">Select platform...</option>
+                <option value="">选择平台...</option>
                 <option value="amap">Amap (高德地图)</option>
                 <option value="openstreetmap">OpenStreetMap</option>
                 <option value="overpass">Overpass API</option>
@@ -137,32 +146,32 @@ export default function CreateJobPage() {
             <div>
               <label
                 htmlFor="job_type"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Job Type
+                任务类型
               </label>
               <select
                 id="job_type"
                 name="job_type"
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="dashboard-control mt-1 block w-full"
               >
-                <option value="full">Full Crawl</option>
-                <option value="incremental">Incremental Update</option>
+                <option value="full">全量抓取</option>
+                <option value="incremental">增量更新</option>
               </select>
             </div>
             <div>
               <label
                 htmlFor="schedule_cron"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Schedule (Cron)
+                定时调度 (Cron)
               </label>
               <input
                 type="text"
                 id="schedule_cron"
                 name="schedule_cron"
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="e.g., 0 0 * * * (daily at midnight)"
+                className="dashboard-control mt-1 block w-full"
+                placeholder="例如：0 0 * * *（每天午夜）"
               />
             </div>
           </div>
@@ -171,32 +180,32 @@ export default function CreateJobPage() {
           <div>
             <label
               htmlFor="categories"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-stone-700"
             >
-              Categories (comma-separated)
+              分类（逗号分隔）
             </label>
             <input
               type="text"
               id="categories"
               name="categories"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="e.g., restaurant, hotel, attraction"
+              className="dashboard-control mt-1 block w-full"
+              placeholder="例如：餐厅、酒店、景点"
             />
           </div>
 
           <div>
             <label
               htmlFor="cities"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-stone-700"
             >
-              Cities (comma-separated)
+              城市（逗号分隔）
             </label>
             <input
               type="text"
               id="cities"
               name="cities"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="e.g., Tokyo, Osaka, Kyoto"
+              className="dashboard-control mt-1 block w-full"
+              placeholder="例如：东京、大阪、京都"
             />
           </div>
 
@@ -205,9 +214,9 @@ export default function CreateJobPage() {
             <div>
               <label
                 htmlFor="rate_limit_rps"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Rate Limit (requests/second)
+                速率限制（请求/秒）
               </label>
               <input
                 type="number"
@@ -216,15 +225,15 @@ export default function CreateJobPage() {
                 min="0.1"
                 step="0.1"
                 defaultValue="1"
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="dashboard-control mt-1 block w-full"
               />
             </div>
             <div>
               <label
                 htmlFor="max_concurrent"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-stone-700"
               >
-                Max Concurrent Requests
+                最大并发请求数
               </label>
               <input
                 type="number"
@@ -232,7 +241,7 @@ export default function CreateJobPage() {
                 name="max_concurrent"
                 min="1"
                 defaultValue="5"
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="dashboard-control mt-1 block w-full"
               />
             </div>
           </div>
@@ -242,18 +251,18 @@ export default function CreateJobPage() {
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-50 focus-explorer"
             >
               {mutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              Create Job
+              创建任务
             </button>
             <Link
               href="/jobs"
-              className="rounded-lg border border-gray-300 px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border border-stone-200 bg-white px-6 py-2.5 text-sm font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-50 focus-explorer"
             >
-              Cancel
+              取消
             </Link>
           </div>
         </div>

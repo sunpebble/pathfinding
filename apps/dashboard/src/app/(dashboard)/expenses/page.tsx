@@ -15,6 +15,12 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import {
+  DashboardCard,
+  DashboardEmptyState,
+  DashboardLoadingState,
+  DashboardPageHeader,
+} from '@/components/ui/dashboard-primitives';
 import { useAuth } from '@/hooks/use-auth';
 import { createApiClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
@@ -104,28 +110,19 @@ const SPLIT_TYPES = [
 // ---------------------------------------------------------------------------
 
 function Spinner({ className }: { className?: string }) {
-  return (
-    <div className={cn('flex items-center justify-center py-12', className)}>
-      <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-    </div>
-  );
+  return <DashboardLoadingState className={className} label="加载中" />;
 }
 
 function EmptyState({ icon: Icon, message }: { icon: React.ElementType; message: string }) {
-  return (
-    <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-      <Icon className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-      <p className="text-sm text-gray-500">{message}</p>
-    </div>
-  );
+  return <DashboardEmptyState icon={Icon} title={message} className="border-dashed" />;
 }
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-      <h3 className="text-base font-semibold text-gray-900 mb-4">{title}</h3>
+    <DashboardCard className="p-5">
+      <h3 className="mb-4 text-base font-semibold text-stone-900">{title}</h3>
       {children}
-    </div>
+    </DashboardCard>
   );
 }
 
@@ -776,18 +773,16 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Receipt className="h-6 w-6 text-emerald-600" />
-          费用分摊
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">管理旅行中的共享开支与结算</p>
-      </div>
+      <DashboardPageHeader
+        title="费用分摊"
+        description="管理旅行中的共享开支与结算"
+        icon={Receipt}
+      />
 
       {/* Itinerary selector */}
-      <form onSubmit={handleQuery} className="flex items-end gap-3">
+      <form onSubmit={handleQuery} className="dashboard-surface flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-end">
         <div className="flex-1 max-w-md">
-          <label htmlFor="itinerary-id" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="itinerary-id" className="mb-1 block text-sm font-medium text-stone-700">
             行程 ID
           </label>
           <div className="relative">
@@ -798,14 +793,14 @@ export default function ExpensesPage() {
               placeholder="输入行程 ID"
               value={itineraryId}
               onChange={e => setItineraryId(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="dashboard-control w-full py-2 pl-10 pr-4"
             />
           </div>
         </div>
         <button
           type="submit"
           disabled={!itineraryId.trim()}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-emerald-900/10 transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 focus-explorer"
         >
           查询
         </button>
@@ -815,18 +810,18 @@ export default function ExpensesPage() {
       {activeId && (
         <>
           {/* Tabs */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex gap-6" aria-label="Tabs">
+          <div className="dashboard-surface rounded-2xl px-3 pt-3">
+            <nav className="flex gap-3 overflow-x-auto" aria-label="Tabs">
               {TABS.map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setActiveTab(key)}
                   className={cn(
-                    'inline-flex items-center gap-1.5 border-b-2 pb-3 pt-1 text-sm font-medium transition-colors',
+                    'inline-flex items-center gap-1.5 rounded-t-xl border-b-2 px-3 pb-3 pt-1 text-sm font-medium transition-colors',
                     activeTab === key
-                      ? 'border-emerald-600 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                      ? 'border-emerald-600 bg-emerald-50/70 text-emerald-700'
+                      : 'border-transparent text-stone-500 hover:border-stone-300 hover:bg-stone-50 hover:text-stone-700',
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -874,10 +869,11 @@ export default function ExpensesPage() {
 
       {/* Placeholder when no itinerary selected */}
       {!activeId && (
-        <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-          <Receipt className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">请输入行程 ID 后点击"查询"开始管理费用</p>
-        </div>
+        <DashboardEmptyState
+          icon={Receipt}
+          title="请输入行程 ID 后点击&quot;查询&quot;开始管理费用"
+          className="border-dashed py-16"
+        />
       )}
     </div>
   );

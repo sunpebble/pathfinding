@@ -29,9 +29,7 @@ function generateTopographicPath(
     const x = centerX + Math.cos(radians) * radius;
     const y = centerY + Math.sin(radians) * radius * 0.6;
 
-    if (x >= -50 && x <= width + 50 && y >= -50 && y <= height + 50) {
-      points.push(`${angle === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
-    }
+    points.push(`${angle === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
   }
   return points.join(' ') + ' Z';
 }

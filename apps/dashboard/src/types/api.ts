@@ -165,6 +165,7 @@ export interface GuideWithAI {
   title: string;
   content?: string;
   content_html?: string;
+  content_markdown?: string;
   source_platform: string;
   source_url?: string;
   source_external_id?: string;

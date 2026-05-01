@@ -19,19 +19,50 @@ type Guide = InferSelectModel<typeof travelGuides>;
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
+function recordFromJson(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
+function stringFromRecord(record: Record<string, unknown>, keys: string[]): string | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function stringArrayFromRecord(record: Record<string, unknown>, keys: string[]): string[] | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      const strings = value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+      if (strings.length > 0)
+        return strings;
+    }
+  }
+  return null;
+}
+
 /**
  * Convert a DB guide row to the iOS-compatible response format.
  * The iOS BlogPost model expects specific field names that differ from the DB schema.
  */
 function toClientGuide(guide: Guide): Record<string, unknown> {
+  const enrichedData = recordFromJson(guide.enrichedData);
+
   return {
     id: String(guide.id),
     title: guide.title,
     author_name: guide.authorName,
     content: guide.content,
-    content_html: null,
-    content_markdown: null,
-    summary: null,
+    content_html: stringFromRecord(enrichedData, ['contentHtml', 'content_html']),
+    content_markdown: stringFromRecord(enrichedData, ['contentMarkdown', 'content_markdown']),
+    summary: stringFromRecord(enrichedData, ['summary', 'aiSummary', 'ai_summary']),
     cover_image_url: guide.coverImageUrl,
     image_urls: guide.imageUrls,
     source_platform: guide.platform,
@@ -42,16 +73,11 @@ function toClientGuide(guide: Guide): Record<string, unknown> {
     created_at: guide.createdAt?.toISOString() ?? null,
     destinations: guide.destinations,
     // AI fields from enrichedData
-    ai_summary:
-      (guide.enrichedData as Record<string, unknown> | null)?.summary ?? null,
-    ai_tips:
-      (guide.enrichedData as Record<string, unknown> | null)?.tips ?? null,
-    ai_best_time:
-      (guide.enrichedData as Record<string, unknown> | null)?.bestTime ?? null,
-    ai_duration:
-      (guide.enrichedData as Record<string, unknown> | null)?.duration ?? null,
-    ai_budget:
-      (guide.enrichedData as Record<string, unknown> | null)?.budget ?? null,
+    ai_summary: stringFromRecord(enrichedData, ['aiSummary', 'summary', 'ai_summary']),
+    ai_tips: stringArrayFromRecord(enrichedData, ['aiTips', 'tips', 'ai_tips']),
+    ai_best_time: stringFromRecord(enrichedData, ['aiBestTime', 'bestTime', 'ai_best_time']),
+    ai_duration: stringFromRecord(enrichedData, ['aiDuration', 'duration', 'ai_duration']),
+    ai_budget: stringFromRecord(enrichedData, ['aiBudget', 'budget', 'ai_budget']),
     ai_days: (guide.dayItineraries as unknown[]) ?? null,
     ai_processed_at: null,
   };

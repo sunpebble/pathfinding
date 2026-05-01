@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   BarChart3,
-  Loader2,
   MapPin,
   Play,
   Settings,
@@ -13,7 +12,14 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { use } from 'react';
+import {
+  DashboardCard,
+  DashboardEmptyState,
+  DashboardLoadingState,
+  DashboardPageHeader,
+} from '@/components/ui/dashboard-primitives';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cancelCrawlJob, getCrawlJob, startCrawlJob } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 
@@ -52,115 +58,115 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    );
+    return <DashboardLoadingState label="加载任务中" />;
   }
 
   if (isError) {
     return (
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-gray-900">
-          Failed to load job
-        </h2>
-        {error instanceof Error && (
-          <p className="mt-2 text-sm text-gray-500">{error.message}</p>
+      <DashboardEmptyState
+        icon={XCircle}
+        title="加载任务失败"
+        description={error instanceof Error ? error.message : undefined}
+        action={(
+          <Link
+            href="/jobs"
+            className="text-sm font-medium text-emerald-700 hover:underline"
+          >
+            返回任务列表
+          </Link>
         )}
-        <Link
-          href="/jobs"
-          className="mt-4 inline-block text-blue-600 hover:underline"
-        >
-          Back to Jobs
-        </Link>
-      </div>
+      />
     );
   }
 
   if (!job) {
     return (
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-gray-900">Job not found</h2>
-        <Link
-          href="/jobs"
-          className="mt-4 inline-block text-blue-600 hover:underline"
-        >
-          Back to Jobs
-        </Link>
-      </div>
+      <DashboardEmptyState
+        icon={XCircle}
+        title="任务不存在"
+        action={(
+          <Link href="/jobs" className="text-sm font-medium text-emerald-700 hover:underline">
+            返回任务列表
+          </Link>
+        )}
+      />
     );
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/jobs"
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-            aria-label="Back to Jobs"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{job.name}</h1>
-            <p className="font-mono text-sm text-gray-500">{job.id}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {job.status === 'pending' && (
-            <button
-              onClick={() => startMutation.mutate(job.id)}
-              disabled={startMutation.isPending}
-              className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-            >
-              <Play className="h-4 w-4" />
-              Start Job
-            </button>
-          )}
-          {job.status === 'running' && (
-            <button
-              onClick={() => {
+      <DashboardPageHeader
+        title={job.name}
+        description={job.id}
+        icon={Settings}
+        actions={(
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/jobs"
+                  className="rounded-xl border border-stone-200 bg-white p-2 text-stone-600 shadow-sm transition-colors hover:bg-stone-50 focus-explorer"
+                  aria-label="返回任务列表"
+                  title="返回任务列表"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>返回任务列表</TooltipContent>
+            </Tooltip>
+            {job.status === 'pending' && (
+              <button
+                onClick={() => startMutation.mutate(job.id)}
+                disabled={startMutation.isPending}
+                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-50 focus-explorer"
+              >
+                <Play className="h-4 w-4" />
+                启动任务
+              </button>
+            )}
+            {job.status === 'running' && (
+              <button
+                onClick={() => {
                 // eslint-disable-next-line no-alert
-                if (window.confirm('Are you sure you want to cancel this job? This action cannot be undone.')) {
-                  cancelMutation.mutate(job.id);
-                }
-              }}
-              disabled={cancelMutation.isPending}
-              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              <StopCircle className="h-4 w-4" />
-              Cancel Job
-            </button>
-          )}
-          <StatusBadge status={job.status} size="lg" />
-        </div>
-      </div>
+                  if (window.confirm('确定要取消此任务吗？此操作不可撤销。')) {
+                    cancelMutation.mutate(job.id);
+                  }
+                }}
+                disabled={cancelMutation.isPending}
+                className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50 focus-explorer"
+              >
+                <StopCircle className="h-4 w-4" />
+                取消任务
+              </button>
+            )}
+            <StatusBadge status={job.status} size="lg" />
+          </>
+        )}
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Records Extracted"
+          title="已提取记录"
           value={job.statistics?.records_extracted ?? 0}
           icon={<BarChart3 className="h-5 w-5" />}
           color="blue"
         />
         <StatCard
-          title="Requests Failed"
+          title="失败请求"
           value={job.statistics?.requests_failed ?? 0}
           icon={<XCircle className="h-5 w-5" />}
           color="red"
         />
         <StatCard
-          title="Requests Success"
+          title="成功请求"
           value={job.statistics?.requests_success ?? 0}
           icon={<MapPin className="h-5 w-5" />}
           color="emerald"
         />
         <StatCard
-          title="Platform"
+          title="平台"
           value={job.platform}
           icon={<Settings className="h-5 w-5" />}
           color="purple"
@@ -170,39 +176,39 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
       {/* Details Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Job Info */}
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Job Information
+        <DashboardCard className="p-6">
+          <h2 className="mb-4 text-lg font-semibold text-stone-900">
+            任务信息
           </h2>
           <dl className="space-y-4">
             <InfoRow label="ID" value={job.id} mono />
-            <InfoRow label="Name" value={job.name} />
-            <InfoRow label="Type" value={job.job_type} />
-            <InfoRow label="Platform" value={job.platform} />
-            <InfoRow label="Created" value={formatDateTime(job.created_at)} />
-            <InfoRow label="Updated" value={formatDateTime(job.updated_at)} />
+            <InfoRow label="名称" value={job.name} />
+            <InfoRow label="类型" value={job.job_type} />
+            <InfoRow label="平台" value={job.platform} />
+            <InfoRow label="创建时间" value={formatDateTime(job.created_at)} />
+            <InfoRow label="更新时间" value={formatDateTime(job.updated_at)} />
             {job.schedule_cron && (
-              <InfoRow label="Schedule" value={job.schedule_cron} mono />
+              <InfoRow label="调度" value={job.schedule_cron} mono />
             )}
             {job.last_run_at && (
               <InfoRow
-                label="Last Run"
+                label="上次运行"
                 value={formatDateTime(job.last_run_at)}
               />
             )}
           </dl>
-        </div>
+        </DashboardCard>
 
         {/* Configuration */}
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Configuration
+        <DashboardCard className="p-6">
+          <h2 className="mb-4 text-lg font-semibold text-stone-900">
+            配置
           </h2>
           <div className="space-y-4">
             {job.config?.categories && job.config.categories.length > 0 && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Categories
+                  分类
                 </dt>
                 <dd className="mt-1 flex flex-wrap gap-2">
                   {job.config.categories.map(cat => (
@@ -219,7 +225,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
             {job.config?.geographic_scope?.cities
               && job.config.geographic_scope.cities.length > 0 && (
               <div>
-                <dt className="text-sm font-medium text-gray-500">Cities</dt>
+                <dt className="text-sm font-medium text-gray-500">城市</dt>
                 <dd className="mt-1 flex flex-wrap gap-2">
                   {job.config.geographic_scope.cities.map(city => (
                     <span
@@ -235,16 +241,16 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
             {job.config?.rate_limit && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Rate Limit
+                  速率限制
                 </dt>
                 <dd className="mt-1 text-sm text-gray-900">
                   {job.config.rate_limit.requests_per_second}
                   {' '}
-                  req/s,
+                  请求/秒，
                   {' '}
                   {job.config.rate_limit.max_concurrent}
                   {' '}
-                  concurrent
+                  并发
                 </dd>
               </div>
             )}
@@ -252,14 +258,14 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
 
           {/* Raw Config */}
           <div className="mt-6">
-            <dt className="text-sm font-medium text-gray-500">Raw Config</dt>
-            <dd className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-4">
-              <pre className="text-xs text-gray-700">
+            <dt className="text-sm font-medium text-gray-500">原始配置</dt>
+            <dd className="mt-2 overflow-x-auto rounded-xl bg-stone-50 p-4 ring-1 ring-stone-200">
+              <pre className="text-xs text-stone-700">
                 {JSON.stringify(job.config, null, 2)}
               </pre>
             </dd>
           </div>
-        </div>
+        </DashboardCard>
       </div>
     </div>
   );
@@ -284,11 +290,11 @@ function StatCard({
   };
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm">
+    <div className="dashboard-surface rounded-2xl p-6 backdrop-blur-sm">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-medium text-stone-500">{title}</p>
+          <p className="mt-1 text-2xl font-semibold text-stone-900">{value}</p>
         </div>
         <div className={`rounded-full p-3 ${colors[color]}`}>{icon}</div>
       </div>
@@ -307,9 +313,9 @@ function InfoRow({
 }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-sm font-medium text-gray-500">{label}</dt>
+      <dt className="text-sm font-medium text-stone-500">{label}</dt>
       <dd
-        className={`text-sm text-gray-900 ${mono ? 'font-mono' : ''} truncate`}
+        className={`truncate text-sm text-stone-900 ${mono ? 'font-mono' : ''}`}
       >
         {value}
       </dd>

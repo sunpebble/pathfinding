@@ -1,6 +1,13 @@
 'use client';
 
+import type * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import {
+  DashboardCard,
+  DashboardEmptyState,
+  DashboardLoadingState,
+  DashboardPageHeader,
+} from '@/components/ui/dashboard-primitives';
 import { useAuth } from '@/hooks/use-auth';
 
 interface UserProfile {
@@ -43,7 +50,7 @@ export default function ProfilePage() {
         const errorData = await res.json().catch(() => null);
         throw new Error(
           (errorData as Record<string, string> | null)?.error
-          ?? `Failed to load profile (${res.status})`,
+          ?? `加载个人资料失败 (${res.status})`,
         );
       }
       const data = await res.json();
@@ -55,8 +62,8 @@ export default function ProfilePage() {
       setError(null);
     }
     catch (err) {
-      console.error('Failed to fetch profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
+      console.error('获取个人资料失败:', err);
+      setError(err instanceof Error ? err.message : '加载个人资料失败');
     }
     finally {
       setLoading(false);
@@ -84,7 +91,7 @@ export default function ProfilePage() {
         const errorData = await updateRes.json().catch(() => null);
         throw new Error(
           (errorData as Record<string, string> | null)?.error
-          ?? `Failed to update profile (${updateRes.status})`,
+          ?? `更新个人资料失败 (${updateRes.status})`,
         );
       }
       setEditing(false);
@@ -94,67 +101,63 @@ export default function ProfilePage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        throw new Error(`Failed to reload profile (${res.status})`);
+        throw new Error(`重新加载个人资料失败 (${res.status})`);
       }
       const data = await res.json();
       setProfile(data.data);
     }
     catch (err) {
-      console.error('Failed to update profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
+      console.error('更新个人资料失败:', err);
+      setError(err instanceof Error ? err.message : '更新个人资料失败');
     }
   };
 
   if (loading || authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    );
+    return <DashboardLoadingState label="加载个人资料中" />;
   }
 
   if (!profile) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Profile</h1>
+      <div className="space-y-6">
+        <DashboardPageHeader title="个人资料" description="管理你的账户资料" />
         {error
-          ? <p className="text-red-600">{error}</p>
-          : <p className="text-gray-500">Please sign in to view your profile.</p>}
+          ? <DashboardCard className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</DashboardCard>
+          : <DashboardEmptyState icon={UserIcon} title="请登录以查看个人资料" />}
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Profile</h1>
+    <div className="max-w-2xl space-y-6">
+      <DashboardPageHeader title="个人资料" description="管理你的账户资料" />
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-lg border p-6 space-y-6">
+      <DashboardCard className="space-y-6 p-6">
         {/* Avatar and name */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-600">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-2xl font-bold text-emerald-700 ring-1 ring-emerald-200">
             {profile.display_name?.[0] ?? profile.name?.[0] ?? '?'}
           </div>
           <div>
             <h2 className="text-xl font-semibold">{profile.display_name ?? profile.name}</h2>
-            <p className="text-gray-500">{profile.email}</p>
+            <p className="text-stone-500">{profile.email}</p>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="flex gap-6 py-4 border-y">
+        <div className="flex gap-6 border-y border-stone-200 py-4">
           <div className="text-center">
             <p className="text-lg font-semibold">{profile.followers_count}</p>
-            <p className="text-sm text-gray-500">Followers</p>
+            <p className="text-sm text-stone-500">粉丝</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-semibold">{profile.following_count}</p>
-            <p className="text-sm text-gray-500">Following</p>
+            <p className="text-sm text-stone-500">关注</p>
           </div>
         </div>
 
@@ -163,64 +166,73 @@ export default function ProfilePage() {
           ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Display Name
+                  <label className="mb-1 block text-sm font-medium text-stone-700">
+                    显示名称
                   </label>
                   <input
                     type="text"
                     value={formData.displayName}
                     onChange={e =>
                       setFormData(prev => ({ ...prev, displayName: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="dashboard-control w-full"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Bio
+                  <label className="mb-1 block text-sm font-medium text-stone-700">
+                    简介
                   </label>
                   <textarea
                     value={formData.bio}
                     onChange={e =>
                       setFormData(prev => ({ ...prev, bio: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="dashboard-control w-full"
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-explorer"
                   >
-                    Save
+                    保存
                   </button>
                   <button
                     onClick={() => setEditing(false)}
-                    className="px-4 py-2 border rounded-md hover:bg-gray-50"
+                    className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50 focus-explorer"
                   >
-                    Cancel
+                    取消
                   </button>
                 </div>
               </div>
             )
           : (
               <div>
-                <p className="text-gray-700">{profile.bio ?? 'No bio yet.'}</p>
+                <p className="text-stone-700">{profile.bio ?? '暂无简介'}</p>
                 <button
                   onClick={() => setEditing(true)}
-                  className="mt-4 px-4 py-2 border rounded-md hover:bg-gray-50"
+                  className="mt-4 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50 focus-explorer"
                 >
-                  Edit Profile
+                  编辑资料
                 </button>
               </div>
             )}
 
         {/* Joined date */}
-        <p className="text-sm text-gray-400">
-          Joined
+        <p className="text-sm text-stone-400">
+          加入于
           {' '}
           {new Date(profile.created_at).toLocaleDateString()}
         </p>
-      </div>
+      </DashboardCard>
     </div>
+  );
+}
+
+function UserIcon(props: React.ComponentProps<'svg'>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M20 21a8 8 0 0 0-16 0" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
   );
 }

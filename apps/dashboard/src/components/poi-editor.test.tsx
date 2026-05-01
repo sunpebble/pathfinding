@@ -70,10 +70,10 @@ describe('poiEditor', () => {
       { wrapper: Wrapper },
     );
 
-    fireEvent.change(screen.getByLabelText('Latitude'), {
+    fireEvent.change(screen.getByLabelText('纬度'), {
       target: { value: '35.6600' },
     });
-    fireEvent.change(screen.getByLabelText('Longitude'), {
+    fireEvent.change(screen.getByLabelText('经度'), {
       target: { value: '139.7500' },
     });
 
@@ -83,7 +83,7 @@ describe('poiEditor', () => {
     });
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /save coordinates/i }));
+      fireEvent.click(screen.getByRole('button', { name: /保存坐标/ }));
       await Promise.resolve();
     });
 

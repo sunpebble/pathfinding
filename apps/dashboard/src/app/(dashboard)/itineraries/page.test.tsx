@@ -145,8 +145,8 @@ describe('itinerariesPage', () => {
 
     render(<ItinerariesPage />);
 
-    expect(screen.getByText('Friends')).toBeInTheDocument();
-    expect(screen.queryByText('Team')).not.toBeInTheDocument();
+    expect(screen.getByText('好友')).toBeInTheDocument();
+    expect(screen.queryByText('团队')).not.toBeInTheDocument();
   });
 
   it('redirects unauthenticated users to sign in', async () => {

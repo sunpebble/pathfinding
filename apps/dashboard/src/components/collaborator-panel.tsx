@@ -61,15 +61,21 @@ export function CollaboratorPanel({
   };
 
   const statusLabels: Record<string, string> = {
-    pending: 'Pending',
-    accepted: 'Active',
-    rejected: 'Rejected',
+    pending: '待处理',
+    accepted: '活跃',
+    rejected: '已拒绝',
   };
 
   const statusColors: Record<string, string> = {
     pending: 'text-amber-600',
     accepted: 'text-emerald-600',
     rejected: 'text-red-600',
+  };
+
+  const roleLabels: Record<string, string> = {
+    owner: '所有者',
+    editor: '编辑者',
+    viewer: '浏览者',
   };
 
   const invalidateCollaborators = async () => {
@@ -80,7 +86,7 @@ export function CollaboratorPanel({
 
   const handleRemove = async (collaboratorId: string, userId: string) => {
     if (userId === currentUserId) {
-      setError('You cannot remove yourself');
+      setError('不能移除自己');
       return;
     }
 
@@ -93,7 +99,7 @@ export function CollaboratorPanel({
       await invalidateCollaborators();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove collaborator');
+      setError(err instanceof Error ? err.message : '移除协作者失败');
     }
     finally {
       setRemovingId(null);
@@ -113,7 +119,7 @@ export function CollaboratorPanel({
       await invalidateCollaborators();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update role');
+      setError(err instanceof Error ? err.message : '更新角色失败');
     }
     finally {
       setUpdatingRoleId(null);
@@ -125,12 +131,12 @@ export function CollaboratorPanel({
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Users className="h-5 w-5 text-emerald-600" />
-          Collaborators
+          协作者
         </h3>
         <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
           <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">No collaborators yet</p>
-          {isOwner && <p className="text-gray-400 text-xs mt-1">Invite people to collaborate on this itinerary</p>}
+          <p className="text-gray-500 text-sm">暂无协作者</p>
+          {isOwner && <p className="text-gray-400 text-xs mt-1">邀请他人协作编辑此行程</p>}
         </div>
       </div>
     );
@@ -140,7 +146,7 @@ export function CollaboratorPanel({
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
         <Users className="h-5 w-5 text-emerald-600" />
-        Collaborators (
+        协作者 (
         {localCollaborators.length}
         )
       </h3>
@@ -174,7 +180,7 @@ export function CollaboratorPanel({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-gray-900 truncate">{collab.userId}</p>
-                    {isCurrentUser && <span className="text-xs text-emerald-600 font-medium">(You)</span>}
+                    {isCurrentUser && <span className="text-xs text-emerald-600 font-medium">(你)</span>}
                   </div>
                   <p className={cn('text-xs font-medium', statusColors[collab.status])}>{statusLabels[collab.status]}</p>
                 </div>
@@ -192,14 +198,14 @@ export function CollaboratorPanel({
                             isUpdating && 'opacity-50 cursor-not-allowed',
                           )}
                         >
-                          <option value="editor">Editor</option>
-                          <option value="viewer">Viewer</option>
+                          <option value="editor">编辑者</option>
+                          <option value="viewer">浏览者</option>
                         </select>
                       )
                     : (
                         <span className={cn('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border', roleColors[collab.role])}>
                           <RoleIcon className="h-3.5 w-3.5" />
-                          {collab.role.charAt(0).toUpperCase() + collab.role.slice(1)}
+                          {roleLabels[collab.role] ?? collab.role}
                         </span>
                       )}
                 </div>
@@ -210,8 +216,8 @@ export function CollaboratorPanel({
                     onClick={() => handleRemove(collaboratorId, collab.userId)}
                     disabled={isRemoving}
                     className={cn('p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors', isRemoving && 'opacity-50 cursor-not-allowed')}
-                    title="Remove collaborator"
-                    aria-label={isRemoving ? 'Removing collaborator' : 'Remove collaborator'}
+                    title="移除协作者"
+                    aria-label={isRemoving ? '正在移除协作者' : '移除协作者'}
                   >
                     {isRemoving
                       ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
@@ -229,13 +235,13 @@ export function CollaboratorPanel({
           <p className="text-xs text-gray-500 flex items-start gap-2">
             <Shield className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
             <span>
-              As the owner, you can change roles and remove collaborators.
-              <strong className="block mt-1">Editor:</strong>
+              作为所有者，你可以更改角色和移除协作者。
+              <strong className="block mt-1">编辑者：</strong>
               {' '}
-              Can add, edit, and remove POIs.
-              <strong className="block mt-1">Viewer:</strong>
+              可以添加、编辑和移除兴趣点。
+              <strong className="block mt-1">浏览者：</strong>
               {' '}
-              Can only view the itinerary.
+              只能查看行程。
             </span>
           </p>
         </div>

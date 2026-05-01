@@ -202,6 +202,7 @@ func (h *Handler) HandleMafengwoDetail(w http.ResponseWriter, r *http.Request) {
 			service.ParseChineseNumber(result.Views),
 			service.ParseChineseNumber(result.Likes),
 		)
+		contentMarkdown := service.GenerateGuideMarkdownContent(result.Title, cleanedContent, result.Images)
 
 		slog.Info("游记详情爬取成功",
 			"url", req.URL,
@@ -215,34 +216,39 @@ func (h *Handler) HandleMafengwoDetail(w http.ResponseWriter, r *http.Request) {
 		h.EventBus.Publish(ctx, eventbus.Event{
 			Topic: "crawler.mafengwo.detail.completed",
 			Data: map[string]any{
-				"url":          req.URL,
-				"externalId":   externalID,
-				"title":        result.Title,
-				"content":      cleanedContent,
-				"contentHtml":  result.ContentHTML,
-				"author":       result.Author,
-				"views":        service.ParseChineseNumber(result.Views),
-				"likes":        service.ParseChineseNumber(result.Likes),
-				"coverImage":   result.CoverImage,
-				"images":       result.Images,
-				"qualityScore": qualityScore,
-				"platform":     "mafengwo",
+				"url":        req.URL,
+				"externalId": externalID,
+				"platform":   "mafengwo",
+				"guide": map[string]any{
+					"title":           result.Title,
+					"content":         cleanedContent,
+					"contentHtml":     result.ContentHTML,
+					"contentMarkdown": contentMarkdown,
+					"author":          result.Author,
+					"views":           service.ParseChineseNumber(result.Views),
+					"likes":           service.ParseChineseNumber(result.Likes),
+					"coverImage":      result.CoverImage,
+					"images":          result.Images,
+					"qualityScore":    qualityScore,
+				},
 			},
 		})
 
 		middleware.JSON(w, 200, map[string]any{
 			"success": true,
 			"data": map[string]any{
-				"url":          req.URL,
-				"externalId":   externalID,
-				"title":        result.Title,
-				"content":      cleanedContent,
-				"author":       result.Author,
-				"views":        result.Views,
-				"likes":        result.Likes,
-				"coverImage":   result.CoverImage,
-				"images":       result.Images,
-				"qualityScore": qualityScore,
+				"url":             req.URL,
+				"externalId":      externalID,
+				"title":           result.Title,
+				"content":         cleanedContent,
+				"contentHtml":     result.ContentHTML,
+				"contentMarkdown": contentMarkdown,
+				"author":          result.Author,
+				"views":           result.Views,
+				"likes":           result.Likes,
+				"coverImage":      result.CoverImage,
+				"images":          result.Images,
+				"qualityScore":    qualityScore,
 			},
 		})
 		return

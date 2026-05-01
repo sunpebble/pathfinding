@@ -128,11 +128,11 @@ describe('itineraryEditor', () => {
       { wrapper: Wrapper },
     );
 
-    expect(await screen.findByText('No activities planned for this day')).toBeInTheDocument();
+    expect(await screen.findByText('当天暂无计划活动')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /add poi/i }));
+    fireEvent.click(screen.getByRole('button', { name: /添加兴趣点/ }));
 
-    const searchInput = await screen.findByPlaceholderText('Search POIs...');
+    const searchInput = await screen.findByPlaceholderText('搜索兴趣点...');
     fireEvent.change(searchInput, { target: { value: 'tower' } });
     fireEvent.click(await screen.findByRole('button', { name: /Tokyo Tower/i }));
 
@@ -147,7 +147,7 @@ describe('itineraryEditor', () => {
     });
     expect(await screen.findByText('Tokyo Tower')).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.queryByText('No activities planned for this day')).not.toBeInTheDocument();
+      expect(screen.queryByText('当天暂无计划活动')).not.toBeInTheDocument();
     });
   });
 
@@ -187,12 +187,12 @@ describe('itineraryEditor', () => {
 
     expect(await screen.findByText('Tsukiji Market')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /expand/i }));
-    fireEvent.change(screen.getByLabelText('Start Time'), { target: { value: '10:30' } });
-    fireEvent.change(screen.getByLabelText('End Time'), { target: { value: '11:45' } });
-    fireEvent.change(screen.getByLabelText('Transport Mode'), { target: { value: 'taxi' } });
-    fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'Updated plan' } });
-    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+    fireEvent.click(screen.getByRole('button', { name: /展开/ }));
+    fireEvent.change(screen.getByLabelText('开始时间'), { target: { value: '10:30' } });
+    fireEvent.change(screen.getByLabelText('结束时间'), { target: { value: '11:45' } });
+    fireEvent.change(screen.getByLabelText('交通方式'), { target: { value: 'taxi' } });
+    fireEvent.change(screen.getByLabelText('备注'), { target: { value: 'Updated plan' } });
+    fireEvent.click(screen.getByRole('button', { name: /保存更改/ }));
 
     await waitFor(() => {
       expect(mockUpdateItineraryItem).toHaveBeenCalledWith('42', 'day-1', 'item-1', {
@@ -203,13 +203,13 @@ describe('itineraryEditor', () => {
       });
     });
 
-    fireEvent.click(await screen.findByRole('button', { name: /expand/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /展开/ }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Start Time')).toHaveValue('10:30');
-      expect(screen.getByLabelText('End Time')).toHaveValue('11:45');
-      expect(screen.getByLabelText('Transport Mode')).toHaveValue('taxi');
-      expect(screen.getByLabelText('Notes')).toHaveValue('Updated plan');
+      expect(screen.getByLabelText('开始时间')).toHaveValue('10:30');
+      expect(screen.getByLabelText('结束时间')).toHaveValue('11:45');
+      expect(screen.getByLabelText('交通方式')).toHaveValue('taxi');
+      expect(screen.getByLabelText('备注')).toHaveValue('Updated plan');
     });
   });
 
@@ -245,7 +245,7 @@ describe('itineraryEditor', () => {
     );
 
     expect(await screen.findByText('Meiji Shrine')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /move down/i }));
+    fireEvent.click(screen.getByRole('button', { name: /下移/ }));
 
     await waitFor(() => {
       expect(mockReorderItineraryItems).toHaveBeenCalledWith('42', 'day-1', ['item-2', 'item-1']);
@@ -281,11 +281,11 @@ describe('itineraryEditor', () => {
 
     expect(await screen.findByText('Asakusa')).toBeInTheDocument();
     const itemCard = screen.getByText('Asakusa').closest('div[class*="rounded-lg"]') as HTMLElement | null;
-    fireEvent.click(within(itemCard ?? document.body).getByRole('button', { name: /remove/i }));
+    fireEvent.click(within(itemCard ?? document.body).getByRole('button', { name: /移除/ }));
 
     await waitFor(() => {
       expect(mockRemoveItineraryItem).toHaveBeenCalledWith('42', 'day-1', 'item-1');
     });
-    expect(await screen.findByText('No activities planned for this day')).toBeInTheDocument();
+    expect(await screen.findByText('当天暂无计划活动')).toBeInTheDocument();
   });
 });

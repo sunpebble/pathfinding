@@ -13,11 +13,48 @@
  * @module
  */
 
+import { getStoredAuthToken } from './client';
+
 // ---------------------------------------------------------------------------
 // Internals
 // ---------------------------------------------------------------------------
 
 const API_BASE = '/api/crawler';
+
+function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
+  if (!headers) {
+    return {};
+  }
+
+  if (headers instanceof Headers) {
+    const normalized: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      normalized[key] = value;
+    });
+    return normalized;
+  }
+
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+
+  return { ...headers };
+}
+
+function buildRequestHeaders(headers?: HeadersInit): Record<string, string> {
+  const normalized = normalizeHeaders(headers);
+
+  if (!normalized['Content-Type']) {
+    normalized['Content-Type'] = 'application/json';
+  }
+
+  const token = getStoredAuthToken();
+  if (token) {
+    normalized.Authorization = `Bearer ${token}`;
+  }
+
+  return normalized;
+}
 
 function parseErrorMessage(error: unknown, status: number): string {
   if (error && typeof error === 'object') {
@@ -56,10 +93,7 @@ async function fetchApi<T>(
 ): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers: buildRequestHeaders(options?.headers),
   });
 
   if (!res.ok) {
@@ -428,6 +462,7 @@ export interface TravelGuide {
   title?: string;
   content: string;
   content_html?: string;
+  content_markdown?: string;
   author_name?: string;
   author_id?: string;
   destinations: string[];
@@ -572,6 +607,69 @@ export async function createBackfillJobs(
   const response = await fetchApi<ApiEnvelope<{ jobsCreated: number }>>('/backfill-jobs', {
     method: 'POST',
     body: JSON.stringify(input),
+  });
+  return response.data;
+}
+
+export interface BackfillExecutionResult {
+  executed: number;
+  totalProcessed: number;
+  totalFailed: number;
+}
+
+export async function executeBackfillJobs(): Promise<BackfillExecutionResult> {
+  const response = await fetchApi<ApiEnvelope<BackfillExecutionResult>>('/backfill-execute', {
+    method: 'POST',
+  });
+  return response.data;
+}
+
+export interface FullBackfillResult {
+  analysis: {
+    totalFieldGaps: number;
+    totalDestinationGaps: number;
+  };
+  execution: BackfillExecutionResult;
+}
+
+export async function executeFullBackfill(): Promise<FullBackfillResult> {
+  const response = await fetchApi<ApiEnvelope<FullBackfillResult>>('/backfill-all', {
+    method: 'POST',
+  });
+  return response.data;
+}
+
+// ---------------------------------------------------------------------------
+// Guide Discovery & Import
+// ---------------------------------------------------------------------------
+
+export interface GuideDiscoveryResult {
+  platform: string;
+  city: string;
+  totalFound: number;
+  newGuides: Array<{ url: string; title?: string }>;
+  existingCount: number;
+}
+
+export async function discoverGuides(platform: string, city: string): Promise<GuideDiscoveryResult> {
+  const response = await fetchApi<ApiEnvelope<GuideDiscoveryResult>>('/discover-guides', {
+    method: 'POST',
+    body: JSON.stringify({ platform, city }),
+  });
+  return response.data;
+}
+
+export interface GuideImportResult {
+  imported: number;
+  failed: number;
+  skipped: number;
+  results: Array<{ url: string; success: boolean; message: string; guideId?: number }>;
+}
+
+export async function importGuides(platform: string, urls: string[]): Promise<GuideImportResult> {
+  const response = await fetchApi<ApiEnvelope<GuideImportResult>>('/import-guides', {
+    method: 'POST',
+    body: JSON.stringify({ platform, urls }),
   });
   return response.data;
 }

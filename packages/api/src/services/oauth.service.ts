@@ -23,7 +23,7 @@ const appleJWKS = jose.createRemoteJWKSet(
 export async function verifyGoogleToken(idToken: string): Promise<GoogleUserInfo> {
   const expectedClientId = process.env.GOOGLE_CLIENT_ID;
   if (!expectedClientId) {
-    throw new Error('GOOGLE_CLIENT_ID environment variable is required for Google token verification');
+    throw new Error('GOOGLE_CLIENT_ID 环境变量是 Google 令牌验证所必需的');
   }
 
   const { payload } = await jose.jwtVerify(idToken, googleJWKS, {
@@ -32,10 +32,10 @@ export async function verifyGoogleToken(idToken: string): Promise<GoogleUserInfo
   });
 
   if (!payload.sub || typeof payload.sub !== 'string') {
-    throw new Error('Google token missing subject claim');
+    throw new Error('Google 令牌缺少 subject 声明');
   }
   if (!payload.email || typeof payload.email !== 'string') {
-    throw new Error('Google token missing email claim');
+    throw new Error('Google 令牌缺少 email 声明');
   }
 
   return {
@@ -71,7 +71,7 @@ export async function verifyAppleToken(identityToken: string): Promise<{
   );
 
   if (!payload.sub || typeof payload.sub !== 'string') {
-    throw new Error('Apple token missing subject claim');
+    throw new Error('Apple 令牌缺少 subject 声明');
   }
 
   return {

@@ -83,11 +83,11 @@ interface ItineraryEditorProps {
 }
 
 const transportModeOptions = [
-  { value: 'walking', label: 'Walking', emoji: '🚶' },
-  { value: 'driving', label: 'Driving', emoji: '🚗' },
-  { value: 'transit', label: 'Transit', emoji: '🚇' },
-  { value: 'cycling', label: 'Cycling', emoji: '🚴' },
-  { value: 'taxi', label: 'Taxi', emoji: '🚕' },
+  { value: 'walking', label: '步行', emoji: '🚶' },
+  { value: 'driving', label: '驾车', emoji: '🚗' },
+  { value: 'transit', label: '公共交通', emoji: '🚇' },
+  { value: 'cycling', label: '骑行', emoji: '🚴' },
+  { value: 'taxi', label: '出租车', emoji: '🚕' },
 ];
 
 function formatDate(dateString: string) {
@@ -201,7 +201,7 @@ function ItemEditor({
   if (!poi) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-        <p className="text-sm text-red-700">POI not found</p>
+        <p className="text-sm text-red-700">未找到兴趣点</p>
       </div>
     );
   }
@@ -232,12 +232,12 @@ function ItemEditor({
                   onClick={onMoveUp}
                   disabled={isSaving}
                   className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
-                  aria-label="Move up"
+                  aria-label="上移"
                 >
                   <ChevronUp className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Move up</TooltipContent>
+              <TooltipContent>上移</TooltipContent>
             </Tooltip>
           )}
           {canMoveDown && (
@@ -248,12 +248,12 @@ function ItemEditor({
                   onClick={onMoveDown}
                   disabled={isSaving}
                   className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
-                  aria-label="Move down"
+                  aria-label="下移"
                 >
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Move down</TooltipContent>
+              <TooltipContent>下移</TooltipContent>
             </Tooltip>
           )}
           <Tooltip>
@@ -262,7 +262,7 @@ function ItemEditor({
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                aria-label={isExpanded ? '收起' : '展开'}
               >
                 <ChevronDown
                   className={cn(
@@ -272,7 +272,7 @@ function ItemEditor({
                 />
               </button>
             </TooltipTrigger>
-            <TooltipContent>{isExpanded ? 'Collapse' : 'Expand'}</TooltipContent>
+            <TooltipContent>{isExpanded ? '收起' : '展开'}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -281,12 +281,12 @@ function ItemEditor({
                 onClick={onRemove}
                 disabled={isSaving}
                 className="p-1 text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                aria-label="Remove"
+                aria-label="移除"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>Remove</TooltipContent>
+            <TooltipContent>移除</TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -296,7 +296,7 @@ function ItemEditor({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor={`start-time-${item.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
-                Start Time
+                开始时间
               </label>
               <input
                 id={`start-time-${item.id}`}
@@ -308,7 +308,7 @@ function ItemEditor({
             </div>
             <div>
               <label htmlFor={`end-time-${item.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
-                End Time
+                结束时间
               </label>
               <input
                 id={`end-time-${item.id}`}
@@ -322,7 +322,7 @@ function ItemEditor({
 
           <div>
             <label htmlFor={`transport-mode-${item.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
-              Transport Mode
+              交通方式
             </label>
             <select
               id={`transport-mode-${item.id}`}
@@ -342,7 +342,7 @@ function ItemEditor({
 
           <div>
             <label htmlFor={`notes-${item.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
-              Notes
+              备注
             </label>
             <textarea
               id={`notes-${item.id}`}
@@ -350,7 +350,7 @@ function ItemEditor({
               onChange={e => setLocalNotes(e.target.value)}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              placeholder="Add notes about this activity..."
+              placeholder="添加关于此活动的备注..."
             />
           </div>
 
@@ -381,7 +381,7 @@ function ItemEditor({
               )}
             >
               <Save className="h-4 w-4" />
-              Save Changes
+              保存更改
             </button>
           </div>
         </div>
@@ -474,7 +474,7 @@ function DayEditor({
       await refreshEditor();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add POI');
+      setError(err instanceof Error ? err.message : '添加兴趣点失败');
     }
     finally {
       setIsSaving(false);
@@ -489,7 +489,7 @@ function DayEditor({
       await refreshEditor();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update item');
+      setError(err instanceof Error ? err.message : '更新项目失败');
     }
     finally {
       setIsSaving(false);
@@ -504,7 +504,7 @@ function DayEditor({
       await refreshEditor();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove item');
+      setError(err instanceof Error ? err.message : '移除项目失败');
     }
     finally {
       setIsSaving(false);
@@ -523,7 +523,7 @@ function DayEditor({
       await refreshEditor();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reorder item');
+      setError(err instanceof Error ? err.message : '重新排序失败');
     }
     finally {
       setIsSaving(false);
@@ -542,7 +542,7 @@ function DayEditor({
       await refreshEditor();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reorder item');
+      setError(err instanceof Error ? err.message : '重新排序失败');
     }
     finally {
       setIsSaving(false);
@@ -557,8 +557,9 @@ function DayEditor({
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900">
-            Day
+            第
             {day.dayNumber}
+            天
           </h3>
           <p className="text-xs text-gray-500">{formatDate(day.date)}</p>
         </div>
@@ -576,13 +577,13 @@ function DayEditor({
             ? (
                 <>
                   <X className="h-4 w-4" />
-                  Cancel
+                  取消
                 </>
               )
             : (
                 <>
                   <Plus className="h-4 w-4" />
-                  Add POI
+                  添加兴趣点
                 </>
               )}
         </button>
@@ -597,7 +598,7 @@ function DayEditor({
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search POIs..."
+                placeholder="搜索兴趣点..."
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
@@ -605,21 +606,21 @@ function DayEditor({
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              aria-label="Filter POIs by category"
+              aria-label="按分类筛选兴趣点"
             >
-              <option value="">All Categories</option>
-              <option value="attraction">Attraction</option>
-              <option value="restaurant">Restaurant</option>
-              <option value="hotel">Hotel</option>
-              <option value="shopping">Shopping</option>
-              <option value="other">Other</option>
+              <option value="">全部分类</option>
+              <option value="attraction">景点</option>
+              <option value="restaurant">餐厅</option>
+              <option value="hotel">酒店</option>
+              <option value="shopping">购物</option>
+              <option value="other">其他</option>
             </select>
           </div>
 
           <div className="max-h-60 overflow-y-auto space-y-2">
             {pois.length === 0
               ? (
-                  <p className="text-sm text-gray-500 text-center py-4">{cityId ? 'No POIs found' : 'City not specified for itinerary'}</p>
+                  <p className="text-sm text-gray-500 text-center py-4">{cityId ? '未找到兴趣点' : '行程未指定城市'}</p>
                 )
               : (
                   pois.map(poi => (
@@ -654,7 +655,7 @@ function DayEditor({
         {items.length === 0
           ? (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-500">No activities planned for this day</p>
+                <p className="text-sm text-gray-500">当天暂无计划活动</p>
               </div>
             )
           : (
@@ -712,8 +713,8 @@ export function ItineraryEditor({
       <div className="relative bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex-shrink-0 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Edit Itinerary</h2>
-            <p className="text-sm text-gray-500 mt-1">Add, edit, and organize activities for each day</p>
+            <h2 className="text-xl font-bold text-gray-900">编辑行程</h2>
+            <p className="text-sm text-gray-500 mt-1">添加、编辑和组织每天的活动</p>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -721,12 +722,12 @@ export function ItineraryEditor({
                 type="button"
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Close"
+                aria-label="关闭"
               >
                 <X className="h-6 w-6" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>Close</TooltipContent>
+            <TooltipContent>关闭</TooltipContent>
           </Tooltip>
         </div>
 
@@ -735,7 +736,7 @@ export function ItineraryEditor({
             ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
                   <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">No days in this itinerary</p>
+                  <p className="text-gray-500">此行程暂无天数</p>
                 </div>
               )
             : (
@@ -759,7 +760,7 @@ export function ItineraryEditor({
             className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2"
           >
             <CheckCircle2 className="h-4 w-4" />
-            Done
+            完成
           </button>
         </div>
       </div>

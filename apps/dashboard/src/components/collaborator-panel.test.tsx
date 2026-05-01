@@ -127,8 +127,8 @@ describe('collaboratorPanel', () => {
       { wrapper: Wrapper },
     );
 
-    expect(screen.getByText('Collaborators (2)')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByTitle('Remove collaborator')[0]!);
+    expect(screen.getByRole('heading', { name: /协作者.*2/ })).toBeInTheDocument();
+    fireEvent.click(screen.getAllByTitle('移除协作者')[0]!);
 
     await waitFor(() => {
       expect(mockRemoveCollaborator).toHaveBeenCalledWith('10');
@@ -173,13 +173,13 @@ describe('collaboratorPanel', () => {
       expect(screen.getAllByRole('combobox')[0]).toHaveValue('editor');
     });
 
-    fireEvent.click(screen.getAllByTitle('Remove collaborator')[0]!);
+    fireEvent.click(screen.getAllByTitle('移除协作者')[0]!);
 
     await waitFor(() => {
       expect(mockRemoveCollaborator).toHaveBeenCalledWith('10');
     });
     await waitFor(() => {
-      expect(screen.getByText('Collaborators (1)')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /协作者.*1/ })).toBeInTheDocument();
     });
   });
 });

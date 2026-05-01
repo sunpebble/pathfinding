@@ -29,7 +29,7 @@ struct MarkdownContentView: View {
 
   /// Parse markdown into block-level elements for proper spacing
   private var blocks: [MarkdownBlock] {
-    parseBlocks(from: effectiveMarkdown)
+    MarkdownContentParser.parse(effectiveMarkdown)
   }
 
   var body: some View {
@@ -55,6 +55,9 @@ struct MarkdownContentView: View {
 
         case .blockquote(let text):
           blockquoteView(text: text)
+
+        case .image(_, let url):
+          markdownImageView(url: url)
         }
       }
 
@@ -114,6 +117,24 @@ struct MarkdownContentView: View {
     }
   }
 
+  @ViewBuilder
+  private func markdownImageView(url: URL) -> some View {
+    CachedAsyncImage(url: url) { image in
+      image
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+    } placeholder: {
+      RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
+        .fill(DesignTokens.Colors.fillTertiary)
+        .aspectRatio(16 / 9, contentMode: .fit)
+        .overlay {
+          ProgressView()
+        }
+    }
+    .frame(maxWidth: .infinity)
+    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+  }
+
   private var expandButton: some View {
     Button {
       withAnimation(.easeInOut(duration: 0.3)) {
@@ -137,9 +158,12 @@ struct MarkdownContentView: View {
     .buttonStyle(.plain)
   }
 
-  // MARK: - Markdown Parsing
+}
 
-  private func parseBlocks(from text: String) -> [MarkdownBlock] {
+// MARK: - Markdown Parsing
+
+enum MarkdownContentParser {
+  static func parse(_ text: String) -> [MarkdownBlock] {
     let lines = text.components(separatedBy: "\n")
     var blocks: [MarkdownBlock] = []
     var currentParagraph = ""
@@ -154,6 +178,17 @@ struct MarkdownContentView: View {
           blocks.append(.paragraph(currentParagraph.trimmingCharacters(in: .whitespacesAndNewlines)))
           currentParagraph = ""
         }
+        orderedIndex = 0
+        continue
+      }
+
+      // Image
+      if let image = trimmed.markdownImage() {
+        if !currentParagraph.isEmpty {
+          blocks.append(.paragraph(currentParagraph.trimmingCharacters(in: .whitespacesAndNewlines)))
+          currentParagraph = ""
+        }
+        blocks.append(.image(alt: image.alt, url: image.url))
         orderedIndex = 0
         continue
       }
@@ -231,20 +266,42 @@ struct MarkdownContentView: View {
 
 // MARK: - Block Types
 
-private enum MarkdownBlock {
+enum MarkdownBlock: Equatable {
   case heading(Int, String)       // level, text
   case paragraph(String)          // text (may contain inline markdown)
   case listItem(String, ordered: Bool, index: Int)
   case separator
   case blockquote(String)
+  case image(alt: String, url: URL)
 }
 
 // MARK: - String Helpers
 
 private extension String {
+  struct ImageMatch {
+    let alt: String
+    let url: URL
+  }
+
   struct HeadingMatch {
     let level: Int
     let text: String
+  }
+
+  func markdownImage() -> ImageMatch? {
+    guard hasPrefix("![") else { return nil }
+    guard let closeAlt = firstIndex(of: "]") else { return nil }
+    let afterAlt = index(after: closeAlt)
+    guard afterAlt < endIndex, self[afterAlt] == "(" else { return nil }
+    guard let closeUrl = self[afterAlt...].firstIndex(of: ")") else { return nil }
+
+    let altStart = index(startIndex, offsetBy: 2)
+    let alt = String(self[altStart..<closeAlt]).trimmingCharacters(in: .whitespacesAndNewlines)
+    let urlStart = index(after: afterAlt)
+    let urlText = String(self[urlStart..<closeUrl]).trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let url = URL(string: urlText) else { return nil }
+
+    return ImageMatch(alt: alt, url: url)
   }
 
   func headingLevel() -> HeadingMatch? {

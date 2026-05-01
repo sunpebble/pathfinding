@@ -89,7 +89,7 @@ describe('auth.service — JWT tokens', () => {
   it('getJwtSecret throws when JWT_SECRET is missing', () => {
     resetJwtSecret();
     delete process.env.JWT_SECRET;
-    expect(() => getJwtSecret()).toThrow('JWT_SECRET environment variable is required');
+    expect(() => getJwtSecret()).toThrow('JWT_SECRET 环境变量是必需的');
   });
 
   it('generateToken creates a valid JWT that can be verified', async () => {

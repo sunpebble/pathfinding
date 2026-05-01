@@ -39,8 +39,9 @@ const AUTH_BOOTSTRAP_ERROR_MESSAGE = 'Failed to load authenticated user';
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => getStoredAuthToken());
-  const [isLoading, setIsLoading] = useState(() => getStoredAuthToken() !== null);
+  // Keep the pre-effect render independent of localStorage so SSR and hydration match.
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   /**
    * Re-validate the stored token by fetching the current user.

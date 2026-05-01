@@ -23,8 +23,10 @@
  */
 
 import type { Browser, BrowserContext, Page } from 'playwright';
+import * as cheerio from 'cheerio';
 import { and, eq } from 'drizzle-orm';
 import { chromium } from 'playwright';
+import { buildStructuredGuideContent, cleanGuidePlainText } from '../packages/api/src/services/guide-content';
 import { createDb, travelGuides } from '../packages/database/src/index';
 
 // ============================================
@@ -35,11 +37,17 @@ const CONFIG = {
   maxNotes: Number(process.env.MAX_NOTES) || 0,
   headless: process.env.HEADLESS !== 'false',
   concurrency: Math.min(Number(process.env.CONCURRENCY) || 2, 4),
+  recrawlExisting: process.env.RECRAWL_EXISTING === 'true',
+  recrawlExistingLimit: Number(process.env.RECRAWL_EXISTING_LIMIT) || 0,
   delayBetweenPages: 3000,
   pageTimeout: 30000,
   overallPageTimeout: 60000, // hard kill for entire loadPage call
   maxRetries: 2,
   seedApiPages: Number(process.env.SEED_API_PAGES) || 10, // pages per destination in seed API
+  collectSeeds: process.env.SEED_COLLECTION === 'true'
+    || (process.env.SEED_COLLECTION !== 'false' && process.env.RECRAWL_EXISTING !== 'true'),
+  probeIdSpace: process.env.PROBE_ID_SPACE === 'true'
+    || (process.env.PROBE_ID_SPACE !== 'false' && process.env.RECRAWL_EXISTING !== 'true'),
 };
 
 const MOBILE_UA
@@ -108,6 +116,7 @@ const SEED_DESTINATIONS = [
 interface GuideDetail {
   title: string;
   content: string;
+  contentHtml?: string;
   author?: string;
   views?: string;
   likes?: string;
@@ -180,6 +189,22 @@ function calculateQualityScore(data: GuideDetail): number {
   if (data.views || data.likes)
     score += 0.1;
   return Math.min(1, Math.round(score * 100) / 100);
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value))
+    return { ...value as Record<string, unknown> };
+  return {};
+}
+
+function collectGuideImages(detail: GuideDetail): string[] {
+  const images = new Set<string>();
+  if (detail.coverImage)
+    images.add(detail.coverImage);
+  for (const image of detail.images) {
+    images.add(image);
+  }
+  return Array.from(images);
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -295,43 +320,66 @@ async function _loadPageInner(contextIndex: number, url: string): Promise<string
 // ============================================
 
 function extractDetail(html: string): GuideDetail | null {
-  // Use regex-based extraction (no cheerio needed since we have full rendered HTML)
+  const $ = cheerio.load(html);
 
-  // Title: from <title> tag or og:title
-  let title = '';
-  const ogTitle = html.match(/property="og:title"\s+content="([^"]+)"/);
-  if (ogTitle) {
-    title = ogTitle[1];
-  }
-  else {
-    const titleTag = html.match(/<title>([^<]+)<\/title>/);
-    if (titleTag) {
-      title = titleTag[1].split('\uFF0C')[0].split('|')[0].trim();
-    }
-  }
+  const title = (
+    $('meta[property="og:title"]').attr('content')
+    ?? $('title').text().split('\uFF0C')[0]?.split('|')[0]
+    ?? ''
+  ).trim();
 
-  // Content: extract text from rendered body
-  // Remove HTML tags but keep text content
-  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  if (!bodyMatch)
+  const contentSelectors = [
+    '.chapter-container',
+    '.note-content',
+    '._j_content',
+    '.post_content',
+    '.rich_text_content',
+    '#_j_note_content',
+    'article',
+    'main',
+  ].join(', ');
+  const contentContainer = $(contentSelectors).first();
+  const contentRoot = contentContainer.length > 0 ? contentContainer.clone() : $('body').clone();
+  if (contentRoot.length === 0)
     return null;
 
-  let content = bodyMatch[1]
-    // Remove script/style blocks
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    // Remove navigation, footer, ads
-    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
-    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
-    // Remove HTML tags
-    .replace(/<[^>]+>/g, ' ')
-    // Decode entities
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    // Clean whitespace
+  const removeSelectors = [
+    'script',
+    'style',
+    'iframe',
+    'nav',
+    'footer',
+    '.copyright',
+    '.copy_right',
+    '[class*="copyright"]',
+    '.recommend',
+    '.rec_wrap',
+    '[class*="recommend"]',
+    '.ad_container',
+    '.ad-container',
+    '[class*="ad_"]',
+    '[class*="ad-"]',
+    '[id*="ad_"]',
+    '.share_wrap',
+    '.share-wrap',
+    '[class*="share"]',
+    '.comment_list',
+    '.comment-list',
+    '[class*="comment"]',
+    '.related',
+    '[class*="related"]',
+    '.footer',
+    '[class*="footer"]',
+    '.sidebar',
+    '[class*="sidebar"]',
+    '.nav',
+    '[class*="nav"]',
+  ].join(', ');
+  contentRoot.find(removeSelectors).remove();
+
+  const contentHtml = contentContainer.length > 0 ? contentRoot.html()?.trim() : undefined;
+  let content = contentRoot
+    .text()
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -347,8 +395,10 @@ function extractDetail(html: string): GuideDetail | null {
     return null;
 
   // Author
-  const authorMatch = html.match(/class="[^"]*(?:user-name|author-name|note-author)[^"]*"[^>]*>([^<]+)</);
-  const author = authorMatch?.[1]?.trim() || undefined;
+  const author = $('.author-name, .user_name a, .name a, .headinfo .name, [class*="author"] a')
+    .first()
+    .text()
+    .trim() || undefined;
 
   // Views/Likes from rendered text
   const viewsMatch = content.match(/(\d+(?:\.\d+)?[\u4E07k]?)\s*(?:\u6D4F\u89C8|\u9605\u8BFB)/i);
@@ -358,21 +408,35 @@ function extractDetail(html: string): GuideDetail | null {
 
   // Images
   const images: string[] = [];
-  const imgRegex = /src="(https?:\/\/[^"]*mafengwo[^"]*\.(?:jpg|jpeg|png|webp)[^"]*)"/gi;
-  for (const imgMatch of html.matchAll(imgRegex)) {
-    const src = imgMatch[1];
-    if (!src.includes('avatar') && !src.includes('icon') && !src.includes('logo') && !src.includes('emoji') && !images.includes(src)) {
-      images.push(src);
+  const imageRoot = contentContainer.length > 0 ? contentContainer : $('body');
+  imageRoot.find('img').each((_, image) => {
+    const src = $(image).attr('src')
+      ?? $(image).attr('data-src')
+      ?? $(image).attr('data-original')
+      ?? '';
+    if (/^https?:\/\/.*mafengwo.*\.(?:jpg|jpeg|png|webp)/i.test(src)) {
+      const lower = src.toLowerCase();
+      if (!lower.includes('avatar') && !lower.includes('icon') && !lower.includes('logo') && !lower.includes('emoji') && !images.includes(src))
+        images.push(src);
+    }
+  });
+
+  if (images.length === 0) {
+    const imgRegex = /src="(https?:\/\/[^"]*mafengwo[^"]*\.(?:jpg|jpeg|png|webp)[^"]*)"/gi;
+    for (const imgMatch of html.matchAll(imgRegex)) {
+      const src = imgMatch[1];
+      if (!src.includes('avatar') && !src.includes('icon') && !src.includes('logo') && !src.includes('emoji') && !images.includes(src)) {
+        images.push(src);
+      }
     }
   }
 
-  const coverMatch = html.match(/property="og:image"\s+content="([^"]+)"/);
-  const coverImage = coverMatch?.[1] || images[0] || undefined;
+  const coverImage = $('meta[property="og:image"]').attr('content') || images[0] || undefined;
 
   // Related note IDs (snowball)
   const relatedNoteIds = extractAllNoteIds(html);
 
-  return { title, content, author, views, likes, coverImage, images, relatedNoteIds };
+  return { title, content, contentHtml, author, views, likes, coverImage, images, relatedNoteIds };
 }
 
 // ============================================
@@ -387,16 +451,24 @@ async function saveToTiDB(
 ): Promise<boolean> {
   try {
     const qualityScore = calculateQualityScore(detail);
+    const imageUrls = collectGuideImages(detail);
+    const cleanedContent = cleanGuidePlainText(detail.content, detail.title);
+    const structuredContent = buildStructuredGuideContent({
+      title: detail.title,
+      content: cleanedContent,
+      contentHtml: detail.contentHtml,
+      imageUrls,
+    });
 
     const guideData = {
       platform: 'mafengwo',
       externalId,
       title: detail.title || externalId,
-      content: detail.content,
+      content: cleanedContent || null,
       authorName: detail.author ?? null,
       sourceUrl,
       coverImageUrl: detail.coverImage ?? null,
-      imageUrls: detail.images,
+      imageUrls,
       destinations: [] as string[],
       tags: [] as string[],
       viewCount: parseChineseNumber(detail.views),
@@ -408,16 +480,25 @@ async function saveToTiDB(
     };
 
     const existing = await db
-      .select({ id: travelGuides.id })
+      .select({ id: travelGuides.id, enrichedData: travelGuides.enrichedData })
       .from(travelGuides)
       .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, externalId)))
       .limit(1);
 
     if (existing.length > 0) {
-      await db.update(travelGuides).set(guideData).where(eq(travelGuides.id, existing[0]!.id));
+      await db.update(travelGuides).set({
+        ...guideData,
+        enrichedData: {
+          ...toRecord(existing[0]!.enrichedData),
+          ...structuredContent,
+        },
+      }).where(eq(travelGuides.id, existing[0]!.id));
     }
     else {
-      await db.insert(travelGuides).values(guideData);
+      await db.insert(travelGuides).values({
+        ...guideData,
+        enrichedData: structuredContent,
+      });
     }
 
     return true;
@@ -441,8 +522,13 @@ async function main() {
   console.warn(`  Max notes:    ${CONFIG.maxNotes === 0 ? 'unlimited' : CONFIG.maxNotes}`);
   console.warn(`  Headless:     ${CONFIG.headless}`);
   console.warn(`  Concurrency:  ${CONFIG.concurrency} tabs`);
+  console.warn(`  Recrawl:      ${CONFIG.recrawlExisting ? 'existing guides' : 'new guides only'}`);
+  if (CONFIG.recrawlExisting)
+    console.warn(`  Recrawl cap:  ${CONFIG.recrawlExistingLimit === 0 ? 'unlimited' : CONFIG.recrawlExistingLimit}`);
+  console.warn(`  Seed crawl:   ${CONFIG.collectSeeds}`);
   console.warn(`  Destinations: ${SEED_DESTINATIONS.length} seed cities`);
   console.warn(`  API pages/dest: ${CONFIG.seedApiPages}`);
+  console.warn(`  ID probing:   ${CONFIG.probeIdSpace}`);
   console.warn(`${'='.repeat(60)}\n`);
 
   if (!process.env.DATABASE_URL) {
@@ -484,10 +570,35 @@ async function main() {
       .select({ externalId: travelGuides.externalId })
       .from(travelGuides)
       .where(eq(travelGuides.platform, 'mafengwo'));
+
+    const existingIds: string[] = [];
     for (const row of existingRows) {
-      seenIds.add(row.externalId);
+      if (!row.externalId)
+        continue;
+      existingIds.push(row.externalId);
     }
-    log(`Loaded ${seenIds.size} existing IDs`);
+
+    if (CONFIG.recrawlExisting) {
+      for (const id of existingIds) {
+        seenIds.add(id);
+      }
+
+      const idsToRecrawl = CONFIG.recrawlExistingLimit > 0
+        ? existingIds.slice(0, CONFIG.recrawlExistingLimit)
+        : existingIds;
+
+      for (const id of idsToRecrawl) {
+        queue.push(id);
+      }
+
+      log(`Queued ${queue.length} existing IDs for recrawl`);
+    }
+    else {
+      for (const id of existingIds) {
+        seenIds.add(id);
+      }
+      log(`Loaded ${seenIds.size} existing IDs`);
+    }
   }
   catch {
     log('Failed to load existing IDs');
@@ -496,39 +607,83 @@ async function main() {
   try {
     await initBrowser();
 
-    // ================================================
-    // Phase 1: Collect seed URLs via paginated API + sitemap
-    // The mobile SPA entry pages show the same 17 "hot" notes regardless
-    // of destination, so we use the JSON API for real destination-specific
-    // note listings, plus article sitemaps for bulk IDs.
-    // ================================================
-    log('\n--- Phase 1: Seed collection ---');
+    if (CONFIG.collectSeeds) {
+      // ================================================
+      // Phase 1: Collect seed URLs via paginated API + sitemap
+      // The mobile SPA entry pages show the same 17 "hot" notes regardless
+      // of destination, so we use the JSON API for real destination-specific
+      // note listings, plus article sitemaps for bulk IDs.
+      // ================================================
+      log('\n--- Phase 1: Seed collection ---');
 
-    // Phase 1a: Paginated note listing API (no WAF, returns HTML fragments)
-    // GET https://m.mafengwo.cn/note/index/more?mddid={id}&iPage={page}
-    log('  Phase 1a: Paginated API seed collection');
-    for (const dest of SEED_DESTINATIONS) {
-      let emptyPages = 0;
-      for (let page = 1; page <= CONFIG.seedApiPages; page++) {
-        if (emptyPages >= 2)
-          break; // stop if 2 consecutive empty pages
+      // Phase 1a: Paginated note listing API (no WAF, returns HTML fragments)
+      // GET https://m.mafengwo.cn/note/index/more?mddid={id}&iPage={page}
+      log('  Phase 1a: Paginated API seed collection');
+      for (const dest of SEED_DESTINATIONS) {
+        let emptyPages = 0;
+        for (let page = 1; page <= CONFIG.seedApiPages; page++) {
+          if (emptyPages >= 2)
+            break; // stop if 2 consecutive empty pages
 
-        const apiUrl = `https://m.mafengwo.cn/note/index/more?mddid=${dest.id}&iPage=${page}`;
-        try {
-          const resp = await fetch(apiUrl, {
-            headers: { 'User-Agent': MOBILE_UA, 'Referer': `https://m.mafengwo.cn/note/l-${dest.id}.html` },
-          });
-          const text = await resp.text();
-          const ids = extractAllNoteIds(text);
+          const apiUrl = `https://m.mafengwo.cn/note/index/more?mddid=${dest.id}&iPage=${page}`;
+          try {
+            const resp = await fetch(apiUrl, {
+              headers: { 'User-Agent': MOBILE_UA, 'Referer': `https://m.mafengwo.cn/note/l-${dest.id}.html` },
+            });
+            const text = await resp.text();
+            const ids = extractAllNoteIds(text);
 
-          if (ids.length === 0) {
-            emptyPages++;
-            continue;
+            if (ids.length === 0) {
+              emptyPages++;
+              continue;
+            }
+            emptyPages = 0;
+
+            let newCount = 0;
+            for (const id of ids) {
+              if (!seenIds.has(id)) {
+                seenIds.add(id);
+                queue.push(id);
+                newCount++;
+                stats.seedsCollected++;
+              }
+            }
+            if (newCount > 0) {
+              log(`    ${dest.name} p${page}: +${newCount} new (total queue: ${queue.length})`);
+            }
           }
-          emptyPages = 0;
+          catch {
+            // API call failed, skip
+          }
+
+          await sleep(randomDelay(500, 500));
+        }
+      }
+      log(`  API seeds collected: ${stats.seedsCollected}, queue: ${queue.length}`);
+
+      // Phase 1b: Article sitemaps for bulk ID extraction
+      // Sitemaps at https://www.mafengwo.cn/sitemapIndex.xml contain article-{0-3}.xml
+      log('  Phase 1b: Sitemap bulk ID extraction');
+      for (let sitemapIdx = 0; sitemapIdx <= 3; sitemapIdx++) {
+        try {
+          const sitemapUrl = `https://www.mafengwo.cn/article-${sitemapIdx}.xml`;
+          const resp = await fetch(sitemapUrl, {
+            headers: { 'User-Agent': MOBILE_UA },
+          });
+          const xml = await resp.text();
+
+          // Extract note IDs from URLs like /i/12345.html or /note/12345.html
+          const urlIds: string[] = [];
+          for (const match of xml.matchAll(/\/i\/(\d+)\.html/g)) {
+            urlIds.push(match[1]);
+          }
+          // Also match /note/{id}.html pattern (desktop)
+          for (const match of xml.matchAll(/\/note\/(\d+)\.html/g)) {
+            urlIds.push(match[1]);
+          }
 
           let newCount = 0;
-          for (const id of ids) {
+          for (const id of urlIds) {
             if (!seenIds.has(id)) {
               seenIds.add(id);
               queue.push(id);
@@ -536,42 +691,31 @@ async function main() {
               stats.seedsCollected++;
             }
           }
-          if (newCount > 0) {
-            log(`    ${dest.name} p${page}: +${newCount} new (total queue: ${queue.length})`);
-          }
+          log(`    article-${sitemapIdx}.xml: ${urlIds.length} IDs, ${newCount} new`);
         }
-        catch {
-          // API call failed, skip
+        catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          log(`    article-${sitemapIdx}.xml: failed (${msg.slice(0, 60)})`);
         }
-
-        await sleep(randomDelay(500, 500));
       }
-    }
-    log(`  API seeds collected: ${stats.seedsCollected}, queue: ${queue.length}`);
 
-    // Phase 1b: Article sitemaps for bulk ID extraction
-    // Sitemaps at https://www.mafengwo.cn/sitemapIndex.xml contain article-{0-3}.xml
-    log('  Phase 1b: Sitemap bulk ID extraction');
-    for (let sitemapIdx = 0; sitemapIdx <= 3; sitemapIdx++) {
-      try {
-        const sitemapUrl = `https://www.mafengwo.cn/article-${sitemapIdx}.xml`;
-        const resp = await fetch(sitemapUrl, {
-          headers: { 'User-Agent': MOBILE_UA },
-        });
-        const xml = await resp.text();
+      // Phase 1c: Also load entry pages via browser as fallback seed source
+      log('  Phase 1c: Browser entry pages (fallback)');
+      const entryUrls = [
+        'https://m.mafengwo.cn/note/',
+      ];
 
-        // Extract note IDs from URLs like /i/12345.html or /note/12345.html
-        const urlIds: string[] = [];
-        for (const match of xml.matchAll(/\/i\/(\d+)\.html/g)) {
-          urlIds.push(match[1]);
-        }
-        // Also match /note/{id}.html pattern (desktop)
-        for (const match of xml.matchAll(/\/note\/(\d+)\.html/g)) {
-          urlIds.push(match[1]);
+      for (const entryUrl of entryUrls) {
+        log(`    Entry: ${entryUrl}`);
+        const html = await loadPage(0, entryUrl);
+        if (!html) {
+          log('      Failed to load');
+          continue;
         }
 
+        const ids = extractAllNoteIds(html);
         let newCount = 0;
-        for (const id of urlIds) {
+        for (const id of ids) {
           if (!seenIds.has(id)) {
             seenIds.add(id);
             queue.push(id);
@@ -579,43 +723,15 @@ async function main() {
             stats.seedsCollected++;
           }
         }
-        log(`    article-${sitemapIdx}.xml: ${urlIds.length} IDs, ${newCount} new`);
+        log(`      Found ${ids.length} IDs, ${newCount} new`);
+        await sleep(randomDelay(2000, 1000));
       }
-      catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        log(`    article-${sitemapIdx}.xml: failed (${msg.slice(0, 60)})`);
-      }
+
+      log(`\nPhase 1 complete: ${queue.length} seed URLs in queue\n`);
     }
-
-    // Phase 1c: Also load entry pages via browser as fallback seed source
-    log('  Phase 1c: Browser entry pages (fallback)');
-    const entryUrls = [
-      'https://m.mafengwo.cn/note/',
-    ];
-
-    for (const entryUrl of entryUrls) {
-      log(`    Entry: ${entryUrl}`);
-      const html = await loadPage(0, entryUrl);
-      if (!html) {
-        log('      Failed to load');
-        continue;
-      }
-
-      const ids = extractAllNoteIds(html);
-      let newCount = 0;
-      for (const id of ids) {
-        if (!seenIds.has(id)) {
-          seenIds.add(id);
-          queue.push(id);
-          newCount++;
-          stats.seedsCollected++;
-        }
-      }
-      log(`      Found ${ids.length} IDs, ${newCount} new`);
-      await sleep(randomDelay(2000, 1000));
+    else {
+      log('\n--- Phase 1: Seed collection skipped ---');
     }
-
-    log(`\nPhase 1 complete: ${queue.length} seed URLs in queue\n`);
 
     // ================================================
     // Phase 2: Crawl details with snowball discovery
@@ -643,20 +759,22 @@ async function main() {
           processedCount++;
           const progress = `[${processedCount} | Q:${queue.length} | S:${stats.detailsSaved}]`;
 
-          // Check if already in DB
-          try {
-            const existing = await db
-              .select({ id: travelGuides.id })
-              .from(travelGuides)
-              .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, noteId)))
-              .limit(1);
-            if (existing.length > 0) {
-              stats.skipped++;
-              return;
+          if (!CONFIG.recrawlExisting) {
+            // Check if already in DB
+            try {
+              const existing = await db
+                .select({ id: travelGuides.id })
+                .from(travelGuides)
+                .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, noteId)))
+                .limit(1);
+              if (existing.length > 0) {
+                stats.skipped++;
+                return;
+              }
             }
-          }
-          catch {
-            // continue
+            catch {
+              // continue
+            }
           }
 
           log(`${progress} Crawling: ${noteId}`);
@@ -724,7 +842,10 @@ async function main() {
     // When snowball runs dry, probe sequential IDs near known valid notes.
     // Known ID range: ~1 to ~25,000,000
     // ================================================
-    if (!shuttingDown && (CONFIG.maxNotes === 0 || stats.detailsSaved < CONFIG.maxNotes)) {
+    if (!CONFIG.probeIdSpace) {
+      log('\n--- Phase 3: ID space probing skipped ---');
+    }
+    if (!shuttingDown && CONFIG.probeIdSpace && (CONFIG.maxNotes === 0 || stats.detailsSaved < CONFIG.maxNotes)) {
       log('\n--- Phase 3: ID space probing ---');
 
       const knownIds = Array.from(seenIds).map(Number).filter(n => !Number.isNaN(n) && n > 0);
@@ -813,18 +934,20 @@ async function main() {
                     processedCount++;
                     const qProgress = `[${processedCount} | Q:${queue.length} | S:${stats.detailsSaved}]`;
 
-                    try {
-                      const existing = await db
-                        .select({ id: travelGuides.id })
-                        .from(travelGuides)
-                        .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, qId)))
-                        .limit(1);
-                      if (existing.length > 0) {
-                        stats.skipped++;
-                        return;
+                    if (!CONFIG.recrawlExisting) {
+                      try {
+                        const existing = await db
+                          .select({ id: travelGuides.id })
+                          .from(travelGuides)
+                          .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, qId)))
+                          .limit(1);
+                        if (existing.length > 0) {
+                          stats.skipped++;
+                          return;
+                        }
                       }
+                      catch {}
                     }
-                    catch {}
 
                     log(`${qProgress} Crawling: ${qId}`);
                     const qUrl = `https://m.mafengwo.cn/i/${qId}.html`;

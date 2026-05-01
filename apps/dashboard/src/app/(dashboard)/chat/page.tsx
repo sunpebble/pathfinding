@@ -58,16 +58,16 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="dashboard-surface flex h-[calc(100vh-8rem)] min-h-[640px] flex-col overflow-hidden rounded-3xl bg-white/80 backdrop-blur-sm">
       {/* Header */}
-      <div className="border-b border-border bg-background px-6 py-4">
+      <div className="border-b border-stone-200/70 bg-stone-50/80 px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 ring-1 ring-emerald-200 dark:bg-emerald-900/30">
             <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-foreground">AI 助手</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-lg font-semibold text-stone-950 dark:text-stone-50">AI 助手</h1>
+            <p className="text-sm text-stone-500 dark:text-stone-400">
               旅行规划 · 内容审核 · 数据探索
             </p>
           </div>
@@ -75,7 +75,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages */}
-      <Conversation className="flex-1 bg-muted/30">
+      <Conversation className="flex-1 bg-stone-50/60">
         <ConversationContent className="mx-auto max-w-3xl px-4 py-6">
           {messages.length === 0
             ? (
@@ -142,7 +142,7 @@ export default function ChatPage() {
       </Conversation>
 
       {/* Input */}
-      <div className="border-t border-border bg-background p-4">
+      <div className="border-t border-stone-200/70 bg-white/90 p-4">
         <PromptInput onSubmit={handleSubmit} className="mx-auto max-w-3xl">
           <PromptInputTextarea
             placeholder="输入你的问题..."
@@ -296,13 +296,13 @@ function SuggestionCard({
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-lg border border-border bg-background p-4 text-left',
-        'transition-colors hover:border-emerald-300 hover:bg-emerald-50',
+        'dashboard-surface rounded-2xl p-4 text-left',
+        'transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-[var(--dashboard-shadow-sm)]',
         'dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20',
       )}
     >
-      <p className="font-medium text-foreground">{title}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      <p className="font-medium text-stone-950">{title}</p>
+      <p className="mt-1 text-sm text-stone-500">{description}</p>
     </button>
   );
 }

@@ -13,12 +13,19 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import {
+  DashboardCard,
+  DashboardEmptyState,
+  DashboardLoadingState,
+  DashboardPageHeader,
+  DashboardToolbar,
+} from '@/components/ui/dashboard-primitives';
 import { PlatformBadge } from '@/components/ui/platform-badge';
 import { getTravelGuides } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 const PLATFORMS = [
-  { value: '', label: 'All Platforms' },
+  { value: '', label: '全部平台' },
   { value: 'ctrip', label: '携程' },
   { value: 'xiaohongshu', label: '小红书' },
   { value: 'weibo', label: '微博' },
@@ -48,15 +55,15 @@ function QualityScore({ score }: { score: number }) {
 
 function GuideCard({ guide }: { guide: TravelGuide }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer">
+    <DashboardCard className="cursor-pointer p-4 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-[var(--dashboard-shadow)]">
       <div className="flex gap-4">
         {/* Cover Image */}
         {guide.cover_image_url && (
           <div className="flex-shrink-0">
             <img
               src={guide.cover_image_url}
-              alt={guide.title || 'Guide cover'}
-              className="w-24 h-24 object-cover rounded-lg"
+              alt={guide.title || '游记封面'}
+              className="h-24 w-24 rounded-xl object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
@@ -67,31 +74,31 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-medium text-gray-900 line-clamp-2">
-              {guide.title || 'Untitled Guide'}
+            <h3 className="line-clamp-2 font-medium text-stone-900">
+              {guide.title || '未命名游记'}
             </h3>
             <PlatformBadge platform={guide.source_platform} />
           </div>
 
           {/* Author & Quality */}
-          <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+          <div className="mt-1 flex items-center gap-3 text-sm text-stone-500">
             {guide.author_name && <span>{guide.author_name}</span>}
             <QualityScore score={guide.quality_score} />
           </div>
 
           {/* Destinations */}
           {guide.destinations.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
+            <div className="mt-2 flex flex-wrap gap-1">
               {guide.destinations.slice(0, 3).map(dest => (
                 <span
                   key={dest}
-                  className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs"
+                  className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 ring-1 ring-emerald-200"
                 >
                   {dest}
                 </span>
               ))}
               {guide.destinations.length > 3 && (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-stone-400">
                   +
                   {guide.destinations.length - 3}
                 </span>
@@ -100,7 +107,7 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
           )}
 
           {/* Stats */}
-          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+          <div className="mt-3 flex items-center gap-4 text-xs text-stone-500">
             <span className="flex items-center gap-1">
               <Heart className="h-3.5 w-3.5" />
               {guide.likes_count.toLocaleString()}
@@ -124,16 +131,16 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
                     'noopener,noreferrer',
                   );
                 }}
-                className="flex items-center gap-1 text-blue-600 hover:underline ml-auto cursor-pointer"
+                className="ml-auto flex cursor-pointer items-center gap-1 text-emerald-700 hover:underline"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                Source
+                来源
               </span>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </DashboardCard>
   );
 }
 
@@ -163,34 +170,26 @@ export default function GuidesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-emerald-600" />
-            Travel Guides
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {total.toLocaleString()}
-            {' '}
-            guides from multiple platforms
-          </p>
-        </div>
-      </div>
+      <DashboardPageHeader
+        title="旅行游记"
+        icon={BookOpen}
+        description={`${total.toLocaleString()} 篇来自多平台的游记`}
+      />
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
+      <DashboardToolbar>
         {/* Search */}
-        <div className="relative flex-1 max-w-md">
+        <div className="relative w-full sm:max-w-md sm:flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search guides..."
+            placeholder="搜索游记..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setPage(0);
             }}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="dashboard-control w-full py-2 pl-10 pr-4"
           />
         </div>
 
@@ -201,7 +200,7 @@ export default function GuidesPage() {
             setPlatform(e.target.value);
             setPage(0);
           }}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          className="dashboard-control"
         >
           {PLATFORMS.map(p => (
             <option key={p.value} value={p.value}>
@@ -209,27 +208,23 @@ export default function GuidesPage() {
             </option>
           ))}
         </select>
-      </div>
+      </DashboardToolbar>
 
       {/* Content */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-        </div>
+        <DashboardLoadingState label="加载游记中" />
       )}
       {!isLoading && error && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
-          Failed to load guides. Please try again.
-        </div>
+        <DashboardCard className="border-red-200 bg-red-50 p-4 text-red-700">
+          加载游记失败，请重试。
+        </DashboardCard>
       )}
       {!isLoading && !error && guides.length === 0 && (
-        <div className="text-center py-12">
-          <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No guides found</p>
-          <p className="text-sm text-gray-400 mt-1">
-            Start a crawl job to collect travel guides
-          </p>
-        </div>
+        <DashboardEmptyState
+          icon={BookOpen}
+          title="未找到游记"
+          description="启动抓取任务来收集旅行游记"
+        />
       )}
       {!isLoading && !error && guides.length > 0 && (
         <>
@@ -244,8 +239,8 @@ export default function GuidesPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-              <p className="text-sm text-gray-500">
+            <div className="dashboard-surface flex items-center justify-between rounded-2xl px-4 py-3">
+              <p className="text-sm text-stone-500">
                 Showing
                 {' '}
                 {page * pageSize + 1}
@@ -261,16 +256,16 @@ export default function GuidesPage() {
                 <button
                   onClick={() => setPage(Math.max(0, page - 1))}
                   disabled={page === 0}
-                  className="px-3 py-1.5 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="rounded-xl border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Previous
+                  上一页
                 </button>
                 <button
                   onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                   disabled={page >= totalPages - 1}
-                  className="px-3 py-1.5 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="rounded-xl border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Next
+                  下一页
                 </button>
               </div>
             </div>

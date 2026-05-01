@@ -21,7 +21,8 @@
     "build": "nx run-many -t build",
     "build:packages": "nx run-many -t build --projects=types,utils,constants",
     "build:apps": "nx run-many -t build --projects=dashboard",
-    "dev": "nx run-many -t dev --projects=dashboard --parallel=1",
+    "dev": "pnpm dev:db && nx run-many -t dev --projects=@pathfinding/api,dashboard --parallel=2",
+    "dev:db": "docker-compose -f docker-compose.dev.yml up -d tidb && pnpm --filter @pathfinding/database dev:ensure-db",
     "dev:api": "pnpm --filter @pathfinding/api dev",
 
     "dev:dashboard": "nx run dashboard:dev",

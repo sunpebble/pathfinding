@@ -324,7 +324,7 @@ export function PromptInputAttachment({
               )}
             </div>
             <Button
-              aria-label="Remove attachment"
+              aria-label="移除附件"
               className="absolute inset-0 size-5 cursor-pointer rounded p-0 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 [&>svg]:size-2.5"
               onClick={(e) => {
                 e.stopPropagation();
@@ -334,7 +334,7 @@ export function PromptInputAttachment({
               variant="ghost"
             >
               <XIcon />
-              <span className="sr-only">Remove</span>
+              <span className="sr-only">移除</span>
             </Button>
           </div>
 
@@ -775,12 +775,12 @@ export const PromptInput = ({
     <>
       <input
         accept={accept}
-        aria-label="Upload files"
+        aria-label="上传文件"
         className="hidden"
         multiple={multiple}
         onChange={handleChange}
         ref={inputRef}
-        title="Upload files"
+        title="上传文件"
         type="file"
       />
       <form
@@ -1042,7 +1042,7 @@ export const PromptInputSubmit = ({
 
   return (
     <InputGroupButton
-      aria-label="Submit"
+      aria-label="提交"
       className={cn(className)}
       size={size}
       type="submit"

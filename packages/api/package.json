@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "DATABASE_URL=${DATABASE_URL:-mysql://root@127.0.0.1:4000/pathfinding} JWT_SECRET=${JWT_SECRET:-pathfinding-local-dev-secret-change-me} tsx watch src/server.ts",
     "build": "tsdown",
     "start": "node dist/server.mjs",
     "typecheck": "tsc --noEmit",
