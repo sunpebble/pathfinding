@@ -32,10 +32,10 @@ describe('backfill.service', () => {
       const result = await analyzeFieldGaps(10);
 
       expect(result).toHaveLength(2);
-      expect(result[0].guideId).toBe(1);
-      expect(result[0].missingCount).toBe(7);
-      expect(result[1].guideId).toBe(2);
-      expect(result[1].missingCount).toBe(4);
+      expect(result[0]!.guideId).toBe(1);
+      expect(result[0]!.missingCount).toBe(7);
+      expect(result[1]!.guideId).toBe(2);
+      expect(result[1]!.missingCount).toBe(4);
     });
 
     it('returns empty array when no gaps', async () => {
@@ -77,8 +77,8 @@ describe('backfill.service', () => {
       const result = await analyzeDestinationGaps();
 
       expect(result).toHaveLength(1);
-      expect(result[0].cityName).toBe('Chengdu');
-      expect(result[0].guideCount).toBe(0);
+      expect(result[0]!.cityName).toBe('Chengdu');
+      expect(result[0]!.guideCount).toBe(0);
     });
   });
 

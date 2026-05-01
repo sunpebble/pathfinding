@@ -1,7 +1,7 @@
 # Travel Guide Data Backfill System Design
 
-**Date:** 2026-05-01  
-**Author:** OpenCode  
+**Date:** 2026-05-01
+**Author:** OpenCode
 **Status:** Approved
 
 ## Overview
@@ -96,12 +96,13 @@ interface BackfillJobConfig {
 
 New endpoints:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/backfill-analysis` | Run analysis and return report |
-| `POST` | `/backfill-jobs` | Accept analysis report + options, create crawl jobs |
+| Method | Endpoint             | Description                                         |
+| ------ | -------------------- | --------------------------------------------------- |
+| `POST` | `/backfill-analysis` | Run analysis and return report                      |
+| `POST` | `/backfill-jobs`     | Accept analysis report + options, create crawl jobs |
 
 Extend `jobType` enum values:
+
 - `'field_backfill'` — re-crawl specific guides to fill missing fields
 - `'destination_fill'` — crawl new guides for destinations with zero coverage
 
@@ -111,9 +112,9 @@ Extend `jobType` enum values:
 
 New endpoint:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/gap-report` | Return aggregate stats on data gaps (counts per field, blank destination count) |
+| Method | Endpoint      | Description                                                                     |
+| ------ | ------------- | ------------------------------------------------------------------------------- |
+| `GET`  | `/gap-report` | Return aggregate stats on data gaps (counts per field, blank destination count) |
 
 ## Database
 

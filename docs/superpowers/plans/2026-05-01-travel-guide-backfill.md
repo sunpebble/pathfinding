@@ -12,24 +12,25 @@
 
 ## File Map
 
-| File | Action | Responsibility |
-|------|--------|---------------|
-| `packages/api/src/services/backfill.service.ts` | Create | Core analysis logic: scan gaps, generate crawl jobs |
-| `packages/api/src/services/backfill.service.test.ts` | Create | Unit tests for backfill service |
-| `packages/api/src/routes/crawl-jobs.ts` | Modify | Add `POST /backfill-analysis` and `POST /backfill-jobs` endpoints |
-| `packages/api/src/routes/crawl-jobs.test.ts` | Modify | Add tests for new endpoints |
-| `packages/api/src/routes/guides.ts` | Modify | Add `GET /gap-report` endpoint |
-| `packages/api/src/routes/guides.test.ts` | Modify | Add test for gap-report endpoint |
-| `apps/dashboard/src/lib/api/crawler.ts` | Modify | Add `getBackfillAnalysis()` and `createBackfillJobs()` client functions |
-| `apps/dashboard/src/app/api/crawler/backfill-analysis/route.ts` | Create | Next.js proxy route for backfill analysis |
-| `apps/dashboard/src/app/api/crawler/backfill-jobs/route.ts` | Create | Next.js proxy route for creating backfill jobs |
-| `apps/dashboard/src/app/(dashboard)/jobs/backfill/page.tsx` | Create | Dashboard page for gap analysis and task generation |
+| File                                                            | Action | Responsibility                                                          |
+| --------------------------------------------------------------- | ------ | ----------------------------------------------------------------------- |
+| `packages/api/src/services/backfill.service.ts`                 | Create | Core analysis logic: scan gaps, generate crawl jobs                     |
+| `packages/api/src/services/backfill.service.test.ts`            | Create | Unit tests for backfill service                                         |
+| `packages/api/src/routes/crawl-jobs.ts`                         | Modify | Add `POST /backfill-analysis` and `POST /backfill-jobs` endpoints       |
+| `packages/api/src/routes/crawl-jobs.test.ts`                    | Modify | Add tests for new endpoints                                             |
+| `packages/api/src/routes/guides.ts`                             | Modify | Add `GET /gap-report` endpoint                                          |
+| `packages/api/src/routes/guides.test.ts`                        | Modify | Add test for gap-report endpoint                                        |
+| `apps/dashboard/src/lib/api/crawler.ts`                         | Modify | Add `getBackfillAnalysis()` and `createBackfillJobs()` client functions |
+| `apps/dashboard/src/app/api/crawler/backfill-analysis/route.ts` | Create | Next.js proxy route for backfill analysis                               |
+| `apps/dashboard/src/app/api/crawler/backfill-jobs/route.ts`     | Create | Next.js proxy route for creating backfill jobs                          |
+| `apps/dashboard/src/app/(dashboard)/jobs/backfill/page.tsx`     | Create | Dashboard page for gap analysis and task generation                     |
 
 ---
 
 ## Task 1: Backfill Service (Core Analysis Logic)
 
 **Files:**
+
 - Create: `packages/api/src/services/backfill.service.ts`
 - Test: `packages/api/src/services/backfill.service.test.ts`
 
@@ -372,6 +373,7 @@ git commit -m "feat(api): add backfill analysis service"
 ## Task 2: Crawl Jobs Route Extensions
 
 **Files:**
+
 - Modify: `packages/api/src/routes/crawl-jobs.ts`
 - Modify: `packages/api/src/routes/crawl-jobs.test.ts`
 
@@ -380,11 +382,13 @@ git commit -m "feat(api): add backfill analysis service"
 Open `packages/api/src/routes/crawl-jobs.ts` and add after the fail endpoint (before `export default app`):
 
 Add import at top:
+
 ```typescript
 import { runFullAnalysis, generateBackfillJobs } from '../services/backfill.service.js';
 ```
 
 Add Zod schemas:
+
 ```typescript
 const backfillJobsSchema = z.object({
   fieldGapGuideIds: z.array(z.number()).optional(),
@@ -393,6 +397,7 @@ const backfillJobsSchema = z.object({
 ```
 
 Add endpoints:
+
 ```typescript
 // ── POST /backfill-analysis — Run gap analysis ─────────
 app.post('/backfill-analysis', adminRequired(), async (c) => {
@@ -562,17 +567,20 @@ git commit -m "feat(api): add backfill analysis and job generation endpoints"
 ## Task 3: Guides Route Gap Report
 
 **Files:**
+
 - Modify: `packages/api/src/routes/guides.ts`
 - Modify: `packages/api/src/routes/guides.test.ts`
 
 ### Step 3.1: Add gap-report endpoint
 
 Open `packages/api/src/routes/guides.ts`. Add import:
+
 ```typescript
 import { runFullAnalysis } from '../services/backfill.service.js';
 ```
 
 Add endpoint before `export default app`:
+
 ```typescript
 // ── GET /gap-report — Data gap summary ─────────────────
 app.get('/gap-report', async (c) => {
@@ -646,6 +654,7 @@ git commit -m "feat(api): add guide gap-report endpoint"
 ## Task 4: Dashboard API Client Extensions
 
 **Files:**
+
 - Modify: `apps/dashboard/src/lib/api/crawler.ts`
 
 ### Step 4.1: Add backfill types and functions
@@ -705,26 +714,32 @@ export async function createBackfillJobs(
 Wait — the proxy routes don't exist yet on `/api/crawler/backfill-analysis`. The client calls `/api/crawler/*` which maps to the proxy routes. Let me check the existing pattern.
 
 Looking at the crawler.ts file, `fetchApi` uses `${API_BASE}${endpoint}` where `API_BASE = '/api/crawler'`. So:
+
 - `getBackfillAnalysis()` calls `POST /api/crawler/backfill-analysis`
 - `createBackfillJobs()` calls `POST /api/crawler/backfill-jobs`
 
 But wait, looking at the existing `getCrawlJobs`, it calls `/crawl-jobs` which becomes `/api/crawler/crawl-jobs`. So I need to create proxy routes at:
+
 - `apps/dashboard/src/app/api/crawler/backfill-analysis/route.ts`
 - `apps/dashboard/src/app/api/crawler/backfill-jobs/route.ts`
 
 These proxy routes will forward to the backend.
 
 Actually, hold on. Let me re-read the crawler.ts fetchApi. The endpoints in crawler.ts don't include the `/api/crawler` prefix — that's added by `fetchApi`. So:
+
 - `fetchApi('/backfill-analysis')` → `fetch('/api/crawler/backfill-analysis')`
 
 This means the Next.js route files should be at:
+
 - `apps/dashboard/src/app/api/crawler/backfill-analysis/route.ts`
 
 But wait, I see the existing routes:
+
 - `apps/dashboard/src/app/api/crawler/crawl-jobs/route.ts` handles `/api/crawler/crawl-jobs`
 - `apps/dashboard/src/app/api/crawler/guides/route.ts` handles `/api/crawler/guides`
 
 So I need:
+
 - `apps/dashboard/src/app/api/crawler/backfill-analysis/route.ts` (POST)
 - `apps/dashboard/src/app/api/crawler/backfill-jobs/route.ts` (POST)
 
@@ -733,11 +748,13 @@ Wait, but the client calls `fetchApi('/backfill-analysis')`. The `fetchApi` func
 But existing functions call `fetchApi('/crawl-jobs')` which becomes `fetch('/api/crawler/crawl-jobs')`. So the endpoint parameter already includes the leading `/`.
 
 Hmm, but I notice `getCrawlJobs` calls `fetchApi('/crawl-jobs')`. The route file is at `app/api/crawler/crawl-jobs/route.ts`. So the pattern is:
+
 - Client endpoint: `/crawl-jobs` (in crawler.ts)
 - fetchApi resolves to: `/api/crawler/crawl-jobs`
 - Next.js route handler: `app/api/crawler/crawl-jobs/route.ts`
 
 So for backfill:
+
 - Client endpoint: `/backfill-analysis` (in crawler.ts)
 - fetchApi resolves to: `/api/crawler/backfill-analysis`
 - Next.js route handler: `app/api/crawler/backfill-analysis/route.ts`
@@ -766,6 +783,7 @@ git commit -m "feat(dashboard): add backfill analysis API client"
 ## Task 5: Dashboard Proxy Routes
 
 **Files:**
+
 - Create: `apps/dashboard/src/app/api/crawler/backfill-analysis/route.ts`
 - Create: `apps/dashboard/src/app/api/crawler/backfill-jobs/route.ts`
 
@@ -882,6 +900,7 @@ git commit -m "feat(dashboard): add backfill proxy routes"
 ## Task 6: Dashboard Backfill Page
 
 **Files:**
+
 - Create: `apps/dashboard/src/app/(dashboard)/jobs/backfill/page.tsx`
 
 ### Step 6.1: Create the backfill page
@@ -1180,6 +1199,7 @@ git commit -m "feat(dashboard): add backfill analysis page"
 ## Task 7: Add Navigation Link to Backfill Page
 
 **Files:**
+
 - Modify: `apps/dashboard/src/app/(dashboard)/jobs/page.tsx`
 
 ### Step 7.1: Add backfill link to Jobs page
@@ -1224,6 +1244,7 @@ pnpm check
 ```
 
 Expected:
+
 - `pnpm typecheck`: all 9 projects PASS
 - `pnpm lint`: no errors
 - `pnpm test`: all test suites PASS
@@ -1248,19 +1269,19 @@ git add -A && git commit -m "fix: resolve lint and type issues"
 
 ## Spec Coverage Checklist
 
-| Spec Requirement | Task |
-|-----------------|------|
-| `backfill.service.ts` with `analyzeFieldGaps()` | Task 1 |
-| `backfill.service.ts` with `analyzeDestinationGaps()` | Task 1 |
-| `backfill.service.ts` with `generateBackfillJobs()` | Task 1 |
-| `POST /backfill-analysis` endpoint | Task 2 |
-| `POST /backfill-jobs` endpoint | Task 2 |
-| `GET /gap-report` endpoint | Task 3 |
-| Dashboard API client extensions | Task 4 |
-| Dashboard proxy routes | Task 5 |
-| Dashboard backfill page with tables | Task 6 |
-| Navigation link | Task 7 |
-| Tests for all new code | Tasks 1-3 |
+| Spec Requirement                                      | Task      |
+| ----------------------------------------------------- | --------- |
+| `backfill.service.ts` with `analyzeFieldGaps()`       | Task 1    |
+| `backfill.service.ts` with `analyzeDestinationGaps()` | Task 1    |
+| `backfill.service.ts` with `generateBackfillJobs()`   | Task 1    |
+| `POST /backfill-analysis` endpoint                    | Task 2    |
+| `POST /backfill-jobs` endpoint                        | Task 2    |
+| `GET /gap-report` endpoint                            | Task 3    |
+| Dashboard API client extensions                       | Task 4    |
+| Dashboard proxy routes                                | Task 5    |
+| Dashboard backfill page with tables                   | Task 6    |
+| Navigation link                                       | Task 7    |
+| Tests for all new code                                | Tasks 1-3 |
 
 ## Placeholder Scan
 
