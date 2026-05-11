@@ -462,8 +462,6 @@ export interface TravelGuide extends TravelGuideResponseDto {
   author_id?: string | null;
   published_at?: string | null;
   crawled_at?: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
 /** List travel guides with optional filters and sorting. */
