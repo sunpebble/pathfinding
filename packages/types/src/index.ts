@@ -18,6 +18,7 @@ export * from './reminder';
 export * from './search';
 export * from './simCard';
 export * from './transport';
+export * from './travel-guide';
 export * from './user';
 
 /**
