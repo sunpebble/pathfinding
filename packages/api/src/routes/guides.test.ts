@@ -181,6 +181,47 @@ describe('guides routes', () => {
         ai_days: [{ day_number: 1, pois: [] }],
       }));
     });
+
+    it('normalizes DB day itineraries into the shared ai_days contract', async () => {
+      const chain = createPaginatedSelectChain([{
+        ...richGuideMock,
+        enrichedData: {
+          contentHtml: '<p>富文本内容</p>',
+        },
+        dayItineraries: [{ day: 1, title: 'Day 1', pois: [] }],
+      }]);
+      const countChain = createWhereSelectChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      const response = await createApp().request('/api/guides');
+      expect(response.status).toBe(200);
+
+      const body = await response.json();
+      expect(body.data[0].ai_days).toEqual([{ day_number: 1, title: 'Day 1', pois: [] }]);
+      expect(body.data[0].ai_days[0]).not.toHaveProperty('day');
+    });
+
+    it('keeps ai_processed_at null for current iOS compatibility', async () => {
+      const chain = createPaginatedSelectChain([{
+        ...richGuideMock,
+        enrichedData: {
+          ...richGuideMock.enrichedData,
+          aiProcessedAt: '2026-05-10T00:00:00.000Z',
+        },
+      }]);
+      const countChain = createWhereSelectChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      const response = await createApp().request('/api/guides');
+      expect(response.status).toBe(200);
+
+      const body = await response.json();
+      expect(body.data[0].ai_processed_at).toBeNull();
+    });
   });
 
   describe('gET /api/guides/search', () => {

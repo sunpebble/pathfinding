@@ -128,6 +128,42 @@ function geocodingMetricsFromRecord(record: Record<string, unknown>): TravelGuid
   return null;
 }
 
+function normalizeAiDays(value: unknown): TravelGuideResponseDto['ai_days'] {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  interface NormalizedAiDay {
+    day_number: number;
+    theme?: string;
+    title?: string;
+    pois?: Array<Record<string, unknown>>;
+  }
+
+  const days = value
+    .map((item) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        return null;
+      }
+
+      const record = item as Record<string, unknown>;
+      const dayNumber = record.day_number ?? record.dayNumber ?? record.day;
+      if (typeof dayNumber !== 'number' || !Number.isFinite(dayNumber)) {
+        return null;
+      }
+
+      return {
+        day_number: dayNumber,
+        ...(typeof record.theme === 'string' ? { theme: record.theme } : {}),
+        ...(typeof record.title === 'string' ? { title: record.title } : {}),
+        ...(Array.isArray(record.pois) ? { pois: record.pois as Array<Record<string, unknown>> } : {}),
+      };
+    })
+    .filter((day): day is NormalizedAiDay => day !== null);
+
+  return days.length > 0 ? days : null;
+}
+
 /**
  * Convert a DB guide row to the iOS-compatible response format.
  * The iOS BlogPost model expects specific field names that differ from the DB schema.
@@ -135,8 +171,10 @@ function geocodingMetricsFromRecord(record: Record<string, unknown>): TravelGuid
 function toClientGuide(guide: Guide): TravelGuideResponseDto {
   const enrichedData = recordFromJson(guide.enrichedData);
   const id = String(guide.id);
-  const aiDays = arrayFromRecord(enrichedData, ['aiDays', 'ai_days'])
-    ?? (Array.isArray(guide.dayItineraries) ? guide.dayItineraries : null);
+  const aiDays = normalizeAiDays(
+    arrayFromRecord(enrichedData, ['aiDays', 'ai_days'])
+    ?? (Array.isArray(guide.dayItineraries) ? guide.dayItineraries : null),
+  );
 
   return {
     id,
@@ -169,8 +207,8 @@ function toClientGuide(guide: Guide): TravelGuideResponseDto {
     ai_best_time: stringFromRecord(enrichedData, ['aiBestTime', 'bestTime', 'ai_best_time']),
     ai_duration: stringFromRecord(enrichedData, ['aiDuration', 'duration', 'ai_duration']),
     ai_budget: stringFromRecord(enrichedData, ['aiBudget', 'budget', 'ai_budget']),
-    ai_days: aiDays as TravelGuideResponseDto['ai_days'],
-    ai_processed_at: dateString(stringFromRecord(enrichedData, ['aiProcessedAt', 'processedAt', 'ai_processed_at'])),
+    ai_days: aiDays,
+    ai_processed_at: null,
     ai_version: stringFromRecord(enrichedData, ['aiVersion', 'version', 'ai_version']),
     ai_model: stringFromRecord(enrichedData, ['aiModel', 'model', 'ai_model']),
     geocoding_metrics: geocodingMetricsFromRecord(enrichedData),
