@@ -25,7 +25,7 @@ export interface TravelGuideContentDto {
 
 export interface TravelGuideAiDayDto {
   day_number?: number;
-  dayNumber?: number;
+  title?: string;
   theme?: string;
   pois?: Array<Record<string, unknown>>;
 }

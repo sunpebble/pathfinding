@@ -4,7 +4,7 @@ import type { InferSelectModel } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import { getDb, travelGuides } from '@pathfinding/database';
-import { and, asc, desc, eq, gte, like, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, like, lte, sql } from 'drizzle-orm';
 /**
  * Guides routes — list, get by ID, search, destinations, stats.
  * Mirrors the Convex /api/guides/* HTTP endpoints.
@@ -223,6 +223,13 @@ app.get('/', async (c) => {
     = Number.isFinite(parsedMinQuality) && parsedMinQuality >= 0
       ? parsedMinQuality
       : 0;
+  const maxQualityParam = c.req.query('max_quality');
+  const parsedMaxQuality = maxQualityParam === undefined
+    ? Number.NaN
+    : Number.parseFloat(maxQualityParam);
+  const maxQuality = Number.isFinite(parsedMaxQuality) && parsedMaxQuality >= 0
+    ? parsedMaxQuality
+    : undefined;
   const { limit, offset } = parsePagination(
     c.req.query('limit'),
     c.req.query('offset'),
@@ -242,6 +249,9 @@ app.get('/', async (c) => {
   }
   if (minQuality > 0) {
     conditions.push(gte(travelGuides.qualityScore, minQuality));
+  }
+  if (maxQuality !== undefined) {
+    conditions.push(lte(travelGuides.qualityScore, maxQuality));
   }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;

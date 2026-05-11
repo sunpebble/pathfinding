@@ -147,6 +147,19 @@ describe('guides routes', () => {
       expect(response.status).toBe(200);
     });
 
+    it('filters by max_quality for review queues', async () => {
+      const chain = createPaginatedSelectChain([]);
+      const countChain = createWhereSelectChain([{ count: 0 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      const response = await createApp().request('/api/guides?max_quality=0.5&sort=quality_score&order=asc');
+      expect(response.status).toBe(200);
+      expect(chain.where).toHaveBeenCalledWith(expect.anything());
+      expect(countChain.where).toHaveBeenCalledWith(expect.anything());
+    });
+
     it('returns the shared guide response contract for list results', async () => {
       const chain = createPaginatedSelectChain([richGuideMock]);
       const countChain = createWhereSelectChain([{ count: 1 }]);
