@@ -5,13 +5,14 @@
  * `/api/crawler/*` proxy routes. Hides URL construction, query-string
  * serialization, and response unwrapping behind simple async functions.
  *
- * All types are defined locally as lightweight "API-response DTOs"
- * (string dates, flat structure) — intentionally separate from
- * the canonical `@pathfinding/crawler-types` package which uses
- * Date objects and richer nested structures.
+ * Most types are defined locally as lightweight "API-response DTOs"
+ * (string dates, flat structure). Travel guides extend the shared
+ * `@pathfinding/types` DTO used by API consumers.
  *
  * @module
  */
+
+import type { TravelGuideResponseDto } from '@pathfinding/types';
 
 import { getStoredAuthToken } from './client';
 
@@ -454,28 +455,13 @@ export async function getTrainingDataset(id: string): Promise<TrainingDataset> {
 // ---------------------------------------------------------------------------
 
 /** A travel guide record from the crawler backend. */
-export interface TravelGuide {
-  id: string;
-  source_platform: 'xiaohongshu' | 'weibo' | 'ctrip';
-  source_external_id: string;
+export interface TravelGuide extends TravelGuideResponseDto {
+  _id?: string;
+  source_external_id?: string | null;
   source_url?: string;
-  title?: string;
-  content: string;
-  content_html?: string;
-  content_markdown?: string;
-  author_name?: string;
-  author_id?: string;
-  destinations: string[];
-  tags: string[];
-  likes_count: number;
-  saves_count: number;
-  comments_count: number;
-  views_count: number;
-  cover_image_url?: string;
-  image_urls: string[];
-  published_at?: string;
-  crawled_at: string;
-  quality_score: number;
+  author_id?: string | null;
+  published_at?: string | null;
+  crawled_at?: string | null;
   created_at: string;
   updated_at: string;
 }

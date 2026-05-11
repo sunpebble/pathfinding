@@ -8,6 +8,11 @@
  * @module
  */
 
+import type {
+  TravelGuideAiDayDto,
+  TravelGuideResponseDto,
+} from '@pathfinding/types';
+
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
@@ -152,37 +157,9 @@ export interface UpdateCollaboratorInput {
 // Travel Guides (with AI enrichment)
 // ---------------------------------------------------------------------------
 
-/**
- * Travel guide from REST API (uses snake_case).
- *
- * Includes both snake_case and camelCase variants of AI fields
- * for compatibility with different backend versions.
- */
-export interface GuideWithAI {
+/** Travel guide from REST API with Dashboard camelCase AI aliases. */
+export interface GuideWithAI extends TravelGuideResponseDto {
   _id: string;
-  /** Duplicate ID field for compatibility. */
-  id?: string;
-  title: string;
-  content?: string;
-  content_html?: string;
-  content_markdown?: string;
-  source_platform: string;
-  source_url?: string;
-  source_external_id?: string;
-  author_name?: string;
-  published_at?: string;
-  crawled_at?: string;
-  updated_at?: string;
-  likes_count: number;
-  views_count: number;
-  comments_count: number;
-  saves_count: number;
-  image_urls?: string[];
-  cover_image_url?: string;
-  quality_score: number;
-  destinations?: string[];
-  tags?: string[];
-  // AI enriched fields (camelCase)
   aiSummary?: string;
   aiTips?: string[];
   aiBestTime?: string;
@@ -190,22 +167,11 @@ export interface GuideWithAI {
   aiBudget?: string;
   aiDays?: AiDay[];
   aiProcessedAt?: number;
-  // AI enriched fields (snake_case duplicates for API compatibility)
-  ai_summary?: string;
-  ai_tips?: string[];
-  ai_best_time?: string;
-  ai_duration?: string;
-  ai_budget?: string;
-  ai_days?: AiDay[];
-  geocoding_metrics?: {
-    total_pois: number;
-    average_confidence: number;
-    low_confidence_count: number;
-  };
+  ai_days?: AiDay[] | null;
 }
 
 /** A single day in an AI-generated itinerary. */
-export interface AiDay {
+export interface AiDay extends TravelGuideAiDayDto {
   dayNumber: number;
   theme?: string;
   pois: AiPoi[];
@@ -213,6 +179,7 @@ export interface AiDay {
 
 /** A point of interest within an AI-generated day plan. */
 export interface AiPoi {
+  [key: string]: unknown;
   name: string;
   type: 'attraction' | 'restaurant' | 'hotel' | 'transportation';
   description?: string;
