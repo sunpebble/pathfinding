@@ -88,4 +88,51 @@ describe('proxyBackendApiResponse', () => {
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({ error: '至少需要选择一个补齐目标' });
   });
+
+  it('maps async body factory failures to fallback 500 responses', async () => {
+    const fetchMock = vi.fn();
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { proxyBackendApiResponse } = await import('./proxy');
+    const response = await proxyBackendApiResponse(
+      new NextRequest('http://localhost/api/crawler/backfill-jobs', {
+        headers: { Authorization: 'Bearer test-token' },
+      }),
+      {
+        endpoint: '/api/crawl-jobs/backfill-jobs',
+        method: 'POST',
+        body: async () => {
+          throw new Error('Invalid JSON');
+        },
+        fallbackError: 'Failed to parse body',
+      },
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith('Failed to parse body', expect.any(Error));
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: 'Failed to parse body' });
+  });
+
+  it('uses BackendApiError message when backend payload has message and error fields', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      createJsonResponse({ message: 'Use this', error: 'Not this' }, { status: 400 }),
+    ));
+
+    const { proxyBackendApiResponse } = await import('./proxy');
+    const response = await proxyBackendApiResponse(
+      new NextRequest('http://localhost/api/crawler/backfill-jobs', {
+        headers: { Authorization: 'Bearer test-token' },
+      }),
+      {
+        endpoint: '/api/crawl-jobs/backfill-jobs',
+        method: 'POST',
+        fallbackError: 'Failed to create backfill jobs',
+      },
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Use this' });
+  });
 });

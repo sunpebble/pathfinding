@@ -40,21 +40,6 @@ function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
   return { ...headers };
 }
 
-function errorMessageFromData(data: unknown, fallback: string): string {
-  if (data && typeof data === 'object') {
-    const record = data as Record<string, unknown>;
-    if (typeof record.error === 'string' && record.error.length > 0) {
-      return record.error;
-    }
-
-    if (typeof record.message === 'string' && record.message.length > 0) {
-      return record.message;
-    }
-  }
-
-  return fallback;
-}
-
 async function resolveBody(body: unknown | ProxyBodyFactory | undefined): Promise<unknown> {
   if (typeof body === 'function') {
     return (body as ProxyBodyFactory)();
@@ -79,9 +64,8 @@ export async function proxyBackendApiResponse<TBackend, TClient = TBackend>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const body = await resolveBody(options.body);
-
   try {
+    const body = await resolveBody(options.body);
     const payload = await fetchBackendApi<TBackend>(options.endpoint, {
       method: options.method ?? 'GET',
       headers,
@@ -93,7 +77,7 @@ export async function proxyBackendApiResponse<TBackend, TClient = TBackend>(
   catch (error) {
     if (error instanceof BackendApiError) {
       return NextResponse.json(
-        { error: errorMessageFromData(error.data, error.message) },
+        { error: error.message },
         { status: error.status },
       );
     }
