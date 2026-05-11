@@ -137,7 +137,7 @@ function normalizeAiDays(value: unknown): TravelGuideResponseDto['ai_days'] {
     day_number: number;
     theme?: string;
     title?: string;
-    pois?: Array<Record<string, unknown>>;
+    pois: Array<Record<string, unknown>>;
   }
 
   const days = value
@@ -156,7 +156,7 @@ function normalizeAiDays(value: unknown): TravelGuideResponseDto['ai_days'] {
         day_number: dayNumber,
         ...(typeof record.theme === 'string' ? { theme: record.theme } : {}),
         ...(typeof record.title === 'string' ? { title: record.title } : {}),
-        ...(Array.isArray(record.pois) ? { pois: record.pois as Array<Record<string, unknown>> } : {}),
+        pois: Array.isArray(record.pois) ? record.pois as Array<Record<string, unknown>> : [],
       };
     })
     .filter((day): day is NormalizedAiDay => day !== null);

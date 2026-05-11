@@ -203,6 +203,26 @@ describe('guides routes', () => {
       expect(body.data[0].ai_days[0]).not.toHaveProperty('day');
     });
 
+    it('normalizes enriched dayNumber AI days with default pois', async () => {
+      const chain = createPaginatedSelectChain([{
+        ...richGuideMock,
+        enrichedData: {
+          aiDays: [{ dayNumber: 2 }],
+        },
+      }]);
+      const countChain = createWhereSelectChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      const response = await createApp().request('/api/guides');
+      expect(response.status).toBe(200);
+
+      const body = await response.json();
+      expect(body.data[0].ai_days).toEqual([{ day_number: 2, pois: [] }]);
+      expect(body.data[0].ai_days[0]).not.toHaveProperty('dayNumber');
+    });
+
     it('keeps ai_processed_at null for current iOS compatibility', async () => {
       const chain = createPaginatedSelectChain([{
         ...richGuideMock,
