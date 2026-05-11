@@ -8,6 +8,8 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
+      "@pathfinding/types": ["../../packages/types/src/index.ts"],
+      "@pathfinding/types/*": ["../../packages/types/src/*"],
       "@/*": ["./src/*"]
     },
     "allowJs": true,
