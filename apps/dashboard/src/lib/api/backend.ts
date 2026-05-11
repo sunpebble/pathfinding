@@ -30,6 +30,18 @@ export function getBackendApiBaseUrl(): string {
 // Internals
 // ---------------------------------------------------------------------------
 
+export class BackendApiError extends Error {
+  readonly status: number;
+  readonly data: unknown;
+
+  constructor(message: string, status: number, data: unknown) {
+    super(message);
+    this.name = 'BackendApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
 /** Extract a human-readable error message from a parsed error response. */
 function parseErrorMessage(error: unknown, status: number): string {
   if (error && typeof error === 'object') {
@@ -130,12 +142,16 @@ export async function fetchBackendApi<T>(
 
     if (!res.ok) {
       const error = await parseJsonResponse<unknown>(res).catch(() => undefined);
-      throw new Error(parseErrorMessage(error, res.status));
+      throw new BackendApiError(parseErrorMessage(error, res.status), res.status, error);
     }
 
     return parseJsonResponse<T>(res);
   }
   catch (error) {
+    if (error instanceof BackendApiError) {
+      throw error;
+    }
+
     // In production, never fall back to mock data — re-throw immediately
     if (process.env.NODE_ENV === 'production') {
       throw error;
