@@ -7,6 +7,11 @@ interface CrawlJobClientResponse {
   data: ReturnType<typeof normalizeCrawlJob>;
 }
 
+function parsePositiveJobId(id: string): number | null {
+  const numericId = Number(id);
+  return Number.isInteger(numericId) && numericId > 0 ? numericId : null;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
@@ -54,13 +59,18 @@ export async function POST(
     return NextResponse.json({ error: 'Action required' }, { status: 400 });
   }
 
+  const numericId = parsePositiveJobId(id);
+  if (numericId === null) {
+    return NextResponse.json({ error: 'Invalid job id' }, { status: 400 });
+  }
+
   if (action === 'start') {
     return proxyBackendApiResponse<{ data: Record<string, unknown> }, CrawlJobClientResponse>(
       request,
       {
         endpoint: '/api/crawl-jobs/start',
         method: 'POST',
-        body: { id },
+        body: { id: numericId },
         transform: response => ({ data: normalizeCrawlJob(response.data) }),
         fallbackError: 'Failed to start job',
       },
@@ -73,7 +83,7 @@ export async function POST(
       {
         endpoint: '/api/crawl-jobs',
         method: 'DELETE',
-        body: { id },
+        body: { id: numericId },
         fallbackError: 'Failed to cancel job',
       },
     );

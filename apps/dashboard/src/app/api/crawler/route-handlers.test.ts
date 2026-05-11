@@ -264,7 +264,7 @@ describe('crawler route handlers', () => {
       'http://api.example.com/api/crawl-jobs/start',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ id: '12' }),
+        body: JSON.stringify({ id: 12 }),
       }),
     );
     expect(response.status).toBe(200);
@@ -275,5 +275,54 @@ describe('crawler route handlers', () => {
         started_at: '2026-03-06T01:00:00.000Z',
       }),
     });
+  });
+
+  it('cancels crawl jobs through the API action endpoint with a numeric id', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({ success: true }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { POST } = await import('./crawl-jobs/[...slug]/route');
+    const response = await POST(new NextRequest('http://localhost/api/crawler/crawl-jobs/12/cancel', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer test-token' },
+    }), {
+      params: Promise.resolve({ slug: ['12', 'cancel'] }),
+    });
+    const payload = await response.json();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api.example.com/api/crawl-jobs',
+      expect.objectContaining({
+        method: 'DELETE',
+        body: JSON.stringify({ id: 12 }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({
+      data: expect.objectContaining({
+        id: '12',
+        status: 'cancelled',
+      }),
+    });
+  });
+
+  it('rejects invalid crawl job action ids before reaching the backend', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { POST } = await import('./crawl-jobs/[...slug]/route');
+    const response = await POST(new NextRequest('http://localhost/api/crawler/crawl-jobs/not-a-number/start', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer test-token' },
+    }), {
+      params: Promise.resolve({ slug: ['not-a-number', 'start'] }),
+    });
+    const payload = await response.json();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid job id' });
   });
 });
