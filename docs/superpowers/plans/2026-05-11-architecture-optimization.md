@@ -43,6 +43,7 @@ Do not rewrite Go or Swift code in this pass. iOS compatibility is protected by 
 ### Task 1: Add Shared Guide Response DTO
 
 **Files:**
+
 - Create: `packages/types/src/travel-guide.ts`
 - Modify: `packages/types/src/index.ts`
 
@@ -155,6 +156,7 @@ git commit -m "feat(types): add travel guide response dto"
 ### Task 2: Move Guide List Semantics Into API
 
 **Files:**
+
 - Modify: `packages/api/src/routes/guides.test.ts`
 - Modify: `packages/api/src/routes/guides.ts`
 
@@ -365,6 +367,7 @@ git commit -m "refactor(api): standardize guide response contract"
 ### Task 3: Add Backend Error Type And Proxy Helper
 
 **Files:**
+
 - Modify: `apps/dashboard/src/lib/api/backend.ts`
 - Create: `apps/dashboard/src/lib/api/backend.test.ts`
 - Create: `apps/dashboard/src/lib/api/proxy.ts`
@@ -693,6 +696,7 @@ git commit -m "refactor(dashboard): add backend proxy helper"
 ### Task 4: Migrate Dashboard Crawler Route Handlers
 
 **Files:**
+
 - Modify: `apps/dashboard/src/app/api/crawler/route-handlers.test.ts`
 - Modify: `apps/dashboard/src/app/api/crawler/guides/route.ts`
 - Modify: `apps/dashboard/src/app/api/crawler/guides/[id]/route.ts`
@@ -995,6 +999,7 @@ git commit -m "refactor(dashboard): consolidate crawler proxy routes"
 ### Task 5: Align Dashboard Guide Types With Shared DTO
 
 **Files:**
+
 - Modify: `apps/dashboard/package.json`
 - Modify: `apps/dashboard/src/lib/api/crawler.ts`
 - Modify: `apps/dashboard/src/types/api.ts`
@@ -1079,6 +1084,7 @@ git commit -m "refactor(dashboard): use shared guide dto"
 ### Task 6: Clean Low-Risk Workspace Dependency Ownership
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `pnpm-lock.yaml`
 
@@ -1137,6 +1143,7 @@ git commit -m "chore: clarify root script dependencies"
 ### Task 7: Integrated Verification
 
 **Files:**
+
 - No source files unless a verification failure identifies a real regression from Tasks 1-6.
 
 - [ ] **Step 1: Run focused Dashboard tests**
