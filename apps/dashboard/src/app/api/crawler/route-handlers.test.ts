@@ -51,7 +51,10 @@ describe('crawler route handlers', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       'http://api.example.com/api/guides?platform=weibo&limit=1',
-      expect.objectContaining({ method: 'GET' }),
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+      }),
     );
     expect(response.status).toBe(200);
     expect(payload).toEqual({
@@ -92,7 +95,9 @@ describe('crawler route handlers', () => {
 
     const { GET } = await import('./guides/[id]/route');
 
-    const response = await GET(new NextRequest('http://localhost/api/crawler/guides/42'), {
+    const response = await GET(new NextRequest('http://localhost/api/crawler/guides/42', {
+      headers: { Authorization: 'Bearer test-token' },
+    }), {
       params: Promise.resolve({ id: '42' }),
     });
     const payload = await response.json();
@@ -159,6 +164,19 @@ describe('crawler route handlers', () => {
         offset: 0,
       },
     });
+  });
+
+  it('rejects protected crawler routes before reaching the backend when auth is missing', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { GET } = await import('./crawl-jobs/route');
+    const response = await GET(new NextRequest('http://localhost/api/crawler/crawl-jobs'));
+    const payload = await response.json();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+    expect(payload).toEqual({ error: 'Unauthorized' });
   });
 
   it('creates crawl jobs through the API with normalized request and response bodies', async () => {
@@ -236,6 +254,7 @@ describe('crawler route handlers', () => {
     const { POST } = await import('./crawl-jobs/[...slug]/route');
     const response = await POST(new NextRequest('http://localhost/api/crawler/crawl-jobs/12/start', {
       method: 'POST',
+      headers: { Authorization: 'Bearer test-token' },
     }), {
       params: Promise.resolve({ slug: ['12', 'start'] }),
     });

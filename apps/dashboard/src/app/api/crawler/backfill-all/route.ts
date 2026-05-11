@@ -1,31 +1,27 @@
-import { NextResponse } from 'next/server';
-import { fetchBackendApi } from '@/lib/api/backend';
+import type { NextRequest } from 'next/server';
+import { proxyBackendApiResponse } from '@/lib/api/proxy';
 
-export async function POST() {
-  try {
-    const response = await fetchBackendApi<{
-      data: {
-        analysis: {
-          totalFieldGaps: number;
-          totalDestinationGaps: number;
-        };
-        execution: {
-          executed: number;
-          totalProcessed: number;
-          totalFailed: number;
-        };
-      };
-    }>('/api/crawl-jobs/backfill-all', {
+interface BackfillAllResponse {
+  data: {
+    analysis: {
+      totalFieldGaps: number;
+      totalDestinationGaps: number;
+    };
+    execution: {
+      executed: number;
+      totalProcessed: number;
+      totalFailed: number;
+    };
+  };
+}
+
+export async function POST(request: NextRequest) {
+  return proxyBackendApiResponse<BackfillAllResponse>(
+    request,
+    {
+      endpoint: '/api/crawl-jobs/backfill-all',
       method: 'POST',
-    });
-
-    return NextResponse.json(response);
-  }
-  catch (error) {
-    console.error('Error executing full backfill:', error);
-    return NextResponse.json(
-      { error: 'Failed to execute full backfill' },
-      { status: 500 },
-    );
-  }
+      fallbackError: 'Failed to execute full backfill',
+    },
+  );
 }

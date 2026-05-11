@@ -1,25 +1,21 @@
-import { NextResponse } from 'next/server';
-import { fetchBackendApi } from '@/lib/api/backend';
+import type { NextRequest } from 'next/server';
+import { proxyBackendApiResponse } from '@/lib/api/proxy';
 
-export async function POST() {
-  try {
-    const response = await fetchBackendApi<{
-      data: {
-        executed: number;
-        totalProcessed: number;
-        totalFailed: number;
-      };
-    }>('/api/crawl-jobs/backfill-execute', {
+interface BackfillExecuteResponse {
+  data: {
+    executed: number;
+    totalProcessed: number;
+    totalFailed: number;
+  };
+}
+
+export async function POST(request: NextRequest) {
+  return proxyBackendApiResponse<BackfillExecuteResponse>(
+    request,
+    {
+      endpoint: '/api/crawl-jobs/backfill-execute',
       method: 'POST',
-    });
-
-    return NextResponse.json(response);
-  }
-  catch (error) {
-    console.error('Error executing backfill jobs:', error);
-    return NextResponse.json(
-      { error: 'Failed to execute backfill jobs' },
-      { status: 500 },
-    );
-  }
+      fallbackError: 'Failed to execute backfill jobs',
+    },
+  );
 }

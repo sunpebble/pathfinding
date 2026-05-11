@@ -1,29 +1,24 @@
-import { NextResponse } from 'next/server';
-import { fetchBackendApi } from '@/lib/api/backend';
+import type { NextRequest } from 'next/server';
+import { proxyBackendApiResponse } from '@/lib/api/proxy';
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const response = await fetchBackendApi<{
-      data: {
-        platform: string;
-        city: string;
-        totalFound: number;
-        newGuides: Array<{ url: string; title?: string }>;
-        existingCount: number;
-      };
-    }>('/api/crawl-jobs/discover-guides', {
+interface DiscoverGuidesResponse {
+  data: {
+    platform: string;
+    city: string;
+    totalFound: number;
+    newGuides: Array<{ url: string; title?: string }>;
+    existingCount: number;
+  };
+}
+
+export async function POST(request: NextRequest) {
+  return proxyBackendApiResponse<DiscoverGuidesResponse>(
+    request,
+    {
+      endpoint: '/api/crawl-jobs/discover-guides',
       method: 'POST',
-      body: JSON.stringify(body),
-    });
-
-    return NextResponse.json(response);
-  }
-  catch (error) {
-    console.error('Error discovering guides:', error);
-    return NextResponse.json(
-      { error: 'Failed to discover guides' },
-      { status: 500 },
-    );
-  }
+      body: async () => request.json(),
+      fallbackError: 'Failed to discover guides',
+    },
+  );
 }
