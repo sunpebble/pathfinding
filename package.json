@@ -67,7 +67,7 @@
   "__dependency_notes__": [
     "Root devDependencies include runtime libraries for repo-level TypeScript scripts under scripts/.",
     "- cheerio: scripts/crawl-mafengwo.ts parses remote HTML.",
-    "- playwright: scripts/crawl-mafengwo.ts performs a brief headless session for WAF cookie challenges."
+    "- playwright: scripts/crawl-mafengwo.ts runs the browser-based Mafengwo crawler required by path-bound WAF cookies."
   ],
   "devDependencies": {
     "@antfu/eslint-config": "^7.6.1",
