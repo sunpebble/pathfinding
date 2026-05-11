@@ -1,9 +1,10 @@
 import type { DayItinerary } from '@pathfinding/database/schema';
+import type { TravelGuideResponseDto } from '@pathfinding/types';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import { getDb, travelGuides } from '@pathfinding/database';
-import { and, desc, eq, gte, like, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, like, sql } from 'drizzle-orm';
 /**
  * Guides routes — list, get by ID, search, destinations, stats.
  * Mirrors the Convex /api/guides/* HTTP endpoints.
@@ -48,38 +49,131 @@ function stringArrayFromRecord(record: Record<string, unknown>, keys: string[]):
   return null;
 }
 
+function dateString(value: Date | string | null | undefined): string | null {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value === 'string' && value.length > 0) {
+    return value;
+  }
+  return null;
+}
+
+function numberFromGuide(guide: Guide, key: keyof Guide, fallback = 0): number {
+  const value = guide[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string' && item.length > 0)
+    : [];
+}
+
+function parseGuideOrder(value: string | undefined): 'asc' | 'desc' {
+  return value === 'asc' ? 'asc' : 'desc';
+}
+
+function destinationsFromGuide(value: Guide['destinations']): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((destination) => {
+      if (typeof destination === 'string') {
+        return destination;
+      }
+      if (destination && typeof destination === 'object' && typeof destination.name === 'string') {
+        return destination.name;
+      }
+      return null;
+    })
+    .filter((destination): destination is string => Boolean(destination));
+}
+
+function arrayFromRecord(record: Record<string, unknown>, keys: string[]): unknown[] | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function geocodingMetricsFromRecord(record: Record<string, unknown>): TravelGuideResponseDto['geocoding_metrics'] {
+  const value = record.geocodingMetrics ?? record.geocoding_metrics;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+
+  const metrics = value as Record<string, unknown>;
+  const totalPois = metrics.total_pois;
+  const averageConfidence = metrics.average_confidence;
+  const lowConfidenceCount = metrics.low_confidence_count;
+
+  if (
+    typeof totalPois === 'number'
+    && typeof averageConfidence === 'number'
+    && typeof lowConfidenceCount === 'number'
+  ) {
+    return {
+      total_pois: totalPois,
+      average_confidence: averageConfidence,
+      low_confidence_count: lowConfidenceCount,
+    };
+  }
+
+  return null;
+}
+
 /**
  * Convert a DB guide row to the iOS-compatible response format.
  * The iOS BlogPost model expects specific field names that differ from the DB schema.
  */
-function toClientGuide(guide: Guide): Record<string, unknown> {
+function toClientGuide(guide: Guide): TravelGuideResponseDto {
   const enrichedData = recordFromJson(guide.enrichedData);
+  const id = String(guide.id);
+  const aiDays = arrayFromRecord(enrichedData, ['aiDays', 'ai_days'])
+    ?? (Array.isArray(guide.dayItineraries) ? guide.dayItineraries : null);
 
   return {
-    id: String(guide.id),
+    id,
+    _id: id,
     title: guide.title,
+    summary: stringFromRecord(enrichedData, ['summary', 'aiSummary', 'ai_summary']),
+    source_platform: guide.platform,
+    source_external_id: guide.externalId ?? null,
+    source_url: guide.sourceUrl ?? null,
     author_name: guide.authorName,
-    content: guide.content,
+    author_id: stringFromRecord(enrichedData, ['authorId', 'author_id']),
+    content: guide.content ?? '',
     content_html: stringFromRecord(enrichedData, ['contentHtml', 'content_html']),
     content_markdown: stringFromRecord(enrichedData, ['contentMarkdown', 'content_markdown']),
-    summary: stringFromRecord(enrichedData, ['summary', 'aiSummary', 'ai_summary']),
     cover_image_url: guide.coverImageUrl,
-    image_urls: guide.imageUrls,
-    source_platform: guide.platform,
-    quality_score: guide.qualityScore,
-    views_count: guide.viewCount,
-    likes_count: guide.likeCount,
+    image_urls: stringArray(guide.imageUrls),
+    quality_score: numberFromGuide(guide, 'qualityScore'),
+    views_count: numberFromGuide(guide, 'viewCount'),
+    likes_count: numberFromGuide(guide, 'likeCount'),
     saves_count: 0,
-    created_at: guide.createdAt?.toISOString() ?? null,
-    destinations: guide.destinations,
-    // AI fields from enrichedData
+    comments_count: numberFromGuide(guide, 'commentCount'),
+    destinations: destinationsFromGuide(guide.destinations),
+    tags: stringArray(guide.tags),
+    published_at: dateString(guide.publishedAt),
+    crawled_at: dateString(guide.crawledAt),
+    created_at: dateString(guide.createdAt),
+    updated_at: dateString(guide.updatedAt),
     ai_summary: stringFromRecord(enrichedData, ['aiSummary', 'summary', 'ai_summary']),
     ai_tips: stringArrayFromRecord(enrichedData, ['aiTips', 'tips', 'ai_tips']),
     ai_best_time: stringFromRecord(enrichedData, ['aiBestTime', 'bestTime', 'ai_best_time']),
     ai_duration: stringFromRecord(enrichedData, ['aiDuration', 'duration', 'ai_duration']),
     ai_budget: stringFromRecord(enrichedData, ['aiBudget', 'budget', 'ai_budget']),
-    ai_days: (guide.dayItineraries as unknown[]) ?? null,
-    ai_processed_at: null,
+    ai_days: aiDays as TravelGuideResponseDto['ai_days'],
+    ai_processed_at: dateString(stringFromRecord(enrichedData, ['aiProcessedAt', 'processedAt', 'ai_processed_at'])),
+    ai_version: stringFromRecord(enrichedData, ['aiVersion', 'version', 'ai_version']),
+    ai_model: stringFromRecord(enrichedData, ['aiModel', 'model', 'ai_model']),
+    geocoding_metrics: geocodingMetricsFromRecord(enrichedData),
   };
 }
 
@@ -95,6 +189,12 @@ app.get('/', async (c) => {
     c.req.query('limit'),
     c.req.query('offset'),
   );
+  const sort = c.req.query('sort');
+  const order = parseGuideOrder(c.req.query('order'));
+  const guideOrderBy
+    = sort === 'quality_score'
+      ? order === 'asc' ? asc(travelGuides.qualityScore) : desc(travelGuides.qualityScore)
+      : desc(travelGuides.createdAt);
 
   const db = getDb();
 
@@ -113,7 +213,7 @@ app.get('/', async (c) => {
       .select()
       .from(travelGuides)
       .where(where)
-      .orderBy(desc(travelGuides.createdAt))
+      .orderBy(guideOrderBy)
       .limit(limit)
       .offset(offset),
     db
@@ -193,7 +293,7 @@ app.get('/destinations', async (c) => {
  * Fetch a guide by ID and return its client representation.
  * Returns `null` if not found.
  */
-async function findGuideById(id: number): Promise<Record<string, unknown> | null> {
+async function findGuideById(id: number): Promise<TravelGuideResponseDto | null> {
   const db = getDb();
   const result = await db
     .select()

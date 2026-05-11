@@ -92,6 +92,26 @@ const guideMock = {
   category: null,
 };
 
+const richGuideMock = {
+  ...guideMock,
+  sourceUrl: 'https://example.com/guide/1',
+  externalId: 'mfw-1',
+  commentCount: 7,
+  updatedAt: new Date('2026-05-10T00:00:00.000Z'),
+  tags: ['museum', 'family'],
+  imageUrls: ['https://img.example.com/cover.jpg'],
+  enrichedData: {
+    contentHtml: '<p>富文本内容</p>',
+    contentMarkdown: '## 富文本内容',
+    aiSummary: '结构化摘要',
+    aiTips: ['提前预约'],
+    aiBestTime: '春秋',
+    aiDuration: '2 days',
+    aiBudget: '1000 CNY',
+    aiDays: [{ day_number: 1, pois: [] }],
+  },
+};
+
 describe('guides routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-jwt-secret';
@@ -125,6 +145,41 @@ describe('guides routes', () => {
 
       const response = await createApp().request('/api/guides?platform=xiaohongshu&min_quality=0.8');
       expect(response.status).toBe(200);
+    });
+
+    it('returns the shared guide response contract for list results', async () => {
+      const chain = createPaginatedSelectChain([richGuideMock]);
+      const countChain = createWhereSelectChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      const response = await createApp().request('/api/guides?limit=5&offset=10&sort=quality_score&order=asc');
+      expect(response.status).toBe(200);
+
+      const body = await response.json();
+      expect(chain.limit).toHaveBeenCalledWith(5);
+      expect(chain.offset).toHaveBeenCalledWith(10);
+      expect(body.pagination).toEqual({ limit: 5, offset: 10, total: 1 });
+      expect(body.data[0]).toEqual(expect.objectContaining({
+        id: '1',
+        _id: '1',
+        title: 'Paris Guide',
+        source_platform: 'xiaohongshu',
+        source_url: 'https://example.com/guide/1',
+        content_html: '<p>富文本内容</p>',
+        content_markdown: '## 富文本内容',
+        comments_count: 7,
+        tags: ['museum', 'family'],
+        image_urls: ['https://img.example.com/cover.jpg'],
+        updated_at: '2026-05-10T00:00:00.000Z',
+        ai_summary: '结构化摘要',
+        ai_tips: ['提前预约'],
+        ai_best_time: '春秋',
+        ai_duration: '2 days',
+        ai_budget: '1000 CNY',
+        ai_days: [{ day_number: 1, pois: [] }],
+      }));
     });
   });
 
