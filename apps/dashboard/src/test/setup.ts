@@ -27,6 +27,7 @@ export const mockRouter = {
 };
 
 export const mockPathname = vi.fn(() => '/');
+export const mockParams = vi.fn(() => ({}));
 
 export function createMockAuthUser(overrides: Partial<User> = {}): User {
   return {
@@ -79,6 +80,7 @@ export function createMockAuthApi() {
 }
 
 vi.mock('next/navigation', () => ({
+  useParams: mockParams,
   usePathname: mockPathname,
   useRouter: vi.fn(() => mockRouter),
 }));

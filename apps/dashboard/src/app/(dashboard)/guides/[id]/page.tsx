@@ -71,6 +71,28 @@ function formatDate(dateString?: string) {
   }
 }
 
+type EditableAiPoi = AiPoi & {
+  name: string;
+  latitude: number;
+  longitude: number;
+};
+
+function getAiDayNumber(day: AiDay, index: number) {
+  return day.day_number ?? day.dayNumber ?? index + 1;
+}
+
+function getAiDayPois(day: AiDay): AiPoi[] {
+  return Array.isArray(day.pois) ? (day.pois as AiPoi[]) : [];
+}
+
+function isEditableAiPoi(poi: AiPoi): poi is EditableAiPoi {
+  return (
+    typeof poi.name === 'string'
+    && typeof poi.latitude === 'number'
+    && typeof poi.longitude === 'number'
+  );
+}
+
 export default function GuideDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -78,7 +100,7 @@ export default function GuideDetailPage() {
   const [editingPoi, setEditingPoi] = useState<{
     dayNumber: number;
     poiIndex: number;
-    poi: AiPoi;
+    poi: EditableAiPoi;
   } | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -89,6 +111,7 @@ export default function GuideDetailPage() {
 
   const guide = data?.data as unknown as GuideWithAI | undefined;
   const aiTips = guide?.aiTips ?? guide?.ai_tips;
+  const aiDays = guide?.ai_days ?? guide?.aiDays ?? [];
 
   const aiTipsWithKeys = React.useMemo(() => {
     if (!aiTips)
@@ -412,7 +435,7 @@ export default function GuideDetailPage() {
       )}
 
       {/* AI-Extracted Itinerary */}
-      {guide.ai_days && guide.ai_days.length > 0 && (
+      {aiDays.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -441,104 +464,112 @@ export default function GuideDetailPage() {
           </div>
 
           <div className="space-y-6">
-            {(guide.ai_days || guide.aiDays || []).map((day: AiDay) => (
-              <div
-                key={day.dayNumber}
-                className="border border-gray-200 rounded-lg p-4"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-lg text-sm">
-                    第
-                    {' '}
-                    {day.dayNumber}
-                    {' '}
-                    天
+            {aiDays.map((day: AiDay, dayIndex: number) => {
+              const dayNumber = getAiDayNumber(day, dayIndex);
+              const pois = getAiDayPois(day);
+
+              return (
+                <div
+                  key={dayNumber}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-lg text-sm">
+                      第
+                      {' '}
+                      {dayNumber}
+                      {' '}
+                      天
+                    </div>
+                    {day.theme && (
+                      <span className="text-sm text-gray-600">{day.theme}</span>
+                    )}
                   </div>
-                  {day.theme && (
-                    <span className="text-sm text-gray-600">{day.theme}</span>
-                  )}
-                </div>
 
-                <div className="space-y-2">
-                  {day.pois.map((poi: AiPoi, poiIndex: number) => {
-                    const isLowConfidence
-                      = poi.geocodeConfidence !== undefined
-                        && poi.geocodeConfidence < 0.5;
-                    const latitudeText
-                      = typeof poi.latitude === 'number'
-                        ? poi.latitude.toFixed(6)
-                        : 'N/A';
-                    const longitudeText
-                      = typeof poi.longitude === 'number'
-                        ? poi.longitude.toFixed(6)
-                        : 'N/A';
+                  <div className="space-y-2">
+                    {pois.map((poi: AiPoi, poiIndex: number) => {
+                      const isLowConfidence
+                        = poi.geocodeConfidence !== undefined
+                          && poi.geocodeConfidence < 0.5;
+                      const editablePoi = isEditableAiPoi(poi) ? poi : null;
+                      const latitudeText
+                        = typeof poi.latitude === 'number'
+                          ? poi.latitude.toFixed(6)
+                          : 'N/A';
+                      const longitudeText
+                        = typeof poi.longitude === 'number'
+                          ? poi.longitude.toFixed(6)
+                          : 'N/A';
 
-                    return (
-                      <div
+                      return (
+                        <div
                         // eslint-disable-next-line react/no-array-index-key
-                        key={`poi-${day.dayNumber}-${poiIndex}`}
-                        className={cn(
-                          'flex items-start gap-3 p-3 rounded-lg border transition-colors',
-                          isLowConfidence && !poi.isManuallyVerified
-                            ? 'border-amber-200 bg-amber-50'
-                            : 'border-gray-200 bg-gray-50',
-                        )}
-                      >
-                        <div className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                          {poiIndex + 1}
-                        </div>
+                          key={`poi-${dayNumber}-${poiIndex}`}
+                          className={cn(
+                            'flex items-start gap-3 p-3 rounded-lg border transition-colors',
+                            isLowConfidence && !poi.isManuallyVerified
+                              ? 'border-amber-200 bg-amber-50'
+                              : 'border-gray-200 bg-gray-50',
+                          )}
+                        >
+                          <div className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                            {poiIndex + 1}
+                          </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900">
-                                {poi.name}
-                              </h4>
-                              <p className="text-xs text-gray-500 uppercase mt-0.5">
-                                {poi.type}
-                              </p>
-                              {poi.description && (
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {poi.description}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900">
+                                  {poi.name ?? '未命名地点'}
+                                </h4>
+                                <p className="text-xs text-gray-500 uppercase mt-0.5">
+                                  {poi.type ?? 'poi'}
                                 </p>
-                              )}
-                              {poi.address && (
-                                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  {poi.address}
+                                {poi.description && (
+                                  <p className="text-sm text-gray-600 mt-1">
+                                    {poi.description}
+                                  </p>
+                                )}
+                                {poi.address && (
+                                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {poi.address}
+                                  </p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-1 font-mono">
+                                  {latitudeText}
+                                  ,
+                                  {' '}
+                                  {longitudeText}
                                 </p>
-                              )}
-                              <p className="text-xs text-gray-400 mt-1 font-mono">
-                                {latitudeText}
-                                ,
-                                {' '}
-                                {longitudeText}
-                              </p>
-                            </div>
+                              </div>
 
-                            <div className="flex flex-col items-end gap-2">
-                              {poi.geocodeConfidence !== undefined && (
-                                <GeocodingConfidenceBadge
-                                  confidence={poi.geocodeConfidence}
-                                  source={poi.geocodeSource}
-                                  isManuallyVerified={poi.isManuallyVerified}
-                                  onClick={() =>
-                                    setEditingPoi({
-                                      dayNumber: day.dayNumber,
-                                      poiIndex,
-                                      poi,
-                                    })}
-                                />
-                              )}
+                              <div className="flex flex-col items-end gap-2">
+                                {poi.geocodeConfidence !== undefined && (
+                                  <GeocodingConfidenceBadge
+                                    confidence={poi.geocodeConfidence}
+                                    source={poi.geocodeSource}
+                                    isManuallyVerified={poi.isManuallyVerified}
+                                    onClick={editablePoi
+                                      ? () =>
+                                          setEditingPoi({
+                                            dayNumber,
+                                            poiIndex,
+                                            poi: editablePoi,
+                                          })
+                                      : undefined}
+                                  />
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -568,7 +599,7 @@ export default function GuideDetailPage() {
           <div>
             <dt className="text-gray-500">游记 ID</dt>
             <dd className="font-mono text-gray-900">
-              {(guide.id || guide._id).slice(0, 8)}
+              {(guide.id || guide._id || 'unknown').slice(0, 8)}
               ...
             </dd>
           </div>

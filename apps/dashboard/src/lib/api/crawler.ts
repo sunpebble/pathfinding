@@ -458,7 +458,6 @@ export async function getTrainingDataset(id: string): Promise<TrainingDataset> {
 export interface TravelGuide extends TravelGuideResponseDto {
   _id?: string;
   source_external_id?: string | null;
-  source_url?: string;
   author_id?: string | null;
   published_at?: string | null;
   crawled_at?: string | null;

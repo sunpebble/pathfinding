@@ -159,32 +159,31 @@ export interface UpdateCollaboratorInput {
 
 /** Travel guide from REST API with Dashboard camelCase AI aliases. */
 export interface GuideWithAI extends TravelGuideResponseDto {
-  _id: string;
-  aiSummary?: string;
-  aiTips?: string[];
-  aiBestTime?: string;
-  aiDuration?: string;
-  aiBudget?: string;
-  aiDays?: AiDay[];
-  aiProcessedAt?: number;
+  _id?: string;
+  aiSummary?: string | null;
+  aiTips?: string[] | null;
+  aiBestTime?: string | null;
+  aiDuration?: string | null;
+  aiBudget?: string | null;
+  aiDays?: AiDay[] | null;
+  aiProcessedAt?: number | null;
   ai_days?: AiDay[] | null;
 }
 
 /** A single day in an AI-generated itinerary. */
 export interface AiDay extends TravelGuideAiDayDto {
-  dayNumber: number;
+  dayNumber?: number;
   theme?: string;
-  pois: AiPoi[];
 }
 
 /** A point of interest within an AI-generated day plan. */
 export interface AiPoi {
   [key: string]: unknown;
-  name: string;
-  type: 'attraction' | 'restaurant' | 'hotel' | 'transportation';
+  name?: string;
+  type?: string;
   description?: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   address?: string;
   geocodeConfidence?: number;
   geocodeSource?: string;

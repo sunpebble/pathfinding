@@ -54,6 +54,8 @@ function QualityScore({ score }: { score: number }) {
 }
 
 function GuideCard({ guide }: { guide: TravelGuide }) {
+  const sourceUrl = guide.source_url ?? undefined;
+
   return (
     <DashboardCard className="cursor-pointer p-4 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-[var(--dashboard-shadow)]">
       <div className="flex gap-4">
@@ -120,13 +122,13 @@ function GuideCard({ guide }: { guide: TravelGuide }) {
               <MessageCircle className="h-3.5 w-3.5" />
               {guide.comments_count.toLocaleString()}
             </span>
-            {guide.source_url && (
+            {sourceUrl && (
               <span
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   window.open(
-                    guide.source_url,
+                    sourceUrl,
                     '_blank',
                     'noopener,noreferrer',
                   );
