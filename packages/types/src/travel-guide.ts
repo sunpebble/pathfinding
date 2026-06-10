@@ -51,7 +51,8 @@ export interface TravelGuideResponseDto extends TravelGuideContentDto {
   quality_score: number;
   views_count: number;
   likes_count: number;
-  saves_count: number;
+  /** null when the platform provides no real saves data (D13) — never a fake 0. */
+  saves_count: number | null;
   comments_count: number;
   destinations: string[];
   tags: string[];

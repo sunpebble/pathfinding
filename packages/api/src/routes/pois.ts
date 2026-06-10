@@ -1,20 +1,44 @@
-import { getDb, pois } from '@pathfinding/database';
-import { and, eq, like, sql } from 'drizzle-orm';
+import { zValidator } from '@hono/zod-validator';
+import { cities, getDb, pois } from '@pathfinding/database';
+import { and, eq, gte, inArray, like, or, sql } from 'drizzle-orm';
 /**
  * POI routes — list, get by ID, search, nearby.
  */
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { escapeLikePattern, parsePagination, parsePositiveInt } from '../lib/params.js';
 import { jsonData, jsonList } from '../lib/response.js';
 
 const app = new Hono();
 
+/** D13 list parameters — q/cityId/city/category/min_quality validated via Zod. */
+const listPoisQuerySchema = z.object({
+  q: z.string().trim().min(1).optional(),
+  cityId: z.coerce.number().int().positive().optional(),
+  city: z.string().trim().min(1).optional(),
+  category: z.string().trim().min(1).optional(),
+  min_quality: z.coerce.number().min(0).max(5).optional(),
+});
+
+/**
+ * Resolve a city name (Chinese or English) to city IDs. An unknown name
+ * yields an empty list — callers must return an empty result instead of
+ * silently dropping the filter.
+ */
+async function findCityIdsByName(cityName: string): Promise<number[]> {
+  const db = getDb();
+  const rows = await db
+    .select({ id: cities.id })
+    .from(cities)
+    .where(or(eq(cities.name, cityName), eq(cities.nameEn, cityName)));
+
+  return rows.map(row => row.id);
+}
+
 // ── GET / — Search/list POIs ───────────────────────────
-app.get('/', async (c) => {
-  const q = c.req.query('q');
-  const cityId = c.req.query('cityId');
-  const category = c.req.query('category');
+app.get('/', zValidator('query', listPoisQuerySchema), async (c) => {
+  const { q, cityId, city, category, min_quality: minQuality } = c.req.valid('query');
   const { limit, offset } = parsePagination(
     c.req.query('limit'),
     c.req.query('offset'),
@@ -26,14 +50,21 @@ app.get('/', async (c) => {
   if (q) {
     conditions.push(like(pois.name, `%${escapeLikePattern(q)}%`));
   }
-  if (cityId) {
-    const parsedCityId = parsePositiveInt(cityId);
-    if (!parsedCityId)
-      return c.json({ error: 'Invalid cityId' }, 400);
-    conditions.push(eq(pois.cityId, parsedCityId));
+  if (cityId !== undefined) {
+    conditions.push(eq(pois.cityId, cityId));
+  }
+  if (city) {
+    const cityIds = await findCityIdsByName(city);
+    if (cityIds.length === 0) {
+      return jsonList(c, [], { limit, offset }, 0);
+    }
+    conditions.push(inArray(pois.cityId, cityIds));
   }
   if (category) {
     conditions.push(eq(pois.category, category));
+  }
+  if (minQuality !== undefined && minQuality > 0) {
+    conditions.push(gte(pois.rating, minQuality));
   }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;

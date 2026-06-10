@@ -85,6 +85,82 @@ describe('poi routes', () => {
       const response = await createApp().request('/api/pois?cityId=abc');
       expect(response.status).toBe(400);
     });
+
+    it('forwards offset to the query (D13 pagination)', async () => {
+      // Arrange
+      const chain = createPaginatedSelectChain([]);
+      const countChain = createCountSelectChain(0);
+      mockDb.select.mockReturnValueOnce(chain).mockReturnValueOnce(countChain);
+
+      // Act
+      const response = await createApp().request('/api/pois?limit=10&offset=30');
+
+      // Assert
+      expect(response.status).toBe(200);
+      expect(chain.limit).toHaveBeenCalledWith(10);
+      expect(chain.offset).toHaveBeenCalledWith(30);
+      const body = await response.json();
+      expect(body.pagination).toEqual({ limit: 10, offset: 30, total: 0 });
+    });
+
+    it('filters by city name through the cities table (D13)', async () => {
+      // Arrange: city name resolves to IDs, then list + count run filtered.
+      const cityWhere = vi.fn().mockResolvedValue([{ id: 7 }]);
+      const cityChain = { from: vi.fn().mockReturnValue({ where: cityWhere }) };
+      const chain = createPaginatedSelectChain([
+        { id: 1, name: '外滩', cityId: 7, category: 'attraction' },
+      ]);
+      const countChain = createCountSelectChain(1);
+      mockDb.select
+        .mockReturnValueOnce(cityChain)
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      // Act
+      const response = await createApp().request(`/api/pois?city=${encodeURIComponent('上海')}`);
+
+      // Assert
+      expect(response.status).toBe(200);
+      expect(cityWhere).toHaveBeenCalledWith(expect.anything());
+      const body = await response.json();
+      expect(body.data).toHaveLength(1);
+    });
+
+    it('returns an empty list for an unknown city instead of dropping the filter', async () => {
+      // Arrange
+      const cityWhere = vi.fn().mockResolvedValue([]);
+      const cityChain = { from: vi.fn().mockReturnValue({ where: cityWhere }) };
+      mockDb.select.mockReturnValueOnce(cityChain);
+
+      // Act
+      const response = await createApp().request('/api/pois?city=Atlantis');
+
+      // Assert
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data).toEqual([]);
+      expect(body.pagination.total).toBe(0);
+      expect(mockDb.select).toHaveBeenCalledTimes(1);
+    });
+
+    it('filters by min_quality (D13)', async () => {
+      // Arrange
+      const chain = createPaginatedSelectChain([]);
+      const countChain = createCountSelectChain(0);
+      mockDb.select.mockReturnValueOnce(chain).mockReturnValueOnce(countChain);
+
+      // Act
+      const response = await createApp().request('/api/pois?min_quality=4');
+
+      // Assert
+      expect(response.status).toBe(200);
+      expect(chain.where).toHaveBeenCalledWith(expect.anything());
+    });
+
+    it('rejects an out-of-range min_quality', async () => {
+      const response = await createApp().request('/api/pois?min_quality=9');
+      expect(response.status).toBe(400);
+    });
   });
 
   describe('gET /api/pois/nearby', () => {

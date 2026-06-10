@@ -1,7 +1,12 @@
 /**
  * 批量 AI 游记处理脚本
  *
- * 使用自定义 AI API 处理未处理的游记
+ * 使用自定义 AI API 处理未处理的游记。
+ *
+ * D8: 筛选条件为字段级（enrichedData.aiDays 缺失才处理，DB 级 JSON_EXTRACT 过滤），
+ *     写回为读-合并-写（保留既有 key，AI 产物 key 以最新值替换）。
+ * D14: prompt 不再要求 LLM 输出经纬度；AI 提取 POI 名称后由 geocoding 服务
+ *     （高德，GCJ-02→WGS-84）解析坐标并校验范围/城市一致性。
  *
  * 使用方法:
  *   npx tsx scripts/batch-ai-process.ts --limit 10
@@ -12,10 +17,17 @@
  *   AI_BASE_URL - AI API 基础 URL (默认: https://o.kunish.org)
  *   AI_API_KEY - AI API 密钥
  *   AI_MODEL - 使用的模型 (默认: gemini-3-pro-high)
+ *   AMAP_API_KEY - 高德地理编码 key（未配置时坐标标记为 pending，绝不写 0,0）
  */
 
-import { createDb, travelGuideAiData, travelGuides } from '@pathfinding/database';
-import { eq, isNull } from 'drizzle-orm';
+import type { GeocodingProvider } from '../packages/api/src/services/geocoding.service.js';
+import { asc, eq, sql } from 'drizzle-orm';
+import {
+  buildGeocodingMetrics,
+  createGeocodingProvider,
+  geocodeAiDays,
+} from '../packages/api/src/services/geocoding.service.js';
+import { createDb, travelGuideAiData, travelGuides } from '../packages/database/src/index';
 
 // ============================================
 // 配置
@@ -39,14 +51,16 @@ interface Guide {
   content: string | null;
   destinations: unknown;
   platform: string;
+  enrichedData: Record<string, unknown> | null;
 }
 
 interface POI {
   name: string;
   type: string;
   description?: string;
-  latitude: number;
-  longitude: number;
+  /** D14: 由 geocoding 服务写入（WGS-84），LLM 不再输出。 */
+  latitude?: number;
+  longitude?: number;
   address?: string;
   duration?: string;
   priceInfo?: string;
@@ -62,6 +76,7 @@ interface POI {
   };
   geocodeConfidence?: number;
   geocodeSource?: string;
+  geocodeError?: string;
 }
 
 interface DayPlan {
@@ -144,8 +159,6 @@ const SYSTEM_PROMPT = `你是一个旅游行程分析专家。根据用户提供
           "name": "景点名称",
           "type": "景点类型（attraction/restaurant/hotel/shopping/entertainment/transport）",
           "description": "简短描述",
-          "latitude": 0.0,
-          "longitude": 0.0,
           "address": "地址",
           "duration": "建议游玩时长",
           "priceInfo": "价格信息",
@@ -166,7 +179,7 @@ const SYSTEM_PROMPT = `你是一个旅游行程分析专家。根据用户提供
 7. 保持原文语气和风格，只做格式化，不改写内容
 
 注意：
-1. 如果无法确定某个景点的经纬度，请使用 0.0
+1. 不要输出任何经纬度坐标，坐标由专门的地理编码服务解析
 2. 所有字段都是可选的，如果游记中没有相关信息，可以省略
 3. 尽量从游记中提取真实信息，不要编造
 4. 返回纯 JSON，不要包含其他文本`;
@@ -288,9 +301,60 @@ ${content.slice(0, 15000)}
 // 主流程
 // ============================================
 
+/** 取游记第一个目的地名，作为地理编码的城市上下文。 */
+function firstDestinationName(destinations: unknown): string | undefined {
+  if (!Array.isArray(destinations)) {
+    return undefined;
+  }
+  for (const item of destinations) {
+    if (typeof item === 'string' && item.trim()) {
+      return item.trim();
+    }
+    if (item && typeof item === 'object' && typeof (item as { name?: unknown }).name === 'string') {
+      const name = (item as { name: string }).name.trim();
+      if (name) {
+        return name;
+      }
+    }
+  }
+  return undefined;
+}
+
+/** 仅保留有值的 key，避免 undefined 覆盖既有 enrichedData。 */
+function pickDefined(record: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(record).filter(([, value]) => value !== undefined),
+  );
+}
+
+/**
+ * aiDays（dayNumber/latitude/longitude）→ schema 约定的 dayItineraries
+ * （day/lat/lng）。只收录坐标已解析的 POI——绝不写 0,0 占位。
+ */
+function toDayItineraries(days: DayPlan[]) {
+  return days.map(day => ({
+    day: day.dayNumber,
+    ...(day.theme ? { title: day.theme } : {}),
+    pois: (day.pois ?? [])
+      .filter(poi =>
+        typeof poi.latitude === 'number'
+        && Number.isFinite(poi.latitude)
+        && typeof poi.longitude === 'number'
+        && Number.isFinite(poi.longitude),
+      )
+      .map(poi => ({
+        name: poi.name,
+        lat: poi.latitude!,
+        lng: poi.longitude!,
+        ...(poi.type ? { category: poi.type } : {}),
+      })),
+  }));
+}
+
 async function processGuide(
   db: ReturnType<typeof createDb>,
   guide: Guide,
+  geocodingProvider: GeocodingProvider,
 ): Promise<boolean> {
   log(`Processing guide: ${guide.id}`, {
     title: guide.title?.slice(0, 50),
@@ -305,6 +369,17 @@ async function processGuide(
       return false;
     }
 
+    // D14: AI 只提取 POI 名称，坐标由地理编码服务解析并校验。
+    let geocodedDays: DayPlan[] | undefined;
+    let geocodingMetrics: ReturnType<typeof buildGeocodingMetrics> = null;
+    if (aiResult.aiDays && aiResult.aiDays.length > 0) {
+      const city = firstDestinationName(guide.destinations);
+      const { days, stats } = await geocodeAiDays(aiResult.aiDays, city, geocodingProvider);
+      geocodedDays = days;
+      geocodingMetrics = buildGeocodingMetrics(days);
+      log(`Geocoded guide ${guide.id}`, { city: city ?? null, ...stats });
+    }
+
     // 保存 AI 处理结果到 travel_guide_ai_data 表
     await db.insert(travelGuideAiData).values({
       guideId: guide.id,
@@ -316,22 +391,25 @@ async function processGuide(
       processedAt: new Date(),
     });
 
-    // 更新 enrichedData 到 travelGuides 表
-    const enrichedData = {
+    // D8: 读-合并-写。aiDays 缺失时写空数组作为「已处理、无行程」标记，
+    // 否则该行会被字段级筛选反复选中、无限重复消耗 AI 配额。
+    const aiPatch = pickDefined({
       aiSummary: aiResult.aiSummary,
       aiTips: aiResult.aiTips,
       aiBestTime: aiResult.aiBestTime,
       aiDuration: aiResult.aiDuration,
       aiBudget: aiResult.aiBudget,
-      aiDays: aiResult.aiDays,
+      aiDays: geocodedDays ?? [],
       contentMarkdown: aiResult.contentMarkdown,
-    };
+      geocodingMetrics: geocodingMetrics ?? undefined,
+    });
+    const enrichedData = { ...(guide.enrichedData ?? {}), ...aiPatch };
 
     await db
       .update(travelGuides)
       .set({
         enrichedData,
-        dayItineraries: aiResult.aiDays ?? null,
+        dayItineraries: geocodedDays ? toDayItineraries(geocodedDays) : null,
         lastUpdatedAt: new Date(),
       })
       .where(eq(travelGuides.id, guide.id));
@@ -354,8 +432,9 @@ async function main() {
   let processAll = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--limit' && args[i + 1]) {
-      limit = Number.parseInt(args[i + 1], 10);
+    const next = args[i + 1];
+    if (args[i] === '--limit' && next) {
+      limit = Number.parseInt(next, 10);
       i++;
     }
     else if (args[i] === '--all') {
@@ -380,15 +459,21 @@ async function main() {
     limit: processAll ? 'all' : limit,
   });
 
+  const geocodingProvider = createGeocodingProvider();
+  if (!process.env.AMAP_API_KEY) {
+    log('Warning: AMAP_API_KEY 未配置，POI 坐标将标记为 pending（不会写入占位坐标）');
+  }
+
   // 创建数据库连接
   const db = createDb();
 
   let totalProcessed = 0;
   let totalFailed = 0;
-  let offset = 0;
 
   do {
-    // 获取未经 AI 处理的游记（enrichedData 为 null 的）
+    // D8: 字段级筛选 — 仅处理 enrichedData.aiDays 缺失的游记（DB 级过滤）。
+    // 处理成功的行会写入 aiDays（至少为空数组）从而离开结果集；失败的行
+    // 仍留在集合头部，用累计失败数作为 offset 跳过它们，避免死循环。
     const pendingGuides = await db
       .select({
         id: travelGuides.id,
@@ -396,11 +481,13 @@ async function main() {
         content: travelGuides.content,
         destinations: travelGuides.destinations,
         platform: travelGuides.platform,
+        enrichedData: travelGuides.enrichedData,
       })
       .from(travelGuides)
-      .where(isNull(travelGuides.enrichedData))
+      .where(sql`JSON_EXTRACT(${travelGuides.enrichedData}, '$.aiDays') IS NULL`)
+      .orderBy(asc(travelGuides.id))
       .limit(limit)
-      .offset(offset);
+      .offset(totalFailed);
 
     log(`Fetched ${pendingGuides.length} pending guides`);
 
@@ -410,7 +497,7 @@ async function main() {
     }
 
     for (const guide of pendingGuides) {
-      const success = await processGuide(db, guide);
+      const success = await processGuide(db, guide, geocodingProvider);
 
       if (success) {
         totalProcessed++;
@@ -427,8 +514,6 @@ async function main() {
         break;
       }
     }
-
-    offset += pendingGuides.length;
   } while (processAll);
 
   log('Batch processing complete', {

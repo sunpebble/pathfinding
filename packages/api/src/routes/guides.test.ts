@@ -236,6 +236,77 @@ describe('guides routes', () => {
       expect(body.data[0].ai_days[0]).not.toHaveProperty('dayNumber');
     });
 
+    it('returns saves_count as null instead of a fake 0 (D13)', async () => {
+      // Arrange
+      const chain = createPaginatedSelectChain([richGuideMock]);
+      const countChain = createWhereSelectChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      // Act
+      const response = await createApp().request('/api/guides');
+
+      // Assert
+      const body = await response.json();
+      expect(body.data[0].saves_count).toBeNull();
+    });
+
+    it('filters by q on guide titles', async () => {
+      // Arrange
+      const chain = createPaginatedSelectChain([guideMock]);
+      const countChain = createWhereSelectChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      // Act
+      const response = await createApp().request('/api/guides?q=Paris');
+
+      // Assert
+      expect(response.status).toBe(200);
+      expect(chain.where).toHaveBeenCalledWith(expect.anything());
+    });
+
+    it('filters by destinations via the guide_destinations auxiliary table', async () => {
+      // Arrange: first select resolves auxiliary-table guide IDs, then list+count.
+      const destWhere = vi.fn().mockResolvedValue([{ guideId: 1 }, { guideId: 1 }]);
+      const destChain = { from: vi.fn().mockReturnValue({ where: destWhere }) };
+      const chain = createPaginatedSelectChain([guideMock]);
+      const countChain = createWhereSelectChain([{ count: 1 }]);
+      mockDb.select
+        .mockReturnValueOnce(destChain)
+        .mockReturnValueOnce(chain)
+        .mockReturnValueOnce(countChain);
+
+      // Act
+      const response = await createApp().request('/api/guides?destinations=Paris,%20London');
+
+      // Assert
+      expect(response.status).toBe(200);
+      expect(destWhere).toHaveBeenCalledWith(expect.anything());
+      const body = await response.json();
+      expect(body.data).toHaveLength(1);
+    });
+
+    it('returns an empty list when no guide covers the requested destinations', async () => {
+      // Arrange: the auxiliary table has no match — must NOT silently drop the filter.
+      const destWhere = vi.fn().mockResolvedValue([]);
+      const destChain = { from: vi.fn().mockReturnValue({ where: destWhere }) };
+      mockDb.select.mockReturnValueOnce(destChain);
+
+      // Act
+      const response = await createApp().request('/api/guides?destinations=Atlantis');
+
+      // Assert
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data).toEqual([]);
+      expect(body.pagination.total).toBe(0);
+      // Only the auxiliary lookup ran; no unfiltered full-table query.
+      expect(mockDb.select).toHaveBeenCalledTimes(1);
+    });
+
     it('keeps ai_processed_at null for current iOS compatibility', async () => {
       const chain = createPaginatedSelectChain([{
         ...richGuideMock,
@@ -446,38 +517,166 @@ describe('guides routes', () => {
 
       expect(response.status).toBe(404);
     });
+
+    it('writes manual corrections into enrichedData.aiDays and re-derives dayItineraries (D13)', async () => {
+      // Arrange: a guide whose read path is served from enrichedData.aiDays.
+      const guideWithAiDays = {
+        ...guideMock,
+        enrichedData: {
+          aiSummary: '摘要',
+          aiDays: [
+            {
+              dayNumber: 1,
+              theme: '老城区',
+              pois: [
+                {
+                  name: '宽窄巷子',
+                  type: 'attraction',
+                  latitude: 30.1,
+                  longitude: 104.1,
+                  geocodeConfidence: 0.4,
+                  geocodeSource: 'amap',
+                },
+                { name: '未解析点' },
+              ],
+            },
+          ],
+        },
+        dayItineraries: [
+          { day: 1, title: '老城区', pois: [{ name: '宽窄巷子', lat: 30.1, lng: 104.1 }] },
+        ],
+      };
+      mockDb.select.mockReturnValueOnce(createSelectChain([guideWithAiDays]));
+      const updateChain = createUpdateChain();
+      mockDb.update.mockReturnValueOnce(updateChain);
+
+      // Act
+      const response = await requestWithAuth(createApp(), '/api/guides/1/poi-coordinates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dayNumber: 1,
+          poiIndex: 0,
+          latitude: 30.6624,
+          longitude: 104.0633,
+          verifiedBy: 'admin',
+        }),
+      });
+
+      // Assert
+      expect(response.status).toBe(200);
+      const updates = updateChain.set.mock.calls[0]![0] as {
+        enrichedData: Record<string, unknown>;
+        dayItineraries: Array<{ day: number; title?: string; pois: unknown[] }>;
+      };
+      const aiDays = updates.enrichedData.aiDays as Array<{ pois: Array<Record<string, unknown>> }>;
+      expect(aiDays[0]!.pois[0]).toMatchObject({
+        name: '宽窄巷子',
+        latitude: 30.6624,
+        longitude: 104.0633,
+        geocodeConfidence: 1,
+        geocodeSource: 'manual',
+        isManuallyVerified: true,
+        verifiedBy: 'admin',
+      });
+      // Other AI keys survive the merge.
+      expect(updates.enrichedData.aiSummary).toBe('摘要');
+      // dayItineraries is re-derived from aiDays — only resolved POIs, lat/lng shape.
+      expect(updates.dayItineraries).toEqual([
+        {
+          day: 1,
+          title: '老城区',
+          pois: [{ name: '宽窄巷子', lat: 30.6624, lng: 104.0633, category: 'attraction' }],
+        },
+      ]);
+    });
+
+    it('returns 404 when the aiDays poi index does not exist', async () => {
+      mockDb.select.mockReturnValueOnce(createSelectChain([{
+        ...guideMock,
+        enrichedData: { aiDays: [{ dayNumber: 1, pois: [] }] },
+      }]));
+
+      const response = await requestWithAuth(createApp(), '/api/guides/1/poi-coordinates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dayNumber: 1, poiIndex: 0, latitude: 1, longitude: 1 }),
+      });
+
+      expect(response.status).toBe(404);
+      expect(mockDb.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('gET /api/guides/gap-report', () => {
-    it('returns gap summary', async () => {
-      const guidesFrom = vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue([
-          { id: 1, title: 'Test', platform: 'xiaohongshu', content: '', imageUrls: null, destinations: null, dayItineraries: null, geoData: null, enrichedData: null, coverImageUrl: null },
-        ]),
-      });
-      const citiesFrom = vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue([
-          { id: 1, name: 'Chengdu', countryCode: 'CN' },
-        ]),
-      });
-      const destGroupBy = vi.fn().mockResolvedValue([]);
-      const destFrom = vi.fn().mockReturnValue({ groupBy: destGroupBy });
+    it('returns gap summary with the real total guide count', async () => {
+      // Arrange: the five db.select calls behind runFullAnalysis —
+      // ranked field gaps → field summary → covered subquery → gap list → gap count.
+      const rankedGapChain = {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([{
+                guideId: 1,
+                title: 'Test',
+                platform: 'xiaohongshu',
+                missingCount: 7,
+                content: 1,
+                imageUrls: 1,
+                destinations: 1,
+                dayItineraries: 1,
+                geoData: 1,
+                enrichedData: 1,
+                coverImageUrl: 1,
+              }]),
+            }),
+          }),
+        }),
+      };
+      const summaryChain = {
+        from: vi.fn().mockResolvedValue([{
+          totalGuides: 5,
+          guidesWithGaps: 1,
+          content: 1,
+          imageUrls: 1,
+          destinations: 1,
+          dayItineraries: 1,
+          geoData: 1,
+          enrichedData: 1,
+          coverImageUrl: 1,
+        }]),
+      };
+      const subqueryChain = {
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({}) }),
+      };
+      const gapListChain = {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([{ cityName: 'Chengdu', countryCode: 'CN' }]),
+            }),
+          }),
+        }),
+      };
+      const gapCountChain = {
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([{ total: 1 }]) }),
+      };
+      mockDb.select
+        .mockReturnValueOnce(rankedGapChain)
+        .mockReturnValueOnce(summaryChain)
+        .mockReturnValueOnce(subqueryChain)
+        .mockReturnValueOnce(gapListChain)
+        .mockReturnValueOnce(gapCountChain);
 
-      let callCount = 0;
-      mockDb.select.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1)
-          return { from: guidesFrom };
-        if (callCount === 2)
-          return { from: citiesFrom };
-        return { from: destFrom };
-      });
-
+      // Act
       const response = await createApp().request('/api/guides/gap-report');
+
+      // Assert
       expect(response.status).toBe(200);
       const body = await response.json();
-      expect(body.data.fieldGapCount).toBeDefined();
-      expect(body.data.destinationGapCount).toBeDefined();
+      expect(body.data.totalGuides).toBe(5);
+      expect(body.data.fieldGapCount).toBe(1);
+      expect(body.data.destinationGapCount).toBe(1);
     });
   });
 });

@@ -14,7 +14,7 @@ import { jsonData, jsonOk } from '../lib/response.js';
 import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 import { executeAllPendingBackfillJobs } from '../services/backfill-executor.service.js';
-import { generateBackfillJobs, runFullAnalysis } from '../services/backfill.service.js';
+import { computeIngestStats, generateBackfillJobs, runFullAnalysis } from '../services/backfill.service.js';
 import { batchImportGuides, discoverNewGuides } from '../services/guide-import.service.js';
 
 // ── Zod schemas ────────────────────────────────────────
@@ -58,6 +58,10 @@ const discoverGuidesSchema = z.object({
 const importGuidesSchema = z.object({
   platform: z.string().min(1),
   urls: z.array(z.string().url()).min(1),
+});
+
+const ingestStatsQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(90).default(7),
 });
 
 const app = new Hono<{ Variables: AuthVariables }>();
@@ -267,6 +271,15 @@ app.post('/backfill-all', adminRequired(), async (c) => {
     },
     execution,
   });
+});
+
+// ── GET /ingest-stats — Daily ingest counts + field fill rates (D16) ───
+app.get('/ingest-stats', adminRequired(), zValidator('query', ingestStatsQuerySchema), async (c) => {
+  const { days } = c.req.valid('query');
+
+  const stats = await computeIngestStats(days);
+
+  return jsonData(c, stats);
 });
 
 // ── POST /discover-guides — Discover new guides from a platform ───

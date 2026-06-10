@@ -214,6 +214,9 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.5.0
         version: 0.5.0(hono@4.12.9)(zod@3.25.76)
+      '@pathfinding/crawler-types':
+        specifier: workspace:*
+        version: link:../crawler-types
       '@pathfinding/database':
         specifier: workspace:*
         version: link:../database
@@ -223,6 +226,9 @@ importers:
       '@pathfinding/types':
         specifier: workspace:*
         version: link:../types
+      '@pathfinding/utils':
+        specifier: workspace:*
+        version: link:../utils
       drizzle-orm:
         specifier: ^0.44.0
         version: 0.44.7(@opentelemetry/api@1.9.0)(mysql2@3.18.2(@types/node@22.19.3))
@@ -14469,8 +14475,8 @@ snapshots:
       '@babel/parser': 7.29.0
       eslint: 10.0.2(jiti@2.6.1)
       hermes-parser: 0.25.1
-      zod: 4.3.6
-      zod-validation-error: 4.0.2(zod@4.3.6)
+      zod: 3.25.76
+      zod-validation-error: 4.0.2(zod@3.25.76)
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -18734,9 +18740,9 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  zod-validation-error@4.0.2(zod@4.3.6):
+  zod-validation-error@4.0.2(zod@3.25.76):
     dependencies:
-      zod: 4.3.6
+      zod: 3.25.76
     optional: true
 
   zod@3.25.76: {}

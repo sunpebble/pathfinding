@@ -3,8 +3,8 @@ import type { TravelGuideResponseDto } from '@pathfinding/types';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
-import { getDb, travelGuides } from '@pathfinding/database';
-import { and, asc, desc, eq, gte, like, lte, sql } from 'drizzle-orm';
+import { getDb, guideDestinations, travelGuides } from '@pathfinding/database';
+import { and, asc, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
 /**
  * Guides routes — list, get by ID, search, destinations, stats.
  * Mirrors the Convex /api/guides/* HTTP endpoints.
@@ -194,7 +194,8 @@ function toClientGuide(guide: Guide): TravelGuideResponseDto {
     quality_score: numberFromGuide(guide, 'qualityScore'),
     views_count: numberFromGuide(guide, 'viewCount'),
     likes_count: numberFromGuide(guide, 'likeCount'),
-    saves_count: 0,
+    // D13: no real saves data exists — null instead of a fake 0.
+    saves_count: null,
     comments_count: numberFromGuide(guide, 'commentCount'),
     destinations: destinationsFromGuide(guide.destinations),
     tags: stringArray(guide.tags),
@@ -215,9 +216,36 @@ function toClientGuide(guide: Guide): TravelGuideResponseDto {
   };
 }
 
+/**
+ * Resolve guide IDs covering any of the given destination names via the
+ * guide_destinations auxiliary table (D13, performance rule: fetch IDs from
+ * the lightweight table first, then batch-fetch the heavy rows).
+ */
+async function findGuideIdsByDestinations(names: string[]): Promise<number[]> {
+  const db = getDb();
+  const rows = await db
+    .select({ guideId: guideDestinations.guideId })
+    .from(guideDestinations)
+    .where(inArray(guideDestinations.destination, names));
+
+  return [...new Set(rows.map(row => row.guideId))];
+}
+
+function parseDestinationsParam(raw: string | undefined): string[] {
+  if (!raw) {
+    return [];
+  }
+  return raw
+    .split(',')
+    .map(name => name.trim())
+    .filter(name => name !== '');
+}
+
 // ── GET / — List guides with pagination ────────────────
 app.get('/', async (c) => {
   const platform = c.req.query('platform');
+  const q = c.req.query('q');
+  const destinationNames = parseDestinationsParam(c.req.query('destinations'));
   const parsedMinQuality = Number.parseFloat(c.req.query('min_quality') ?? '0');
   const minQuality
     = Number.isFinite(parsedMinQuality) && parsedMinQuality >= 0
@@ -247,11 +275,21 @@ app.get('/', async (c) => {
   if (platform) {
     conditions.push(eq(travelGuides.platform, platform));
   }
+  if (q) {
+    conditions.push(like(travelGuides.title, `%${escapeLikePattern(q)}%`));
+  }
   if (minQuality > 0) {
     conditions.push(gte(travelGuides.qualityScore, minQuality));
   }
   if (maxQuality !== undefined) {
     conditions.push(lte(travelGuides.qualityScore, maxQuality));
+  }
+  if (destinationNames.length > 0) {
+    const guideIds = await findGuideIdsByDestinations(destinationNames);
+    if (guideIds.length === 0) {
+      return jsonList(c, [], { limit, offset }, 0);
+    }
+    conditions.push(inArray(travelGuides.id, guideIds));
   }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
@@ -393,7 +431,7 @@ app.get('/gap-report', async (c) => {
   const analysis = await runFullAnalysis(100);
 
   return jsonData(c, {
-    totalGuides: analysis.totalFieldGaps, // approximate; actual total requires separate count
+    totalGuides: analysis.totalGuides,
     fieldGapCount: analysis.totalFieldGaps,
     destinationGapCount: analysis.totalDestinationGaps,
     fieldMissingDistribution: analysis.fieldMissingDistribution,
@@ -472,6 +510,58 @@ const updateGuidePoiCoordinatesSchema = z.object({
   verifiedBy: z.string().optional(),
 });
 
+/** Read the day number of an aiDays entry (day_number / dayNumber / day). */
+function aiDayNumber(day: Record<string, unknown>): number | null {
+  const value = day.day_number ?? day.dayNumber ?? day.day;
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Derive schema-shaped dayItineraries from enrichedData.aiDays — single
+ * source of truth (D13). Mirrors batch-ai-process: only POIs with resolved
+ * finite coordinates are included, shaped { day, title?, pois: [{ name, lat, lng, category? }] }.
+ */
+function deriveDayItineraries(aiDays: unknown[]): DayItinerary[] {
+  const itineraries: DayItinerary[] = [];
+
+  for (const day of aiDays) {
+    if (!isRecord(day)) {
+      continue;
+    }
+    const dayNumber = aiDayNumber(day);
+    if (dayNumber === null) {
+      continue;
+    }
+
+    const title = typeof day.title === 'string'
+      ? day.title
+      : typeof day.theme === 'string'
+        ? day.theme
+        : undefined;
+    const pois = (Array.isArray(day.pois) ? day.pois : [])
+      .filter(isRecord)
+      .filter(poi =>
+        typeof poi.name === 'string'
+        && typeof poi.latitude === 'number' && Number.isFinite(poi.latitude)
+        && typeof poi.longitude === 'number' && Number.isFinite(poi.longitude),
+      )
+      .map(poi => ({
+        name: poi.name as string,
+        lat: poi.latitude as number,
+        lng: poi.longitude as number,
+        ...(typeof poi.type === 'string' ? { category: poi.type } : {}),
+      }));
+
+    itineraries.push({ day: dayNumber, ...(title ? { title } : {}), pois });
+  }
+
+  return itineraries;
+}
+
 app.patch('/:id', authRequired(), zValidator('json', updateGuideSchema), async (c) => {
   const id = parsePositiveInt(c.req.param('id'));
   if (!id)
@@ -523,6 +613,57 @@ app.patch('/:id/poi-coordinates', authRequired(), zValidator('json', updateGuide
     return c.json({ error: '攻略不存在' }, 404);
   }
 
+  // D13: the read path prefers enrichedData.aiDays (latitude/longitude), so a
+  // manual correction must land there too — otherwise the fix is never
+  // visible. dayItineraries is re-derived from aiDays to keep one truth source.
+  const enrichedData = recordFromJson(guide.enrichedData);
+  const aiDaysKey = Array.isArray(enrichedData.aiDays)
+    ? 'aiDays'
+    : Array.isArray(enrichedData.ai_days)
+      ? 'ai_days'
+      : null;
+
+  if (aiDaysKey) {
+    const aiDays = structuredClone(enrichedData[aiDaysKey] as unknown[]);
+    const dayIndex = aiDays.findIndex(
+      day => isRecord(day) && aiDayNumber(day) === body.dayNumber,
+    );
+    if (dayIndex === -1) {
+      return c.json({ error: '攻略日程不存在' }, 404);
+    }
+
+    const day = aiDays[dayIndex] as Record<string, unknown>;
+    const pois = Array.isArray(day.pois) ? [...day.pois] : [];
+    const poi = pois[body.poiIndex];
+    if (!isRecord(poi)) {
+      return c.json({ error: '攻略兴趣点不存在' }, 404);
+    }
+
+    pois[body.poiIndex] = {
+      ...poi,
+      latitude: body.latitude,
+      longitude: body.longitude,
+      geocodeConfidence: 1,
+      geocodeSource: 'manual',
+      isManuallyVerified: true,
+      verifiedAt: Date.now(),
+      ...(body.verifiedBy ? { verifiedBy: body.verifiedBy } : {}),
+    };
+    aiDays[dayIndex] = { ...day, pois };
+
+    await db
+      .update(travelGuides)
+      .set({
+        // Merge by key — AI keys other than aiDays are never dropped (D7/D8).
+        enrichedData: { ...enrichedData, [aiDaysKey]: aiDays },
+        dayItineraries: deriveDayItineraries(aiDays),
+      })
+      .where(eq(travelGuides.id, guideId));
+
+    return jsonOk(c);
+  }
+
+  // Legacy rows without aiDays: correct dayItineraries (lat/lng shape) directly.
   const dayItineraries: DayItinerary[] = Array.isArray(guide.dayItineraries) ? structuredClone(guide.dayItineraries) : [];
   const dayIndex = dayItineraries.findIndex(day => Number(day.day) === body.dayNumber);
   if (dayIndex === -1) {
