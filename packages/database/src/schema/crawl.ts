@@ -36,6 +36,10 @@ export const rawCrawlRecords = mysqlTable(
     url: text('url'),
     rawData: json('raw_data'),
     processedData: json('processed_data'),
+    /** SHA-256 hex digest of the raw payload, for dedup / replay (crawler-types RawCrawlRecord.content_hash) */
+    contentHash: varchar('content_hash', { length: 64 }),
+    /** Parse pipeline status (crawler-types ParseStatus): pending | success | failed | skipped | rejected */
+    parseStatus: varchar('parse_status', { length: 20 }).notNull().default('pending'),
     error: text('error'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -44,6 +48,8 @@ export const rawCrawlRecords = mysqlTable(
     index('raw_crawl_job_idx').on(t.jobId),
     index('raw_crawl_job_status_idx').on(t.jobId, t.status),
     index('raw_crawl_status_idx').on(t.status),
+    index('raw_crawl_content_hash_idx').on(t.contentHash),
+    index('raw_crawl_parse_status_idx').on(t.parseStatus),
   ],
 );
 

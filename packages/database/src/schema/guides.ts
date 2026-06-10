@@ -48,6 +48,8 @@ export const travelGuides = mysqlTable(
     commentCount: int('comment_count').notNull().default(0),
     qualityScore: double('quality_score'),
     completenessScore: double('completeness_score'),
+    /** Completeness level from crawler-types validators: complete | usable | incomplete */
+    completenessLevel: varchar('completeness_level', { length: 20 }),
     enrichedData: json('enriched_data').$type<Record<string, unknown>>(),
     geoData: json('geo_data').$type<GeoData>(),
     dayItineraries: json('day_itineraries').$type<DayItinerary[]>(),
@@ -58,7 +60,10 @@ export const travelGuides = mysqlTable(
   },
   t => [
     index('travel_guides_platform_idx').on(t.platform),
-    index('travel_guides_platform_ext_idx').on(t.platform, t.externalId),
+    // Unique business key (D1): one row per crawled guide. NULL external_id
+    // (manual records) is exempt — MySQL unique indexes allow multiple NULLs.
+    // Run scripts/dedupe-travel-guides.ts BEFORE pushing this index.
+    uniqueIndex('travel_guides_platform_ext_idx').on(t.platform, t.externalId),
     index('travel_guides_quality_idx').on(t.qualityScore),
     index('travel_guides_completeness_idx').on(t.completenessScore),
   ],
