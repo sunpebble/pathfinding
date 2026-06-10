@@ -28,6 +28,7 @@ export * from './converters.js';
 export * from './crawl-job.js';
 export * from './mafengwo.js';
 export * from './normalized-poi.js';
+export * from './parse-number.js';
 
 // ============================================================================
 // Gold Layer — ML Training & Quality Reports

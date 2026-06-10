@@ -8,6 +8,7 @@ import {
   detectAdDensity,
   extractPureContent,
   isLowQualityContent,
+  maskPhoneNumbers,
   normalizeWhitespace,
   PERSONAL_INFO_PATTERNS,
   PLATFORM_NOISE_PATTERNS,
@@ -102,16 +103,19 @@ describe('cleanContent', () => {
       }
     });
 
-    it('should remove phone numbers', () => {
+    it('should mask phone numbers instead of deleting them', () => {
       const content = `${filler(200)}\n手机：13812345678\n${filler(100)}`;
       const result = cleanContent(content);
       expect(result.content).not.toContain('13812345678');
+      expect(result.content).toContain('手机：138****5678');
+      expect(result.removedTypes).toContain('personal');
     });
 
-    it('should remove standalone phone numbers', () => {
+    it('should mask standalone phone numbers', () => {
       const content = `${filler(200)} 13912345678 ${filler(100)}`;
       const result = cleanContent(content);
       expect(result.content).not.toContain('13912345678');
+      expect(result.content).toContain('139****5678');
     });
 
     it('should remove public account references', () => {
@@ -316,6 +320,86 @@ describe('cleanContent', () => {
       expect(result.content).not.toContain('微信号');
       expect(result.content).not.toContain('点赞收藏');
     });
+  });
+
+  // 审计回归用例：被旧版裸词规则误删的真实旅游信息必须保留
+  describe('over-cleaning regressions (audit cases)', () => {
+    it('should keep hotel phone sentences with the number masked', () => {
+      const content = `${filler(200)}\n酒店电话：13912345678，前台24小时有人\n${filler(100)}`;
+      const result = cleanContent(content);
+      expect(result.content).toContain('酒店电话：139****5678，前台24小时有人');
+    });
+
+    it('should keep transport tips mentioning 持续更新', () => {
+      const content = `${filler(200)}\n持续更新中的小贴士：地铁2号线可以直达机场\n${filler(100)}`;
+      const result = cleanContent(content);
+      expect(result.content).toContain('持续更新中的小贴士：地铁2号线可以直达机场');
+    });
+
+    it('should keep sightseeing advice starting with 查看更多', () => {
+      const content = `${filler(200)}\n查看更多景点可以去游客中心拿一份免费地图\n${filler(100)}`;
+      const result = cleanContent(content);
+      expect(result.content).toContain('查看更多景点可以去游客中心拿一份免费地图');
+    });
+
+    it('should keep in-paragraph opinion after an engagement question', () => {
+      const content = `${filler(200)}\n大家觉得怎么样？我个人认为洱海的日出很美，建议早起前往才村码头\n${filler(100)}`;
+      const result = cleanContent(content);
+      expect(result.content).toContain('我个人认为洱海的日出很美，建议早起前往才村码头');
+    });
+
+    it('should not delete sentences containing the bare word 推荐', () => {
+      const content = `${filler(200)}\n推荐大家早起去看日出，人少景美\n${filler(100)}`;
+      const result = cleanContent(content);
+      expect(result.content).toContain('推荐大家早起去看日出，人少景美');
+    });
+
+    it('should not delete sentences containing the bare word 微信', () => {
+      const content = `${filler(200)}\n景区门票可以用微信支付，不用带现金\n${filler(100)}`;
+      const result = cleanContent(content);
+      expect(result.content).toContain('景区门票可以用微信支付，不用带现金');
+    });
+
+    it('should not delete travel tips starting with 好了/记得', () => {
+      const content = `${filler(200)}\n好了，接下来介绍交通方式\n记得带好防晒霜和墨镜\n${filler(100)}`;
+      const result = cleanContent(content);
+      expect(result.content).toContain('好了，接下来介绍交通方式');
+      expect(result.content).toContain('记得带好防晒霜和墨镜');
+    });
+
+    it('should still remove standalone UI noise lines', () => {
+      const content = `${filler(200)}\n查看更多\n持续更新中…\n${filler(100)}`;
+      const result = cleanContent(content);
+      expect(result.content).not.toContain('查看更多');
+      expect(result.content).not.toContain('持续更新中');
+    });
+  });
+});
+
+// ============================================================================
+// maskPhoneNumbers
+// ============================================================================
+
+describe('maskPhoneNumbers', () => {
+  it('should mask the middle four digits', () => {
+    expect(maskPhoneNumbers('13812341234')).toBe('138****1234');
+  });
+
+  it('should keep surrounding text intact', () => {
+    expect(maskPhoneNumbers('订房电话13912345678转0')).toBe('订房电话139****5678转0');
+  });
+
+  it('should not touch landline numbers', () => {
+    expect(maskPhoneNumbers('景区咨询：0872-1234567')).toBe('景区咨询：0872-1234567');
+  });
+
+  it('should not mask digits embedded in longer numbers', () => {
+    expect(maskPhoneNumbers('订单号213812345678901')).toBe('订单号213812345678901');
+  });
+
+  it('should mask multiple numbers', () => {
+    expect(maskPhoneNumbers('13812341234 或 15987654321'))
+      .toBe('138****1234 或 159****4321');
   });
 });
 
