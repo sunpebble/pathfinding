@@ -19,6 +19,8 @@ type GuideDetailResult struct {
 	Likes       string   `json:"likes"`
 	CoverImage  string   `json:"coverImage"`
 	Images      []string `json:"images"`
+	// PublishedAt 是页面提取的发布日期原始字符串（如 "2023.5.20"），页面无此信息时为空。
+	PublishedAt string `json:"publishedAt"`
 }
 
 // DestinationResult — 目的地页面提取结果
@@ -123,6 +125,18 @@ const JSExtractGuideDetail = `(() => {
     const ogImage = document.querySelector('meta[property="og:image"]');
     const coverImage = ogImage ? ogImage.content : '';
 
+    // 发布时间：优先时间元素，其次正文「YYYY.MM.DD发布」模式；页面无则留空
+    let publishedAt = '';
+    const timeEl = document.querySelector('.vc_time, .time, .date, time, [class*="publish"]');
+    if (timeEl) {
+        const m = timeEl.textContent.match(/\d{4}[-./]\d{1,2}[-./]\d{1,2}/);
+        if (m) publishedAt = m[0];
+    }
+    if (!publishedAt) {
+        const m = document.body.innerText.match(/(\d{4}[-./]\d{1,2}[-./]\d{1,2})\s*发布/);
+        if (m) publishedAt = m[1];
+    }
+
     // 正文容器
     const contentContainer = document.querySelector(
         '.chapter-container, .note-content, ._j_content, .post_content, .rich_text_content, #_j_note_content'
@@ -173,7 +187,8 @@ const JSExtractGuideDetail = `(() => {
         views:       views,
         likes:       likes,
         coverImage:  coverImage,
-        images:      images
+        images:      images,
+        publishedAt: publishedAt
     };
 })()`
 

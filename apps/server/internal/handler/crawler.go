@@ -65,14 +65,15 @@ func (h *Handler) HandleCrawlerFetch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := string(body)
-	content := service.CleanContent(html, 10000)
+	content, contentTruncated := service.CleanContent(html, 10000)
 	title := service.ExtractTitle(html)
 	platform := service.DetectPlatform(req.URL)
 
-	data := map[string]string{
-		"url":     req.URL,
-		"title":   title,
-		"content": content,
+	data := map[string]any{
+		"url":              req.URL,
+		"title":            title,
+		"content":          content,
+		"contentTruncated": contentTruncated,
 	}
 
 	// Publish event

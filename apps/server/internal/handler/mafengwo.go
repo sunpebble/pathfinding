@@ -6,13 +6,30 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
+	"sort"
 	"time"
 
 	"github.com/pathfinding/server/internal/browser"
-	"github.com/pathfinding/server/internal/eventbus"
 	"github.com/pathfinding/server/internal/middleware"
-	"github.com/pathfinding/server/internal/service"
 )
+
+// errDBNotConfigured 是 DB 未配置时透出到 HTTP 响应的保存失败原因。
+const errDBNotConfigured = "database not configured"
+
+// trySave 同步执行一次保存并返回 (saved, saveError)。
+// 保存失败必须透出到 HTTP 响应（设计 D3），绝不只记日志。
+func (h *Handler) trySave(ctx context.Context, dataType string, save func(context.Context) error) (bool, string) {
+	if h.Store == nil {
+		slog.Warn("DB 未配置，跳过保存", "dataType", dataType)
+		return false, errDBNotConfigured
+	}
+	if err := save(ctx); err != nil {
+		slog.Error("保存失败", "dataType", dataType, "error", err)
+		return false, err.Error()
+	}
+	return true, ""
+}
 
 // requireKernel 检查 Kernel.sh API Key 是否已配置。
 // 未配置时返回 503，已配置返回 true。
@@ -55,18 +72,25 @@ func (h *Handler) closeBrowserSession(ctx context.Context, kernelSession *browse
 	}
 }
 
-// POST /api/crawler/mafengwo/list — 爬取游记列表页
+// mddIDPattern 校验马蜂窝目的地 ID（纯数字）。
+var mddIDPattern = regexp.MustCompile(`^\d+$`)
+
+// POST /api/crawler/mafengwo/list — 爬取游记列表页（设计 D10：city 真正生效）。
+//
+// 优先级：mddId（城市游记列表）→ city（站内搜索页）→ 全站 feed。
+// 响应必须含 cityScoped 标志；全站 feed 为 false，调用方不得归属城市。
 func (h *Handler) HandleMafengwoList(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		City        string `json:"city"`
+		MddID       string `json:"mddId"`
 		ScrollCount int    `json:"scrollCount"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		middleware.Error(w, 400, "Invalid JSON body")
 		return
 	}
-	if req.City == "" {
-		middleware.Error(w, 400, "City name is required")
+	if req.MddID != "" && !mddIDPattern.MatchString(req.MddID) {
+		middleware.Error(w, 400, "mddId must be numeric")
 		return
 	}
 	if req.ScrollCount <= 0 {
@@ -80,58 +104,29 @@ func (h *Handler) HandleMafengwoList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
-	kernelSession, browserSession, err := h.createBrowserSession(ctx)
+	slog.Info("正在爬取游记列表", "city", req.City, "mddId", req.MddID)
+
+	result, err := h.crawlTravelNoteList(r.Context(), req.MddID, req.City, req.ScrollCount)
 	if err != nil {
-		slog.Error("浏览器会话创建失败", "error", err)
-		middleware.Error(w, 500, "Failed to create browser session: "+err.Error())
-		return
-	}
-	defer h.closeBrowserSession(ctx, kernelSession, browserSession)
-
-	// 访问马蜂窝移动版游记页面
-	url := "https://m.mafengwo.cn/note/"
-	slog.Info("正在爬取游记列表", "city", req.City, "url", url)
-
-	if err := browserSession.Navigate(url, 3000); err != nil {
-		slog.Error("页面导航失败", "url", url, "error", err)
-		middleware.Error(w, 500, "Failed to navigate: "+err.Error())
+		slog.Error("游记列表爬取失败", "city", req.City, "mddId", req.MddID, "error", err)
+		middleware.Error(w, 500, err.Error())
 		return
 	}
 
-	// 滚动加载更多
-	if err := browserSession.ScrollToLoadMore(req.ScrollCount, 2000); err != nil {
-		slog.Error("滚动加载失败", "error", err)
-		middleware.Error(w, 500, "Failed to scroll: "+err.Error())
-		return
-	}
-
-	// 提取游记 URL
-	var result browser.GuideURLResult
-	if err := browserSession.Evaluate(browser.JSExtractGuideURLs, &result); err != nil {
-		slog.Error("提取游记链接失败", "error", err)
-		middleware.Error(w, 500, "Failed to extract URLs: "+err.Error())
-		return
-	}
-
-	slog.Info("游记列表爬取完成", "city", req.City, "count", len(result.URLs))
-
-	// 发送事件
-	h.EventBus.Publish(ctx, eventbus.Event{
-		Topic: "crawler.mafengwo.list.completed",
-		Data: map[string]any{
-			"city": req.City,
-			"urls": result.URLs,
-		},
-	})
+	slog.Info("游记列表爬取完成",
+		"city", req.City,
+		"mddId", req.MddID,
+		"count", len(result.URLs),
+		"cityScoped", result.CityScoped,
+	)
 
 	middleware.JSON(w, 200, map[string]any{
-		"success": true,
-		"data": map[string]any{
-			"city":  req.City,
-			"urls":  result.URLs,
-			"total": len(result.URLs),
-		},
+		"city":       req.City,
+		"mddId":      req.MddID,
+		"urls":       result.URLs,
+		"total":      len(result.URLs),
+		"cityScoped": result.CityScoped,
+		"sourceUrl":  result.SourceURL,
 	})
 }
 
@@ -140,7 +135,6 @@ func (h *Handler) HandleMafengwoDetail(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		URL        string `json:"url"`
 		MaxRetries int    `json:"maxRetries"`
-		UseAI      bool   `json:"useAI"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		middleware.Error(w, 400, "Invalid JSON body")
@@ -150,113 +144,39 @@ func (h *Handler) HandleMafengwoDetail(w http.ResponseWriter, r *http.Request) {
 		middleware.Error(w, 400, "URL is required")
 		return
 	}
-	if req.MaxRetries <= 0 {
-		req.MaxRetries = 3
-	}
 
 	if !h.requireKernel(w) {
 		return
 	}
 
-	ctx := r.Context()
-	var lastError error
-
-	for attempt := 1; attempt <= req.MaxRetries; attempt++ {
-		slog.Info("正在爬取游记详情", "url", req.URL, "attempt", attempt)
-
-		kernelSession, browserSession, err := h.createBrowserSession(ctx)
-		if err != nil {
-			lastError = err
-			slog.Error("浏览器会话创建失败，重试中", "attempt", attempt, "error", err)
-			continue
-		}
-
-		// 转换为移动版 URL
-		mobileURL := browserSession.ConvertToMobileURL(req.URL)
-
-		// 导航到页面
-		if err := browserSession.Navigate(mobileURL, 5000); err != nil {
-			h.closeBrowserSession(ctx, kernelSession, browserSession)
-			lastError = err
-			slog.Error("页面导航失败，重试中", "attempt", attempt, "error", err)
-			continue
-		}
-
-		// 提取游记详情
-		var result browser.GuideDetailResult
-		if err := browserSession.Evaluate(browser.JSExtractGuideDetail, &result); err != nil {
-			h.closeBrowserSession(ctx, kernelSession, browserSession)
-			lastError = err
-			slog.Error("提取详情失败，重试中", "attempt", attempt, "error", err)
-			continue
-		}
-
-		h.closeBrowserSession(ctx, kernelSession, browserSession)
-
-		// 内容清洗
-		cleanedContent := service.CleanContent(result.Content, 10000)
-		externalID := service.ExtractExternalID(req.URL)
-		qualityScore := service.CalculateQualityScore(
-			result.Title, cleanedContent, result.Author,
-			result.Images,
-			service.ParseChineseNumber(result.Views),
-			service.ParseChineseNumber(result.Likes),
-		)
-		contentMarkdown := service.GenerateGuideMarkdownContent(result.Title, cleanedContent, result.Images)
-
-		slog.Info("游记详情爬取成功",
-			"url", req.URL,
-			"title", result.Title,
-			"contentLen", len(cleanedContent),
-			"images", len(result.Images),
-			"qualityScore", qualityScore,
-		)
-
-		// 发送事件
-		h.EventBus.Publish(ctx, eventbus.Event{
-			Topic: "crawler.mafengwo.detail.completed",
-			Data: map[string]any{
-				"url":        req.URL,
-				"externalId": externalID,
-				"platform":   "mafengwo",
-				"guide": map[string]any{
-					"title":           result.Title,
-					"content":         cleanedContent,
-					"contentHtml":     result.ContentHTML,
-					"contentMarkdown": contentMarkdown,
-					"author":          result.Author,
-					"views":           service.ParseChineseNumber(result.Views),
-					"likes":           service.ParseChineseNumber(result.Likes),
-					"coverImage":      result.CoverImage,
-					"images":          result.Images,
-					"qualityScore":    qualityScore,
-				},
-			},
-		})
-
-		middleware.JSON(w, 200, map[string]any{
-			"success": true,
-			"data": map[string]any{
-				"url":             req.URL,
-				"externalId":      externalID,
-				"title":           result.Title,
-				"content":         cleanedContent,
-				"contentHtml":     result.ContentHTML,
-				"contentMarkdown": contentMarkdown,
-				"author":          result.Author,
-				"views":           result.Views,
-				"likes":           result.Likes,
-				"coverImage":      result.CoverImage,
-				"images":          result.Images,
-				"qualityScore":    qualityScore,
-			},
-		})
+	out, err := h.crawlGuideDetail(r.Context(), req.URL, req.MaxRetries, "", "")
+	if err != nil {
+		// 所有重试都失败：失败 URL 与原因必须返回给调用方（设计 D11）
+		slog.Error("游记详情爬取失败（重试已用完）", "url", req.URL, "error", err)
+		middleware.Error(w, 500, err.Error())
 		return
 	}
 
-	// 所有重试都失败
-	slog.Error("游记详情爬取失败（重试已用完）", "url", req.URL, "error", lastError)
-	middleware.Error(w, 500, "Failed after retries: "+lastError.Error())
+	middleware.JSON(w, 200, map[string]any{
+		"url":              req.URL,
+		"externalId":       out.ExternalID,
+		"title":            out.Raw.Title,
+		"content":          out.Content,
+		"contentHtml":      out.Raw.ContentHTML,
+		"contentMarkdown":  out.ContentMarkdown,
+		"contentTruncated": out.ContentTruncated,
+		"author":           out.Raw.Author,
+		"views":            out.Views,
+		"likes":            out.Likes,
+		"viewsRaw":         out.Raw.Views,
+		"likesRaw":         out.Raw.Likes,
+		"coverImage":       out.Raw.CoverImage,
+		"images":           out.Raw.Images,
+		"publishedAt":      out.Raw.PublishedAt,
+		"qualityScore":     out.QualityScore,
+		"saved":            out.Saved,
+		"saveError":        out.SaveError,
+	})
 }
 
 // POST /api/crawler/mafengwo/destination — 爬取目的地信息
@@ -274,82 +194,32 @@ func (h *Handler) HandleMafengwoDestination(w http.ResponseWriter, r *http.Reque
 		middleware.Error(w, 400, "destinationId or destinationName required")
 		return
 	}
-	if req.MaxRetries <= 0 {
-		req.MaxRetries = 3
-	}
 
 	if !h.requireKernel(w) {
 		return
 	}
 
-	ctx := r.Context()
-	var lastError error
-
-	for attempt := 1; attempt <= req.MaxRetries; attempt++ {
-		slog.Info("正在爬取目的地信息", "destinationId", req.DestinationID, "attempt", attempt)
-
-		kernelSession, browserSession, err := h.createBrowserSession(ctx)
-		if err != nil {
-			lastError = err
-			continue
-		}
-
-		// 构造目的地 URL
-		url := fmt.Sprintf("https://www.mafengwo.cn/travel-scenic-spot/mafengwo/%s.html", req.DestinationID)
-		if req.DestinationID == "" {
-			url = fmt.Sprintf("https://www.mafengwo.cn/search/q.php?q=%s", req.DestinationName)
-		}
-
-		if err := browserSession.Navigate(url, 5000); err != nil {
-			h.closeBrowserSession(ctx, kernelSession, browserSession)
-			lastError = err
-			continue
-		}
-
-		var result browser.DestinationResult
-		if err := browserSession.Evaluate(browser.JSExtractDestination, &result); err != nil {
-			h.closeBrowserSession(ctx, kernelSession, browserSession)
-			lastError = err
-			continue
-		}
-
-		h.closeBrowserSession(ctx, kernelSession, browserSession)
-
-		// 补充 ID（如果从 URL 中提取到了）
-		if result.MddID == "" && req.DestinationID != "" {
-			result.MddID = req.DestinationID
-		}
-
-		slog.Info("目的地信息爬取成功",
-			"mddId", result.MddID,
-			"name", result.Name,
-			"travelNotes", result.TravelNotesCount,
-		)
-
-		h.EventBus.Publish(ctx, eventbus.Event{
-			Topic: "crawler.mafengwo.destination.completed",
-			Data: map[string]any{
-				"mddId":            result.MddID,
-				"name":             result.Name,
-				"nameEn":           result.NameEn,
-				"description":      result.Description,
-				"coverImage":       result.CoverImage,
-				"images":           result.Images,
-				"bestTravelTime":   result.BestTravelTime,
-				"travelNotesCount": result.TravelNotesCount,
-				"poisCount":        result.PoisCount,
-			},
-		})
-
-		middleware.JSON(w, 200, map[string]any{
-			"success": true,
-			"data":    result,
-		})
+	out, err := h.crawlDestination(r.Context(), req.DestinationID, req.DestinationName, req.MaxRetries)
+	if err != nil {
+		slog.Error("目的地爬取失败", "destinationId", req.DestinationID, "error", err)
+		middleware.Error(w, 500, err.Error())
 		return
 	}
 
-	slog.Error("目的地爬取失败", "error", lastError)
-	middleware.Error(w, 500, "Failed after retries: "+lastError.Error())
+	middleware.JSON(w, 200, map[string]any{
+		"mddId":            out.Result.MddID,
+		"name":             out.Result.Name,
+		"nameEn":           out.Result.NameEn,
+		"description":      out.Result.Description,
+		"coverImage":       out.Result.CoverImage,
+		"images":           out.Result.Images,
+		"bestTravelTime":   out.Result.BestTravelTime,
+		"travelNotesCount": out.Result.TravelNotesCount,
+		"poisCount":        out.Result.PoisCount,
+		"sourceUrl":        out.SourceURL,
+		"saved":            out.Saved,
+		"saveError":        out.SaveError,
+	})
 }
 
 // POST /api/crawler/mafengwo/guide — 爬取攻略（列表/详情）
@@ -381,93 +251,51 @@ func (h *Handler) HandleMafengwoGuide(w http.ResponseWriter, r *http.Request) {
 		middleware.Error(w, 400, "guideUrl required for detail mode")
 		return
 	}
-	if req.ScrollCount <= 0 {
-		req.ScrollCount = 5
-	}
-	if req.MaxRetries <= 0 {
-		req.MaxRetries = 3
-	}
 
 	if !h.requireKernel(w) {
 		return
 	}
 
-	ctx := r.Context()
-	kernelSession, browserSession, err := h.createBrowserSession(ctx)
-	if err != nil {
-		middleware.Error(w, 500, "Failed to create browser session: "+err.Error())
-		return
-	}
-	defer h.closeBrowserSession(ctx, kernelSession, browserSession)
-
 	if req.Mode == "list" {
-		// 攻略列表模式
-		url := fmt.Sprintf("https://www.mafengwo.cn/gonglve/ziyouxing/%s.html", req.DestinationID)
-		if err := browserSession.Navigate(url, 3000); err != nil {
-			middleware.Error(w, 500, "Failed to navigate: "+err.Error())
-			return
-		}
-		if err := browserSession.ScrollToLoadMore(req.ScrollCount, 2000); err != nil {
-			middleware.Error(w, 500, "Failed to scroll: "+err.Error())
-			return
-		}
-
-		var result browser.GuideListResult
-		if err := browserSession.Evaluate(browser.JSExtractGuideList, &result); err != nil {
-			middleware.Error(w, 500, "Failed to extract guides: "+err.Error())
+		result, err := h.crawlGuideListPage(r.Context(), req.DestinationID, req.ScrollCount)
+		if err != nil {
+			middleware.Error(w, 500, err.Error())
 			return
 		}
 
 		slog.Info("攻略列表爬取成功", "destinationId", req.DestinationID, "count", len(result.Guides))
 
 		middleware.JSON(w, 200, map[string]any{
-			"success": true,
-			"data": map[string]any{
-				"destinationId": req.DestinationID,
-				"guides":        result.Guides,
-				"total":         len(result.Guides),
-			},
+			"destinationId": req.DestinationID,
+			"guides":        result.Guides,
+			"total":         len(result.Guides),
 		})
-	} else {
-		// 攻略详情模式
-		mobileURL := browserSession.ConvertToMobileURL(req.GuideURL)
-		if err := browserSession.Navigate(mobileURL, 5000); err != nil {
-			middleware.Error(w, 500, "Failed to navigate: "+err.Error())
-			return
-		}
-
-		var result browser.GuideDetailResult
-		if err := browserSession.Evaluate(browser.JSExtractGuideDetail, &result); err != nil {
-			middleware.Error(w, 500, "Failed to extract detail: "+err.Error())
-			return
-		}
-
-		cleanedContent := service.CleanContent(result.Content, 10000)
-
-		slog.Info("攻略详情爬取成功", "url", req.GuideURL, "title", result.Title)
-
-		h.EventBus.Publish(ctx, eventbus.Event{
-			Topic: "crawler.mafengwo.guide.detail.completed",
-			Data: map[string]any{
-				"url":     req.GuideURL,
-				"title":   result.Title,
-				"content": cleanedContent,
-				"author":  result.Author,
-				"images":  result.Images,
-			},
-		})
-
-		middleware.JSON(w, 200, map[string]any{
-			"success": true,
-			"data": map[string]any{
-				"url":     req.GuideURL,
-				"title":   result.Title,
-				"content": cleanedContent,
-				"author":  result.Author,
-				"images":  result.Images,
-			},
-		})
+		return
 	}
+
+	out, err := h.crawlGuideDetail(r.Context(), req.GuideURL, req.MaxRetries, req.DestinationID, req.DestinationName)
+	if err != nil {
+		slog.Error("攻略详情爬取失败", "url", req.GuideURL, "error", err)
+		middleware.Error(w, 500, err.Error())
+		return
+	}
+
+	middleware.JSON(w, 200, map[string]any{
+		"url":              req.GuideURL,
+		"guideId":          out.ExternalID,
+		"title":            out.Raw.Title,
+		"content":          out.Content,
+		"contentTruncated": out.ContentTruncated,
+		"author":           out.Raw.Author,
+		"images":           out.Raw.Images,
+		"views":            out.Views,
+		"likes":            out.Likes,
+		"viewsRaw":         out.Raw.Views,
+		"likesRaw":         out.Raw.Likes,
+		"publishedAt":      out.Raw.PublishedAt,
+		"saved":            out.Saved,
+		"saveError":        out.SaveError,
+	})
 }
 
 // POST /api/crawler/mafengwo/poi — 爬取 POI 列表（景点/美食/酒店/购物）
@@ -479,20 +307,15 @@ func (h *Handler) HandleMafengwoPOI(w http.ResponseWriter, r *http.Request) {
 		Category        string `json:"category"`
 		PoiURL          string `json:"poiUrl"`
 		ScrollCount     int    `json:"scrollCount"`
-		MaxRetries      int    `json:"maxRetries"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		middleware.Error(w, 400, "Invalid JSON body")
 		return
 	}
-	if req.Mode == "" {
-		req.Mode = "list"
-	}
 	if req.Category == "" {
 		req.Category = "attraction"
 	}
-	validCategories := map[string]bool{"attraction": true, "restaurant": true, "hotel": true, "shopping": true}
-	if !validCategories[req.Category] {
+	if _, ok := poiCategoryPaths[req.Category]; !ok {
 		middleware.Error(w, 400, "Invalid category")
 		return
 	}
@@ -501,76 +324,19 @@ func (h *Handler) HandleMafengwoPOI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
-	kernelSession, browserSession, err := h.createBrowserSession(ctx)
+	out, err := h.crawlPOIList(r.Context(), req.DestinationID, req.DestinationName, req.Category, req.PoiURL, req.ScrollCount)
 	if err != nil {
-		middleware.Error(w, 500, "Failed to create browser session: "+err.Error())
+		middleware.Error(w, 500, err.Error())
 		return
-	}
-	defer h.closeBrowserSession(ctx, kernelSession, browserSession)
-
-	// 分类到 URL 路径的映射
-	categoryPaths := map[string]string{
-		"attraction": "jd",
-		"restaurant": "cy",
-		"hotel":      "jd",
-		"shopping":   "gw",
-	}
-	path := categoryPaths[req.Category]
-
-	url := fmt.Sprintf("https://www.mafengwo.cn/%s/%s/gonglve.html", path, req.DestinationID)
-	if req.PoiURL != "" {
-		url = req.PoiURL
-	}
-
-	if err := browserSession.Navigate(url, 3000); err != nil {
-		middleware.Error(w, 500, "Failed to navigate: "+err.Error())
-		return
-	}
-
-	if req.ScrollCount <= 0 {
-		req.ScrollCount = 5
-	}
-	if err := browserSession.ScrollToLoadMore(req.ScrollCount, 2000); err != nil {
-		middleware.Error(w, 500, "Failed to scroll: "+err.Error())
-		return
-	}
-
-	var result browser.POIListResult
-	if err := browserSession.Evaluate(browser.JSExtractPOIList, &result); err != nil {
-		middleware.Error(w, 500, "Failed to extract POIs: "+err.Error())
-		return
-	}
-
-	slog.Info("POI 列表爬取成功",
-		"destinationId", req.DestinationID,
-		"category", req.Category,
-		"count", len(result.POIs),
-	)
-
-	// 为每个 POI 详情发送事件
-	for _, poi := range result.POIs {
-		h.EventBus.Publish(ctx, eventbus.Event{
-			Topic: "crawler.mafengwo.poi.detail.completed",
-			Data: map[string]any{
-				"destinationId": req.DestinationID,
-				"category":      req.Category,
-				"name":          poi.Name,
-				"url":           poi.URL,
-				"rating":        poi.Rating,
-				"image":         poi.Image,
-			},
-		})
 	}
 
 	middleware.JSON(w, 200, map[string]any{
-		"success": true,
-		"data": map[string]any{
-			"destinationId": req.DestinationID,
-			"category":      req.Category,
-			"pois":          result.POIs,
-			"total":         len(result.POIs),
-		},
+		"destinationId": req.DestinationID,
+		"category":      req.Category,
+		"pois":          out.POIs,
+		"total":         len(out.POIs),
+		"savedCount":    out.SavedCount,
+		"saveErrors":    out.SaveErrors,
 	})
 }
 
@@ -582,77 +348,28 @@ func (h *Handler) HandleMafengwoQA(w http.ResponseWriter, r *http.Request) {
 		DestinationName string `json:"destinationName"`
 		QAURL           string `json:"qaUrl"`
 		ScrollCount     int    `json:"scrollCount"`
-		MaxRetries      int    `json:"maxRetries"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		middleware.Error(w, 400, "Invalid JSON body")
 		return
-	}
-	if req.Mode == "" {
-		req.Mode = "list"
 	}
 
 	if !h.requireKernel(w) {
 		return
 	}
 
-	ctx := r.Context()
-	kernelSession, browserSession, err := h.createBrowserSession(ctx)
+	out, err := h.crawlQAList(r.Context(), req.DestinationID, req.DestinationName, req.QAURL, req.ScrollCount)
 	if err != nil {
-		middleware.Error(w, 500, "Failed to create browser session: "+err.Error())
+		middleware.Error(w, 500, err.Error())
 		return
-	}
-	defer h.closeBrowserSession(ctx, kernelSession, browserSession)
-
-	url := fmt.Sprintf("https://www.mafengwo.cn/wenda/area-%s.html", req.DestinationID)
-	if req.QAURL != "" {
-		url = req.QAURL
-	}
-
-	if err := browserSession.Navigate(url, 3000); err != nil {
-		middleware.Error(w, 500, "Failed to navigate: "+err.Error())
-		return
-	}
-
-	if req.ScrollCount <= 0 {
-		req.ScrollCount = 5
-	}
-	if err := browserSession.ScrollToLoadMore(req.ScrollCount, 2000); err != nil {
-		middleware.Error(w, 500, "Failed to scroll: "+err.Error())
-		return
-	}
-
-	var result browser.QAListResult
-	if err := browserSession.Evaluate(browser.JSExtractQAList, &result); err != nil {
-		middleware.Error(w, 500, "Failed to extract QA: "+err.Error())
-		return
-	}
-
-	slog.Info("问答列表爬取成功",
-		"destinationId", req.DestinationID,
-		"count", len(result.Questions),
-	)
-
-	// 为每个问答发送事件
-	for _, qa := range result.Questions {
-		h.EventBus.Publish(ctx, eventbus.Event{
-			Topic: "crawler.mafengwo.qa.detail.completed",
-			Data: map[string]any{
-				"destinationId": req.DestinationID,
-				"title":         qa.Title,
-				"url":           qa.URL,
-				"answerCount":   qa.AnswerCount,
-			},
-		})
 	}
 
 	middleware.JSON(w, 200, map[string]any{
-		"success": true,
-		"data": map[string]any{
-			"destinationId": req.DestinationID,
-			"questions":     result.Questions,
-			"total":         len(result.Questions),
-		},
+		"destinationId": req.DestinationID,
+		"questions":     out.Questions,
+		"total":         len(out.Questions),
+		"savedCount":    out.SavedCount,
+		"saveErrors":    out.SaveErrors,
 	})
 }
 
@@ -662,7 +379,6 @@ func (h *Handler) HandleMafengwoRanking(w http.ResponseWriter, r *http.Request) 
 		DestinationID   string `json:"destinationId"`
 		DestinationName string `json:"destinationName"`
 		RankingType     string `json:"rankingType"`
-		MaxRetries      int    `json:"maxRetries"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		middleware.Error(w, 400, "Invalid JSON body")
@@ -675,76 +391,36 @@ func (h *Handler) HandleMafengwoRanking(w http.ResponseWriter, r *http.Request) 
 	if req.RankingType == "" {
 		req.RankingType = "must_visit"
 	}
-	validTypes := map[string]bool{"must_visit": true, "food": true, "hotel": true, "shopping": true, "hidden_gem": true}
-	if !validTypes[req.RankingType] {
+	if _, ok := rankingPaths[req.RankingType]; !ok {
 		middleware.Error(w, 400, "Invalid rankingType")
 		return
-	}
-	if req.MaxRetries <= 0 {
-		req.MaxRetries = 3
 	}
 
 	if !h.requireKernel(w) {
 		return
 	}
 
-	ctx := r.Context()
-	kernelSession, browserSession, err := h.createBrowserSession(ctx)
+	out, err := h.crawlRanking(r.Context(), req.DestinationID, req.DestinationName, req.RankingType)
 	if err != nil {
-		middleware.Error(w, 500, "Failed to create browser session: "+err.Error())
+		middleware.Error(w, 500, err.Error())
 		return
 	}
-	defer h.closeBrowserSession(ctx, kernelSession, browserSession)
-
-	// 排行榜类型到 URL 的映射
-	rankingPaths := map[string]string{
-		"must_visit": "jd",
-		"food":       "cy",
-		"hotel":      "jd",
-		"shopping":   "gw",
-		"hidden_gem": "jd",
-	}
-	path := rankingPaths[req.RankingType]
-
-	url := fmt.Sprintf("https://www.mafengwo.cn/%s/%s/gonglve.html", path, req.DestinationID)
-	if err := browserSession.Navigate(url, 5000); err != nil {
-		middleware.Error(w, 500, "Failed to navigate: "+err.Error())
-		return
-	}
-
-	var result browser.RankingResult
-	if err := browserSession.Evaluate(browser.JSExtractRanking, &result); err != nil {
-		middleware.Error(w, 500, "Failed to extract ranking: "+err.Error())
-		return
-	}
-
-	slog.Info("排行榜爬取成功",
-		"destinationId", req.DestinationID,
-		"rankingType", req.RankingType,
-		"count", len(result.Items),
-	)
-
-	h.EventBus.Publish(ctx, eventbus.Event{
-		Topic: "crawler.mafengwo.ranking.completed",
-		Data: map[string]any{
-			"destinationId": req.DestinationID,
-			"rankingType":   req.RankingType,
-			"items":         result.Items,
-		},
-	})
 
 	middleware.JSON(w, 200, map[string]any{
-		"success": true,
-		"data": map[string]any{
-			"destinationId": req.DestinationID,
-			"rankingType":   req.RankingType,
-			"items":         result.Items,
-			"total":         len(result.Items),
-		},
+		"destinationId": req.DestinationID,
+		"rankingType":   req.RankingType,
+		"items":         out.Items,
+		"total":         len(out.Items),
+		"rankingId":     out.RankingID,
+		"saved":         out.Saved,
+		"saveError":     out.SaveError,
 	})
 }
 
-// POST /api/crawler/mafengwo/batch — 批量任务编排（纯编排，不需要浏览器）
+// POST /api/crawler/mafengwo/batch — 批量任务编排（设计 D12）。
+//
+// 任务直接入队 BatchRunner 顺序执行（不再发布无人消费的 eventbus 事件）；
+// 队列容量不足时整体拒绝并返回 503，执行状态可通过 statusUrl 查询。
 func (h *Handler) HandleMafengwoBatch(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Destinations []struct {
@@ -792,19 +468,6 @@ func (h *Handler) HandleMafengwoBatch(w http.ResponseWriter, r *http.Request) {
 		crawlDetails = *req.CrawlDetails
 	}
 
-	batchID := fmt.Sprintf("batch_%d", time.Now().UnixMilli())
-
-	type CrawlTask struct {
-		TaskType        string `json:"taskType"`
-		DestinationID   string `json:"destinationId"`
-		DestinationName string `json:"destinationName"`
-		Priority        int    `json:"priority"`
-		Category        string `json:"category,omitempty"`
-		RankingType     string `json:"rankingType,omitempty"`
-	}
-
-	var tasks []CrawlTask
-
 	// 标准化 dataType 名称（接受单复数形式）
 	normalizeDataType := func(dt string) string {
 		switch dt {
@@ -831,52 +494,70 @@ func (h *Handler) HandleMafengwoBatch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// 无浏览器服务时批量任务必然全部失败：直接 503，不制造「任务已创建」的假成功。
+	if !h.requireKernel(w) {
+		return
+	}
+	if h.Batch == nil {
+		middleware.Error(w, 503, "Batch runner not configured")
+		return
+	}
+
+	var tasks []CrawlTask
 	for _, dest := range req.Destinations {
 		for _, dt := range req.DataTypes {
 			basePriority := req.Priority
 			switch normalizeDataType(dt) {
 			case "destination":
 				tasks = append(tasks, CrawlTask{
-					TaskType:        "destination_detail",
+					TaskType:        taskTypeDestinationDetail,
 					DestinationID:   dest.ID,
 					DestinationName: dest.Name,
 					Priority:        basePriority + 2,
 				})
 			case "travel_notes":
 				tasks = append(tasks, CrawlTask{
-					TaskType:        "travel_note_list",
+					TaskType:        taskTypeTravelNoteList,
 					DestinationID:   dest.ID,
 					DestinationName: dest.Name,
 					Priority:        basePriority,
+					ScrollCount:     req.ScrollCount,
+					CrawlDetails:    crawlDetails,
+					DetailsLimit:    req.DetailsLimit,
 				})
 			case "pois":
 				for _, cat := range req.PoiCategories {
 					tasks = append(tasks, CrawlTask{
-						TaskType:        "poi_list",
+						TaskType:        taskTypePOIList,
 						DestinationID:   dest.ID,
 						DestinationName: dest.Name,
 						Priority:        basePriority - 1,
 						Category:        cat,
+						ScrollCount:     req.ScrollCount,
 					})
 				}
 			case "guides":
 				tasks = append(tasks, CrawlTask{
-					TaskType:        "guide_list",
+					TaskType:        taskTypeGuideList,
 					DestinationID:   dest.ID,
 					DestinationName: dest.Name,
 					Priority:        basePriority,
+					ScrollCount:     req.ScrollCount,
+					CrawlDetails:    crawlDetails,
+					DetailsLimit:    req.DetailsLimit,
 				})
 			case "qa":
 				tasks = append(tasks, CrawlTask{
-					TaskType:        "qa_list",
+					TaskType:        taskTypeQAList,
 					DestinationID:   dest.ID,
 					DestinationName: dest.Name,
 					Priority:        basePriority - 2,
+					ScrollCount:     req.ScrollCount,
 				})
 			case "rankings":
 				for _, rt := range req.RankingTypes {
 					tasks = append(tasks, CrawlTask{
-						TaskType:        "ranking",
+						TaskType:        taskTypeRanking,
 						DestinationID:   dest.ID,
 						DestinationName: dest.Name,
 						Priority:        basePriority - 1,
@@ -887,30 +568,43 @@ func (h *Handler) HandleMafengwoBatch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	_ = crawlDetails
+	// 高优先级任务先执行（稳定排序保持同优先级的目的地顺序）
+	sort.SliceStable(tasks, func(i, j int) bool { return tasks[i].Priority > tasks[j].Priority })
 
-	// Publish events
-	h.EventBus.Publish(context.Background(), eventbus.Event{
-		Topic: "crawler.mafengwo.batch.started",
-		Data: map[string]any{
-			"batchId":    batchID,
-			"totalTasks": len(tasks),
-		},
-	})
-	for _, task := range tasks {
-		h.EventBus.Publish(context.Background(), eventbus.Event{
-			Topic: "crawler.mafengwo.batch.task.created",
-			Data:  task,
-		})
+	batchID := fmt.Sprintf("batch_%d", time.Now().UnixMilli())
+	if err := h.Batch.Enqueue(batchID, tasks); err != nil {
+		slog.Error("批量任务入队失败", "batchId", batchID, "tasks", len(tasks), "error", err)
+		middleware.Error(w, 503, "Failed to enqueue batch: "+err.Error())
+		return
 	}
 
-	slog.Info("Batch crawl created", "batchId", batchID, "tasks", len(tasks))
+	slog.Info("Batch crawl queued", "batchId", batchID, "tasks", len(tasks))
 
 	middleware.JSON(w, 200, map[string]any{
-		"success":    true,
 		"batchId":    batchID,
 		"totalTasks": len(tasks),
 		"tasks":      tasks,
-		"message":    fmt.Sprintf("Created %d crawl tasks for %d destinations", len(tasks), len(req.Destinations)),
+		"statusUrl":  "/api/crawler/mafengwo/batch/" + batchID,
+		"message":    fmt.Sprintf("Queued %d crawl tasks for %d destinations", len(tasks), len(req.Destinations)),
 	})
+}
+
+// GET /api/crawler/mafengwo/batch/{batchId} — 查询批量任务执行状态（设计 D12）。
+func (h *Handler) HandleMafengwoBatchStatus(w http.ResponseWriter, r *http.Request) {
+	batchID := r.PathValue("batchId")
+	if batchID == "" {
+		middleware.Error(w, 400, "batchId is required")
+		return
+	}
+	if h.Batch == nil {
+		middleware.Error(w, 503, "Batch runner not configured")
+		return
+	}
+
+	status, ok := h.Batch.Status(batchID)
+	if !ok {
+		middleware.Error(w, 404, "batch not found: "+batchID)
+		return
+	}
+	middleware.JSON(w, 200, status)
 }

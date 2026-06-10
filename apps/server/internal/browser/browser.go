@@ -86,8 +86,14 @@ func (s *Session) GetPageHTML() (string, error) {
 
 // ConvertToMobileURL 将桌面版 URL 转换为移动版 URL。
 // 将 "www.mafengwo.cn" 替换为 "m.mafengwo.cn"，若无匹配则原样返回。
-func (s *Session) ConvertToMobileURL(url string) string {
+// 包级纯函数，便于在创建会话之前完成 URL 转换。
+func ConvertToMobileURL(url string) string {
 	return strings.Replace(url, "www.mafengwo.cn", "m.mafengwo.cn", 1)
+}
+
+// ConvertToMobileURL 是 ConvertToMobileURL 包级函数的会话方法别名。
+func (s *Session) ConvertToMobileURL(url string) string {
+	return ConvertToMobileURL(url)
 }
 
 // Close 关闭浏览器会话并释放所有相关资源。

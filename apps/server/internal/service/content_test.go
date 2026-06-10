@@ -12,7 +12,7 @@ import (
 func TestCleanContent_RemovesScriptTags(t *testing.T) {
 	// 验证 script 标签及其内容被移除
 	input := `<p>Hello</p><script>alert('xss')</script><p>World</p>`
-	got := CleanContent(input, 0)
+	got, _ := CleanContent(input, 0)
 	if strings.Contains(got, "alert") || strings.Contains(got, "script") {
 		t.Errorf("script 标签内容未被移除, got: %q", got)
 	}
@@ -24,7 +24,7 @@ func TestCleanContent_RemovesScriptTags(t *testing.T) {
 func TestCleanContent_RemovesStyleTags(t *testing.T) {
 	// 验证 style 标签及其内容被移除
 	input := `<p>Hello</p><style>body{color:red}</style><p>World</p>`
-	got := CleanContent(input, 0)
+	got, _ := CleanContent(input, 0)
 	if strings.Contains(got, "color") || strings.Contains(got, "style") {
 		t.Errorf("style 标签内容未被移除, got: %q", got)
 	}
@@ -36,7 +36,7 @@ func TestCleanContent_RemovesStyleTags(t *testing.T) {
 func TestCleanContent_StripsHTMLTags(t *testing.T) {
 	// 验证所有 HTML 标签被替换为空格
 	input := `<h1>Title</h1><p>Content <b>bold</b></p>`
-	got := CleanContent(input, 0)
+	got, _ := CleanContent(input, 0)
 	if strings.Contains(got, "<") || strings.Contains(got, ">") {
 		t.Errorf("HTML 标签未被完全移除, got: %q", got)
 	}
@@ -48,7 +48,7 @@ func TestCleanContent_StripsHTMLTags(t *testing.T) {
 func TestCleanContent_CollapsesWhitespace(t *testing.T) {
 	// 验证连续空白被折叠为单个空格
 	input := `<p>Hello</p>   <p>World</p>`
-	got := CleanContent(input, 0)
+	got, _ := CleanContent(input, 0)
 	if strings.Contains(got, "  ") {
 		t.Errorf("连续空白未被折叠, got: %q", got)
 	}
@@ -57,7 +57,7 @@ func TestCleanContent_CollapsesWhitespace(t *testing.T) {
 func TestCleanContent_TruncatesByRuneCount(t *testing.T) {
 	// 验证按 rune 数量截断，而非字节数（中文字符场景）
 	input := "这是一段中文测试内容用于验证截断功能"
-	got := CleanContent(input, 5)
+	got, _ := CleanContent(input, 5)
 	runes := []rune(got)
 	if len(runes) != 5 {
 		t.Errorf("期望截断为 5 个 rune, got %d runes: %q", len(runes), got)
@@ -69,7 +69,7 @@ func TestCleanContent_TruncatesByRuneCount(t *testing.T) {
 
 func TestCleanContent_EmptyInput(t *testing.T) {
 	// 验证空字符串输入返回空字符串
-	got := CleanContent("", 100)
+	got, _ := CleanContent("", 100)
 	if got != "" {
 		t.Errorf("空输入应返回空字符串, got: %q", got)
 	}
@@ -78,7 +78,7 @@ func TestCleanContent_EmptyInput(t *testing.T) {
 func TestCleanContent_NestedTags(t *testing.T) {
 	// 验证嵌套标签被正确移除
 	input := `<div><p><span>深层嵌套</span></p></div>`
-	got := CleanContent(input, 0)
+	got, _ := CleanContent(input, 0)
 	if strings.Contains(got, "<") {
 		t.Errorf("嵌套标签未被完全移除, got: %q", got)
 	}
@@ -90,7 +90,7 @@ func TestCleanContent_NestedTags(t *testing.T) {
 func TestCleanContent_DefaultMaxLenWhenZero(t *testing.T) {
 	// 验证 maxLen 为 0 时使用默认值 10000
 	input := strings.Repeat("a", 15000)
-	got := CleanContent(input, 0)
+	got, _ := CleanContent(input, 0)
 	runes := []rune(got)
 	if len(runes) != 10000 {
 		t.Errorf("maxLen=0 时应使用默认值 10000, got %d runes", len(runes))
@@ -100,7 +100,7 @@ func TestCleanContent_DefaultMaxLenWhenZero(t *testing.T) {
 func TestCleanContent_NegativeMaxLen(t *testing.T) {
 	// 验证 maxLen 为负数时使用默认值 10000
 	input := strings.Repeat("b", 15000)
-	got := CleanContent(input, -1)
+	got, _ := CleanContent(input, -1)
 	runes := []rune(got)
 	if len(runes) != 10000 {
 		t.Errorf("maxLen=-1 时应使用默认值 10000, got %d runes", len(runes))
@@ -110,7 +110,7 @@ func TestCleanContent_NegativeMaxLen(t *testing.T) {
 func TestCleanContent_CaseInsensitiveScriptRemoval(t *testing.T) {
 	// 验证大小写混合的 script 标签也能被移除
 	input := `<SCRIPT type="text/javascript">var x=1;</SCRIPT>text`
-	got := CleanContent(input, 0)
+	got, _ := CleanContent(input, 0)
 	if strings.Contains(got, "var") {
 		t.Errorf("大写 SCRIPT 标签未被移除, got: %q", got)
 	}
@@ -122,9 +122,46 @@ func TestCleanContent_CaseInsensitiveScriptRemoval(t *testing.T) {
 func TestCleanContent_ContentShorterThanMaxLen(t *testing.T) {
 	// 验证内容长度小于 maxLen 时不截断
 	input := "short"
-	got := CleanContent(input, 100)
+	got, truncated := CleanContent(input, 100)
 	if got != "short" {
 		t.Errorf("短内容不应被截断, got: %q", got)
+	}
+	if truncated {
+		t.Error("未截断时 truncated 应为 false")
+	}
+}
+
+func TestCleanContent_TruncatedFlagSet(t *testing.T) {
+	// 验证发生截断时返回 truncated=true
+	input := strings.Repeat("字", 200)
+	_, truncated := CleanContent(input, 100)
+	if !truncated {
+		t.Error("发生截断时 truncated 应为 true")
+	}
+}
+
+func TestCleanContent_TruncatesAtSentenceBoundary(t *testing.T) {
+	// 验证截断优先发生在句边界（句号后），而非硬切断句中
+	input := "第一句话说完了。第二句还在继续说一些内容呢"
+	got, truncated := CleanContent(input, 10)
+	if !truncated {
+		t.Error("超长内容应标记 truncated=true")
+	}
+	if got != "第一句话说完了。" {
+		t.Errorf("应在句边界截断, got: %q", got)
+	}
+}
+
+func TestCleanContent_HardCutWhenBoundaryTooEarly(t *testing.T) {
+	// 验证句边界过早（截掉超过一半）时退回硬截断，保留长度
+	input := "短。" + strings.Repeat("后面是没有标点的超长内容", 100)
+	got, truncated := CleanContent(input, 50)
+	if !truncated {
+		t.Error("超长内容应标记 truncated=true")
+	}
+	runes := []rune(got)
+	if len(runes) != 50 {
+		t.Errorf("句边界过早时应硬截断为 50 个 rune, got %d: %q", len(runes), got)
 	}
 }
 
@@ -215,77 +252,126 @@ func TestExtractTitle(t *testing.T) {
 // ParseChineseNumber 测试
 // =============================================================================
 
+// 契约（设计 D4，与 TS parseChineseNumber 一致）：解析失败必须 ok=false，
+// 绝不把失败伪造成 0；ok=true 且值为 0 仅出现在字面量 0。
 func TestParseChineseNumber(t *testing.T) {
 	tests := []struct {
-		name  string // 测试用例名称
-		input string
-		want  int
+		name   string // 测试用例名称
+		input  string
+		want   int
+		wantOK bool
 	}{
 		{
-			name:  "万为单位 - 1.2万 = 12000",
-			input: "1.2万",
-			want:  12000,
+			name:   "万为单位 - 1.2万 = 12000",
+			input:  "1.2万",
+			want:   12000,
+			wantOK: true,
 		},
 		{
-			name:  "万为单位 - 整数 3万",
-			input: "3万",
-			want:  30000,
+			name:   "万为单位 - 整数 3万",
+			input:  "3万",
+			want:   30000,
+			wantOK: true,
 		},
 		{
-			name:  "小写 k - 3.5k = 3500",
-			input: "3.5k",
-			want:  3500,
+			name:   "小写 k - 3.5k = 3500",
+			input:  "3.5k",
+			want:   3500,
+			wantOK: true,
 		},
 		{
-			name:  "大写 K - 2K = 2000",
-			input: "2K",
-			want:  2000,
+			name:   "大写 K - 2K = 2000",
+			input:  "2K",
+			want:   2000,
+			wantOK: true,
 		},
 		{
-			name:  "纯数字 - 123",
-			input: "123",
-			want:  123,
+			name:   "纯数字 - 123",
+			input:  "123",
+			want:   123,
+			wantOK: true,
 		},
 		{
-			name:  "空字符串返回 0",
-			input: "",
-			want:  0,
+			name:   "字面量 0 是唯一合法的零值",
+			input:  "0",
+			want:   0,
+			wantOK: true,
 		},
 		{
-			name:  "无数字内容返回 0",
-			input: "abc",
-			want:  0,
+			name:   "千分位分组 - 3,456 = 3456",
+			input:  "3,456",
+			want:   3456,
+			wantOK: true,
 		},
 		{
-			name:  "带空白的输入",
-			input: "  456  ",
-			want:  456,
+			name:   "亿为单位 - 1.5亿 = 150000000",
+			input:  "1.5亿",
+			want:   150000000,
+			wantOK: true,
 		},
 		{
-			name:  "万为单位带小数 - 0.5万 = 5000",
-			input: "0.5万",
-			want:  5000,
+			name:   "w 等价于万 - 1.2w = 12000",
+			input:  "1.2w",
+			want:   12000,
+			wantOK: true,
 		},
 		{
-			name:  "非法万格式返回 0",
-			input: "abc万",
-			want:  0,
+			name:   "带空白的输入",
+			input:  "  456  ",
+			want:   456,
+			wantOK: true,
 		},
 		{
-			name:  "非法 k 格式返回 0",
-			input: "abck",
-			want:  0,
+			name:   "万为单位带小数 - 0.5万 = 5000",
+			input:  "0.5万",
+			want:   5000,
+			wantOK: true,
 		},
 		{
-			name:  "k 的浮点精度 - 1.1k = 1100",
-			input: "1.1k",
-			want:  1100,
+			name:   "k 的浮点精度 - 1.1k = 1100",
+			input:  "1.1k",
+			want:   1100,
+			wantOK: true,
+		},
+		// 以下为解析失败用例：必须 ok=false，绝不返回伪造的计数
+		{
+			name:   "空字符串解析失败",
+			input:  "",
+			wantOK: false,
+		},
+		{
+			name:   "无数字内容解析失败",
+			input:  "abc",
+			wantOK: false,
+		},
+		{
+			name:   "非法万格式解析失败",
+			input:  "abc万",
+			wantOK: false,
+		},
+		{
+			name:   "非法 k 格式解析失败",
+			input:  "abck",
+			wantOK: false,
+		},
+		{
+			name:   "数字后带杂质解析失败 - 不得截取前缀数字",
+			input:  "123人浏览",
+			wantOK: false,
+		},
+		{
+			name:   "非法千分位分组解析失败",
+			input:  "12,34",
+			wantOK: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ParseChineseNumber(tt.input)
+			got, ok := ParseChineseNumber(tt.input)
+			if ok != tt.wantOK {
+				t.Fatalf("ParseChineseNumber(%q) ok = %v, want %v", tt.input, ok, tt.wantOK)
+			}
 			if got != tt.want {
 				t.Errorf("ParseChineseNumber(%q) = %d, want %d", tt.input, got, tt.want)
 			}

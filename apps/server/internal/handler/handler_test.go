@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -21,6 +22,21 @@ func newTestHandler() *handler.Handler {
 	}
 	bus := eventbus.New()
 	return handler.New(nil, cfg, bus)
+}
+
+// newBatchTestHandler creates a Handler that passes the Kernel gate（假 API key，
+// 构造时不发起网络请求）并挂一个未启动的 BatchRunner：入队与状态查询可测，
+// 但任务永不执行（保持 pending，测试中零网络调用）。
+func newBatchTestHandler() *handler.Handler {
+	cfg := &config.Config{
+		Port:         3000,
+		KernelAPIKey: "test-key",
+	}
+	h := handler.New(nil, cfg, eventbus.New())
+	h.Batch = handler.NewBatchRunner(func(_ context.Context, _ handler.CrawlTask) (handler.TaskOutcome, error) {
+		return handler.TaskOutcome{}, nil
+	}, 0)
+	return h
 }
 
 // apiResponse is the generic JSON response wrapper.
@@ -397,10 +413,20 @@ func TestMafengwoList_Validation(t *testing.T) {
 		}
 	})
 
-	t.Run("empty city", func(t *testing.T) {
-		w := doRequest(t, "POST", "/test", map[string]any{"city": ""}, h.HandleMafengwoList)
+	t.Run("non-numeric mddId", func(t *testing.T) {
+		w := doRequest(t, "POST", "/test", map[string]any{"mddId": "abc123"}, h.HandleMafengwoList)
 		if w.Code != http.StatusBadRequest {
 			t.Errorf("expected 400, got %d", w.Code)
+		}
+	})
+
+	t.Run("empty city falls back to global feed", func(t *testing.T) {
+		// 设计 D10：空 city/mddId 不再是参数错误，而是回退全站 feed
+		// （cityScoped=false）。测试环境无 Kernel，请求应止步于浏览器
+		// 服务检查（503），而非 400。
+		w := doRequest(t, "POST", "/test", map[string]any{"city": ""}, h.HandleMafengwoList)
+		if w.Code != http.StatusServiceUnavailable {
+			t.Errorf("expected 503 (kernel gate, not validation), got %d", w.Code)
 		}
 	})
 }
@@ -523,7 +549,7 @@ func TestMafengwoBatch_Validation(t *testing.T) {
 }
 
 func TestMafengwoBatch_DefaultDataTypes(t *testing.T) {
-	h := newTestHandler()
+	h := newBatchTestHandler()
 	w := doRequest(t, "POST", "/test",
 		map[string]any{
 			"destinations": []map[string]string{
@@ -559,7 +585,7 @@ func TestMafengwoBatch_DefaultDataTypes(t *testing.T) {
 }
 
 func TestMafengwoBatch_AllDataTypes(t *testing.T) {
-	h := newTestHandler()
+	h := newBatchTestHandler()
 	w := doRequest(t, "POST", "/test",
 		map[string]any{
 			"destinations": []map[string]string{
@@ -593,7 +619,7 @@ func TestMafengwoBatch_AllDataTypes(t *testing.T) {
 }
 
 func TestMafengwoBatch_SingularPluralDataTypes(t *testing.T) {
-	h := newTestHandler()
+	h := newBatchTestHandler()
 
 	// Test singular forms
 	w := doRequest(t, "POST", "/test",
@@ -623,7 +649,7 @@ func TestMafengwoBatch_SingularPluralDataTypes(t *testing.T) {
 }
 
 func TestMafengwoBatch_TaskPriorities(t *testing.T) {
-	h := newTestHandler()
+	h := newBatchTestHandler()
 	w := doRequest(t, "POST", "/test",
 		map[string]any{
 			"destinations": []map[string]string{{"id": "10065", "name": "北京"}},
@@ -675,6 +701,116 @@ func TestMafengwoBatch_TaskPriorities(t *testing.T) {
 		if task.TaskType == "ranking" && task.Priority != 4 {
 			t.Errorf("ranking: expected priority 4, got %d", task.Priority)
 		}
+	}
+}
+
+func TestMafengwoBatch_NoRunnerConfigured(t *testing.T) {
+	// Arrange: Kernel 已配置但 Batch runner 缺失 → 503，
+	// 绝不返回「任务已创建」的假成功（设计 D12）。
+	cfg := &config.Config{Port: 3000, KernelAPIKey: "test-key"}
+	h := handler.New(nil, cfg, eventbus.New())
+
+	// Act
+	w := doRequest(t, "POST", "/test",
+		map[string]any{
+			"destinations": []map[string]string{{"id": "10065", "name": "北京"}},
+		},
+		h.HandleMafengwoBatch)
+
+	// Assert
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503, got %d; body: %s", w.Code, w.Body.String())
+	}
+	resp := parseResponse(t, w)
+	if resp.Error != "Batch runner not configured" {
+		t.Errorf("expected 'Batch runner not configured', got %q", resp.Error)
+	}
+}
+
+// =======================================================================
+// Mafengwo Batch status endpoint（设计 D12：执行结果可查询）
+// =======================================================================
+
+// doBatchStatusRequest 以路径参数 batchId 调用状态查询 handler。
+func doBatchStatusRequest(h *handler.Handler, batchID string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest("GET", "/api/crawler/mafengwo/batch/"+batchID, nil)
+	req.SetPathValue("batchId", batchID)
+	w := httptest.NewRecorder()
+	h.HandleMafengwoBatchStatus(w, req)
+	return w
+}
+
+func TestMafengwoBatchStatus_QueuedTasksVisible(t *testing.T) {
+	// Arrange: 入队一个批次（runner 未启动，任务保持 pending）
+	h := newBatchTestHandler()
+	w := doRequest(t, "POST", "/test",
+		map[string]any{
+			"destinations": []map[string]string{{"id": "10065", "name": "北京"}},
+			"dataTypes":    []string{"destination"},
+		},
+		h.HandleMafengwoBatch)
+	if w.Code != http.StatusOK {
+		t.Fatalf("batch enqueue failed: %d; body: %s", w.Code, w.Body.String())
+	}
+	var created struct {
+		BatchID string `json:"batchId"`
+	}
+	if err := json.Unmarshal(parseResponse(t, w).Data, &created); err != nil {
+		t.Fatalf("failed to decode batch response: %v", err)
+	}
+
+	// Act
+	sw := doBatchStatusRequest(h, created.BatchID)
+
+	// Assert: 状态可查、任务计数与 pending 状态正确
+	if sw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d; body: %s", sw.Code, sw.Body.String())
+	}
+	var status struct {
+		BatchID    string `json:"batchId"`
+		TotalTasks int    `json:"totalTasks"`
+		Pending    int    `json:"pending"`
+		Tasks      []struct {
+			Status string `json:"status"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(parseResponse(t, sw).Data, &status); err != nil {
+		t.Fatalf("failed to decode status: %v", err)
+	}
+	if status.BatchID != created.BatchID {
+		t.Errorf("batchId 不一致: %q vs %q", status.BatchID, created.BatchID)
+	}
+	if status.TotalTasks != 1 || status.Pending != 1 {
+		t.Errorf("expected 1 pending task, got total=%d pending=%d", status.TotalTasks, status.Pending)
+	}
+	if len(status.Tasks) != 1 || status.Tasks[0].Status != "pending" {
+		t.Errorf("expected one pending task entry, got %+v", status.Tasks)
+	}
+}
+
+func TestMafengwoBatchStatus_UnknownBatch(t *testing.T) {
+	// Arrange
+	h := newBatchTestHandler()
+
+	// Act
+	w := doBatchStatusRequest(h, "batch_nope")
+
+	// Assert
+	if w.Code != http.StatusNotFound {
+		t.Errorf("expected 404 for unknown batch, got %d", w.Code)
+	}
+}
+
+func TestMafengwoBatchStatus_NoRunnerConfigured(t *testing.T) {
+	// Arrange: Batch runner 缺失
+	h := newTestHandler()
+
+	// Act
+	w := doBatchStatusRequest(h, "batch_x")
+
+	// Assert
+	if w.Code != http.StatusServiceUnavailable {
+		t.Errorf("expected 503, got %d", w.Code)
 	}
 }
 

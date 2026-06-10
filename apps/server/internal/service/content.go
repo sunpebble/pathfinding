@@ -8,8 +8,11 @@ import (
 	"unicode/utf8"
 )
 
-// CleanContent strips HTML tags, scripts, styles, collapses whitespace, truncates to maxLen.
-func CleanContent(html string, maxLen int) string {
+// CleanContent strips HTML tags, scripts, styles, collapses whitespace, and
+// truncates to maxLen at a sentence boundary when possible.
+// The second return value reports whether truncation occurred, so callers can
+// expose contentTruncated instead of silently shipping cut-off text.
+func CleanContent(html string, maxLen int) (string, bool) {
 	if maxLen <= 0 {
 		maxLen = 10000
 	}
@@ -26,12 +29,30 @@ func CleanContent(html string, maxLen int) string {
 	re = regexp.MustCompile(`\s+`)
 	s = re.ReplaceAllString(s, " ")
 	s = strings.TrimSpace(s)
-	// Truncate
-	if utf8.RuneCountInString(s) > maxLen {
-		runes := []rune(s)
-		s = string(runes[:maxLen])
+
+	runes := []rune(s)
+	if len(runes) <= maxLen {
+		return s, false
 	}
-	return s
+	return strings.TrimSpace(string(truncateAtSentenceBoundary(runes[:maxLen]))), true
+}
+
+// sentenceEndRunes are the punctuation marks treated as sentence boundaries.
+var sentenceEndRunes = map[rune]bool{
+	'。': true, '！': true, '？': true, '；': true, '…': true,
+	'.': true, '!': true, '?': true, ';': true,
+}
+
+// truncateAtSentenceBoundary cuts after the last sentence-ending rune,
+// falling back to the hard cut when the boundary would discard more than
+// half of the allowed length.
+func truncateAtSentenceBoundary(runes []rune) []rune {
+	for i := len(runes) - 1; i >= 0 && i+1 >= len(runes)/2; i-- {
+		if sentenceEndRunes[runes[i]] {
+			return runes[:i+1]
+		}
+	}
+	return runes
 }
 
 // GenerateGuideMarkdownContent converts cleaned guide text and images into
@@ -330,37 +351,42 @@ func ExtractTitle(html string) string {
 	return "Untitled"
 }
 
-// ParseChineseNumber converts Chinese number strings like "1.2万", "3.5k", "123" to int.
-func ParseChineseNumber(s string) int {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return 0
+// countMultipliers 是计数单位后缀到倍数的映射（与 TS parseChineseNumber 对齐，设计 D4）。
+var countMultipliers = map[string]float64{
+	"万": 10_000,
+	"w": 10_000,
+	"亿": 100_000_000,
+	"k": 1_000,
+}
+
+// countPattern 匹配「数字部分 + 可选单位后缀」：
+// 数字部分为严格千分位分组（3,456）或普通数字（1234、1.2）。
+var countPattern = regexp.MustCompile(`^(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)([万亿wkWK])?$`)
+
+// ParseChineseNumber 将中文计数字符串（如 "1.2万"、"3.5k"、"3,456"、"123"）解析为 int。
+// 契约与 TS parseChineseNumber 完全一致（设计 D4）：解析失败返回 ok=false，
+// 绝不把失败伪造成 0——ok=true 且值为 0 仅出现在字面量 0。
+// 调用方必须让失败可见（HTTP 响应置 null / 记录告警），而非当作计数 0 入库。
+func ParseChineseNumber(s string) (int, bool) {
+	m := countPattern.FindStringSubmatch(strings.TrimSpace(s))
+	if m == nil {
+		return 0, false
 	}
-	if strings.Contains(s, "万") {
-		s = strings.Replace(s, "万", "", 1)
-		f, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			return 0
-		}
-		return int(math.Round(f * 10000))
+
+	value, err := strconv.ParseFloat(strings.ReplaceAll(m[1], ",", ""), 64)
+	if err != nil {
+		return 0, false
 	}
-	lower := strings.ToLower(s)
-	if strings.Contains(lower, "k") {
-		s = strings.Replace(lower, "k", "", 1)
-		f, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			return 0
-		}
-		return int(math.Round(f * 1000))
+
+	unit := strings.ToLower(m[2])
+	if unit == "" {
+		return int(math.Round(value)), true
 	}
-	// Try parse as plain number
-	re := regexp.MustCompile(`\d+`)
-	m := re.FindString(s)
-	if m == "" {
-		return 0
+	multiplier, ok := countMultipliers[unit]
+	if !ok {
+		return 0, false
 	}
-	n, _ := strconv.Atoi(m)
-	return n
+	return int(math.Round(value * multiplier)), true
 }
 
 // CalculateQualityScore returns a 0-1 quality score.
