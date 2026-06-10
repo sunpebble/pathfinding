@@ -328,82 +328,49 @@ export async function stopScheduledTask(
 // POIs
 // ---------------------------------------------------------------------------
 
-/** A normalized POI record from the crawler backend. */
-export interface NormalizedPOI {
-  id: string;
-  canonical_id?: string;
+/**
+ * A POI row as returned by the Hono `/api/pois` route — a snake_cased
+ * `pois` table row (D13: the previous `NormalizedPOI` shape was fictional;
+ * render only what the backend actually provides).
+ */
+export interface PoiRecord {
+  id: number;
+  external_id: string | null;
   name: string;
-  name_en?: string;
-  name_aliases?: string[];
-  description?: string;
+  name_en: string | null;
   category: string;
-  subcategory?: string;
-  tags?: string[];
-  location_lat: number;
-  location_lng: number;
-  address?: string;
-  city?: string;
-  district?: string;
-  country?: string;
-  postal_code?: string;
-  rating_overall?: number;
+  city_id: number;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+  rating: number | null;
   rating_count: number;
-  operating_hours?: Record<string, { open: string; close: string }>;
-  price_range?: string;
-  price_avg?: number;
-  phone?: string;
-  website?: string;
-  photos_count: number;
-  photo_urls?: string[];
-  quality_score: number;
-  completeness_score: number;
-  freshness_score: number;
-  sources: Array<{
-    platform: string;
-    external_id: string;
-    url: string;
-    confidence: number;
-    last_crawled: string;
-  }>;
-  is_duplicate: boolean;
+  price_level: number | null;
+  business_hours: Record<string, { open: string; close: string } | null> | null;
+  phone: string | null;
+  image_urls: string[] | null;
+  source: string;
   created_at: string;
   updated_at: string;
 }
 
 /** List POIs from the crawler backend with optional filters. */
 export async function getPOIs(params?: {
-  query?: string;
+  q?: string;
   category?: string;
   city?: string;
   min_quality?: number;
   limit?: number;
   offset?: number;
-}): Promise<PaginatedResponse<NormalizedPOI>> {
+}): Promise<PaginatedResponse<PoiRecord>> {
   return fetchApi(`/pois${buildQuery({
-    query: params?.query,
+    q: params?.q,
     category: params?.category,
     city: params?.city,
     min_quality: params?.min_quality,
     limit: params?.limit,
     offset: params?.offset,
   })}`);
-}
-
-/**
- * Fetch a single POI by ID.
- *
- * @param id - POI identifier.
- */
-export async function getPOI(id: string): Promise<NormalizedPOI> {
-  return fetchApi(`/pois/${id}`);
-}
-
-/** Trigger POI normalization and return statistics. */
-export async function normalizePOIs(): Promise<{
-  success: boolean;
-  stats: { normalized: number; skipped: number; failed: number };
-}> {
-  return fetchApi('/pois/normalize', { method: 'POST' });
 }
 
 // ---------------------------------------------------------------------------

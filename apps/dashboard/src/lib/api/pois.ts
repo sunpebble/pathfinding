@@ -11,7 +11,9 @@ import type { PaginatedResponse, Poi } from '@/types/api';
 import { createApiClient } from './client';
 
 const poisClient = createApiClient('/api/pois');
-const guidesClient = createApiClient('/api/guides');
+// Guide mutations must go through the crawler proxy — there is no
+// `/api/guides` rewrite, so direct calls would 404 at the Next server.
+const guidesClient = createApiClient('/api/crawler/guides');
 
 /**
  * Build a query string suffix from a flat params object.

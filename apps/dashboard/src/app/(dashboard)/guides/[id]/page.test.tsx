@@ -16,7 +16,7 @@ describe('guideDetailPage', () => {
     mockParams.mockReturnValue({ id: 'guide-1' });
   });
 
-  it('renders snake_case AI days when POIs are omitted', () => {
+  function mockGuide(overrides: Record<string, unknown> = {}) {
     mockUseQuery.mockReturnValue({
       data: {
         data: {
@@ -30,17 +30,22 @@ describe('guideDetailPage', () => {
           quality_score: 0.8,
           views_count: 0,
           likes_count: 0,
-          saves_count: 0,
+          saves_count: null,
           comments_count: 0,
           destinations: [],
           tags: [],
           ai_days: [{ day_number: 1 }],
+          ...overrides,
         },
       },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
     });
+  }
+
+  it('renders snake_case AI days when POIs are omitted', () => {
+    mockGuide();
 
     render(<GuideDetailPage />);
 
@@ -50,5 +55,29 @@ describe('guideDetailPage', () => {
         node?.textContent?.replace(/\s+/g, ' ').trim() === '第 1 天',
       ).length,
     ).toBeGreaterThan(0);
+  });
+
+  it('hides the saves stat when saves_count is null instead of faking a 0', () => {
+    // Arrange
+    mockGuide({ saves_count: null });
+
+    // Act
+    render(<GuideDetailPage />);
+
+    // Assert
+    expect(screen.queryByText('收藏')).not.toBeInTheDocument();
+    expect(screen.getByText('点赞')).toBeInTheDocument();
+  });
+
+  it('shows the saves stat when saves_count is a real number', () => {
+    // Arrange
+    mockGuide({ saves_count: 12 });
+
+    // Act
+    render(<GuideDetailPage />);
+
+    // Assert
+    expect(screen.getByText('收藏')).toBeInTheDocument();
+    expect(screen.getByText('12')).toBeInTheDocument();
   });
 });

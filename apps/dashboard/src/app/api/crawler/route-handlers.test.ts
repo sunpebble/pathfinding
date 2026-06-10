@@ -76,6 +76,130 @@ describe('crawler route handlers', () => {
     });
   });
 
+  it('forwards q/destinations/offset/platform to the guides backend (D13)', async () => {
+    // Arrange
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({ data: [], pagination: { total: 0, limit: 10, offset: 20 } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { GET } = await import('./guides/route');
+    const request = new NextRequest(
+      'http://localhost/api/crawler/guides?platforms=mafengwo&q=%E4%B8%8A%E6%B5%B7&destinations=%E4%B8%8A%E6%B5%B7,%E6%9D%AD%E5%B7%9E&limit=10&offset=20',
+      { headers: { Authorization: 'Bearer test-token' } },
+    );
+
+    // Act
+    const response = await GET(request);
+
+    // Assert
+    expect(response.status).toBe(200);
+    const calledUrl = new URL(fetchMock.mock.calls[0]![0] as string);
+    expect(calledUrl.pathname).toBe('/api/guides');
+    expect(calledUrl.searchParams.get('platform')).toBe('mafengwo');
+    expect(calledUrl.searchParams.get('q')).toBe('上海');
+    expect(calledUrl.searchParams.get('destinations')).toBe('上海,杭州');
+    expect(calledUrl.searchParams.get('limit')).toBe('10');
+    expect(calledUrl.searchParams.get('offset')).toBe('20');
+  });
+
+  it('forwards q/category/city/min_quality/limit/offset to the pois backend (D13)', async () => {
+    // Arrange
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({ data: [], pagination: { total: 0, limit: 12, offset: 24 } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { GET } = await import('./pois/route');
+    const request = new NextRequest(
+      'http://localhost/api/crawler/pois?q=%E5%A4%96%E6%BB%A9&category=attraction&city=%E4%B8%8A%E6%B5%B7&min_quality=4&limit=12&offset=24',
+      { headers: { Authorization: 'Bearer test-token' } },
+    );
+
+    // Act
+    const response = await GET(request);
+    const payload = await response.json();
+
+    // Assert
+    expect(response.status).toBe(200);
+    const calledUrl = new URL(fetchMock.mock.calls[0]![0] as string);
+    expect(calledUrl.pathname).toBe('/api/pois');
+    expect(calledUrl.searchParams.get('q')).toBe('外滩');
+    expect(calledUrl.searchParams.get('category')).toBe('attraction');
+    expect(calledUrl.searchParams.get('city')).toBe('上海');
+    expect(calledUrl.searchParams.get('min_quality')).toBe('4');
+    expect(calledUrl.searchParams.get('limit')).toBe('12');
+    expect(calledUrl.searchParams.get('offset')).toBe('24');
+    expect(payload.pagination).toEqual({ total: 0, limit: 12, offset: 24 });
+  });
+
+  it('rejects pois requests without auth before reaching the backend', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { GET } = await import('./pois/route');
+    const response = await GET(new NextRequest('http://localhost/api/crawler/pois'));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+  });
+
+  it('proxies manual poi coordinate corrections to the backend PATCH endpoint', async () => {
+    // Arrange
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({ success: true }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { PATCH } = await import('./guides/[id]/poi-coordinates/route');
+    const body = {
+      dayNumber: 1,
+      poiIndex: 0,
+      latitude: 30.6624,
+      longitude: 104.0633,
+      verifiedBy: 'admin',
+    };
+    const request = new NextRequest('http://localhost/api/crawler/guides/42/poi-coordinates', {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-token',
+      },
+    });
+
+    // Act
+    const response = await PATCH(request, { params: Promise.resolve({ id: '42' }) });
+    const payload = await response.json();
+
+    // Assert
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api.example.com/api/guides/42/poi-coordinates',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify(body),
+        headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({ success: true });
+  });
+
+  it('rejects poi coordinate corrections without auth', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { PATCH } = await import('./guides/[id]/poi-coordinates/route');
+    const request = new NextRequest('http://localhost/api/crawler/guides/42/poi-coordinates', {
+      method: 'PATCH',
+      body: JSON.stringify({ dayNumber: 1, poiIndex: 0, latitude: 1, longitude: 1 }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const response = await PATCH(request, { params: Promise.resolve({ id: '42' }) });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
+  });
+
   it('loads a single guide through the API without importing Convex', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse({

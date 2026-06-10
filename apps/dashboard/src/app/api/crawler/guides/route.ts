@@ -53,7 +53,9 @@ export async function GET(request: NextRequest) {
     backendParams.set('platform', platform);
   }
 
-  for (const key of ['q', 'min_quality', 'max_quality', 'sort', 'order']) {
+  // D13: destinations is resolved by the backend via the guide_destinations
+  // auxiliary table — dropping it here silently disabled the filter.
+  for (const key of ['q', 'destinations', 'min_quality', 'max_quality', 'sort', 'order']) {
     const value = searchParams.get(key);
     if (value) {
       backendParams.set(key, value);

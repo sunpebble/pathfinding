@@ -260,8 +260,14 @@ export default function GuideDetailPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Stats — saves_count is null when the platform never provided it (D13):
+          hide the stat instead of faking a 0. */}
+      <div
+        className={cn(
+          'grid gap-4',
+          typeof guide.saves_count === 'number' ? 'grid-cols-4' : 'grid-cols-3',
+        )}
+      >
         <StatCard
           icon={Heart}
           label="点赞"
@@ -280,12 +286,14 @@ export default function GuideDetailPage() {
           value={guide.comments_count}
           color="text-green-500"
         />
-        <StatCard
-          icon={Bookmark}
-          label="收藏"
-          value={guide.saves_count}
-          color="text-purple-500"
-        />
+        {typeof guide.saves_count === 'number' && (
+          <StatCard
+            icon={Bookmark}
+            label="收藏"
+            value={guide.saves_count}
+            color="text-purple-500"
+          />
+        )}
       </div>
 
       {/* Destinations & Tags */}

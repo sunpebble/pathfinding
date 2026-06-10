@@ -20,23 +20,21 @@ export async function GET(request: NextRequest) {
     = Number.isFinite(rawLimit) && rawLimit > 0
       ? Math.min(rawLimit, 100)
       : 50;
+  const rawOffset = Number.parseInt(searchParams.get('offset') || '0', 10);
+  const offset = Number.isFinite(rawOffset) && rawOffset > 0 ? rawOffset : 0;
 
   try {
     const backendParams = new URLSearchParams();
-    const query = searchParams.get('query');
-    const category = searchParams.get('category');
-    const city = searchParams.get('city');
-    const minQuality = searchParams.get('min_quality');
 
-    if (query)
-      backendParams.set('query', query);
-    if (category)
-      backendParams.set('category', category);
-    if (city)
-      backendParams.set('city', city);
-    if (minQuality)
-      backendParams.set('min_quality', minQuality);
+    // D13: forward exactly what the Hono pois route reads — q (not query),
+    // city (name), category, min_quality — plus pagination including offset.
+    for (const key of ['q', 'category', 'city', 'min_quality'] as const) {
+      const value = searchParams.get(key);
+      if (value)
+        backendParams.set(key, value);
+    }
     backendParams.set('limit', String(limit));
+    backendParams.set('offset', String(offset));
 
     const response = await fetchBackendApi<{ data: Array<Record<string, unknown>>; pagination?: { total: number } }>(
       `/api/pois?${backendParams.toString()}`,
@@ -48,7 +46,7 @@ export async function GET(request: NextRequest) {
       pagination: response.pagination ?? {
         total: response.data.length,
         limit,
-        offset: 0,
+        offset,
       },
     });
   }

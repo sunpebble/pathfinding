@@ -1,11 +1,11 @@
 'use client';
 
+import type { PoiRecord } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Globe,
   Loader2,
   MapPin,
   Phone,
@@ -38,7 +38,7 @@ export default function POIsPage() {
     queryKey: ['pois', searchQuery, category, city, page],
     queryFn: () =>
       getPOIs({
-        query: searchQuery || undefined,
+        q: searchQuery || undefined,
         category: category || undefined,
         city: city || undefined,
         limit,
@@ -196,34 +196,16 @@ export default function POIsPage() {
 }
 
 interface POICardProps {
-  poi: {
-    id: string;
-    name: string;
-    name_en?: string;
-    category: string;
-    subcategory?: string;
-    address?: string;
-    city?: string;
-    rating_overall?: number;
-    rating_count: number;
-    phone?: string;
-    website?: string;
-    operating_hours?: Record<string, { open: string; close: string }>;
-    quality_score: number;
-    completeness_score: number;
-    sources: Array<{ platform: string }>;
-    created_at: string;
-  };
+  poi: PoiRecord;
 }
 
+/**
+ * Render a POI card from the real `/api/pois` row shape (D13).
+ * Missing fields are simply not rendered — never faked.
+ */
 function POICard({ poi }: POICardProps) {
-  const qualityPercentage = Math.round(poi.quality_score * 100);
-  const qualityColor
-    = qualityPercentage >= 70
-      ? 'text-emerald-600 bg-emerald-50'
-      : qualityPercentage >= 40
-        ? 'text-amber-600 bg-amber-50'
-        : 'text-red-600 bg-red-50';
+  const hasBusinessHours
+    = poi.business_hours && Object.keys(poi.business_hours).length > 0;
 
   return (
     <DashboardCard className="p-5 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-[var(--dashboard-shadow)]">
@@ -235,12 +217,6 @@ function POICard({ poi }: POICardProps) {
             <p className="text-sm text-stone-500">{poi.name_en}</p>
           )}
         </div>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${qualityColor}`}
-        >
-          {qualityPercentage}
-          %
-        </span>
       </div>
 
       {/* Category */}
@@ -248,11 +224,6 @@ function POICard({ poi }: POICardProps) {
         <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
           {poi.category}
         </span>
-        {poi.subcategory && (
-          <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600 ring-1 ring-stone-200">
-            {poi.subcategory}
-          </span>
-        )}
       </div>
 
       {/* Address */}
@@ -264,11 +235,11 @@ function POICard({ poi }: POICardProps) {
       )}
 
       {/* Rating */}
-      {poi.rating_overall && (
+      {typeof poi.rating === 'number' && (
         <div className="mt-2 flex items-center gap-2 text-sm">
           <Star className="h-4 w-4 text-amber-400" />
           <span className="font-medium text-stone-900">
-            {poi.rating_overall.toFixed(1)}
+            {poi.rating.toFixed(1)}
           </span>
           <span className="text-stone-500">
             (
@@ -287,18 +258,7 @@ function POICard({ poi }: POICardProps) {
             <span>{poi.phone}</span>
           </div>
         )}
-        {poi.website && (
-          <a
-            href={poi.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-emerald-700 hover:underline"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            <span>网站</span>
-          </a>
-        )}
-        {poi.operating_hours && (
+        {hasBusinessHours && (
           <div className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" />
             <span>营业时间</span>
@@ -308,17 +268,9 @@ function POICard({ poi }: POICardProps) {
 
       {/* Footer */}
       <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-3">
-        <div className="flex items-center gap-1.5">
-          {poi.sources.map((source, idx) => (
-            <span
-              // eslint-disable-next-line react/no-array-index-key
-              key={`source-${source.platform}-${idx}`}
-              className="rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600"
-            >
-              {source.platform}
-            </span>
-          ))}
-        </div>
+        <span className="rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600">
+          {poi.source}
+        </span>
         <span className="text-xs text-stone-400">
           {formatDateTime(poi.created_at)}
         </span>

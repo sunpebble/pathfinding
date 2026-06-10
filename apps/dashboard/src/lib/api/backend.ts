@@ -98,6 +98,27 @@ function toNumberOrDefault(value: unknown, fallback = 0): number {
   return fallback;
 }
 
+/**
+ * Convert a value to a number, preserving "no data" as `null`.
+ *
+ * Used for stats the backend explicitly nulls out (e.g. `saves_count`,
+ * D13) — coercing them to 0 would fake a real measurement.
+ */
+function toNumberOrNull(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
 /** Filter an unknown value to an array of strings. */
 function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
@@ -208,7 +229,7 @@ export function normalizeTravelGuide(
     destinations: toStringArray(guide.destinations),
     tags: toStringArray(guide.tags),
     likes_count: toNumberOrDefault(guide.likes_count ?? guide.like_count),
-    saves_count: toNumberOrDefault(guide.saves_count),
+    saves_count: toNumberOrNull(guide.saves_count),
     comments_count: toNumberOrDefault(guide.comments_count ?? guide.comment_count),
     views_count: toNumberOrDefault(guide.views_count ?? guide.view_count),
     cover_image_url:
