@@ -3,16 +3,14 @@ import SwiftUI
 struct DiscoverView: View {
   @State private var store = GuideStore.shared
 
-  // MARK: - Hot Cities Data Source (static; no new server contract)
+  // MARK: - Hot Cities Data Source (data-driven from v1/cities endpoint)
 
-  static let hotCities: [(cityId: String, cityName: String)] = [
-    (cityId: "tokyo_001", cityName: "东京"),
-    (cityId: "bangkok_001", cityName: "曼谷"),
-    (cityId: "paris_001", cityName: "巴黎"),
-    (cityId: "singapore_001", cityName: "新加坡"),
-    (cityId: "seoul_001", cityName: "首尔"),
-    (cityId: "london_001", cityName: "伦敦"),
-  ]
+  @State private var hotCities: [CityWithEncyclopedia] = []
+
+  /// Pure mapping used for routing and testability — no fabricated ids.
+  static func hotCityRoute(from city: CityWithEncyclopedia) -> (cityId: String, cityName: String) {
+    (cityId: city.id, cityName: city.displayName)
+  }
 
   var body: some View {
     NavigationStack {
@@ -34,18 +32,29 @@ struct DiscoverView: View {
       .navigationDestination(for: BlogPost.self) { guide in
         BlogDetailView(guide: guide)
       }
-      .navigationDestination(for: String.self) { cityId in
-        if let city = DiscoverView.hotCities.first(where: { $0.cityId == cityId }) {
-          CityEncyclopediaView(cityId: city.cityId, cityName: city.cityName)
-        }
+      .navigationDestination(for: CityWithEncyclopedia.self) { city in
+        CityEncyclopediaView(cityId: city.id, cityName: city.displayName)
       }
       .task {
         await store.fetchGuides()
         await store.fetchPopularDestinations()
+        await loadHotCities()
       }
       .refreshable {
         await store.fetchGuides(forceRefresh: true)
+        await loadHotCities()
       }
+    }
+  }
+
+  // MARK: - Data Loading
+
+  private func loadHotCities() async {
+    do {
+      hotCities = try await CityAPIClient.shared.fetchCitiesWithEncyclopedia(limit: 10)
+    } catch {
+      // On failure leave hotCities empty — section is hidden when empty
+      hotCities = []
     }
   }
 
@@ -86,35 +95,37 @@ struct DiscoverView: View {
         }
       }
 
-      // MARK: Hot Cities Section
-      Section {
-        ScrollView(.horizontal, showsIndicators: false) {
-          GlassEffectContainer {
-            HStack(spacing: DesignTokens.Spacing.md) {
-              ForEach(DiscoverView.hotCities, id: \.cityId) { city in
-                NavigationLink(value: city.cityId) {
-                  HotCityCardContent(cityName: city.cityName)
-                    .padding(DesignTokens.Spacing.sm)
-                    .cardSurface(cornerRadius: DesignTokens.Radius.lg)
+      // MARK: Hot Cities Section (hidden when empty — before load or on failure)
+      if !hotCities.isEmpty {
+        Section {
+          ScrollView(.horizontal, showsIndicators: false) {
+            GlassEffectContainer {
+              HStack(spacing: DesignTokens.Spacing.md) {
+                ForEach(hotCities) { city in
+                  NavigationLink(value: city) {
+                    HotCityCardContent(cityName: city.displayName)
+                      .padding(DesignTokens.Spacing.sm)
+                      .cardSurface(cornerRadius: DesignTokens.Radius.lg)
+                  }
+                  .buttonStyle(.glass)
+                  .accessibilityLabel(city.displayName)
                 }
-                .buttonStyle(.glass)
-                .accessibilityLabel(city.cityName)
               }
+              .padding(.horizontal, DesignTokens.Spacing.md)
+              .padding(.vertical, DesignTokens.Spacing.xs)
             }
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.xs)
           }
+          .scrollClipDisabled()
+          .listRowInsets(EdgeInsets())
+          .listRowBackground(Color.clear)
+          .listRowSeparator(.hidden)
+        } header: {
+          Text("discover.hot_cities".localized)
+            .font(.title3)
+            .fontWeight(.bold)
+            .foregroundStyle(.primary)
+            .textCase(nil)
         }
-        .scrollClipDisabled()
-        .listRowInsets(EdgeInsets())
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
-      } header: {
-        Text("discover.hot_cities".localized)
-          .font(.title3)
-          .fontWeight(.bold)
-          .foregroundStyle(.primary)
-          .textCase(nil)
       }
 
       // MARK: Recent Section

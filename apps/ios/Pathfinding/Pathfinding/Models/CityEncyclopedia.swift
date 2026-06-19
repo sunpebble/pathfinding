@@ -424,7 +424,7 @@ struct CityEncyclopedia: Codable, Identifiable {
 
 // MARK: - City With Encyclopedia
 
-struct CityWithEncyclopedia: Codable, Identifiable {
+struct CityWithEncyclopedia: Codable, Identifiable, Hashable {
   let id: String
   let name: String
   let nameEn: String?
@@ -461,6 +461,16 @@ struct CityWithEncyclopedia: Codable, Identifiable {
   /// English display name
   var displayNameEn: String? {
     nameEn
+  }
+
+  // MARK: Hashable / Equatable (key: id)
+
+  static func == (lhs: CityWithEncyclopedia, rhs: CityWithEncyclopedia) -> Bool {
+    lhs.id == rhs.id
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
   }
 }
 
