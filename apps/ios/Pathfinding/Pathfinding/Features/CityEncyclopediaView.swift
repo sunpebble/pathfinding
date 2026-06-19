@@ -123,7 +123,8 @@ struct CityEncyclopediaView: View {
       .buttonStyle(.glassProminent)
     }
     .frame(maxWidth: .infinity)
-    .padding(.vertical, 100)
+    .padding(DesignTokens.Spacing.md)
+    .cardSurface()
   }
 
   // MARK: - No Encyclopedia View
