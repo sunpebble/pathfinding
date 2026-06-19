@@ -86,6 +86,7 @@
 		542E3A9A66D56C78FDB2D549 /* CarPlayVoiceCommandHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FB3A141ED6A91078CE1579 /* CarPlayVoiceCommandHandler.swift */; };
 		550C122999E2B1C5660990C8 /* TipsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACACAAE6FEA74D27B6C4364F /* TipsCard.swift */; };
 		5736AA41900755D0B1647BD6 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07D06AEEC92366CD1FCD629 /* AppConfig.swift */; };
+		57DBF54E6DD5FC533DB54F7C /* ItineraryDetailDestinationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A7B59E95DA141FDAC0291B /* ItineraryDetailDestinationsTests.swift */; };
 		585CC0D41049F300745205E4 /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4449D1637D48D3E4E20C18 /* CloudKitSyncManager.swift */; };
 		5AA15CC87D3FF7AF96B75502 /* AddExpenseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E041688DCCA52199B6B74195 /* AddExpenseView.swift */; };
 		5B0D8A0030B60C6BB6568134 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ADD63621DF9E3465C8277FF /* LocalizationManager.swift */; };
@@ -460,6 +461,7 @@
 		D60205850EC25B865FB2A4EB /* FollowStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowStore.swift; sourceTree = "<group>"; };
 		D9954F6834C9E2A43BAB0203 /* TravelNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TravelNote.swift; sourceTree = "<group>"; };
 		E041688DCCA52199B6B74195 /* AddExpenseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExpenseView.swift; sourceTree = "<group>"; };
+		E0A7B59E95DA141FDAC0291B /* ItineraryDetailDestinationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryDetailDestinationsTests.swift; sourceTree = "<group>"; };
 		E22344E98B397B94F75CF449 /* GuideAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideAPIClient.swift; sourceTree = "<group>"; };
 		E2418ED4F523E4289DCF7E98 /* CarPlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayManager.swift; sourceTree = "<group>"; };
 		E2696A5A8C0E1CD9D9656B37 /* BudgetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetStore.swift; sourceTree = "<group>"; };
@@ -597,6 +599,7 @@
 			isa = PBXGroup;
 			children = (
 				1659CAA114BDDDB72101E180 /* AuthManagerRequestTests.swift */,
+				E0A7B59E95DA141FDAC0291B /* ItineraryDetailDestinationsTests.swift */,
 				447D0FE5EEAF01DA8D9C124D /* MarkdownContentParserTests.swift */,
 			);
 			path = PathfindingTests;
@@ -1384,6 +1387,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2093E2AA2641EC6999A78046 /* AuthManagerRequestTests.swift in Sources */,
+				57DBF54E6DD5FC533DB54F7C /* ItineraryDetailDestinationsTests.swift in Sources */,
 				66D7B64AB6CCBE6288A0C97D /* MarkdownContentParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

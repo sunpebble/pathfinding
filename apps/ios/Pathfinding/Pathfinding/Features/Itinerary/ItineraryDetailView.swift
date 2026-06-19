@@ -5,12 +5,30 @@ import SwiftUI
 
 struct ItineraryDetailView: View {
   let itinerary: SavedItinerary
+
+  // MARK: - Navigation Destinations
+
+  enum Destination: Hashable {
+    case analysis
+    case budget
+  }
+
+  /// Returns the destinations reachable from this itinerary.
+  /// `.analysis` requires a backend id; `.budget` is always available.
+  var availableDestinations: [Destination] {
+    var result: [Destination] = []
+    if itinerary.apiItineraryId != nil { result.append(.analysis) }
+    result.append(.budget)
+    return result
+  }
+
   @State private var localDays: [AiDay] = []
   @State private var localTitle: String = ""
   @State private var selectedDayIndex: Int? = nil
   @State private var cameraPosition: MapCameraPosition = .automatic
   @State private var selectedPoiId: String? = nil
   @State private var showCopySheet = false
+  @State private var activeDestination: Destination?
 
   @Environment(AppState.self) private var appState
   private var store: ItineraryStore { ItineraryStore.shared }
@@ -111,6 +129,44 @@ struct ItineraryDetailView: View {
 
       ToolbarItem(placement: .topBarTrailing) {
         CalendarSyncToolbarButton(itinerary: itinerary)
+      }
+
+      ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+      ToolbarItem(placement: .topBarTrailing) {
+        Menu {
+          if availableDestinations.contains(.analysis) {
+            Button {
+              activeDestination = .analysis
+            } label: {
+              Label("行程分析", systemImage: "chart.bar.xaxis")
+            }
+          }
+          if availableDestinations.contains(.budget) {
+            Button {
+              activeDestination = .budget
+            } label: {
+              Label("预算管理", systemImage: "creditcard")
+            }
+          }
+        } label: {
+          Image(systemName: "ellipsis.circle")
+        }
+        .accessibilityLabel("更多功能")
+      }
+    }
+    .navigationDestination(item: $activeDestination) { destination in
+      switch destination {
+      case .analysis:
+        ItineraryAnalysisView(
+          itineraryId: itinerary.apiItineraryId ?? "",
+          itineraryTitle: itinerary.title
+        )
+      case .budget:
+        BudgetOverviewView(
+          itineraryId: itinerary.id.uuidString,
+          itineraryTitle: itinerary.title
+        )
       }
     }
     .sheet(isPresented: $showCopySheet) {

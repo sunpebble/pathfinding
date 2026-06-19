@@ -138,3 +138,60 @@ struct SavedItineraryOriginalAuthor: Codable, Hashable {
   let displayName: String?
   let avatarUrl: String?
 }
+
+// MARK: - Preview / Test Fixtures
+
+#if DEBUG
+extension SavedItinerary {
+  /// Representative sample used in previews and unit tests (tasks 10, 15, 16).
+  /// Includes an `apiItineraryId` so `.analysis` destination is available.
+  static var previewSample: SavedItinerary {
+    var itinerary = SavedItinerary(
+      id: UUID(uuidString: "DEADBEEF-0000-0000-0000-000000000001")!,
+      title: "北京三日精华游",
+      destination: "北京",
+      daysCount: 2
+    )
+    itinerary.apiItineraryId = "preview-api-itinerary-id"
+    itinerary.days = [
+      AiDay(
+        dayNumber: 1,
+        theme: "故宫与天安门",
+        pois: [
+          AiPoi(
+            name: "天安门广场",
+            type: "景点",
+            description: "中国最大广场",
+            latitude: 39.9054,
+            longitude: 116.3976,
+            address: "北京市东城区天安门广场"
+          ),
+          AiPoi(
+            name: "故宫博物院",
+            type: "景点",
+            description: "明清两代皇宫",
+            latitude: 39.9163,
+            longitude: 116.3972,
+            address: "北京市东城区景山前街4号"
+          ),
+        ]
+      ),
+      AiDay(
+        dayNumber: 2,
+        theme: "长城一日游",
+        pois: [
+          AiPoi(
+            name: "慕田峪长城",
+            type: "景点",
+            description: "保存完好的长城段落",
+            latitude: 40.4319,
+            longitude: 116.5694,
+            address: "北京市怀柔区慕田峪村"
+          ),
+        ]
+      ),
+    ]
+    return itinerary
+  }
+}
+#endif

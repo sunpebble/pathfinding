@@ -182,7 +182,7 @@ struct AddExpenseView: View {
     Task {
       let success = await budgetStore.createExpense(
         itineraryId: itineraryId,
-        userId: "current-user", // TODO: Get from AuthManager
+        userId: AuthManager.shared.currentUserId ?? "guest",
         categoryId: category.id,
         amount: amountValue,
         currency: budgetStore.budget?.currency ?? "CNY",
