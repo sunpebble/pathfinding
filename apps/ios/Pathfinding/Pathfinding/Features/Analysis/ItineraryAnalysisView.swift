@@ -57,28 +57,10 @@ struct ItineraryAnalysisView: View {
 // MARK: - Loading View
 
 struct LoadingAnalysisView: View {
-  @State private var animationPhase = 0.0
-
   var body: some View {
     VStack(spacing: DesignTokens.Spacing.lg) {
-      ZStack {
-        Circle()
-          .stroke(DesignTokens.Colors.accent.opacity(0.2), lineWidth: 8)
-          .frame(width: 80, height: 80)
-
-        Circle()
-          .trim(from: 0, to: 0.7)
-          .stroke(
-            LinearGradient(
-              colors: [.indigo, .purple],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            ),
-            style: StrokeStyle(lineWidth: 8, lineCap: .round)
-          )
-          .frame(width: 80, height: 80)
-          .rotationEffect(.degrees(animationPhase))
-      }
+      ProgressView()
+        .controlSize(.large)
 
       Text("正在分析行程...")
         .font(.headline)
@@ -89,11 +71,6 @@ struct LoadingAnalysisView: View {
         .multilineTextAlignment(.center)
     }
     .padding()
-    .onAppear {
-      withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
-        animationPhase = 360
-      }
-    }
   }
 }
 
@@ -133,26 +110,17 @@ struct AnalysisEmptyView: View {
   let onAnalyze: () -> Void
 
   var body: some View {
-    VStack(spacing: DesignTokens.Spacing.md) {
-      Image(systemName: "chart.bar.doc.horizontal")
-        .font(.system(size: 48))
-        .foregroundStyle(DesignTokens.Colors.accent)
-
-      Text("生成行程分析报告")
-        .font(.headline)
-
+    ContentUnavailableView {
+      Label("生成行程分析报告", systemImage: "chart.bar.doc.horizontal")
+    } description: {
       Text("评估行程合理性、获取优化建议和预算分析")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-        .multilineTextAlignment(.center)
-
+    } actions: {
       Button(action: onAnalyze) {
         Text("开始分析")
           .fontWeight(.semibold)
       }
       .buttonStyle(.primary)
     }
-    .padding()
   }
 }
 
@@ -166,7 +134,9 @@ struct AnalysisReportContent: View {
     ScrollView {
       VStack(spacing: DesignTokens.Spacing.lg) {
         // Overall Score Card
-        OverallScoreCard(report: report)
+        GlassEffectContainer {
+          OverallScoreCard(report: report)
+        }
 
         // Tab Selector
         Picker("", selection: $selectedTab) {
@@ -239,13 +209,7 @@ struct OverallScoreCard: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
-    .shadow(
-      color: DesignTokens.Shadow.md.color,
-      radius: DesignTokens.Shadow.md.radius,
-      y: DesignTokens.Shadow.md.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.lg)
   }
 }
 
@@ -339,38 +303,40 @@ struct OverviewTabContent: View {
   let report: ItineraryAnalysisReport
 
   var body: some View {
-    VStack(spacing: DesignTokens.Spacing.md) {
-      // Time Analysis
-      TimeAnalysisCard(timeAnalysis: report.timeAnalysis)
+    GlassEffectContainer {
+      VStack(spacing: DesignTokens.Spacing.md) {
+        // Time Analysis
+        TimeAnalysisCard(timeAnalysis: report.timeAnalysis)
 
-      // Strengths
-      if !report.strengths.isEmpty {
-        InsightsCard(
-          title: "优势",
-          icon: "checkmark.circle.fill",
-          iconColor: .green,
-          items: report.strengths
-        )
-      }
+        // Strengths
+        if !report.strengths.isEmpty {
+          InsightsCard(
+            title: "优势",
+            icon: "checkmark.circle.fill",
+            iconColor: .green,
+            items: report.strengths
+          )
+        }
 
-      // Critical Issues
-      if !report.criticalIssues.isEmpty {
-        InsightsCard(
-          title: "需要注意",
-          icon: "exclamationmark.triangle.fill",
-          iconColor: .orange,
-          items: report.criticalIssues
-        )
-      }
+        // Critical Issues
+        if !report.criticalIssues.isEmpty {
+          InsightsCard(
+            title: "需要注意",
+            icon: "exclamationmark.triangle.fill",
+            iconColor: .orange,
+            items: report.criticalIssues
+          )
+        }
 
-      // Improvements
-      if !report.improvements.isEmpty {
-        InsightsCard(
-          title: "可改进",
-          icon: "lightbulb.fill",
-          iconColor: .yellow,
-          items: report.improvements
-        )
+        // Improvements
+        if !report.improvements.isEmpty {
+          InsightsCard(
+            title: "可改进",
+            icon: "lightbulb.fill",
+            iconColor: .yellow,
+            items: report.improvements
+          )
+        }
       }
     }
   }
@@ -468,13 +434,7 @@ struct TimeAnalysisCard: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.md)
   }
 
   private func formatMinutes(_ minutes: Int) -> String {
@@ -573,13 +533,7 @@ struct InsightsCard: View {
     }
     .padding()
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.md)
   }
 }
 
@@ -609,16 +563,20 @@ struct DailyAnalysisTabContent: View {
 
       // Selected Day Details
       if let dayAnalysis = report.dayAnalysis.first(where: { $0.dayNumber == selectedDay }) {
-        DayAnalysisCard(day: dayAnalysis)
+        GlassEffectContainer {
+          VStack(spacing: DesignTokens.Spacing.md) {
+            DayAnalysisCard(day: dayAnalysis)
 
-        // Route Optimization for this day
-        if let optimization = report.routeOptimizations.first(where: { $0.dayNumber == selectedDay }) {
-          RouteOptimizationCard(optimization: optimization)
-        }
+            // Route Optimization for this day
+            if let optimization = report.routeOptimizations.first(where: { $0.dayNumber == selectedDay }) {
+              RouteOptimizationCard(optimization: optimization)
+            }
 
-        // POI List for this day
-        if !dayAnalysis.poisAnalysis.isEmpty {
-          PoiAnalysisListCard(pois: dayAnalysis.poisAnalysis)
+            // POI List for this day
+            if !dayAnalysis.poisAnalysis.isEmpty {
+              PoiAnalysisListCard(pois: dayAnalysis.poisAnalysis)
+            }
+          }
         }
       }
     }
@@ -793,13 +751,7 @@ struct DayAnalysisCard: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.md)
   }
 
   private func formatMinutes(_ minutes: Int) -> String {
@@ -895,13 +847,7 @@ struct PoiAnalysisListCard: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.md)
   }
 }
 
@@ -966,26 +912,26 @@ struct BudgetTabContent: View {
   var body: some View {
     VStack(spacing: DesignTokens.Spacing.md) {
       if let budget = report.budgetAnalysis {
-        // Budget Overview
-        BudgetOverviewCard(budget: budget)
+        GlassEffectContainer {
+          VStack(spacing: DesignTokens.Spacing.md) {
+            // Budget Overview
+            BudgetOverviewCard(budget: budget)
 
-        // Budget Breakdown Chart
-        BudgetBreakdownChart(breakdown: budget.breakdown)
+            // Budget Breakdown Chart
+            BudgetBreakdownChart(breakdown: budget.breakdown)
 
-        // Saving Opportunities
-        if !budget.savingOpportunities.isEmpty {
-          SavingOpportunitiesCard(opportunities: budget.savingOpportunities)
+            // Saving Opportunities
+            if !budget.savingOpportunities.isEmpty {
+              SavingOpportunitiesCard(opportunities: budget.savingOpportunities)
+            }
+          }
         }
       } else {
-        VStack(spacing: DesignTokens.Spacing.md) {
-          Image(systemName: "yensign.circle")
-            .font(.system(size: 48))
-            .foregroundStyle(.gray)
-
-          Text("预算分析不可用")
-            .font(.headline)
-            .foregroundStyle(.secondary)
-        }
+        ContentUnavailableView(
+          "预算分析不可用",
+          systemImage: "yensign.circle",
+          description: Text("该行程暂无预算数据")
+        )
         .padding(40)
       }
     }
@@ -1050,13 +996,7 @@ struct BudgetOverviewCard: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
-    .shadow(
-      color: DesignTokens.Shadow.md.color,
-      radius: DesignTokens.Shadow.md.radius,
-      y: DesignTokens.Shadow.md.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.lg)
   }
 }
 
@@ -1106,13 +1046,7 @@ struct BudgetBreakdownChart: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.md)
   }
 
   private func categoryColor(for category: String) -> Color {
@@ -1177,13 +1111,7 @@ struct SavingOpportunitiesCard: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.md)
   }
 
   private func effortColor(_ effort: SavingOpportunity.EffortLevel) -> Color {
@@ -1201,15 +1129,17 @@ struct RecommendationsTabContent: View {
   let report: ItineraryAnalysisReport
 
   var body: some View {
-    VStack(spacing: DesignTokens.Spacing.md) {
-      // Top Recommendations
-      if !report.topRecommendations.isEmpty {
-        TopRecommendationsCard(recommendations: report.topRecommendations)
-      }
+    GlassEffectContainer {
+      VStack(spacing: DesignTokens.Spacing.md) {
+        // Top Recommendations
+        if !report.topRecommendations.isEmpty {
+          TopRecommendationsCard(recommendations: report.topRecommendations)
+        }
 
-      // Route Optimizations
-      if !report.routeOptimizations.isEmpty {
-        RouteOptimizationsCard(optimizations: report.routeOptimizations)
+        // Route Optimizations
+        if !report.routeOptimizations.isEmpty {
+          RouteOptimizationsCard(optimizations: report.routeOptimizations)
+        }
       }
     }
   }
@@ -1249,13 +1179,7 @@ struct TopRecommendationsCard: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.md)
   }
 }
 
@@ -1314,13 +1238,7 @@ struct RouteOptimizationsCard: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface(cornerRadius: DesignTokens.Radius.md)
   }
 }
 

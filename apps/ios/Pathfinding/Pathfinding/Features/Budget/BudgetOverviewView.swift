@@ -20,20 +20,22 @@ struct BudgetOverviewView: View {
 
   var body: some View {
     ScrollView {
-      VStack(spacing: DesignTokens.Spacing.lg) {
-        // Budget Summary Card
-        budgetSummaryCard
+      GlassEffectContainer {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+          // Budget Summary Card
+          budgetSummaryCard
 
-        // Chart Section
-        chartSection
+          // Chart Section
+          chartSection
 
-        // Category Breakdown
-        categoryBreakdownSection
+          // Category Breakdown
+          categoryBreakdownSection
 
-        // Recent Expenses
-        recentExpensesSection
+          // Recent Expenses
+          recentExpensesSection
+        }
+        .padding(DesignTokens.Spacing.md)
       }
-      .padding(DesignTokens.Spacing.md)
     }
     .background(DesignTokens.Colors.backgroundGrouped)
     .navigationTitle("预算追踪")
@@ -157,8 +159,7 @@ struct BudgetOverviewView: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(DesignTokens.Colors.cardBackground)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+    .cardSurface(cornerRadius: DesignTokens.Radius.lg)
   }
 
   // MARK: - Chart Section
@@ -184,8 +185,7 @@ struct BudgetOverviewView: View {
       .frame(height: 220)
     }
     .padding(DesignTokens.Spacing.md)
-    .background(DesignTokens.Colors.cardBackground)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+    .cardSurface(cornerRadius: DesignTokens.Radius.lg)
   }
 
   // MARK: - Category Pie Chart
@@ -276,8 +276,7 @@ struct BudgetOverviewView: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(DesignTokens.Colors.cardBackground)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+    .cardSurface(cornerRadius: DesignTokens.Radius.lg)
   }
 
   // MARK: - Recent Expenses Section
@@ -326,8 +325,7 @@ struct BudgetOverviewView: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(DesignTokens.Colors.cardBackground)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+    .cardSurface(cornerRadius: DesignTokens.Radius.lg)
   }
 
   // MARK: - Helpers
