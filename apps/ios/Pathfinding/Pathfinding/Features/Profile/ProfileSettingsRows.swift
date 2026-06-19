@@ -7,8 +7,6 @@ struct ExplorerSectionHeaderLabel: View {
   let icon: String
   let color: Color
 
-  @Environment(\.colorScheme) private var colorScheme
-
   var body: some View {
     HStack(spacing: DesignTokens.Spacing.xs) {
       Image(systemName: icon)
@@ -31,68 +29,23 @@ struct ExplorerSettingsRow: View {
   let title: String
   let subtitle: String
   let iconColor: Color
-  var terrainColor: Color = .clear
-  var showChevron: Bool = false
-
-  @Environment(\.colorScheme) private var colorScheme
-  @State private var isPressed = false
+  var terrainColor: Color = .clear  // kept for call-site compat, unused
+  var showChevron: Bool = false     // kept for call-site compat, unused (NavigationLink provides disclosure)
 
   var body: some View {
-    HStack(spacing: DesignTokens.Spacing.md) {
-      // Icon with gradient background
-      ZStack {
-        RoundedRectangle(cornerRadius: 8)
-          .fill(
-            LinearGradient(
-              colors: [
-                iconColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
-                iconColor.opacity(colorScheme == .dark ? 0.15 : 0.08)
-              ],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .frame(width: 34, height: 34)
-
-        // Subtle terrain color accent
-        if terrainColor != .clear {
-          RoundedRectangle(cornerRadius: 8)
-            .stroke(terrainColor.opacity(0.2), lineWidth: 0.5)
-            .frame(width: 34, height: 34)
-        }
-
-        Image(systemName: icon)
-          .font(.system(size: 14, weight: .semibold))
-          .foregroundStyle(iconColor)
-      }
-      .shadow(
-        color: colorScheme == .dark ? iconColor.opacity(0.2) : .clear,
-        radius: 4,
-        y: 0
-      )
-
+    Label {
       VStack(alignment: .leading, spacing: 3) {
         Text(title)
-          .font(.body)
           .foregroundStyle(.primary)
-
         Text(subtitle)
           .font(.caption)
           .foregroundStyle(.secondary)
           .lineLimit(1)
       }
-
-      if showChevron {
-        Spacer()
-
-        Image(systemName: "chevron.right")
-          .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(.tertiary)
-      }
+    } icon: {
+      Image(systemName: icon)
+        .foregroundStyle(iconColor)
     }
-    .padding(.vertical, 3)
-    .scaleEffect(isPressed ? 0.98 : 1)
-    .animation(.spring(response: 0.2), value: isPressed)
   }
 }
 
@@ -121,69 +74,39 @@ struct ExplorerVersionRow: View {
 
 struct OfflineMapSettingsRow: View {
   @State private var manager = OfflineMapManager.shared
-  @Environment(\.colorScheme) private var colorScheme
 
   private let mapColor = DesignTokens.Colors.Terrain.forest
 
   var body: some View {
-    HStack(spacing: DesignTokens.Spacing.md) {
-      // Icon with gradient background
-      ZStack {
-        RoundedRectangle(cornerRadius: 8)
-          .fill(
-            LinearGradient(
-              colors: [
-                mapColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
-                mapColor.opacity(colorScheme == .dark ? 0.15 : 0.08)
-              ],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .frame(width: 34, height: 34)
-
-        Image(systemName: "map.fill")
-          .font(.system(size: 14, weight: .semibold))
-          .foregroundStyle(mapColor)
-      }
-      .shadow(
-        color: colorScheme == .dark ? mapColor.opacity(0.2) : .clear,
-        radius: 4,
-        y: 0
-      )
-
+    Label {
       VStack(alignment: .leading, spacing: 3) {
-        Text("profile.offline_maps".localized)
-          .font(.body)
-          .foregroundStyle(.primary)
+        HStack {
+          VStack(alignment: .leading, spacing: 3) {
+            Text("profile.offline_maps".localized)
+              .foregroundStyle(.primary)
+            Text(subtitleText)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+          }
 
-        Text(subtitleText)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
+          Spacer()
+
+          if !manager.downloadedRegions.isEmpty {
+            Text("\(manager.downloadedRegions.count)")
+              .font(.caption2)
+              .fontWeight(.semibold)
+              .foregroundStyle(.white)
+              .padding(.horizontal, 8)
+              .padding(.vertical, 4)
+              .background(mapColor, in: Capsule())
+          }
+        }
       }
-
-      Spacer()
-
-      // Show download count badge if any
-      if !manager.downloadedRegions.isEmpty {
-        Text("\(manager.downloadedRegions.count)")
-          .font(.caption2)
-          .fontWeight(.semibold)
-          .foregroundStyle(.white)
-          .padding(.horizontal, 8)
-          .padding(.vertical, 4)
-          .background(
-            LinearGradient(
-              colors: [mapColor, mapColor.opacity(0.8)],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            ),
-            in: Capsule()
-          )
-      }
+    } icon: {
+      Image(systemName: "map.fill")
+        .foregroundStyle(mapColor)
     }
-    .padding(.vertical, 3)
   }
 
   private var subtitleText: String {
@@ -199,73 +122,39 @@ struct OfflineMapSettingsRow: View {
 
 struct iCloudSyncSettingsRow: View {
   @State private var syncManager = CloudKitSyncManager.shared
-  @Environment(\.colorScheme) private var colorScheme
-  var showChevron: Bool = false
+  var showChevron: Bool = false  // kept for call-site compat, unused
 
   var body: some View {
-    HStack(spacing: DesignTokens.Spacing.md) {
-      // Icon with gradient background and breathing animation
-      ZStack {
-        RoundedRectangle(cornerRadius: 8)
-          .fill(
-            LinearGradient(
-              colors: [
-                syncStatusColor.opacity(colorScheme == .dark ? 0.25 : 0.15),
-                syncStatusColor.opacity(colorScheme == .dark ? 0.15 : 0.08)
-              ],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
-          .frame(width: 34, height: 34)
-
-        Image(systemName: syncStatusIcon)
-          .font(.system(size: 14, weight: .semibold))
-          .foregroundStyle(syncStatusColor)
-          .symbolEffect(.pulse, isActive: syncManager.syncStatus == .syncing)
-      }
-      .shadow(
-        color: colorScheme == .dark ? syncStatusColor.opacity(0.3) : .clear,
-        radius: 4,
-        y: 0
-      )
-      .breathingAnimation(
-        minOpacity: 0.8,
-        maxOpacity: 1.0,
-        duration: 2.0
-      )
-
+    Label {
       VStack(alignment: .leading, spacing: 3) {
-        Text("profile.icloud_sync".localized)
-          .font(.body)
-          .foregroundStyle(.primary)
+        HStack {
+          VStack(alignment: .leading, spacing: 3) {
+            Text("profile.icloud_sync".localized)
+              .foregroundStyle(.primary)
+            Text(syncStatusText)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+          }
 
-        Text(syncStatusText)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
+          Spacer()
+
+          if syncManager.pendingConflicts.count > 0 {
+            Text("\(syncManager.pendingConflicts.count)")
+              .font(.caption2)
+              .fontWeight(.semibold)
+              .foregroundStyle(.white)
+              .padding(.horizontal, 6)
+              .padding(.vertical, 2)
+              .background(.orange, in: Capsule())
+          }
+        }
       }
-
-      Spacer()
-
-      if syncManager.pendingConflicts.count > 0 {
-        Text("\(syncManager.pendingConflicts.count)")
-          .font(.caption2)
-          .fontWeight(.semibold)
-          .foregroundStyle(.white)
-          .padding(.horizontal, 6)
-          .padding(.vertical, 2)
-          .background(.orange, in: Capsule())
-          .pulseAnimation(duration: 1.5)
-      }
-
-      if showChevron {
-        Image(systemName: "chevron.right")
-          .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(.tertiary)
-      }
+    } icon: {
+      Image(systemName: syncStatusIcon)
+        .foregroundStyle(syncStatusColor)
+        .symbolEffect(.pulse, isActive: syncManager.syncStatus == .syncing)
     }
-    .padding(.vertical, 3)
   }
 
   private var syncStatusIcon: String {

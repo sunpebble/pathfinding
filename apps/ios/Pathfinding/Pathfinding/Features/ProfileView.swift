@@ -4,17 +4,10 @@ struct ProfileView: View {
   @EnvironmentObject private var authViewModel: AuthViewModel
   @Environment(ThemeManager.self) private var themeManager
   @Environment(\.localizationManager) private var localizationManager
-  @Environment(\.colorScheme) private var colorScheme
-  @State private var showAPISettings = false
-  @State private var showAbout = false
-  @State private var showThemeSettings = false
-  @State private var showLanguageSettings = false
-  @State private var showCloudSyncSettings = false
   @State private var showLogin = false
   @State private var followStore = FollowStore.shared
   @State private var followStats: FollowStats?
   @State private var favoriteStore = FavoriteStore.shared
-  @State private var isVisible = false
 
   // Navigation destinations for stats
   @State private var navigateToFavorites = false
@@ -28,119 +21,7 @@ struct ProfileView: View {
 
   var body: some View {
     NavigationStack {
-      ZStack {
-        // Explorer background with enhanced gradient
-        ExplorerPageBackground(style: .list, accentColor: .purple)
-
-        List {
-          // MARK: - Profile Section
-        Section {
-          if isLoggedIn {
-            // Show logged-in user info
-            ProfileHeaderView(
-              email: authViewModel.userEmail,
-              isLoggedIn: true,
-              colorScheme: colorScheme
-            )
-            .bounceIn(from: .top, distance: 30, delay: 0.1)
-          } else {
-            // Show guest prompt
-            Button {
-              showLogin = true
-            } label: {
-              ProfileHeaderView(
-                email: nil,
-                isLoggedIn: false,
-                colorScheme: colorScheme,
-                showChevron: true
-              )
-            }
-            .buttonStyle(.plain)
-          } // end else (guest)
-        }
-
-        // MARK: - Stats Section
-        Section {
-          VStack(spacing: DesignTokens.Spacing.md) {
-            // Main stats row with staggered animation
-            HStack(spacing: 0) {
-              Button {
-                navigateToFavorites = true
-              } label: {
-                EnhancedStatItem(
-                  value: "\(favoriteStore.totalFavoritesCount)",
-                  label: "profile.favorites".localized,
-                  icon: "bookmark.fill",
-                  color: .orange,
-                  index: 0
-                )
-              }
-              .buttonStyle(.plain)
-
-              ExplorerStatDivider()
-
-              Button {
-                navigateToLikes = true
-              } label: {
-                EnhancedStatItem(
-                  value: "\(favoriteStore.totalLikesCount)",
-                  label: "profile.likes".localized,
-                  icon: "heart.fill",
-                  color: .red,
-                  index: 1
-                )
-              }
-              .buttonStyle(.plain)
-
-              ExplorerStatDivider()
-
-              EnhancedStatItem(
-                value: "0",
-                label: "profile.footprints".localized,
-                icon: "shoeprints.fill",
-                color: DesignTokens.Colors.Terrain.forest,
-                index: 2
-              )
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(favoriteStore.totalFavoritesCount) 个收藏，\(favoriteStore.totalLikesCount) 个喜欢，0 个足迹")
-
-            ExplorerDivider(style: .topographic, color: .purple.opacity(0.3))
-              .padding(.horizontal, DesignTokens.Spacing.md)
-
-            // Follow stats row
-            Button {
-              navigateToFollowManagement = true
-            } label: {
-              HStack(spacing: 0) {
-                EnhancedStatItem(
-                  value: "\(followStats?.followersCount ?? 0)",
-                  label: "profile.followers".localized,
-                  icon: "person.2.fill",
-                  color: .pink,
-                  index: 3
-                )
-
-                ExplorerStatDivider()
-
-                EnhancedStatItem(
-                  value: "\(followStats?.followingCount ?? 0)",
-                  label: "profile.following".localized,
-                  icon: "person.wave.2.fill",
-                  color: .purple,
-                  index: 4
-                )
-              }
-            }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(followStats?.followersCount ?? 0) 个关注者，\(followStats?.followingCount ?? 0) 个关注")
-            .accessibilityHint("双击管理关注")
-          }
-          .padding(.vertical, DesignTokens.Spacing.xs)
-        }
-        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-
+      List {
         // MARK: - Travel Stats Section
         Section {
           NavigationLink {
@@ -154,7 +35,6 @@ struct ProfileView: View {
               terrainColor: DesignTokens.Colors.Terrain.ocean
             )
           }
-          .staggeredAnimation(index: 0, baseDelay: 0.03)
 
           NavigationLink {
             PreferencesView()
@@ -167,13 +47,8 @@ struct ProfileView: View {
               terrainColor: DesignTokens.Colors.Terrain.volcano
             )
           }
-          .staggeredAnimation(index: 1, baseDelay: 0.03)
         } header: {
-          ExplorerSectionHeaderLabel(
-            title: "profile.section.travel_data".localized,
-            icon: "chart.xyaxis.line",
-            color: .indigo
-          )
+          Text("profile.section.travel_data".localized)
         }
 
         // MARK: - Likes & Favorites Section
@@ -189,7 +64,6 @@ struct ProfileView: View {
               terrainColor: DesignTokens.Colors.Terrain.desert
             )
           }
-          .staggeredAnimation(index: 2, baseDelay: 0.03)
 
           NavigationLink {
             MyLikesView()
@@ -202,7 +76,6 @@ struct ProfileView: View {
               terrainColor: DesignTokens.Colors.Terrain.volcano
             )
           }
-          .staggeredAnimation(index: 3, baseDelay: 0.03)
 
           NavigationLink {
             FavoriteCollectionsView()
@@ -215,13 +88,8 @@ struct ProfileView: View {
               terrainColor: DesignTokens.Colors.Terrain.mountain
             )
           }
-          .staggeredAnimation(index: 4, baseDelay: 0.03)
         } header: {
-          ExplorerSectionHeaderLabel(
-            title: "profile.section.likes_favorites".localized,
-            icon: "heart.circle.fill",
-            color: .orange
-          )
+          Text("profile.section.likes_favorites".localized)
         }
 
         // MARK: - Travel Services Section
@@ -237,67 +105,52 @@ struct ProfileView: View {
               terrainColor: DesignTokens.Colors.Terrain.glacier
             )
           }
-          .staggeredAnimation(index: 5, baseDelay: 0.03)
         } header: {
-          ExplorerSectionHeaderLabel(
-            title: "profile.section.travel_services".localized,
-            icon: "airplane.circle.fill",
-            color: .indigo
-          )
+          Text("profile.section.travel_services".localized)
         }
 
         // MARK: - Appearance Section
         Section {
-          Button {
-            showThemeSettings = true
+          NavigationLink {
+            ThemeSettingsSheet()
           } label: {
             ExplorerSettingsRow(
               icon: themeManager.currentMode.icon,
               title: "profile.theme".localized,
               subtitle: themeManager.currentMode.displayName,
               iconColor: themeManager.currentMode.iconColor,
-              terrainColor: DesignTokens.Colors.Terrain.mountain,
-              showChevron: true
+              terrainColor: DesignTokens.Colors.Terrain.mountain
             )
           }
-          .staggeredAnimation(index: 6, baseDelay: 0.03)
 
-          Button {
-            showLanguageSettings = true
+          NavigationLink {
+            LanguageSettingsSheet()
           } label: {
             ExplorerSettingsRow(
               icon: localizationManager.currentLanguage.icon,
               title: "profile.language".localized,
               subtitle: localizationManager.currentLanguage.nativeName,
               iconColor: localizationManager.currentLanguage.iconColor,
-              terrainColor: DesignTokens.Colors.Terrain.ocean,
-              showChevron: true
+              terrainColor: DesignTokens.Colors.Terrain.ocean
             )
           }
-          .staggeredAnimation(index: 7, baseDelay: 0.03)
         } header: {
-          ExplorerSectionHeaderLabel(
-            title: "profile.section.appearance".localized,
-            icon: "paintpalette.fill",
-            color: .purple
-          )
+          Text("profile.section.appearance".localized)
         }
 
         // MARK: - Settings Section
         Section {
-          Button {
-            showCloudSyncSettings = true
+          NavigationLink {
+            iCloudSyncSettingsSheet()
           } label: {
-            iCloudSyncSettingsRow(showChevron: true)
+            iCloudSyncSettingsRow()
           }
-          .staggeredAnimation(index: 8, baseDelay: 0.03)
 
           NavigationLink {
             OfflineMapListView()
           } label: {
             OfflineMapSettingsRow()
           }
-          .staggeredAnimation(index: 9, baseDelay: 0.03)
 
           NavigationLink {
             SiriShortcutsSettingsView()
@@ -310,21 +163,18 @@ struct ProfileView: View {
               terrainColor: DesignTokens.Colors.Terrain.mountain
             )
           }
-          .staggeredAnimation(index: 10, baseDelay: 0.03)
 
-          Button {
-            showAPISettings = true
+          NavigationLink {
+            APISettingsSheet()
           } label: {
             ExplorerSettingsRow(
               icon: "server.rack",
               title: "profile.api_config".localized,
               subtitle: AppConfig.apiBaseURL,
               iconColor: .blue,
-              terrainColor: DesignTokens.Colors.Terrain.ocean,
-              showChevron: true
+              terrainColor: DesignTokens.Colors.Terrain.ocean
             )
           }
-          .staggeredAnimation(index: 11, baseDelay: 0.03)
 
           NavigationLink {
             CacheSettingsView()
@@ -337,27 +187,20 @@ struct ProfileView: View {
               terrainColor: DesignTokens.Colors.Terrain.desert
             )
           }
-          .staggeredAnimation(index: 12, baseDelay: 0.03)
 
-          Button {
-            showAbout = true
+          NavigationLink {
+            AboutSheet()
           } label: {
             ExplorerSettingsRow(
               icon: "info.circle",
               title: "profile.about".localized,
               subtitle: "profile.about_subtitle".localized,
               iconColor: .purple,
-              terrainColor: DesignTokens.Colors.Terrain.mountain,
-              showChevron: true
+              terrainColor: DesignTokens.Colors.Terrain.mountain
             )
           }
-          .staggeredAnimation(index: 13, baseDelay: 0.03)
         } header: {
-          ExplorerSectionHeaderLabel(
-            title: "profile.section.settings".localized,
-            icon: "gearshape.fill",
-            color: .gray
-          )
+          Text("profile.section.settings".localized)
         }
 
         // MARK: - Version Section
@@ -376,23 +219,10 @@ struct ProfileView: View {
           #endif
         }
       }
-      .scrollContentBackground(.hidden)
       .listStyle(.insetGrouped)
       .navigationTitle("profile.title".localized)
-      .sheet(isPresented: $showAPISettings) {
-        APISettingsSheet()
-      }
-      .sheet(isPresented: $showAbout) {
-        AboutSheet()
-      }
-      .sheet(isPresented: $showThemeSettings) {
-        ThemeSettingsSheet()
-      }
-      .sheet(isPresented: $showLanguageSettings) {
-        LanguageSettingsSheet()
-      }
-      .sheet(isPresented: $showCloudSyncSettings) {
-        iCloudSyncSettingsSheet()
+      .safeAreaInset(edge: .top) {
+        heroView
       }
       .sheet(isPresented: $showLogin) {
         LoginView()
@@ -410,30 +240,141 @@ struct ProfileView: View {
         await loadFollowStats()
         await loadFavoriteStats()
       }
-      } // end ZStack
     }
   }
 
+  // MARK: - Glass Hero
+
+  private var heroView: some View {
+    GlassEffectContainer {
+      VStack(spacing: DesignTokens.Spacing.md) {
+        // Avatar + name row
+        HStack(spacing: DesignTokens.Spacing.lg) {
+          Image(systemName: "person.fill")
+            .font(.system(size: 32, weight: .medium))
+            .foregroundStyle(.white)
+            .padding(DesignTokens.Spacing.lg)
+            .glassEffect(.regular.tint(.purple.opacity(0.25)), in: Circle())
+
+          VStack(alignment: .leading, spacing: 6) {
+            Text(isLoggedIn ? (authViewModel.userEmail ?? "User") : "profile.guest".localized)
+              .font(.title2)
+              .fontWeight(.bold)
+              .foregroundStyle(.primary)
+            if isLoggedIn {
+              Text("profile.logged_in".localized)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            } else {
+              HStack(spacing: 4) {
+                Image(systemName: "arrow.right.circle.fill")
+                  .font(.caption)
+                  .foregroundStyle(.indigo)
+                Text("profile.login_prompt".localized)
+                  .font(.subheadline)
+                  .foregroundStyle(.secondary)
+              }
+            }
+          }
+          Spacer()
+          if !isLoggedIn {
+            Button("profile.login_prompt".localized) {
+              showLogin = true
+            }
+            .buttonStyle(.glass)
+          }
+        }
+
+        Divider()
+
+        // Stats row inline
+        HStack(spacing: 0) {
+          Button { navigateToFavorites = true } label: {
+            EnhancedStatItem(
+              value: "\(favoriteStore.totalFavoritesCount)",
+              label: "profile.favorites".localized,
+              icon: "bookmark.fill",
+              color: .orange,
+              index: 0
+            )
+          }
+          .buttonStyle(.plain)
+
+          Divider().frame(height: 50)
+
+          Button { navigateToLikes = true } label: {
+            EnhancedStatItem(
+              value: "\(favoriteStore.totalLikesCount)",
+              label: "profile.likes".localized,
+              icon: "heart.fill",
+              color: .red,
+              index: 1
+            )
+          }
+          .buttonStyle(.plain)
+
+          Divider().frame(height: 50)
+
+          EnhancedStatItem(
+            value: "0",
+            label: "profile.footprints".localized,
+            icon: "shoeprints.fill",
+            color: DesignTokens.Colors.Terrain.forest,
+            index: 2
+          )
+
+          Divider().frame(height: 50)
+
+          Button { navigateToFollowManagement = true } label: {
+            HStack(spacing: 0) {
+              EnhancedStatItem(
+                value: "\(followStats?.followersCount ?? 0)",
+                label: "profile.followers".localized,
+                icon: "person.2.fill",
+                color: .pink,
+                index: 3
+              )
+              Divider().frame(height: 50)
+              EnhancedStatItem(
+                value: "\(followStats?.followingCount ?? 0)",
+                label: "profile.following".localized,
+                icon: "person.wave.2.fill",
+                color: .purple,
+                index: 4
+              )
+            }
+          }
+          .buttonStyle(.plain)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+          "\(favoriteStore.totalFavoritesCount) 个收藏，\(favoriteStore.totalLikesCount) 个喜欢，0 个足迹，\(followStats?.followersCount ?? 0) 个关注者，\(followStats?.followingCount ?? 0) 个关注"
+        )
+      }
+      .padding(DesignTokens.Spacing.md)
+    }
+    .backgroundExtensionEffect()
+    .padding(.horizontal, DesignTokens.Spacing.md)
+    .padding(.top, DesignTokens.Spacing.sm)
+  }
+
+  // MARK: - Data Loading
+
   private func loadFollowStats() async {
-    // In a real app, get current user ID from auth
-    // For now, use a placeholder or skip if not logged in
     if let userId = AuthManager.shared.currentUserId {
       followStats = await followStore.getFollowStats(for: userId)
     }
   }
 
   private func loadFavoriteStats() async {
-    // Load collections, favorites, and likes count in parallel
     await withTaskGroup(of: Void.self) { group in
       group.addTask {
         await self.favoriteStore.fetchCollections()
       }
       group.addTask {
-        // Fetch first page to get total favorites count from API response
         await self.favoriteStore.fetchFavoritedItineraries(refresh: true)
       }
       group.addTask {
-        // Fetch first page to get total likes count from API response
         await self.favoriteStore.fetchLikedItineraries(refresh: true)
       }
     }
