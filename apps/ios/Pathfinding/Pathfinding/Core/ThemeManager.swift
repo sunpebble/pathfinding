@@ -202,9 +202,11 @@ final class ThemeManager {
   private(set) var mapStyle: MapStyleOption = .followTheme
 
   /// Whether to use true black for OLED displays in dark mode
+  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
   private(set) var useTrueBlack: Bool = false
 
   /// Whether to reduce contrast in dark mode
+  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
   private(set) var reduceContrastInDark: Bool = false
 
   /// Keys for UserDefaults storage
@@ -234,6 +236,7 @@ final class ThemeManager {
   }
 
   /// Primary gradient using accent colors
+  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
   var primaryGradient: LinearGradient {
     LinearGradient(
       colors: [accentColor.color, accentColor.secondaryColor],
@@ -266,7 +269,6 @@ final class ThemeManager {
 
     currentMode = mode
     saveSettings()
-    applyTheme()
     notifyThemeChange()
   }
 
@@ -276,7 +278,6 @@ final class ThemeManager {
 
     accentColor = color
     saveSettings()
-    applyAccentColor()
     notifyThemeChange()
   }
 
@@ -290,6 +291,7 @@ final class ThemeManager {
   }
 
   /// Set true black mode for OLED displays
+  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
   func setTrueBlack(_ enabled: Bool) {
     guard enabled != useTrueBlack else { return }
 
@@ -299,6 +301,7 @@ final class ThemeManager {
   }
 
   /// Set reduce contrast mode
+  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
   func setReduceContrast(_ enabled: Bool) {
     guard enabled != reduceContrastInDark else { return }
 
@@ -312,51 +315,6 @@ final class ThemeManager {
     mapStyle.mapStyle(for: colorScheme)
   }
 
-  /// Apply the current theme to all windows
-  func applyTheme() {
-    let style = currentMode.userInterfaceStyle
-
-    // Apply to all connected scenes
-    for scene in UIApplication.shared.connectedScenes {
-      guard let windowScene = scene as? UIWindowScene else { continue }
-      for window in windowScene.windows {
-        UIView.transition(
-          with: window,
-          duration: 0.3,
-          options: [.transitionCrossDissolve, .allowUserInteraction],
-          animations: {
-            window.overrideUserInterfaceStyle = style
-          }
-        )
-      }
-    }
-  }
-
-  /// Apply theme without animation (for initial setup)
-  func applyThemeImmediately() {
-    let style = currentMode.userInterfaceStyle
-
-    for scene in UIApplication.shared.connectedScenes {
-      guard let windowScene = scene as? UIWindowScene else { continue }
-      for window in windowScene.windows {
-        window.overrideUserInterfaceStyle = style
-      }
-    }
-
-    applyAccentColor()
-  }
-
-  /// Apply the accent color globally
-  func applyAccentColor() {
-    // Set the tint color for all windows
-    for scene in UIApplication.shared.connectedScenes {
-      guard let windowScene = scene as? UIWindowScene else { continue }
-      for window in windowScene.windows {
-        window.tintColor = accentColor.uiColor
-      }
-    }
-  }
-
   /// Reset all theme settings to defaults
   func resetToDefaults() {
     currentMode = .system
@@ -366,8 +324,6 @@ final class ThemeManager {
     reduceContrastInDark = false
 
     saveSettings()
-    applyTheme()
-    applyAccentColor()
     notifyThemeChange()
   }
 

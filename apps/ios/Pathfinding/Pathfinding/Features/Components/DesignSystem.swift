@@ -461,6 +461,7 @@ enum DesignTokens {
     // MARK: - Gradients
 
     /// Hero gradient for headers (uses current accent)
+    @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
     @MainActor static func heroGradient(for colorScheme: ColorScheme) -> LinearGradient {
       let primary = ThemeManager.shared.accentColor.color
       let secondary = ThemeManager.shared.accentColor.secondaryColor
@@ -494,11 +495,13 @@ enum DesignTokens {
     }
 
     /// Primary gradient (uses current accent colors)
+    @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
     @MainActor static var primaryGradient: LinearGradient {
       ThemeManager.shared.primaryGradient
     }
 
     /// Mesh gradient for premium features
+    @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
     @MainActor static func meshGradient(for colorScheme: ColorScheme) -> LinearGradient {
       let primary = ThemeManager.shared.accentColor.color
       let secondary = ThemeManager.shared.accentColor.secondaryColor
