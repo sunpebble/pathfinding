@@ -1,6 +1,6 @@
 import type { travelGuides } from '@pathfinding/database';
 import type { TravelGuideResponseDto } from '@pathfinding/types';
-import { arrayFromRecord, recordFromJson } from './ai-days';
+import { aiDayNumber, arrayFromRecord, recordFromJson } from './ai-days';
 
 type GuideRow = typeof travelGuides.$inferSelect;
 
@@ -100,8 +100,8 @@ function normalizeAiDays(value: unknown): TravelGuideResponseDto['ai_days'] {
         return null;
       }
       const record = item as Record<string, unknown>;
-      const dayNumber = record.day_number ?? record.dayNumber ?? record.day;
-      if (typeof dayNumber !== 'number' || !Number.isFinite(dayNumber)) {
+      const dayNumber = aiDayNumber(record);
+      if (dayNumber === null) {
         return null;
       }
       return {

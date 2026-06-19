@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aiDayNumber, aiDaysToDayItineraries, isRecord, resolveAiDays } from './ai-days';
+import { aiDayNumber, aiDaysToDayItineraries, isRecord } from './ai-days';
 
 describe('aiDayNumber', () => {
   it('reads day_number, dayNumber, then day', () => {
@@ -42,15 +42,6 @@ describe('aiDaysToDayItineraries', () => {
     const result = aiDaysToDayItineraries([{ pois: [] }, 'nope', null]);
 
     expect(result).toEqual([]);
-  });
-});
-
-describe('resolveAiDays', () => {
-  it('prefers aiDays, then ai_days, then the fallback', () => {
-    expect(resolveAiDays({ aiDays: [{ day: 1, pois: [] }] }, null)).toEqual([{ day: 1, pois: [] }]);
-    expect(resolveAiDays({ ai_days: [{ day: 2, pois: [] }] }, null)).toEqual([{ day: 2, pois: [] }]);
-    expect(resolveAiDays({}, [{ day: 3, pois: [] }])).toEqual([{ day: 3, pois: [] }]);
-    expect(resolveAiDays({}, null)).toBeNull();
   });
 });
 

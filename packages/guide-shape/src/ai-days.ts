@@ -65,14 +65,3 @@ export function aiDaysToDayItineraries(aiDays: unknown[]): DayItinerary[] {
 
   return itineraries;
 }
-
-/** Pick the authored aiDays blob: enrichedData.aiDays, then ai_days, then a caller fallback. */
-export function resolveAiDays(
-  enrichedData: Record<string, unknown>,
-  fallback: unknown,
-): unknown[] | null {
-  return (
-    arrayFromRecord(enrichedData, ['aiDays', 'ai_days'])
-    ?? (Array.isArray(fallback) ? fallback : null)
-  );
-}
