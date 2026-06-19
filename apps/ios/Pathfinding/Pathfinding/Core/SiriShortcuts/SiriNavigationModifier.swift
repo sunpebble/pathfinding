@@ -29,16 +29,14 @@ struct SiriNavigationModifier: ViewModifier {
         handleNavigationAction(action)
       }
       .sheet(isPresented: $showNoteCreation) {
-        if #available(iOS 17.0, *) {
-          SiriQuickNoteSheet(
-            title: noteTitle,
-            content: noteContent,
-            onDismiss: {
-              showNoteCreation = false
-              clearNoteState()
-            }
-          )
-        }
+        SiriQuickNoteSheet(
+          title: noteTitle,
+          content: noteContent,
+          onDismiss: {
+            showNoteCreation = false
+            clearNoteState()
+          }
+        )
       }
   }
 
@@ -115,11 +113,7 @@ extension View {
   /// Handles Siri navigation actions
   @ViewBuilder
   func onSiriNavigationAction(_ action: SiriNavigationAction?) -> some View {
-    if #available(iOS 16.0, *) {
-      self.modifier(SiriNavigationModifier(action: action))
-    } else {
-      self
-    }
+    self.modifier(SiriNavigationModifier(action: action))
   }
 }
 

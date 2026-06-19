@@ -299,20 +299,18 @@ struct ProfileView: View {
           }
           .staggeredAnimation(index: 9, baseDelay: 0.03)
 
-          if #available(iOS 17.0, *) {
-            NavigationLink {
-              SiriShortcutsSettingsView()
-            } label: {
-              ExplorerSettingsRow(
-                icon: "waveform",
-                title: "profile.siri_shortcuts".localized,
-                subtitle: "profile.siri_shortcuts_subtitle".localized,
-                iconColor: .purple,
-                terrainColor: DesignTokens.Colors.Terrain.mountain
-              )
-            }
-            .staggeredAnimation(index: 10, baseDelay: 0.03)
+          NavigationLink {
+            SiriShortcutsSettingsView()
+          } label: {
+            ExplorerSettingsRow(
+              icon: "waveform",
+              title: "profile.siri_shortcuts".localized,
+              subtitle: "profile.siri_shortcuts_subtitle".localized,
+              iconColor: .purple,
+              terrainColor: DesignTokens.Colors.Terrain.mountain
+            )
           }
+          .staggeredAnimation(index: 10, baseDelay: 0.03)
 
           Button {
             showAPISettings = true

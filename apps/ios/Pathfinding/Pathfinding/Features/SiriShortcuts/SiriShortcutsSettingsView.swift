@@ -351,9 +351,7 @@ struct AddCustomShortcutSheet: View {
 // MARK: - Preview
 
 #Preview {
-  if #available(iOS 17.0, *) {
-    NavigationStack {
-      SiriShortcutsSettingsView()
-    }
+  NavigationStack {
+    SiriShortcutsSettingsView()
   }
 }

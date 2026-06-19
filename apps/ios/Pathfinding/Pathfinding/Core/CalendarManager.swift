@@ -105,21 +105,12 @@ final class CalendarManager {
   /// Request calendar access permission
   func requestAccess() async -> Bool {
     do {
-      if #available(iOS 17.0, *) {
-        let granted = try await eventStore.requestFullAccessToEvents()
-        updateAuthorizationStatus()
-        if granted {
-          loadAvailableCalendars()
-        }
-        return granted
-      } else {
-        let granted = try await eventStore.requestAccess(to: .event)
-        updateAuthorizationStatus()
-        if granted {
-          loadAvailableCalendars()
-        }
-        return granted
+      let granted = try await eventStore.requestFullAccessToEvents()
+      updateAuthorizationStatus()
+      if granted {
+        loadAvailableCalendars()
       }
+      return granted
     } catch {
       logger.error("Failed to request calendar access: \(error.localizedDescription)")
       return false

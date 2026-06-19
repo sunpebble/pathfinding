@@ -89,9 +89,7 @@ struct RootView: View {
   }
 
   private func checkPendingSiriNavigation() {
-    if #available(iOS 16.0, *) {
-      siriNavigationAction = SiriShortcutsManager.shared.checkPendingNavigation()
-    }
+    siriNavigationAction = SiriShortcutsManager.shared.checkPendingNavigation()
   }
 }
 
