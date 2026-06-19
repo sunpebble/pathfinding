@@ -24,7 +24,7 @@ final class ExpenseFormModel {
   /// Parsed numeric amount; 0 when amountText is invalid.
   var amount: Double { Double(amountText) ?? 0 }
 
-  /// Mirror of the enriched category field from the source expense (edit mode only).
+  /// Current selected category; seeded from expense.category in edit mode, updated by the picker in both modes.
   var category: ExpenseCategory? { selectedCategory }
 
   var isValid: Bool {
@@ -59,12 +59,14 @@ final class ExpenseFormModel {
       }()
       // Parse date
       let dateFormatter = DateFormatter()
+      dateFormatter.locale = Locale(identifier: "en_US_POSIX")
       dateFormatter.dateFormat = "yyyy-MM-dd"
       date = dateFormatter.date(from: expense.date) ?? Date()
       // Parse time
       if let timeStr = expense.time {
         includeTime = true
         let timeFormatter = DateFormatter()
+        timeFormatter.locale = Locale(identifier: "en_US_POSIX")
         timeFormatter.dateFormat = "HH:mm"
         time = timeFormatter.date(from: timeStr) ?? Date()
       } else {
@@ -80,7 +82,7 @@ final class ExpenseFormModel {
 /// Shared form body used by both AddExpenseView and EditExpenseView.
 struct ExpenseForm: View {
   @Bindable var budgetStore: BudgetStore
-  var model: ExpenseFormModel
+  let model: ExpenseFormModel
   var currencyLabel: String
 
   var body: some View {
