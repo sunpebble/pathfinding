@@ -182,6 +182,7 @@ struct ItineraryDetailView: View {
       logMemoryUsage(context: "ItineraryDetailView.onAppear", poiCount: allPois.count)
     }
     .onDisappear {
+      saveChanges()
       logMemoryUsage(context: "ItineraryDetailView.onDisappear", poiCount: allPois.count)
     }
     .onChange(of: localDays) { _, _ in
