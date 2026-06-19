@@ -8,6 +8,8 @@ struct EnhancedStatItem: View {
   let icon: String
   let color: Color
   var index: Int = 0
+  /// When true the value text is replaced with a redacted placeholder while data loads.
+  var isLoading: Bool = false
 
   var body: some View {
     VStack(spacing: 8) {
@@ -21,10 +23,11 @@ struct EnhancedStatItem: View {
           .foregroundStyle(color)
       }
 
-      Text(value)
+      Text(isLoading ? "—" : value)
         .font(.title3)
         .fontWeight(.bold)
         .monospacedDigit()
+        .redacted(reason: isLoading ? .placeholder : [])
 
       Text(label)
         .font(.caption)

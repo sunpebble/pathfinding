@@ -8,6 +8,7 @@ struct ProfileView: View {
   @State private var followStore = FollowStore.shared
   @State private var followStats: FollowStats?
   @State private var favoriteStore = FavoriteStore.shared
+  @State private var footprintStore = FootprintStore.shared
 
   // Navigation destinations for stats
   @State private var navigateToFavorites = false
@@ -239,6 +240,7 @@ struct ProfileView: View {
       .task {
         await loadFollowStats()
         await loadFavoriteStats()
+        await footprintStore.loadVisitedCities()
       }
     }
   }
@@ -316,11 +318,12 @@ struct ProfileView: View {
           Divider().frame(height: 50)
 
           EnhancedStatItem(
-            value: "0",
+            value: "\(footprintStore.visitedCities.count)",
             label: "profile.footprints".localized,
             icon: "shoeprints.fill",
             color: DesignTokens.Colors.Terrain.forest,
-            index: 2
+            index: 2,
+            isLoading: footprintStore.isLoadingCities
           )
 
           Divider().frame(height: 50)
@@ -348,7 +351,7 @@ struct ProfileView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-          "\(favoriteStore.totalFavoritesCount) 个收藏，\(favoriteStore.totalLikesCount) 个喜欢，0 个足迹，\(followStats?.followersCount ?? 0) 个关注者，\(followStats?.followingCount ?? 0) 个关注"
+          "\(favoriteStore.totalFavoritesCount) 个收藏，\(favoriteStore.totalLikesCount) 个喜欢，\(footprintStore.visitedCities.count) 个足迹，\(followStats?.followersCount ?? 0) 个关注者，\(followStats?.followingCount ?? 0) 个关注"
         )
       }
       .padding(DesignTokens.Spacing.md)

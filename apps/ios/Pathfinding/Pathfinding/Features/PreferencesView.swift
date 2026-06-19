@@ -63,7 +63,18 @@ struct PreferencesView: View {
       // MARK: - Travel Style
       Section {
         NavigationLink {
-          TravelStyleSelectionView()
+          SingleSelectionView(
+            title: "preferences.travel_style".localized,
+            options: TravelStyle.allCases,
+            isSelected: { $0 == preferenceStore.preferences?.travelStyle },
+            onSelect: { style in
+              Task { _ = await preferenceStore.updatePreferences(travelStyle: style) }
+            },
+            icon: { $0.icon },
+            label: { $0.displayName },
+            description: { $0.description },
+            tintColor: DesignTokens.Colors.accent
+          )
         } label: {
           PreferenceRow(
             icon: preferenceStore.preferences?.travelStyle.icon ?? "scale.3d",
@@ -74,7 +85,18 @@ struct PreferencesView: View {
         }
 
         NavigationLink {
-          BudgetLevelSelectionView()
+          SingleSelectionView(
+            title: "preferences.budget".localized,
+            options: BudgetLevel.allCases,
+            isSelected: { $0 == preferenceStore.preferences?.budgetLevel },
+            onSelect: { level in
+              Task { _ = await preferenceStore.updatePreferences(budgetLevel: level) }
+            },
+            icon: { $0.icon },
+            label: { $0.displayName },
+            description: { $0.description },
+            tintColor: .green
+          )
         } label: {
           PreferenceRow(
             icon: preferenceStore.preferences?.budgetLevel.icon ?? "dollarsign.circle",
@@ -85,7 +107,18 @@ struct PreferencesView: View {
         }
 
         NavigationLink {
-          PacePreferenceSelectionView()
+          SingleSelectionView(
+            title: "preferences.pace".localized,
+            options: PacePreference.allCases,
+            isSelected: { $0 == preferenceStore.preferences?.pacePreference },
+            onSelect: { pace in
+              Task { _ = await preferenceStore.updatePreferences(pacePreference: pace) }
+            },
+            icon: { $0.icon },
+            label: { $0.displayName },
+            description: { $0.description },
+            tintColor: .orange
+          )
         } label: {
           PreferenceRow(
             icon: preferenceStore.preferences?.pacePreference.icon ?? "figure.walk",
@@ -258,8 +291,7 @@ struct PreferenceSummaryCard: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(Color(.secondarySystemBackground))
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+    .cardSurface()
     .padding(.horizontal, DesignTokens.Spacing.md)
     .padding(.vertical, DesignTokens.Spacing.xs)
   }
@@ -279,26 +311,9 @@ struct CategoryBadge: View {
     }
     .padding(.horizontal, 10)
     .padding(.vertical, 6)
-    .background(categoryColor.opacity(0.15))
-    .foregroundStyle(categoryColor)
+    .background(category.color.opacity(0.15))
+    .foregroundStyle(category.color)
     .clipShape(Capsule())
-  }
-
-  private var categoryColor: Color {
-    switch category.color {
-    case "orange": return .orange
-    case "purple": return .purple
-    case "green": return .green
-    case "pink": return .pink
-    case "indigo": return .indigo
-    case "red": return .red
-    case "cyan": return .cyan
-    case "yellow": return .yellow
-    case "blue": return .blue
-    case "mint": return .mint
-    case "gold": return .orange // iOS doesn't have gold, use orange
-    default: return .gray
-    }
   }
 }
 
@@ -333,7 +348,7 @@ struct CategoryScoreRow: View {
     HStack(spacing: DesignTokens.Spacing.sm) {
       Image(systemName: category.icon)
         .font(.title3)
-        .foregroundStyle(categoryColor)
+        .foregroundStyle(category.color)
         .frame(width: 28)
 
       Text(category.displayName)
@@ -348,7 +363,7 @@ struct CategoryScoreRow: View {
             .frame(height: 8)
 
           Capsule()
-            .fill(categoryColor)
+            .fill(category.color)
             .frame(width: geometry.size.width * score, height: 8)
         }
       }
@@ -358,23 +373,6 @@ struct CategoryScoreRow: View {
         .font(.caption)
         .foregroundStyle(.secondary)
         .frame(width: 40, alignment: .trailing)
-    }
-  }
-
-  private var categoryColor: Color {
-    switch category.color {
-    case "orange": return .orange
-    case "purple": return .purple
-    case "green": return .green
-    case "pink": return .pink
-    case "indigo": return .indigo
-    case "red": return .red
-    case "cyan": return .cyan
-    case "yellow": return .yellow
-    case "blue": return .blue
-    case "mint": return .mint
-    case "gold": return .orange
-    default: return .gray
     }
   }
 }
@@ -404,7 +402,7 @@ struct PreferenceRow: View {
   }
 }
 
-// MARK: - Category Selection View
+// MARK: - Category Selection View (multi-select, kept separate)
 
 struct CategorySelectionView: View {
   @State private var preferenceStore = PreferenceStore.shared
@@ -426,7 +424,7 @@ struct CategorySelectionView: View {
             HStack(spacing: DesignTokens.Spacing.sm) {
               Image(systemName: category.icon)
                 .font(.title3)
-                .foregroundStyle(categoryColor(for: category))
+                .foregroundStyle(category.color)
                 .frame(width: 28)
 
               VStack(alignment: .leading, spacing: 2) {
@@ -478,60 +476,49 @@ struct CategorySelectionView: View {
       }
     }
   }
-
-  private func categoryColor(for category: PreferenceCategory) -> Color {
-    switch category.color {
-    case "orange": return .orange
-    case "purple": return .purple
-    case "green": return .green
-    case "pink": return .pink
-    case "indigo": return .indigo
-    case "red": return .red
-    case "cyan": return .cyan
-    case "yellow": return .yellow
-    case "blue": return .blue
-    case "mint": return .mint
-    case "gold": return .orange
-    default: return .gray
-    }
-  }
 }
 
-// MARK: - Travel Style Selection View
+// MARK: - Generic Single-Selection View
+// Replaces TravelStyleSelectionView / BudgetLevelSelectionView / PacePreferenceSelectionView.
+// All three were structurally identical (plain-button rows, checkmark on selected, auto-dismiss).
 
-struct TravelStyleSelectionView: View {
-  @State private var preferenceStore = PreferenceStore.shared
-  @State private var selectedStyle: TravelStyle?
+struct SingleSelectionView<Option: Identifiable & Hashable>: View {
+  let title: String
+  let options: [Option]
+  let isSelected: (Option) -> Bool
+  let onSelect: (Option) -> Void
+  let icon: (Option) -> String
+  let label: (Option) -> String
+  let description: (Option) -> String
+  let tintColor: Color
+
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     List {
       Section {
-        ForEach(TravelStyle.allCases) { style in
+        ForEach(options) { option in
           Button {
-            selectedStyle = style
-            Task {
-              _ = await preferenceStore.updatePreferences(travelStyle: style)
-              dismiss()
-            }
+            onSelect(option)
+            dismiss()
           } label: {
             HStack(spacing: DesignTokens.Spacing.sm) {
-              Image(systemName: style.icon)
+              Image(systemName: icon(option))
                 .font(.title3)
-                .foregroundStyle(DesignTokens.Colors.accent)
+                .foregroundStyle(tintColor)
                 .frame(width: 28)
 
               VStack(alignment: .leading, spacing: 2) {
-                Text(style.displayName)
+                Text(label(option))
                   .foregroundStyle(.primary)
-                Text(style.description)
+                Text(description(option))
                   .font(.caption)
                   .foregroundStyle(.secondary)
               }
 
               Spacer()
 
-              if preferenceStore.preferences?.travelStyle == style {
+              if isSelected(option) {
                 Image(systemName: "checkmark.circle.fill")
                   .foregroundStyle(.green)
               }
@@ -541,101 +528,7 @@ struct TravelStyleSelectionView: View {
         }
       }
     }
-    .navigationTitle("preferences.travel_style".localized)
-    .navigationBarTitleDisplayMode(.inline)
-  }
-}
-
-// MARK: - Budget Level Selection View
-
-struct BudgetLevelSelectionView: View {
-  @State private var preferenceStore = PreferenceStore.shared
-  @Environment(\.dismiss) private var dismiss
-
-  var body: some View {
-    List {
-      Section {
-        ForEach(BudgetLevel.allCases) { level in
-          Button {
-            Task {
-              _ = await preferenceStore.updatePreferences(budgetLevel: level)
-              dismiss()
-            }
-          } label: {
-            HStack(spacing: DesignTokens.Spacing.sm) {
-              Image(systemName: level.icon)
-                .font(.title3)
-                .foregroundStyle(.green)
-                .frame(width: 28)
-
-              VStack(alignment: .leading, spacing: 2) {
-                Text(level.displayName)
-                  .foregroundStyle(.primary)
-                Text(level.description)
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-              }
-
-              Spacer()
-
-              if preferenceStore.preferences?.budgetLevel == level {
-                Image(systemName: "checkmark.circle.fill")
-                  .foregroundStyle(.green)
-              }
-            }
-          }
-          .buttonStyle(.plain)
-        }
-      }
-    }
-    .navigationTitle("preferences.budget".localized)
-    .navigationBarTitleDisplayMode(.inline)
-  }
-}
-
-// MARK: - Pace Preference Selection View
-
-struct PacePreferenceSelectionView: View {
-  @State private var preferenceStore = PreferenceStore.shared
-  @Environment(\.dismiss) private var dismiss
-
-  var body: some View {
-    List {
-      Section {
-        ForEach(PacePreference.allCases) { pace in
-          Button {
-            Task {
-              _ = await preferenceStore.updatePreferences(pacePreference: pace)
-              dismiss()
-            }
-          } label: {
-            HStack(spacing: DesignTokens.Spacing.sm) {
-              Image(systemName: pace.icon)
-                .font(.title3)
-                .foregroundStyle(.orange)
-                .frame(width: 28)
-
-              VStack(alignment: .leading, spacing: 2) {
-                Text(pace.displayName)
-                  .foregroundStyle(.primary)
-                Text(pace.description)
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-              }
-
-              Spacer()
-
-              if preferenceStore.preferences?.pacePreference == pace {
-                Image(systemName: "checkmark.circle.fill")
-                  .foregroundStyle(.green)
-              }
-            }
-          }
-          .buttonStyle(.plain)
-        }
-      }
-    }
-    .navigationTitle("preferences.pace".localized)
+    .navigationTitle(title)
     .navigationBarTitleDisplayMode(.inline)
   }
 }

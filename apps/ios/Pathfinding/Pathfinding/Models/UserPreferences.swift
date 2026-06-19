@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Preference Category
 
@@ -50,19 +51,21 @@ enum PreferenceCategory: String, Codable, CaseIterable, Identifiable {
     }
   }
 
-  var color: String {
+  /// Centralised SwiftUI Color for this category.
+  /// Single source of truth – replaces all per-view `categoryColor(for:)` switch statements.
+  var color: Color {
     switch self {
-    case .food: return "orange"
-    case .culture: return "purple"
-    case .nature: return "green"
-    case .shopping: return "pink"
-    case .nightlife: return "indigo"
-    case .adventure: return "red"
-    case .relaxation: return "cyan"
-    case .photography: return "yellow"
-    case .family: return "blue"
-    case .budget: return "mint"
-    case .luxury: return "gold"
+    case .food: return .orange
+    case .culture: return .purple
+    case .nature: return .green
+    case .shopping: return .pink
+    case .nightlife: return .indigo
+    case .adventure: return .red
+    case .relaxation: return .cyan
+    case .photography: return .yellow
+    case .family: return .blue
+    case .budget: return .mint
+    case .luxury: return .orange // iOS has no "gold"; closest is orange
     }
   }
 }
