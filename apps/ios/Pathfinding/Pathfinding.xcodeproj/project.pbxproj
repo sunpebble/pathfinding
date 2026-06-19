@@ -59,7 +59,6 @@
 		366A4E6D90F7D4FF9E589826 /* HiddenGemsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864EB3347EC320979B18C728 /* HiddenGemsStore.swift */; };
 		36A55A98A5D6D5BDB3B9945E /* TransportAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E548E64BF788AD6AFD034720 /* TransportAPIClient.swift */; };
 		37F44C6BAF3C43293045DB1F /* VisualEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EAD231DEED8EEC7BD672564 /* VisualEffects.swift */; };
-		38263948E16017F49C319761 /* EnhancedDiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EA99B15677254C8F5C6FEC6 /* EnhancedDiscoverView.swift */; };
 		38610C8194871525123CE555 /* PathfindingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F473F942F97F461ADCC99AEF /* PathfindingApp.swift */; };
 		38C26B66212D59F6D0228DF4 /* VideoEditorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE20A0D033C2E7A92E418E4C /* VideoEditorManager.swift */; };
 		3AA2DB6138E52C8E89ECA400 /* FavoriteCollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51BC96AA0CB458202638EB5F /* FavoriteCollectionsView.swift */; };
@@ -397,7 +396,6 @@
 		8C4449D1637D48D3E4E20C18 /* CloudKitSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncManager.swift; sourceTree = "<group>"; };
 		8D12B553F3E78BD95E3CEDAD /* ItineraryAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryAnalysisView.swift; sourceTree = "<group>"; };
 		8D328F78152E4B59D6A10595 /* WorldClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockView.swift; sourceTree = "<group>"; };
-		8EA99B15677254C8F5C6FEC6 /* EnhancedDiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancedDiscoverView.swift; sourceTree = "<group>"; };
 		8EAD231DEED8EEC7BD672564 /* VisualEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffects.swift; sourceTree = "<group>"; };
 		909B8549E6B8AD2AD37BC7C0 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
 		91A2F8827930C01D116AC63C /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
@@ -629,7 +627,6 @@
 				08C22D18715DAE2244022C97 /* CopyItinerarySheet.swift */,
 				BA83A2A926AD19E47B886675 /* DebugMenuView.swift */,
 				A7801B2F0BD47F1BCC1A7E44 /* DiscoverView.swift */,
-				8EA99B15677254C8F5C6FEC6 /* EnhancedDiscoverView.swift */,
 				803967AA10840F1EF8418E88 /* FlightDetailView.swift */,
 				077E45AEFD3DD10D928CD204 /* FlightListView.swift */,
 				C80C869DF30828354D994AE2 /* ItineraryListView.swift */,
@@ -1230,7 +1227,6 @@
 				E8CE944BDEE799DD2C7348F4 /* DesignSystem.swift in Sources */,
 				2149C6EE339A1749A6163C16 /* DiscoverView.swift in Sources */,
 				5E8B83A21046D96829003E64 /* EditBudgetView.swift in Sources */,
-				38263948E16017F49C319761 /* EnhancedDiscoverView.swift in Sources */,
 				7E52564C035441D32FB49C14 /* ExpenseListView.swift in Sources */,
 				E7EDEA42A1B8A6DD3238ADF9 /* ExplorerCards.swift in Sources */,
 				6414767280DBD72AA972B625 /* ExplorerComponents.swift in Sources */,
