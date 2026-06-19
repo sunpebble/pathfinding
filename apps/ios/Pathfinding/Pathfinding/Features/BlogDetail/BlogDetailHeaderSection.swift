@@ -68,9 +68,10 @@ struct BlogDetailHeaderSection: View {
               Label(name, systemImage: "mappin.circle.fill")
                 .font(.caption)
                 .fontWeight(.medium)
+                .foregroundStyle(DesignTokens.Colors.accent)
                 .padding(.horizontal, DesignTokens.Spacing.sm)
                 .padding(.vertical, DesignTokens.Spacing.xxs)
-                .cardSurface(tint: DesignTokens.Colors.accent)
+                .cardSurface()
             }
             .buttonStyle(.plain)
           } else {

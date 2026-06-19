@@ -7,29 +7,10 @@ import SwiftUI
 /// for proper block-level structure with spacing.
 struct MarkdownContentView: View {
   let markdown: String
-  let truncateAt: Int
-
-  @State private var isExpanded = false
-
-  init(markdown: String, truncateAt: Int = 10000) {
-    self.markdown = markdown
-    self.truncateAt = truncateAt
-  }
-
-  private var effectiveMarkdown: String {
-    if !isExpanded && markdown.count > truncateAt {
-      return String(markdown.prefix(truncateAt)) + "\n\n..."
-    }
-    return markdown
-  }
-
-  private var needsTruncation: Bool {
-    markdown.count > truncateAt
-  }
 
   /// Parse markdown into block-level elements for proper spacing
   private var blocks: [MarkdownBlock] {
-    MarkdownContentParser.parse(effectiveMarkdown)
+    MarkdownContentParser.parse(markdown)
   }
 
   var body: some View {
@@ -59,10 +40,6 @@ struct MarkdownContentView: View {
         case .image(_, let url):
           markdownImageView(url: url)
         }
-      }
-
-      if needsTruncation && !isExpanded {
-        expandButton
       }
     }
   }
@@ -133,29 +110,6 @@ struct MarkdownContentView: View {
     }
     .frame(maxWidth: .infinity)
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-  }
-
-  private var expandButton: some View {
-    Button {
-      withAnimation(.easeInOut(duration: 0.3)) {
-        isExpanded = true
-      }
-    } label: {
-      HStack(spacing: DesignTokens.Spacing.xs) {
-        Text("查看更多")
-        Image(systemName: "chevron.down")
-      }
-      .font(.subheadline)
-      .fontWeight(.medium)
-      .foregroundStyle(DesignTokens.Colors.accent)
-      .frame(maxWidth: .infinity)
-      .padding(.vertical, DesignTokens.Spacing.sm)
-      .background(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .fill(DesignTokens.Colors.accent.opacity(0.08))
-      )
-    }
-    .buttonStyle(.plain)
   }
 
 }

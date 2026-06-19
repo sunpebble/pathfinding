@@ -7,71 +7,30 @@ import SwiftUI
 /// it splits on Chinese/English sentence boundaries to create readable paragraphs.
 struct PlainTextContentView: View {
   let content: String
-  let truncateAt: Int
-
-  @State private var isExpanded = false
-
-  init(content: String, truncateAt: Int = 10000) {
-    self.content = content
-    self.truncateAt = truncateAt
-  }
 
   /// Split raw text into paragraphs for readability.
   /// If the text already has newlines, respect them.
   /// Otherwise, split on sentence-ending punctuation patterns.
   private var paragraphs: [String] {
-    let text = isExpanded || content.count <= truncateAt
-      ? content
-      : String(content.prefix(truncateAt)) + "..."
-
     // If text already has meaningful newlines, use them
-    let lines = text.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+    let lines = content.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
     if lines.count > 1 {
       return lines
     }
 
     // No newlines — split on sentence boundaries
     // Group ~2-3 sentences per paragraph for readability
-    return splitIntoParagraphs(text, sentencesPerParagraph: 3)
-  }
-
-  private var needsTruncation: Bool {
-    content.count > truncateAt
+    return splitIntoParagraphs(content, sentencesPerParagraph: 3)
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-      VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-        ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
-          Text(paragraph)
-            .font(.body)
-            .lineSpacing(4)
-            .textSelection(.enabled)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-      }
-
-      if needsTruncation && !isExpanded {
-        Button {
-          withAnimation(.easeInOut(duration: 0.3)) {
-            isExpanded = true
-          }
-        } label: {
-          HStack(spacing: DesignTokens.Spacing.xs) {
-            Text("查看更多")
-            Image(systemName: "chevron.down")
-          }
-          .font(.subheadline)
-          .fontWeight(.medium)
-          .foregroundStyle(DesignTokens.Colors.accent)
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, DesignTokens.Spacing.sm)
-          .background(
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-              .fill(DesignTokens.Colors.accent.opacity(0.08))
-          )
-        }
-        .buttonStyle(.plain)
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+      ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
+        Text(paragraph)
+          .font(.body)
+          .lineSpacing(4)
+          .textSelection(.enabled)
+          .frame(maxWidth: .infinity, alignment: .leading)
       }
     }
   }
