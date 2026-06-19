@@ -120,6 +120,7 @@
 		7AFCA35B4D061936096A444B /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DFC4CED1545F4DF705F4143 /* UserPreferences.swift */; };
 		7B2C30583293FF439C0482F1 /* VoiceInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8CAC7D750919F940F66160 /* VoiceInputView.swift */; };
 		7BDB45A2FDEB797CA16F3FEE /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDB6C69978B4EE9C43BF70E9 /* ChatView.swift */; };
+		7D752941ACA629DFB9EBA4D6 /* CopyableSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99ABE2634CF32E6F2522436D /* CopyableSourceTests.swift */; };
 		7E52564C035441D32FB49C14 /* ExpenseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508B564C0B70C1341B1267D /* ExpenseListView.swift */; };
 		7E59B9F501CFF7537DF013A6 /* APIRequestTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47DFF08D96C580195ADE616C /* APIRequestTypes.swift */; };
 		8057E853C0CA820DC5AC2A6D /* Translation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D1B905EAFE8CE02D62F142 /* Translation.swift */; };
@@ -403,6 +404,7 @@
 		947C99303624C59EC7014BC3 /* WiFi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFi.swift; sourceTree = "<group>"; };
 		957B7D122E847FBEC0E7FD2F /* CommentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentStore.swift; sourceTree = "<group>"; };
 		97EB2089F5F7061C84D20DF4 /* SiriShortcutsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriShortcutsSettingsView.swift; sourceTree = "<group>"; };
+		99ABE2634CF32E6F2522436D /* CopyableSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableSourceTests.swift; sourceTree = "<group>"; };
 		9A0E58A9F3AB9A6137D024CF /* RouteOptimizationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOptimizationSheet.swift; sourceTree = "<group>"; };
 		9A0E9A7880FE046607D110DB /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		9B61E690A9C53853D3E71FB0 /* TicketAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketAPIClient.swift; sourceTree = "<group>"; };
@@ -603,6 +605,7 @@
 			isa = PBXGroup;
 			children = (
 				1659CAA114BDDDB72101E180 /* AuthManagerRequestTests.swift */,
+				99ABE2634CF32E6F2522436D /* CopyableSourceTests.swift */,
 				E0A7B59E95DA141FDAC0291B /* ItineraryDetailDestinationsTests.swift */,
 				6C77BB1D4DCD8617EBF6B1A1 /* ItineraryStoreCopyTests.swift */,
 				447D0FE5EEAF01DA8D9C124D /* MarkdownContentParserTests.swift */,
@@ -1393,6 +1396,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2093E2AA2641EC6999A78046 /* AuthManagerRequestTests.swift in Sources */,
+				7D752941ACA629DFB9EBA4D6 /* CopyableSourceTests.swift in Sources */,
 				57DBF54E6DD5FC533DB54F7C /* ItineraryDetailDestinationsTests.swift in Sources */,
 				0091E305A43102A9C4560B57 /* ItineraryStoreCopyTests.swift in Sources */,
 				66D7B64AB6CCBE6288A0C97D /* MarkdownContentParserTests.swift in Sources */,

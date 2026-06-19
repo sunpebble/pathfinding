@@ -1,11 +1,300 @@
 import SwiftUI
 
-/// Sheet for copying an itinerary with options for date selection and partial copy
-struct CopyItinerarySheet: View {
+// MARK: - Copyable Source Abstraction
+
+/// A normalized POI used by the copy UI. Only its existence (for counting)
+/// matters to the shared layout, so this is intentionally minimal.
+struct CopyablePoi: Identifiable, Hashable {
+  let id: String
+}
+
+/// A day that can participate in a copy. Concrete days (`AiDay`,
+/// `APIItineraryDay`) expose their POIs through `poiIDs`; the normalized
+/// `pois` list is derived from it. `pois` is provided as a protocol-extension
+/// default so it never collides with a conformer's differently-typed stored
+/// `pois` property.
+protocol CopyableDay {
+  var dayNumber: Int { get }
+  /// Stable identifiers of the POIs in this day. Drives the normalized `pois`.
+  var poiIDs: [String] { get }
+  var pois: [CopyablePoi] { get }
+}
+
+extension CopyableDay {
+  var pois: [CopyablePoi] { poiIDs.map { CopyablePoi(id: $0) } }
+}
+
+/// The day-level option a copy action receives: full copy (`nil`) or the
+/// 1-based day numbers selected for a partial copy.
+typealias CopySelection = [Int]?
+
+/// Abstraction over the three copyable sources so a single generic
+/// `CopyItinerarySheet` can render the shared form, day selection, preview,
+/// counts, and copy action. Per-source differences (editable title, extra
+/// basic-info rows, attribution, navigation strings, alert wording, and the
+/// local-vs-API copy backend) are expressed as protocol requirements so the
+/// three flows behave exactly as before.
+///
+/// `days` is provided as a protocol-extension default derived from `rawDays`,
+/// which lets sources that already own a (possibly optional) stored `days`
+/// property conform without an invalid redeclaration.
+///
+/// The protocol itself is nonisolated so the read-only count/UI accessors are
+/// usable from anywhere (including synchronous test autoclosures); only
+/// `performCopy` is `@MainActor` because it touches the MainActor-isolated
+/// `ItineraryStore`.
+protocol CopyableSource {
+  associatedtype Day: CopyableDay
+
+  /// Raw days for this source; `nil`/empty when there is no day breakdown.
+  var rawDays: [Day]? { get }
+
+  /// Normalized, non-optional day list used by the shared UI.
+  var days: [Day] { get }
+
+  /// Number of days available to copy.
+  var dayCount: Int { get }
+
+  /// Total number of POIs across all days.
+  var poiCount: Int { get }
+
+  /// Title shown in the preview and used as the default copy name.
+  var title: String { get }
+
+  // MARK: Per-source UI configuration
+
+  /// Navigation bar title for the sheet.
+  var navigationTitle: String { get }
+
+  /// Whether the user can edit the new itinerary's name (TextField shown).
+  var allowsTitleEditing: Bool { get }
+
+  /// Default value pre-filled into the title field when editing is allowed.
+  var defaultEditableTitle: String { get }
+
+  /// Placeholder text for the title field when editing is allowed.
+  var titleFieldPlaceholder: String { get }
+
+  /// Header for the basic info section.
+  var basicInfoHeader: String { get }
+
+  /// Label for the "keep browsing / continue" success alert button.
+  var continueButtonTitle: String { get }
+
+  /// Body text of the success alert.
+  var successMessage: String { get }
+
+  /// Whether copy failures should surface an error alert (API-backed sources).
+  var reportsCopyErrors: Bool { get }
+
+  /// Extra rows rendered at the top of the basic info section (author, city…).
+  @ViewBuilder var basicInfoExtraContent: AnyView { get }
+
+  /// Optional attribution section rendered after the preview (API sources).
+  @ViewBuilder var attributionSection: AnyView { get }
+
+  // MARK: Copy action
+
+  /// Perform the copy. `selection` is `nil` for a full copy or the sorted set
+  /// of 1-based day numbers for a partial copy. `newTitle` is `nil` when the
+  /// source does not allow title editing or the field was left blank.
+  @MainActor
+  func performCopy(
+    selection: CopySelection,
+    newStartDate: Date,
+    newTitle: String?
+  ) async throws -> SavedItinerary
+}
+
+extension CopyableSource {
+  var days: [Day] { rawDays ?? [] }
+  var dayCount: Int { days.count }
+  var poiCount: Int { days.reduce(0) { $0 + $1.pois.count } }
+
+  // Defaults so sources only override what differs.
+  var allowsTitleEditing: Bool { false }
+  var defaultEditableTitle: String { title }
+  var titleFieldPlaceholder: String { "行程名称" }
+  var continueButtonTitle: String { "继续浏览" }
+  var successMessage: String { "行程已保存到「我的行程」" }
+  var reportsCopyErrors: Bool { false }
+  var basicInfoExtraContent: AnyView { AnyView(EmptyView()) }
+  var attributionSection: AnyView { AnyView(EmptyView()) }
+}
+
+// MARK: - Day Conformances
+
+extension AiDay: CopyableDay {
+  var poiIDs: [String] { pois.map(\.id) }
+}
+
+extension APIItineraryDay: CopyableDay {
+  var poiIDs: [String] { (items ?? []).map(\.id) }
+}
+
+// MARK: - Source Conformances
+
+extension SavedItinerary: CopyableSource {
+  var rawDays: [AiDay]? { days }
+
+  var navigationTitle: String { "复制行程" }
+  var allowsTitleEditing: Bool { true }
+  var defaultEditableTitle: String { "\(title) (副本)" }
+  var titleFieldPlaceholder: String { "行程名称" }
+  var basicInfoHeader: String { "基本信息" }
+  var continueButtonTitle: String { "继续" }
+  var successMessage: String { "行程已复制到「我的行程」" }
+
+  @MainActor
+  func performCopy(
+    selection: CopySelection,
+    newStartDate: Date,
+    newTitle: String?
+  ) async throws -> SavedItinerary {
+    let store = ItineraryStore.shared
+    if let selectedDays = selection, !selectedDays.isEmpty {
+      return store.copyItineraryPartial(
+        self,
+        selectedDays: selectedDays,
+        newStartDate: newStartDate,
+        newTitle: newTitle
+      )
+    }
+    return store.copyItinerary(self, newStartDate: newStartDate)
+  }
+}
+
+extension BlogPost: CopyableSource {
+  var rawDays: [AiDay]? { aiDays }
+
+  var navigationTitle: String { "复制到我的行程" }
+  var basicInfoHeader: String { "行程信息" }
+
+  var basicInfoExtraContent: AnyView {
+    AnyView(
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        Text(title)
+          .font(.headline)
+
+        if let author = authorName {
+          Text("作者: \(author)")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
+    )
+  }
+
+  @MainActor
+  func performCopy(
+    selection: CopySelection,
+    newStartDate: Date,
+    newTitle: String?
+  ) async throws -> SavedItinerary {
+    let store = ItineraryStore.shared
+    let selectedDaysArray: [Int]? = {
+      guard let selection, !selection.isEmpty else { return nil }
+      return selection
+    }()
+    return store.copyFromGuide(
+      self,
+      selectedDays: selectedDaysArray,
+      newStartDate: newStartDate
+    )
+  }
+}
+
+extension APIItinerary: CopyableSource {
+  var rawDays: [APIItineraryDay]? { days }
+
+  var navigationTitle: String { "复制公开行程" }
+  var allowsTitleEditing: Bool { true }
+  var defaultEditableTitle: String { title }
+  var titleFieldPlaceholder: String { "新行程名称" }
+  var basicInfoHeader: String { "行程信息" }
+  var reportsCopyErrors: Bool { true }
+
+  var basicInfoExtraContent: AnyView {
+    AnyView(
+      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        Text(title)
+          .font(.headline)
+
+        if let author = originalAuthor?.displayName {
+          HStack(spacing: DesignTokens.Spacing.xs) {
+            Image(systemName: "person.circle.fill")
+              .foregroundStyle(.secondary)
+            Text("原作者: \(author)")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
+        }
+
+        if let cityName = cityName {
+          HStack(spacing: DesignTokens.Spacing.xs) {
+            Image(systemName: "mappin.circle.fill")
+              .foregroundStyle(.red.opacity(0.7))
+            Text(cityName)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
+        }
+      }
+    )
+  }
+
+  var attributionSection: AnyView {
+    guard originalAuthor != nil || copiedFromId != nil else {
+      return AnyView(EmptyView())
+    }
+    return AnyView(
+      Section {
+        HStack {
+          Image(systemName: "link")
+            .foregroundStyle(.blue)
+          Text("复制后将保留原作者信息")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      } footer: {
+        Text("尊重原创，感谢分享")
+      }
+    )
+  }
+
+  @MainActor
+  func performCopy(
+    selection: CopySelection,
+    newStartDate: Date,
+    newTitle: String?
+  ) async throws -> SavedItinerary {
+    let store = ItineraryStore.shared
+    if let selectedDays = selection, !selectedDays.isEmpty {
+      return try await store.copyItineraryPartialFromAPI(
+        itineraryId: id,
+        newStartDate: newStartDate,
+        selectedDays: selectedDays,
+        newTitle: newTitle
+      )
+    }
+    return try await store.copyItineraryFromAPI(
+      itineraryId: id,
+      newStartDate: newStartDate
+    )
+  }
+}
+
+// MARK: - Generic Copy Itinerary Sheet
+
+/// Sheet for copying any `CopyableSource` with options for date selection and
+/// partial copy. The three former sheets (`CopyItinerarySheet`,
+/// `CopyGuideSheet`, `CopyPublicItinerarySheet`) are thin specializations of
+/// this single generic view.
+struct CopyItinerarySheet<Source: CopyableSource>: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(AppState.self) private var appState
 
-  let itinerary: SavedItinerary
+  let source: Source
   let onCopyComplete: (SavedItinerary) -> Void
 
   @State private var newStartDate = Date()
@@ -14,285 +303,23 @@ struct CopyItinerarySheet: View {
   @State private var selectedDays: Set<Int> = []
   @State private var isCopying = false
   @State private var showSuccess = false
+  @State private var errorMessage: String?
+  @State private var showError = false
 
-  private var store: ItineraryStore { ItineraryStore.shared }
-
-  var body: some View {
-    NavigationStack {
-      Form {
-        // MARK: - Basic Info Section
-        Section {
-          TextField("行程名称", text: $newTitle)
-            .onAppear {
-              newTitle = "\(itinerary.title) (副本)"
-            }
-
-          DatePicker(
-            "开始日期",
-            selection: $newStartDate,
-            displayedComponents: .date
-          )
-        } header: {
-          Text("基本信息")
-        }
-
-        // MARK: - Copy Mode Section
-        Section {
-          Toggle("仅复制部分天数", isOn: $isPartialCopy.animation())
-
-          if isPartialCopy {
-            daySelectionView
-          }
-        } header: {
-          Text("复制选项")
-        } footer: {
-          if isPartialCopy {
-            Text("选择要复制的天数，其他天数将被跳过")
-          } else {
-            Text("将复制所有 \(itinerary.days.count) 天的行程")
-          }
-        }
-
-        // MARK: - Preview Section
-        Section {
-          copyPreviewView
-        } header: {
-          Text("复制预览")
-        }
-      }
-      .navigationTitle("复制行程")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          Button("取消") {
-            dismiss()
-          }
-          .disabled(isCopying)
-        }
-
-        ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            performCopy()
-          } label: {
-            if isCopying {
-              ProgressView()
-            } else {
-              Text("复制")
-                .fontWeight(.semibold)
-            }
-          }
-          .disabled(isCopying || (isPartialCopy && selectedDays.isEmpty))
-        }
-      }
-      .alert("复制成功", isPresented: $showSuccess) {
-        Button("查看行程") {
-          appState.selectedTab = .itinerary
-          dismiss()
-        }
-        Button("继续", role: .cancel) {
-          dismiss()
-        }
-      } message: {
-        Text("行程已复制到「我的行程」")
-      }
-    }
-  }
-
-  // MARK: - Day Selection View
-
-  private var daySelectionView: some View {
-    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      HStack {
-        Text("选择天数")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-
-        Spacer()
-
-        Button(selectedDays.count == itinerary.days.count ? "取消全选" : "全选") {
-          if selectedDays.count == itinerary.days.count {
-            selectedDays.removeAll()
-          } else {
-            selectedDays = Set(itinerary.days.map(\.dayNumber))
-          }
-        }
-        .font(.caption)
-      }
-
-      LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 70))],
-        spacing: DesignTokens.Spacing.sm
-      ) {
-        ForEach(itinerary.days) { day in
-          DaySelectionChip(
-            day: day,
-            isSelected: selectedDays.contains(day.dayNumber)
-          ) {
-            if selectedDays.contains(day.dayNumber) {
-              selectedDays.remove(day.dayNumber)
-            } else {
-              selectedDays.insert(day.dayNumber)
-            }
-          }
-        }
-      }
-    }
-    .padding(.vertical, DesignTokens.Spacing.xs)
-  }
-
-  // MARK: - Copy Preview View
-
-  private var copyPreviewView: some View {
-    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      HStack {
-        Image(systemName: "doc.on.doc.fill")
-          .foregroundStyle(.blue)
-        Text(newTitle.isEmpty ? "\(itinerary.title) (副本)" : newTitle)
-          .font(.headline)
-          .lineLimit(1)
-      }
-
-      HStack(spacing: DesignTokens.Spacing.md) {
-        Label {
-          Text(formattedDate(newStartDate))
-        } icon: {
-          Image(systemName: "calendar")
-            .foregroundStyle(.orange)
-        }
-
-        Label {
-          Text("\(daysToBecopied)天")
-        } icon: {
-          Image(systemName: "clock")
-            .foregroundStyle(.green)
-        }
-
-        Label {
-          Text("\(poisToBeCopied)景点")
-        } icon: {
-          Image(systemName: "mappin")
-            .foregroundStyle(.red)
-        }
-      }
-      .font(.caption)
-      .foregroundStyle(.secondary)
-    }
-    .padding(.vertical, DesignTokens.Spacing.xs)
-  }
-
-  // MARK: - Computed Properties
-
-  private var daysToBecopied: Int {
-    if isPartialCopy {
-      return selectedDays.count
-    }
-    return itinerary.days.count
-  }
-
-  private var poisToBeCopied: Int {
-    if isPartialCopy {
-      return itinerary.days
-        .filter { selectedDays.contains($0.dayNumber) }
-        .reduce(0) { $0 + $1.pois.count }
-    }
-    return itinerary.days.reduce(0) { $0 + $1.pois.count }
-  }
-
-  // MARK: - Helper Methods
-
-  private func formattedDate(_ date: Date) -> String {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy年M月d日"
-    return formatter.string(from: date)
-  }
-
-  private func performCopy() {
-    isCopying = true
-
-    Task { @MainActor in
-      let newItinerary: SavedItinerary
-
-      if isPartialCopy && !selectedDays.isEmpty {
-        newItinerary = store.copyItineraryPartial(
-          itinerary,
-          selectedDays: Array(selectedDays).sorted(),
-          newStartDate: newStartDate,
-          newTitle: newTitle.isEmpty ? nil : newTitle
-        )
-      } else {
-        newItinerary = store.copyItinerary(itinerary, newStartDate: newStartDate)
-      }
-
-      isCopying = false
-      showSuccess = true
-      onCopyComplete(newItinerary)
-    }
-  }
-}
-
-// MARK: - Day Selection Chip
-
-struct DaySelectionChip: View {
-  let day: AiDay
-  let isSelected: Bool
-  let onTap: () -> Void
-
-  var body: some View {
-    Button(action: onTap) {
-      VStack(spacing: 2) {
-        Text("Day \(day.dayNumber)")
-          .font(.caption)
-          .fontWeight(.medium)
-
-        Text("\(day.pois.count)点")
-          .font(.caption2)
-          .foregroundStyle(.secondary)
-      }
-      .frame(minWidth: 60)
-      .padding(.horizontal, DesignTokens.Spacing.sm)
-      .padding(.vertical, DesignTokens.Spacing.xs)
-      .glassEffect(
-        .regular.tint(isSelected ? .accentColor : .clear).interactive(),
-        in: .capsule
-      )
-    }
-    .buttonStyle(.plain)
-  }
-}
-
-// MARK: - Copy from Guide Sheet
-
-/// Sheet for copying a BlogPost guide with options
-struct CopyGuideSheet: View {
-  @Environment(\.dismiss) private var dismiss
-  @Environment(AppState.self) private var appState
-
-  let guide: BlogPost
-  let onCopyComplete: (SavedItinerary) -> Void
-
-  @State private var newStartDate = Date()
-  @State private var isPartialCopy = false
-  @State private var selectedDays: Set<Int> = []
-  @State private var isCopying = false
-  @State private var showSuccess = false
-
-  private var store: ItineraryStore { ItineraryStore.shared }
-  private var days: [AiDay] { guide.aiDays ?? [] }
+  private var days: [Source.Day] { source.days }
 
   var body: some View {
     NavigationStack {
       Form {
         // MARK: - Basic Info Section
         Section {
-          VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            Text(guide.title)
-              .font(.headline)
+          source.basicInfoExtraContent
 
-            if let author = guide.authorName {
-              Text("作者: \(author)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+          if source.allowsTitleEditing {
+            TextField(source.titleFieldPlaceholder, text: $newTitle)
+              .onAppear {
+                newTitle = source.defaultEditableTitle
+              }
           }
 
           DatePicker(
@@ -301,7 +328,7 @@ struct CopyGuideSheet: View {
             displayedComponents: .date
           )
         } header: {
-          Text("行程信息")
+          Text(source.basicInfoHeader)
         }
 
         // MARK: - Copy Mode Section
@@ -310,7 +337,7 @@ struct CopyGuideSheet: View {
             Toggle("仅复制部分天数", isOn: $isPartialCopy.animation())
 
             if isPartialCopy {
-              guideDaySelectionView
+              daySelectionView
             }
           } header: {
             Text("复制选项")
@@ -329,8 +356,11 @@ struct CopyGuideSheet: View {
         } header: {
           Text("复制预览")
         }
+
+        // MARK: - Per-source Attribution Section
+        source.attributionSection
       }
-      .navigationTitle("复制到我的行程")
+      .navigationTitle(source.navigationTitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
@@ -359,18 +389,23 @@ struct CopyGuideSheet: View {
           appState.selectedTab = .itinerary
           dismiss()
         }
-        Button("继续浏览", role: .cancel) {
+        Button(source.continueButtonTitle, role: .cancel) {
           dismiss()
         }
       } message: {
-        Text("行程已保存到「我的行程」")
+        Text(source.successMessage)
+      }
+      .alert("复制失败", isPresented: $showError) {
+        Button("确定", role: .cancel) {}
+      } message: {
+        Text(errorMessage ?? "未知错误，请稍后重试")
       }
     }
   }
 
   // MARK: - Day Selection View
 
-  private var guideDaySelectionView: some View {
+  private var daySelectionView: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
         Text("选择天数")
@@ -393,9 +428,10 @@ struct CopyGuideSheet: View {
         columns: [GridItem(.adaptive(minimum: 70))],
         spacing: DesignTokens.Spacing.sm
       ) {
-        ForEach(days) { day in
+        ForEach(days, id: \.dayNumber) { day in
           DaySelectionChip(
-            day: day,
+            dayNumber: day.dayNumber,
+            poiCount: day.pois.count,
             isSelected: selectedDays.contains(day.dayNumber)
           ) {
             if selectedDays.contains(day.dayNumber) {
@@ -417,7 +453,7 @@ struct CopyGuideSheet: View {
       HStack {
         Image(systemName: "doc.on.doc.fill")
           .foregroundStyle(.blue)
-        Text(guide.title)
+        Text(previewTitle)
           .font(.headline)
           .lineLimit(1)
       }
@@ -451,6 +487,14 @@ struct CopyGuideSheet: View {
   }
 
   // MARK: - Computed Properties
+
+  /// Preview title mirrors each source's original behavior: editable sources
+  /// fall back to their default name when the field is blank; non-editable
+  /// sources always show the source title.
+  private var previewTitle: String {
+    guard source.allowsTitleEditing else { return source.title }
+    return newTitle.isEmpty ? source.defaultEditableTitle : newTitle
+  }
 
   private var daysToBecopied: Int {
     if isPartialCopy {
@@ -480,375 +524,79 @@ struct CopyGuideSheet: View {
     isCopying = true
 
     Task { @MainActor in
-      let selectedDaysArray = isPartialCopy && !selectedDays.isEmpty
+      let selection: CopySelection = isPartialCopy && !selectedDays.isEmpty
         ? Array(selectedDays).sorted()
         : nil
+      let resolvedTitle = source.allowsTitleEditing && !newTitle.isEmpty ? newTitle : nil
 
-      let newItinerary = store.copyFromGuide(
-        guide,
-        selectedDays: selectedDaysArray,
-        newStartDate: newStartDate
-      )
-
-      isCopying = false
-      showSuccess = true
-      onCopyComplete(newItinerary)
-    }
-  }
-}
-
-#Preview("Copy Itinerary") {
-  CopyItinerarySheet(
-    itinerary: SavedItinerary(
-      title: "东京5日游",
-      destination: "东京",
-      daysCount: 5
-    )
-  ) { _ in }
-    .environment(AppState())
-}
-
-#Preview("Copy Guide") {
-  CopyGuideSheet(
-    guide: BlogPost(
-      id: "1",
-      title: "京都赏樱攻略",
-      authorName: "旅行达人",
-      content: nil,
-      contentHtml: nil,
-      contentMarkdown: nil,
-      summary: nil,
-      coverImageUrl: nil,
-      imageUrls: nil,
-      sourcePlatform: "xiaohongshu",
-      qualityScore: nil,
-      viewsCount: nil,
-      likesCount: nil,
-      savesCount: nil,
-      createdAt: nil,
-      destinations: nil,
-      aiSummary: nil,
-      aiTips: nil,
-      aiBestTime: nil,
-      aiDuration: nil,
-      aiBudget: nil,
-      aiDays: [
-        AiDay(dayNumber: 1, theme: "抵达", pois: []),
-        AiDay(dayNumber: 2, theme: "赏樱", pois: []),
-        AiDay(dayNumber: 3, theme: "寺庙", pois: [])
-      ],
-      aiProcessedAt: nil
-    )
-  ) { _ in }
-    .environment(AppState())
-}
-
-// MARK: - Copy Public Itinerary Sheet
-
-/// Sheet for copying a public itinerary from API with options
-struct CopyPublicItinerarySheet: View {
-  @Environment(\.dismiss) private var dismiss
-  @Environment(AppState.self) private var appState
-
-  let itinerary: APIItinerary
-  let onCopyComplete: (SavedItinerary) -> Void
-
-  @State private var newStartDate = Date()
-  @State private var newTitle: String = ""
-  @State private var isPartialCopy = false
-  @State private var selectedDays: Set<Int> = []
-  @State private var isCopying = false
-  @State private var showSuccess = false
-  @State private var errorMessage: String?
-  @State private var showError = false
-
-  private var store: ItineraryStore { ItineraryStore.shared }
-  private var days: [APIItineraryDay] { itinerary.days ?? [] }
-
-  var body: some View {
-    NavigationStack {
-      Form {
-        // MARK: - Basic Info Section
-        Section {
-          VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            Text(itinerary.title)
-              .font(.headline)
-
-            if let author = itinerary.originalAuthor?.displayName {
-              HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "person.circle.fill")
-                  .foregroundStyle(.secondary)
-                Text("原作者: \(author)")
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-              }
-            }
-
-            if let cityName = itinerary.cityName {
-              HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "mappin.circle.fill")
-                  .foregroundStyle(.red.opacity(0.7))
-                Text(cityName)
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-              }
-            }
-          }
-
-          TextField("新行程名称", text: $newTitle)
-            .onAppear {
-              newTitle = "\(itinerary.title)"
-            }
-
-          DatePicker(
-            "开始日期",
-            selection: $newStartDate,
-            displayedComponents: .date
-          )
-        } header: {
-          Text("行程信息")
-        }
-
-        // MARK: - Copy Mode Section
-        if !days.isEmpty {
-          Section {
-            Toggle("仅复制部分天数", isOn: $isPartialCopy.animation())
-
-            if isPartialCopy {
-              apiDaySelectionView
-            }
-          } header: {
-            Text("复制选项")
-          } footer: {
-            if isPartialCopy {
-              Text("选择要复制的天数，其他天数将被跳过")
-            } else {
-              Text("将复制所有 \(days.count) 天的行程")
-            }
-          }
-        }
-
-        // MARK: - Preview Section
-        Section {
-          apiCopyPreviewView
-        } header: {
-          Text("复制预览")
-        }
-
-        // MARK: - Original Author Attribution
-        if itinerary.originalAuthor != nil || itinerary.copiedFromId != nil {
-          Section {
-            HStack {
-              Image(systemName: "link")
-                .foregroundStyle(.blue)
-              Text("复制后将保留原作者信息")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-          } footer: {
-            Text("尊重原创，感谢分享")
-          }
-        }
-      }
-      .navigationTitle("复制公开行程")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          Button("取消") {
-            dismiss()
-          }
-          .disabled(isCopying)
-        }
-
-        ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            performAPICopy()
-          } label: {
-            if isCopying {
-              ProgressView()
-            } else {
-              Text("复制")
-                .fontWeight(.semibold)
-            }
-          }
-          .disabled(isCopying || (isPartialCopy && selectedDays.isEmpty))
-        }
-      }
-      .alert("复制成功", isPresented: $showSuccess) {
-        Button("查看行程") {
-          appState.selectedTab = .itinerary
-          dismiss()
-        }
-        Button("继续浏览", role: .cancel) {
-          dismiss()
-        }
-      } message: {
-        Text("行程已保存到「我的行程」")
-      }
-      .alert("复制失败", isPresented: $showError) {
-        Button("确定", role: .cancel) {}
-      } message: {
-        Text(errorMessage ?? "未知错误，请稍后重试")
-      }
-    }
-  }
-
-  // MARK: - Day Selection View
-
-  private var apiDaySelectionView: some View {
-    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      HStack {
-        Text("选择天数")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-
-        Spacer()
-
-        Button(selectedDays.count == days.count ? "取消全选" : "全选") {
-          if selectedDays.count == days.count {
-            selectedDays.removeAll()
-          } else {
-            selectedDays = Set(days.map(\.dayNumber))
-          }
-        }
-        .font(.caption)
-      }
-
-      LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 70))],
-        spacing: DesignTokens.Spacing.sm
-      ) {
-        ForEach(days) { day in
-          APIDaySelectionChip(
-            day: day,
-            isSelected: selectedDays.contains(day.dayNumber)
-          ) {
-            if selectedDays.contains(day.dayNumber) {
-              selectedDays.remove(day.dayNumber)
-            } else {
-              selectedDays.insert(day.dayNumber)
-            }
-          }
-        }
-      }
-    }
-    .padding(.vertical, DesignTokens.Spacing.xs)
-  }
-
-  // MARK: - Copy Preview View
-
-  private var apiCopyPreviewView: some View {
-    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      HStack {
-        Image(systemName: "doc.on.doc.fill")
-          .foregroundStyle(.blue)
-        Text(newTitle.isEmpty ? itinerary.title : newTitle)
-          .font(.headline)
-          .lineLimit(1)
-      }
-
-      HStack(spacing: DesignTokens.Spacing.md) {
-        Label {
-          Text(formattedDate(newStartDate))
-        } icon: {
-          Image(systemName: "calendar")
-            .foregroundStyle(.orange)
-        }
-
-        Label {
-          Text("\(daysToBecopied)天")
-        } icon: {
-          Image(systemName: "clock")
-            .foregroundStyle(.green)
-        }
-
-        Label {
-          Text("\(poisToBeCopied)景点")
-        } icon: {
-          Image(systemName: "mappin")
-            .foregroundStyle(.red)
-        }
-      }
-      .font(.caption)
-      .foregroundStyle(.secondary)
-    }
-    .padding(.vertical, DesignTokens.Spacing.xs)
-  }
-
-  // MARK: - Computed Properties
-
-  private var daysToBecopied: Int {
-    if isPartialCopy {
-      return selectedDays.count
-    }
-    return days.count
-  }
-
-  private var poisToBeCopied: Int {
-    if isPartialCopy {
-      return days
-        .filter { selectedDays.contains($0.dayNumber) }
-        .reduce(0) { $0 + ($1.items?.count ?? 0) }
-    }
-    return days.reduce(0) { $0 + ($1.items?.count ?? 0) }
-  }
-
-  // MARK: - Helper Methods
-
-  private func formattedDate(_ date: Date) -> String {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy年M月d日"
-    return formatter.string(from: date)
-  }
-
-  private func performAPICopy() {
-    isCopying = true
-
-    Task { @MainActor in
       do {
-        let newItinerary: SavedItinerary
-
-        if isPartialCopy && !selectedDays.isEmpty {
-          newItinerary = try await store.copyItineraryPartialFromAPI(
-            itineraryId: itinerary.id,
-            newStartDate: newStartDate,
-            selectedDays: Array(selectedDays).sorted(),
-            newTitle: newTitle.isEmpty ? nil : newTitle
-          )
-        } else {
-          newItinerary = try await store.copyItineraryFromAPI(
-            itineraryId: itinerary.id,
-            newStartDate: newStartDate
-          )
-        }
+        let newItinerary = try await source.performCopy(
+          selection: selection,
+          newStartDate: newStartDate,
+          newTitle: resolvedTitle
+        )
 
         isCopying = false
         showSuccess = true
         onCopyComplete(newItinerary)
       } catch {
         isCopying = false
-        errorMessage = error.localizedDescription
-        showError = true
+        if source.reportsCopyErrors {
+          errorMessage = error.localizedDescription
+          showError = true
+        }
       }
     }
   }
 }
 
-// MARK: - API Day Selection Chip
+// MARK: - Thin Specializations (preserve original call sites)
 
-struct APIDaySelectionChip: View {
-  let day: APIItineraryDay
+extension CopyItinerarySheet where Source == SavedItinerary {
+  /// Copy a locally saved itinerary.
+  init(itinerary: SavedItinerary, onCopyComplete: @escaping (SavedItinerary) -> Void) {
+    self.init(source: itinerary, onCopyComplete: onCopyComplete)
+  }
+}
+
+/// Sheet for copying a `BlogPost` guide. Thin specialization of the generic
+/// `CopyItinerarySheet`.
+struct CopyGuideSheet: View {
+  let guide: BlogPost
+  let onCopyComplete: (SavedItinerary) -> Void
+
+  var body: some View {
+    CopyItinerarySheet(source: guide, onCopyComplete: onCopyComplete)
+  }
+}
+
+/// Sheet for copying a public itinerary from the API. Thin specialization of
+/// the generic `CopyItinerarySheet`.
+struct CopyPublicItinerarySheet: View {
+  let itinerary: APIItinerary
+  let onCopyComplete: (SavedItinerary) -> Void
+
+  var body: some View {
+    CopyItinerarySheet(source: itinerary, onCopyComplete: onCopyComplete)
+  }
+}
+
+// MARK: - Day Selection Chip
+
+struct DaySelectionChip: View {
+  let dayNumber: Int
+  let poiCount: Int
   let isSelected: Bool
   let onTap: () -> Void
 
   var body: some View {
     Button(action: onTap) {
       VStack(spacing: 2) {
-        Text("Day \(day.dayNumber)")
+        Text("Day \(dayNumber)")
           .font(.caption)
           .fontWeight(.medium)
 
-        Text("\(day.items?.count ?? 0)点")
+        Text("\(poiCount)点")
           .font(.caption2)
           .foregroundStyle(.secondary)
       }
@@ -964,6 +712,54 @@ struct OriginalAuthorBadge: View {
         .fill(Color(.systemGray6))
     )
   }
+}
+
+// MARK: - Previews
+
+#Preview("Copy Itinerary") {
+  CopyItinerarySheet(
+    itinerary: SavedItinerary(
+      title: "东京5日游",
+      destination: "东京",
+      daysCount: 5
+    )
+  ) { _ in }
+    .environment(AppState())
+}
+
+#Preview("Copy Guide") {
+  CopyGuideSheet(
+    guide: BlogPost(
+      id: "1",
+      title: "京都赏樱攻略",
+      authorName: "旅行达人",
+      content: nil,
+      contentHtml: nil,
+      contentMarkdown: nil,
+      summary: nil,
+      coverImageUrl: nil,
+      imageUrls: nil,
+      sourcePlatform: "xiaohongshu",
+      qualityScore: nil,
+      viewsCount: nil,
+      likesCount: nil,
+      savesCount: nil,
+      createdAt: nil,
+      destinations: nil,
+      aiSummary: nil,
+      aiTips: nil,
+      aiBestTime: nil,
+      aiDuration: nil,
+      aiBudget: nil,
+      aiDays: [
+        AiDay(dayNumber: 1, theme: "抵达", pois: []),
+        AiDay(dayNumber: 2, theme: "赏樱", pois: []),
+        AiDay(dayNumber: 3, theme: "寺庙", pois: [])
+      ],
+      aiProcessedAt: nil
+    )
+  ) { _ in }
+    .environment(AppState())
 }
 
 #Preview("Copy Public Itinerary") {
