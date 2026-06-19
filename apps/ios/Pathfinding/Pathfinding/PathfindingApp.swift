@@ -8,7 +8,6 @@ struct PathfindingApp: App {
 
   init() {
     applyUITestLaunchOverrides()
-    configureAppearance()
   }
 
   var body: some Scene {
@@ -20,29 +19,6 @@ struct PathfindingApp: App {
         .withTheme(themeManager)
         .withLocalization()
     }
-  }
-
-  private func configureAppearance() {
-    // Configure navigation bar appearance
-    let navBarAppearance = UINavigationBarAppearance()
-    navBarAppearance.configureWithDefaultBackground()
-    navBarAppearance.titleTextAttributes = [
-      .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
-    ]
-    navBarAppearance.largeTitleTextAttributes = [
-      .font: UIFont.systemFont(ofSize: 34, weight: .bold)
-    ]
-
-    UINavigationBar.appearance().standardAppearance = navBarAppearance
-    UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
-    UINavigationBar.appearance().compactAppearance = navBarAppearance
-
-    // Configure tab bar appearance
-    let tabBarAppearance = UITabBarAppearance()
-    tabBarAppearance.configureWithDefaultBackground()
-
-    UITabBar.appearance().standardAppearance = tabBarAppearance
-    UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
   }
 
   private func applyUITestLaunchOverrides() {
