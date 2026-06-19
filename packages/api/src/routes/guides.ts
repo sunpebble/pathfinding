@@ -14,6 +14,7 @@ import { escapeLikePattern, parsePagination, parsePositiveInt } from '../lib/par
 import { jsonData, jsonList, jsonOk } from '../lib/response.js';
 import { authRequired } from '../middleware/auth.js';
 import { runFullAnalysis } from '../services/backfill.service.js';
+import { createUserGuide, updateUserGuide } from '../services/guide-writer.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
@@ -281,21 +282,18 @@ app.post('/', authRequired(), zValidator('json', createGuideSchema), async (c) =
   const body = c.req.valid('json');
   const db = getDb();
 
-  const [result] = await db
-    .insert(travelGuides)
-    .values({
-      platform: body.platform,
-      title: body.title,
-      content: body.content ?? null,
-      authorName: body.authorName ?? null,
-      sourceUrl: body.sourceUrl ?? null,
-      destinations: body.destinations ?? null,
-      tags: body.tags ?? null,
-      category: body.category ?? null,
-    })
-    .$returningId();
+  const id = await createUserGuide(db, {
+    platform: body.platform,
+    title: body.title,
+    content: body.content ?? null,
+    authorName: body.authorName ?? null,
+    sourceUrl: body.sourceUrl ?? null,
+    destinations: body.destinations ?? null,
+    tags: body.tags ?? null,
+    category: body.category ?? null,
+  });
 
-  return jsonData(c, { id: result!.id }, 201);
+  return jsonData(c, { id }, 201);
 });
 
 // ── PATCH /:id — Update a guide ────────────────────────
@@ -338,10 +336,7 @@ app.patch('/:id', authRequired(), zValidator('json', updateGuideSchema), async (
     return c.json({ error: '没有需要更新的字段' }, 400);
   }
 
-  await db
-    .update(travelGuides)
-    .set(updates)
-    .where(eq(travelGuides.id, id));
+  await updateUserGuide(db, id, updates);
 
   return jsonOk(c);
 });
