@@ -9,14 +9,18 @@ struct TimelineSection: View {
   @Binding var selectedPoiId: String?
   @Binding var cameraPosition: MapCameraPosition
 
+  @Namespace private var glassNS
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       Label("行程安排", systemImage: "map")
         .font(.headline)
         .padding(.horizontal)
 
-      LazyVStack(spacing: 12) {
+      GlassEffectContainer(spacing: DesignTokens.Spacing.sm) {
         ForEach(Array(localDays.enumerated()), id: \.element.id) { index, day in
+          let isSelected = selectedDayIndex == index
           ItineraryDayCard(
             day: day,
             index: index,
@@ -24,8 +28,14 @@ struct TimelineSection: View {
             selectedPoiId: $selectedPoiId,
             cameraPosition: $cameraPosition
           )
+          .cardSurface(tint: isSelected ? .accentColor.opacity(0.3) : nil)
+          .glassEffectID("day-\(index)", in: glassNS)
+          .onChange(of: selectedDayIndex) { _, _ in
+            withAnimation(reduceMotion ? nil : DesignTokens.Animation.spring) { }
+          }
         }
       }
+      .padding(.horizontal)
     }
   }
 }

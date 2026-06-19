@@ -17,8 +17,7 @@ struct TipsCard: View {
       }
     }
     .padding()
-    .background(.green.opacity(0.1))
-    .clipShape(RoundedRectangle(cornerRadius: 12))
+    .cardSurface(tint: .green.opacity(0.15))
     .padding(.horizontal)
   }
 }

@@ -27,7 +27,7 @@ struct MapHeader: View {
         }
       }
     }
-    .frame(height: 350)
-    .clipShape(RoundedRectangle(cornerRadius: 0))
+    .frame(height: 320)
+    .backgroundExtensionEffect()
   }
 }

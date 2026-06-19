@@ -95,19 +95,22 @@ struct ItineraryDetailView: View {
         .padding(.vertical)
       }
     }
+    .scrollEdgeEffectStyle(.soft, for: .top)
     .navigationBarTitleDisplayMode(.inline)
-    .ignoresSafeArea(edges: .top)
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
-        HStack(spacing: DesignTokens.Spacing.sm) {
-          Button {
-            showCopySheet = true
-          } label: {
-            Image(systemName: "doc.on.doc")
-          }
-
-          CalendarSyncToolbarButton(itinerary: itinerary)
+        Button {
+          showCopySheet = true
+        } label: {
+          Image(systemName: "doc.on.doc")
         }
+        .accessibilityLabel("复制行程")
+      }
+
+      ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+      ToolbarItem(placement: .topBarTrailing) {
+        CalendarSyncToolbarButton(itinerary: itinerary)
       }
     }
     .sheet(isPresented: $showCopySheet) {

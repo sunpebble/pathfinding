@@ -94,8 +94,5 @@ struct ItineraryDayCard: View {
       .padding(.leading, 4)
     }
     .padding()
-    .background(Color(.secondarySystemBackground).opacity(0.5))
-    .clipShape(RoundedRectangle(cornerRadius: 16))
-    .padding(.horizontal)
   }
 }
