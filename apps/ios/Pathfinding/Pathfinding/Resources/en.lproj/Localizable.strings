@@ -43,6 +43,7 @@
 "discover.search_placeholder" = "Search destinations, guides...";
 "discover.featured" = "Featured";
 "discover.recent" = "Recent";
+"guide.ai" = "AI Curated";
 
 // MARK: - Home
 "home.title" = "Pathfinding";
