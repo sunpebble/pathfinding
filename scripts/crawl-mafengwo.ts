@@ -26,7 +26,8 @@ import type { Browser, BrowserContext, Page } from 'playwright';
 import * as cheerio from 'cheerio';
 import { and, eq } from 'drizzle-orm';
 import { chromium } from 'playwright';
-import { buildStructuredGuideContent, cleanGuidePlainText } from '../packages/api/src/services/guide-content';
+import { normalizeGuide } from '../packages/api/src/services/guide-normalize.js';
+import { persistIngestedGuide } from '../packages/api/src/services/guide-writer.js';
 import { createDb, travelGuides } from '../packages/database/src/index';
 
 // ============================================
@@ -151,50 +152,6 @@ function extractAllNoteIds(html: string): string[] {
     ids.add(match[1]);
   }
   return Array.from(ids);
-}
-
-function parseChineseNumber(str: string | undefined): number {
-  if (!str)
-    return 0;
-  const match = str.trim().match(/([\d.]+)\s*([万k])?/i);
-  if (!match)
-    return 0;
-  const num = Number.parseFloat(match[1]);
-  const unit = match[2]?.toLowerCase();
-  if (unit === '万')
-    return Math.round(num * 10000);
-  if (unit === 'k')
-    return Math.round(num * 1000);
-  return Math.round(num);
-}
-
-function calculateQualityScore(data: GuideDetail): number {
-  let score = 0;
-  if (data.title && data.title.length >= 5)
-    score += 0.2;
-  const contentLength = data.content?.length || 0;
-  if (contentLength >= 500)
-    score += 0.4;
-  else if (contentLength >= 200)
-    score += 0.3;
-  else if (contentLength >= 100)
-    score += 0.2;
-  if (data.author)
-    score += 0.1;
-  const imageCount = data.images?.length || 0;
-  if (imageCount >= 5)
-    score += 0.2;
-  else if (imageCount >= 1)
-    score += 0.1;
-  if (data.views || data.likes)
-    score += 0.1;
-  return Math.min(1, Math.round(score * 100) / 100);
-}
-
-function toRecord(value: unknown): Record<string, unknown> {
-  if (value && typeof value === 'object' && !Array.isArray(value))
-    return { ...value as Record<string, unknown> };
-  return {};
 }
 
 function collectGuideImages(detail: GuideDetail): string[] {
@@ -443,6 +400,16 @@ function extractDetail(html: string): GuideDetail | null {
 // Save to TiDB
 // ============================================
 
+/**
+ * Route the crawled note through the canonical ingest pipeline.
+ *
+ * This script crawls by noteId and snowballs to related notes, so at save time
+ * there is NO reliable destination. The canonical pipeline REJECTS empty-
+ * destination guides — by design. We pass no import context and no staging
+ * supplement, so destination-less guides are rejected and SKIPPED (logged),
+ * never written. This deliberately replaces the old direct `travelGuides`
+ * write so the script can no longer bypass validation/quality/raw-record.
+ */
 async function saveToTiDB(
   db: ReturnType<typeof createDb>,
   externalId: string,
@@ -450,58 +417,28 @@ async function saveToTiDB(
   detail: GuideDetail,
 ): Promise<boolean> {
   try {
-    const qualityScore = calculateQualityScore(detail);
-    const imageUrls = collectGuideImages(detail);
-    const cleanedContent = cleanGuidePlainText(detail.content, detail.title);
-    const structuredContent = buildStructuredGuideContent({
-      title: detail.title,
-      content: cleanedContent,
-      contentHtml: detail.contentHtml,
-      imageUrls,
-    });
-
-    const guideData = {
-      platform: 'mafengwo',
-      externalId,
-      title: detail.title || externalId,
-      content: cleanedContent || null,
-      authorName: detail.author ?? null,
+    const normalized = normalizeGuide(
+      {
+        url: sourceUrl,
+        externalId,
+        title: detail.title || externalId,
+        content: detail.content,
+        contentHtml: detail.contentHtml,
+        author: detail.author ?? '',
+        viewsRaw: detail.views,
+        likesRaw: detail.likes,
+        coverImage: detail.coverImage ?? '',
+        images: collectGuideImages(detail),
+      } as never,
       sourceUrl,
-      coverImageUrl: detail.coverImage ?? null,
-      imageUrls,
-      destinations: [] as string[],
-      tags: [] as string[],
-      viewCount: parseChineseNumber(detail.views),
-      likeCount: parseChineseNumber(detail.likes),
-      commentCount: 0,
-      qualityScore,
-      crawledAt: new Date(),
-      lastUpdatedAt: new Date(),
-    };
-
-    const existing = await db
-      .select({ id: travelGuides.id, enrichedData: travelGuides.enrichedData })
-      .from(travelGuides)
-      .where(and(eq(travelGuides.platform, 'mafengwo'), eq(travelGuides.externalId, externalId)))
-      .limit(1);
-
-    if (existing.length > 0) {
-      await db.update(travelGuides).set({
-        ...guideData,
-        enrichedData: {
-          ...toRecord(existing[0]!.enrichedData),
-          ...structuredContent,
-        },
-      }).where(eq(travelGuides.id, existing[0]!.id));
+      undefined,
+      null,
+    );
+    const result = await persistIngestedGuide(db as never, normalized);
+    if (!result.success) {
+      log(`  Skipped ${externalId}: ${result.message}`);
     }
-    else {
-      await db.insert(travelGuides).values({
-        ...guideData,
-        enrichedData: structuredContent,
-      });
-    }
-
-    return true;
+    return result.success;
   }
   catch (error) {
     const message = error instanceof Error ? error.message : String(error);
