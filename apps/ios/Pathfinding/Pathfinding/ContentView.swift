@@ -25,14 +25,6 @@ enum Tab: String, CaseIterable {
     }
   }
 
-  var selectedIcon: String {
-    switch self {
-    case .discover: return "sparkle.magnifyingglass"
-    case .chat: return "bubble.left.and.bubble.right.fill"
-    case .itinerary: return "map.fill"
-    case .profile: return "person.fill"
-    }
-  }
 }
 
 @Observable
@@ -47,36 +39,24 @@ struct ContentView: View {
 
   var body: some View {
     TabView(selection: $appState.selectedTab) {
-      DiscoverView()
-        .tag(Tab.discover)
-        .tabItem {
-          Label(Tab.discover.title, systemImage: appState.selectedTab == .discover ? Tab.discover.selectedIcon : Tab.discover.icon)
-        }
-
-      ChatSessionListView(userId: AuthManager.shared.currentUserId ?? "guest")
-        .tag(Tab.chat)
-        .tabItem {
-          Label(Tab.chat.title, systemImage: appState.selectedTab == .chat ? Tab.chat.selectedIcon : Tab.chat.icon)
-        }
-
-      ItineraryListView()
-        .tag(Tab.itinerary)
-        .tabItem {
-          Label(Tab.itinerary.title, systemImage: appState.selectedTab == .itinerary ? Tab.itinerary.selectedIcon : Tab.itinerary.icon)
-        }
-
-      ProfileView()
-        .tag(Tab.profile)
-        .tabItem {
-          Label(Tab.profile.title, systemImage: appState.selectedTab == .profile ? Tab.profile.selectedIcon : Tab.profile.icon)
-        }
+      SwiftUI.Tab(Tab.discover.title, systemImage: Tab.discover.icon, value: Tab.discover) {
+        DiscoverView()
+      }
+      SwiftUI.Tab(Tab.chat.title, systemImage: Tab.chat.icon, value: Tab.chat) {
+        ChatSessionListView(userId: AuthManager.shared.currentUserId ?? "guest")
+      }
+      SwiftUI.Tab(Tab.itinerary.title, systemImage: Tab.itinerary.icon, value: Tab.itinerary) {
+        ItineraryListView()
+      }
+      SwiftUI.Tab(Tab.profile.title, systemImage: Tab.profile.icon, value: Tab.profile) {
+        ProfileView()
+      }
     }
+    .tabBarMinimizeBehavior(.onScrollDown)
     .accessibilityIdentifier("authenticated-root")
     .tint(ThemeManager.shared.accentColor.color)
-    .animation(DesignTokens.Animation.smooth, value: appState.selectedTab)
     .sensoryFeedback(.selection, trigger: appState.selectedTab)
     .environment(appState)
-    // Force view refresh when language changes
     .id(localizationManager.currentLanguage)
   }
 }
