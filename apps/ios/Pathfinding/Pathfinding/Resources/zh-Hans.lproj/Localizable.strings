@@ -218,6 +218,8 @@
 "theme.dark" = "深色模式";
 "theme.dark_description" = "始终使用深色外观";
 "theme.select" = "选择主题";
+"theme.mode" = "主题模式";
+"theme.accent" = "强调色";
 "theme.about" = "关于主题模式";
 "theme.about_description" = "选择「跟随系统」将根据设备的外观设置自动切换浅色和深色模式。你可以在「设置 > 显示与亮度」中更改系统外观。";
 "theme.preview.light" = "浅色";

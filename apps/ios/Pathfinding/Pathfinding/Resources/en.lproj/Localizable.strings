@@ -218,6 +218,8 @@
 "theme.dark" = "Dark Mode";
 "theme.dark_description" = "Always use dark appearance";
 "theme.select" = "Select Theme";
+"theme.mode" = "Theme Mode";
+"theme.accent" = "Accent Color";
 "theme.about" = "About Theme";
 "theme.about_description" = "Selecting 'System' will automatically switch between light and dark mode based on your device's appearance settings. You can change system appearance in Settings > Display & Brightness.";
 "theme.preview.light" = "Light";
