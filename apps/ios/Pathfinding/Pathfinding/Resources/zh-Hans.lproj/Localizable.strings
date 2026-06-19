@@ -73,7 +73,10 @@
 "itinerary.title" = "我的行程";
 "itinerary.empty" = "暂无行程";
 "itinerary.empty_description" = "从攻略中导入或创建新行程";
+"itinerary.empty.ai" = "AI 生成行程";
+"itinerary.empty.browse" = "浏览公开行程";
 "itinerary.create" = "创建行程";
+"itinerary.create.accessibility" = "新建行程";
 "itinerary.import" = "导入行程";
 "itinerary.day" = "第 %d 天";
 "itinerary.days" = "%d 天";

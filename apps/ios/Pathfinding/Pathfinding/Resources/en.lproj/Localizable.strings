@@ -73,7 +73,10 @@
 "itinerary.title" = "My Itineraries";
 "itinerary.empty" = "No Itineraries";
 "itinerary.empty_description" = "Import from guides or create a new itinerary";
+"itinerary.empty.ai" = "Generate with AI";
+"itinerary.empty.browse" = "Browse Public Itineraries";
 "itinerary.create" = "Create Itinerary";
+"itinerary.create.accessibility" = "New Itinerary";
 "itinerary.import" = "Import Itinerary";
 "itinerary.day" = "Day %d";
 "itinerary.days" = "%d Days";

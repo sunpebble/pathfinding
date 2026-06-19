@@ -10,55 +10,24 @@ struct ItineraryListView: View {
 
   var body: some View {
     NavigationStack {
-      ZStack {
-        // Explorer background
-        ExplorerPageBackground(style: .list, accentColor: .blue)
-
-        Group {
-          if store.itineraries.isEmpty {
-            emptyView
-          } else {
-            itineraryList
-          }
+      Group {
+        if store.itineraries.isEmpty {
+          emptyView
+        } else {
+          itineraryList
         }
       }
-      .navigationTitle("我的行程")
+      .navigationTitle("itinerary.title".localized)
       .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          Menu {
-            Button {
-              showAIPlanner = true
-            } label: {
-              Label("AI 规划", systemImage: "sparkles")
-            }
-
-            Button {
-              showVoiceItinerary = true
-            } label: {
-              Label("语音输入", systemImage: "mic.fill")
-            }
-
-            Button {
-              showDiscovery = true
-            } label: {
-              Label("发现公共行程", systemImage: "globe")
-            }
-          } label: {
-            Image(systemName: "ellipsis.circle")
-              .symbolRenderingMode(.hierarchical)
-          }
-          .accessibilityLabel("更多操作")
-          .accessibilityHint("打开菜单，包含 AI 规划、语音输入和发现公共行程")
-        }
+        ToolbarItem(placement: .topBarLeading) { itineraryActionsMenu }
+        ToolbarSpacer(.fixed, placement: .topBarTrailing)
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             showCreateSheet = true
           } label: {
-            Image(systemName: "plus.circle.fill")
-              .symbolRenderingMode(.hierarchical)
+            Image(systemName: "plus")
           }
-          .accessibilityLabel("新建行程")
-          .accessibilityHint("创建一个新的旅行行程")
+          .accessibilityLabel("itinerary.create.accessibility".localized)
         }
       }
       .sheet(isPresented: $showCreateSheet) {
@@ -89,6 +58,41 @@ struct ItineraryListView: View {
     }
   }
 
+  // MARK: - Toolbar Actions Menu
+
+  private var itineraryActionsMenu: some View {
+    Menu {
+      Button {
+        showAIPlanner = true
+      } label: {
+        Label("AI 规划", systemImage: "sparkles")
+      }
+
+      Button {
+        showVoiceItinerary = true
+      } label: {
+        Label("语音输入", systemImage: "mic.fill")
+      }
+
+      Button {
+        showCreateSheet = true
+      } label: {
+        Label("itinerary.create".localized, systemImage: "plus")
+      }
+
+      Button {
+        showDiscovery = true
+      } label: {
+        Label("发现公共行程", systemImage: "globe")
+      }
+    } label: {
+      Image(systemName: "ellipsis.circle")
+        .symbolRenderingMode(.hierarchical)
+    }
+    .accessibilityLabel("更多操作")
+    .accessibilityHint("打开菜单，包含 AI 规划、语音输入和发现公共行程")
+  }
+
   // MARK: - Memory Monitoring
 
   private func logMemoryUsage(context: String) {
@@ -103,60 +107,22 @@ struct ItineraryListView: View {
     }
     #endif
   }
-  
+
   // MARK: - Empty View
-  
+
   private var emptyView: some View {
     ContentUnavailableView {
-      Label("暂无行程", systemImage: "map")
+      Label("itinerary.empty".localized, systemImage: "map")
     } description: {
-      Text("从攻略中导入行程，或创建新行程")
+      Text("itinerary.empty_description".localized)
     } actions: {
-      VStack(spacing: DesignTokens.Spacing.md) {
-        // AI generation button - most prominent
-        Button {
-          showAIPlanner = true
-        } label: {
-          Label("AI 生成行程", systemImage: "sparkles")
-        }
-        .buttonStyle(.primary)
-
-        // Voice creation button
-        Button {
-          showVoiceItinerary = true
-        } label: {
-          Label("语音创建", systemImage: "mic.fill")
-        }
-        .buttonStyle(.secondary)
-
-        HStack(spacing: DesignTokens.Spacing.md) {
-          NavigationLink {
-            DiscoverView()
-          } label: {
-            Label("浏览攻略", systemImage: "book")
-          }
-          .buttonStyle(.secondary)
-
-          Button {
-            showCreateSheet = true
-          } label: {
-            Label("新建行程", systemImage: "plus")
-          }
-          .buttonStyle(.secondary)
-        }
-
-        // Discover public itineraries
-        Button {
-          showDiscovery = true
-        } label: {
-          Label("发现公开行程", systemImage: "globe")
-        }
-        .buttonStyle(.bordered)
-        .controlSize(.small)
-      }
+      Button("itinerary.empty.ai".localized) { showAIPlanner = true }
+        .buttonStyle(.glassProminent)
+      Button("itinerary.empty.browse".localized) { showDiscovery = true }
+        .buttonStyle(.glass)
     }
   }
-  
+
   // MARK: - Itinerary List
 
   private var itineraryList: some View {
@@ -179,9 +145,7 @@ struct ItineraryListView: View {
         store.delete(at: offsets)
       }
     }
-    .listStyle(.plain)
-    .background(Color(.systemGroupedBackground))
-    .scrollContentBackground(.hidden)
+    .listStyle(.insetGrouped)
   }
 }
 
@@ -227,7 +191,6 @@ struct ItineraryCard: View {
       }
     }
     .padding(DesignTokens.Spacing.sm)
-    .subtleCardStyle(radius: DesignTokens.Radius.md)
   }
 
   // MARK: - Subviews
