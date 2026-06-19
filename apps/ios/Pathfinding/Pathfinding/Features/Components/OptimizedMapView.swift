@@ -37,37 +37,39 @@ struct OptimizedMapView: View {
 
   // MARK: - Body
 
+  // Precomputed O(1) annotation-ID → display index map (avoids O(n) firstIndex per pin)
+  private var annotationIndexMap: [UUID: Int] {
+    var map = [UUID: Int](minimumCapacity: annotations.count)
+    for (idx, annotation) in annotations.enumerated() {
+      map[annotation.id] = idx
+    }
+    return map
+  }
+
   var body: some View {
+    let indexMap = annotationIndexMap
     Map(position: $cameraPosition) {
       ForEach(displayAnnotations, id: \.id) { annotation in
         let isSelected = annotation.poi.id == selectedPoiId
-        let index = annotations.firstIndex(where: { $0.id == annotation.id }) ?? 0
+        let index = indexMap[annotation.id] ?? 0
+        let pinColor = isSelected ? Color.red : colorForType(annotation.poi.type)
 
         Annotation(annotation.poi.name, coordinate: annotation.coordinate) {
-          ZStack {
-            Circle()
-              .fill(isSelected ? Color.red : colorForType(annotation.poi.type))
-              .frame(width: isSelected ? 40 : 30, height: isSelected ? 40 : 30)
-              .shadow(color: isSelected ? .red.opacity(0.5) : .black.opacity(0.2), radius: isSelected ? 8 : 4)
-              .overlay(
-                Circle().stroke(.white, lineWidth: 2)
-              )
-              .scaleEffect(isSelected ? 1.1 : 1.0)
-              .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isSelected)
-
-            Text("\(index + 1)")
-              .font(isSelected ? .body : .caption)
-              .fontWeight(.bold)
-              .foregroundStyle(.white)
-          }
-          .zIndex(isSelected ? 100 : 1)
-          .minimumTouchTarget()
-          .onTapGesture {
-            onAnnotationTap?(annotation.poi.id)
-          }
-          .accessibilityElement(children: .ignore)
-          .accessibilityLabel("\(annotation.poi.name)，\(annotation.poi.type ?? "景点")")
-          .accessibilityValue(isSelected ? "已选中" : "")
+          Text("\(index + 1)")
+            .font(DesignTokens.Typography.MapLegend.duration)
+            .foregroundStyle(.white)
+            .padding(8)
+            .glassEffect(.regular.tint(pinColor), in: .circle)
+            .scaleEffect(isSelected ? 1.2 : 1.0)
+            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isSelected)
+            .zIndex(isSelected ? 100 : 1)
+            .minimumTouchTarget()
+            .onTapGesture {
+              onAnnotationTap?(annotation.poi.id)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(annotation.poi.name)，\(annotation.poi.type ?? "景点")")
+            .accessibilityValue(isSelected ? "已选中" : "")
         }
       }
     }
