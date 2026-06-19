@@ -143,6 +143,7 @@ struct iCloudSyncSettingsSheet: View {
     .sheet(isPresented: $showConflictResolver) {
       if let conflict = selectedConflict {
         ConflictResolverSheet(conflict: conflict, syncManager: syncManager)
+          .presentationDetents([.medium, .large])
       }
     }
   }
@@ -256,71 +257,77 @@ private struct ConflictResolverSheet: View {
           }
           .padding(.top, DesignTokens.Spacing.lg)
 
-          // Version Comparison
-          VStack(spacing: DesignTokens.Spacing.md) {
-            VersionCard(
-              title: "icloud.local_version".localized,
-              itinerary: conflict.localItinerary,
-              modifiedAt: conflict.localModifiedAt,
-              icon: "iphone",
-              color: .blue
-            )
+          // Version Comparison + Resolution Options in one glass cluster
+          GlassEffectContainer {
+            VStack(spacing: DesignTokens.Spacing.md) {
+              // Version Comparison
+              VersionCard(
+                title: "icloud.local_version".localized,
+                itinerary: conflict.localItinerary,
+                modifiedAt: conflict.localModifiedAt,
+                icon: "iphone",
+                color: .blue
+              )
 
-            Text("icloud.vs".localized)
-              .font(.caption)
-              .foregroundStyle(.secondary)
-              .padding(.vertical, DesignTokens.Spacing.xs)
+              Text("icloud.vs".localized)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.vertical, DesignTokens.Spacing.xs)
 
-            VersionCard(
-              title: "icloud.cloud_version".localized,
-              itinerary: conflict.remoteItinerary,
-              modifiedAt: conflict.remoteModifiedAt,
-              icon: "icloud.fill",
-              color: .cyan
-            )
-          }
-          .padding(.horizontal)
+              VersionCard(
+                title: "icloud.cloud_version".localized,
+                itinerary: conflict.remoteItinerary,
+                modifiedAt: conflict.remoteModifiedAt,
+                icon: "icloud.fill",
+                color: .cyan
+              )
 
-          // Resolution Options
-          VStack(spacing: DesignTokens.Spacing.sm) {
-            Text("icloud.choose_resolution".localized)
-              .font(.headline)
+              Divider()
+                .padding(.vertical, DesignTokens.Spacing.xs)
 
-            ResolutionButton(
-              title: "icloud.keep_local".localized,
-              subtitle: "icloud.keep_local_description".localized,
-              icon: "iphone",
-              color: .blue
-            ) {
-              Task {
-                await syncManager.resolveConflict(conflict, resolution: .useLocal)
-                dismiss()
+              // Resolution Options
+              VStack(spacing: DesignTokens.Spacing.sm) {
+                Text("icloud.choose_resolution".localized)
+                  .font(.headline)
+
+                ResolutionButton(
+                  title: "icloud.keep_local".localized,
+                  subtitle: "icloud.keep_local_description".localized,
+                  icon: "iphone",
+                  isPrimary: false
+                ) {
+                  Task {
+                    await syncManager.resolveConflict(conflict, resolution: .useLocal)
+                    dismiss()
+                  }
+                }
+
+                ResolutionButton(
+                  title: "icloud.keep_cloud".localized,
+                  subtitle: "icloud.keep_cloud_description".localized,
+                  icon: "icloud.fill",
+                  isPrimary: false
+                ) {
+                  Task {
+                    await syncManager.resolveConflict(conflict, resolution: .useRemote)
+                    dismiss()
+                  }
+                }
+
+                ResolutionButton(
+                  title: "icloud.keep_both".localized,
+                  subtitle: "icloud.keep_both_description".localized,
+                  icon: "doc.on.doc.fill",
+                  isPrimary: true
+                ) {
+                  Task {
+                    await syncManager.resolveConflict(conflict, resolution: .keepBoth)
+                    dismiss()
+                  }
+                }
               }
             }
-
-            ResolutionButton(
-              title: "icloud.keep_cloud".localized,
-              subtitle: "icloud.keep_cloud_description".localized,
-              icon: "icloud.fill",
-              color: .cyan
-            ) {
-              Task {
-                await syncManager.resolveConflict(conflict, resolution: .useRemote)
-                dismiss()
-              }
-            }
-
-            ResolutionButton(
-              title: "icloud.keep_both".localized,
-              subtitle: "icloud.keep_both_description".localized,
-              icon: "doc.on.doc.fill",
-              color: .green
-            ) {
-              Task {
-                await syncManager.resolveConflict(conflict, resolution: .keepBoth)
-                dismiss()
-              }
-            }
+            .padding()
           }
           .padding(.horizontal)
           .padding(.bottom, DesignTokens.Spacing.lg)
@@ -372,11 +379,7 @@ private struct VersionCard: View {
       }
     }
     .padding()
-    .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .overlay(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .stroke(color.opacity(0.3), lineWidth: 1)
-    )
+    .cardSurface(tint: color.opacity(0.15))
   }
 }
 
@@ -386,7 +389,7 @@ private struct ResolutionButton: View {
   let title: String
   let subtitle: String
   let icon: String
-  let color: Color
+  let isPrimary: Bool
   let action: () -> Void
 
   var body: some View {
@@ -394,28 +397,37 @@ private struct ResolutionButton: View {
       HStack(spacing: DesignTokens.Spacing.md) {
         Image(systemName: icon)
           .font(.title2)
-          .foregroundStyle(color)
           .frame(width: 32)
 
         VStack(alignment: .leading, spacing: 2) {
           Text(title)
             .font(.subheadline)
             .fontWeight(.semibold)
-            .foregroundStyle(.primary)
           Text(subtitle)
             .font(.caption)
-            .foregroundStyle(.secondary)
         }
 
         Spacer()
 
         Image(systemName: "chevron.right")
           .font(.caption)
-          .foregroundStyle(.secondary)
       }
       .padding()
-      .background(.quaternary, in: RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
     }
-    .buttonStyle(.plain)
+    .modifier(ResolutionButtonStyleModifier(isPrimary: isPrimary))
+  }
+}
+
+// MARK: - Resolution Button Style Modifier
+
+private struct ResolutionButtonStyleModifier: ViewModifier {
+  let isPrimary: Bool
+
+  func body(content: Content) -> some View {
+    if isPrimary {
+      content.buttonStyle(.glassProminent)
+    } else {
+      content.buttonStyle(.glass)
+    }
   }
 }

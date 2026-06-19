@@ -56,22 +56,24 @@ struct LanguagePreviewCard: View {
   @Environment(\.localizationManager) private var localizationManager
 
   var body: some View {
-    HStack(spacing: DesignTokens.Spacing.md) {
-      // Chinese preview
-      LanguageMiniPreview(
-        title: "中文",
-        languageCode: "zh",
-        isActive: localizationManager.effectiveLanguage == .chinese
-      )
+    GlassEffectContainer {
+      HStack(spacing: DesignTokens.Spacing.md) {
+        // Chinese preview
+        LanguageMiniPreview(
+          title: "中文",
+          languageCode: "zh",
+          isActive: localizationManager.effectiveLanguage == .chinese
+        )
 
-      // English preview
-      LanguageMiniPreview(
-        title: "EN",
-        languageCode: "en",
-        isActive: localizationManager.effectiveLanguage == .english
-      )
+        // English preview
+        LanguageMiniPreview(
+          title: "EN",
+          languageCode: "en",
+          isActive: localizationManager.effectiveLanguage == .english
+        )
+      }
+      .padding(DesignTokens.Spacing.md)
     }
-    .padding(DesignTokens.Spacing.md)
   }
 }
 
@@ -81,14 +83,6 @@ struct LanguageMiniPreview: View {
   let title: String
   let languageCode: String
   let isActive: Bool
-
-  private var backgroundColor: Color {
-    Color(UIColor.secondarySystemBackground)
-  }
-
-  private var cardColor: Color {
-    Color(UIColor.tertiarySystemBackground)
-  }
 
   var body: some View {
     VStack(spacing: DesignTokens.Spacing.xs) {
@@ -132,13 +126,7 @@ struct LanguageMiniPreview: View {
         .padding(.bottom, 10)
       }
       .frame(maxWidth: .infinity)
-      .background(backgroundColor)
-      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-      .overlay(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-          .stroke(isActive ? Color.accentColor : Color.clear, lineWidth: 2)
-      )
-      .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+      .cardSurface(tint: isActive ? Color.accentColor.opacity(0.3) : nil)
 
       // Label
       Text(languageCode == "zh" ? "简体中文" : "English")

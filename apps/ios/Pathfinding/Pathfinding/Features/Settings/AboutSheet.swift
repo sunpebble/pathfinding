@@ -47,7 +47,7 @@ struct AboutSheet: View {
           AboutRow(title: "about.developer".localized, value: "about.developer_name".localized)
           AboutRow(title: "about.build_number".localized, value: AppConfig.buildNumber)
           AboutRow(title: "about.swift_version".localized, value: "6.0")
-          AboutRow(title: "about.min_ios".localized, value: "iOS 17.0")
+          AboutRow(title: "about.min_ios".localized, value: "iOS 26.0")
         }
         .padding(.horizontal)
 
