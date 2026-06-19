@@ -1,182 +1,256 @@
 import SwiftUI
 
-/// Form view for adding a new expense
+// MARK: - Expense Form Model
+
+/// Backing model for create/edit expense forms.
+@Observable
+final class ExpenseFormModel {
+  enum Mode {
+    case create
+    case edit(Expense)
+  }
+
+  // Editable fields
+  var amountText: String
+  var description: String
+  var selectedCategory: ExpenseCategory?
+  var date: Date
+  var time: Date
+  var includeTime: Bool
+  var paymentMethod: PaymentMethod
+  var notes: String
+  var showCategoryPicker: Bool = false
+
+  /// Parsed numeric amount; 0 when amountText is invalid.
+  var amount: Double { Double(amountText) ?? 0 }
+
+  /// Mirror of the enriched category field from the source expense (edit mode only).
+  var category: ExpenseCategory? { selectedCategory }
+
+  var isValid: Bool {
+    guard let value = Double(amountText), value > 0 else { return false }
+    guard !description.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+    return selectedCategory != nil
+  }
+
+  init(mode: Mode) {
+    switch mode {
+    case .create:
+      amountText = ""
+      description = ""
+      selectedCategory = nil
+      date = Date()
+      time = Date()
+      includeTime = false
+      paymentMethod = .wechat
+      notes = ""
+
+    case .edit(let expense):
+      amountText = String(format: "%.2f", expense.amount)
+      description = expense.description
+      // category is resolved later via budgetStore.categories; keep enriched field as seed
+      selectedCategory = expense.category
+      notes = expense.notes ?? ""
+      paymentMethod = {
+        if let raw = expense.paymentMethod, let method = PaymentMethod(rawValue: raw) {
+          return method
+        }
+        return .wechat
+      }()
+      // Parse date
+      let dateFormatter = DateFormatter()
+      dateFormatter.dateFormat = "yyyy-MM-dd"
+      date = dateFormatter.date(from: expense.date) ?? Date()
+      // Parse time
+      if let timeStr = expense.time {
+        includeTime = true
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+        time = timeFormatter.date(from: timeStr) ?? Date()
+      } else {
+        includeTime = false
+        time = Date()
+      }
+    }
+  }
+}
+
+// MARK: - Shared Expense Form
+
+/// Shared form body used by both AddExpenseView and EditExpenseView.
+struct ExpenseForm: View {
+  @Bindable var budgetStore: BudgetStore
+  var model: ExpenseFormModel
+  var currencyLabel: String
+
+  var body: some View {
+    Form {
+      // Amount Section
+      Section {
+        HStack {
+          Text(currencyLabel)
+            .font(.headline)
+            .foregroundStyle(.secondary)
+
+          TextField("0.00", text: Bindable(model).amountText)
+            .keyboardType(.decimalPad)
+            .font(.system(size: 36, weight: .bold))
+            .multilineTextAlignment(.trailing)
+        }
+        .padding(.vertical, DesignTokens.Spacing.sm)
+      } header: {
+        Text("金额")
+      }
+
+      // Category Section
+      Section {
+        Button {
+          model.showCategoryPicker = true
+        } label: {
+          HStack {
+            if let category = model.selectedCategory {
+              Image(systemName: category.sfSymbol)
+                .foregroundStyle(category.swiftUIColor)
+                .frame(width: 28, height: 28)
+                .background(category.swiftUIColor.opacity(0.15))
+                .clipShape(Circle())
+
+              Text(category.name)
+                .foregroundStyle(.primary)
+            } else {
+              Image(systemName: "folder")
+                .foregroundStyle(.secondary)
+                .frame(width: 28, height: 28)
+                .background(Color(.systemGray5))
+                .clipShape(Circle())
+
+              Text("选择分类")
+                .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+              .font(.caption)
+              .foregroundStyle(.tertiary)
+          }
+        }
+      } header: {
+        Text("分类")
+      }
+
+      // Description Section
+      Section {
+        TextField("支出说明", text: Bindable(model).description)
+      } header: {
+        Text("说明")
+      }
+
+      // Date & Time Section
+      Section {
+        DatePicker(
+          "日期",
+          selection: Bindable(model).date,
+          displayedComponents: .date
+        )
+
+        Toggle("记录时间", isOn: Bindable(model).includeTime)
+
+        if model.includeTime {
+          DatePicker(
+            "时间",
+            selection: Bindable(model).time,
+            displayedComponents: .hourAndMinute
+          )
+        }
+      } header: {
+        Text("日期时间")
+      }
+
+      // Payment Method Section
+      Section {
+        Picker("支付方式", selection: Bindable(model).paymentMethod) {
+          ForEach(PaymentMethod.allCases, id: \.self) { method in
+            Label(method.displayName, systemImage: method.icon)
+              .tag(method)
+          }
+        }
+        .pickerStyle(.menu)
+      } header: {
+        Text("支付方式")
+      }
+
+      // Notes Section
+      Section {
+        TextField("备注（可选）", text: Bindable(model).notes, axis: .vertical)
+          .lineLimit(3...6)
+      } header: {
+        Text("备注")
+      }
+    }
+    .sheet(isPresented: Bindable(model).showCategoryPicker) {
+      CategoryPickerView(
+        categories: budgetStore.categories,
+        selectedCategory: Bindable(model).selectedCategory
+      )
+    }
+  }
+}
+
+// MARK: - Add Expense View
+
+/// Thin wrapper around ExpenseForm for creating a new expense.
 struct AddExpenseView: View {
   let itineraryId: String
   @Bindable var budgetStore: BudgetStore
 
   @Environment(\.dismiss) private var dismiss
 
-  @State private var amount: String = ""
-  @State private var description: String = ""
-  @State private var selectedCategory: ExpenseCategory?
-  @State private var date: Date = Date()
-  @State private var time: Date = Date()
-  @State private var includeTime: Bool = false
-  @State private var paymentMethod: PaymentMethod = .wechat
-  @State private var notes: String = ""
-  @State private var showCategoryPicker = false
-
-  private var isValid: Bool {
-    guard let amountValue = Double(amount), amountValue > 0 else { return false }
-    guard !description.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
-    guard selectedCategory != nil else { return false }
-    return true
-  }
+  @State private var model = ExpenseFormModel(mode: .create)
 
   var body: some View {
     NavigationStack {
-      Form {
-        // Amount Section
-        Section {
-          HStack {
-            Text(budgetStore.budget?.currency ?? "CNY")
-              .font(.headline)
-              .foregroundStyle(.secondary)
-
-            TextField("0.00", text: $amount)
-              .keyboardType(.decimalPad)
-              .font(.system(size: 36, weight: .bold))
-              .multilineTextAlignment(.trailing)
-          }
-          .padding(.vertical, DesignTokens.Spacing.sm)
-        } header: {
-          Text("金额")
-        }
-
-        // Category Section
-        Section {
-          Button {
-            showCategoryPicker = true
-          } label: {
-            HStack {
-              if let category = selectedCategory {
-                Image(systemName: category.sfSymbol)
-                  .foregroundStyle(category.swiftUIColor)
-                  .frame(width: 28, height: 28)
-                  .background(category.swiftUIColor.opacity(0.15))
-                  .clipShape(Circle())
-
-                Text(category.name)
-                  .foregroundStyle(.primary)
-              } else {
-                Image(systemName: "folder")
-                  .foregroundStyle(.secondary)
-                  .frame(width: 28, height: 28)
-                  .background(Color(.systemGray5))
-                  .clipShape(Circle())
-
-                Text("选择分类")
-                  .foregroundStyle(.secondary)
-              }
-
-              Spacer()
-
-              Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-            }
-          }
-        } header: {
-          Text("分类")
-        }
-
-        // Description Section
-        Section {
-          TextField("支出说明", text: $description)
-        } header: {
-          Text("说明")
-        }
-
-        // Date & Time Section
-        Section {
-          DatePicker(
-            "日期",
-            selection: $date,
-            displayedComponents: .date
-          )
-
-          Toggle("记录时间", isOn: $includeTime)
-
-          if includeTime {
-            DatePicker(
-              "时间",
-              selection: $time,
-              displayedComponents: .hourAndMinute
-            )
-          }
-        } header: {
-          Text("日期时间")
-        }
-
-        // Payment Method Section
-        Section {
-          Picker("支付方式", selection: $paymentMethod) {
-            ForEach(PaymentMethod.allCases, id: \.self) { method in
-              Label(method.displayName, systemImage: method.icon)
-                .tag(method)
-            }
-          }
-          .pickerStyle(.menu)
-        } header: {
-          Text("支付方式")
-        }
-
-        // Notes Section
-        Section {
-          TextField("备注（可选）", text: $notes, axis: .vertical)
-            .lineLimit(3...6)
-        } header: {
-          Text("备注")
-        }
-      }
+      ExpenseForm(
+        budgetStore: budgetStore,
+        model: model,
+        currencyLabel: budgetStore.budget?.currency ?? "CNY"
+      )
       .navigationTitle("添加支出")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") {
-            dismiss()
-          }
+          Button("取消") { dismiss() }
         }
-
         ToolbarItem(placement: .confirmationAction) {
-          Button("保存") {
-            saveExpense()
-          }
-          .disabled(!isValid || budgetStore.isSubmitting)
+          Button("保存") { saveExpense() }
+            .disabled(!model.isValid || budgetStore.isSubmitting)
         }
-      }
-      .sheet(isPresented: $showCategoryPicker) {
-        CategoryPickerView(
-          categories: budgetStore.categories,
-          selectedCategory: $selectedCategory
-        )
       }
       .task {
         if budgetStore.categories.isEmpty {
           await budgetStore.fetchCategories()
         }
-        // Auto-select first category if none selected
-        if selectedCategory == nil, let first = budgetStore.categories.first {
-          selectedCategory = first
+        // Auto-select first category if none chosen
+        if model.selectedCategory == nil, let first = budgetStore.categories.first {
+          model.selectedCategory = first
         }
       }
     }
   }
 
   private func saveExpense() {
-    guard let category = selectedCategory,
-          let amountValue = Double(amount) else { return }
+    guard let category = model.selectedCategory,
+          let amountValue = Double(model.amountText) else { return }
 
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "yyyy-MM-dd"
-    let dateStr = dateFormatter.string(from: date)
+    let dateStr = dateFormatter.string(from: model.date)
 
     var timeStr: String?
-    if includeTime {
+    if model.includeTime {
       let timeFormatter = DateFormatter()
       timeFormatter.dateFormat = "HH:mm"
-      timeStr = timeFormatter.string(from: time)
+      timeStr = timeFormatter.string(from: model.time)
     }
 
     Task {
@@ -186,16 +260,13 @@ struct AddExpenseView: View {
         categoryId: category.id,
         amount: amountValue,
         currency: budgetStore.budget?.currency ?? "CNY",
-        description: description.trimmingCharacters(in: .whitespaces),
+        description: model.description.trimmingCharacters(in: .whitespaces),
         date: dateStr,
         time: timeStr,
-        paymentMethod: paymentMethod,
-        notes: notes.isEmpty ? nil : notes
+        paymentMethod: model.paymentMethod,
+        notes: model.notes.isEmpty ? nil : model.notes
       )
-
-      if success {
-        dismiss()
-      }
+      if success { dismiss() }
     }
   }
 }
@@ -234,9 +305,7 @@ struct CategoryPickerView: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") {
-            dismiss()
-          }
+          Button("取消") { dismiss() }
         }
       }
     }
@@ -280,6 +349,7 @@ struct CategoryGridItem: View {
 
 // MARK: - Edit Expense View
 
+/// Thin wrapper around ExpenseForm for updating an existing expense.
 struct EditExpenseView: View {
   let expense: Expense
   let itineraryId: String
@@ -287,206 +357,59 @@ struct EditExpenseView: View {
 
   @Environment(\.dismiss) private var dismiss
 
-  @State private var amount: String = ""
-  @State private var description: String = ""
-  @State private var selectedCategory: ExpenseCategory?
-  @State private var date: Date = Date()
-  @State private var time: Date = Date()
-  @State private var includeTime: Bool = false
-  @State private var paymentMethod: PaymentMethod = .wechat
-  @State private var notes: String = ""
-  @State private var showCategoryPicker = false
+  @State private var model: ExpenseFormModel
 
-  private var isValid: Bool {
-    guard let amountValue = Double(amount), amountValue > 0 else { return false }
-    guard !description.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
-    guard selectedCategory != nil else { return false }
-    return true
+  init(expense: Expense, itineraryId: String, budgetStore: BudgetStore) {
+    self.expense = expense
+    self.itineraryId = itineraryId
+    self.budgetStore = budgetStore
+    self._model = State(initialValue: ExpenseFormModel(mode: .edit(expense)))
   }
 
   var body: some View {
     NavigationStack {
-      Form {
-        // Amount Section
-        Section {
-          HStack {
-            Text(expense.currency)
-              .font(.headline)
-              .foregroundStyle(.secondary)
-
-            TextField("0.00", text: $amount)
-              .keyboardType(.decimalPad)
-              .font(.system(size: 36, weight: .bold))
-              .multilineTextAlignment(.trailing)
-          }
-          .padding(.vertical, DesignTokens.Spacing.sm)
-        } header: {
-          Text("金额")
-        }
-
-        // Category Section
-        Section {
-          Button {
-            showCategoryPicker = true
-          } label: {
-            HStack {
-              if let category = selectedCategory {
-                Image(systemName: category.sfSymbol)
-                  .foregroundStyle(category.swiftUIColor)
-                  .frame(width: 28, height: 28)
-                  .background(category.swiftUIColor.opacity(0.15))
-                  .clipShape(Circle())
-
-                Text(category.name)
-                  .foregroundStyle(.primary)
-              } else {
-                Image(systemName: "folder")
-                  .foregroundStyle(.secondary)
-
-                Text("选择分类")
-                  .foregroundStyle(.secondary)
-              }
-
-              Spacer()
-
-              Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-            }
-          }
-        } header: {
-          Text("分类")
-        }
-
-        // Description Section
-        Section {
-          TextField("支出说明", text: $description)
-        } header: {
-          Text("说明")
-        }
-
-        // Date & Time Section
-        Section {
-          DatePicker(
-            "日期",
-            selection: $date,
-            displayedComponents: .date
-          )
-
-          Toggle("记录时间", isOn: $includeTime)
-
-          if includeTime {
-            DatePicker(
-              "时间",
-              selection: $time,
-              displayedComponents: .hourAndMinute
-            )
-          }
-        } header: {
-          Text("日期时间")
-        }
-
-        // Payment Method Section
-        Section {
-          Picker("支付方式", selection: $paymentMethod) {
-            ForEach(PaymentMethod.allCases, id: \.self) { method in
-              Label(method.displayName, systemImage: method.icon)
-                .tag(method)
-            }
-          }
-          .pickerStyle(.menu)
-        } header: {
-          Text("支付方式")
-        }
-
-        // Notes Section
-        Section {
-          TextField("备注（可选）", text: $notes, axis: .vertical)
-            .lineLimit(3...6)
-        } header: {
-          Text("备注")
-        }
-      }
+      ExpenseForm(
+        budgetStore: budgetStore,
+        model: model,
+        currencyLabel: expense.currency
+      )
       .navigationTitle("编辑支出")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") {
-            dismiss()
-          }
+          Button("取消") { dismiss() }
         }
-
         ToolbarItem(placement: .confirmationAction) {
-          Button("保存") {
-            updateExpense()
-          }
-          .disabled(!isValid || budgetStore.isSubmitting)
+          Button("保存") { updateExpense() }
+            .disabled(!model.isValid || budgetStore.isSubmitting)
         }
-      }
-      .sheet(isPresented: $showCategoryPicker) {
-        CategoryPickerView(
-          categories: budgetStore.categories,
-          selectedCategory: $selectedCategory
-        )
-      }
-      .onAppear {
-        loadExpenseData()
       }
       .task {
         if budgetStore.categories.isEmpty {
           await budgetStore.fetchCategories()
         }
+        // Resolve category from store now that categories are loaded
+        if let stored = budgetStore.categories.first(where: { $0.id == expense.categoryId }) {
+          model.selectedCategory = stored
+        }
       }
-    }
-  }
-
-  private func loadExpenseData() {
-    amount = String(format: "%.2f", expense.amount)
-    description = expense.description
-    selectedCategory = budgetStore.categories.first { $0.id == expense.categoryId }
-    notes = expense.notes ?? ""
-
-    // Parse date
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "yyyy-MM-dd"
-    if let parsedDate = dateFormatter.date(from: expense.date) {
-      date = parsedDate
-    }
-
-    // Parse time
-    if let timeStr = expense.time {
-      includeTime = true
-      let timeFormatter = DateFormatter()
-      timeFormatter.dateFormat = "HH:mm"
-      if let parsedTime = timeFormatter.date(from: timeStr) {
-        time = parsedTime
-      }
-    }
-
-    // Parse payment method
-    if let methodStr = expense.paymentMethod,
-       let method = PaymentMethod(rawValue: methodStr) {
-      paymentMethod = method
     }
   }
 
   private func updateExpense() {
-    guard let category = selectedCategory,
-          let amountValue = Double(amount) else { return }
+    guard let category = model.selectedCategory,
+          let amountValue = Double(model.amountText) else { return }
 
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "yyyy-MM-dd"
-    let dateStr = dateFormatter.string(from: date)
+    let dateStr = dateFormatter.string(from: model.date)
 
     var timeStr: String?
-    if includeTime {
+    if model.includeTime {
       let timeFormatter = DateFormatter()
       timeFormatter.dateFormat = "HH:mm"
-      timeStr = timeFormatter.string(from: time)
+      timeStr = timeFormatter.string(from: model.time)
     }
-
-    let descriptionText = description.trimmingCharacters(in: .whitespaces)
-    let notesText = notes.isEmpty ? nil : notes
 
     Task {
       let success = await budgetStore.updateExpense(
@@ -494,16 +417,13 @@ struct EditExpenseView: View {
         itineraryId: itineraryId,
         categoryId: category.id,
         amount: amountValue,
-        description: descriptionText,
+        description: model.description.trimmingCharacters(in: .whitespaces),
         date: dateStr,
         time: timeStr,
-        paymentMethod: paymentMethod.rawValue,
-        notes: notesText
+        paymentMethod: model.paymentMethod.rawValue,
+        notes: model.notes.isEmpty ? nil : model.notes
       )
-
-      if success {
-        dismiss()
-      }
+      if success { dismiss() }
     }
   }
 }

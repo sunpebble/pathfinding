@@ -22,6 +22,7 @@
 		0DB5807B0695BD2C2D1AADC6 /* SafetyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0ECD88FC1A7CA0371A8DB5 /* SafetyComponents.swift */; };
 		0F49EF390FE6C9E3DF50FDC7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45483963DF5BAECD964E3082 /* Assets.xcassets */; };
 		0FFD22E8851CD623B1CC425B /* AddFlightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2489F8B66A305766DB65DB7B /* AddFlightView.swift */; };
+		10A60D4211B9476E6E418726 /* ExpenseFormModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59162E257AA1C57B68BFA460 /* ExpenseFormModelTests.swift */; };
 		10D10C3D66DA98B659A7C858 /* WiFi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 947C99303624C59EC7014BC3 /* WiFi.swift */; };
 		10DB0E210CFD7FF7F7338DCC /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A2F8827930C01D116AC63C /* APIClient.swift */; };
 		11A635C0D143555EB92D8FC5 /* AstronomyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D072765F0DF38BF7FA0F8E /* AstronomyView.swift */; };
@@ -344,6 +345,7 @@
 		555CF85DCF1102466E690D23 /* ShareStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareStatsView.swift; sourceTree = "<group>"; };
 		5737881C95646549578325F9 /* Favorite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Favorite.swift; sourceTree = "<group>"; };
 		58A08A7993D15AB3341C118E /* PlainTextContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainTextContentView.swift; sourceTree = "<group>"; };
+		59162E257AA1C57B68BFA460 /* ExpenseFormModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseFormModelTests.swift; sourceTree = "<group>"; };
 		59416B95E7D9420581D210BD /* BlogDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlogDetailView.swift; sourceTree = "<group>"; };
 		599D1A4EB9F4FD5E637F1108 /* SafetyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyAPIClient.swift; sourceTree = "<group>"; };
 		59D1B905EAFE8CE02D62F142 /* Translation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Translation.swift; sourceTree = "<group>"; };
@@ -606,6 +608,7 @@
 			children = (
 				1659CAA114BDDDB72101E180 /* AuthManagerRequestTests.swift */,
 				99ABE2634CF32E6F2522436D /* CopyableSourceTests.swift */,
+				59162E257AA1C57B68BFA460 /* ExpenseFormModelTests.swift */,
 				E0A7B59E95DA141FDAC0291B /* ItineraryDetailDestinationsTests.swift */,
 				6C77BB1D4DCD8617EBF6B1A1 /* ItineraryStoreCopyTests.swift */,
 				447D0FE5EEAF01DA8D9C124D /* MarkdownContentParserTests.swift */,
@@ -1397,6 +1400,7 @@
 			files = (
 				2093E2AA2641EC6999A78046 /* AuthManagerRequestTests.swift in Sources */,
 				7D752941ACA629DFB9EBA4D6 /* CopyableSourceTests.swift in Sources */,
+				10A60D4211B9476E6E418726 /* ExpenseFormModelTests.swift in Sources */,
 				57DBF54E6DD5FC533DB54F7C /* ItineraryDetailDestinationsTests.swift in Sources */,
 				0091E305A43102A9C4560B57 /* ItineraryStoreCopyTests.swift in Sources */,
 				66D7B64AB6CCBE6288A0C97D /* MarkdownContentParserTests.swift in Sources */,

@@ -353,6 +353,40 @@ struct SpendingTrendResponse: Codable {
   let data: [SpendingTrend]
 }
 
+// MARK: - Expense Preview
+
+#if DEBUG
+extension Expense {
+  static let previewSample = Expense(
+    id: "preview-expense-1",
+    itineraryId: "preview-itinerary-1",
+    userId: "preview-user-1",
+    categoryId: "preview-category-1",
+    amount: 128.50,
+    currency: "CNY",
+    description: "午餐",
+    date: "2024-06-01",
+    time: "12:30",
+    poiId: nil,
+    dayNumber: 1,
+    paymentMethod: "wechat",
+    receiptImageUrl: nil,
+    notes: "好吃",
+    createdAt: 1_717_200_000_000,
+    updatedAt: 1_717_200_000_000,
+    category: ExpenseCategory(
+      id: "preview-category-1",
+      name: "餐饮",
+      nameEn: "Dining",
+      icon: "fork.knife",
+      color: "#FF6B35",
+      sortOrder: 1,
+      isSystem: true
+    )
+  )
+}
+#endif
+
 // MARK: - Payment Method
 
 enum PaymentMethod: String, CaseIterable, Codable {
