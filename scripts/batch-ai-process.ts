@@ -21,6 +21,7 @@
  */
 
 import type { GeocodingProvider } from '../packages/api/src/services/geocoding.service.js';
+import { aiDaysToDayItineraries } from '@pathfinding/guide-shape';
 import { asc, eq, sql } from 'drizzle-orm';
 import {
   buildGeocodingMetrics,
@@ -327,30 +328,6 @@ function pickDefined(record: Record<string, unknown>): Record<string, unknown> {
   );
 }
 
-/**
- * aiDays（dayNumber/latitude/longitude）→ schema 约定的 dayItineraries
- * （day/lat/lng）。只收录坐标已解析的 POI——绝不写 0,0 占位。
- */
-function toDayItineraries(days: DayPlan[]) {
-  return days.map(day => ({
-    day: day.dayNumber,
-    ...(day.theme ? { title: day.theme } : {}),
-    pois: (day.pois ?? [])
-      .filter(poi =>
-        typeof poi.latitude === 'number'
-        && Number.isFinite(poi.latitude)
-        && typeof poi.longitude === 'number'
-        && Number.isFinite(poi.longitude),
-      )
-      .map(poi => ({
-        name: poi.name,
-        lat: poi.latitude!,
-        lng: poi.longitude!,
-        ...(poi.type ? { category: poi.type } : {}),
-      })),
-  }));
-}
-
 async function processGuide(
   db: ReturnType<typeof createDb>,
   guide: Guide,
@@ -409,7 +386,7 @@ async function processGuide(
       .update(travelGuides)
       .set({
         enrichedData,
-        dayItineraries: geocodedDays ? toDayItineraries(geocodedDays) : null,
+        dayItineraries: geocodedDays ? aiDaysToDayItineraries(geocodedDays) : null,
         lastUpdatedAt: new Date(),
       })
       .where(eq(travelGuides.id, guide.id));

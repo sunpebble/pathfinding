@@ -1,9 +1,8 @@
-import type { DayItinerary } from '@pathfinding/database/schema';
 import type { TravelGuideResponseDto } from '@pathfinding/types';
-import type { InferSelectModel } from 'drizzle-orm';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import { getDb, guideDestinations, travelGuides } from '@pathfinding/database';
+import { aiDayNumber, aiDaysToDayItineraries, isRecord, recordFromJson, toResponseDto } from '@pathfinding/guide-shape';
 import { and, asc, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
 /**
  * Guides routes — list, get by ID, search, destinations, stats.
@@ -16,204 +15,10 @@ import { jsonData, jsonList, jsonOk } from '../lib/response.js';
 import { authRequired } from '../middleware/auth.js';
 import { runFullAnalysis } from '../services/backfill.service.js';
 
-type Guide = InferSelectModel<typeof travelGuides>;
-
 const app = new Hono<{ Variables: AuthVariables }>();
-
-function recordFromJson(value: unknown): Record<string, unknown> {
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return {};
-}
-
-function stringFromRecord(record: Record<string, unknown>, keys: string[]): string | null {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === 'string' && value.trim()) {
-      return value;
-    }
-  }
-  return null;
-}
-
-function stringArrayFromRecord(record: Record<string, unknown>, keys: string[]): string[] | null {
-  for (const key of keys) {
-    const value = record[key];
-    if (Array.isArray(value)) {
-      const strings = value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
-      if (strings.length > 0)
-        return strings;
-    }
-  }
-  return null;
-}
-
-function dateString(value: Date | string | null | undefined): string | null {
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-  if (typeof value === 'string' && value.length > 0) {
-    return value;
-  }
-  return null;
-}
-
-function numberFromGuide(guide: Guide, key: keyof Guide, fallback = 0): number {
-  const value = guide[key];
-  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-}
-
-function stringArray(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string' && item.length > 0)
-    : [];
-}
 
 function parseGuideOrder(value: string | undefined): 'asc' | 'desc' {
   return value === 'asc' ? 'asc' : 'desc';
-}
-
-function destinationsFromGuide(value: Guide['destinations']): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((destination) => {
-      if (typeof destination === 'string') {
-        return destination;
-      }
-      if (destination && typeof destination === 'object' && typeof destination.name === 'string') {
-        return destination.name;
-      }
-      return null;
-    })
-    .filter((destination): destination is string => Boolean(destination));
-}
-
-function arrayFromRecord(record: Record<string, unknown>, keys: string[]): unknown[] | null {
-  for (const key of keys) {
-    const value = record[key];
-    if (Array.isArray(value)) {
-      return value;
-    }
-  }
-  return null;
-}
-
-function geocodingMetricsFromRecord(record: Record<string, unknown>): TravelGuideResponseDto['geocoding_metrics'] {
-  const value = record.geocodingMetrics ?? record.geocoding_metrics;
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return null;
-  }
-
-  const metrics = value as Record<string, unknown>;
-  const totalPois = metrics.total_pois;
-  const averageConfidence = metrics.average_confidence;
-  const lowConfidenceCount = metrics.low_confidence_count;
-
-  if (
-    typeof totalPois === 'number'
-    && typeof averageConfidence === 'number'
-    && typeof lowConfidenceCount === 'number'
-  ) {
-    return {
-      total_pois: totalPois,
-      average_confidence: averageConfidence,
-      low_confidence_count: lowConfidenceCount,
-    };
-  }
-
-  return null;
-}
-
-function normalizeAiDays(value: unknown): TravelGuideResponseDto['ai_days'] {
-  if (!Array.isArray(value)) {
-    return null;
-  }
-
-  interface NormalizedAiDay {
-    day_number: number;
-    theme?: string;
-    title?: string;
-    pois: Array<Record<string, unknown>>;
-  }
-
-  const days = value
-    .map((item) => {
-      if (!item || typeof item !== 'object' || Array.isArray(item)) {
-        return null;
-      }
-
-      const record = item as Record<string, unknown>;
-      const dayNumber = record.day_number ?? record.dayNumber ?? record.day;
-      if (typeof dayNumber !== 'number' || !Number.isFinite(dayNumber)) {
-        return null;
-      }
-
-      return {
-        day_number: dayNumber,
-        ...(typeof record.theme === 'string' ? { theme: record.theme } : {}),
-        ...(typeof record.title === 'string' ? { title: record.title } : {}),
-        pois: Array.isArray(record.pois) ? record.pois as Array<Record<string, unknown>> : [],
-      };
-    })
-    .filter((day): day is NormalizedAiDay => day !== null);
-
-  return days.length > 0 ? days : null;
-}
-
-/**
- * Convert a DB guide row to the iOS-compatible response format.
- * The iOS BlogPost model expects specific field names that differ from the DB schema.
- */
-function toClientGuide(guide: Guide): TravelGuideResponseDto {
-  const enrichedData = recordFromJson(guide.enrichedData);
-  const id = String(guide.id);
-  const aiDays = normalizeAiDays(
-    arrayFromRecord(enrichedData, ['aiDays', 'ai_days'])
-    ?? (Array.isArray(guide.dayItineraries) ? guide.dayItineraries : null),
-  );
-
-  return {
-    id,
-    _id: id,
-    title: guide.title,
-    summary: stringFromRecord(enrichedData, ['summary', 'aiSummary', 'ai_summary']),
-    source_platform: guide.platform,
-    source_external_id: guide.externalId ?? null,
-    source_url: guide.sourceUrl ?? null,
-    author_name: guide.authorName,
-    author_id: stringFromRecord(enrichedData, ['authorId', 'author_id']),
-    content: guide.content ?? '',
-    content_html: stringFromRecord(enrichedData, ['contentHtml', 'content_html']),
-    content_markdown: stringFromRecord(enrichedData, ['contentMarkdown', 'content_markdown']),
-    cover_image_url: guide.coverImageUrl,
-    image_urls: stringArray(guide.imageUrls),
-    quality_score: numberFromGuide(guide, 'qualityScore'),
-    views_count: numberFromGuide(guide, 'viewCount'),
-    likes_count: numberFromGuide(guide, 'likeCount'),
-    // D13: no real saves data exists — null instead of a fake 0.
-    saves_count: null,
-    comments_count: numberFromGuide(guide, 'commentCount'),
-    destinations: destinationsFromGuide(guide.destinations),
-    tags: stringArray(guide.tags),
-    published_at: dateString(guide.publishedAt),
-    crawled_at: dateString(guide.crawledAt),
-    created_at: dateString(guide.createdAt),
-    updated_at: dateString(guide.updatedAt),
-    ai_summary: stringFromRecord(enrichedData, ['aiSummary', 'summary', 'ai_summary']),
-    ai_tips: stringArrayFromRecord(enrichedData, ['aiTips', 'tips', 'ai_tips']),
-    ai_best_time: stringFromRecord(enrichedData, ['aiBestTime', 'bestTime', 'ai_best_time']),
-    ai_duration: stringFromRecord(enrichedData, ['aiDuration', 'duration', 'ai_duration']),
-    ai_budget: stringFromRecord(enrichedData, ['aiBudget', 'budget', 'ai_budget']),
-    ai_days: aiDays,
-    ai_processed_at: null,
-    ai_version: stringFromRecord(enrichedData, ['aiVersion', 'version', 'ai_version']),
-    ai_model: stringFromRecord(enrichedData, ['aiModel', 'model', 'ai_model']),
-    geocoding_metrics: geocodingMetricsFromRecord(enrichedData),
-  };
 }
 
 /**
@@ -308,7 +113,7 @@ app.get('/', async (c) => {
       .where(where),
   ]);
 
-  return jsonList(c, results.map(toClientGuide), { limit, offset }, countResult[0]?.count ?? 0);
+  return jsonList(c, results.map(toResponseDto), { limit, offset }, countResult[0]?.count ?? 0);
 });
 
 // ── GET /search — Search guides ────────────────────────
@@ -340,7 +145,7 @@ app.get('/search', async (c) => {
       .where(whereClause),
   ]);
 
-  return jsonList(c, results.map(toClientGuide), { limit, offset: 0 }, countResult[0]?.count ?? 0);
+  return jsonList(c, results.map(toResponseDto), { limit, offset: 0 }, countResult[0]?.count ?? 0);
 });
 
 // ── GET /destinations — Popular destinations ───────────
@@ -387,7 +192,7 @@ async function findGuideById(id: number): Promise<TravelGuideResponseDto | null>
     .where(eq(travelGuides.id, id))
     .limit(1);
 
-  return result[0] ? toClientGuide(result[0]) : null;
+  return result[0] ? toResponseDto(result[0]) : null;
 }
 
 // ── GET /by-id — Get guide by ID ───────────────────────
@@ -510,58 +315,6 @@ const updateGuidePoiCoordinatesSchema = z.object({
   verifiedBy: z.string().optional(),
 });
 
-/** Read the day number of an aiDays entry (day_number / dayNumber / day). */
-function aiDayNumber(day: Record<string, unknown>): number | null {
-  const value = day.day_number ?? day.dayNumber ?? day.day;
-  return typeof value === 'number' && Number.isFinite(value) ? value : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-/**
- * Derive schema-shaped dayItineraries from enrichedData.aiDays — single
- * source of truth (D13). Mirrors batch-ai-process: only POIs with resolved
- * finite coordinates are included, shaped { day, title?, pois: [{ name, lat, lng, category? }] }.
- */
-function deriveDayItineraries(aiDays: unknown[]): DayItinerary[] {
-  const itineraries: DayItinerary[] = [];
-
-  for (const day of aiDays) {
-    if (!isRecord(day)) {
-      continue;
-    }
-    const dayNumber = aiDayNumber(day);
-    if (dayNumber === null) {
-      continue;
-    }
-
-    const title = typeof day.title === 'string'
-      ? day.title
-      : typeof day.theme === 'string'
-        ? day.theme
-        : undefined;
-    const pois = (Array.isArray(day.pois) ? day.pois : [])
-      .filter(isRecord)
-      .filter(poi =>
-        typeof poi.name === 'string'
-        && typeof poi.latitude === 'number' && Number.isFinite(poi.latitude)
-        && typeof poi.longitude === 'number' && Number.isFinite(poi.longitude),
-      )
-      .map(poi => ({
-        name: poi.name as string,
-        lat: poi.latitude as number,
-        lng: poi.longitude as number,
-        ...(typeof poi.type === 'string' ? { category: poi.type } : {}),
-      }));
-
-    itineraries.push({ day: dayNumber, ...(title ? { title } : {}), pois });
-  }
-
-  return itineraries;
-}
-
 app.patch('/:id', authRequired(), zValidator('json', updateGuideSchema), async (c) => {
   const id = parsePositiveInt(c.req.param('id'));
   if (!id)
@@ -656,7 +409,7 @@ app.patch('/:id/poi-coordinates', authRequired(), zValidator('json', updateGuide
       .set({
         // Merge by key — AI keys other than aiDays are never dropped (D7/D8).
         enrichedData: { ...enrichedData, [aiDaysKey]: aiDays },
-        dayItineraries: deriveDayItineraries(aiDays),
+        dayItineraries: aiDaysToDayItineraries(aiDays),
       })
       .where(eq(travelGuides.id, guideId));
 
@@ -664,7 +417,7 @@ app.patch('/:id/poi-coordinates', authRequired(), zValidator('json', updateGuide
   }
 
   // Legacy rows without aiDays: correct dayItineraries (lat/lng shape) directly.
-  const dayItineraries: DayItinerary[] = Array.isArray(guide.dayItineraries) ? structuredClone(guide.dayItineraries) : [];
+  const dayItineraries = Array.isArray(guide.dayItineraries) ? structuredClone(guide.dayItineraries) : [];
   const dayIndex = dayItineraries.findIndex(day => Number(day.day) === body.dayNumber);
   if (dayIndex === -1) {
     return c.json({ error: '攻略日程不存在' }, 404);
