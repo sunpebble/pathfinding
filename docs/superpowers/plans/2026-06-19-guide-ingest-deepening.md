@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Collapse the leaky multi-service guide ingest into one deep module — a shared canonical-shape converter, a Zod-validated Go crawler port, a pure `normalizeGuide`, and a single `guide-writer` module that is the *only* writer of `travel_guides` (D2 enforced, not just declared).
+**Goal:** Collapse the leaky multi-service guide ingest into one deep module — a shared canonical-shape converter, a Zod-validated Go crawler port, a pure `normalizeGuide`, and a single `guide-writer` module that is the _only_ writer of `travel_guides` (D2 enforced, not just declared).
 
 **Architecture:** Three layers, built in order. (1) `@pathfinding/guide-shape` owns the `aiDays ↔ dayItineraries` derive (D13) and the response projection, killing 3-way duplication. (2) `GoCrawlerPort` puts a Zod anti-corruption layer in front of the Go `/detail` HTTP boundary (the `/list` discovery dedup is deferred — see Self-Review). (3) `normalizeGuide` (pure: raw → CanonicalGuide) + `guide-writer.ts` (sole `travel_guides` writer, exposing intent-named operations for crawl/CRUD/coordinate/enrichment). All 11 existing direct `travelGuides` write sites fold into `guide-writer.ts`.
 
@@ -26,6 +26,7 @@
 ## File Structure
 
 **New package `packages/guide-shape/`** — the shared canonical-shape module:
+
 - `package.json`, `tsconfig.json`, `tsdown.config.ts`, `vitest.config.ts`, `project.json` — mirror `@pathfinding/utils`.
 - `src/index.ts` — barrel.
 - `src/ai-days.ts` — `aiDaysToDayItineraries` + untrusted-blob accessors (`isRecord`, `aiDayNumber`, `recordFromJson`, `arrayFromRecord`, `normalizeAiDays`). The single D13 derive.
@@ -33,6 +34,7 @@
 - `src/ai-days.test.ts`, `src/response.test.ts`.
 
 **`packages/api/src/services/`** — the deepened ingest:
+
 - `go-crawler-port.ts` (Create) — `RawCrawlDetail` Zod schema + type, `GoCrawlerPort` interface, `HttpGoCrawlerPort` adapter, `createGoCrawlerPort(env)`.
 - `go-crawler-port.test.ts` (Create) — decode + contract-parity test.
 - `guide-normalize.ts` (Create) — `CanonicalGuide`, `NormalizeResult`, pure `normalizeGuide` + all pure helpers moved out of `guide-import.service.ts`.
@@ -52,6 +54,7 @@
 ### Task 1: Scaffold the `@pathfinding/guide-shape` package
 
 **Files:**
+
 - Create: `packages/guide-shape/package.json`
 - Create: `packages/guide-shape/tsconfig.json`
 - Create: `packages/guide-shape/tsdown.config.ts`
@@ -61,6 +64,7 @@
 - Modify: `packages/api/package.json` (add dependency)
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: a resolvable workspace package `@pathfinding/guide-shape` exporting from `./src/index.ts`.
 
@@ -104,6 +108,7 @@
 - [ ] **Step 2: Create the build/test config files (copied verbatim from `@pathfinding/utils`)**
 
 `packages/guide-shape/tsconfig.json`:
+
 ```json
 {
   "extends": "../../tsconfig.base.json",
@@ -117,6 +122,7 @@
 ```
 
 `packages/guide-shape/tsdown.config.ts`:
+
 ```ts
 import { defineConfig } from 'tsdown';
 
@@ -132,6 +138,7 @@ export default defineConfig({
 ```
 
 `packages/guide-shape/vitest.config.ts`:
+
 ```ts
 import { defineConfig } from 'vitest/config';
 
@@ -149,6 +156,7 @@ export default defineConfig({
 ```
 
 `packages/guide-shape/project.json`:
+
 ```json
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
@@ -184,11 +192,13 @@ export * from './response';
 Create empty stubs so the barrel resolves until Tasks 2-3 fill them:
 
 `packages/guide-shape/src/ai-days.ts`:
+
 ```ts
 export {};
 ```
 
 `packages/guide-shape/src/response.ts`:
+
 ```ts
 export {};
 ```
@@ -196,6 +206,7 @@ export {};
 - [ ] **Step 4: Register the dependency and install**
 
 Add to `packages/api/package.json` `dependencies` (keep alphabetical):
+
 ```json
     "@pathfinding/guide-shape": "workspace:*",
 ```
@@ -220,10 +231,12 @@ git commit -m "feat(guide-shape): scaffold canonical-shape package"
 ### Task 2: `aiDaysToDayItineraries` — the single D13 derive
 
 **Files:**
+
 - Modify: `packages/guide-shape/src/ai-days.ts`
 - Test: `packages/guide-shape/src/ai-days.test.ts`
 
 **Interfaces:**
+
 - Consumes: `DayItinerary`, `PoiCoordinate` (type-only) from `@pathfinding/database`.
 - Produces:
   - `isRecord(value: unknown): value is Record<string, unknown>`
@@ -236,6 +249,7 @@ git commit -m "feat(guide-shape): scaffold canonical-shape package"
 - [ ] **Step 1: Write the failing test**
 
 `packages/guide-shape/src/ai-days.test.ts`:
+
 ```ts
 import { describe, expect, it } from 'vitest';
 import { aiDayNumber, aiDaysToDayItineraries, isRecord, resolveAiDays } from './ai-days';
@@ -310,6 +324,7 @@ Expected: FAIL with "aiDaysToDayItineraries is not a function" (module is the em
 - [ ] **Step 3: Write the implementation**
 
 `packages/guide-shape/src/ai-days.ts`:
+
 ```ts
 import type { DayItinerary } from '@pathfinding/database';
 
@@ -408,16 +423,19 @@ git commit -m "feat(guide-shape): add aiDaysToDayItineraries D13 derive"
 ### Task 3: `toResponseDto` — the read projection
 
 **Files:**
+
 - Modify: `packages/guide-shape/src/response.ts`
 - Test: `packages/guide-shape/src/response.test.ts`
 
 **Interfaces:**
+
 - Consumes: `aiDaysToDayItineraries`-adjacent helpers (`recordFromJson`, `arrayFromRecord` from `./ai-days`), `normalizeAiDays` (defined here), `travelGuides.$inferSelect` (type, from `@pathfinding/database`), `TravelGuideResponseDto` (type, from `@pathfinding/types`).
 - Produces: `toResponseDto(guide: GuideRow): TravelGuideResponseDto`, where `type GuideRow = typeof travelGuides.$inferSelect`.
 
 - [ ] **Step 1: Write the failing test**
 
 `packages/guide-shape/src/response.test.ts`:
+
 ```ts
 import { describe, expect, it } from 'vitest';
 import { toResponseDto } from './response';
@@ -493,6 +511,7 @@ Expected: FAIL with "toResponseDto is not a function".
 - [ ] **Step 3: Write the implementation**
 
 `packages/guide-shape/src/response.ts` (moves `guides.ts:30-217` verbatim, retargeted to the shared `recordFromJson`/`arrayFromRecord`):
+
 ```ts
 import type { travelGuides } from '@pathfinding/database';
 import type { TravelGuideResponseDto } from '@pathfinding/types';
@@ -680,11 +699,13 @@ git commit -m "feat(guide-shape): add toResponseDto read projection"
 ### Task 4: Rewire all three consumers to the shared module
 
 **Files:**
+
 - Modify: `packages/api/src/routes/guides.ts` (delete local `toClientGuide` + 11 blob helpers + `deriveDayItineraries` + `aiDayNumber`/`isRecord`; import from `@pathfinding/guide-shape`)
 - Modify: `scripts/batch-ai-process.ts` (delete local `toDayItineraries`; import `aiDaysToDayItineraries`)
 - Test: `packages/api/src/routes/guides.test.ts` (existing — re-point assertions if needed)
 
 **Interfaces:**
+
 - Consumes: `toResponseDto`, `aiDaysToDayItineraries`, `resolveAiDays`, `recordFromJson`, `isRecord`, `aiDayNumber` from `@pathfinding/guide-shape`.
 - Produces: `guides.ts` read path emits the identical DTO; the poi-coordinates PATCH derives via the shared function. (Behaviour-preserving — the existing `guides.test.ts` is the guard.)
 
@@ -696,6 +717,7 @@ Expected: PASS (record the passing set before refactoring).
 - [ ] **Step 2: Replace `toClientGuide` and helpers in `guides.ts`**
 
 At the top of `packages/api/src/routes/guides.ts`, add:
+
 ```ts
 import { aiDayNumber, aiDaysToDayItineraries, isRecord, recordFromJson, resolveAiDays, toResponseDto } from '@pathfinding/guide-shape';
 ```
@@ -708,18 +730,23 @@ Run: `rg -n 'numberFromGuide|stringArray\(|parseGuideOrder|destinationsFromGuide
 Expected after deletion: only `parseGuideOrder` matches.
 
 Also delete the now-orphaned type import at the top of `guides.ts`:
+
 ```ts
 import type { DayItinerary } from '@pathfinding/database/schema';
 ```
+
 It was used only by `deriveDayItineraries` and the inline poi-coordinates fallback (the latter moves to the writer in Task 11). Leaving it trips `unused-imports/no-unused-imports`.
 
 - [ ] **Step 3: Replace `toClientGuide(...)` call sites with `toResponseDto(...)`**
 
 Every `toClientGuide(x)` → `toResponseDto(x)` (call sites at the old `guides.ts:311`, `:343`, `:390`). The poi-coordinates PATCH aiDays branch keeps its logic but uses the shared derive:
+
 ```ts
         dayItineraries: aiDaysToDayItineraries(aiDays),
 ```
+
 and the dual-key probe uses the shared reader:
+
 ```ts
   const enrichedData = recordFromJson(guide.enrichedData);
   const aiDaysKey = Array.isArray(enrichedData.aiDays)
@@ -728,18 +755,23 @@ and the dual-key probe uses the shared reader:
       ? 'ai_days'
       : null;
 ```
+
 (`aiDayNumber`/`isRecord` now imported.)
 
 - [ ] **Step 4: Replace `toDayItineraries` in `scripts/batch-ai-process.ts`**
 
 Add import:
+
 ```ts
 import { aiDaysToDayItineraries } from '@pathfinding/guide-shape';
 ```
+
 Delete the local `toDayItineraries` (334-352). Replace its call site (412):
+
 ```ts
         dayItineraries: geocodedDays ? aiDaysToDayItineraries(geocodedDays) : null,
 ```
+
 Note: `geocodedDays` is `DayPlan[]` whose entries carry `dayNumber`/`theme`/`pois[].latitude/longitude/name/type` — structurally compatible with the untrusted-blob reader. This is NOT byte-identical to the old `toDayItineraries`: the unified derive DROPS any day whose `dayNumber` is non-finite, whereas the original emitted such a day with `day: undefined`. Because `DayPlan.dayNumber` is typed `number` this never fires in practice; the new behavior (dropping malformed days) is strictly safer. Accept and document — do not treat as a pure refactor.
 
 - [ ] **Step 5: Run typecheck + lint + the guides route tests**
@@ -761,10 +793,12 @@ git commit -m "refactor(api): consume guide-shape; delete duplicated derive/proj
 ### Task 5: `RawCrawlDetail` Zod schema + contract-parity test
 
 **Files:**
+
 - Create: `packages/api/src/services/go-crawler-port.ts`
 - Test: `packages/api/src/services/go-crawler-port.test.ts`
 
 **Interfaces:**
+
 - Consumes: `zod`.
 - Produces:
   - `RawCrawlDetailSchema` (Zod), `type RawCrawlDetail = z.infer<typeof RawCrawlDetailSchema>`
@@ -776,6 +810,7 @@ git commit -m "refactor(api): consume guide-shape; delete duplicated derive/proj
 - [ ] **Step 1: Write the failing test**
 
 `packages/api/src/services/go-crawler-port.test.ts`:
+
 ```ts
 import { describe, expect, it } from 'vitest';
 import { decodeDetailResponse, RawCrawlDetailSchema } from './go-crawler-port.js';
@@ -858,6 +893,7 @@ Expected: FAIL with "Cannot find module './go-crawler-port.js'".
 - [ ] **Step 3: Write the implementation**
 
 `packages/api/src/services/go-crawler-port.ts`:
+
 ```ts
 import { z } from 'zod';
 
@@ -930,10 +966,12 @@ git commit -m "feat(api): add Zod-validated RawCrawlDetail contract for Go /deta
 ### Task 6: `GoCrawlerPort` interface + HTTP adapter
 
 **Files:**
+
 - Modify: `packages/api/src/services/go-crawler-port.ts`
 - Test: `packages/api/src/services/go-crawler-port.test.ts`
 
 **Interfaces:**
+
 - Consumes: `decodeDetailResponse`, `RawCrawlDetail` (from Task 5).
 - Produces:
   - `interface GoCrawlerPort { fetchDetail(url): Promise<DecodeResult> }` (just `fetchDetail` — the ingest path. `/list` discovery is NOT folded here: `discoverFromMafengwo` and `runDestinationFill` both need an `mddId` for D10 city-scoping, so a `city`-only `fetchList` cannot replace them. Deduping `/list` is deferred — see Self-Review.)
@@ -970,6 +1008,7 @@ describe('HttpGoCrawlerPort.fetchDetail', () => {
   });
 });
 ```
+
 (Add `import { vi } from 'vitest';` to the top import if not present.)
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -1033,10 +1072,12 @@ git commit -m "feat(api): add GoCrawlerPort with injected HTTP adapter"
 ### Task 7: `CanonicalGuide` + pure `normalizeGuide`
 
 **Files:**
+
 - Create: `packages/api/src/services/guide-normalize.ts`
 - Test: `packages/api/src/services/guide-normalize.test.ts`
 
 **Interfaces:**
+
 - Consumes: `cleanContent`, `validateGuideEnhanced`, `calculateQualityScoreUnified`, `calculateCompletenessLevel`, `parseChineseNumber`, `CompletenessLevel` from `@pathfinding/crawler-types`; `buildStructuredGuideContent` from `./guide-content.js`; `RawCrawlDetail` from `./go-crawler-port.js`; `GuideDestination` (type) from `@pathfinding/database`; `createHash` from `node:crypto`.
 - Produces:
   - `interface ImportContext { city?: string; cityScoped?: boolean; jobId?: number }`
@@ -1050,6 +1091,7 @@ git commit -m "feat(api): add GoCrawlerPort with injected HTTP adapter"
 - [ ] **Step 1: Write the failing test**
 
 `packages/api/src/services/guide-normalize.test.ts`:
+
 ```ts
 import { describe, expect, it } from 'vitest';
 import type { RawCrawlDetail } from './go-crawler-port.js';
@@ -1127,6 +1169,7 @@ Expected: FAIL with "Cannot find module './guide-normalize.js'".
 - [ ] **Step 3: Write the implementation**
 
 `packages/api/src/services/guide-normalize.ts` — move all PURE slices from `guide-import.service.ts` (resolveCount 231-255, parsePublishedAt 257-281, resolveDestinationNames 283-296, asStringArray 298-303, sha256Hex 305-307, and the normalization body 457-610), injecting the clock:
+
 ```ts
 import type { CompletenessLevel } from '@pathfinding/crawler-types';
 import type { travelGuides, GuideDestination } from '@pathfinding/database';
@@ -1391,10 +1434,12 @@ git commit -m "feat(api): add pure normalizeGuide (raw -> CanonicalGuide)"
 ### Task 8: `guide-writer.ts` — the sole `travel_guides` writer
 
 **Files:**
+
 - Create: `packages/api/src/services/guide-writer.ts`
 - Test: `packages/api/src/services/guide-writer.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Database`, `travelGuides`, `guideDestinations`, `rawCrawlRecords` from `@pathfinding/database`; `and`, `eq` from `drizzle-orm`; `CanonicalGuide`, `NormalizeResult`, `GuideWriteValues`, `RawCrawlAudit` from `./guide-normalize.js`; `ParseStatus` from `@pathfinding/crawler-types`; `aiDayNumber`, `aiDaysToDayItineraries`, `isRecord`, `recordFromJson` from `@pathfinding/guide-shape`.
 - Produces:
   - `type GuideRow = typeof travelGuides.$inferSelect`
@@ -1409,6 +1454,7 @@ git commit -m "feat(api): add pure normalizeGuide (raw -> CanonicalGuide)"
 - [ ] **Step 1: Write the failing test**
 
 `packages/api/src/services/guide-writer.test.ts`:
+
 ```ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -1544,6 +1590,7 @@ Expected: FAIL with "Cannot find module './guide-writer.js'".
 - [ ] **Step 3: Write the implementation**
 
 `packages/api/src/services/guide-writer.ts` — move the IMPURE writers from `guide-import.service.ts` (findExistingGuide 362-386, insertNewGuide 643-666, refreshExistingGuide 668-755, recordRawCrawl 309-328, syncGuideDestinations 330-357, mergeEnrichedData 388-403, isEmptyShell 405-407, CONTENT_DERIVED_KEYS 54-55), and add the CRUD/coordinate/enrichment operations. (Full module — pure D7 `computeRefreshUpdates` extracted; coordinate fix uses `aiDaysToDayItineraries`.)
+
 ```ts
 import type { Database, GuideDestination } from '@pathfinding/database';
 import type { ParseStatus } from '@pathfinding/crawler-types';
@@ -1819,10 +1866,12 @@ git commit -m "feat(api): add guide-writer as the sole travel_guides writer"
 ### Task 9: Recompose `guide-import.service.ts` over the new seams
 
 **Files:**
+
 - Modify: `packages/api/src/services/guide-import.service.ts`
 - Test: `packages/api/src/services/guide-import.service.test.ts` (rewrite the heaviest assertions)
 
 **Interfaces:**
+
 - Consumes: `createGoCrawlerPort`, `GoCrawlerPort` from `./go-crawler-port.js`; `normalizeGuide`, `ImportContext`, `StagingSupplement` from `./guide-normalize.js`; `persistIngestedGuide`, `syncGuideDestinations`, `PersistResult` from `./guide-writer.js`.
 - Produces: unchanged public API — `discoverNewGuides`, `importGuide`, `batchImportGuides`, plus re-export `syncGuideDestinations` for backfill. `importGuide(platform, url, overrideConfig?, context?)` now: port.fetchDetail → staging lookup → normalizeGuide → persistIngestedGuide.
 
@@ -1836,6 +1885,7 @@ Expected: FAIL (composition not wired yet).
 - [ ] **Step 2: Replace the body of `importMafengwoGuide` with the composition**
 
 In `guide-import.service.ts`, delete the moved helpers (now in `guide-normalize.ts` / `guide-writer.ts`): `resolveCount`, `parsePublishedAt`, `CHINESE_DATE_PATTERN`, `resolveDestinationNames`, `asStringArray`, `sha256Hex`, `recordRawCrawl`, `RawCrawlInput`, `mergeEnrichedData`, `CONTENT_DERIVED_KEYS`, `isEmptyShell`, `findExistingGuide`, `insertNewGuide`, `refreshExistingGuide`, `PreparedGuide`, and the inline `MafengwoDetailData`/`MafengwoDetailResponse` (now `RawCrawlDetail`). Keep `discoverNewGuides`, `importGuide`, `batchImportGuides`, the staging read, and re-export `syncGuideDestinations`. New `importMafengwoGuide`:
+
 ```ts
 async function importMafengwoGuide(
   url: string,
@@ -1874,6 +1924,7 @@ async function importMafengwoGuide(
   };
 }
 ```
+
 Update `importGuide`/`batchImportGuides` to build the port from `overrideConfig` via `createGoCrawlerPort(overrideConfig)` and pass it down (replacing the old `cfg` threading). Keep `ExecutorConfig`/`ImportContext` exports for back-compat — `ImportContext` now re-exported from `guide-normalize.ts`.
 
 - [ ] **Step 3: Run the full api suite**
@@ -1898,10 +1949,12 @@ git commit -m "refactor(api): recompose guide import over port/normalize/writer 
 ### Task 10: Fold user-CRUD writes (`guides.ts` POST + PATCH `/:id`)
 
 **Files:**
+
 - Modify: `packages/api/src/routes/guides.ts`
 - Test: `packages/api/src/routes/guides.test.ts`
 
 **Interfaces:**
+
 - Consumes: `createUserGuide`, `updateUserGuide` from `../services/guide-writer.js`.
 - Produces: POST `/` and PATCH `/:id` route through the writer; no direct `db.insert/update(travelGuides)` remains in these handlers.
 
@@ -1965,10 +2018,12 @@ git commit -m "refactor(api): route guide CRUD writes through guide-writer"
 ### Task 11: Fold coordinate-edit writes (`guides.ts` PATCH `/:id/poi-coordinates`)
 
 **Files:**
+
 - Modify: `packages/api/src/routes/guides.ts`
 - Test: `packages/api/src/routes/guides.test.ts`
 
 **Interfaces:**
+
 - Consumes: `applyPoiCoordinateFix` from `../services/guide-writer.js`.
 - Produces: the PATCH handler delegates both branches to the writer; no direct `db.update(travelGuides)` remains. Note `verifiedAt: Date.now()` moves into the route call (the writer takes an injected `verifiedAt`).
 
@@ -2019,10 +2074,12 @@ git commit -m "refactor(api): route poi-coordinate edits through guide-writer"
 ### Task 12: Fold backfill-executor writes
 
 **Files:**
+
 - Modify: `packages/api/src/services/backfill-executor.service.ts`
 - Test: `packages/api/src/services/backfill-executor.service.test.ts`
 
 **Interfaces:**
+
 - Consumes: `updateUserGuide` (for the sparse staging/refetch merges) and `syncGuideDestinations` from `../services/guide-writer.js` (the latter already re-exported via guide-import).
 - Produces: `syncFromMafengwoGuide` and `fetchAndUpdateGuide` build their sparse `updates` map exactly as today (the field-merge logic is staging-specific, keep it) but perform the write via `updateUserGuide(db, guideId, updates)` instead of `db.update(travelGuides)`. Destination mirroring stays via `syncGuideDestinations`.
 
@@ -2034,6 +2091,7 @@ Expected: PASS (baseline).
 - [ ] **Step 2: Replace the two write sites**
 
 In `syncFromMafengwoGuide` (was `:140`):
+
 ```ts
   if (Object.keys(updates).length > 0) {
     await updateUserGuide(db, guideId, updates);
@@ -2041,7 +2099,9 @@ In `syncFromMafengwoGuide` (was `:140`):
   }
   return false;
 ```
+
 In `fetchAndUpdateGuide` (was `:179`):
+
 ```ts
   if (Object.keys(updates).length > 0) {
     await updateUserGuide(db, guideId, updates);
@@ -2049,6 +2109,7 @@ In `fetchAndUpdateGuide` (was `:179`):
   }
   return false;
 ```
+
 Add `import { syncGuideDestinations, updateUserGuide } from './guide-writer.js';` and drop the local `syncGuideDestinations` import from guide-import if it pointed elsewhere.
 
 - [ ] **Step 3: Run tests + typecheck**
@@ -2068,16 +2129,19 @@ git commit -m "refactor(api): route backfill writes through guide-writer"
 ### Task 13: Fold the hard violation — `scripts/crawl-mafengwo.ts`
 
 **Files:**
+
 - Modify: `scripts/crawl-mafengwo.ts`
 - Test: none (scripts are not unit-tested); verify via typecheck + a dry-run guard.
 
 **Interfaces:**
+
 - Consumes: `createGoCrawlerPort` + `normalizeGuide` + `persistIngestedGuide` (or, minimally, `importGuide` from `guide-import.service.ts`).
 - Produces: `saveToTiDB` no longer writes `travelGuides` directly; it routes through the validated ingest path so the script can no longer bypass validation/quality/raw-record.
 
 - [ ] **Step 1: Replace `saveToTiDB` with a call into the ingest path**
 
 The script currently builds `GuideDetail` and writes directly (was `:489`/`:498`, bypassing validation). Replace the whole `saveToTiDB` with a thin adapter that maps the script's `GuideDetail` to the Go-detail-shaped `RawCrawlDetail` and runs the canonical pipeline:
+
 ```ts
 import { normalizeGuide } from '../packages/api/src/services/guide-normalize.js';
 import { persistIngestedGuide } from '../packages/api/src/services/guide-writer.js';
@@ -2110,6 +2174,7 @@ async function saveToTiDB(db: ReturnType<typeof createDb>, externalId: string, s
   }
 }
 ```
+
 Then delete the now-unused script-local `calculateQualityScore`, `cleanGuidePlainText`, `parseChineseNumber`, and `buildStructuredGuideContent` call (the canonical pipeline owns them).
 
 **Do NOT remove the `travelGuides` import** — it is still used by four SELECT queries in this script (discovery/dedup at the old lines ~483, ~570, ~766, ~940). Only the `db.insert(travelGuides)` / `db.update(travelGuides)` write calls inside `saveToTiDB` are removed. Verify after editing:
@@ -2141,9 +2206,11 @@ git commit -m "refactor(scripts): route crawl-mafengwo through validated ingest 
 ### Task 14: Fold the enrichment/cleanup scripts
 
 **Files:**
+
 - Modify: `scripts/batch-ai-process.ts`, `scripts/generate-content-html.ts`, `scripts/clean-historical-guides.ts`
 
 **Interfaces:**
+
 - Consumes: `applyGuideEnrichment` from `../packages/api/src/services/guide-writer.js`.
 - Produces: all three scripts write via `applyGuideEnrichment` instead of `db.update(travelGuides)`.
 
@@ -2156,6 +2223,7 @@ git commit -m "refactor(scripts): route crawl-mafengwo through validated ingest 
       lastUpdatedAt: new Date(),
     });
 ```
+
 (import `applyGuideEnrichment`; `aiDaysToDayItineraries` already imported in Task 4.)
 
 - [ ] **Step 2: `scripts/generate-content-html.ts` (was `:140`)**
@@ -2189,10 +2257,12 @@ git commit -m "refactor(scripts): route guide enrichment writes through guide-wr
 ### Task 15: Enforce D2 with a lint guard
 
 **Files:**
+
 - Modify: `eslint.config.mjs`
 - Test: a deliberate violation must fail lint.
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: an ESLint `no-restricted-syntax` rule banning `insert(travelGuides)` / `update(travelGuides)` everywhere except `packages/api/src/services/guide-writer.ts`.
 
@@ -2274,6 +2344,7 @@ git commit -m "test: verify guide-ingest deepening end-to-end"
 **Spec coverage:** Q1 all-rows single writer → Tasks 8, 10–15 (every one of the 11 write sites folds into `guide-writer.ts`, lint-enforced). Q2 GoCrawlerPort + Zod → Tasks 5–6. Q3 converter-first → Phase 1 (Tasks 1–4) precedes the writer split. Q4 keep crawler-types primitives exported → `normalizeGuide` composes them (Task 7), none inlined. Invariant ownership: D2 by module boundary + lint (Task 15); D4/D5/D10 in `normalizeGuide` (`resolveCount`/score-order/`resolveDestinationNames`); D6/D7/D9 in `guide-writer`; D13 in `guide-shape`.
 
 **Open risks for the implementer:**
+
 1. **`raw_crawl_records.job_id` FK** (Tasks 7–8): admin/manual imports use `NO_JOB_ID = 0`. `job_id` is `notNull` and an FK; if TiDB enforces the constraint, inserting `0` (no matching `crawl_jobs` row) fails at runtime. Confirm the FK is unenforced (or seed a sentinel job) before relying on the manual-import path — faithful to the original, which has the same exposure.
 2. **Script imports of `packages/api/src`**: scripts import `src` TS directly via tsx — already done for `guide-content` in `crawl-mafengwo.ts`, so `guide-normalize.js` / `guide-writer.js` resolve the same way. `scripts/` is outside the Nx typecheck graph, so verify scripts with `npx tsx <script> --help`, not `pnpm typecheck`.
 3. **`createUserGuide` insert type**: `UserGuideInsert = $inferInsert` requires `platform`/`title`; the CRUD route already supplies both.

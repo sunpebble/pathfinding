@@ -7,12 +7,12 @@ Decision IDs (D2, D4, …) reference `docs/superpowers/specs/2026-06-10-data-pip
 ## Guide ingest domain
 
 - **Crawled Detail** — the raw payload the Go crawler returns from `POST /api/crawler/mafengwo/detail`.
-  An untyped, inter-process shape; it is *not* trusted until decoded.
+  An untyped, inter-process shape; it is _not_ trusted until decoded.
 
 - **Canonical Guide** — the validated, scored, in-process domain model of one travel guide, produced
   from a Crawled Detail (crawl origin) or from user input (CRUD origin). The single shape every writer
   and every reader agrees on. `enrichedData.aiDays` is its source of truth for day plans (D13);
-  `dayItineraries` is always *derived*, never authored.
+  `dayItineraries` is always _derived_, never authored.
 
 - **Guide Shape** (`@pathfinding/guide-shape`) — the module that owns the Canonical Guide ↔ wire-shape
   transforms: `aiDaysToDayItineraries(aiDays)` (the D13 derive, one owner) and `toResponseDto(guide)`
@@ -20,7 +20,7 @@ Decision IDs (D2, D4, …) reference `docs/superpowers/specs/2026-06-10-data-pip
   `batch-ai-process`. Its existence is what lets the read route stop re-deriving aiDays. Replaces the
   scattered `deriveDayItineraries` + `toClientGuide` + enrichedData blob accessors in `routes/guides.ts`.
 
-- **Guide Writer** (`persistGuide`) — the *sole* writer of the `travel_guides` table (D2, enforced not
+- **Guide Writer** (`persistGuide`) — the _sole_ writer of the `travel_guides` table (D2, enforced not
   just declared). Takes a Canonical Guide + the existing row, owns the D7 upsert refresh policy
   (keep-longer-content gate, `CONTENT_DERIVED_KEYS` stripping, no-overwrite-with-empty, empty-shell full
   refresh, enrichedData key-merge), the D6 `raw_crawl_records` audit write, the D9 `guide_destinations`
