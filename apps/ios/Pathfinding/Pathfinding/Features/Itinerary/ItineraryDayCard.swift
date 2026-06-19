@@ -9,7 +9,7 @@ import SwiftUI
 struct ItineraryDayCard: View {
   let day: AiDay
   let index: Int
-  @Binding var selectedDayIndex: Int?
+  let onSelect: () -> Void
   @Binding var selectedPoiId: String?
   @Binding var cameraPosition: MapCameraPosition
 
@@ -17,7 +17,7 @@ struct ItineraryDayCard: View {
     VStack(alignment: .leading, spacing: 16) {
       // Day Header (Editable)
       Button {
-        selectedDayIndex = index
+        onSelect()
       } label: {
         HStack {
           Text("第 \(day.dayNumber) 天")

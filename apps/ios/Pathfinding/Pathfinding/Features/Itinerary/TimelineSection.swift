@@ -24,15 +24,16 @@ struct TimelineSection: View {
           ItineraryDayCard(
             day: day,
             index: index,
-            selectedDayIndex: $selectedDayIndex,
+            onSelect: {
+              withAnimation(reduceMotion ? nil : DesignTokens.Animation.spring) {
+                selectedDayIndex = index
+              }
+            },
             selectedPoiId: $selectedPoiId,
             cameraPosition: $cameraPosition
           )
           .cardSurface(tint: isSelected ? .accentColor.opacity(0.3) : nil)
           .glassEffectID("day-\(index)", in: glassNS)
-          .onChange(of: selectedDayIndex) { _, _ in
-            withAnimation(reduceMotion ? nil : DesignTokens.Animation.spring) { }
-          }
         }
       }
       .padding(.horizontal)
