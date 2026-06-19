@@ -253,14 +253,6 @@ enum DesignTokens {
       Color(.secondarySystemBackground)
     }
 
-    /// True black background for OLED (dark mode only)
-    static func trueBlackBackground(for colorScheme: ColorScheme, enabled: Bool = false) -> Color {
-      if colorScheme == .dark && enabled {
-        return Color(white: 0.0)
-      }
-      return background
-    }
-
     /// Elevated background for dark mode cards
     static func elevatedBackground(for colorScheme: ColorScheme) -> Color {
       colorScheme == .dark

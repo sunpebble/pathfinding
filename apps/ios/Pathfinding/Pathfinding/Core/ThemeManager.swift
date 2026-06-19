@@ -1,4 +1,3 @@
-import MapKit
 import SwiftUI
 import Observation
 
@@ -125,52 +124,6 @@ enum AccentColorOption: String, CaseIterable, Identifiable {
   }
 }
 
-// MARK: - Map Style Option
-
-/// Map display style options
-enum MapStyleOption: String, CaseIterable, Identifiable {
-  case standard = "standard"
-  case satellite = "satellite"
-  case hybrid = "hybrid"
-  case followTheme = "followTheme"
-
-  var id: String { rawValue }
-
-  var displayName: String {
-    switch self {
-    case .standard: return "map.style.standard".localized
-    case .satellite: return "map.style.satellite".localized
-    case .hybrid: return "map.style.hybrid".localized
-    case .followTheme: return "map.style.followTheme".localized
-    }
-  }
-
-  var icon: String {
-    switch self {
-    case .standard: return "map"
-    case .satellite: return "globe.americas"
-    case .hybrid: return "map.circle"
-    case .followTheme: return "circle.lefthalf.filled"
-    }
-  }
-
-  /// Get MapKit MapStyle for given color scheme
-  func mapStyle(for colorScheme: ColorScheme) -> MapStyle {
-    switch self {
-    case .standard:
-      return .standard(elevation: .realistic, pointsOfInterest: .all)
-    case .satellite:
-      return .imagery(elevation: .realistic)
-    case .hybrid:
-      return .hybrid(elevation: .realistic, pointsOfInterest: .all)
-    case .followTheme:
-      return colorScheme == .dark
-        ? .standard(elevation: .realistic, pointsOfInterest: .all, showsTraffic: false)
-        : .standard(elevation: .realistic, pointsOfInterest: .all)
-    }
-  }
-}
-
 // MARK: - Theme Manager
 
 /// Manages the app's theme settings with UserDefaults persistence
@@ -189,13 +142,9 @@ final class ThemeManager {
   /// Current accent color selected by the user
   private(set) var accentColor: AccentColorOption = .indigo
 
-  /// Current map style selected by the user
-  private(set) var mapStyle: MapStyleOption = .followTheme
-
   /// Keys for UserDefaults storage
   private let themeKey = "app_theme_mode"
   private let accentColorKey = "app_accent_color"
-  private let mapStyleKey = "app_map_style"
 
   // MARK: - Computed Properties
 
@@ -242,25 +191,10 @@ final class ThemeManager {
     notifyThemeChange()
   }
 
-  /// Set the map style and persist to UserDefaults
-  func setMapStyle(_ style: MapStyleOption) {
-    guard style != mapStyle else { return }
-
-    mapStyle = style
-    saveSettings()
-    notifyThemeChange()
-  }
-
-  /// Get MapStyle for current settings
-  func currentMapStyle(for colorScheme: ColorScheme) -> MapStyle {
-    mapStyle.mapStyle(for: colorScheme)
-  }
-
   /// Reset all theme settings to defaults
   func resetToDefaults() {
     currentMode = .system
     accentColor = .indigo
-    mapStyle = .followTheme
 
     saveSettings()
     notifyThemeChange()
@@ -280,18 +214,11 @@ final class ThemeManager {
        let color = AccentColorOption(rawValue: savedColor) {
       accentColor = color
     }
-
-    // Load map style
-    if let savedStyle = UserDefaults.standard.string(forKey: mapStyleKey),
-       let style = MapStyleOption(rawValue: savedStyle) {
-      mapStyle = style
-    }
   }
 
   private func saveSettings() {
     UserDefaults.standard.set(currentMode.rawValue, forKey: themeKey)
     UserDefaults.standard.set(accentColor.rawValue, forKey: accentColorKey)
-    UserDefaults.standard.set(mapStyle.rawValue, forKey: mapStyleKey)
   }
 
   private func notifyThemeChange() {
@@ -353,21 +280,3 @@ extension View {
   }
 }
 
-// MARK: - Map Style Modifier
-
-/// View modifier to apply map style based on theme
-struct ThemedMapStyleModifier: ViewModifier {
-  @Environment(\.colorScheme) private var colorScheme
-  @Environment(ThemeManager.self) private var themeManager
-
-  func body(content: Content) -> some View {
-    content
-  }
-}
-
-extension View {
-  /// Get the appropriate MapStyle for current theme
-  func themedMapStyle() -> some View {
-    modifier(ThemedMapStyleModifier())
-  }
-}
