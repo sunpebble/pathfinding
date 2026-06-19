@@ -38,12 +38,3 @@ struct EnhancedStatItem: View {
   }
 }
 
-// MARK: - Explorer Stat Divider
-
-struct ExplorerStatDivider: View {
-  var body: some View {
-    Rectangle()
-      .fill(Color.primary.opacity(0.1))
-      .frame(width: 1, height: 50)
-  }
-}

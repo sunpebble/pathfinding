@@ -1,27 +1,5 @@
 import SwiftUI
 
-// MARK: - Explorer Section Header Label
-
-struct ExplorerSectionHeaderLabel: View {
-  let title: String
-  let icon: String
-  let color: Color
-
-  var body: some View {
-    HStack(spacing: DesignTokens.Spacing.xs) {
-      Image(systemName: icon)
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(color)
-
-      Text(title)
-        .font(.caption)
-        .fontWeight(.semibold)
-        .foregroundStyle(color)
-    }
-    .textCase(nil)
-  }
-}
-
 // MARK: - Explorer Settings Row
 
 struct ExplorerSettingsRow: View {
