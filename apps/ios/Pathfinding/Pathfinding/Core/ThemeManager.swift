@@ -36,15 +36,6 @@ enum ThemeMode: String, CaseIterable, Identifiable {
     }
   }
 
-  /// Convert to UIKit's UIUserInterfaceStyle
-  var userInterfaceStyle: UIUserInterfaceStyle {
-    switch self {
-    case .system: return .unspecified
-    case .light: return .light
-    case .dark: return .dark
-    }
-  }
-
   /// Convert to SwiftUI's ColorScheme (nil for system)
   var colorScheme: ColorScheme? {
     switch self {
@@ -201,20 +192,10 @@ final class ThemeManager {
   /// Current map style selected by the user
   private(set) var mapStyle: MapStyleOption = .followTheme
 
-  /// Whether to use true black for OLED displays in dark mode
-  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
-  private(set) var useTrueBlack: Bool = false
-
-  /// Whether to reduce contrast in dark mode
-  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
-  private(set) var reduceContrastInDark: Bool = false
-
   /// Keys for UserDefaults storage
   private let themeKey = "app_theme_mode"
   private let accentColorKey = "app_accent_color"
   private let mapStyleKey = "app_map_style"
-  private let trueBlackKey = "app_true_black"
-  private let reduceContrastKey = "app_reduce_contrast"
 
   // MARK: - Computed Properties
 
@@ -233,26 +214,6 @@ final class ThemeManager {
   /// Whether the app is currently in dark mode
   var isDarkMode: Bool {
     effectiveColorScheme == .dark
-  }
-
-  /// Primary gradient using accent colors
-  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
-  var primaryGradient: LinearGradient {
-    LinearGradient(
-      colors: [accentColor.color, accentColor.secondaryColor],
-      startPoint: .topLeading,
-      endPoint: .bottomTrailing
-    )
-  }
-
-  /// Background color for OLED true black support
-  var darkBackground: Color {
-    useTrueBlack ? Color(white: 0.0) : Color(UIColor.systemBackground)
-  }
-
-  /// Secondary background for OLED true black support
-  var darkSecondaryBackground: Color {
-    useTrueBlack ? Color(white: 0.05) : Color(UIColor.secondarySystemBackground)
   }
 
   // MARK: - Initialization
@@ -290,26 +251,6 @@ final class ThemeManager {
     notifyThemeChange()
   }
 
-  /// Set true black mode for OLED displays
-  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
-  func setTrueBlack(_ enabled: Bool) {
-    guard enabled != useTrueBlack else { return }
-
-    useTrueBlack = enabled
-    saveSettings()
-    notifyThemeChange()
-  }
-
-  /// Set reduce contrast mode
-  @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
-  func setReduceContrast(_ enabled: Bool) {
-    guard enabled != reduceContrastInDark else { return }
-
-    reduceContrastInDark = enabled
-    saveSettings()
-    notifyThemeChange()
-  }
-
   /// Get MapStyle for current settings
   func currentMapStyle(for colorScheme: ColorScheme) -> MapStyle {
     mapStyle.mapStyle(for: colorScheme)
@@ -320,8 +261,6 @@ final class ThemeManager {
     currentMode = .system
     accentColor = .indigo
     mapStyle = .followTheme
-    useTrueBlack = false
-    reduceContrastInDark = false
 
     saveSettings()
     notifyThemeChange()
@@ -347,18 +286,12 @@ final class ThemeManager {
        let style = MapStyleOption(rawValue: savedStyle) {
       mapStyle = style
     }
-
-    // Load boolean settings
-    useTrueBlack = UserDefaults.standard.bool(forKey: trueBlackKey)
-    reduceContrastInDark = UserDefaults.standard.bool(forKey: reduceContrastKey)
   }
 
   private func saveSettings() {
     UserDefaults.standard.set(currentMode.rawValue, forKey: themeKey)
     UserDefaults.standard.set(accentColor.rawValue, forKey: accentColorKey)
     UserDefaults.standard.set(mapStyle.rawValue, forKey: mapStyleKey)
-    UserDefaults.standard.set(useTrueBlack, forKey: trueBlackKey)
-    UserDefaults.standard.set(reduceContrastInDark, forKey: reduceContrastKey)
   }
 
   private func notifyThemeChange() {

@@ -460,25 +460,6 @@ enum DesignTokens {
 
     // MARK: - Gradients
 
-    /// Hero gradient for headers (uses current accent)
-    @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
-    @MainActor static func heroGradient(for colorScheme: ColorScheme) -> LinearGradient {
-      let primary = ThemeManager.shared.accentColor.color
-      let secondary = ThemeManager.shared.accentColor.secondaryColor
-
-      return colorScheme == .dark
-        ? LinearGradient(
-            colors: [primary.opacity(0.3), secondary.opacity(0.2), .clear],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
-        : LinearGradient(
-            colors: [primary.opacity(0.15), secondary.opacity(0.1), .clear],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
-    }
-
     /// Card gradient
     static func cardGradient(for colorScheme: ColorScheme) -> LinearGradient {
       colorScheme == .dark
@@ -497,26 +478,11 @@ enum DesignTokens {
     /// Primary gradient (uses current accent colors)
     @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
     @MainActor static var primaryGradient: LinearGradient {
-      ThemeManager.shared.primaryGradient
-    }
-
-    /// Mesh gradient for premium features
-    @available(*, deprecated, message: "iOS 26: accent via .tint; glass via .glassEffect(.regular.tint(...))")
-    @MainActor static func meshGradient(for colorScheme: ColorScheme) -> LinearGradient {
-      let primary = ThemeManager.shared.accentColor.color
-      let secondary = ThemeManager.shared.accentColor.secondaryColor
-
-      return colorScheme == .dark
-        ? LinearGradient(
-            colors: [primary.opacity(0.4), secondary.opacity(0.3), primary.opacity(0.2)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
-        : LinearGradient(
-            colors: [primary.opacity(0.2), secondary.opacity(0.15), primary.opacity(0.1)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
+      LinearGradient(
+        colors: [ThemeManager.shared.accentColor.color, ThemeManager.shared.accentColor.secondaryColor],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+      )
     }
 
     /// Subtle background gradient for sections
@@ -688,14 +654,6 @@ extension Color {
     ThemeManager.shared.accentColor.secondaryColor
   }
 
-  // MARK: - Legacy Accent Colors (deprecated - use DesignTokens.Colors instead)
-
-  @available(*, deprecated, message: "Use DesignTokens.Colors.accent instead")
-  static let accent = Color.indigo
-
-  @available(*, deprecated, message: "Use DesignTokens.Colors.accentSecondary instead")
-  static let accentSecondary = Color.purple
-
   // MARK: - Semantic Colors
 
   static let aiPurple = Color.purple
@@ -722,10 +680,6 @@ extension Color {
 
   // MARK: - Background Gradients
 
-  @MainActor static var heroGradient: LinearGradient {
-    DesignTokens.Colors.primaryGradient
-  }
-
   static var cardGradient: LinearGradient {
     LinearGradient(
       colors: [.white.opacity(0.8), .white.opacity(0.4)],
@@ -737,11 +691,6 @@ extension Color {
   /// Gradient that adapts to color scheme
   static func adaptiveCardGradient(for colorScheme: ColorScheme) -> LinearGradient {
     DesignTokens.Colors.cardGradient(for: colorScheme)
-  }
-
-  /// Hero gradient that adapts to color scheme
-  @MainActor static func adaptiveHeroGradient(for colorScheme: ColorScheme) -> LinearGradient {
-    DesignTokens.Colors.heroGradient(for: colorScheme)
   }
 
   // MARK: - Hex Color Initialization
