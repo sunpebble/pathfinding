@@ -1,6 +1,7 @@
 import { crawlJobs, getDb, mafengwoDestinations, mafengwoGuides, travelGuides } from '@pathfinding/database';
 import { eq, inArray } from 'drizzle-orm';
-import { batchImportGuides, syncGuideDestinations } from './guide-import.service.js';
+import { batchImportGuides } from './guide-import.service.js';
+import { syncGuideDestinations, updateUserGuide } from './guide-writer.js';
 
 export interface ExecutorConfig {
   goServerUrl: string;
@@ -137,7 +138,7 @@ async function syncFromMafengwoGuide(
   }
 
   if (Object.keys(updates).length > 0) {
-    await db.update(travelGuides).set(updates).where(eq(travelGuides.id, guideId));
+    await updateUserGuide(db, guideId, updates);
     return true;
   }
   return false;
@@ -176,7 +177,7 @@ async function fetchAndUpdateGuide(
   }
 
   if (Object.keys(updates).length > 0) {
-    await db.update(travelGuides).set(updates).where(eq(travelGuides.id, guideId));
+    await updateUserGuide(db, guideId, updates);
     return true;
   }
   return false;

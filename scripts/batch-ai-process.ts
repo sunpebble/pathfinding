@@ -21,12 +21,14 @@
  */
 
 import type { GeocodingProvider } from '../packages/api/src/services/geocoding.service.js';
-import { asc, eq, sql } from 'drizzle-orm';
+import { aiDaysToDayItineraries } from '@pathfinding/guide-shape';
+import { asc, sql } from 'drizzle-orm';
 import {
   buildGeocodingMetrics,
   createGeocodingProvider,
   geocodeAiDays,
 } from '../packages/api/src/services/geocoding.service.js';
+import { applyGuideEnrichment } from '../packages/api/src/services/guide-writer.js';
 import { createDb, travelGuideAiData, travelGuides } from '../packages/database/src/index';
 
 // ============================================
@@ -327,30 +329,6 @@ function pickDefined(record: Record<string, unknown>): Record<string, unknown> {
   );
 }
 
-/**
- * aiDays（dayNumber/latitude/longitude）→ schema 约定的 dayItineraries
- * （day/lat/lng）。只收录坐标已解析的 POI——绝不写 0,0 占位。
- */
-function toDayItineraries(days: DayPlan[]) {
-  return days.map(day => ({
-    day: day.dayNumber,
-    ...(day.theme ? { title: day.theme } : {}),
-    pois: (day.pois ?? [])
-      .filter(poi =>
-        typeof poi.latitude === 'number'
-        && Number.isFinite(poi.latitude)
-        && typeof poi.longitude === 'number'
-        && Number.isFinite(poi.longitude),
-      )
-      .map(poi => ({
-        name: poi.name,
-        lat: poi.latitude!,
-        lng: poi.longitude!,
-        ...(poi.type ? { category: poi.type } : {}),
-      })),
-  }));
-}
-
 async function processGuide(
   db: ReturnType<typeof createDb>,
   guide: Guide,
@@ -405,14 +383,11 @@ async function processGuide(
     });
     const enrichedData = { ...(guide.enrichedData ?? {}), ...aiPatch };
 
-    await db
-      .update(travelGuides)
-      .set({
-        enrichedData,
-        dayItineraries: geocodedDays ? toDayItineraries(geocodedDays) : null,
-        lastUpdatedAt: new Date(),
-      })
-      .where(eq(travelGuides.id, guide.id));
+    await applyGuideEnrichment(db as never, guide.id, {
+      enrichedData,
+      dayItineraries: geocodedDays ? aiDaysToDayItineraries(geocodedDays) : null,
+      lastUpdatedAt: new Date(),
+    });
 
     log(`Guide processed successfully: ${guide.id}`);
     return true;

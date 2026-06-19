@@ -4,7 +4,8 @@
  */
 
 import { createDb, travelGuides } from '@pathfinding/database';
-import { asc, eq } from 'drizzle-orm';
+import { asc } from 'drizzle-orm';
+import { applyGuideEnrichment } from '../packages/api/src/services/guide-writer.js';
 
 const BATCH_SIZE = 50;
 
@@ -137,15 +138,9 @@ async function main() {
           continue;
         }
 
-        await db
-          .update(travelGuides)
-          .set({
-            enrichedData: {
-              ...enrichedData,
-              contentHtml,
-            },
-          })
-          .where(eq(travelGuides.id, guide.id));
+        await applyGuideEnrichment(db as never, guide.id, {
+          enrichedData: { ...enrichedData, contentHtml },
+        });
 
         totalUpdated++;
         const imageCount = Array.isArray(guide.imageUrls) ? guide.imageUrls.length : 0;

@@ -68,4 +68,16 @@ export default antfu({
     // Stricter TypeScript rules (non-type-aware)
     'ts/no-explicit-any': 'error',
   },
+}, {
+  files: ['packages/api/src/**/*.ts', 'scripts/**/*.ts'],
+  ignores: ['packages/api/src/services/guide-writer.ts'],
+  rules: {
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector: 'CallExpression[callee.property.name=/^(insert|update)$/][arguments.0.name=\'travelGuides\']',
+        message: 'travel_guides writes must go through guide-writer.ts (D2 single writer).',
+      },
+    ],
+  },
 });

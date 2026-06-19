@@ -4,7 +4,8 @@
  */
 
 import { createDb, travelGuides } from '@pathfinding/database';
-import { asc, eq } from 'drizzle-orm';
+import { asc } from 'drizzle-orm';
+import { applyGuideEnrichment } from '../packages/api/src/services/guide-writer.js';
 import { cleanContent } from '../packages/crawler-types/src/content-cleaner.js';
 
 const BATCH_SIZE = 50;
@@ -57,10 +58,7 @@ async function main() {
           continue;
         }
 
-        await db
-          .update(travelGuides)
-          .set({ content: cleanResult.content })
-          .where(eq(travelGuides.id, guide.id));
+        await applyGuideEnrichment(db as never, guide.id, { content: cleanResult.content });
 
         totalCleaned++;
         const pct = Math.round((1 - cleanResult.cleanedLength / cleanResult.originalLength) * 100);
