@@ -30,14 +30,16 @@ struct BlogDetailItinerarySection: View {
       Label("行程安排", systemImage: "map")
         .font(.headline)
 
-      VStack(spacing: DesignTokens.Spacing.xs) {
-        ForEach(days) { day in
-          Button {
-            selectedDay = day
-          } label: {
-            DayCard(day: day)
+      GlassEffectContainer {
+        VStack(spacing: DesignTokens.Spacing.xs) {
+          ForEach(days) { day in
+            Button {
+              selectedDay = day
+            } label: {
+              DayCard(day: day)
+            }
+            .buttonStyle(.plain)
           }
-          .buttonStyle(.plain)
         }
       }
     }
@@ -65,10 +67,7 @@ struct BlogDetailItinerarySection: View {
     }
     .padding(DesignTokens.Spacing.md)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(DesignTokens.Colors.warning.opacity(0.08))
-    )
+    .cardSurface()
   }
 
   // MARK: - Import Button
@@ -85,7 +84,6 @@ struct BlogDetailItinerarySection: View {
       .frame(maxWidth: .infinity)
       .padding(.vertical, DesignTokens.Spacing.md)
     }
-    .buttonStyle(.borderedProminent)
-    .tint(DesignTokens.Colors.accent)
+    .buttonStyle(.glassProminent)
   }
 }

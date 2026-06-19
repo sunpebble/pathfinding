@@ -42,6 +42,6 @@ struct DayCard: View {
         .foregroundStyle(.tertiary)
     }
     .padding(DesignTokens.Spacing.sm)
-    .subtleCardStyle(radius: DesignTokens.Radius.sm)
+    .cardSurface()
   }
 }

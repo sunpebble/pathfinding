@@ -67,7 +67,7 @@ struct BlogDetailPoiSheet: View {
               Label("导航到这里", systemImage: "arrow.triangle.turn.up.right.diamond")
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
           }
         }
         .padding(DesignTokens.Spacing.lg)

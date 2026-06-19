@@ -29,11 +29,7 @@ struct BlogDetailView: View {
   }
 
   var body: some View {
-    ZStack {
-      // Explorer background
-      ExplorerPageBackground(style: .minimal, accentColor: colorForDay(1))
-
-      ScrollView {
+    ScrollView {
       VStack(alignment: .leading, spacing: 0) {
         // MARK: - Media (picker + gallery/map + POI list)
         BlogDetailMediaSection(
@@ -71,8 +67,6 @@ struct BlogDetailView: View {
         .padding(DesignTokens.Spacing.lg)
       }
     }
-    .scrollContentBackground(.hidden)
-    } // end ZStack
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarItemGroup(placement: .topBarTrailing) {
@@ -85,6 +79,7 @@ struct BlogDetailView: View {
             .foregroundStyle(isLiked ? .red : .secondary)
             .symbolEffect(.bounce, value: isLiked)
         }
+        .buttonStyle(.glass)
         .accessibilityLabel(isLiked ? "取消喜欢" : "喜欢")
         .accessibilityHint(isLiked ? "取消喜欢这篇攻略" : "标记喜欢这篇攻略")
 
@@ -97,6 +92,7 @@ struct BlogDetailView: View {
             .foregroundStyle(isSaved ? .orange : .secondary)
             .symbolEffect(.bounce, value: isSaved)
         }
+        .buttonStyle(.glass)
         .accessibilityLabel(isSaved ? "取消收藏" : "收藏")
         .accessibilityHint(isSaved ? "取消收藏这篇攻略" : "收藏这篇攻略")
 
@@ -105,6 +101,7 @@ struct BlogDetailView: View {
         } label: {
           Image(systemName: "square.and.arrow.up")
         }
+        .buttonStyle(.glass)
         .accessibilityLabel("分享")
         .accessibilityHint("分享这篇攻略")
 
@@ -115,6 +112,7 @@ struct BlogDetailView: View {
           } label: {
             Image(systemName: "doc.richtext")
           }
+          .buttonStyle(.glass)
           .accessibilityLabel("导出 PDF")
           .accessibilityHint("将攻略导出为 PDF 文件")
         }

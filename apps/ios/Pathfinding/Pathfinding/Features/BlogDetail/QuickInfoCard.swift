@@ -30,9 +30,6 @@ struct QuickInfoCard: View {
     }
     .padding(DesignTokens.Spacing.sm)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-        .fill(color.opacity(0.08))
-    )
+    .cardSurface()
   }
 }

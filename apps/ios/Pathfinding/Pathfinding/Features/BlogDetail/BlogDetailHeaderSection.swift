@@ -4,9 +4,16 @@ import SwiftUI
 struct BlogDetailHeaderSection: View {
   let guide: BlogPost
 
+  @State private var resolvedCities: [String: CityWithEncyclopedia] = [:]
+
   var body: some View {
     // Title & Meta
     titleSection
+
+    // Destination chips
+    if let destinations = guide.destinations, !destinations.isEmpty {
+      destinationsSection(destinations)
+    }
 
     // Quick Info Cards
     if guide.aiProcessedAt != nil {
@@ -50,6 +57,46 @@ struct BlogDetailHeaderSection: View {
     }
   }
 
+  // MARK: - Destinations Section
+
+  private func destinationsSection(_ destinations: [String]) -> some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      HStack(spacing: DesignTokens.Spacing.xs) {
+        ForEach(destinations, id: \.self) { name in
+          if let city = resolvedCities[name] {
+            NavigationLink(destination: CityEncyclopediaView(cityId: city.id, cityName: city.name)) {
+              Label(name, systemImage: "mappin.circle.fill")
+                .font(.caption)
+                .fontWeight(.medium)
+                .padding(.horizontal, DesignTokens.Spacing.sm)
+                .padding(.vertical, DesignTokens.Spacing.xxs)
+                .cardSurface(tint: DesignTokens.Colors.accent)
+            }
+            .buttonStyle(.plain)
+          } else {
+            Label(name, systemImage: "mappin.circle")
+              .font(.caption)
+              .fontWeight(.medium)
+              .foregroundStyle(.secondary)
+              .padding(.horizontal, DesignTokens.Spacing.sm)
+              .padding(.vertical, DesignTokens.Spacing.xxs)
+              .cardSurface()
+          }
+        }
+      }
+      .padding(.vertical, DesignTokens.Spacing.xxs)
+    }
+    .task(id: guide.id) {
+      guard let destinations = guide.destinations else { return }
+      for name in destinations {
+        guard resolvedCities[name] == nil else { continue }
+        if let city = try? await CityAPIClient.shared.searchCities(query: name).first {
+          resolvedCities[name] = city
+        }
+      }
+    }
+  }
+
   // MARK: - Quick Info Section
 
   private var quickInfoSection: some View {
@@ -58,23 +105,25 @@ struct BlogDetailHeaderSection: View {
       GridItem(.flexible(), spacing: DesignTokens.Spacing.sm)
     ]
 
-    return LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.sm) {
-      if let duration = guide.aiDuration {
-        QuickInfoCard(icon: "clock", title: "时长", value: duration, color: DesignTokens.Colors.info)
-      }
-      if let budget = guide.aiBudget {
-        QuickInfoCard(icon: "yensign.circle", title: "预算", value: budget, color: DesignTokens.Colors.success)
-      }
-      if let bestTime = guide.aiBestTime {
-        QuickInfoCard(icon: "calendar", title: "最佳时间", value: bestTime, color: DesignTokens.Colors.warning)
-      }
-      if let days = guide.aiDays {
-        QuickInfoCard(
-          icon: "map",
-          title: "行程",
-          value: "\(days.count)天",
-          color: DesignTokens.Colors.aiPurple
-        )
+    return GlassEffectContainer {
+      LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.sm) {
+        if let duration = guide.aiDuration {
+          QuickInfoCard(icon: "clock", title: "时长", value: duration, color: DesignTokens.Colors.info)
+        }
+        if let budget = guide.aiBudget {
+          QuickInfoCard(icon: "yensign.circle", title: "预算", value: budget, color: DesignTokens.Colors.success)
+        }
+        if let bestTime = guide.aiBestTime {
+          QuickInfoCard(icon: "calendar", title: "最佳时间", value: bestTime, color: DesignTokens.Colors.warning)
+        }
+        if let days = guide.aiDays {
+          QuickInfoCard(
+            icon: "map",
+            title: "行程",
+            value: "\(days.count)天",
+            color: DesignTokens.Colors.aiPurple
+          )
+        }
       }
     }
   }
@@ -106,10 +155,6 @@ struct BlogDetailHeaderSection: View {
       .padding(DesignTokens.Spacing.md)
       .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(DesignTokens.Colors.aiPurple.opacity(0.08))
-    )
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+    .cardSurface(tint: DesignTokens.Colors.aiPurple)
   }
 }

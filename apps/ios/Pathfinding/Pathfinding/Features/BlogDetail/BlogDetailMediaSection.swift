@@ -217,7 +217,7 @@ struct BlogDetailMediaSection: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
-        .background(Capsule().fill(.black.opacity(0.3)))
+        .glassEffect(.regular, in: .capsule)
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.bottom, DesignTokens.Spacing.sm)
       }

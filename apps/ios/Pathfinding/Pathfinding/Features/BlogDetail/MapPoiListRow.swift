@@ -38,10 +38,12 @@ struct MapPoiListRow: View {
       }
       .padding(.vertical, DesignTokens.Spacing.xs)
       .padding(.horizontal, DesignTokens.Spacing.sm)
-      .background(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
-          .fill(isSelected ? dayColor.opacity(0.1) : Color.clear)
-      )
+      .background {
+        if isSelected {
+          RoundedRectangle(cornerRadius: DesignTokens.Radius.xs, style: .continuous)
+            .glassEffect(Glass.regular.tint(dayColor), in: RoundedRectangle(cornerRadius: DesignTokens.Radius.xs, style: .continuous))
+        }
+      }
     }
     .buttonStyle(.plain)
   }

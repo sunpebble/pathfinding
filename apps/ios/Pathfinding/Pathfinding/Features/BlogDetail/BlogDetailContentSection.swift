@@ -9,7 +9,7 @@ struct BlogDetailContentSection: View {
   var body: some View {
     if let contentMarkdown = guide.contentMarkdown, !contentMarkdown.isEmpty {
       DisclosureGroup(isExpanded: $isArticleExpanded) {
-        MarkdownContentView(markdown: contentMarkdown)
+        MarkdownContentView(markdown: contentMarkdown, truncateAt: .max)
           .padding(.top, DesignTokens.Spacing.sm)
       } label: {
         Label("原文内容", systemImage: "doc.richtext")
@@ -17,7 +17,7 @@ struct BlogDetailContentSection: View {
       }
     } else if let contentHtml = guide.contentHtml, !contentHtml.isEmpty {
       DisclosureGroup(isExpanded: $isArticleExpanded) {
-        RichTextContentView(html: contentHtml)
+        RichTextContentView(html: contentHtml, truncateAt: .max)
           .padding(.top, DesignTokens.Spacing.sm)
       } label: {
         Label("原文内容", systemImage: "doc.richtext")
@@ -25,7 +25,7 @@ struct BlogDetailContentSection: View {
       }
     } else if let content = guide.content, !content.isEmpty {
       DisclosureGroup(isExpanded: $isArticleExpanded) {
-        PlainTextContentView(content: content)
+        PlainTextContentView(content: content, truncateAt: .max)
           .padding(.top, DesignTokens.Spacing.sm)
       } label: {
         Label("原文内容", systemImage: "doc.text")
