@@ -77,6 +77,7 @@
 "itinerary.empty.browse" = "浏览公开行程";
 "itinerary.create" = "创建行程";
 "itinerary.create.accessibility" = "新建行程";
+"itinerary.create.hint" = "创建一个新的旅行行程";
 "itinerary.import" = "导入行程";
 "itinerary.day" = "第 %d 天";
 "itinerary.days" = "%d 天";

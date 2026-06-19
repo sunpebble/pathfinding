@@ -28,6 +28,7 @@ struct ItineraryListView: View {
             Image(systemName: "plus")
           }
           .accessibilityLabel("itinerary.create.accessibility".localized)
+          .accessibilityHint("itinerary.create.hint".localized)
         }
       }
       .sheet(isPresented: $showCreateSheet) {
@@ -90,7 +91,7 @@ struct ItineraryListView: View {
         .symbolRenderingMode(.hierarchical)
     }
     .accessibilityLabel("更多操作")
-    .accessibilityHint("打开菜单，包含 AI 规划、语音输入和发现公共行程")
+    .accessibilityHint("打开菜单，包含 AI 规划、语音输入、创建行程和发现公共行程")
   }
 
   // MARK: - Memory Monitoring

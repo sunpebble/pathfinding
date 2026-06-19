@@ -77,6 +77,7 @@
 "itinerary.empty.browse" = "Browse Public Itineraries";
 "itinerary.create" = "Create Itinerary";
 "itinerary.create.accessibility" = "New Itinerary";
+"itinerary.create.hint" = "Create a new travel itinerary";
 "itinerary.import" = "Import Itinerary";
 "itinerary.day" = "Day %d";
 "itinerary.days" = "%d Days";
