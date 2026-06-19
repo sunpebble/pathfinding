@@ -2,7 +2,7 @@ import type { TravelGuideResponseDto } from '@pathfinding/types';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import { getDb, guideDestinations, travelGuides } from '@pathfinding/database';
-import { aiDayNumber, aiDaysToDayItineraries, isRecord, recordFromJson, toResponseDto } from '@pathfinding/guide-shape';
+import { toResponseDto } from '@pathfinding/guide-shape';
 import { and, asc, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
 /**
  * Guides routes — list, get by ID, search, destinations, stats.
@@ -14,7 +14,7 @@ import { escapeLikePattern, parsePagination, parsePositiveInt } from '../lib/par
 import { jsonData, jsonList, jsonOk } from '../lib/response.js';
 import { authRequired } from '../middleware/auth.js';
 import { runFullAnalysis } from '../services/backfill.service.js';
-import { createUserGuide, updateUserGuide } from '../services/guide-writer.js';
+import { applyPoiCoordinateFix, createUserGuide, updateUserGuide } from '../services/guide-writer.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
@@ -344,103 +344,21 @@ app.patch('/:id', authRequired(), zValidator('json', updateGuideSchema), async (
 app.patch('/:id/poi-coordinates', authRequired(), zValidator('json', updateGuidePoiCoordinatesSchema), async (c) => {
   const guideId = parsePositiveInt(c.req.param('id'));
   const body = c.req.valid('json');
-
   if (!guideId) {
     return c.json({ error: 'Invalid ID' }, 400);
   }
-
   const db = getDb();
-  const result = await db
-    .select()
-    .from(travelGuides)
-    .where(eq(travelGuides.id, guideId))
-    .limit(1);
-
-  const guide = result[0];
-  if (!guide) {
-    return c.json({ error: '攻略不存在' }, 404);
+  const outcome = await applyPoiCoordinateFix(db, guideId, {
+    dayNumber: body.dayNumber,
+    poiIndex: body.poiIndex,
+    latitude: body.latitude,
+    longitude: body.longitude,
+    verifiedAt: Date.now(),
+    ...(body.verifiedBy ? { verifiedBy: body.verifiedBy } : {}),
+  });
+  if (outcome === 'not-found') {
+    return c.json({ error: '攻略或兴趣点不存在' }, 404);
   }
-
-  // D13: the read path prefers enrichedData.aiDays (latitude/longitude), so a
-  // manual correction must land there too — otherwise the fix is never
-  // visible. dayItineraries is re-derived from aiDays to keep one truth source.
-  const enrichedData = recordFromJson(guide.enrichedData);
-  const aiDaysKey = Array.isArray(enrichedData.aiDays)
-    ? 'aiDays'
-    : Array.isArray(enrichedData.ai_days)
-      ? 'ai_days'
-      : null;
-
-  if (aiDaysKey) {
-    const aiDays = structuredClone(enrichedData[aiDaysKey] as unknown[]);
-    const dayIndex = aiDays.findIndex(
-      day => isRecord(day) && aiDayNumber(day) === body.dayNumber,
-    );
-    if (dayIndex === -1) {
-      return c.json({ error: '攻略日程不存在' }, 404);
-    }
-
-    const day = aiDays[dayIndex] as Record<string, unknown>;
-    const pois = Array.isArray(day.pois) ? [...day.pois] : [];
-    const poi = pois[body.poiIndex];
-    if (!isRecord(poi)) {
-      return c.json({ error: '攻略兴趣点不存在' }, 404);
-    }
-
-    pois[body.poiIndex] = {
-      ...poi,
-      latitude: body.latitude,
-      longitude: body.longitude,
-      geocodeConfidence: 1,
-      geocodeSource: 'manual',
-      isManuallyVerified: true,
-      verifiedAt: Date.now(),
-      ...(body.verifiedBy ? { verifiedBy: body.verifiedBy } : {}),
-    };
-    aiDays[dayIndex] = { ...day, pois };
-
-    await db
-      .update(travelGuides)
-      .set({
-        // Merge by key — AI keys other than aiDays are never dropped (D7/D8).
-        enrichedData: { ...enrichedData, [aiDaysKey]: aiDays },
-        dayItineraries: aiDaysToDayItineraries(aiDays),
-      })
-      .where(eq(travelGuides.id, guideId));
-
-    return jsonOk(c);
-  }
-
-  // Legacy rows without aiDays: correct dayItineraries (lat/lng shape) directly.
-  const dayItineraries = Array.isArray(guide.dayItineraries) ? structuredClone(guide.dayItineraries) : [];
-  const dayIndex = dayItineraries.findIndex(day => Number(day.day) === body.dayNumber);
-  if (dayIndex === -1) {
-    return c.json({ error: '攻略日程不存在' }, 404);
-  }
-
-  const pois = Array.isArray(dayItineraries[dayIndex]?.pois) ? [...dayItineraries[dayIndex]!.pois] : [];
-  if (!pois[body.poiIndex]) {
-    return c.json({ error: '攻略兴趣点不存在' }, 404);
-  }
-
-  pois[body.poiIndex] = {
-    ...pois[body.poiIndex],
-    name: pois[body.poiIndex]!.name,
-    lat: body.latitude,
-    lng: body.longitude,
-  };
-
-  dayItineraries[dayIndex] = {
-    ...dayItineraries[dayIndex],
-    day: dayItineraries[dayIndex]!.day,
-    pois,
-  };
-
-  await db
-    .update(travelGuides)
-    .set({ dayItineraries })
-    .where(eq(travelGuides.id, guideId));
-
   return jsonOk(c);
 });
 
