@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { decodeDetailResponse, RawCrawlDetailSchema } from './go-crawler-port.js';
+import { describe, expect, it, vi } from 'vitest';
+import { decodeDetailResponse, HttpGoCrawlerPort, RawCrawlDetailSchema } from './go-crawler-port.js';
 
 const GO_DETAIL_KEYS = [
   'url',
@@ -82,5 +82,30 @@ describe('decodeDetailResponse', () => {
   it('returns not-ok when the payload fails validation', () => {
     const result = decodeDetailResponse({ success: true, data: { url: 'x' } });
     expect(result.ok).toBe(false);
+  });
+});
+
+describe('httpGoCrawlerPort.fetchDetail', () => {
+  it('pOSTs to /detail and returns a decoded RawCrawlDetail', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ success: true, data: goDetailPayload() }),
+    });
+    const port = new HttpGoCrawlerPort({ goServerUrl: 'http://go:3001', fetchImpl: fetchImpl as never });
+
+    const result = await port.fetchDetail('https://example.com/1');
+
+    expect(result).toMatchObject({ ok: true });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'http://go:3001/api/crawler/mafengwo/detail',
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('returns not-ok on a non-200 response', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 502, json: vi.fn() });
+    const port = new HttpGoCrawlerPort({ goServerUrl: 'http://go:3001', fetchImpl: fetchImpl as never });
+
+    expect(await port.fetchDetail('https://example.com/1')).toEqual({ ok: false, error: '获取游记详情失败：502' });
   });
 });
