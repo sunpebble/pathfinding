@@ -23,12 +23,12 @@
   7. 任何 sheet **不得**设 `.presentationBackground(_:)`(否则分级 sheet 丢失自动玻璃)。
 - **弃用而非删除(关键)**:`cardStyle`/`subtleCardStyle`/`adaptiveCardStyle`/`glowCardStyle`/`borderedCardStyle`/`elevatedCardStyle`、`PrimaryButtonStyle`/`SecondaryButtonStyle`/`OutlineButtonStyle`、`VisualEffects.swift` 装饰、`heroGradient`/`meshGradient`/`primaryGradient`/`Terrain`/`Expedition` 调色板、`DesignTokens.Shadow`、`appleShadow`、`useTrueBlack`/`reduceContrastInDark` 这些**全 App 共用**符号,本计划一律加 `@available(*, deprecated, message: "iOS 26: use cardSurface / .buttonStyle(.glass*) / system glass")`,**保持可编译**。仅当某符号经 `grep -rn "<symbol>" Pathfinding Shared` 验证**零非测试消费者**时,才在对应 Task 末尾物理删除。
 - **工程**:用 XcodeGen 管理。改 `project.yml` / `Config/*.xcconfig` 后运行 `xcodegen generate` 重生成 `.xcodeproj`;**绝不手改** `project.pbxproj`。
-- **构建闸门命令**(下文记作 *BUILD*):
+- **构建闸门命令**(下文记作 _BUILD_):
   ```bash
   cd apps/ios/Pathfinding && xcodegen generate && \
   xcodebuild build -scheme Pathfinding-Debug -destination 'generic/platform=iOS Simulator' -quiet
   ```
-- **测试命令**(下文记作 *TEST <Class>*;先 `xcrun simctl list devices available` 选一台 iOS 26 模拟器,把 `iPhone 17 Pro` 换成实际可用名):
+- **测试命令**(下文记作 _TEST <Class>_;先 `xcrun simctl list devices available` 选一台 iOS 26 模拟器,把 `iPhone 17 Pro` 换成实际可用名):
   ```bash
   cd apps/ios/Pathfinding && \
   xcodebuild test -scheme Pathfinding-Debug \
@@ -44,6 +44,7 @@
 ## File Structure
 
 **修改(底座 / 外壳):**
+
 - `apps/ios/Pathfinding/project.yml` — 部署目标 / Xcode 版本
 - `apps/ios/Pathfinding/Config/*.xcconfig` — 若含 `IPHONEOS_DEPLOYMENT_TARGET`
 - `Pathfinding/PathfindingApp.swift` — 删 `configureAppearance()`
@@ -53,6 +54,7 @@
 - `Pathfinding/Core/ThemeManager.swift` — 删窗口注入,环境驱动;弃用渐变生成器与多余开关
 
 **修改 / 新增(行程流程):**
+
 - `Pathfinding/Features/ItineraryListView.swift` — 列表重设计 + 抽离详情
 - 新增 `Pathfinding/Features/Itinerary/ItineraryDetailView.swift` 及子视图 `MapHeader.swift` / `TimelineSection.swift` / `DayCard.swift` / `TipsCard.swift` / `DayEditSheet.swift`(同目录)
 - `Pathfinding/Features/PoiEditView.swift` — 搜索防抖
@@ -63,6 +65,7 @@
 - `Pathfinding/Core/ItineraryStore.swift` — 持久化防抖 + `copyItinerary` 修复
 
 **新增(测试):**
+
 - `PathfindingTests/ItineraryStoreCopyTests.swift`
 - `PathfindingTests/PoiSearchDebounceTests.swift`
 - `PathfindingTests/ItineraryDetailDestinationsTests.swift`
@@ -73,33 +76,40 @@
 ## Task 1: 抬高部署目标到 iOS 26
 
 **Files:**
+
 - Modify: `apps/ios/Pathfinding/project.yml:4-6,19-22`
 - Modify: `apps/ios/Pathfinding/Config/*.xcconfig`(若含部署目标)
 - Regenerate: `Pathfinding.xcodeproj`(经 `xcodegen generate`)
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: iOS 26 SDK 基线,后续所有 Task 可无条件使用 Liquid Glass API。
 
 - [ ] **Step 1: 定位所有部署目标声明**
 
 Run:
+
 ```bash
 cd apps/ios/Pathfinding && grep -rn "17.0\|IPHONEOS_DEPLOYMENT_TARGET\|deploymentTarget\|xcodeVersion" project.yml Config/
 ```
+
 Expected: 命中 `project.yml:5`(`iOS: '17.0'`)、`project.yml:6`(`xcodeVersion: '16.0'`)、`project.yml:22`(`IPHONEOS_DEPLOYMENT_TARGET: '17.0'`),以及 `Config/*.xcconfig` 中可能存在的同名键。
 
 - [ ] **Step 2: 改 `project.yml`**
 
 把第 5、6、22 行改为(部署目标 26.0;`xcodeVersion` 对齐本机实际的 Xcode 27):
+
 ```yaml
   deploymentTarget:
     iOS: '26.0'
   xcodeVersion: '27.0'
 ```
+
 ```yaml
     IPHONEOS_DEPLOYMENT_TARGET: '26.0'
 ```
+
 > 环境实测:本机 Xcode 27.0 / iOS 27.0 SDK / `iPhone 17 Pro`(iOS 27)模拟器。部署目标 26.0 ≤ SDK 27.0 合法;Liquid Glass(iOS 26 引入)在 27 SDK 全部可用。
 
 - [ ] **Step 3: 改 `Config/*.xcconfig` 中的部署目标(若 Step 1 命中)**
@@ -108,13 +118,13 @@ Expected: 命中 `project.yml:5`(`iOS: '17.0'`)、`project.yml:6`(`xcodeVersion:
 
 - [ ] **Step 4: 重生成并构建**
 
-Run: *BUILD*
+Run: _BUILD_
 Expected: `xcodegen generate` 成功;`xcodebuild build` 成功(此时尚无玻璃代码,纯验证抬版不破坏现有构建)。本机已确认 Xcode 27 / iOS 27 SDK 就绪,应可直接构建。
 
 - [ ] **Step 5: 折叠现已恒真的旧可用性判断(可选清理,限本次命中处)**
 
 Run: `grep -rn "#available(iOS 1[567]" Pathfinding`
-对每处 `if #available(iOS 16/17, *)`(min 已是 26,恒真),保留 then 分支、删 else 分支与判断壳。仅改本次命中的少数文件(Siri/Calendar/Profile)。改完重跑 *BUILD*。
+对每处 `if #available(iOS 16/17, *)`(min 已是 26,恒真),保留 then 分支、删 else 分支与判断壳。仅改本次命中的少数文件(Siri/Calendar/Profile)。改完重跑 _BUILD_。
 
 - [ ] **Step 6: Commit**
 
@@ -128,15 +138,18 @@ git commit -m "build(ios): raise deployment target to iOS 26"
 ## Task 2: 移除 UIKit appearance 代理(拿回全局玻璃)
 
 **Files:**
+
 - Modify: `Pathfinding/PathfindingApp.swift:9-12,25-46`
 
 **Interfaces:**
+
 - Consumes: Task 1 的 iOS 26 基线
 - Produces: 导航栏/标签栏/sheet 自动 Liquid Glass。
 
 - [ ] **Step 1: 删除 `configureAppearance()` 及其调用**
 
 删掉 `init()` 中的 `configureAppearance()` 调用(`:11`)与整个 `configureAppearance()` 方法(`:25-46`)。保留 `applyUITestLaunchOverrides()`。`init()` 变为:
+
 ```swift
   init() {
     applyUITestLaunchOverrides()
@@ -145,7 +158,7 @@ git commit -m "build(ios): raise deployment target to iOS 26"
 
 - [ ] **Step 2: 构建**
 
-Run: *BUILD*
+Run: _BUILD_
 Expected: 成功。
 
 - [ ] **Step 3: 手动目检**
@@ -164,9 +177,11 @@ git commit -m "feat(ios): drop UIKit appearance proxies for automatic Liquid Gla
 ## Task 3: 声明式 TabView + 滚动最小化
 
 **Files:**
+
 - Modify: `Pathfinding/ContentView.swift:4-36`(`Tab` 枚举)、`:43-82`(`ContentView.body`)
 
 **Interfaces:**
+
 - Consumes: Task 2 的玻璃栏
 - Produces: `enum Tab`(去掉 `selectedIcon`);`ContentView` 使用值绑定 `TabView`。
 
@@ -200,11 +215,12 @@ git commit -m "feat(ios): drop UIKit appearance proxies for automatic Liquid Gla
     .id(localizationManager.currentLanguage)
   }
 ```
+
 (移除原 `.animation(...)`;系统玻璃标签栏自带过渡。)
 
 - [ ] **Step 3: 构建**
 
-Run: *BUILD*
+Run: _BUILD_
 Expected: 成功。
 
 - [ ] **Step 4: 手动目检**
@@ -223,9 +239,11 @@ git commit -m "feat(ios): adopt declarative TabView with tab bar minimize behavi
 ## Task 4: `cardSurface` 玻璃卡片原语
 
 **Files:**
+
 - Modify: `Pathfinding/Features/Components/DesignSystem.swift`(新增扩展;弃用旧卡片修饰符)
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces:
   - `func cardSurface(tint: Color? = nil, cornerRadius: CGFloat = DesignTokens.Radius.lg) -> some View`
@@ -234,6 +252,7 @@ git commit -m "feat(ios): adopt declarative TabView with tab bar minimize behavi
 - [ ] **Step 1: 新增 `cardSurface` 扩展**
 
 在 `extension View` 区追加:
+
 ```swift
 extension View {
   /// 唯一玻璃卡片表面(iOS 26)。在 padding/frame 之后调用。
@@ -248,11 +267,13 @@ extension View {
   }
 }
 ```
+
 > 注:`.glassEffect` 仅有 `.regular`/`.clear` 等变体;强调通过 `.tint()` 表达,不存在 `.prominent` 玻璃变体。若编译器报 `Glass` 命名空间不符,改用 `.regular`/`.regular.tint($0)` 字面量(以 SDK 实际签名为准)。
 
 - [ ] **Step 2: 新增 `cardSurface` 的 `#Preview`**
 
 在文件末尾追加,覆盖无 tint / 有 tint:
+
 ```swift
 #Preview("cardSurface") {
   VStack(spacing: 16) {
@@ -268,13 +289,14 @@ extension View {
 - [ ] **Step 3: 弃用旧卡片修饰符**
 
 给 `cardStyle`/`subtleCardStyle`/`adaptiveCardStyle`/`adaptiveSubtleCardStyle`/`glassCard`/`elevatedCardStyle`/`glowCardStyle`/`borderedCardStyle` 各加一行(保留方法体):
+
 ```swift
   @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
 ```
 
 - [ ] **Step 4: 构建 + 预览**
 
-Run: *BUILD*;Xcode 打开 `cardSurface` 预览,Light/Dark + 降低透明度 三态目检。
+Run: _BUILD_;Xcode 打开 `cardSurface` 预览,Light/Dark + 降低透明度 三态目检。
 Expected: 构建成功(旧调用点因弃用仅告警,不报错);预览中卡片为系统玻璃、无手写阴影。
 
 - [ ] **Step 5: Commit**
@@ -289,23 +311,27 @@ git commit -m "feat(ios): add cardSurface glass primitive and deprecate legacy c
 ## Task 5: 玻璃按钮样式
 
 **Files:**
+
 - Modify: `Pathfinding/Features/Components/DesignSystem.swift`(弃用 3 个自定义 ButtonStyle 与 `.primary/.secondary/.outline` 便捷)
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: 约定 —— 主操作用 `.buttonStyle(.glassProminent)`,次级用 `.buttonStyle(.glass)`;`PrimaryButtonStyle/SecondaryButtonStyle/OutlineButtonStyle` 标注弃用。
 
 - [ ] **Step 1: 弃用自定义 ButtonStyle**
 
 给 `PrimaryButtonStyle`、`SecondaryButtonStyle`、`OutlineButtonStyle` 三个 struct 各加:
+
 ```swift
 @available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
 ```
+
 并给 `extension ButtonStyle where Self == ...` 的三个静态便捷各加同样弃用标注(保留实现以免破坏现有调用)。
 
 - [ ] **Step 2: 构建**
 
-Run: *BUILD*
+Run: _BUILD_
 Expected: 成功(现有 `.primary/.secondary` 调用点仅告警)。
 
 - [ ] **Step 3: Commit**
@@ -320,9 +346,11 @@ git commit -m "feat(ios): deprecate custom button styles in favor of system glas
 ## Task 6: ThemeManager 环境化 + 弃用渐变生成器
 
 **Files:**
+
 - Modify: `Pathfinding/Core/ThemeManager.swift:236-243,315-358`
 
 **Interfaces:**
+
 - Consumes: Task 3 的 `.tint`
 - Produces: 外观仅经 `ThemeModifier`(`preferredColorScheme` + `.tint`)驱动;`applyTheme/applyAccentColor/applyThemeImmediately` 的窗口遍历删除。
 
@@ -336,7 +364,7 @@ git commit -m "feat(ios): deprecate custom button styles in favor of system glas
 
 - [ ] **Step 3: 构建 + 手动目检**
 
-Run: *BUILD*;运行后在设置里切换 浅/深色 与强调色,确认全 App(含未迁移 Tab)即时生效。
+Run: _BUILD_;运行后在设置里切换 浅/深色 与强调色,确认全 App(含未迁移 Tab)即时生效。
 Expected: 成功;主题切换正常(经 SwiftUI 环境而非窗口注入)。
 
 - [ ] **Step 4: Commit**
@@ -351,10 +379,12 @@ git commit -m "refactor(ios): drive theming via SwiftUI environment, deprecate g
 ## Task 7: 抽离并拆分 `SavedItineraryDetailView`(行为保持)
 
 **Files:**
+
 - Modify: `Pathfinding/Features/ItineraryListView.swift`(移出 `:397-741`)
 - Create: `Pathfinding/Features/Itinerary/ItineraryDetailView.swift`、`MapHeader.swift`、`TimelineSection.swift`、`DayCard.swift`、`TipsCard.swift`、`DayEditSheet.swift`
 
 **Interfaces:**
+
 - Consumes: `SavedItinerary`(`Models/SavedItinerary.swift`)、`ItineraryStore`、`OptimizedMapView`
 - Produces: `struct ItineraryDetailView: View { let itinerary: SavedItinerary }`,内部子视图 `MapHeader`/`TimelineSection`/`DayCard`/`TipsCard`/`DayEditSheet`。列表的 `navigationDestination(for: SavedItinerary.self)`(`ItineraryListView.swift:80`)改路由到 `ItineraryDetailView`。
 
@@ -365,15 +395,16 @@ git commit -m "refactor(ios): drive theming via SwiftUI environment, deprecate g
 - [ ] **Step 2: 按职责拆出子视图(行为不变)**
 
 把原 body 内联块抽成同目录独立 struct,**逐字搬运**现有视图代码,不改样式:
+
 - `MapHeader`:地图头(原 `:442` 附近)
 - `TimelineSection` + `DayCard`:时间轴与日卡(原 `:491-577`)
 - `TipsCard`:贴士块(原 `:594-595`)
 - `DayEditSheet`:内联日编辑 sheet(原 `:641-691`)
-`ItineraryDetailView.body` 改为组合这些子视图,数据/绑定通过初始化参数传入。
+  `ItineraryDetailView.body` 改为组合这些子视图,数据/绑定通过初始化参数传入。
 
 - [ ] **Step 3: 构建 + 预览**
 
-Run: *BUILD*;为 `ItineraryDetailView` 加一个用示例 `SavedItinerary` 的 `#Preview`。
+Run: _BUILD_;为 `ItineraryDetailView` 加一个用示例 `SavedItinerary` 的 `#Preview`。
 Expected: 构建成功;详情屏外观/交互与重构前一致(纯结构搬运)。
 
 - [ ] **Step 4: 手动目检**
@@ -392,9 +423,11 @@ git commit -m "refactor(ios): extract ItineraryDetailView into composed subviews
 ## Task 8: 行程列表重设计
 
 **Files:**
+
 - Modify: `Pathfinding/Features/ItineraryListView.swift:11-90,109-157,182-184,229-230`
 
 **Interfaces:**
+
 - Consumes: Task 7 的 `ItineraryDetailView`
 - Produces: 玻璃化列表入口(系统玻璃行 + 分组工具栏 + 单主操作空态)。
 
@@ -405,6 +438,7 @@ git commit -m "refactor(ios): extract ItineraryDetailView into composed subviews
 - [ ] **Step 2: 分组工具栏**
 
 把 leading 省略号 Menu 与 trailing plus(`:26-63`)改为离散 `ToolbarItem`,在「AI/语音/发现」菜单与「新建」主操作之间插 `ToolbarSpacer(.fixed)`:
+
 ```swift
     .toolbar {
       ToolbarItem(placement: .topBarLeading) { itineraryActionsMenu }
@@ -415,11 +449,13 @@ git commit -m "refactor(ios): extract ItineraryDetailView into composed subviews
       }
     }
 ```
+
 (`itineraryActionsMenu` 为原 Menu 内容抽出的计算属性。)
 
 - [ ] **Step 3: 收敛空态为单主操作**
 
 把空态 5 个 CTA(`:109-157`)改为一个 `ContentUnavailableView`,label 内置一个 `.buttonStyle(.glassProminent)` 主操作(AI 生成行程)与至多一个 `.buttonStyle(.glass)` 次操作(浏览公开行程);其余入口移到工具栏菜单:
+
 ```swift
 ContentUnavailableView {
   Label("itinerary.empty.title".localized, systemImage: "map")
@@ -435,7 +471,7 @@ ContentUnavailableView {
 
 - [ ] **Step 4: 构建 + 手动目检 + a11y 目检**
 
-Run: *BUILD*;运行确认列表行为系统玻璃、工具栏成正确玻璃胶囊分组、空态单一主操作。三档 a11y 目检。
+Run: _BUILD_;运行确认列表行为系统玻璃、工具栏成正确玻璃胶囊分组、空态单一主操作。三档 a11y 目检。
 Expected: 成功且观感符合内容优先。
 
 - [ ] **Step 5: Commit**
@@ -450,20 +486,24 @@ git commit -m "feat(ios): redesign itinerary list with system glass and grouped 
 ## Task 9: 行程详情重设计(地图头 + 玻璃卡 + 选中日 morph)
 
 **Files:**
+
 - Modify: `Pathfinding/Features/Itinerary/ItineraryDetailView.swift`、`MapHeader.swift`、`TimelineSection.swift`、`DayCard.swift`、`TipsCard.swift`
 
 **Interfaces:**
+
 - Consumes: Task 4 `cardSurface`、Task 7 子视图
 - Produces: 玻璃化详情样板。
 
 - [ ] **Step 1: 地图头玻璃化滚动边缘**
 
 `MapHeader`:移除固定 350pt + cornerRadius 0 + `.ignoresSafeArea(edges: .top)` 的对抗式写法;改为:
+
 ```swift
 OptimizedMapView(/* 原参数 */)
   .frame(height: 320)
   .backgroundExtensionEffect()
 ```
+
 并在详情根 `ScrollView` 上加 `.scrollEdgeEffectStyle(.soft, for: .top)`。
 
 - [ ] **Step 2: 卡片走 `cardSurface`**
@@ -473,11 +513,13 @@ OptimizedMapView(/* 原参数 */)
 - [ ] **Step 3: 选中日 tint 玻璃 + morph**
 
 `TimelineSection` 顶部声明 `@Namespace private var glassNS` 与 `@Environment(\.accessibilityReduceMotion) private var reduceMotion`。选中日:
+
 ```swift
 dayCard
   .cardSurface(tint: isSelected ? .accentColor.opacity(0.3) : nil)
   .glassEffectID("day-\(index)", in: glassNS)
 ```
+
 把整个时间轴的卡片簇包进 `GlassEffectContainer(spacing: DesignTokens.Spacing.sm) { ... }`(全详情仅此一个 Container)。展开/收起 `withAnimation(reduceMotion ? nil : DesignTokens.Animation.spring)`。
 
 - [ ] **Step 4: 工具栏拆分**
@@ -486,7 +528,7 @@ dayCard
 
 - [ ] **Step 5: 构建 + 预览 + a11y 目检**
 
-Run: *BUILD*;预览三态;运行目检地图头玻璃栏浮动、选中日 morph、Reduce Motion 下无动画。
+Run: _BUILD_;预览三态;运行目检地图头玻璃栏浮动、选中日 morph、Reduce Motion 下无动画。
 Expected: 成功。
 
 - [ ] **Step 6: Commit**
@@ -501,17 +543,20 @@ git commit -m "feat(ios): redesign itinerary detail with glass cards and morphin
 ## Task 10: 接通孤儿页(预算 / 分析入口 + 数据通路)
 
 **Files:**
+
 - Modify: `Pathfinding/Features/Itinerary/ItineraryDetailView.swift`(新增入口)
 - Modify: `Pathfinding/Features/Budget/AddExpenseView.swift:185`(替换硬编码 userId)
 - Create: `PathfindingTests/ItineraryDetailDestinationsTests.swift`
 
 **Interfaces:**
+
 - Consumes: `ItineraryAnalysisView(itineraryId:)`、`BudgetOverviewView(...)`(以其现有 init 签名为准,搬运时核对)、`AuthManager.shared.currentUserId`
 - Produces: 详情可达分析/预算;预算真实 `userId`。
 
 - [ ] **Step 1: 写失败测试(分析/预算可达性)**
 
 `PathfindingTests/ItineraryDetailDestinationsTests.swift`:
+
 ```swift
 import XCTest
 @testable import Pathfinding
@@ -529,12 +574,13 @@ final class ItineraryDetailDestinationsTests: XCTestCase {
 
 - [ ] **Step 2: 运行,确认失败**
 
-Run: *TEST ItineraryDetailDestinationsTests*
+Run: _TEST ItineraryDetailDestinationsTests_
 Expected: 编译失败 / FAIL —— `availableDestinations`、`SavedItinerary.previewSample`、`ItineraryDetail.Destination` 未定义。
 
 - [ ] **Step 3: 实现入口与可测枚举**
 
 在 `ItineraryDetailView` 增加:
+
 ```swift
 enum Destination: Hashable { case analysis, budget }
 
@@ -545,6 +591,7 @@ var availableDestinations: [Destination] {
   return result
 }
 ```
+
 工具栏加 overflow `Menu`,按 `availableDestinations` 生成 `NavigationLink`:分析 → `ItineraryAnalysisView(itineraryId: itinerary.apiItineraryId ?? "")`;预算 → `BudgetOverviewView(itineraryId: itinerary.id, userId: AuthManager.shared.currentUserId ?? "guest")`(以两视图实际 init 为准)。在 `Models/SavedItinerary.swift`(或测试目标可见处)加 `static var previewSample: SavedItinerary`。
 
 - [ ] **Step 4: 替换硬编码 userId**
@@ -553,7 +600,7 @@ var availableDestinations: [Destination] {
 
 - [ ] **Step 5: 运行测试通过 + 构建**
 
-Run: *TEST ItineraryDetailDestinationsTests* → PASS;*BUILD* → 成功。
+Run: _TEST ItineraryDetailDestinationsTests_ → PASS;_BUILD_ → 成功。
 
 - [ ] **Step 6: 手动目检**
 
@@ -571,10 +618,12 @@ git commit -m "feat(ios): wire budget and analysis into itinerary detail with re
 ## Task 11: 预算 / 分析页玻璃化与原生态
 
 **Files:**
+
 - Modify: `Pathfinding/Features/Analysis/ItineraryAnalysisView.swift:59-97,132-157` 及各卡片块
 - Modify: `Pathfinding/Features/Budget/BudgetOverviewView.swift:159-330` 各卡片块
 
 **Interfaces:**
+
 - Consumes: Task 4 `cardSurface`
 - Produces: 统一玻璃卡 + 原生加载/空态。
 
@@ -588,7 +637,7 @@ git commit -m "feat(ios): wire budget and analysis into itinerary detail with re
 
 - [ ] **Step 3: 构建 + 预览 + a11y 目检**
 
-Run: *BUILD*;预览分析/预算的加载/空/有数据三态 + 三档 a11y。
+Run: _BUILD_;预览分析/预算的加载/空/有数据三态 + 三档 a11y。
 Expected: 成功。
 
 - [ ] **Step 4: Commit**
@@ -603,16 +652,19 @@ git commit -m "feat(ios): glassify budget and analysis cards with native loading
 ## Task 12: 拷贝 / 选择 sheet 的玻璃 chip + 背景审计
 
 **Files:**
+
 - Modify: `Pathfinding/Features/CopyItinerarySheet.swift:254-257`(`DaySelectionChip`)
 - Audit: `Pathfinding/Features/ItineraryListView.swift:64-79,687` 及流程内所有 `.sheet/.fullScreenCover`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: 玻璃化选择 chip;无 `presentationBackground` 覆盖。
 
 - [ ] **Step 1: chip 玻璃化**
 
 `DaySelectionChip` 的 `RoundedRectangle().fill(isSelected ? Color.accentColor : Color(.systemGray6))` 改为:
+
 ```swift
 chipLabel
   .padding(.horizontal, DesignTokens.Spacing.sm)
@@ -622,6 +674,7 @@ chipLabel
     in: .capsule
   )
 ```
+
 `APIDaySelectionChip` 同样处理。
 
 - [ ] **Step 2: presentationBackground 审计**
@@ -631,7 +684,7 @@ Run: `grep -rn "presentationBackground" Pathfinding/Features`
 
 - [ ] **Step 3: 构建 + 手动目检**
 
-Run: *BUILD*;运行拷贝 sheet,确认 chip 选中态由玻璃 tint 表达、sheet 为系统玻璃背景。
+Run: _BUILD_;运行拷贝 sheet,确认 chip 选中态由玻璃 tint 表达、sheet 为系统玻璃背景。
 
 - [ ] **Step 4: Commit**
 
@@ -645,9 +698,11 @@ git commit -m "feat(ios): glassify day-selection chips and keep automatic sheet 
 ## Task 13: 地图 Pin 玻璃化 + O(n) 索引修复
 
 **Files:**
+
 - Modify: `Pathfinding/Features/Components/OptimizedMapView.swift:44,47-62`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: 玻璃 / 原生 marker;预计算索引映射。
 
@@ -658,6 +713,7 @@ git commit -m "feat(ios): glassify day-selection chips and keep automatic sheet 
 - [ ] **Step 2: pin 玻璃化**
 
 把手搓 `ZStack { Circle().fill().shadow().overlay(stroke); Text(index) }`(`:47-62`)改为玻璃徽章:
+
 ```swift
 Text("\(index + 1)")
   .font(DesignTokens.Typography.MapLegend.duration)
@@ -665,11 +721,12 @@ Text("\(index + 1)")
   .padding(8)
   .glassEffect(.regular.tint(typeColor), in: .circle)
 ```
+
 (或用原生 `Marker` 的 tint,取本流程一致者。)
 
 - [ ] **Step 3: 构建 + 手动目检**
 
-Run: *BUILD*;详情地图确认编号 pin 为玻璃徽章、选中态清晰、滚动/缩放流畅。
+Run: _BUILD_;详情地图确认编号 pin 为玻璃徽章、选中态清晰、滚动/缩放流畅。
 
 - [ ] **Step 4: Commit**
 
@@ -683,10 +740,12 @@ git commit -m "perf(ios): precompute pin indices and glassify map annotations"
 ## Task 14: POI 搜索防抖
 
 **Files:**
+
 - Modify: `Pathfinding/Features/PoiEditView.swift:63-84`
 - Create: `PathfindingTests/PoiSearchDebounceTests.swift`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: `PoiSearchDebouncer`(可测的纯防抖器),`PoiEditView` 用它驱动 `MKLocalSearch`。
 
@@ -709,12 +768,13 @@ final class PoiSearchDebounceTests: XCTestCase {
 
 - [ ] **Step 2: 运行,确认失败**
 
-Run: *TEST PoiSearchDebounceTests*
+Run: _TEST PoiSearchDebounceTests_
 Expected: FAIL —— `PoiSearchDebouncer` 未定义。
 
 - [ ] **Step 3: 实现防抖器**
 
 新增 `PoiSearchDebouncer`(`PoiEditView.swift` 同文件或 `Core/`):
+
 ```swift
 @MainActor
 final class PoiSearchDebouncer {
@@ -734,11 +794,12 @@ final class PoiSearchDebouncer {
   }
 }
 ```
+
 把 `PoiEditView` 中 `.onChange(of: name)` 每键直接 `MKLocalSearch` 改为 `debouncer.send(name)`,在回调里发起搜索。
 
 - [ ] **Step 4: 运行测试通过 + 构建**
 
-Run: *TEST PoiSearchDebounceTests* → PASS;*BUILD* → 成功。
+Run: _TEST PoiSearchDebounceTests_ → PASS;_BUILD_ → 成功。
 
 - [ ] **Step 5: Commit**
 
@@ -752,11 +813,13 @@ git commit -m "perf(ios): debounce POI MKLocalSearch input"
 ## Task 15: ItineraryStore 持久化防抖 + copyItinerary 修复
 
 **Files:**
+
 - Modify: `Pathfinding/Core/ItineraryStore.swift:122-128,138-...,364-371`
 - Modify: `Pathfinding/Features/Itinerary/ItineraryDetailView.swift`(标题保存改 onSubmit/防抖)
 - Create: `PathfindingTests/ItineraryStoreCopyTests.swift`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: `copyItinerary` 正确按 `newStartDate` 调整日期且只构建一次;标题不再每键全量持久化。
 
@@ -782,17 +845,19 @@ final class ItineraryStoreCopyTests: XCTestCase {
 
 - [ ] **Step 2: 运行,确认失败**
 
-Run: *TEST ItineraryStoreCopyTests*
+Run: _TEST ItineraryStoreCopyTests_
 Expected: FAIL —— 当前 `copyItinerary` 忽略 `newStartDate`(且 `makeForTesting` 未定义)。
 
 - [ ] **Step 3: 修复 copyItinerary + 加测试工厂**
 
 `ItineraryStore.copyItinerary`(`:138`)删除重复构建 `newItinerary` 的死代码,按 `newStartDate` 与原 `startDate` 的差值平移每天日期,只构建一次返回。加:
+
 ```swift
   #if DEBUG
   static func makeForTesting() -> ItineraryStore { ItineraryStore() }
   #endif
 ```
+
 (若构造器私有,提供测试可达入口。)
 
 - [ ] **Step 4: 持久化防抖**
@@ -801,7 +866,7 @@ Expected: FAIL —— 当前 `copyItinerary` 忽略 `newStartDate`(且 `makeForT
 
 - [ ] **Step 5: 运行测试通过 + 构建**
 
-Run: *TEST ItineraryStoreCopyTests* → PASS;*BUILD* → 成功。
+Run: _TEST ItineraryStoreCopyTests_ → PASS;_BUILD_ → 成功。
 
 - [ ] **Step 6: 手动目检**
 
@@ -819,10 +884,12 @@ git commit -m "fix(ios): debounce itinerary persistence and correct copyItinerar
 ## Task 16(拉伸): 拷贝 sheet 三胞胎收敛为泛型
 
 **Files:**
+
 - Modify: `Pathfinding/Features/CopyItinerarySheet.swift`(全文件)
 - Create: `PathfindingTests/CopyableSourceTests.swift`
 
 **Interfaces:**
+
 - Consumes: `SavedItinerary`、`BlogPost`、`APIItinerary`
 - Produces: `protocol CopyableSource`(暴露 `days`/`poiCount`/`title`/`performCopy`)+ 单一泛型 `CopyItinerarySheet<Source: CopyableSource>`。
 
@@ -843,7 +910,7 @@ final class CopyableSourceTests: XCTestCase {
 
 - [ ] **Step 2: 运行,确认失败**
 
-Run: *TEST CopyableSourceTests*
+Run: _TEST CopyableSourceTests_
 Expected: FAIL —— `CopyableSource`/`dayCount`/`poiCount` 未定义。
 
 - [ ] **Step 3: 抽象协议并让三源实现**
@@ -852,7 +919,7 @@ Expected: FAIL —— `CopyableSource`/`dayCount`/`poiCount` 未定义。
 
 - [ ] **Step 4: 运行测试通过 + 构建 + 手动目检**
 
-Run: *TEST CopyableSourceTests* → PASS;*BUILD* → 成功;三条拷贝入口(本地/Guide/公开)逐一手测功能不变。
+Run: _TEST CopyableSourceTests_ → PASS;_BUILD_ → 成功;三条拷贝入口(本地/Guide/公开)逐一手测功能不变。
 
 - [ ] **Step 5: Commit**
 
@@ -866,10 +933,12 @@ git commit -m "refactor(ios): unify three copy sheets behind a CopyableSource pr
 ## Task 17(拉伸): 费用表单合并
 
 **Files:**
+
 - Modify: `Pathfinding/Features/Budget/AddExpenseView.swift`、`EditExpenseView`(同文件或 `Budget/`)
 - Create: `PathfindingTests/ExpenseFormModelTests.swift`
 
 **Interfaces:**
+
 - Consumes: 费用模型
 - Produces: 共享 `ExpenseForm`(create/edit 双模),`AddExpenseView`/`EditExpenseView` 成薄包装。
 
@@ -895,7 +964,7 @@ final class ExpenseFormModelTests: XCTestCase {
 
 - [ ] **Step 2: 运行,确认失败**
 
-Run: *TEST ExpenseFormModelTests*
+Run: _TEST ExpenseFormModelTests_
 Expected: FAIL —— `ExpenseFormModel`/`mode` 未定义。
 
 - [ ] **Step 3: 提取共享表单**
@@ -904,7 +973,7 @@ Expected: FAIL —— `ExpenseFormModel`/`mode` 未定义。
 
 - [ ] **Step 4: 运行测试通过 + 构建 + 手动目检**
 
-Run: *TEST ExpenseFormModelTests* → PASS;*BUILD* → 成功;新增与编辑费用各手测一次。
+Run: _TEST ExpenseFormModelTests_ → PASS;_BUILD_ → 成功;新增与编辑费用各手测一次。
 
 - [ ] **Step 5: Commit**
 
@@ -918,28 +987,34 @@ git commit -m "refactor(ios): share one ExpenseForm across add and edit expense"
 ## Task 18: 收尾 —— grep 删除无消费者符号 + 全量校验
 
 **Files:**
+
 - Modify: `Pathfinding/Features/Components/VisualEffects.swift`、`DesignSystem.swift`、`Core/ThemeManager.swift`(仅删 grep-空消费者者)
 
 **Interfaces:**
+
 - Consumes: 前述全部 Task
 - Produces: 物理删除迁移后无引用的死装饰;全量测试通过。
 
 - [ ] **Step 1: 逐符号 grep 验证**
 
 对每个弃用符号运行,例如:
+
 ```bash
 cd apps/ios/Pathfinding && for s in ExplorerPageBackground ExplorerCardStyle AnimatedBorderGradient GradientMeshBackground NoiseTextureOverlay; do
   echo "== $s =="; grep -rn "\b$s\b" Pathfinding Shared --include=*.swift | grep -v "VisualEffects.swift"; done
 ```
+
 **仅**对输出为空(无非定义处引用)的符号,删除其定义及相关 `View` 扩展便捷。**有任何非测试消费者(如 Discover/Profile)则保留弃用、不删**,留待对应 Tab 的 spec。
 
 - [ ] **Step 2: 构建 + 全量测试**
 
-Run: *BUILD*;然后全量测试:
+Run: _BUILD_;然后全量测试:
+
 ```bash
 cd apps/ios/Pathfinding && xcodebuild test -scheme Pathfinding-Debug \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet
 ```
+
 Expected: 构建成功、全部测试通过。
 
 - [ ] **Step 3: 全流程手动回归(三档 a11y)**

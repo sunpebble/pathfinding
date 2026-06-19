@@ -13,14 +13,14 @@ Pathfinding iOS App 是一个成熟的 SwiftUI 应用(233 个 Swift 文件、约
 
 经与需求方确认,本次优化锁定以下决策:
 
-| 决策项 | 结论 |
-| --- | --- |
-| 优化维度 | 视觉焕新 + 交互/信息架构 + 代码/设计系统重构(三合一) |
-| 平台策略 | **iOS 26 起步,全面拥抱 Liquid Glass**(不写 `#available` 降级) |
-| 执行策略 | **A:底座先行 + 垂直样板**(先建底座,打透一条旗舰流程作模板,再逐页铺开) |
-| 旗舰样板流程 | **行程流程**(列表 → 详情:地图/POI/预算/统计/编辑) |
-| 美学基调 | **内容优先 · 克制现代**(干净玻璃 chrome + 照片/地图/字体发声,保留极少签名色瞬间) |
-| 代码去重 | 拷贝 sheet 三胞胎 / 费用表单复制 — **纳入本 spec,作为拉伸项** |
+| 决策项       | 结论                                                                             |
+| ------------ | -------------------------------------------------------------------------------- |
+| 优化维度     | 视觉焕新 + 交互/信息架构 + 代码/设计系统重构(三合一)                             |
+| 平台策略     | **iOS 26 起步,全面拥抱 Liquid Glass**(不写 `#available` 降级)                    |
+| 执行策略     | **A:底座先行 + 垂直样板**(先建底座,打透一条旗舰流程作模板,再逐页铺开)            |
+| 旗舰样板流程 | **行程流程**(列表 → 详情:地图/POI/预算/统计/编辑)                                |
+| 美学基调     | **内容优先 · 克制现代**(干净玻璃 chrome + 照片/地图/字体发声,保留极少签名色瞬间) |
+| 代码去重     | 拷贝 sheet 三胞胎 / 费用表单复制 — **纳入本 spec,作为拉伸项**                    |
 
 ### 1.1 现状核心问题(按杠杆排序)
 
@@ -165,13 +165,13 @@ Pathfinding iOS App 是一个成熟的 SwiftUI 应用(233 个 Swift 文件、约
 
 ## 7. 组件设计(新底座单元)
 
-| 单元 | 职责 | 用法 | 依赖 |
-| --- | --- | --- | --- |
-| `cardSurface(tint:)` | 唯一玻璃卡片表面 | 自由悬浮卡片末尾调用,padding 之后 | `DesignTokens.Radius` |
-| `GlassEffectContainer` 包装 | 同簇玻璃融合/morph | 工具栏簇、卡片网格、悬浮控件 | SwiftUI 原生 |
-| 玻璃按钮 | 主/次操作 | `.buttonStyle(.glassProminent / .glass)` + `.tint` | SwiftUI 原生 |
-| `ItineraryDetailView` + 子视图 | 详情拆分后的可测单元 | 列表 `navigationDestination` 路由 | `ItineraryStore` |
-| 精简 `ThemeManager` | mode/accent/mapStyle 状态 | `ThemeModifier` 经环境注入 | UserDefaults |
+| 单元                           | 职责                      | 用法                                               | 依赖                  |
+| ------------------------------ | ------------------------- | -------------------------------------------------- | --------------------- |
+| `cardSurface(tint:)`           | 唯一玻璃卡片表面          | 自由悬浮卡片末尾调用,padding 之后                  | `DesignTokens.Radius` |
+| `GlassEffectContainer` 包装    | 同簇玻璃融合/morph        | 工具栏簇、卡片网格、悬浮控件                       | SwiftUI 原生          |
+| 玻璃按钮                       | 主/次操作                 | `.buttonStyle(.glassProminent / .glass)` + `.tint` | SwiftUI 原生          |
+| `ItineraryDetailView` + 子视图 | 详情拆分后的可测单元      | 列表 `navigationDestination` 路由                  | `ItineraryStore`      |
+| 精简 `ThemeManager`            | mode/accent/mapStyle 状态 | `ThemeModifier` 经环境注入                         | UserDefaults          |
 
 每个单元应能独立回答:做什么、怎么用、依赖什么;改内部不破坏消费者。
 
@@ -186,14 +186,14 @@ Pathfinding iOS App 是一个成熟的 SwiftUI 应用(233 个 Swift 文件、约
 
 ## 9. 风险与缓解
 
-| 风险 | 缓解 |
-| --- | --- |
-| 玻璃叠玻璃 | 原则 §3.1;List/Form 行不显式上玻璃,仅悬浮表面上,且单一 Container |
-| 过度着色 | 原则 §3.2/3.3;tint 仅选中/主操作,`.interactive()` 仅交互元素 |
-| 半迁移无障碍陷阱 | 原则 §3.6;装饰移除与玻璃接入同批合入,morph 守 Reduce Motion |
-| 孤儿页真实数据未验证 | 接通时做功能性验证(非仅换皮),替换 `userId:"current-user"` |
-| Sheet 背景回归 | 原则 §3.7;显式审计所有 sheet 无 `presentationBackground` |
-| `.tabViewBottomAccessory` 范围蔓延 | 列为候选,不在本 spec 承诺 |
+| 风险                               | 缓解                                                             |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| 玻璃叠玻璃                         | 原则 §3.1;List/Form 行不显式上玻璃,仅悬浮表面上,且单一 Container |
+| 过度着色                           | 原则 §3.2/3.3;tint 仅选中/主操作,`.interactive()` 仅交互元素     |
+| 半迁移无障碍陷阱                   | 原则 §3.6;装饰移除与玻璃接入同批合入,morph 守 Reduce Motion      |
+| 孤儿页真实数据未验证               | 接通时做功能性验证(非仅换皮),替换 `userId:"current-user"`        |
+| Sheet 背景回归                     | 原则 §3.7;显式审计所有 sheet 无 `presentationBackground`         |
+| `.tabViewBottomAccessory` 范围蔓延 | 列为候选,不在本 spec 承诺                                        |
 
 ---
 
