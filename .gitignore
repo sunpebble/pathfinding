@@ -78,3 +78,6 @@ __pycache__/
 .security-key
 logs/security/
 .superpowers/
+
+# Superpowers SDD scratch (briefs, reports, diffs, ledger)
+.superpowers/
