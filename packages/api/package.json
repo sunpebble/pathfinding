@@ -18,6 +18,7 @@
     "@hono/zod-validator": "^0.5.0",
     "@pathfinding/crawler-types": "workspace:*",
     "@pathfinding/database": "workspace:*",
+    "@pathfinding/guide-shape": "workspace:*",
     "@pathfinding/logger": "workspace:*",
     "@pathfinding/types": "workspace:*",
     "@pathfinding/utils": "workspace:*",

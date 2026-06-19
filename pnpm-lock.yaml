@@ -220,6 +220,9 @@ importers:
       '@pathfinding/database':
         specifier: workspace:*
         version: link:../database
+      '@pathfinding/guide-shape':
+        specifier: workspace:*
+        version: link:../guide-shape
       '@pathfinding/logger':
         specifier: workspace:*
         version: link:../logger
@@ -307,6 +310,28 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/guide-shape:
+    dependencies:
+      '@pathfinding/database':
+        specifier: workspace:*
+        version: link:../database
+      '@pathfinding/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.3
+      tsdown:
+        specifier: 0.21.0-beta.2
+        version: 0.21.0-beta.2(synckit@0.11.12)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@22.19.3)(jiti@2.6.1)(jsdom@28.1.0)(less@4.5.1)(lightningcss@1.31.1)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/logger:
     dependencies:
