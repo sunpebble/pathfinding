@@ -246,16 +246,15 @@ struct DaySelectionChip: View {
 
         Text("\(day.pois.count)点")
           .font(.caption2)
-          .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
+          .foregroundStyle(.secondary)
       }
       .frame(minWidth: 60)
       .padding(.horizontal, DesignTokens.Spacing.sm)
       .padding(.vertical, DesignTokens.Spacing.xs)
-      .background(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .fill(isSelected ? Color.accentColor : Color(.systemGray6))
+      .glassEffect(
+        .regular.tint(isSelected ? .accentColor : .clear).interactive(),
+        in: .capsule
       )
-      .foregroundStyle(isSelected ? .white : .primary)
     }
     .buttonStyle(.plain)
   }
@@ -851,16 +850,15 @@ struct APIDaySelectionChip: View {
 
         Text("\(day.items?.count ?? 0)点")
           .font(.caption2)
-          .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
+          .foregroundStyle(.secondary)
       }
       .frame(minWidth: 60)
       .padding(.horizontal, DesignTokens.Spacing.sm)
       .padding(.vertical, DesignTokens.Spacing.xs)
-      .background(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .fill(isSelected ? Color.accentColor : Color(.systemGray6))
+      .glassEffect(
+        .regular.tint(isSelected ? .accentColor : .clear).interactive(),
+        in: .capsule
       )
-      .foregroundStyle(isSelected ? .white : .primary)
     }
     .buttonStyle(.plain)
   }
