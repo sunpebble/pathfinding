@@ -781,7 +781,19 @@ extension Color {
 // MARK: - View Extensions
 
 extension View {
+  /// 唯一玻璃卡片表面(iOS 26)。在 padding/frame 之后调用。
+  /// - 仅用于自由悬浮表面;List/Form 行不要再套(避免玻璃叠玻璃)。
+  /// - tint 仅用于"选中 / 主操作"强调,信息卡传 nil。
+  func cardSurface(tint: Color? = nil, cornerRadius: CGFloat = DesignTokens.Radius.lg) -> some View {
+    let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+    return self.glassEffect(
+      tint.map { Glass.regular.tint($0) } ?? Glass.regular,
+      in: shape
+    )
+  }
+
   /// Apply card styling with shadow
+  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func cardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
     self
       .background(DesignTokens.Colors.cardBackground)
@@ -794,6 +806,7 @@ extension View {
   }
 
   /// Apply subtle card styling
+  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func subtleCardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
     self
       .background(DesignTokens.Colors.cardBackground)
@@ -806,6 +819,7 @@ extension View {
   }
 
   /// Apply card styling with adaptive shadow for color scheme
+  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func adaptiveCardStyle(radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
     let shadow = DesignTokens.Shadow.md(for: colorScheme)
     let border = DesignTokens.Colors.cardBorder(for: colorScheme)
@@ -820,6 +834,7 @@ extension View {
   }
 
   /// Apply subtle card styling with adaptive shadow for color scheme
+  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func adaptiveSubtleCardStyle(radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
     let shadow = DesignTokens.Shadow.sm(for: colorScheme)
     let border = DesignTokens.Colors.cardBorder(for: colorScheme)
@@ -834,6 +849,7 @@ extension View {
   }
 
   /// Glassmorphism effect
+  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func glassCard(radius: CGFloat = DesignTokens.Radius.md) -> some View {
     self
       .background(.ultraThinMaterial)
@@ -841,6 +857,7 @@ extension View {
   }
 
   /// Elevated card style for dark mode
+  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func elevatedCardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
     self
       .background(DesignTokens.Colors.surfaceElevated)
@@ -852,6 +869,7 @@ extension View {
   }
 
   /// Dark mode optimized card with glow effect
+  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func glowCardStyle(color: Color, radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
     let shadow = DesignTokens.Shadow.glow(color: color, for: colorScheme)
     return self
@@ -861,6 +879,7 @@ extension View {
   }
 
   /// Bordered card style (good for dark mode)
+  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func borderedCardStyle(radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
     let border = DesignTokens.Colors.cardBorder(for: colorScheme)
     return self
@@ -1259,6 +1278,16 @@ struct StatLabel: View {
   }
   .background(DesignTokens.Colors.backgroundGrouped)
   .preferredColorScheme(.dark)
+}
+
+#Preview("cardSurface") {
+  VStack(spacing: 16) {
+    Text("Info card").padding().frame(maxWidth: .infinity).cardSurface()
+    Text("Selected").padding().frame(maxWidth: .infinity)
+      .cardSurface(tint: .accentColor.opacity(0.3))
+  }
+  .padding()
+  .background(Color(.systemGroupedBackground))
 }
 
 // MARK: - Color Swatch Helper
