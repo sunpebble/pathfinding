@@ -35,32 +35,54 @@ describe('normalizeGuide', () => {
     expect(result.guide.externalId).toBe('mg1');
     expect(result.guide.values.viewCount).toBe(100);
     expect(result.guide.values.likeCount).toBe(50);
+    expect(result.guide.values.sourceUrl).toBe('https://example.com/1');
     expect(result.guide.destinationNames).toEqual(['北京']);
     expect(result.guide.values.crawledAt).toBe(FIXED);
+    expect(result.guide.values.lastUpdatedAt).toBe(FIXED);
     expect(result.audit.jobId).toBe(5);
     expect(result.audit.contentHash).toMatch(/^[a-f0-9]{64}$/);
   });
 
   it('returns null counts + a warning when both parsed and raw fail (D4, never fake 0)', () => {
-    const result = normalizeGuide(detail({ views: null, viewsRaw: '' }), 'https://example.com/1', undefined, null, () => FIXED);
+    const result = normalizeGuide(detail({ views: null, viewsRaw: '' }), 'https://example.com/1', { city: '北京', cityScoped: true }, null, () => FIXED);
 
     expect(result.status).toBe('accepted');
     if (result.status !== 'accepted') {
       return;
     }
     expect(result.guide.views).toBeNull();
+    expect(result.guide.values.viewCount).toBe(0);
     expect(result.warnings.some(w => w.includes('views'))).toBe(true);
   });
 
-  it('rejects when enhanced validation fails, with audit for the rejected raw record (D6)', () => {
-    const result = normalizeGuide(detail({ content: '太短' }), 'https://example.com/1', undefined, null, () => FIXED);
+  it('rejects empty destinations (faithful to the original validation.valid gate), carrying audit (D6)', () => {
+    const result = normalizeGuide(detail(), 'https://example.com/1', undefined, null, () => FIXED);
 
     expect(result.status).toBe('rejected');
+    if (result.status !== 'rejected') {
+      return;
+    }
+    expect(result.reason).toContain('destinations');
     expect(result.audit.contentHash).toMatch(/^[a-f0-9]{64}$/);
   });
 
+  it('rejects empty content (content required), carrying audit', () => {
+    const result = normalizeGuide(detail({ content: '' }), 'https://example.com/1', { city: '北京', cityScoped: true }, null, () => FIXED);
+
+    expect(result.status).toBe('rejected');
+    if (result.status !== 'rejected') {
+      return;
+    }
+    expect(result.reason).toContain('content');
+  });
+
   it('only attributes the request city when cityScoped is strictly true (D10)', () => {
-    const notScoped = normalizeGuide(detail(), 'https://example.com/1', { city: '北京', cityScoped: false }, null, () => FIXED);
-    expect(notScoped.status === 'accepted' && notScoped.guide.destinationNames).toEqual([]);
+    const result = normalizeGuide(detail(), 'https://example.com/1', { city: '北京', cityScoped: false }, { destinationName: '上海' }, () => FIXED);
+
+    expect(result.status).toBe('accepted');
+    if (result.status !== 'accepted') {
+      return;
+    }
+    expect(result.guide.destinationNames).toEqual(['上海']);
   });
 });

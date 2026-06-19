@@ -6,7 +6,6 @@ import {
   calculateCompletenessLevel,
   calculateQualityScoreUnified,
   cleanContent,
-  MIN_CONTENT_LENGTH,
   parseChineseNumber,
   validateGuideEnhanced,
 } from '@pathfinding/crawler-types';
@@ -149,17 +148,6 @@ export function normalizeGuide(
   const savesCount = staging?.savesCount ?? undefined;
   const publishedAt = staging?.publishedAt ?? parsePublishedAt(detail.publishedAt, warnings);
 
-  // Pre-validation: reject on content length before hitting the full validator.
-  // This keeps destinations from being the silent rejection cause when content is clearly bad.
-  if (cleanedContent.length < MIN_CONTENT_LENGTH) {
-    return {
-      status: 'rejected',
-      reason: `内容过短（${cleanedContent.length} 字符，最低 ${MIN_CONTENT_LENGTH}）`,
-      warnings,
-      audit,
-    };
-  }
-
   const validation = validateGuideEnhanced({
     sourcePlatform: 'mafengwo',
     sourceExternalId: externalId,
@@ -175,17 +163,9 @@ export function normalizeGuide(
     savesCount,
   });
 
-  // Destinations errors are demoted to warnings in the normalizer: the caller
-  // (guide-writer) decides whether to reject for missing destinations. All other
-  // error-level issues (missing platform, externalId, content) remain hard rejections.
-  const hardErrors = validation.errors.filter(e => e.field !== 'destinations');
-  if (hardErrors.length > 0) {
-    const reasons = hardErrors.map(issue => `${issue.field}: ${issue.message}`).join('; ');
+  if (!validation.valid) {
+    const reasons = validation.errors.map(issue => `${issue.field}: ${issue.message}`).join('; ');
     return { status: 'rejected', reason: `error 级校验拒绝：${reasons}`, warnings, audit };
-  }
-  const destinationErrors = validation.errors.filter(e => e.field === 'destinations');
-  for (const err of destinationErrors) {
-    warnings.push(`destinations: ${err.message}`);
   }
 
   for (const warning of validation.warnings) {
