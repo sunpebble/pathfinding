@@ -3,158 +3,148 @@ import SwiftUI
 // MARK: - iCloud Sync Settings Sheet
 
 struct iCloudSyncSettingsSheet: View {
-  @Environment(\.dismiss) private var dismiss
   @State private var syncManager = CloudKitSyncManager.shared
   @State private var showConflictResolver = false
   @State private var selectedConflict: SyncConflict?
 
   var body: some View {
-    NavigationStack {
-      List {
-        // MARK: - Account & Status
-        Section {
-          iCloudStatusCard(syncManager: syncManager)
-        }
+    List {
+      // MARK: - Account & Status
+      Section {
+        iCloudStatusCard(syncManager: syncManager)
+      }
 
-        // MARK: - Sync Toggle
-        Section {
+      // MARK: - Sync Toggle
+      Section {
+        Toggle(isOn: Binding(
+          get: { syncManager.isSyncEnabled },
+          set: { syncManager.isSyncEnabled = $0 }
+        )) {
+          HStack {
+            Image(systemName: "icloud.fill")
+              .foregroundStyle(.cyan)
+            VStack(alignment: .leading, spacing: 2) {
+              Text("icloud.enable_sync".localized)
+              Text("icloud.enable_sync_description".localized)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+        }
+        .disabled(!syncManager.isICloudAvailable)
+
+        if syncManager.isSyncEnabled {
           Toggle(isOn: Binding(
-            get: { syncManager.isSyncEnabled },
-            set: { syncManager.isSyncEnabled = $0 }
+            get: { syncManager.isAutoSyncEnabled },
+            set: { syncManager.isAutoSyncEnabled = $0 }
           )) {
             HStack {
-              Image(systemName: "icloud.fill")
-                .foregroundStyle(.cyan)
+              Image(systemName: "arrow.triangle.2.circlepath")
+                .foregroundStyle(.blue)
               VStack(alignment: .leading, spacing: 2) {
-                Text("icloud.enable_sync".localized)
-                Text("icloud.enable_sync_description".localized)
+                Text("icloud.auto_sync".localized)
+                Text("icloud.auto_sync_description".localized)
                   .font(.caption)
                   .foregroundStyle(.secondary)
               }
             }
           }
-          .disabled(!syncManager.isICloudAvailable)
+        }
+      } header: {
+        Text("icloud.sync_options".localized)
+      }
 
-          if syncManager.isSyncEnabled {
-            Toggle(isOn: Binding(
-              get: { syncManager.isAutoSyncEnabled },
-              set: { syncManager.isAutoSyncEnabled = $0 }
-            )) {
+      // MARK: - Manual Sync
+      if syncManager.isSyncEnabled {
+        Section {
+          Button {
+            Task {
+              await syncManager.startSync()
+            }
+          } label: {
+            HStack {
+              Image(systemName: "arrow.triangle.2.circlepath")
+                .foregroundStyle(.blue)
+              Text("icloud.sync_now".localized)
+              Spacer()
+              if syncManager.syncStatus == .syncing {
+                ProgressView()
+                  .controlSize(.small)
+              }
+            }
+          }
+          .disabled(syncManager.syncStatus == .syncing)
+        } header: {
+          Text("icloud.actions".localized)
+        } footer: {
+          if let lastSync = syncManager.lastSyncTime {
+            Text(String(format: "icloud.last_sync".localized, lastSync.formatted(date: .abbreviated, time: .shortened)))
+          }
+        }
+      }
+
+      // MARK: - Conflicts
+      if !syncManager.pendingConflicts.isEmpty {
+        Section {
+          ForEach(syncManager.pendingConflicts) { conflict in
+            Button {
+              selectedConflict = conflict
+              showConflictResolver = true
+            } label: {
               HStack {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                  .foregroundStyle(.blue)
+                Image(systemName: "exclamationmark.triangle.fill")
+                  .foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 2) {
-                  Text("icloud.auto_sync".localized)
-                  Text("icloud.auto_sync_description".localized)
+                  Text(conflict.localItinerary.title)
+                    .foregroundStyle(.primary)
+                  Text(conflict.conflictDescription)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
+                Spacer()
+                Image(systemName: "chevron.right")
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
               }
             }
           }
         } header: {
-          Text("icloud.sync_options".localized)
-        }
-
-        // MARK: - Manual Sync
-        if syncManager.isSyncEnabled {
-          Section {
-            Button {
-              Task {
-                await syncManager.startSync()
-              }
-            } label: {
-              HStack {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                  .foregroundStyle(.blue)
-                Text("icloud.sync_now".localized)
-                Spacer()
-                if syncManager.syncStatus == .syncing {
-                  ProgressView()
-                    .controlSize(.small)
-                }
-              }
-            }
-            .disabled(syncManager.syncStatus == .syncing)
-          } header: {
-            Text("icloud.actions".localized)
-          } footer: {
-            if let lastSync = syncManager.lastSyncTime {
-              Text(String(format: "icloud.last_sync".localized, lastSync.formatted(date: .abbreviated, time: .shortened)))
-            }
-          }
-        }
-
-        // MARK: - Conflicts
-        if !syncManager.pendingConflicts.isEmpty {
-          Section {
-            ForEach(syncManager.pendingConflicts) { conflict in
-              Button {
-                selectedConflict = conflict
-                showConflictResolver = true
-              } label: {
-                HStack {
-                  Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
-                  VStack(alignment: .leading, spacing: 2) {
-                    Text(conflict.localItinerary.title)
-                      .foregroundStyle(.primary)
-                    Text(conflict.conflictDescription)
-                      .font(.caption)
-                      .foregroundStyle(.secondary)
-                  }
-                  Spacer()
-                  Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-              }
-            }
-          } header: {
-            HStack {
-              Text("icloud.conflicts".localized)
-              Spacer()
-              Text("\(syncManager.pendingConflicts.count)")
-                .font(.caption)
-                .foregroundStyle(.white)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 2)
-                .background(.orange, in: Capsule())
-            }
-          } footer: {
-            Text("icloud.conflicts_description".localized)
-          }
-        }
-
-        // MARK: - Info
-        Section {
-          VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Label("icloud.about".localized, systemImage: "info.circle")
-              .font(.subheadline)
-              .fontWeight(.medium)
-
-            Text("icloud.about_description".localized)
+          HStack {
+            Text("icloud.conflicts".localized)
+            Spacer()
+            Text("\(syncManager.pendingConflicts.count)")
               .font(.caption)
-              .foregroundStyle(.secondary)
+              .foregroundStyle(.white)
+              .padding(.horizontal, 8)
+              .padding(.vertical, 2)
+              .background(.orange, in: Capsule())
           }
-          .padding(.vertical, DesignTokens.Spacing.xs)
+        } footer: {
+          Text("icloud.conflicts_description".localized)
         }
       }
-      .navigationTitle("icloud.title".localized)
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("common.done".localized) { dismiss() }
+
+      // MARK: - Info
+      Section {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+          Label("icloud.about".localized, systemImage: "info.circle")
+            .font(.subheadline)
+            .fontWeight(.medium)
+
+          Text("icloud.about_description".localized)
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
-      }
-      .sheet(isPresented: $showConflictResolver) {
-        if let conflict = selectedConflict {
-          ConflictResolverSheet(conflict: conflict, syncManager: syncManager)
-        }
+        .padding(.vertical, DesignTokens.Spacing.xs)
       }
     }
-    .presentationDetents([.medium, .large])
-    .presentationDragIndicator(.visible)
+    .navigationTitle("icloud.title".localized)
+    .navigationBarTitleDisplayMode(.inline)
+    .sheet(isPresented: $showConflictResolver) {
+      if let conflict = selectedConflict {
+        ConflictResolverSheet(conflict: conflict, syncManager: syncManager)
+      }
+    }
   }
 }
 

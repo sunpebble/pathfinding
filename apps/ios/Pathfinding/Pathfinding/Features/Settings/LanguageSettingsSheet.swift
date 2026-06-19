@@ -3,60 +3,50 @@ import SwiftUI
 // MARK: - Language Settings Sheet
 
 struct LanguageSettingsSheet: View {
-  @Environment(\.dismiss) private var dismiss
   @Environment(\.localizationManager) private var localizationManager
 
   var body: some View {
-    NavigationStack {
-      List {
-        // MARK: - Language Preview
-        Section {
-          LanguagePreviewCard()
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-        }
+    List {
+      // MARK: - Language Preview
+      Section {
+        LanguagePreviewCard()
+          .listRowInsets(EdgeInsets())
+          .listRowBackground(Color.clear)
+      }
 
-        // MARK: - Language Options
-        Section("language.select".localized) {
-          ForEach(AppLanguage.allCases) { language in
-            LanguageRow(
-              language: language,
-              isSelected: localizationManager.currentLanguage == language
-            ) {
-              localizationManager.setLanguage(language)
-            }
+      // MARK: - Language Options
+      Section("language.select".localized) {
+        ForEach(AppLanguage.allCases) { language in
+          LanguageRow(
+            language: language,
+            isSelected: localizationManager.currentLanguage == language
+          ) {
+            localizationManager.setLanguage(language)
           }
-        }
-
-        // MARK: - Description
-        Section {
-          VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            Label("language.about".localized, systemImage: "info.circle")
-              .font(.subheadline)
-              .fontWeight(.medium)
-
-            Text("language.about_description".localized)
-              .font(.caption)
-              .foregroundStyle(.secondary)
-
-            Text("language.restart_hint".localized)
-              .font(.caption)
-              .foregroundStyle(.orange)
-              .padding(.top, DesignTokens.Spacing.xxs)
-          }
-          .padding(.vertical, DesignTokens.Spacing.xs)
         }
       }
-      .navigationTitle("language.title".localized)
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("common.done".localized) { dismiss() }
+
+      // MARK: - Description
+      Section {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+          Label("language.about".localized, systemImage: "info.circle")
+            .font(.subheadline)
+            .fontWeight(.medium)
+
+          Text("language.about_description".localized)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+          Text("language.restart_hint".localized)
+            .font(.caption)
+            .foregroundStyle(.orange)
+            .padding(.top, DesignTokens.Spacing.xxs)
         }
+        .padding(.vertical, DesignTokens.Spacing.xs)
       }
     }
-    .presentationDetents([.medium, .large])
-    .presentationDragIndicator(.visible)
+    .navigationTitle("language.title".localized)
+    .navigationBarTitleDisplayMode(.inline)
   }
 }
 

@@ -3,56 +3,46 @@ import SwiftUI
 // MARK: - Theme Settings Sheet
 
 struct ThemeSettingsSheet: View {
-  @Environment(\.dismiss) private var dismiss
   @Environment(ThemeManager.self) private var themeManager
   @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    NavigationStack {
-      List {
-        // MARK: - Theme Preview
-        Section {
-          ThemePreviewCard(colorScheme: colorScheme)
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-        }
+    List {
+      // MARK: - Theme Preview
+      Section {
+        ThemePreviewCard(colorScheme: colorScheme)
+          .listRowInsets(EdgeInsets())
+          .listRowBackground(Color.clear)
+      }
 
-        // MARK: - Theme Options
-        Section("theme.select".localized) {
-          ForEach(ThemeMode.allCases) { mode in
-            ThemeModeRow(
-              mode: mode,
-              isSelected: themeManager.currentMode == mode
-            ) {
-              themeManager.setTheme(mode)
-            }
+      // MARK: - Theme Options
+      Section("theme.select".localized) {
+        ForEach(ThemeMode.allCases) { mode in
+          ThemeModeRow(
+            mode: mode,
+            isSelected: themeManager.currentMode == mode
+          ) {
+            themeManager.setTheme(mode)
           }
-        }
-
-        // MARK: - Description
-        Section {
-          VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            Label("theme.about".localized, systemImage: "info.circle")
-              .font(.subheadline)
-              .fontWeight(.medium)
-
-            Text("theme.about_description".localized)
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
-          .padding(.vertical, DesignTokens.Spacing.xs)
         }
       }
-      .navigationTitle("theme.title".localized)
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("common.done".localized) { dismiss() }
+
+      // MARK: - Description
+      Section {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+          Label("theme.about".localized, systemImage: "info.circle")
+            .font(.subheadline)
+            .fontWeight(.medium)
+
+          Text("theme.about_description".localized)
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
+        .padding(.vertical, DesignTokens.Spacing.xs)
       }
     }
-    .presentationDetents([.medium, .large])
-    .presentationDragIndicator(.visible)
+    .navigationTitle("theme.title".localized)
+    .navigationBarTitleDisplayMode(.inline)
   }
 }
 

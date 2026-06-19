@@ -7,34 +7,29 @@ struct APISettingsSheet: View {
   @State private var apiURL = AppConfig.apiBaseURL
 
   var body: some View {
-    NavigationStack {
-      Form {
-        Section("api.server".localized) {
-          TextField("api.url_placeholder".localized, text: $apiURL)
-            .textInputAutocapitalization(.never)
-            .keyboardType(.URL)
-        }
-
-        Section {
-          Text(String(format: "api.current_environment".localized, AppConfig.Environment.current.rawValue.capitalized))
-            .foregroundStyle(.secondary)
-        } footer: {
-          Text("api.restart_hint".localized)
-        }
+    Form {
+      Section("api.server".localized) {
+        TextField("api.url_placeholder".localized, text: $apiURL)
+          .textInputAutocapitalization(.never)
+          .keyboardType(.URL)
       }
-      .navigationTitle("api.title".localized)
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          Button("common.cancel".localized) { dismiss() }
+
+      Section {
+        Text(String(format: "api.current_environment".localized, AppConfig.Environment.current.rawValue.capitalized))
+          .foregroundStyle(.secondary)
+      } footer: {
+        Text("api.restart_hint".localized)
+      }
+    }
+    .navigationTitle("api.title".localized)
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button("common.save".localized) {
+          // Save to UserDefaults
+          dismiss()
         }
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("common.save".localized) {
-            // Save to UserDefaults
-            dismiss()
-          }
-          .fontWeight(.semibold)
-        }
+        .fontWeight(.semibold)
       }
     }
   }
