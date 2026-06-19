@@ -68,7 +68,7 @@ struct PreferencesView: View {
             options: TravelStyle.allCases,
             isSelected: { $0 == preferenceStore.preferences?.travelStyle },
             onSelect: { style in
-              Task { _ = await preferenceStore.updatePreferences(travelStyle: style) }
+              _ = await preferenceStore.updatePreferences(travelStyle: style)
             },
             icon: { $0.icon },
             label: { $0.displayName },
@@ -90,7 +90,7 @@ struct PreferencesView: View {
             options: BudgetLevel.allCases,
             isSelected: { $0 == preferenceStore.preferences?.budgetLevel },
             onSelect: { level in
-              Task { _ = await preferenceStore.updatePreferences(budgetLevel: level) }
+              _ = await preferenceStore.updatePreferences(budgetLevel: level)
             },
             icon: { $0.icon },
             label: { $0.displayName },
@@ -112,7 +112,7 @@ struct PreferencesView: View {
             options: PacePreference.allCases,
             isSelected: { $0 == preferenceStore.preferences?.pacePreference },
             onSelect: { pace in
-              Task { _ = await preferenceStore.updatePreferences(pacePreference: pace) }
+              _ = await preferenceStore.updatePreferences(pacePreference: pace)
             },
             icon: { $0.icon },
             label: { $0.displayName },
@@ -486,7 +486,7 @@ struct SingleSelectionView<Option: Identifiable & Hashable>: View {
   let title: String
   let options: [Option]
   let isSelected: (Option) -> Bool
-  let onSelect: (Option) -> Void
+  let onSelect: @MainActor (Option) async -> Void
   let icon: (Option) -> String
   let label: (Option) -> String
   let description: (Option) -> String
@@ -499,8 +499,10 @@ struct SingleSelectionView<Option: Identifiable & Hashable>: View {
       Section {
         ForEach(options) { option in
           Button {
-            onSelect(option)
-            dismiss()
+            Task {
+              await onSelect(option)
+              dismiss()
+            }
           } label: {
             HStack(spacing: DesignTokens.Spacing.sm) {
               Image(systemName: icon(option))
