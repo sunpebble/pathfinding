@@ -44,7 +44,12 @@
 "discover.featured" = "精选攻略";
 "discover.recent" = "最近更新";
 "discover.hot_cities" = "热门城市";
+"discover.empty_title" = "暂无攻略";
 "guide.ai" = "AI 精选";
+
+// MARK: - Search
+"search.idle_title" = "搜索攻略";
+"search.idle_description" = "输入目的地或关键词，开始探索";
 
 // MARK: - Home
 "home.title" = "探路";

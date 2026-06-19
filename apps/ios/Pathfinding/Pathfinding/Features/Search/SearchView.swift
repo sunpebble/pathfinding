@@ -51,37 +51,43 @@ struct SearchView: View {
     NavigationStack {
       Group {
         if store.isSearching {
-          VStack(spacing: DesignTokens.Spacing.lg) {
-            ExplorerLoadingIndicator(message: "正在搜索...", size: 50)
+          List {
+            ForEach(0..<5, id: \.self) { _ in
+              GuideRowContent(guide: BlogPost.placeholder)
+                .redacted(reason: .placeholder)
+            }
           }
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if store.searchResults.isEmpty && !searchText.isEmpty {
+          .listStyle(.insetGrouped)
+          .allowsHitTesting(false)
+        } else if searchText.isEmpty {
+          ContentUnavailableView(
+            "search.idle_title".localized,
+            systemImage: "magnifyingglass",
+            description: Text("search.idle_description".localized)
+          )
+        } else if store.searchResults.isEmpty {
           ContentUnavailableView.search
         } else {
           List {
-            if !store.searchResults.isEmpty {
-              Section {
-                HStack(spacing: DesignTokens.Spacing.xs) {
-                  Image(systemName: "doc.text.magnifyingglass")
-                    .foregroundStyle(DesignTokens.Colors.accent)
-                  Text("找到 \(store.searchResults.count) 条结果")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
-              }
-              .listRowBackground(Color.clear)
-
-              ForEach(Array(store.searchResults.enumerated()), id: \.element.id) { index, guide in
-                NavigationLink(value: guide) {
-                  ExplorerGuideRow(guide: guide, index: index)
-                }
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
+            Section {
+              HStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: "doc.text.magnifyingglass")
+                  .foregroundStyle(DesignTokens.Colors.accent)
+                Text("找到 \(store.searchResults.count) 条结果")
+                  .font(.subheadline)
+                  .foregroundStyle(.secondary)
               }
             }
+            .listRowBackground(Color.clear)
+
+            ForEach(store.searchResults) { guide in
+              NavigationLink(value: guide) {
+                GuideRowContent(guide: guide)
+              }
+              .accessibilityLabel(guide.title)
+            }
           }
-          .listStyle(.plain)
-          .scrollContentBackground(.hidden)
+          .listStyle(.insetGrouped)
         }
       }
       .navigationTitle("tab.search".localized)

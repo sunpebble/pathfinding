@@ -94,41 +94,6 @@ struct ExplorerDivider: View {
   }
 }
 
-// MARK: - Explorer Loading Indicator (探索者加载指示器)
-
-@available(*, deprecated, message: "iOS 26: use cardSurface / system glass; pending Chat/Profile/Auth migration")
-struct ExplorerLoadingIndicator: View {
-  let message: String?
-  let size: CGFloat
-
-  @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  @State private var rotation: Double = 0
-
-  init(message: String? = nil, size: CGFloat = 40) {
-    self.message = message
-    self.size = size
-  }
-
-  var body: some View {
-    VStack(spacing: DesignTokens.Spacing.md) {
-      CompassRoseDecoration(size: size, color: DesignTokens.Colors.accent, opacity: 0.6)
-        .rotationEffect(.degrees(rotation))
-        .onAppear {
-          guard !reduceMotion else { return }
-          withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
-            rotation = 360
-          }
-        }
-
-      if let message = message {
-        Text(message)
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-      }
-    }
-  }
-}
-
 // MARK: - Preview
 
 #Preview("Explorer Components") {
@@ -140,8 +105,6 @@ struct ExplorerLoadingIndicator: View {
         ExplorerDivider(style: .decorated)
         ExplorerDivider(style: .topographic)
       }
-
-      ExplorerLoadingIndicator(message: "正在探索...")
     }
     .padding()
   }

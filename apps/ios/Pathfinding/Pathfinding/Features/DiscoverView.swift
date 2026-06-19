@@ -19,7 +19,7 @@ struct DiscoverView: View {
           loadingView
         } else if store.guides.isEmpty {
           ContentUnavailableView(
-            "discover.featured".localized,
+            "discover.empty_title".localized,
             systemImage: "map",
             description: Text("guides.empty_description".localized)
           )
@@ -422,7 +422,7 @@ struct HotCityCardContent: View {
 
 // MARK: - BlogPost placeholder helper
 
-private extension BlogPost {
+extension BlogPost {
   static let placeholder = BlogPost(
     id: "placeholder",
     title: "Loading guide title here placeholder",

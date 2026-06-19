@@ -44,7 +44,12 @@
 "discover.featured" = "Featured";
 "discover.recent" = "Recent";
 "discover.hot_cities" = "Hot Cities";
+"discover.empty_title" = "No Guides Yet";
 "guide.ai" = "AI Curated";
+
+// MARK: - Search
+"search.idle_title" = "Search Guides";
+"search.idle_description" = "Enter a destination or keyword to start exploring";
 
 // MARK: - Home
 "home.title" = "Pathfinding";
