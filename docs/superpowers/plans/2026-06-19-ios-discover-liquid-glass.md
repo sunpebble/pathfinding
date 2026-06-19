@@ -161,7 +161,7 @@ SwiftUI.Tab(Tab.search.title, systemImage: Tab.search.icon, value: .search, role
 
 - [ ] **Step 5: 从 DiscoverView 剥离搜索**
 
-移除 `.searchable`(`:84`)、`isSearchMode`(`:30-32`)及其 body 分支(`:43-49`)、`searchResultsView`(`:380-432`)、`filterBar`/`destinationFilterBadge`(`:178-313`,�banned 到 SearchView)、`triggerSearch`/`performSearch`(`:461-477`)。DiscoverView 仅保留浏览(featured + recent),保留 `.navigationDestination(for: BlogPost.self)`。
+移除 `.searchable`(`:84`)、`isSearchMode`(`:30-32`)及其 body 分支(`:43-49`)、`searchResultsView`(`:380-432`)、`filterBar`/`destinationFilterBadge`(`:178-313`,搬到 SearchView)、`triggerSearch`/`performSearch`(`:461-477`)。DiscoverView 仅保留浏览(featured + recent),保留 `.navigationDestination(for: BlogPost.self)`。
 
 - [ ] **Step 6: 加本地化键**
 
