@@ -89,14 +89,19 @@ struct CityEncyclopediaView: View {
 
   private var loadingView: some View {
     VStack(spacing: DesignTokens.Spacing.md) {
-      ProgressView()
-        .scaleEffect(1.5)
-      Text("加载城市百科...")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
+      ShimmerView()
+        .frame(height: 120)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+      ShimmerView()
+        .frame(height: 80)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
+      ShimmerView()
+        .frame(height: 100)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
     }
     .frame(maxWidth: .infinity)
-    .padding(.vertical, 100)
+    .padding(DesignTokens.Spacing.md)
+    .cardSurface()
   }
 
   // MARK: - Error View
@@ -115,7 +120,7 @@ struct CityEncyclopediaView: View {
       Button("重试") {
         Task { await loadCityEncyclopedia() }
       }
-      .buttonStyle(.borderedProminent)
+      .buttonStyle(.glassProminent)
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, 100)
@@ -124,21 +129,10 @@ struct CityEncyclopediaView: View {
   // MARK: - No Encyclopedia View
 
   private var noEncyclopediaView: some View {
-    VStack(spacing: DesignTokens.Spacing.md) {
-      Image(systemName: "book.closed.fill")
-        .font(.largeTitle)
-        .foregroundStyle(.secondary)
-      Text("暂无百科信息")
-        .font(.headline)
-      Text("该城市尚未有百科数据")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-    }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, DesignTokens.Spacing.xl)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color(.systemGray6))
+    EncyclopediaEmptyState(
+      icon: "book.closed.fill",
+      title: "暂无百科信息",
+      subtitle: "该城市尚未有百科数据"
     )
   }
 

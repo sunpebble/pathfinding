@@ -18,10 +18,7 @@ struct HistoryTab: View {
             Spacer()
           }
           .padding(DesignTokens.Spacing.md)
-          .background(
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-              .fill(Color.purple.opacity(0.1))
-          )
+          .cardSurface()
         }
 
         // Historical names
@@ -45,11 +42,7 @@ struct HistoryTab: View {
           }
           .padding(DesignTokens.Spacing.md)
           .frame(maxWidth: .infinity, alignment: .leading)
-          .background(
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-              .fill(Color(.systemBackground))
-              .shadow(color: .black.opacity(0.05), radius: 4, y: 1)
-          )
+          .cardSurface()
         }
 
         // Brief history
@@ -63,11 +56,7 @@ struct HistoryTab: View {
         }
         .padding(DesignTokens.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-          RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-            .fill(Color(.systemBackground))
-            .shadow(color: .black.opacity(0.05), radius: 4, y: 1)
-        )
+        .cardSurface()
 
         // Cultural highlights
         if !history.culturalHighlights.isEmpty {
@@ -89,10 +78,7 @@ struct HistoryTab: View {
           }
           .padding(DesignTokens.Spacing.md)
           .frame(maxWidth: .infinity, alignment: .leading)
-          .background(
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-              .fill(Color.yellow.opacity(0.05))
-          )
+          .cardSurface()
         }
 
         // Famous for
@@ -118,11 +104,7 @@ struct HistoryTab: View {
           }
           .padding(DesignTokens.Spacing.md)
           .frame(maxWidth: .infinity, alignment: .leading)
-          .background(
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-              .fill(Color(.systemBackground))
-              .shadow(color: .black.opacity(0.05), radius: 4, y: 1)
-          )
+          .cardSurface()
         }
 
         // World Heritage Sites
@@ -143,10 +125,7 @@ struct HistoryTab: View {
           }
           .padding(DesignTokens.Spacing.md)
           .frame(maxWidth: .infinity, alignment: .leading)
-          .background(
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-              .fill(Color.blue.opacity(0.05))
-          )
+          .cardSurface()
         }
       } else {
         EncyclopediaEmptyState(

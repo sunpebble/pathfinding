@@ -26,6 +26,8 @@ struct CustomsTab: View {
               customCard(custom, isTaboo: true)
             }
           }
+          .padding(DesignTokens.Spacing.md)
+          .cardSurface(tint: .red.opacity(0.15))
         }
 
         // Normal customs by category
@@ -42,6 +44,8 @@ struct CustomsTab: View {
                 customCard(custom, isTaboo: false)
               }
             }
+            .padding(DesignTokens.Spacing.md)
+            .cardSurface()
           }
         }
       }
@@ -76,14 +80,6 @@ struct CustomsTab: View {
         .foregroundStyle(.secondary)
     }
     .padding(DesignTokens.Spacing.md)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-        .fill(isTaboo ? Color.red.opacity(0.05) : Color(.systemBackground))
-    )
-    .overlay(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-        .stroke(isTaboo ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
-    )
   }
 
   // MARK: - Helper Functions

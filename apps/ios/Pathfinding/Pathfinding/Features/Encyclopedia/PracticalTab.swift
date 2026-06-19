@@ -60,10 +60,7 @@ struct PracticalTab: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color.red.opacity(0.05))
-    )
+    .cardSurface(tint: .red.opacity(0.15))
   }
 
   private func emergencyButton(icon: String, label: String, number: String, color: Color)
@@ -85,13 +82,10 @@ struct PracticalTab: View {
       }
       .frame(maxWidth: .infinity)
       .padding(DesignTokens.Spacing.sm)
-      .background(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .fill(color.opacity(0.1))
-      )
       .foregroundStyle(color)
     }
-    .buttonStyle(.plain)
+    .buttonStyle(.glass)
+    .accessibilityLabel("\(label): \(number)")
   }
 
   private func currencySection(_ info: PracticalInfo) -> some View {
@@ -134,10 +128,7 @@ struct PracticalTab: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color.green.opacity(0.05))
-    )
+    .cardSurface()
   }
 
   private func languageSection(_ info: PracticalInfo) -> some View {
@@ -165,11 +156,7 @@ struct PracticalTab: View {
     }
     .padding(DesignTokens.Spacing.md)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color(.systemBackground))
-        .shadow(color: .black.opacity(0.05), radius: 4, y: 1)
-    )
+    .cardSurface()
   }
 
   private func utilitiesSection(_ info: PracticalInfo) -> some View {
@@ -193,10 +180,6 @@ struct PracticalTab: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DesignTokens.Spacing.sm)
-        .background(
-          RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-            .fill(Color(.systemGray6))
-        )
 
         VStack(alignment: .leading, spacing: 4) {
           HStack {
@@ -212,10 +195,6 @@ struct PracticalTab: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DesignTokens.Spacing.sm)
-        .background(
-          RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-            .fill(Color(.systemGray6))
-        )
       }
 
       // Water safety
@@ -234,10 +213,7 @@ struct PracticalTab: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color.yellow.opacity(0.05))
-    )
+    .cardSurface()
   }
 
   private func visaSection(required: Bool, note: String?) -> some View {
@@ -261,10 +237,7 @@ struct PracticalTab: View {
     }
     .padding(DesignTokens.Spacing.md)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill((required ? Color.orange : Color.green).opacity(0.05))
-    )
+    .cardSurface()
   }
 
   private func tippingSection(_ info: PracticalInfo) -> some View {
@@ -278,9 +251,6 @@ struct PracticalTab: View {
     }
     .padding(DesignTokens.Spacing.md)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color.purple.opacity(0.05))
-    )
+    .cardSurface()
   }
 }

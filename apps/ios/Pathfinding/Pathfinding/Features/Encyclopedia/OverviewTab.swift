@@ -93,11 +93,7 @@ struct OverviewTab: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color(.systemBackground))
-        .shadow(color: .black.opacity(0.1), radius: 8, y: 2)
-    )
+    .cardSurface()
   }
 
   // MARK: - Basic Info Section
@@ -158,11 +154,7 @@ struct OverviewTab: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color(.systemBackground))
-        .shadow(color: .black.opacity(0.05), radius: 4, y: 1)
-    )
+    .cardSurface()
   }
 
   private func infoCard(icon: String, label: String, value: String) -> some View {
@@ -179,10 +171,6 @@ struct OverviewTab: View {
     }
     .frame(maxWidth: .infinity)
     .padding(DesignTokens.Spacing.md)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-        .fill(Color.blue.opacity(0.05))
-    )
   }
 
   // MARK: - Best Travel Time Section
@@ -254,10 +242,7 @@ struct OverviewTab: View {
     }
     .padding(DesignTokens.Spacing.md)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color.green.opacity(0.05))
-    )
+    .cardSurface()
   }
 
   // MARK: - Quick Facts Section
@@ -281,10 +266,7 @@ struct OverviewTab: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-        .fill(Color.orange.opacity(0.05))
-    )
+    .cardSurface()
   }
 
   private func factCard(icon: String, label: String, value: String) -> some View {
@@ -303,10 +285,6 @@ struct OverviewTab: View {
       Spacer()
     }
     .padding(DesignTokens.Spacing.sm)
-    .background(
-      RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-        .fill(Color(.systemBackground))
-    )
   }
 
   // MARK: - Helper Functions

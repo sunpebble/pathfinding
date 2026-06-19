@@ -20,5 +20,7 @@ struct EncyclopediaEmptyState: View {
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, DesignTokens.Spacing.xl)
+    .padding(.horizontal, DesignTokens.Spacing.md)
+    .cardSurface()
   }
 }
