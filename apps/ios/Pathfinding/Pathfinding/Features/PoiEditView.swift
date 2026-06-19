@@ -1,19 +1,45 @@
 import SwiftUI
 import MapKit
 
+// MARK: - Debouncer
+
+@MainActor
+final class PoiSearchDebouncer {
+  private let interval: Duration
+  private let onFire: (String) -> Void
+  private var task: Task<Void, Never>?
+
+  init(interval: Duration, onFire: @escaping (String) -> Void) {
+    self.interval = interval
+    self.onFire = onFire
+  }
+
+  func send(_ text: String) {
+    task?.cancel()
+    task = Task { [interval, onFire] in
+      try? await Task.sleep(for: interval)
+      guard !Task.isCancelled else { return }
+      onFire(text)
+    }
+  }
+}
+
+// MARK: - View
+
 struct PoiEditView: View {
   @Binding var poi: AiPoi
   @Environment(\.dismiss) var dismiss
   @State private var searchResults: [MKMapItem] = []
-  
+  @State private var debouncer = PoiSearchDebouncer(interval: .milliseconds(300)) { _ in }
+
   var body: some View {
     Form {
       Section("基本信息") {
         TextField("地点名称 (输入关键字搜索)", text: $poi.name)
           .onChange(of: poi.name) { _, newValue in
-            performSearch(newValue)
+            debouncer.send(newValue)
           }
-        
+
         if !searchResults.isEmpty {
           ForEach(searchResults, id: \.self) { item in
             Button {
@@ -31,7 +57,7 @@ struct PoiEditView: View {
             }
           }
         }
-        
+
         HStack {
           Text("时间")
           Spacer()
@@ -42,7 +68,7 @@ struct PoiEditView: View {
           .multilineTextAlignment(.trailing)
         }
       }
-      
+
       Section("备注") {
         TextField("添加备注", text: Binding(
           get: { poi.description ?? "" },
@@ -58,22 +84,23 @@ struct PoiEditView: View {
         Button("完成") { dismiss() }
       }
     }
+    .task {
+      debouncer = PoiSearchDebouncer(interval: .milliseconds(300)) { [self] query in
+        performSearch(query)
+      }
+    }
   }
-  
+
   private func performSearch(_ query: String) {
     guard !query.isEmpty else {
       searchResults = []
       return
     }
-    
-    // Simple debounce via dispatch delay or just fire. 
-    // For simplicity in this context without Combine, we just fire.
-    // MKLocalSearch is rate limited but usually ok for user typing speed if not crazy.
-    
+
     let request = MKLocalSearch.Request()
     request.naturalLanguageQuery = query
     request.resultTypes = .pointOfInterest
-    
+
     let search = MKLocalSearch(request: request)
     search.start { response, error in
       guard let items = response?.mapItems else { return }
@@ -82,13 +109,11 @@ struct PoiEditView: View {
       }
     }
   }
-  
+
   private func selectLocation(_ item: MKMapItem) {
     poi.name = item.name ?? poi.name
     poi.latitude = item.placemark.coordinate.latitude
     poi.longitude = item.placemark.coordinate.longitude
-    searchResults = [] // Clear results
-    
-    // Auto-fill description if empty? No, keep it simple.
+    searchResults = []
   }
 }
