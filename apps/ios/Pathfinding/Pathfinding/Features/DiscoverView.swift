@@ -3,6 +3,17 @@ import SwiftUI
 struct DiscoverView: View {
   @State private var store = GuideStore.shared
 
+  // MARK: - Hot Cities Data Source (static; no new server contract)
+
+  static let hotCities: [(cityId: String, cityName: String)] = [
+    (cityId: "tokyo_001", cityName: "东京"),
+    (cityId: "bangkok_001", cityName: "曼谷"),
+    (cityId: "paris_001", cityName: "巴黎"),
+    (cityId: "singapore_001", cityName: "新加坡"),
+    (cityId: "seoul_001", cityName: "首尔"),
+    (cityId: "london_001", cityName: "伦敦"),
+  ]
+
   var body: some View {
     NavigationStack {
       Group {
@@ -22,6 +33,11 @@ struct DiscoverView: View {
       .navigationBarTitleDisplayMode(.large)
       .navigationDestination(for: BlogPost.self) { guide in
         BlogDetailView(guide: guide)
+      }
+      .navigationDestination(for: String.self) { cityId in
+        if let city = DiscoverView.hotCities.first(where: { $0.cityId == cityId }) {
+          CityEncyclopediaView(cityId: city.cityId, cityName: city.cityName)
+        }
       }
       .task {
         await store.fetchGuides()
@@ -68,6 +84,37 @@ struct DiscoverView: View {
             .foregroundStyle(.primary)
             .textCase(nil)
         }
+      }
+
+      // MARK: Hot Cities Section
+      Section {
+        ScrollView(.horizontal, showsIndicators: false) {
+          GlassEffectContainer {
+            HStack(spacing: DesignTokens.Spacing.md) {
+              ForEach(DiscoverView.hotCities, id: \.cityId) { city in
+                NavigationLink(value: city.cityId) {
+                  HotCityCardContent(cityName: city.cityName)
+                    .padding(DesignTokens.Spacing.sm)
+                    .cardSurface(cornerRadius: DesignTokens.Radius.lg)
+                }
+                .buttonStyle(.glass)
+                .accessibilityLabel(city.cityName)
+              }
+            }
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+          }
+        }
+        .scrollClipDisabled()
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+      } header: {
+        Text("discover.hot_cities".localized)
+          .font(.title3)
+          .fontWeight(.bold)
+          .foregroundStyle(.primary)
+          .textCase(nil)
       }
 
       // MARK: Recent Section
@@ -320,6 +367,45 @@ struct GuideRowContent: View {
     if num >= 10000 { return String(format: "%.1fw", Double(num) / 10000) }
     if num >= 1000 { return String(format: "%.1fk", Double(num) / 1000) }
     return "\(num)"
+  }
+}
+
+// MARK: - HotCityCardContent
+
+/// Compact card for the hot-cities carousel.
+/// Caller applies frame + padding + `.cardSurface()` — no nested glass here.
+struct HotCityCardContent: View {
+  let cityName: String
+
+  private var themeColor: Color {
+    let colors: [Color] = [.indigo, .teal, .orange, .purple, .pink, .cyan]
+    return colors[abs(cityName.hashValue) % colors.count]
+  }
+
+  var body: some View {
+    VStack(spacing: DesignTokens.Spacing.sm) {
+      ZStack {
+        LinearGradient(
+          colors: [themeColor.opacity(0.4), themeColor.opacity(0.2)],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+        Image(systemName: "building.2.fill")
+          .font(.system(size: 32))
+          .foregroundStyle(.white.opacity(0.6))
+      }
+      .frame(width: 120, height: 80)
+      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+
+      Text(cityName)
+        .font(.subheadline)
+        .fontWeight(.semibold)
+        .foregroundStyle(.primary)
+        .lineLimit(1)
+    }
+    .frame(width: 120)
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel(cityName)
   }
 }
 
