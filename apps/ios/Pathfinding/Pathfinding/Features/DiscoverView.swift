@@ -2,59 +2,21 @@ import SwiftUI
 
 struct DiscoverView: View {
   @State private var store = GuideStore.shared
-  @State private var searchText = ""
-  @State private var selectedCity: String? = nil
-  @State private var onlyAiGuides = false
-  @State private var timeFilter: TimeFilter = .all
-  @State private var searchTask: Task<Void, Never>?
-  @State private var showModeTransition = false
 
   @Environment(\.colorScheme) private var colorScheme
 
-  enum TimeFilter: String, CaseIterable {
-    case all = "全部"
-    case week = "一周内"
-    case month = "一月内"
-    case threeMonths = "三月内"
-
-    var daysAgo: Int? {
-      switch self {
-      case .all: return nil
-      case .week: return 7
-      case .month: return 30
-      case .threeMonths: return 90
-      }
-    }
-  }
-
-  var isSearchMode: Bool {
-    !searchText.isEmpty || selectedCity != nil || onlyAiGuides || timeFilter != .all
-  }
-
-   var body: some View {
+  var body: some View {
     NavigationStack {
       ZStack {
         // Explorer background with star field in dark mode
         explorerBackground
 
-        // Content with reveal animation
+        // Content
         if store.isLoading && store.guides.isEmpty {
           loadingView
-        } else if isSearchMode {
-          VStack(spacing: 0) {
-            filterBar
-              .padding(.horizontal, DesignTokens.Spacing.md)
-              .padding(.vertical, DesignTokens.Spacing.sm)
-            searchResultsView
-          }
         } else {
           ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-              // Filter bar inline
-              filterBar
-                .padding(.horizontal, DesignTokens.Spacing.md)
-                .padding(.vertical, DesignTokens.Spacing.sm)
-
               // Featured section
               if !store.featuredGuides.isEmpty {
                 featuredSection
@@ -81,22 +43,6 @@ struct DiscoverView: View {
       }
       .navigationTitle("discover.title".localized)
       .navigationBarTitleDisplayMode(.large)
-      .searchable(text: $searchText, prompt: "discover.search_placeholder".localized)
-      .onChange(of: searchText) { _, newValue in
-        triggerSearch()
-      }
-      .onChange(of: selectedCity) { _, _ in
-        withAnimation { showModeTransition.toggle() }
-        triggerSearch()
-      }
-      .onChange(of: onlyAiGuides) { _, _ in
-        withAnimation { showModeTransition.toggle() }
-        triggerSearch()
-      }
-      .onChange(of: timeFilter) { _, _ in
-        withAnimation { showModeTransition.toggle() }
-        triggerSearch()
-      }
       .navigationDestination(for: BlogPost.self) { guide in
         BlogDetailView(guide: guide)
       }
@@ -105,11 +51,7 @@ struct DiscoverView: View {
         await store.fetchPopularDestinations()
       }
       .refreshable {
-        if isSearchMode {
-          await performSearch()
-        } else {
-          await store.fetchGuides(forceRefresh: true)
-        }
+        await store.fetchGuides(forceRefresh: true)
       }
     }
   }
@@ -173,152 +115,6 @@ struct DiscoverView: View {
     }
   }
 
-  // MARK: - Filter Bar
-
-  private var filterBar: some View {
-    VStack(spacing: DesignTokens.Spacing.sm) {
-      // City tags - only show when destinations are loaded
-      if !store.popularDestinations.isEmpty {
-        ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: DesignTokens.Spacing.xs) {
-            // "All" badge
-            destinationFilterBadge(nil, label: "全部", index: 0)
-
-            // Popular destinations
-            ForEach(Array(store.popularDestinations.enumerated()), id: \.element.id) { index, dest in
-              destinationFilterBadge(dest.name, label: dest.name, index: index + 1)
-            }
-          }
-          .padding(.horizontal, DesignTokens.Spacing.xxs)
-        }
-      }
-
-      // Filter buttons with enhanced styling
-      HStack(spacing: DesignTokens.Spacing.md) {
-        // AI Toggle with breathing animation when active
-        aiFilterToggle
-
-        // Time filter menu
-        timeFilterMenu
-
-        Spacer()
-      }
-    }
-  }
-
-  // MARK: - AI Filter Toggle
-
-  private var aiFilterToggle: some View {
-    Toggle(isOn: $onlyAiGuides) {
-      HStack(spacing: DesignTokens.Spacing.xxs) {
-        Image(systemName: "sparkles")
-          .symbolEffect(.pulse, options: .repeating, isActive: onlyAiGuides)
-        Text("仅AI行程")
-      }
-      .font(.subheadline)
-    }
-    .toggleStyle(.button)
-    .buttonStyle(.bordered)
-    .tint(onlyAiGuides ? .purple : .secondary)
-    .sensoryFeedback(.selection, trigger: onlyAiGuides)
-    .overlay {
-      if onlyAiGuides && colorScheme == .dark {
-        RoundedRectangle(cornerRadius: 8)
-          .stroke(Color.purple.opacity(0.5), lineWidth: 1)
-          .shadow(color: .purple.opacity(0.3), radius: 8, y: 0)
-      }
-    }
-  }
-
-  // MARK: - Time Filter Menu
-
-  private var timeFilterMenu: some View {
-    Menu {
-      ForEach(TimeFilter.allCases, id: \.self) { filter in
-        Button {
-          withAnimation(.spring(response: 0.3)) {
-            timeFilter = filter
-          }
-        } label: {
-          HStack {
-            Text(filter.rawValue)
-            if timeFilter == filter {
-              Image(systemName: "checkmark")
-            }
-          }
-        }
-      }
-    } label: {
-      Label(timeFilter.rawValue, systemImage: "calendar")
-        .font(.subheadline)
-    }
-    .buttonStyle(.bordered)
-    .tint(timeFilter != .all ? DesignTokens.Colors.accent : .secondary)
-    .sensoryFeedback(.selection, trigger: timeFilter)
-  }
-
-  // MARK: - Destination Filter Badge
-
-  private func destinationFilterBadge(_ city: String?, label: String, index: Int) -> some View {
-    Button {
-      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-        selectedCity = city
-      }
-    } label: {
-      let isSelected = selectedCity == city
-      HStack(spacing: 4) {
-        if city != nil {
-          Image(systemName: terrainIcon(for: label))
-            .font(.system(size: 10))
-        }
-        Text(label)
-          .font(.caption)
-          .fontWeight(.medium)
-      }
-      .padding(.horizontal, DesignTokens.Spacing.sm)
-      .padding(.vertical, DesignTokens.Spacing.xs)
-      .background(
-        Group {
-          if isSelected {
-            LinearGradient(
-              colors: [
-                DesignTokens.Colors.accent,
-                DesignTokens.Colors.accent.opacity(0.8)
-              ],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          } else {
-            DesignTokens.Colors.fillTertiary
-          }
-        }
-      )
-      .foregroundStyle(isSelected ? .white : .primary)
-      .clipShape(Capsule())
-      .overlay {
-        if isSelected && colorScheme == .dark {
-          Capsule()
-            .stroke(DesignTokens.Colors.accent.opacity(0.5), lineWidth: 1)
-        }
-      }
-      .shadow(
-        color: isSelected && colorScheme == .dark ? DesignTokens.Colors.accent.opacity(0.3) : .clear,
-        radius: 6,
-        y: 2
-      )
-    }
-    .buttonStyle(.plain)
-    .sensoryFeedback(.selection, trigger: selectedCity == city)
-    .staggeredAnimation(index: index, baseDelay: 0.02)
-  }
-
-  // Generate terrain icon based on destination name
-  private func terrainIcon(for destination: String) -> String {
-    let hash = abs(destination.hashValue)
-    let icons = ["mountain.2", "water.waves", "tree", "building.2", "sun.max", "leaf"]
-    return icons[hash % icons.count]
-  }
-
   // MARK: - Featured Section
 
   private var featuredSection: some View {
@@ -375,62 +171,6 @@ struct DiscoverView: View {
     }
   }
 
-  // MARK: - Search Results
-
-  private var searchResultsView: some View {
-    Group {
-      if store.isSearching {
-        // Explorer-themed loading indicator
-        VStack(spacing: DesignTokens.Spacing.lg) {
-          ExplorerLoadingIndicator(message: "正在搜索...", size: 50)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else if store.searchResults.isEmpty {
-        // Explorer-themed empty state
-        ExplorerEmptyState(
-          icon: "magnifyingglass",
-          title: "无搜索结果",
-          message: "尝试调整搜索条件或筛选器",
-          actionLabel: "清除筛选",
-          action: {
-            withAnimation(.spring(response: 0.3)) {
-              searchText = ""
-              selectedCity = nil
-              onlyAiGuides = false
-              timeFilter = .all
-            }
-          }
-        )
-        .slideIn(from: .bottom, duration: 0.4)
-      } else {
-        List {
-          // Results count header
-          Section {
-            HStack(spacing: DesignTokens.Spacing.xs) {
-              Image(systemName: "doc.text.magnifyingglass")
-                .foregroundStyle(DesignTokens.Colors.accent)
-              Text("找到 \(store.searchResults.count) 条结果")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
-            .slideIn(from: .leading, duration: 0.3)
-          }
-          .listRowBackground(Color.clear)
-
-          ForEach(Array(store.searchResults.enumerated()), id: \.element.id) { index, guide in
-            NavigationLink(value: guide) {
-              ExplorerGuideRow(guide: guide, index: index)
-            }
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
-          }
-        }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-      }
-    }
-  }
-
   // MARK: - Loading View
 
   private var loadingView: some View {
@@ -454,26 +194,6 @@ struct DiscoverView: View {
       }
       .padding(.vertical, DesignTokens.Spacing.md)
     }
-  }
-
-  // MARK: - Search Logic
-
-  private func triggerSearch() {
-    searchTask?.cancel()
-    searchTask = Task {
-      try? await Task.sleep(for: .milliseconds(300))
-      guard !Task.isCancelled else { return }
-      await performSearch()
-    }
-  }
-
-  private func performSearch() async {
-    await store.search(
-      query: searchText,
-      destination: selectedCity,
-      hasAiData: onlyAiGuides,
-      daysAgo: timeFilter.daysAgo
-    )
   }
 }
 

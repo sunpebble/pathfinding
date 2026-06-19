@@ -6,6 +6,7 @@ enum Tab: String, CaseIterable {
   case chat
   case itinerary
   case profile
+  case search
 
   var title: String {
     switch self {
@@ -13,6 +14,7 @@ enum Tab: String, CaseIterable {
     case .chat: return "tab.chat".localized
     case .itinerary: return "tab.itinerary".localized
     case .profile: return "tab.profile".localized
+    case .search: return "tab.search".localized
     }
   }
 
@@ -22,6 +24,7 @@ enum Tab: String, CaseIterable {
     case .chat: return "bubble.left.and.bubble.right"
     case .itinerary: return "map"
     case .profile: return "person"
+    case .search: return "magnifyingglass"
     }
   }
 
@@ -50,6 +53,9 @@ struct ContentView: View {
       }
       SwiftUI.Tab(Tab.profile.title, systemImage: Tab.profile.icon, value: Tab.profile) {
         ProfileView()
+      }
+      SwiftUI.Tab(Tab.search.title, systemImage: Tab.search.icon, value: Tab.search, role: .search) {
+        SearchView()
       }
     }
     .tabBarMinimizeBehavior(.onScrollDown)

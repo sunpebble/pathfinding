@@ -36,6 +36,7 @@
 "tab.chat" = "Assistant";
 "tab.itinerary" = "Itinerary";
 "tab.profile" = "Profile";
+"tab.search" = "Search";
 
 // MARK: - Discover
 "discover.title" = "Discover";

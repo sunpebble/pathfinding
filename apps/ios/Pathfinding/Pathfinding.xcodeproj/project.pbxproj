@@ -33,6 +33,7 @@
 		15817E3516F915747E5AEA7A /* ItineraryLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51E81A7034079E8989A8675B /* ItineraryLiveActivityWidget.swift */; };
 		16B6BD94B9D3B6924BE17136 /* PoiPhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FAF168BD038654253454A3 /* PoiPhoto.swift */; };
 		16D69EA25B9616588DFF7A0A /* OfflineMapRegion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611D4858FF84DECD71D7FC34 /* OfflineMapRegion.swift */; };
+		1BD8B5F8C39FAA0DD34958C2 /* SearchViewQueryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1260592AEDA28BB7FF29B2D8 /* SearchViewQueryTests.swift */; };
 		1F503556330575BA54804E17 /* ViewItineraryIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168A5A01C5308FEFB3DC22B /* ViewItineraryIntent.swift */; };
 		1FF6A28B578B9EE469362A37 /* ItineraryAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8ECF98FF9859CBFB990B9E /* ItineraryAnalysis.swift */; };
 		2009572070C7A79B0408B105 /* MarkdownContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A49739A46BAA2111719ECD21 /* MarkdownContentView.swift */; };
@@ -142,6 +143,7 @@
 		8E62E7F835EB752FC124DA35 /* ItineraryDayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B8DF9D38A5B9E78B1A00AC /* ItineraryDayCard.swift */; };
 		8FC798701FEE3591CF4BA25B /* QASectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8F5122F7B927F91AD5161C /* QASectionView.swift */; };
 		907E77B0B3683F606C020435 /* Favorite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5737881C95646549578325F9 /* Favorite.swift */; };
+		90E09F77EF6A2DA8CC9BE5FA /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F471980C70A13B37EF52AEB /* SearchView.swift */; };
 		90FE33ECD9BBA14207366887 /* VoiceItineraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CBEB115FD70B41070F36552 /* VoiceItineraryView.swift */; };
 		92438D211BAF673190E5AFE4 /* Insurance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A15CC9AA179D876642295407 /* Insurance.swift */; };
 		92D15CE5991564EAEF2ABF71 /* SpeechRecognitionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A970D66F8A6E2B283B78D512 /* SpeechRecognitionManager.swift */; };
@@ -265,9 +267,11 @@
 		0874DFDB23D30F0DFAC99401 /* PDFAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFAPIClient.swift; sourceTree = "<group>"; };
 		08C22D18715DAE2244022C97 /* CopyItinerarySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyItinerarySheet.swift; sourceTree = "<group>"; };
 		0CCA70C322E27307AFF6393C /* TimelineSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineSection.swift; sourceTree = "<group>"; };
+		0F471980C70A13B37EF52AEB /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		0F9C4D9885656593374D8FE7 /* PoiEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiEditView.swift; sourceTree = "<group>"; };
 		0FC3544E0004E07D487EE3BD /* PathfindingTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PathfindingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1155EC587C26AD4399113BBA /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		1260592AEDA28BB7FF29B2D8 /* SearchViewQueryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewQueryTests.swift; sourceTree = "<group>"; };
 		14370BBB878C7C34052B0F71 /* Budget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Budget.swift; sourceTree = "<group>"; };
 		14A422750FF56A7D6F971EFC /* FavoriteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteStore.swift; sourceTree = "<group>"; };
 		150ACBB4B673FAF3D4F3D78F /* QuestionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionDetailView.swift; sourceTree = "<group>"; };
@@ -611,6 +615,7 @@
 				6C77BB1D4DCD8617EBF6B1A1 /* ItineraryStoreCopyTests.swift */,
 				447D0FE5EEAF01DA8D9C124D /* MarkdownContentParserTests.swift */,
 				19F4F46F2E1A8FBBE957E6DE /* PoiSearchDebounceTests.swift */,
+				1260592AEDA28BB7FF29B2D8 /* SearchViewQueryTests.swift */,
 			);
 			path = PathfindingTests;
 			sourceTree = "<group>";
@@ -657,6 +662,7 @@
 				B00BB46BB0FD6691D0255646 /* Itinerary */,
 				C201CE7CB9CB5C69D3A1BD16 /* QA */,
 				08396FA470C7714A346F048E /* RouteOptimization */,
+				E8D097E5D8A8EF7E71722E02 /* Search */,
 				B581A1A405B7F064C625077A /* Settings */,
 				8E393D47117D2507167B7190 /* Share */,
 				703BDB63F0F7735AD0865563 /* SiriShortcuts */,
@@ -1005,6 +1011,14 @@
 			path = PathfindingUITests;
 			sourceTree = "<group>";
 		};
+		E8D097E5D8A8EF7E71722E02 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				0F471980C70A13B37EF52AEB /* SearchView.swift */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
 		EA64ED24D798D21F29C77081 /* Config */ = {
 			isa = PBXGroup;
 			children = (
@@ -1322,6 +1336,7 @@
 				120A59B1C8F743E9CE10E9BB /* SafetyRatingView.swift in Sources */,
 				0B01D5D1D6C9A15C133BA9C9 /* SavedItinerary.swift in Sources */,
 				9BCE077583ECBCC144F6BE05 /* SearchPOIIntent.swift in Sources */,
+				90E09F77EF6A2DA8CC9BE5FA /* SearchView.swift in Sources */,
 				DB16B898A00162C29BCCA098 /* Share.swift in Sources */,
 				8436BBA8B4F950D45CBC7AEC /* ShareCardView.swift in Sources */,
 				675EFD15236A4A57C6CDF829 /* ShareImageGenerator.swift in Sources */,
@@ -1401,6 +1416,7 @@
 				0091E305A43102A9C4560B57 /* ItineraryStoreCopyTests.swift in Sources */,
 				66D7B64AB6CCBE6288A0C97D /* MarkdownContentParserTests.swift in Sources */,
 				BE13CF092EF8CFAC7A07A084 /* PoiSearchDebounceTests.swift in Sources */,
+				1BD8B5F8C39FAA0DD34958C2 /* SearchViewQueryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

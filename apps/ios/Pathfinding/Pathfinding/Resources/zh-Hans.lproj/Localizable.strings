@@ -36,6 +36,7 @@
 "tab.chat" = "助手";
 "tab.itinerary" = "行程";
 "tab.profile" = "我的";
+"tab.search" = "搜索";
 
 // MARK: - Discover
 "discover.title" = "发现";
