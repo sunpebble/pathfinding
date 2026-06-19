@@ -91,15 +91,16 @@ Expected: 命中 `project.yml:5`(`iOS: '17.0'`)、`project.yml:6`(`xcodeVersion:
 
 - [ ] **Step 2: 改 `project.yml`**
 
-把第 5、6、22 行改为:
+把第 5、6、22 行改为(部署目标 26.0;`xcodeVersion` 对齐本机实际的 Xcode 27):
 ```yaml
   deploymentTarget:
     iOS: '26.0'
-  xcodeVersion: '26.0'
+  xcodeVersion: '27.0'
 ```
 ```yaml
     IPHONEOS_DEPLOYMENT_TARGET: '26.0'
 ```
+> 环境实测:本机 Xcode 27.0 / iOS 27.0 SDK / `iPhone 17 Pro`(iOS 27)模拟器。部署目标 26.0 ≤ SDK 27.0 合法;Liquid Glass(iOS 26 引入)在 27 SDK 全部可用。
 
 - [ ] **Step 3: 改 `Config/*.xcconfig` 中的部署目标(若 Step 1 命中)**
 
@@ -108,7 +109,7 @@ Expected: 命中 `project.yml:5`(`iOS: '17.0'`)、`project.yml:6`(`xcodeVersion:
 - [ ] **Step 4: 重生成并构建**
 
 Run: *BUILD*
-Expected: `xcodegen generate` 成功;`xcodebuild build` 成功(此时尚无玻璃代码,纯验证抬版不破坏现有构建)。若报缺少 iOS 26 SDK,说明本机非 Xcode 26,需先安装。
+Expected: `xcodegen generate` 成功;`xcodebuild build` 成功(此时尚无玻璃代码,纯验证抬版不破坏现有构建)。本机已确认 Xcode 27 / iOS 27 SDK 就绪,应可直接构建。
 
 - [ ] **Step 5: 折叠现已恒真的旧可用性判断(可选清理,限本次命中处)**
 
