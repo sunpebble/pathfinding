@@ -22,12 +22,13 @@
 
 import type { GeocodingProvider } from '../packages/api/src/services/geocoding.service.js';
 import { aiDaysToDayItineraries } from '@pathfinding/guide-shape';
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, sql } from 'drizzle-orm';
 import {
   buildGeocodingMetrics,
   createGeocodingProvider,
   geocodeAiDays,
 } from '../packages/api/src/services/geocoding.service.js';
+import { applyGuideEnrichment } from '../packages/api/src/services/guide-writer.js';
 import { createDb, travelGuideAiData, travelGuides } from '../packages/database/src/index';
 
 // ============================================
@@ -382,14 +383,11 @@ async function processGuide(
     });
     const enrichedData = { ...(guide.enrichedData ?? {}), ...aiPatch };
 
-    await db
-      .update(travelGuides)
-      .set({
-        enrichedData,
-        dayItineraries: geocodedDays ? aiDaysToDayItineraries(geocodedDays) : null,
-        lastUpdatedAt: new Date(),
-      })
-      .where(eq(travelGuides.id, guide.id));
+    await applyGuideEnrichment(db as never, guide.id, {
+      enrichedData,
+      dayItineraries: geocodedDays ? aiDaysToDayItineraries(geocodedDays) : null,
+      lastUpdatedAt: new Date(),
+    });
 
     log(`Guide processed successfully: ${guide.id}`);
     return true;
