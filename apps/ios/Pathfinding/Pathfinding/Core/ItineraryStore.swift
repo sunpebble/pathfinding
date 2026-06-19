@@ -137,26 +137,20 @@ final class ItineraryStore {
   /// - Returns: 复制后的新行程
   @discardableResult
   func copyItinerary(_ itinerary: SavedItinerary, newStartDate: Date) -> SavedItinerary {
-    var newItinerary = itinerary
-    newItinerary = SavedItinerary(
+    var newItinerary = SavedItinerary(
       id: UUID(),
       title: "\(itinerary.title) (副本)",
       destination: itinerary.destination,
-      daysCount: itinerary.days.count
+      daysCount: itinerary.days.count,
+      startDate: newStartDate
     )
-
-    // Copy days with adjusted dates
     newItinerary.days = itinerary.days
 
-    // Update metadata
-    var mutableItinerary = newItinerary
-    mutableItinerary.days = itinerary.days
-
-    allItineraries.insert(mutableItinerary, at: 0)
+    allItineraries.insert(newItinerary, at: 0)
     persist()
     reloadAll()
 
-    return mutableItinerary
+    return newItinerary
   }
 
   /// 部分复制行程（选择特定天数）- 本地存储
@@ -585,6 +579,9 @@ final class ItineraryStore {
 
 #if DEBUG
 extension ItineraryStore {
+  /// Returns a fresh, isolated ItineraryStore instance for use in unit tests.
+  static func makeForTesting() -> ItineraryStore { ItineraryStore() }
+
   /// Generate test itinerary with specified number of POIs for performance testing
   /// - Parameter poiCount: Number of POIs to generate (e.g., 100 for stress testing)
   func generateTestItinerary(poiCount: Int) {

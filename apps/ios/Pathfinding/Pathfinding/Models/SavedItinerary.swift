@@ -8,6 +8,9 @@ struct SavedItinerary: Identifiable, Codable, Hashable {
   let coverImage: String?
   var days: [AiDay]
   let savedAt: Date
+  /// The planned start date of the itinerary (day 1).  Defaults to `savedAt` for
+  /// older records that were persisted before this field existed.
+  var startDate: Date
   let authorName: String?
   let sourcePlatform: String?
   let aiSummary: String?
@@ -41,6 +44,7 @@ struct SavedItinerary: Identifiable, Codable, Hashable {
     self.coverImage = guide.coverImage
     self.days = guide.aiDays ?? []
     self.savedAt = Date()
+    self.startDate = Date()
     self.authorName = guide.authorName
     self.sourcePlatform = guide.sourcePlatform
     self.aiSummary = guide.aiSummary
@@ -54,7 +58,7 @@ struct SavedItinerary: Identifiable, Codable, Hashable {
     self.selectedDays = nil
   }
 
-  init(id: UUID = UUID(), title: String, destination: String?, daysCount: Int) {
+  init(id: UUID = UUID(), title: String, destination: String?, daysCount: Int, startDate: Date = Date()) {
     self.id = id
     self.blogId = "manual-\(id.uuidString)"
     self.title = title
@@ -62,6 +66,7 @@ struct SavedItinerary: Identifiable, Codable, Hashable {
     self.coverImage = nil
     self.days = (1...max(1, daysCount)).map { AiDay(dayNumber: $0, theme: nil, pois: []) }
     self.savedAt = Date()
+    self.startDate = startDate
     self.authorName = "我自己"
     self.sourcePlatform = nil
     self.aiSummary = nil
@@ -98,6 +103,7 @@ struct SavedItinerary: Identifiable, Codable, Hashable {
       )
     } ?? []
     self.savedAt = Date()
+    self.startDate = Date()
     self.authorName = apiItinerary.originalAuthor?.displayName
     self.sourcePlatform = nil
     self.aiSummary = nil
@@ -128,6 +134,37 @@ struct SavedItinerary: Identifiable, Codable, Hashable {
   var isSyncedWithAPI: Bool {
     apiItineraryId != nil
   }
+
+  // MARK: - Codable (backward-compatible decode: `startDate` defaults to `savedAt`)
+
+  enum CodingKeys: String, CodingKey {
+    case id, blogId, title, coverImage, days, savedAt, startDate
+    case authorName, sourcePlatform, aiSummary, aiTips, imageUrls, destination
+    case apiItineraryId, copiedFromId, originalAuthor, copyType, selectedDays
+  }
+
+  init(from decoder: Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    id = try c.decode(UUID.self, forKey: .id)
+    blogId = try c.decode(String.self, forKey: .blogId)
+    title = try c.decode(String.self, forKey: .title)
+    coverImage = try c.decodeIfPresent(String.self, forKey: .coverImage)
+    days = try c.decode([AiDay].self, forKey: .days)
+    savedAt = try c.decode(Date.self, forKey: .savedAt)
+    // Fall back to savedAt for records persisted before this field existed.
+    startDate = (try? c.decodeIfPresent(Date.self, forKey: .startDate)) ?? savedAt
+    authorName = try c.decodeIfPresent(String.self, forKey: .authorName)
+    sourcePlatform = try c.decodeIfPresent(String.self, forKey: .sourcePlatform)
+    aiSummary = try c.decodeIfPresent(String.self, forKey: .aiSummary)
+    aiTips = try c.decodeIfPresent([String].self, forKey: .aiTips)
+    imageUrls = try c.decodeIfPresent([String].self, forKey: .imageUrls)
+    destination = try c.decodeIfPresent(String.self, forKey: .destination)
+    apiItineraryId = try c.decodeIfPresent(String.self, forKey: .apiItineraryId)
+    copiedFromId = try c.decodeIfPresent(String.self, forKey: .copiedFromId)
+    originalAuthor = try c.decodeIfPresent(SavedItineraryOriginalAuthor.self, forKey: .originalAuthor)
+    copyType = try c.decodeIfPresent(String.self, forKey: .copyType)
+    selectedDays = try c.decodeIfPresent([Int].self, forKey: .selectedDays)
+  }
 }
 
 // MARK: - Original Author Info
@@ -150,7 +187,10 @@ extension SavedItinerary {
       id: UUID(uuidString: "DEADBEEF-0000-0000-0000-000000000001")!,
       title: "北京三日精华游",
       destination: "北京",
-      daysCount: 2
+      daysCount: 2,
+      startDate: Calendar.current.date(
+        from: DateComponents(year: 2025, month: 9, day: 1)
+      )!
     )
     itinerary.apiItineraryId = "preview-api-itinerary-id"
     itinerary.days = [

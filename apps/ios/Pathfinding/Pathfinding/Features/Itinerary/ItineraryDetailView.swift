@@ -73,9 +73,6 @@ struct ItineraryDetailView: View {
             .onSubmit {
               saveChanges()
             }
-            .onChange(of: localTitle) { _, _ in
-              saveChanges()
-            }
 
           // Original Author Badge (for copied itineraries)
           if let originalAuthor = itinerary.originalAuthor {

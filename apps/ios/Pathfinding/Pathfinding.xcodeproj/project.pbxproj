@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0091E305A43102A9C4560B57 /* ItineraryStoreCopyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C77BB1D4DCD8617EBF6B1A1 /* ItineraryStoreCopyTests.swift */; };
 		03207FBDC315AA6C03F288F2 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC5E5BA1C8C9CAD38E67A39 /* AuthManager.swift */; };
 		04C9CF9C6CF09A435B05072B /* PdfExportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 418238AC5997E769AA66C044 /* PdfExportSheet.swift */; };
 		04FFEFBF6BE97049B59C1718 /* TravelNoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7026E0B7D0848D304E724186 /* TravelNoteStore.swift */; };
@@ -359,6 +360,7 @@
 		68BD335A3E2EA8301D3E89AF /* BusinessHoursView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessHoursView.swift; sourceTree = "<group>"; };
 		69F3F99C67C430BA89D1352A /* AnalysisStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisStore.swift; sourceTree = "<group>"; };
 		6B6D5C5504AA84A2964B3A51 /* SimCardStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimCardStore.swift; sourceTree = "<group>"; };
+		6C77BB1D4DCD8617EBF6B1A1 /* ItineraryStoreCopyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryStoreCopyTests.swift; sourceTree = "<group>"; };
 		6D735D6A5B0E012C1150CF3B /* InsuranceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsuranceStore.swift; sourceTree = "<group>"; };
 		6E4097BC04672C6961404A83 /* RouteOptimization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOptimization.swift; sourceTree = "<group>"; };
 		6F3C16FCF5D1EEC00A67EA64 /* CalendarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarManager.swift; sourceTree = "<group>"; };
@@ -602,6 +604,7 @@
 			children = (
 				1659CAA114BDDDB72101E180 /* AuthManagerRequestTests.swift */,
 				E0A7B59E95DA141FDAC0291B /* ItineraryDetailDestinationsTests.swift */,
+				6C77BB1D4DCD8617EBF6B1A1 /* ItineraryStoreCopyTests.swift */,
 				447D0FE5EEAF01DA8D9C124D /* MarkdownContentParserTests.swift */,
 				19F4F46F2E1A8FBBE957E6DE /* PoiSearchDebounceTests.swift */,
 			);
@@ -1391,6 +1394,7 @@
 			files = (
 				2093E2AA2641EC6999A78046 /* AuthManagerRequestTests.swift in Sources */,
 				57DBF54E6DD5FC533DB54F7C /* ItineraryDetailDestinationsTests.swift in Sources */,
+				0091E305A43102A9C4560B57 /* ItineraryStoreCopyTests.swift in Sources */,
 				66D7B64AB6CCBE6288A0C97D /* MarkdownContentParserTests.swift in Sources */,
 				BE13CF092EF8CFAC7A07A084 /* PoiSearchDebounceTests.swift in Sources */,
 			);
