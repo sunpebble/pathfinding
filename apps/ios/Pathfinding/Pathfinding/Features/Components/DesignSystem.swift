@@ -991,6 +991,7 @@ extension View {
 
 // MARK: - Custom Button Styles
 
+@available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
 struct PrimaryButtonStyle: ButtonStyle {
   @Environment(\.isEnabled) private var isEnabled
   @Environment(\.colorScheme) private var colorScheme
@@ -1015,6 +1016,7 @@ struct PrimaryButtonStyle: ButtonStyle {
   }
 }
 
+@available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
 struct SecondaryButtonStyle: ButtonStyle {
   @Environment(\.colorScheme) private var colorScheme
 
@@ -1035,6 +1037,7 @@ struct SecondaryButtonStyle: ButtonStyle {
 }
 
 /// Outline button style for dark mode
+@available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
 struct OutlineButtonStyle: ButtonStyle {
   @Environment(\.colorScheme) private var colorScheme
 
@@ -1055,14 +1058,17 @@ struct OutlineButtonStyle: ButtonStyle {
 }
 
 extension ButtonStyle where Self == PrimaryButtonStyle {
+  @available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
   static var primary: PrimaryButtonStyle { PrimaryButtonStyle() }
 }
 
 extension ButtonStyle where Self == SecondaryButtonStyle {
+  @available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
   static var secondary: SecondaryButtonStyle { SecondaryButtonStyle() }
 }
 
 extension ButtonStyle where Self == OutlineButtonStyle {
+  @available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
   static var outline: OutlineButtonStyle { OutlineButtonStyle() }
 }
 
