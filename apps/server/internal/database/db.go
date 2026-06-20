@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -40,57 +41,20 @@ func New(dsn string) (*DB, error) {
 }
 
 // convertDSN converts "mysql://user:pass@host:port/dbname" to Go DSN format.
+// Non-mysql:// strings are returned unchanged (already in Go DSN format).
 func convertDSN(dsn string) (string, error) {
-	// Handle mysql:// URI format
-	if len(dsn) > 8 && dsn[:8] == "mysql://" {
-		rest := dsn[8:] // "root@127.0.0.1:4000/pathfinding" or "root:pass@127.0.0.1:4000/pathfinding"
-
-		// Find @ separator
-		atIdx := -1
-		for i, c := range rest {
-			if c == '@' {
-				atIdx = i
-				break
-			}
-		}
-		if atIdx == -1 {
-			return "", fmt.Errorf("missing @ in DSN: %s", dsn)
-		}
-
-		userInfo := rest[:atIdx]   // "root" or "root:pass"
-		hostPath := rest[atIdx+1:] // "127.0.0.1:4000/pathfinding"
-
-		// Find / to separate host:port from dbname
-		slashIdx := -1
-		for i, c := range hostPath {
-			if c == '/' {
-				slashIdx = i
-				break
-			}
-		}
-
-		var hostPort, dbName string
-		if slashIdx == -1 {
-			hostPort = hostPath
-			dbName = ""
-		} else {
-			hostPort = hostPath[:slashIdx]
-			dbName = hostPath[slashIdx+1:]
-		}
-
-		// Remove query parameters from dbName
-		for i, c := range dbName {
-			if c == '?' {
-				dbName = dbName[:i]
-				break
-			}
-		}
-
-		return fmt.Sprintf("%s@tcp(%s)/%s?parseTime=true&charset=utf8mb4", userInfo, hostPort, dbName), nil
+	u, err := url.Parse(dsn)
+	if err != nil || u.Scheme != "mysql" {
+		return dsn, nil
 	}
 
-	// Already in Go DSN format
-	return dsn, nil
+	userInfo := u.User.String() // "user" or "user:pass"
+	dbName := ""
+	if len(u.Path) > 1 {
+		dbName = u.Path[1:] // strip leading "/"
+	}
+
+	return fmt.Sprintf("%s@tcp(%s)/%s?parseTime=true&charset=utf8mb4", userInfo, u.Host, dbName), nil
 }
 
 // Ping verifies the database connection.

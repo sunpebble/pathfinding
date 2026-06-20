@@ -13,6 +13,15 @@ const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 
 /**
+ * Parse a raw string as an integer and clamp it to [min, max].
+ * Returns `def` when the value is absent or not a valid integer.
+ */
+function clampInt(raw: string | undefined, min: number, max: number, def: number): number {
+  const parsed = Number.parseInt(raw ?? '', 10);
+  return Number.isInteger(parsed) && parsed >= min ? Math.min(parsed, max) : def;
+}
+
+/**
  * Parse a string as a positive integer.
  *
  * Returns `null` if the value is `undefined` or not a valid positive
@@ -31,8 +40,8 @@ const MAX_PAGE_SIZE = 100;
 export function parsePositiveInt(value: string | undefined): number | null {
   if (value === undefined)
     return null;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  const n = clampInt(value, 1, Number.MAX_SAFE_INTEGER, 0);
+  return n > 0 ? n : null;
 }
 
 /** Parsed pagination parameters. */
@@ -67,18 +76,8 @@ export function parsePagination(
   rawOffset: string | undefined,
   defaultLimit: number = DEFAULT_PAGE_SIZE,
 ): Pagination {
-  const parsedLimit = Number.parseInt(rawLimit ?? '', 10);
-  const limit
-    = Number.isInteger(parsedLimit) && parsedLimit > 0
-      ? Math.min(parsedLimit, MAX_PAGE_SIZE)
-      : defaultLimit;
-
-  const parsedOffset = Number.parseInt(rawOffset ?? '', 10);
-  const offset
-    = Number.isInteger(parsedOffset) && parsedOffset >= 0
-      ? parsedOffset
-      : 0;
-
+  const limit = clampInt(rawLimit, 1, MAX_PAGE_SIZE, defaultLimit);
+  const offset = clampInt(rawOffset, 0, Number.MAX_SAFE_INTEGER, 0);
   return { limit, offset };
 }
 

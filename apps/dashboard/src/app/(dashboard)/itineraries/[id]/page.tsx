@@ -22,7 +22,6 @@ import { InviteDialog } from '@/components/invite-dialog';
 import { ItineraryEditor } from '@/components/itinerary-editor';
 import { ItineraryMap } from '@/components/itinerary-map';
 import { PdfExportButton } from '@/components/pdf-export-button';
-import { useAuth } from '@/hooks/use-auth';
 import { getCollaborators } from '@/lib/api/collaborators';
 import {
   getItinerary,
@@ -31,6 +30,7 @@ import {
   normalizeItineraryResponse,
 } from '@/lib/api/itineraries';
 import { cn } from '@/lib/utils';
+import { useAuthContext as useAuth } from '@/providers/auth-provider';
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
   const icons = {

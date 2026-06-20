@@ -12,9 +12,10 @@ const mockUseAuth = vi.fn();
 const mockUseQuery = vi.fn();
 const mockGetItineraries = vi.fn();
 
-vi.mock('@/hooks/use-auth', () => ({
-  useAuth: () => mockUseAuth(),
-}));
+vi.mock('@/providers/auth-provider', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/providers/auth-provider')>();
+  return { ...actual, useAuthContext: () => mockUseAuth() };
+});
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: (options: unknown) => mockUseQuery(options),

@@ -13,7 +13,6 @@ import (
 	"github.com/pathfinding/server/internal/config"
 	"github.com/pathfinding/server/internal/cron"
 	"github.com/pathfinding/server/internal/database"
-	"github.com/pathfinding/server/internal/eventbus"
 	"github.com/pathfinding/server/internal/handler"
 	"github.com/pathfinding/server/internal/middleware"
 	"github.com/pathfinding/server/internal/store"
@@ -35,9 +34,6 @@ func main() {
 	// Load config
 	cfg := config.Load()
 
-	// Event bus
-	bus := eventbus.New()
-
 	// Database (optional — server can start without it)
 	var db *database.DB
 	if cfg.DatabaseURL != "" {
@@ -54,10 +50,7 @@ func main() {
 	}
 
 	// Handler
-	h := handler.New(db, cfg, bus)
-
-	// Register event handlers
-	h.RegisterEventHandlers()
+	h := handler.New(db, cfg)
 
 	// Batch crawl queue — 顺序消费 POST /batch 的任务（设计 D12）
 	batchRunner := handler.NewBatchRunner(h.ExecuteCrawlTask, time.Duration(cfg.CrawlerRateLimitSeconds)*time.Second)
@@ -136,7 +129,6 @@ func main() {
 
 		cronMgr.Stop()
 		batchRunner.Stop()
-		bus.Close()
 		if db != nil {
 			db.Close()
 		}

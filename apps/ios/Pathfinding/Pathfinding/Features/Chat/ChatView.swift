@@ -118,16 +118,16 @@ struct ChatSessionListView: View {
     .listStyle(.insetGrouped)
     .onAppear {
       guard !hasShownSwipeHint, !store.sessions.isEmpty else { return }
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+      Task {
+        try? await Task.sleep(for: .seconds(0.8))
         withAnimation(.easeInOut(duration: 0.4)) {
           swipeHintOffset = -40
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-          withAnimation(.easeInOut(duration: 0.3)) {
-            swipeHintOffset = 0
-          }
-          hasShownSwipeHint = true
+        try? await Task.sleep(for: .seconds(0.6))
+        withAnimation(.easeInOut(duration: 0.3)) {
+          swipeHintOffset = 0
         }
+        hasShownSwipeHint = true
       }
     }
   }

@@ -19,35 +19,25 @@ export * from './categories.js';
 // ============================================================================
 
 export * from './content-cleaner.js';
-export * from './converters.js';
 
 // ============================================================================
 // Silver Layer — Normalized & Enriched Data
 // ============================================================================
 
 export * from './crawl-job.js';
-export * from './mafengwo.js';
 export * from './normalized-poi.js';
 export * from './parse-number.js';
 
 // ============================================================================
-// Gold Layer — ML Training & Quality Reports
-// ============================================================================
-
-export * from './poi-review.js';
-export * from './quality-report.js';
-
-// ============================================================================
-// Platform-Specific Types (Mafengwo)
+// Quality Scoring
 // ============================================================================
 
 export * from './quality-score.js';
 
 // ============================================================================
-// Utilities — Validation, Conversion, Cleaning, Scoring
+// Utilities — Validation, Cleaning, Scoring
 // ============================================================================
 
 export * from './raw-record.js';
-export * from './training-dataset.js';
 export * from './travel-guide.js';
 export * from './validators.js';

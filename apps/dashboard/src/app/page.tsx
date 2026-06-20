@@ -23,7 +23,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { TopographicBackground } from '@/components/ui/topographic-background';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext as useAuth } from '@/providers/auth-provider';
 
 const features = [
   {

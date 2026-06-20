@@ -9,19 +9,17 @@ import (
 	"testing"
 
 	"github.com/pathfinding/server/internal/config"
-	"github.com/pathfinding/server/internal/eventbus"
 	"github.com/pathfinding/server/internal/handler"
 )
 
-// newTestHandler creates a Handler with no DB, no Kernel, and a fresh EventBus.
+// newTestHandler creates a Handler with no DB and no Kernel.
 func newTestHandler() *handler.Handler {
 	cfg := &config.Config{
 		Port:          3000,
 		OllamaBaseURL: "http://localhost:11434",
 		OllamaModel:   "gemma3:4b",
 	}
-	bus := eventbus.New()
-	return handler.New(nil, cfg, bus)
+	return handler.New(nil, cfg)
 }
 
 // newBatchTestHandler creates a Handler that passes the Kernel gate（假 API key，
@@ -32,7 +30,7 @@ func newBatchTestHandler() *handler.Handler {
 		Port:         3000,
 		KernelAPIKey: "test-key",
 	}
-	h := handler.New(nil, cfg, eventbus.New())
+	h := handler.New(nil, cfg)
 	h.Batch = handler.NewBatchRunner(func(_ context.Context, _ handler.CrawlTask) (handler.TaskOutcome, error) {
 		return handler.TaskOutcome{}, nil
 	}, 0)
@@ -708,7 +706,7 @@ func TestMafengwoBatch_NoRunnerConfigured(t *testing.T) {
 	// Arrange: Kernel 已配置但 Batch runner 缺失 → 503，
 	// 绝不返回「任务已创建」的假成功（设计 D12）。
 	cfg := &config.Config{Port: 3000, KernelAPIKey: "test-key"}
-	h := handler.New(nil, cfg, eventbus.New())
+	h := handler.New(nil, cfg)
 
 	// Act
 	w := doRequest(t, "POST", "/test",
@@ -812,16 +810,6 @@ func TestMafengwoBatchStatus_NoRunnerConfigured(t *testing.T) {
 	if w.Code != http.StatusServiceUnavailable {
 		t.Errorf("expected 503, got %d", w.Code)
 	}
-}
-
-// =======================================================================
-// Event Handlers — registration check
-// =======================================================================
-
-func TestRegisterEventHandlers(t *testing.T) {
-	h := newTestHandler()
-	// Should not panic
-	h.RegisterEventHandlers()
 }
 
 // =======================================================================

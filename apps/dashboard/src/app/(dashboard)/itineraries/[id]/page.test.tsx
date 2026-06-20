@@ -21,9 +21,10 @@ const mockCollaboratorPanel = vi.fn(({ collaborators }: { collaborators: unknown
 const mockInviteDialog = vi.fn(({ isOpen }: { isOpen: boolean }) => (isOpen ? <div>Invite Dialog Open</div> : null));
 const mockItineraryEditor = vi.fn(({ isOpen }: { isOpen: boolean }) => (isOpen ? <div>Itinerary Editor Open</div> : null));
 
-vi.mock('@/hooks/use-auth', () => ({
-  useAuth: () => mockUseAuth(),
-}));
+vi.mock('@/providers/auth-provider', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/providers/auth-provider')>();
+  return { ...actual, useAuthContext: () => mockUseAuth() };
+});
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: (options: unknown) => mockUseQuery(options),

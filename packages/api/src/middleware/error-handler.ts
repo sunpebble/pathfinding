@@ -7,9 +7,9 @@
  */
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { createLogger } from '@pathfinding/logger';
 import { HTTPException } from 'hono/http-exception';
 import { ZodError } from 'zod';
+import { createLogger } from '../lib/logger.js';
 
 const log = createLogger('error-handler');
 

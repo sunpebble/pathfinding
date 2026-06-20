@@ -337,31 +337,6 @@ struct ExplorerPageBackground: View {
   }
 }
 
-// MARK: - View Extensions
-
-extension View {
-  /// 应用噪点纹理叠加
-  @available(*, deprecated, message: "iOS 26: use cardSurface / system glass; pending Chat/Profile/Auth migration")
-  func noiseTexture(opacity: Double = 0.03) -> some View {
-    overlay(NoiseTextureOverlay(opacity: opacity))
-  }
-
-  /// 应用探索者页面背景
-  @available(*, deprecated, message: "iOS 26: use cardSurface / system glass; pending Chat/Profile/Auth migration")
-  func explorerPageBackground(
-    style: ExplorerPageBackground.Style = .standard,
-    accentColor: Color = DesignTokens.Colors.accent
-  ) -> some View {
-    background(ExplorerPageBackground(style: style, accentColor: accentColor))
-  }
-
-  /// 应用等高线背景
-  @available(*, deprecated, message: "iOS 26: use cardSurface / system glass; pending Chat/Profile/Auth migration")
-  func topographicBackground(lineCount: Int = 8, color: Color? = nil, animated: Bool = false) -> some View {
-    background(TopographicLinesView(lineCount: lineCount, lineColor: color, animated: animated))
-  }
-}
-
 // MARK: - Preview
 
 #Preview("Visual Effects - Light") {
@@ -372,7 +347,7 @@ extension View {
         .font(.headline)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
-        .topographicBackground(lineCount: 6, color: .indigo.opacity(0.15))
+        .background(TopographicLinesView(lineCount: 6, lineColor: .indigo.opacity(0.15)))
         .clipShape(RoundedRectangle(cornerRadius: 16))
 
       // Compass Rose
@@ -400,7 +375,7 @@ extension View {
         .font(.headline)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
-        .topographicBackground(lineCount: 6, color: .cyan.opacity(0.2))
+        .background(TopographicLinesView(lineCount: 6, lineColor: .cyan.opacity(0.2)))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
     .padding()

@@ -26,7 +26,7 @@ import * as jose from 'jose';
 
 let _jwtSecret: Uint8Array | null = null;
 
-export function getJwtSecret(): Uint8Array {
+function getJwtSecret(): Uint8Array {
   if (!_jwtSecret) {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -35,13 +35,6 @@ export function getJwtSecret(): Uint8Array {
     _jwtSecret = new TextEncoder().encode(secret);
   }
   return _jwtSecret;
-}
-
-/**
- * Reset cached JWT secret (useful in tests).
- */
-export function resetJwtSecret(): void {
-  _jwtSecret = null;
 }
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext as useAuth } from '@/providers/auth-provider';
 import { AUTH_TOKEN_STORAGE_KEY, AuthProvider } from './auth-provider';
 
 async function patchReactContextAccess() {

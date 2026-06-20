@@ -1,10 +1,10 @@
-/**
- * Main Hono application — mounts middleware and route modules.
- */
-import { createLogger } from '@pathfinding/logger';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger as honoLogger } from 'hono/logger';
+/**
+ * Main Hono application — mounts middleware and route modules.
+ */
+import { createLogger } from './lib/logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { rateLimit } from './middleware/rate-limit.js';
 import { securityHeaders } from './middleware/security-headers.js';

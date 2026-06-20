@@ -34,14 +34,12 @@ func (h *Handler) HandleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check Ollama
-	ollamaConnected := false
 	if h.Config.OllamaBaseURL != "" {
 		client := &http.Client{Timeout: 3 * time.Second}
 		resp, err := client.Get(fmt.Sprintf("%s/api/tags", h.Config.OllamaBaseURL))
 		if err == nil {
 			resp.Body.Close()
 			if resp.StatusCode == 200 {
-				ollamaConnected = true
 				ollamaStatus = "connected"
 			} else {
 				ollamaStatus = "unreachable"
@@ -50,7 +48,6 @@ func (h *Handler) HandleHealth(w http.ResponseWriter, r *http.Request) {
 			ollamaStatus = "unreachable"
 		}
 	}
-	_ = ollamaConnected
 
 	status := 503
 	statusText := "unhealthy"

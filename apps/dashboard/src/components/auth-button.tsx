@@ -4,7 +4,7 @@ import { ChevronDown, LogOut, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext as useAuth } from '@/providers/auth-provider';
 
 export function AuthButton() {
   const { isAuthenticated, isLoading: authLoading, signOut, user } = useAuth();

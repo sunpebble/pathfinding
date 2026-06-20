@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"strconv"
 	"sync"
@@ -45,10 +46,8 @@ func (h *Handler) HandleWeatherForecast(w http.ResponseWriter, r *http.Request) 
 	if entry, ok := weatherCache.Load(cacheKey); ok {
 		e := entry.(*weatherCacheEntry)
 		if time.Since(e.timestamp) < weatherCacheTTL {
-			result := make(map[string]any)
-			for k, v := range e.data {
-				result[k] = v
-			}
+			result := make(map[string]any, len(e.data)+1)
+			maps.Copy(result, e.data)
 			result["cached"] = true
 			middleware.JSON(w, 200, map[string]any{"data": result})
 			return

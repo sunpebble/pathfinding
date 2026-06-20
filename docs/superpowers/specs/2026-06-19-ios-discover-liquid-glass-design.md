@@ -15,16 +15,16 @@ Phase 1 已建立 iOS 26 Liquid Glass 设计底座并把行程流程迁移完毕
 
 **需求方本次确认**:
 
-| 决策项 | 结论 |
-| --- | --- |
-| 范围 | DiscoverView 入口 + BlogDetailView 详情 + CityEncyclopediaView 城市百科 |
-| 搜索交互 | 采用 **`Tab(role: .search)` 专用搜索 Tab**(5 Tab 结构) |
-| CityEncyclopedia 入口 | **两者都要**:Discover「热门城市」Section + BlogDetail 目的地城市 |
-| 死代码 | 删除 `EnhancedDiscoverView`(整文件,零消费者) |
+| 决策项                | 结论                                                                    |
+| --------------------- | ----------------------------------------------------------------------- |
+| 范围                  | DiscoverView 入口 + BlogDetailView 详情 + CityEncyclopediaView 城市百科 |
+| 搜索交互              | 采用 **`Tab(role: .search)` 专用搜索 Tab**(5 Tab 结构)                  |
+| CityEncyclopedia 入口 | **两者都要**:Discover「热门城市」Section + BlogDetail 目的地城市        |
+| 死代码                | 删除 `EnhancedDiscoverView`(整文件,零消费者)                            |
 
 ### 1.1 关键认知更正(来自审计)
 
-Phase 1 记忆/carryover 误以为 `Explorer*` 组件结构体已带 `@available(deprecated)`。**审计 grep 证实:`ExplorerCards.swift`/`ExplorerComponents.swift`/`VisualEffects.swift` 上零 `@available`**——只有 `DesignSystem.swift` 的卡片/按钮助手带了。所以本 spec 要**实际写上** Explorer* 的弃用标注(而非假设已有)。
+Phase 1 记忆/carryover 误以为 `Explorer*` 组件结构体已带 `@available(deprecated)`。**审计 grep 证实:`ExplorerCards.swift`/`ExplorerComponents.swift`/`VisualEffects.swift` 上零 `@available`**——只有 `DesignSystem.swift` 的卡片/按钮助手带了。所以本 spec 要**实际写上** Explorer\* 的弃用标注(而非假设已有)。
 
 ### 1.2 现状核心问题(按杠杆排序)
 
@@ -43,13 +43,15 @@ Phase 1 记忆/carryover 误以为 `Explorer*` 组件结构体已带 `@available
 ## 2. 目标与非目标
 
 ### 2.1 目标
+
 - 新增 `Tab(role: .search)` 搜索 Tab + 抽出 `SearchView`,把搜索从 DiscoverView 剥离。
 - Discover 入口 / BlogDetail / CityEncyclopedia 三屏迁到 Liquid Glass。
 - 接通 CityEncyclopedia 的两个入口(Discover 热门城市 Section + BlogDetail 目的地城市)。
 - 拆分两个巨石文件;删除死代码;清理弃用 API。
-- 应用 Explorer* 弃用标注,物理删除零消费者孤儿符号。
+- 应用 Explorer\* 弃用标注,物理删除零消费者孤儿符号。
 
 ### 2.2 非目标(YAGNI)
+
 - Chat / Profile Tab 重设计(后续 spec)。
 - Widget / Watch / CarPlay 玻璃化。
 - 数据层/服务端改动(仅复用既有 `GuideStore.search`、`APIClient.fetchCityWithEncyclopedia`、城市列表 API;新增入口只接线不改契约)。
@@ -77,6 +79,7 @@ SwiftUI.Tab(Tab.search.title, systemImage: "magnifyingglass",
 ## 4. 逐屏 before → after
 
 ### 4.1 DiscoverView(482 → 更小的纯浏览 feed)
+
 - 删整个 `explorerBackground` 5 层栈 → 系统 grouped 背景 + 系统 `List`。
 - feed 改单一 `List`,两个 `Section`(精选 / 最近);section header 取代 `ExplorerDivider`。
 - 精选卡:内容布局后 `.cardSurface(cornerRadius: .lg)`,轮播兄弟卡进**一个** `GlassEffectContainer`;按压用 `.buttonStyle(.glass)`;去掉手搓 reveal 动画。
@@ -87,6 +90,7 @@ SwiftUI.Tab(Tab.search.title, systemImage: "magnifyingglass",
 - **新增「热门城市」Section**(本次 CityEnc 入口之一):一行/横向卡片,数据走既有城市列表 API(实现时核对 `CityAPIClient`/`City` 模型),`NavigationLink` → `CityEncyclopediaView(cityId:cityName:)`。
 
 ### 4.2 BlogDetailView(1028,拆分 + 玻璃化)
+
 - 删 `ExplorerPageBackground(.minimal)` + `.scrollContentBackground(.hidden)`(`:134-137,188`)→ 系统背景。`ExplorerPageBackground` 符号保留(Chat/Profile 仍用)。
 - AI 摘要 → `.cardSurface(tint: DesignTokens.Colors.aiPurple)`;贴士 → `.cardSurface()` 无 tint;`QuickInfoCard` 4 卡 → `.cardSurface()` 无 tint,进一个 `GlassEffectContainer`;`DayCard` 弃用 `.subtleCardStyle()` → `.cardSurface()`。
 - CTA(import / PoiSheet navigate)`.borderedProminent` → `.buttonStyle(.glassProminent)`;工具栏 4 个图标按钮 → `.buttonStyle(.glass)`(已有 a11y label)。
@@ -96,6 +100,7 @@ SwiftUI.Tab(Tab.search.title, systemImage: "magnifyingglass",
 - **修结构 bug**:文章折叠统一为 BlogDetailView 单一 expand 态(渲染器传 `truncateAt:.max`);评论区嵌入时不再内套 ScrollView(跨文件,见 §8 标注)。
 
 ### 4.3 CityEncyclopediaView(1192,接通 + 玻璃化 + 拆分)
+
 - **先接通入口**(§4.1 + §4.2 两处),route value 用 `cityId: String`(+ `cityName`),`CityWithEncyclopedia` 经 `APIClient.shared.fetchCityWithEncyclopedia(cityId:)`(`.task`)拉取。
 - 自定义 Capsule tab scroller(`:78-106`)→ `Picker(selection:).pickerStyle(.segmented)`,对标 `ItineraryAnalysisView.swift:142-149`。
 - 24 个手搓 `RoundedRectangle.fill().shadow()` → `.cardSurface()`(信息卡无 tint;taboo 卡 `tint: .red.opacity(...)`)。
@@ -108,13 +113,14 @@ SwiftUI.Tab(Tab.search.title, systemImage: "magnifyingglass",
 
 ---
 
-## 5. Explorer* 删 / 留(本次**实际写**弃用标注)
+## 5. Explorer\* 删 / 留(本次**实际写**弃用标注)
 
 **保留并加 `@available(*, deprecated, message: "iOS 26: …")`**(仍有 Chat/Profile/Auth 消费者):
 `ExplorerSectionHeader`(Profile)、`ExplorerDivider`(Profile `:108`)、`ExplorerPageBackground`(Profile `:33`、Chat `:20`)、`TopographicLinesView`/`CompassRoseDecoration`/`NoiseTextureOverlay`(Login/Signup)。
 
 **立即物理删**(零消费者,grep 确认):
 `EnhancedDiscoverView.swift`(整文件)、`ExplorerHeroHeader`、`ExplorerFeaturedCardCarousel`、`ExplorerSkeletonCard`、`FloatingActionButton`、`DestinationBadge`、`TravelStatusIndicator`、`SwipeHintView`、`ExplorerCardStyle`+`.explorerCardStyle()`、VisualEffects 孤儿(`WavePatternView`/`MountainSilhouetteView`/`SunburstView`/`MapGridOverlay`/`GradientMeshBackground`/`GrainOverlay`/`AnimatedBorderGradient`/`FloatingParticles`)。
+
 > 注:`.cardStyle()` 的消费者(`GuideComponents.swift:127`、`InsuranceView.swift:104`)是 **DesignSystem** 的 `cardStyle`(`:749`),**不是** `ExplorerCardStyle`,勿混。
 
 **迁移后重新 grep 再删**(Discover 重建切断其最后消费者后):
@@ -124,20 +130,21 @@ SwiftUI.Tab(Tab.search.title, systemImage: "magnifyingglass",
 
 ## 6. 风险与缓解
 
-| 风险 | 缓解 |
-| --- | --- |
-| `Tab(role:.search)` 编译承重(枚举加 case) | 同步补两个 switch 分支 + `tab.search` 键;先单独编译验证 |
-| `role:.search` 真机表现未知 | 在 iOS 26 真机/模拟器验证尾部搁置 + 与 minimize 协同;以 SDK 实际行为为准 |
-| GlassEffectContainer 边界 | 同簇一个、不嵌套、不套在 List 行上;CityEnc 瓦片用非玻璃子项 |
-| tint 纪律 | tint 仅 AI 摘要/taboo 卡/选中 POI 行/激活筛选 chip;信息卡一律无 tint |
-| 弃用标注触发跨 Tab 警告 | 预期(Chat/Profile/Auth 未迁移);message 指向替代 API |
-| 「迁移后再删」符号 | 迁移完**重新 grep 确认零消费者**再删,不提前删 |
-| CityEnc 数据通路 | 接通时做功能性验证(真拉取),非仅换皮 |
-| 「热门城市」缺城市列表数据源 | 审计仅确认单城 `fetchCityWithEncyclopedia(cityId:)`,城市**列表** API 未验证。实现首步先核对 `CityAPIClient`/`City` 是否有列表接口:**有**则数据驱动;**无**则该 Section 退化为一组静态精选城市常量(不新增服务端契约,属非目标),并在计划中标明 |
+| 风险                                      | 缓解                                                                                                                                                                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Tab(role:.search)` 编译承重(枚举加 case) | 同步补两个 switch 分支 + `tab.search` 键;先单独编译验证                                                                                                                                                                                    |
+| `role:.search` 真机表现未知               | 在 iOS 26 真机/模拟器验证尾部搁置 + 与 minimize 协同;以 SDK 实际行为为准                                                                                                                                                                   |
+| GlassEffectContainer 边界                 | 同簇一个、不嵌套、不套在 List 行上;CityEnc 瓦片用非玻璃子项                                                                                                                                                                                |
+| tint 纪律                                 | tint 仅 AI 摘要/taboo 卡/选中 POI 行/激活筛选 chip;信息卡一律无 tint                                                                                                                                                                       |
+| 弃用标注触发跨 Tab 警告                   | 预期(Chat/Profile/Auth 未迁移);message 指向替代 API                                                                                                                                                                                        |
+| 「迁移后再删」符号                        | 迁移完**重新 grep 确认零消费者**再删,不提前删                                                                                                                                                                                              |
+| CityEnc 数据通路                          | 接通时做功能性验证(真拉取),非仅换皮                                                                                                                                                                                                        |
+| 「热门城市」缺城市列表数据源              | 审计仅确认单城 `fetchCityWithEncyclopedia(cityId:)`,城市**列表** API 未验证。实现首步先核对 `CityAPIClient`/`City` 是否有列表接口:**有**则数据驱动;**无**则该 Section 退化为一组静态精选城市常量(不新增服务端契约,属非目标),并在计划中标明 |
 
 ---
 
 ## 7. 验证策略
+
 - **构建闸门**:iOS 26 SDK 编译通过,无 `#available` 残留。
 - **Preview**:每个重建单元(SearchView、Discover feed、BlogDetail 4 子视图、Encyclopedia 4 tab + 卡组件)Light/Dark + 降低透明度 + Reduce Motion 预览。
 - **单元测试**(XCTest,`__tests__`/AAA):搜索 scope→`GuideStore.search` 参数映射、CityEnc 入口可达性(仿 Phase 1 `availableDestinations` 测试)、城市列表数据加载。
@@ -147,12 +154,14 @@ SwiftUI.Tab(Tab.search.title, systemImage: "magnifyingglass",
 ---
 
 ## 8. 不做什么 / 显式标注的跨文件遗留(本次之外)
+
 - Chat / Profile Tab 迁移;Widget·Watch·CarPlay。
 - **显式标注、不静默吸收**:`CommentSectionView` 的内套 ScrollView + `.subtleCardStyle()`(`CommentSectionView.swift:359`);BlogDetail 的 like/save 目前是本地 `@State` + 空操作成功 alert(真持久化另议);CityEnc 的 `MainActor.run` 三跳 `.task` 清理。本次仅在文档记录,供后续 spec 处理。
 
 ---
 
 ## 9. 实现顺序(高层;细化由 writing-plans 产出)
+
 1. 删 `EnhancedDiscoverView.swift`(零风险,缩小消费者图)。
 2. `Tab(role:.search)` + `SearchView`(复用 GuideStore,零数据改动)。
 3. 从 DiscoverView 剥离搜索,重建为 `List` 纯浏览 feed(含玻璃化)。
@@ -160,6 +169,6 @@ SwiftUI.Tab(Tab.search.title, systemImage: "magnifyingglass",
 5. 拆 + 玻璃化 BlogDetail(`Features/BlogDetail/`)。
 6. 拆 + 玻璃化 CityEncyclopedia(`Features/Encyclopedia/`,Picker.segmented、删 createSampleData)。
 7. 弃用 API 清扫 + AI 信号统一(扁平 tint Label)。
-8. 应用 Explorer* 弃用标注 + 删孤儿;迁移后重新 grep 删「再删」组。
+8. 应用 Explorer\* 弃用标注 + 删孤儿;迁移后重新 grep 删「再删」组。
 
 每步可独立编译、预览、验证。

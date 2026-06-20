@@ -242,15 +242,3 @@ export async function applyPoiCoordinateFix(db: Database, id: number, fix: PoiCo
   await db.update(travelGuides).set({ dayItineraries }).where(eq(travelGuides.id, id));
   return 'updated';
 }
-
-// ── Enrichment writer (scripts: AI / content-html / cleanup) ──
-export interface GuideEnrichmentPatch {
-  enrichedData?: Record<string, unknown>;
-  dayItineraries?: GuideRow['dayItineraries'];
-  content?: string;
-  lastUpdatedAt?: Date;
-}
-
-export async function applyGuideEnrichment(db: Database, id: number, patch: GuideEnrichmentPatch): Promise<void> {
-  await db.update(travelGuides).set(patch).where(eq(travelGuides.id, id));
-}

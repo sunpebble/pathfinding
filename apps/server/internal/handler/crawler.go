@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -9,7 +8,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/pathfinding/server/internal/eventbus"
 	"github.com/pathfinding/server/internal/middleware"
 	"github.com/pathfinding/server/internal/service"
 )
@@ -75,16 +73,6 @@ func (h *Handler) HandleCrawlerFetch(w http.ResponseWriter, r *http.Request) {
 		"content":          content,
 		"contentTruncated": contentTruncated,
 	}
-
-	// Publish event
-	h.EventBus.Publish(context.Background(), eventbus.Event{
-		Topic: "crawler.result.received",
-		Data: map[string]any{
-			"url":      req.URL,
-			"platform": platform,
-			"content":  data,
-		},
-	})
 
 	middleware.JSON(w, 200, map[string]any{
 		"success":  true,

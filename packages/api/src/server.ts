@@ -2,8 +2,8 @@
  * HTTP server entry point — starts the Hono app on @hono/node-server.
  */
 import { serve } from '@hono/node-server';
-import { createLogger } from '@pathfinding/logger';
 import { createApp } from './app.js';
+import { createLogger } from './lib/logger.js';
 
 const log = createLogger('server');
 

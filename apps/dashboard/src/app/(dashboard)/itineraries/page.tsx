@@ -13,13 +13,13 @@ import {
   DashboardPageHeader,
   DashboardToolbar,
 } from '@/components/ui/dashboard-primitives';
-import { useAuth } from '@/hooks/use-auth';
 import {
   getItineraries,
 
   normalizeItinerariesResponse,
 } from '@/lib/api/itineraries';
 import { cn } from '@/lib/utils';
+import { useAuthContext as useAuth } from '@/providers/auth-provider';
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
   const colors: Record<string, string> = {

@@ -1,5 +1,4 @@
 import type { JWTPayload } from 'jose';
-import { createLogger } from '@pathfinding/logger';
 /**
  * JWT-based authentication middleware.
  *
@@ -16,6 +15,7 @@ import { createLogger } from '@pathfinding/logger';
  * Tokens without `sid` (legacy) remain valid but cannot be revoked.
  */
 import { createMiddleware } from 'hono/factory';
+import { createLogger } from '../lib/logger.js';
 import { isSessionValid, verifyToken } from '../services/auth.service.js';
 import { ApiError } from './error-handler.js';
 

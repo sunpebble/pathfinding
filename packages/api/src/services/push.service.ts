@@ -5,8 +5,8 @@
  * integration requires platform credentials to be configured.
  */
 import { getDb, pushTokens } from '@pathfinding/database';
-import { createLogger } from '@pathfinding/logger';
 import { and, eq } from 'drizzle-orm';
+import { createLogger } from '../lib/logger.js';
 
 const log = createLogger('push-service');
 

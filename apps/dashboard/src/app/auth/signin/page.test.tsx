@@ -6,9 +6,10 @@ import SignInPage from './page';
 
 const mockUseAuth = vi.fn();
 
-vi.mock('@/hooks/use-auth', () => ({
-  useAuth: () => mockUseAuth(),
-}));
+vi.mock('@/providers/auth-provider', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/providers/auth-provider')>();
+  return { ...actual, useAuthContext: () => mockUseAuth() };
+});
 
 describe('signInPage', () => {
   beforeEach(() => {

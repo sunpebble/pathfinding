@@ -230,19 +230,31 @@ func removeLeadingNoiseBeforeTitle(content, title string) string {
 	return content
 }
 
-func removeLeadingMafengwoBadges(content string) string {
-	badgeIndex := -1
-	badgeLength := 0
-	for _, badge := range []string{"星级游记", "蜂首游记", "宝藏游记"} {
-		index := strings.Index(content, badge)
-		if index >= 0 && index <= 1800 && (badgeIndex < 0 || index < badgeIndex) {
-			badgeIndex = index
-			badgeLength = len(badge)
+// earliestIndex returns the byte index and length of the first marker found in
+// s within maxOffset bytes (maxOffset <= 0 means no limit). Returns -1, 0 if
+// none found.
+func earliestIndex(s string, maxOffset int, markers ...string) (idx, length int) {
+	idx = -1
+	for _, m := range markers {
+		i := strings.Index(s, m)
+		if i < 0 {
+			continue
+		}
+		if maxOffset > 0 && i > maxOffset {
+			continue
+		}
+		if idx < 0 || i < idx {
+			idx = i
+			length = len(m)
 		}
 	}
+	return idx, length
+}
 
-	if badgeIndex >= 0 {
-		return strings.TrimSpace(content[badgeIndex+badgeLength:])
+func removeLeadingMafengwoBadges(content string) string {
+	idx, length := earliestIndex(content, 1800, "星级游记", "蜂首游记", "宝藏游记")
+	if idx >= 0 {
+		return strings.TrimSpace(content[idx+length:])
 	}
 	return content
 }
@@ -281,21 +293,10 @@ func removeMafengwoTripMeta(content string) string {
 		return content
 	}
 
-	markerIndex := -1
-	markerLength := 0
-	for _, marker := range []string{"查看全部天行程", "查看全部行程"} {
-		index := strings.Index(content[followIndex:], marker)
-		if index >= 0 {
-			absoluteIndex := followIndex + index
-			if markerIndex < 0 || absoluteIndex < markerIndex {
-				markerIndex = absoluteIndex
-				markerLength = len(marker)
-			}
-		}
-	}
-
-	if markerIndex >= 0 && markerIndex-followIndex <= 3600 {
-		return content[:followIndex] + " " + content[markerIndex+markerLength:]
+	relIdx, markerLen := earliestIndex(content[followIndex:], 3600, "查看全部天行程", "查看全部行程")
+	if relIdx >= 0 {
+		markerIndex := followIndex + relIdx
+		return content[:followIndex] + " " + content[markerIndex+markerLen:]
 	}
 	return content[:followIndex]
 }

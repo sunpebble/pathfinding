@@ -65,18 +65,7 @@ func OptimizeRoute(pois []TransportPOI, mode string) ([]int, []TransportSegment,
 
 	speed := speedKmH(mode)
 
-	// Build distance matrix
-	dist := make([][]float64, n)
-	for i := range dist {
-		dist[i] = make([]float64, n)
-		for j := range dist[i] {
-			if i != j {
-				dist[i][j] = HaversineDistance(pois[i].Latitude, pois[i].Longitude, pois[j].Latitude, pois[j].Longitude)
-			}
-		}
-	}
-
-	// Nearest-neighbor TSP starting from index 0
+	// Nearest-neighbor TSP starting from index 0; distances computed on demand.
 	visited := make([]bool, n)
 	order := make([]int, 0, n)
 	current := 0
@@ -87,13 +76,13 @@ func OptimizeRoute(pois []TransportPOI, mode string) ([]int, []TransportSegment,
 		bestNext := -1
 		bestDist := math.MaxFloat64
 		for j := 0; j < n; j++ {
-			if !visited[j] && dist[current][j] < bestDist {
-				bestDist = dist[current][j]
-				bestNext = j
+			if !visited[j] {
+				d := HaversineDistance(pois[current].Latitude, pois[current].Longitude, pois[j].Latitude, pois[j].Longitude)
+				if d < bestDist {
+					bestDist = d
+					bestNext = j
+				}
 			}
-		}
-		if bestNext == -1 {
-			break
 		}
 		visited[bestNext] = true
 		order = append(order, bestNext)
@@ -104,7 +93,7 @@ func OptimizeRoute(pois []TransportPOI, mode string) ([]int, []TransportSegment,
 	var segments []TransportSegment
 	optimizedTotal := 0.0
 	for i := 0; i < len(order)-1; i++ {
-		d := dist[order[i]][order[i+1]]
+		d := HaversineDistance(pois[order[i]].Latitude, pois[order[i]].Longitude, pois[order[i+1]].Latitude, pois[order[i+1]].Longitude)
 		optimizedTotal += d
 		segments = append(segments, TransportSegment{
 			From:            pois[order[i]].Name,
@@ -117,7 +106,7 @@ func OptimizeRoute(pois []TransportPOI, mode string) ([]int, []TransportSegment,
 	// Calculate original route distance
 	originalTotal := 0.0
 	for i := 0; i < n-1; i++ {
-		originalTotal += dist[i][i+1]
+		originalTotal += HaversineDistance(pois[i].Latitude, pois[i].Longitude, pois[i+1].Latitude, pois[i+1].Longitude)
 	}
 
 	savings := TransportSavings{

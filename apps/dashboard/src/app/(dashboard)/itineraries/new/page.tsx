@@ -16,8 +16,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
+import { useAuthContext as useAuth } from '@/providers/auth-provider';
 
 const TRAVEL_STYLES = [
   { value: '休闲', label: '休闲' },

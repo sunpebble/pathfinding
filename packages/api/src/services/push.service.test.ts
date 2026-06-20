@@ -18,7 +18,7 @@ vi.mock('@pathfinding/database', async () => {
   };
 });
 
-vi.mock('@pathfinding/logger', () => ({
+vi.mock('../lib/logger.js', () => ({
   createLogger: () => ({
     info: vi.fn(),
     warn: vi.fn(),

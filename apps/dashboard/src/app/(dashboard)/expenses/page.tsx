@@ -21,9 +21,9 @@ import {
   DashboardLoadingState,
   DashboardPageHeader,
 } from '@/components/ui/dashboard-primitives';
-import { useAuth } from '@/hooks/use-auth';
 import { createApiClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
+import { useAuthContext as useAuth } from '@/providers/auth-provider';
 
 const expenseApi = createApiClient('/api/expense-splitting');
 

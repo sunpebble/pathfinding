@@ -134,7 +134,8 @@ struct CommentSectionView: View {
           // Scroll to the target comment (parent for replies, new comment for top-level)
           if let targetCommentId {
             // Small delay to allow the list to update
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            Task { @MainActor in
+              try? await Task.sleep(for: .seconds(0.3))
               scrollToCommentId = targetCommentId
             }
           }
@@ -269,7 +270,8 @@ struct CommentRow: View {
           withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
             likeButtonScale = 1.3
           }
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+          Task {
+            try? await Task.sleep(for: .seconds(0.15))
             withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
               likeButtonScale = 1.0
             }

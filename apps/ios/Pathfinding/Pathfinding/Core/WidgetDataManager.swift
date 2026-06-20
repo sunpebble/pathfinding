@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import WidgetKit
 
 // MARK: - Type Aliases for Shared Widget Models
@@ -15,8 +16,9 @@ typealias AppGroupConstants = WidgetAppGroupConstants
 
 /// Manages data synchronization between main app and widgets
 /// Converts SavedItinerary models to widget-compatible data formats
+@Observable
 @MainActor
-final class WidgetDataManager: ObservableObject {
+final class WidgetDataManager {
   static let shared = WidgetDataManager()
 
   private let defaults: UserDefaults?

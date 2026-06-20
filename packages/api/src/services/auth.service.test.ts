@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   generateToken,
-  getJwtSecret,
   hashPassword,
   needsPasswordMigration,
-  resetJwtSecret,
   verifyPassword,
   verifyToken,
 } from './auth.service.js';
@@ -65,31 +63,13 @@ describe('auth.service — needsPasswordMigration', () => {
 
 describe('auth.service — JWT tokens', () => {
   beforeEach(() => {
-    resetJwtSecret();
     process.env.JWT_SECRET = 'test-jwt-secret-for-auth-service';
   });
 
   afterEach(() => {
-    resetJwtSecret();
     delete process.env.JWT_SECRET;
-  });
-
-  it('getJwtSecret returns a Uint8Array from env', () => {
-    const secret = getJwtSecret();
-    expect(secret).toBeInstanceOf(Uint8Array);
-    expect(secret.length).toBeGreaterThan(0);
-  });
-
-  it('getJwtSecret caches the result', () => {
-    const first = getJwtSecret();
-    const second = getJwtSecret();
-    expect(first).toBe(second); // same reference
-  });
-
-  it('getJwtSecret throws when JWT_SECRET is missing', () => {
-    resetJwtSecret();
-    delete process.env.JWT_SECRET;
-    expect(() => getJwtSecret()).toThrow('JWT_SECRET 环境变量是必需的');
+    // Reset the module cache so getJwtSecret picks up the next test's env
+    vi.resetModules();
   });
 
   it('generateToken creates a valid JWT that can be verified', async () => {
@@ -122,10 +102,11 @@ describe('auth.service — JWT tokens', () => {
     // Generate with current secret
     const token = await generateToken('42', 'user@example.com');
 
-    // Change secret
-    resetJwtSecret();
+    // Switch env to a different secret and reimport the module to get a fresh cache
     process.env.JWT_SECRET = 'completely-different-secret';
+    vi.resetModules();
+    const { verifyToken: freshVerify } = await import('./auth.service.js');
 
-    await expect(verifyToken(token)).rejects.toThrow();
+    await expect(freshVerify(token)).rejects.toThrow();
   });
 });

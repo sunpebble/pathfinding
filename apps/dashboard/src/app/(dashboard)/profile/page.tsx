@@ -8,7 +8,7 @@ import {
   DashboardLoadingState,
   DashboardPageHeader,
 } from '@/components/ui/dashboard-primitives';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext as useAuth } from '@/providers/auth-provider';
 
 interface UserProfile {
   id: number;

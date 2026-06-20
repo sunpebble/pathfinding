@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -25,8 +24,6 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 		originSet[o] = struct{}{}
 	}
 
-	allowedOriginsHeader := strings.Join(allowedOrigins, ", ")
-
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
@@ -40,7 +37,6 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 				} else {
 					// Origin not allowed — still set Vary so caches behave.
 					w.Header().Set("Vary", "Origin")
-					_ = allowedOriginsHeader // keep compiler happy
 				}
 			}
 

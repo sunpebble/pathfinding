@@ -94,17 +94,12 @@ function serializeBody(body: unknown): BodyInit | undefined {
     return undefined;
   }
 
-  if (
-    body instanceof FormData
-    || body instanceof URLSearchParams
-    || body instanceof Blob
-    || typeof body === 'string'
-    || body instanceof ArrayBuffer
-  ) {
-    return body;
+  // Pass BodyInit types through unchanged; JSON.stringify plain objects.
+  if (body !== null && typeof body === 'object' && !(body instanceof FormData) && !(body instanceof URLSearchParams) && !(body instanceof Blob) && !(body instanceof ArrayBuffer)) {
+    return JSON.stringify(body);
   }
 
-  return JSON.stringify(body);
+  return body as BodyInit;
 }
 
 function extractErrorMessage(data: unknown, statusText: string): string {

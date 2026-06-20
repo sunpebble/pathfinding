@@ -366,7 +366,8 @@ struct ARNavigationView: View {
       showCaptureFlash = true
     }
 
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+    Task {
+      try? await Task.sleep(for: .seconds(0.1))
       withAnimation(.easeOut(duration: 0.2)) {
         showCaptureFlash = false
       }

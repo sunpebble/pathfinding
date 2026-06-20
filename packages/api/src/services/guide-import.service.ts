@@ -9,11 +9,10 @@
  * unchanged so callers (crawl-jobs route, backfill-executor) are unaffected;
  * `syncGuideDestinations` is re-exported from `./guide-writer.js` for backfill.
  */
-import type { GoCrawlerPort } from './go-crawler-port.js';
 import type { ImportContext, StagingSupplement } from './guide-normalize.js';
 import { getDb, mafengwoDestinations, mafengwoGuides, travelGuides } from '@pathfinding/database';
 import { eq } from 'drizzle-orm';
-import { createGoCrawlerPort } from './go-crawler-port.js';
+import { fetchDetail } from './go-crawler-port.js';
 import { normalizeGuide } from './guide-normalize.js';
 import { persistIngestedGuide, syncGuideDestinations } from './guide-writer.js';
 
@@ -167,11 +166,11 @@ export async function discoverNewGuides(
 
 async function importMafengwoGuide(
   url: string,
-  port: GoCrawlerPort,
+  cfg: ExecutorConfig,
   context: ImportContext | undefined,
 ): Promise<ImportGuideResult> {
   const db = getDb();
-  const fetched = await port.fetchDetail(url);
+  const fetched = await fetchDetail(url, cfg);
   if (!fetched.ok) {
     return { success: false, action: 'failed', message: fetched.error, warnings: [] };
   }
@@ -215,8 +214,11 @@ export async function importGuide(
   context?: ImportContext,
 ): Promise<ImportGuideResult> {
   if (platform === 'mafengwo') {
-    const port = createGoCrawlerPort(overrideConfig);
-    return importMafengwoGuide(url, port, context);
+    const cfg: ExecutorConfig = {
+      goServerUrl: overrideConfig?.goServerUrl ?? process.env.GO_SERVER_URL ?? 'http://localhost:3001',
+      fetchImpl: overrideConfig?.fetchImpl ?? globalThis.fetch,
+    };
+    return importMafengwoGuide(url, cfg, context);
   }
 
   return {
