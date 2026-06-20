@@ -3,3 +3,34 @@ packages:
   - 'packages/*'
 
 neverBuiltDependencies: []
+
+# Security remediation: force patched versions for high/critical advisories
+# (pnpm audit --audit-level=high). Keys scoped to sub-patched ranges so only
+# vulnerable instances are bumped; targets capped to the current major.
+overrides:
+  'http-proxy-middleware@<3.0.7': '^3.0.7'
+  'hono@<4.12.25': '^4.12.25'
+  'form-data@<4.0.6': '^4.0.6'
+  'ws@<8.21.0': '^8.21.0'
+  'tmp@<0.2.6': '^0.2.6'
+  '@babel/plugin-transform-modules-systemjs@<7.29.4': '^7.29.4'
+  'fast-uri@<3.1.2': '^3.1.2'
+  'axios@<1.16.0': '^1.16.0'
+  'immutable@<5.1.5': '^5.1.5'
+  'next@<16.2.5': '^16.2.5'
+  'drizzle-orm@<0.45.2': '^0.45.2'
+  'vite': '^7.3.5'
+  'defu@<6.1.5': '^6.1.5'
+  'picomatch@<4.0.4': '^4.0.4'
+  'node-forge@<1.4.0': '^1.4.0'
+  'path-to-regexp@<0.1.13': '^0.1.13'
+  'undici@<7.28.0': '^7.28.0'
+  'flatted@<3.4.2': '^3.4.2'
+  '@hono/node-server@<1.19.10': '^1.19.10'
+  'svgo@<3.3.3': '^3.3.3'
+  'serialize-javascript@<7.0.3': '^7.0.3'
+  'koa@<3.1.2': '^3.1.2'
+  'rollup@<4.59.0': '^4.59.0'
+  'minimatch@<10.2.3': '^10.2.3'
+  'shell-quote@<1.8.4': '^1.8.4'
+  'vitest@<4.1.0': '^4.1.0'
