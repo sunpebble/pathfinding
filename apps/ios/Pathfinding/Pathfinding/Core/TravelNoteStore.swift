@@ -55,7 +55,7 @@ final class TravelNoteStore {
   // Error handling
   var errorMessage: String?
 
-  private let apiClient = APIClient.shared
+  private let apiClient = NetworkClient.shared
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "TravelNoteStore")
 
   // MARK: - Public Notes (Discovery Feed)
@@ -685,48 +685,4 @@ struct CommentIdResult: Codable {
 struct UpdateCommentResponse: Codable {
   let success: Bool
   let data: NoteComment
-}
-
-// MARK: - APIClient Extensions for Codable
-
-extension APIClient {
-  /// POST request with Codable body
-  func postCodable<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
-    var request = await createAuthenticatedRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONEncoder().encode(body)
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
-    else {
-      throw APIError.httpError((response as? HTTPURLResponse)?.statusCode ?? 500)
-    }
-
-    return try JSONDecoder().decode(T.self, from: data)
-  }
-
-  /// PATCH request with Codable body
-  func patchCodable<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T {
-    let baseURL = URL(string: AppConfig.apiBaseURL)!
-    let url = baseURL.appendingPathComponent("v1/\(path)")
-    var request = await createAuthenticatedRequest(url: url)
-    request.httpMethod = "PATCH"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONEncoder().encode(body)
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300
-    else {
-      throw APIError.httpError((response as? HTTPURLResponse)?.statusCode ?? 500)
-    }
-
-    return try JSONDecoder().decode(T.self, from: data)
-  }
 }

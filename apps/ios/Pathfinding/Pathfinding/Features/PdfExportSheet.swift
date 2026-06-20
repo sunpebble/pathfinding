@@ -253,7 +253,7 @@ struct PdfExportSheet: View {
     )
 
     do {
-      let url = try await APIClient.shared.generateGuidePdf(
+      let url = try await PDFAPIClient.shared.generateGuidePdf(
         guideId: guide.id,
         options: options
       )

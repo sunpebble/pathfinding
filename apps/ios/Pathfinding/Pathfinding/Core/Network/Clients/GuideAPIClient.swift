@@ -111,39 +111,3 @@ actor GuideAPIClient {
     return result.data
   }
 }
-
-// MARK: - Backward Compatibility Extension
-
-extension APIClient {
-  /// Fetch travel guides with caching
-  func fetchGuides(limit: Int = 20, offset: Int = 0, forceRefresh: Bool = false) async throws -> [BlogPost] {
-    try await GuideAPIClient.shared.fetchGuides(limit: limit, offset: offset, forceRefresh: forceRefresh)
-  }
-
-  /// Fetch single guide by ID
-  func fetchGuide(id: String) async throws -> BlogPost {
-    try await GuideAPIClient.shared.fetchGuide(id: id)
-  }
-
-  /// Search guides with filters
-  func searchGuides(
-    query: String? = nil,
-    destination: String? = nil,
-    hasAiData: Bool? = nil,
-    daysAgo: Int? = nil,
-    limit: Int = 30
-  ) async throws -> [BlogPost] {
-    try await GuideAPIClient.shared.searchGuides(
-      query: query,
-      destination: destination,
-      hasAiData: hasAiData,
-      daysAgo: daysAgo,
-      limit: limit
-    )
-  }
-
-  /// Fetch popular destinations
-  func fetchPopularDestinations(limit: Int = 10) async throws -> [PopularDestination] {
-    try await GuideAPIClient.shared.fetchPopularDestinations(limit: limit)
-  }
-}

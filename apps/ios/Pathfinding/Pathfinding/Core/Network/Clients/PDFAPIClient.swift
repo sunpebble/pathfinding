@@ -97,25 +97,3 @@ actor PDFAPIClient {
     return fileURL
   }
 }
-
-// MARK: - Backward Compatibility Extension
-
-extension APIClient {
-  /// Fetch available PDF templates
-  func fetchPdfTemplates(language: String = "zh") async throws -> [String: PdfTemplate] {
-    try await PDFAPIClient.shared.fetchPdfTemplates(language: language)
-  }
-
-  /// Get PDF preview info for a guide
-  func fetchGuidePdfPreview(guideId: String) async throws -> PdfPreviewInfo {
-    try await PDFAPIClient.shared.fetchGuidePdfPreview(guideId: guideId)
-  }
-
-  /// Generate PDF for a guide and return the file URL
-  func generateGuidePdf(
-    guideId: String,
-    options: PdfExportOptions
-  ) async throws -> URL {
-    try await PDFAPIClient.shared.generateGuidePdf(guideId: guideId, options: options)
-  }
-}

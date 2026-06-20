@@ -404,7 +404,7 @@ struct RouteOptimizationSheet: View {
         )
 
         do {
-            let optimizedResult = try await APIClient.shared.optimizeDayRoute(day: day, options: options)
+            let optimizedResult = try await RouteOptimizationAPIClient.shared.optimizeDayRoute(day: day, options: options)
             await MainActor.run {
                 self.result = optimizedResult
                 self.isLoading = false

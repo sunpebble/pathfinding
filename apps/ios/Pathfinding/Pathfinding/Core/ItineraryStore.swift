@@ -251,7 +251,7 @@ final class ItineraryStore {
     dateFormatter.dateFormat = "yyyy-MM-dd"
     let startDateString = dateFormatter.string(from: newStartDate)
 
-    let apiItinerary = try await APIClient.shared.copyItinerary(
+    let apiItinerary = try await ItineraryAPIClient.shared.copyItinerary(
       itineraryId: itineraryId,
       newStartDate: startDateString
     )
@@ -283,7 +283,7 @@ final class ItineraryStore {
     dateFormatter.dateFormat = "yyyy-MM-dd"
     let startDateString = dateFormatter.string(from: newStartDate)
 
-    let apiItinerary = try await APIClient.shared.copyItineraryPartial(
+    let apiItinerary = try await ItineraryAPIClient.shared.copyItineraryPartial(
       itineraryId: itineraryId,
       newStartDate: startDateString,
       selectedDays: selectedDays,
@@ -307,14 +307,14 @@ final class ItineraryStore {
   ///   - pageSize: 每页数量
   /// - Returns: 复制历史结果
   func getCopyHistory(page: Int = 1, pageSize: Int = 20) async throws -> CopyHistoryResult {
-    return try await APIClient.shared.getCopyHistory(page: page, pageSize: pageSize)
+    return try await ItineraryAPIClient.shared.getCopyHistory(page: page, pageSize: pageSize)
   }
 
   /// 获取行程的复制统计
   /// - Parameter itineraryId: 行程ID
   /// - Returns: 复制统计数据
   func getCopyStats(itineraryId: String) async throws -> ItineraryCopyStats {
-    return try await APIClient.shared.getItineraryCopyStats(itineraryId: itineraryId)
+    return try await ItineraryAPIClient.shared.getItineraryCopyStats(itineraryId: itineraryId)
   }
 
   /// 获取公开行程列表用于发现
@@ -330,7 +330,7 @@ final class ItineraryStore {
     pageSize: Int = 20,
     sortBy: String = "created_at"
   ) async throws -> PublicItinerariesResult {
-    return try await APIClient.shared.listPublicItineraries(
+    return try await ItineraryAPIClient.shared.listPublicItineraries(
       cityId: cityId,
       page: page,
       pageSize: pageSize,

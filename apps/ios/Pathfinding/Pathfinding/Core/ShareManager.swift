@@ -122,7 +122,6 @@ final class ShareManager {
   static let shared = ShareManager()
 
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "ShareManager")
-  private let apiClient = APIClient.shared
 
   // Share state
   private(set) var isSharing = false

@@ -33,7 +33,7 @@ final class StatsStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "stats/quick")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "stats/quick")
       let response = try JSONDecoder().decode(QuickStatsResponse.self, from: data)
       quickStats = response.data
       logger.info("Loaded quick stats")
@@ -53,7 +53,7 @@ final class StatsStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "stats")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "stats")
       let response = try JSONDecoder().decode(TravelStatsResponse.self, from: data)
       fullStats = response.data
       logger.info("Loaded full stats")
@@ -70,7 +70,7 @@ final class StatsStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.postData(endpoint: "stats/calculate", body: [:])
+      let data = try await NetworkClient.shared.postData(endpoint: "stats/calculate", body: [:])
       let response = try JSONDecoder().decode(TravelStatsResponse.self, from: data)
       fullStats = response.data
       logger.info("Calculated and loaded stats")
@@ -86,7 +86,7 @@ final class StatsStore {
 
   func loadAvailableYears() async {
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "stats/yearly/available")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "stats/yearly/available")
       let response = try JSONDecoder().decode(AvailableYearsResponse.self, from: data)
       availableYears = response.data
       logger.info("Loaded \(self.availableYears.count) available years")
@@ -101,7 +101,7 @@ final class StatsStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "stats/yearly")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "stats/yearly")
       let response = try JSONDecoder().decode(YearlyReviewsListResponse.self, from: data)
       yearlyReviews = response.data
       logger.info("Loaded \(self.yearlyReviews.count) yearly reviews")
@@ -118,7 +118,7 @@ final class StatsStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "stats/yearly/\(year)")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "stats/yearly/\(year)")
       let response = try JSONDecoder().decode(YearlyReviewResponse.self, from: data)
       currentYearReview = response.data
       logger.info("Loaded yearly review for \(year)")
@@ -135,7 +135,7 @@ final class StatsStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.postData(
+      let data = try await NetworkClient.shared.postData(
         endpoint: "stats/yearly/\(year)/generate",
         body: [:]
       )
@@ -167,7 +167,7 @@ final class StatsStore {
       if let itineraryId { body["itineraryId"] = itineraryId }
       if let imageUrl { body["imageUrl"] = imageUrl }
 
-      let data = try await APIClient.shared.postData(
+      let data = try await NetworkClient.shared.postData(
         endpoint: "stats/yearly/\(year)/memories",
         body: body
       )
@@ -190,62 +190,5 @@ final class StatsStore {
     availableYears = []
     error = nil
     logger.info("Stats cache cleared")
-  }
-}
-
-// MARK: - APIClient Extension
-
-extension APIClient {
-  func fetchData(endpoint: String) async throws -> Data {
-    let url = URL(string: AppConfig.apiBaseURL)!
-      .appendingPathComponent("v1")
-      .appendingPathComponent(endpoint)
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
-  }
-
-  func postData(endpoint: String, body: [String: Any]) async throws -> Data {
-    // Convert to Data on the calling side to avoid Sendable issues
-    let bodyData = try JSONSerialization.data(withJSONObject: body)
-    return try await postDataWithBody(endpoint: endpoint, bodyData: bodyData)
-  }
-
-  func postDataWithBody(endpoint: String, bodyData: Data) async throws -> Data {
-    let url = URL(string: AppConfig.apiBaseURL)!
-      .appendingPathComponent("v1")
-      .appendingPathComponent(endpoint)
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    request.httpBody = bodyData
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
   }
 }

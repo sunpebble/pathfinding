@@ -144,7 +144,7 @@ struct CityEncyclopediaView: View {
     errorMessage = nil
 
     do {
-      let result = try await APIClient.shared.fetchCityWithEncyclopedia(cityId: cityId)
+      let result = try await CityAPIClient.shared.fetchCityWithEncyclopedia(cityId: cityId)
       await MainActor.run {
         cityWithEncyclopedia = result
         isLoading = false

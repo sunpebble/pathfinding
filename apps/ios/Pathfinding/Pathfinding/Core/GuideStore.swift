@@ -65,7 +65,7 @@ final class GuideStore {
     defer { isLoading = false }
 
     do {
-      let fetchedGuides = try await APIClient.shared.fetchGuides(limit: 30)
+      let fetchedGuides = try await GuideAPIClient.shared.fetchGuides(limit: 30)
       guides = fetchedGuides
       lastFetchedAt = Date()
       logger.info("Fetched \(fetchedGuides.count) guides")
@@ -119,7 +119,7 @@ final class GuideStore {
     defer { isSearching = false }
 
     do {
-      searchResults = try await APIClient.shared.searchGuides(
+      searchResults = try await GuideAPIClient.shared.searchGuides(
         query: query.isEmpty ? nil : query,
         destination: destination,
         hasAiData: hasAiData ? true : nil,
@@ -137,7 +137,7 @@ final class GuideStore {
   /// Fetch popular destinations
   func fetchPopularDestinations() async {
     do {
-      popularDestinations = try await APIClient.shared.fetchPopularDestinations()
+      popularDestinations = try await GuideAPIClient.shared.fetchPopularDestinations()
       logger.info("Fetched \(self.popularDestinations.count) popular destinations")
     } catch {
       logger.error("Fetch destinations error: \(error.localizedDescription)")

@@ -56,7 +56,7 @@ final class FlightStore {
     errorMessage = nil
 
     do {
-      let response = try await APIClient.shared.fetchFlightBookings(
+      let response = try await FlightAPIClient.shared.fetchFlightBookings(
         page: currentPage,
         pageSize: pageSize
       )
@@ -88,7 +88,7 @@ final class FlightStore {
     errorMessage = nil
 
     do {
-      let response = try await APIClient.shared.fetchUpcomingFlights(limit: limit)
+      let response = try await FlightAPIClient.shared.fetchUpcomingFlights(limit: limit)
       // Merge with existing bookings
       for flight in response.data {
         if !bookings.contains(where: { $0.id == flight.id }) {
@@ -107,7 +107,7 @@ final class FlightStore {
   /// Lookup flight by number and date
   func lookupFlight(flightNumber: String, date: String) async -> FlightInfo? {
     do {
-      let flight = try await APIClient.shared.lookupFlight(
+      let flight = try await FlightAPIClient.shared.lookupFlight(
         flightNumber: flightNumber,
         date: date
       )
@@ -125,7 +125,7 @@ final class FlightStore {
     errorMessage = nil
 
     do {
-      let response = try await APIClient.shared.createFlightBooking(input)
+      let response = try await FlightAPIClient.shared.createFlightBooking(input)
       // Refresh bookings to get the new one with full data
       await loadBookings(forceRefresh: true)
       if let bookingId = response.data?.bookingId {
@@ -147,7 +147,7 @@ final class FlightStore {
     errorMessage = nil
 
     do {
-      let updated = try await APIClient.shared.updateFlightBooking(bookingId, input: input)
+      let updated = try await FlightAPIClient.shared.updateFlightBooking(bookingId, input: input)
       // Update local cache
       if let index = bookings.firstIndex(where: { $0.id == bookingId }) {
         bookings[index] = updated
@@ -169,7 +169,7 @@ final class FlightStore {
     errorMessage = nil
 
     do {
-      try await APIClient.shared.deleteFlightBooking(bookingId)
+      try await FlightAPIClient.shared.deleteFlightBooking(bookingId)
       // Remove from local cache
       bookings.removeAll { $0.id == bookingId }
       logger.info("Deleted flight booking: \(bookingId)")
@@ -186,7 +186,7 @@ final class FlightStore {
   /// Link booking to an itinerary
   func linkToItinerary(bookingId: String, itineraryId: String) async -> Bool {
     do {
-      let updated = try await APIClient.shared.linkFlightToItinerary(
+      let updated = try await FlightAPIClient.shared.linkFlightToItinerary(
         bookingId: bookingId,
         itineraryId: itineraryId
       )
@@ -206,7 +206,7 @@ final class FlightStore {
   /// Unlink booking from itinerary
   func unlinkFromItinerary(bookingId: String) async -> Bool {
     do {
-      let updated = try await APIClient.shared.unlinkFlightFromItinerary(bookingId: bookingId)
+      let updated = try await FlightAPIClient.shared.unlinkFlightFromItinerary(bookingId: bookingId)
       // Update local cache
       if let index = bookings.firstIndex(where: { $0.id == bookingId }) {
         bookings[index] = updated
@@ -223,7 +223,7 @@ final class FlightStore {
   /// Check in for a flight
   func checkIn(bookingId: String, seatNumber: String? = nil) async -> Bool {
     do {
-      let updated = try await APIClient.shared.checkInFlight(
+      let updated = try await FlightAPIClient.shared.checkInFlight(
         bookingId: bookingId,
         seatNumber: seatNumber
       )
@@ -243,7 +243,7 @@ final class FlightStore {
   /// Get bookings for a specific itinerary
   func getBookingsForItinerary(_ itineraryId: String) async -> [FlightBooking] {
     do {
-      let bookings = try await APIClient.shared.fetchFlightBookingsForItinerary(itineraryId)
+      let bookings = try await FlightAPIClient.shared.fetchFlightBookingsForItinerary(itineraryId)
       return bookings
     } catch {
       logger.error("Failed to get bookings for itinerary: \(error.localizedDescription)")
@@ -254,7 +254,7 @@ final class FlightStore {
   /// Get flight status for a booking
   func getFlightStatus(_ bookingId: String) async -> FlightStatusData? {
     do {
-      let status = try await APIClient.shared.getFlightStatus(bookingId: bookingId)
+      let status = try await FlightAPIClient.shared.getFlightStatus(bookingId: bookingId)
       return status
     } catch {
       logger.error("Failed to get flight status: \(error.localizedDescription)")

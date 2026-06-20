@@ -748,8 +748,7 @@ struct SafetyRatingView: View {
     errorMessage = nil
 
     // Simulated data for preview - in production, call API
-    // let client = await APIClient.shared
-    // let info = try await client.fetchSafetyInfo(destination: destinationName)
+    // let info = try await SafetyAPIClient.shared.fetchDestinationSafetyInfo(destinationName: destinationName)
 
     // For now, create sample data
     await MainActor.run {

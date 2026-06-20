@@ -62,7 +62,7 @@ final class ShareStore {
 
     do {
       let endpoint = "share/links?resource_type=\(resourceType.rawValue)&resource_id=\(resourceId)"
-      let data = try await APIClient.shared.fetchData(endpoint: endpoint)
+      let data = try await NetworkClient.shared.fetchData(endpoint: endpoint)
       let response = try JSONDecoder().decode(ShareLinksResponse.self, from: data)
       shareLinks = response.data
       logger.info("Loaded \(self.shareLinks.count) share links")
@@ -105,7 +105,7 @@ final class ShareStore {
 
       let bodyData = try JSONEncoder().encode(request)
 
-      let data = try await APIClient.shared.postDataWithBody(endpoint: "share/links", bodyData: bodyData)
+      let data = try await NetworkClient.shared.postDataWithBody(endpoint: "share/links", bodyData: bodyData)
       let response = try JSONDecoder().decode(CreateShareLinkResponse.self, from: data)
 
       if let result = response.data {
@@ -141,7 +141,7 @@ final class ShareStore {
       if let password { body["password"] = password }
       if let expiresInDays { body["expires_in_days"] = expiresInDays }
 
-      let data = try await APIClient.shared.postData(
+      let data = try await NetworkClient.shared.postData(
         endpoint: "itineraries/\(itineraryId)/share",
         body: body
       )
@@ -187,7 +187,7 @@ final class ShareStore {
       if let allowCopy { body["allow_copy"] = allowCopy }
       if let isActive { body["is_active"] = isActive }
 
-      _ = try await APIClient.shared.patchData(endpoint: "share/links/\(shareLinkId)", body: body)
+      _ = try await NetworkClient.shared.patchData(endpoint: "share/links/\(shareLinkId)", body: body)
       logger.info("Updated share link: \(shareLinkId)")
 
       isUpdatingLink = false
@@ -203,7 +203,7 @@ final class ShareStore {
   /// Revoke a share link
   func revokeShareLink(shareLinkId: String) async -> Bool {
     do {
-      _ = try await APIClient.shared.postData(
+      _ = try await NetworkClient.shared.postData(
         endpoint: "share/links/\(shareLinkId)/revoke",
         body: [:]
       )
@@ -225,7 +225,7 @@ final class ShareStore {
   /// Delete a share link permanently
   func deleteShareLink(shareLinkId: String) async -> Bool {
     do {
-      _ = try await APIClient.shared.deleteData(endpoint: "share/links/\(shareLinkId)")
+      _ = try await NetworkClient.shared.deleteData(endpoint: "share/links/\(shareLinkId)")
 
       // Update local state
       shareLinks.removeAll { $0.id == shareLinkId }
@@ -249,7 +249,7 @@ final class ShareStore {
 
     do {
       let endpoint = "share/stats?resource_type=\(resourceType.rawValue)&resource_id=\(resourceId)"
-      let data = try await APIClient.shared.fetchData(endpoint: endpoint)
+      let data = try await NetworkClient.shared.fetchData(endpoint: endpoint)
       let response = try JSONDecoder().decode(ShareStatsResponse.self, from: data)
       stats = response.data
       logger.info("Loaded share stats")
@@ -268,7 +268,7 @@ final class ShareStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(
+      let data = try await NetworkClient.shared.fetchData(
         endpoint: "itineraries/\(itineraryId)/share/stats"
       )
       let response = try JSONDecoder().decode(ShareStatsResponse.self, from: data)
@@ -303,7 +303,7 @@ final class ShareStore {
         endpoint += "&cursor=\(cursor)"
       }
 
-      let data = try await APIClient.shared.fetchData(endpoint: endpoint)
+      let data = try await NetworkClient.shared.fetchData(endpoint: endpoint)
       let response = try JSONDecoder().decode(ShareHistoryResponse.self, from: data)
 
       if refresh {
@@ -342,7 +342,7 @@ final class ShareStore {
       if let days { endpoint += "days=\(days)&" }
       if let limit { endpoint += "limit=\(limit)&" }
 
-      let data = try await APIClient.shared.fetchData(endpoint: endpoint)
+      let data = try await NetworkClient.shared.fetchData(endpoint: endpoint)
       let response = try JSONDecoder().decode(TopSharedResponse.self, from: data)
       topShared = response.data
       logger.info("Loaded \(self.topShared.count) top shared resources")
@@ -371,7 +371,7 @@ final class ShareStore {
       if let resourceType { body["resource_type"] = resourceType.rawValue }
       if let shareUrl { body["share_url"] = shareUrl }
 
-      _ = try await APIClient.shared.postData(endpoint: "share/events", body: body)
+      _ = try await NetworkClient.shared.postData(endpoint: "share/events", body: body)
       logger.info("Tracked share event for resource: \(resourceId)")
     } catch {
       logger.error("Failed to track share event: \(error.localizedDescription)")
@@ -397,56 +397,5 @@ final class ShareStore {
   /// Get a shareable URL for quick sharing
   func getShareableURL(shareCode: String) -> URL? {
     URL(string: "https://pathfinding.app/s/\(shareCode)")
-  }
-}
-
-// MARK: - APIClient Extensions
-
-extension APIClient {
-  func patchData(endpoint: String, body: [String: Any]) async throws -> Data {
-    let url = URL(string: AppConfig.apiBaseURL)!
-      .appendingPathComponent("v1")
-      .appendingPathComponent(endpoint)
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "PATCH"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
-  }
-
-  func deleteData(endpoint: String) async throws -> Data {
-    let url = URL(string: AppConfig.apiBaseURL)!
-      .appendingPathComponent("v1")
-      .appendingPathComponent(endpoint)
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "DELETE"
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
   }
 }

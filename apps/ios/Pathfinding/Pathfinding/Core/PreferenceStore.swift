@@ -48,7 +48,7 @@ final class PreferenceStore {
     error = nil
 
     do {
-      preferences = try await APIClient.shared.fetchPreferences()
+      preferences = try await PreferencesAPIClient.shared.fetchPreferences()
       logger.info("Loaded user preferences")
     } catch {
       logger.error("Failed to load preferences: \(String(describing: error))")
@@ -61,7 +61,7 @@ final class PreferenceStore {
   /// Load top preference categories
   func loadTopCategories(limit: Int = 5) async {
     do {
-      topCategories = try await APIClient.shared.fetchTopCategories(limit: limit)
+      topCategories = try await PreferencesAPIClient.shared.fetchTopCategories(limit: limit)
       logger.info("Loaded \(self.topCategories.count) top categories")
     } catch {
       logger.error("Failed to load top categories: \(String(describing: error))")
@@ -71,7 +71,7 @@ final class PreferenceStore {
   /// Load personalized recommendations
   func loadRecommendations() async {
     do {
-      recommendations = try await APIClient.shared.fetchRecommendations()
+      recommendations = try await PreferencesAPIClient.shared.fetchRecommendations()
       logger.info("Loaded recommendations")
     } catch {
       logger.error("Failed to load recommendations: \(String(describing: error))")
@@ -81,7 +81,7 @@ final class PreferenceStore {
   /// Load recent behavior events
   func loadRecentBehaviors(limit: Int = 50) async {
     do {
-      recentBehaviors = try await APIClient.shared.fetchRecentBehaviors(limit: limit)
+      recentBehaviors = try await PreferencesAPIClient.shared.fetchRecentBehaviors(limit: limit)
       logger.info("Loaded \(self.recentBehaviors.count) recent behaviors")
     } catch {
       logger.error("Failed to load recent behaviors: \(String(describing: error))")
@@ -112,7 +112,7 @@ final class PreferenceStore {
     )
 
     do {
-      preferences = try await APIClient.shared.updatePreferences(request: request)
+      preferences = try await PreferencesAPIClient.shared.updatePreferences(request: request)
       logger.info("Updated user preferences")
       isLoading = false
       return true
@@ -141,7 +141,7 @@ final class PreferenceStore {
     )
 
     do {
-      _ = try await APIClient.shared.recordBehavior(request: request)
+      _ = try await PreferencesAPIClient.shared.recordBehavior(request: request)
       logger.debug("Recorded behavior: \(type.rawValue) on \(targetType.rawValue):\(targetId)")
     } catch {
       logger.error("Failed to record behavior: \(String(describing: error))")
@@ -154,7 +154,7 @@ final class PreferenceStore {
     error = nil
 
     do {
-      let result = try await APIClient.shared.resetPreferences()
+      let result = try await PreferencesAPIClient.shared.resetPreferences()
       if result.success {
         // Reload preferences after reset
         await loadPreferences()

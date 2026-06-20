@@ -25,7 +25,7 @@ final class ChatStore {
   var pendingUserMessage: String?
   var pendingAssistantMessage: String?
 
-  private let apiClient = APIClient.shared
+  private let apiClient = NetworkClient.shared
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "ChatStore")
 
   // MARK: - Session Operations

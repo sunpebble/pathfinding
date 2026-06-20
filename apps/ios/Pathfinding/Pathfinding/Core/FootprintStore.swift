@@ -47,7 +47,7 @@ final class FootprintStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "footprints/cities")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "footprints/cities")
       let response = try decoder.decode(VisitedCitiesResponse.self, from: data)
       visitedCities = response.data
       logger.info("Loaded \(self.visitedCities.count) visited cities")
@@ -67,7 +67,7 @@ final class FootprintStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "footprints/countries")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "footprints/countries")
       let response = try decoder.decode(VisitedCountriesResponse.self, from: data)
       visitedCountries = response.data
       logger.info("Loaded \(self.visitedCountries.count) visited countries")
@@ -87,7 +87,7 @@ final class FootprintStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "footprints/stats")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "footprints/stats")
       let response = try decoder.decode(FootprintStatsResponse.self, from: data)
       footprintStats = response.data
       logger.info("Loaded footprint stats: \(self.footprintStats?.totalCities ?? 0) cities, \(self.footprintStats?.totalCountries ?? 0) countries")
@@ -104,7 +104,7 @@ final class FootprintStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.postData(endpoint: "footprints/stats/refresh", body: [:])
+      let data = try await NetworkClient.shared.postData(endpoint: "footprints/stats/refresh", body: [:])
       let response = try decoder.decode(FootprintStatsResponse.self, from: data)
       footprintStats = response.data
       logger.info("Refreshed footprint stats")
@@ -124,7 +124,7 @@ final class FootprintStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(endpoint: "footprints/map")
+      let data = try await NetworkClient.shared.fetchData(endpoint: "footprints/map")
       let response = try decoder.decode(FootprintMapResponse.self, from: data)
       mapData = response.data
       logger.info("Loaded map data: \(self.mapData?.features.count ?? 0) features, \(self.mapData?.visitedCountries.count ?? 0) countries")
@@ -153,7 +153,7 @@ final class FootprintStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(
+      let data = try await NetworkClient.shared.fetchData(
         endpoint: "footprints/timeline?limit=\(timelinePageSize)&offset=\(timelineOffset)"
       )
       let response = try decoder.decode(FootprintTimelineResponse.self, from: data)
@@ -187,7 +187,7 @@ final class FootprintStore {
         throw APIError.invalidResponse
       }
 
-      _ = try await APIClient.shared.postData(endpoint: "footprints/cities", body: body)
+      _ = try await NetworkClient.shared.postData(endpoint: "footprints/cities", body: body)
       logger.info("Added visited city: \(input.cityName)")
 
       // Refresh data
@@ -216,7 +216,7 @@ final class FootprintStore {
         throw APIError.invalidResponse
       }
 
-      _ = try await APIClient.shared.patchData(endpoint: "footprints/cities/\(id)", body: body)
+      _ = try await NetworkClient.shared.patchData(endpoint: "footprints/cities/\(id)", body: body)
       logger.info("Updated visited city: \(id)")
 
       // Refresh cities list
@@ -235,7 +235,7 @@ final class FootprintStore {
     error = nil
 
     do {
-      _ = try await APIClient.shared.deleteData(endpoint: "footprints/cities/\(id)")
+      _ = try await NetworkClient.shared.deleteData(endpoint: "footprints/cities/\(id)")
       logger.info("Removed visited city: \(id)")
 
       // Refresh data
@@ -261,7 +261,7 @@ final class FootprintStore {
       if let goalCities { body["goalCities"] = goalCities }
       if let goalCountries { body["goalCountries"] = goalCountries }
 
-      _ = try await APIClient.shared.patchData(endpoint: "footprints/goals", body: body)
+      _ = try await NetworkClient.shared.patchData(endpoint: "footprints/goals", body: body)
       logger.info("Updated travel goals")
 
       await loadStats()

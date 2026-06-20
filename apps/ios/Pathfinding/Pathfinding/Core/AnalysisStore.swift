@@ -52,7 +52,7 @@ final class AnalysisStore {
       let queryString = queryParams.joined(separator: "&")
       let endpoint = "analysis/\(itineraryId)?\(queryString)"
 
-      let data = try await APIClient.shared.fetchData(endpoint: endpoint)
+      let data = try await NetworkClient.shared.fetchData(endpoint: endpoint)
       let response = try JSONDecoder().decode(AnalysisReportResponse.self, from: data)
       currentReport = response.data
       cachedReports[itineraryId] = response.data
@@ -83,7 +83,7 @@ final class AnalysisStore {
       ].compactMapValues { $0 }
       let bodyData = try JSONSerialization.data(withJSONObject: bodyDict)
 
-      let data = try await APIClient.shared.postDataWithBody(
+      let data = try await NetworkClient.shared.postDataWithBody(
         endpoint: "analysis/\(itineraryId)",
         bodyData: bodyData
       )
@@ -108,7 +108,7 @@ final class AnalysisStore {
     error = nil
 
     do {
-      let data = try await APIClient.shared.fetchData(
+      let data = try await NetworkClient.shared.fetchData(
         endpoint: "analysis/\(itineraryId)/quick"
       )
       let response = try JSONDecoder().decode(QuickAnalysisResponse.self, from: data)
@@ -127,7 +127,7 @@ final class AnalysisStore {
   /// Load just the score breakdown
   func loadScoreOnly(itineraryId: String) async -> ScoreOnlyData? {
     do {
-      let data = try await APIClient.shared.fetchData(
+      let data = try await NetworkClient.shared.fetchData(
         endpoint: "analysis/\(itineraryId)/score"
       )
       let response = try JSONDecoder().decode(ScoreOnlyResponse.self, from: data)
@@ -143,7 +143,7 @@ final class AnalysisStore {
   /// Load budget analysis only
   func loadBudgetAnalysis(itineraryId: String) async -> BudgetAnalysis? {
     do {
-      let data = try await APIClient.shared.fetchData(
+      let data = try await NetworkClient.shared.fetchData(
         endpoint: "analysis/\(itineraryId)/budget"
       )
       let response = try JSONDecoder().decode(BudgetAnalysisResponse.self, from: data)
@@ -159,7 +159,7 @@ final class AnalysisStore {
   /// Load recommendations only
   func loadRecommendations(itineraryId: String) async -> RecommendationsData? {
     do {
-      let data = try await APIClient.shared.fetchData(
+      let data = try await NetworkClient.shared.fetchData(
         endpoint: "analysis/\(itineraryId)/recommendations"
       )
       let response = try JSONDecoder().decode(AnalysisRecommendationsResponse.self, from: data)

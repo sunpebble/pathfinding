@@ -77,30 +77,3 @@ actor CityAPIClient {
     return result.data
   }
 }
-
-// MARK: - Backward Compatibility Extension
-
-extension APIClient {
-  /// Fetch city with encyclopedia data by ID (public API)
-  func fetchCityWithEncyclopedia(cityId: String) async throws -> CityWithEncyclopedia {
-    try await CityAPIClient.shared.fetchCityWithEncyclopedia(cityId: cityId)
-  }
-
-  /// List cities with encyclopedia data (public API)
-  func fetchCitiesWithEncyclopedia(
-    countryCode: String? = nil,
-    limit: Int = 50
-  ) async throws -> [CityWithEncyclopedia] {
-    try await CityAPIClient.shared.fetchCitiesWithEncyclopedia(countryCode: countryCode, limit: limit)
-  }
-
-  /// Search cities by name (public API)
-  func searchCities(query: String) async throws -> [CityWithEncyclopedia] {
-    try await CityAPIClient.shared.searchCities(query: query)
-  }
-
-  /// Fetch cities by country code (public API)
-  func fetchCitiesByCountry(countryCode: String) async throws -> [CityWithEncyclopedia] {
-    try await CityAPIClient.shared.fetchCitiesByCountry(countryCode: countryCode)
-  }
-}

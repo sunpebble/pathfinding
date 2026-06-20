@@ -26,7 +26,7 @@ final class QAStore {
 
   var errorMessage: String?
 
-  private let apiClient = APIClient.shared
+  private let apiClient = NetworkClient.shared
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "QAStore")
 
   // MARK: - Question Operations

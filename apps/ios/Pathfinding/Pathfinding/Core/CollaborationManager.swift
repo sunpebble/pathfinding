@@ -9,7 +9,7 @@ final class CollaborationManager {
   static let shared = CollaborationManager()
 
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "CollaborationManager")
-  private let apiClient = APIClient.shared
+  private let apiClient = CollaborationAPIClient.shared
 
   // MARK: - State
 

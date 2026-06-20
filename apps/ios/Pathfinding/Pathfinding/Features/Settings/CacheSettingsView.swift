@@ -44,7 +44,7 @@ struct CacheSettingsView: View {
 
         Button {
           Task {
-            await APIClient.shared.clearCache()
+            await NetworkClient.shared.clearCache()
             GuideStore.shared.clearCache()
           }
         } label: {

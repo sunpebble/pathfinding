@@ -9,7 +9,7 @@ final class TimezoneStore {
   static let shared = TimezoneStore()
 
   private let logger = Logger(subsystem: "org.pathfinding.app", category: "TimezoneStore")
-  private let apiClient = APIClient.shared
+  private let apiClient = NetworkClient.shared
 
   // MARK: - State
 
@@ -426,113 +426,5 @@ final class TimezoneStore {
     let data = try await apiClient.postData(url: url, body: body)
     let response = try JSONDecoder().decode(CurrentTimesResponse.self, from: data)
     return response.data
-  }
-}
-
-// MARK: - APIClient Extensions
-
-extension APIClient {
-  /// Fetch data from URL (generic GET request)
-  func fetchData(url: URL) async throws -> Data {
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
-  }
-
-  /// POST data to URL
-  func postData(url: URL, body: [String: Any]) async throws -> Data {
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
-  }
-
-  /// PUT data to URL
-  func putData(url: URL, body: sending [String: Any]) async throws -> Data {
-    var request = URLRequest(url: url)
-    request.httpMethod = "PUT"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
-  }
-
-  /// PATCH data to URL
-  func patchData(url: URL, body: sending [String: Any]) async throws -> Data {
-    var request = URLRequest(url: url)
-    request.httpMethod = "PATCH"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
-  }
-
-  /// DELETE data from URL
-  func deleteData(url: URL) async throws -> Data {
-    var request = URLRequest(url: url)
-    request.httpMethod = "DELETE"
-
-    if let token = try? await AuthManager.shared.getAccessToken() {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    }
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      throw APIError.invalidResponse
-    }
-
-    return data
   }
 }

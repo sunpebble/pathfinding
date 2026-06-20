@@ -630,25 +630,25 @@ struct AstronomyView: View {
 
     do {
       // Fetch sun times
-      sunTimes = try await APIClient.shared.fetchSunTimes(
+      sunTimes = try await AstronomyAPIClient.shared.fetchSunTimes(
         latitude: latitude,
         longitude: longitude,
         date: dateString
       )
 
       // Fetch moon phase
-      moonPhase = try await APIClient.shared.fetchMoonPhase(date: dateString)
+      moonPhase = try await AstronomyAPIClient.shared.fetchMoonPhase(date: dateString)
 
       // Fetch events for next 30 days
       let endDate = Calendar.current.date(byAdding: .day, value: 30, to: selectedDate)!
       let endDateString = dateFormatter.string(from: endDate)
-      events = try await APIClient.shared.fetchAstronomicalEvents(
+      events = try await AstronomyAPIClient.shared.fetchAstronomicalEvents(
         startDate: dateString,
         endDate: endDateString
       )
 
       // Fetch stargazing spots
-      stargazingSpots = try await APIClient.shared.fetchStargazingSpots(
+      stargazingSpots = try await AstronomyAPIClient.shared.fetchStargazingSpots(
         latitude: latitude,
         longitude: longitude,
         radiusKm: 200,

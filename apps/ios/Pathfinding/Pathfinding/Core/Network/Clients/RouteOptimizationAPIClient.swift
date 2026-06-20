@@ -50,27 +50,3 @@ actor RouteOptimizationAPIClient {
     return result.data
   }
 }
-
-// MARK: - Backward Compatibility Extension
-
-extension APIClient {
-  /// Optimize a single day's route
-  func optimizeDayRoute(day: AiDay, options: RouteOptimizationOptions? = nil) async throws -> OptimizedRouteResult {
-    try await RouteOptimizationAPIClient.shared.optimizeDayRoute(day: day, options: options)
-  }
-
-  /// Optimize a full itinerary
-  func optimizeItinerary(days: [AiDay], options: RouteOptimizationOptions? = nil) async throws -> OptimizedItineraryResult {
-    try await RouteOptimizationAPIClient.shared.optimizeItinerary(days: days, options: options)
-  }
-
-  /// Compare original and optimized routes
-  func compareRoute(day: AiDay, options: RouteOptimizationOptions? = nil) async throws -> RouteComparisonResult {
-    try await RouteOptimizationAPIClient.shared.compareRoute(day: day, options: options)
-  }
-
-  /// Get available transport modes
-  func getTransportModes() async throws -> [RouteTransportModeInfo] {
-    try await RouteOptimizationAPIClient.shared.getTransportModes()
-  }
-}
