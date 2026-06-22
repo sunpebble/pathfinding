@@ -10,7 +10,7 @@ func almostEqual(a, b, delta float64) bool {
 	return math.Abs(a-b) <= delta
 }
 
-// ---------- HaversineDistance 测试 ----------
+// ---------- haversineDistance 测试 ----------
 
 // 测试已知城市间距离
 func TestHaversineDistance_KnownCityPairs(t *testing.T) {
@@ -57,9 +57,9 @@ func TestHaversineDistance_KnownCityPairs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := HaversineDistance(tt.lat1, tt.lon1, tt.lat2, tt.lon2)
+			got := haversineDistance(tt.lat1, tt.lon1, tt.lat2, tt.lon2)
 			if !almostEqual(got, tt.wantKm, tt.deltaKm) {
-				t.Errorf("HaversineDistance() = %.2f km, want %.2f km (±%.0f km)", got, tt.wantKm, tt.deltaKm)
+				t.Errorf("haversineDistance() = %.2f km, want %.2f km (±%.0f km)", got, tt.wantKm, tt.deltaKm)
 			}
 		})
 	}
@@ -79,9 +79,9 @@ func TestHaversineDistance_SamePoint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := HaversineDistance(tt.lat, tt.lon, tt.lat, tt.lon)
+			got := haversineDistance(tt.lat, tt.lon, tt.lat, tt.lon)
 			if got != 0 {
-				t.Errorf("HaversineDistance(same point) = %.6f km, want 0", got)
+				t.Errorf("haversineDistance(same point) = %.6f km, want 0", got)
 			}
 		})
 	}
@@ -119,9 +119,9 @@ func TestHaversineDistance_AntipodalPoints(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := HaversineDistance(tt.lat1, tt.lon1, tt.lat2, tt.lon2)
+			got := haversineDistance(tt.lat1, tt.lon1, tt.lat2, tt.lon2)
 			if !almostEqual(got, tt.wantKm, 100.0) {
-				t.Errorf("HaversineDistance() = %.2f km, want ~%.0f km", got, tt.wantKm)
+				t.Errorf("haversineDistance() = %.2f km, want ~%.0f km", got, tt.wantKm)
 			}
 		})
 	}
@@ -132,8 +132,8 @@ func TestHaversineDistance_Symmetry(t *testing.T) {
 	lat1, lon1 := 39.9042, 116.4074 // 北京
 	lat2, lon2 := 31.2304, 121.4737 // 上海
 
-	d1 := HaversineDistance(lat1, lon1, lat2, lon2)
-	d2 := HaversineDistance(lat2, lon2, lat1, lon1)
+	d1 := haversineDistance(lat1, lon1, lat2, lon2)
+	d2 := haversineDistance(lat2, lon2, lat1, lon1)
 
 	if d1 != d2 {
 		t.Errorf("distance is not symmetric: A→B = %.6f, B→A = %.6f", d1, d2)
@@ -146,7 +146,7 @@ func TestHaversineDistance_VeryClosePoints(t *testing.T) {
 	lat1, lon1 := 39.908700, 116.397500
 	lat2, lon2 := 39.909600, 116.397500 // 向北约 100 米
 
-	got := HaversineDistance(lat1, lon1, lat2, lon2)
+	got := haversineDistance(lat1, lon1, lat2, lon2)
 	if got < 0.05 || got > 0.2 {
 		t.Errorf("very close points distance = %.4f km, expected ~0.1 km", got)
 	}
@@ -155,7 +155,7 @@ func TestHaversineDistance_VeryClosePoints(t *testing.T) {
 // 测试负经纬度坐标（南半球、西半球）
 func TestHaversineDistance_NegativeCoordinates(t *testing.T) {
 	// 布宜诺斯艾利斯 (-34.6, -58.4) → 开普敦 (-33.9, 18.4)，约 6860 km
-	got := HaversineDistance(-34.6037, -58.3816, -33.9249, 18.4241)
+	got := haversineDistance(-34.6037, -58.3816, -33.9249, 18.4241)
 	if !almostEqual(got, 6860.0, 50.0) {
 		t.Errorf("Buenos Aires to Cape Town = %.2f km, want ~6860 km", got)
 	}
@@ -503,7 +503,7 @@ func TestHaversineDistance_CrossMeridian(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := HaversineDistance(tt.lat1, tt.lon1, tt.lat2, tt.lon2)
+			got := haversineDistance(tt.lat1, tt.lon1, tt.lat2, tt.lon2)
 			if got < tt.minKm || got > tt.maxKm {
 				t.Errorf("distance = %.2f km, want between %.0f and %.0f km", got, tt.minKm, tt.maxKm)
 			}

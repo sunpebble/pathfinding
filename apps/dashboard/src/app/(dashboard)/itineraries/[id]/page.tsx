@@ -472,7 +472,6 @@ export default function ItineraryDetailPage() {
           onClose={() => setIsEditorOpen(false)}
           itineraryId={id}
           days={editorDays}
-          userId={currentUserId}
         />
       )}
     </div>

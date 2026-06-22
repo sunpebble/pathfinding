@@ -10,18 +10,18 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { Pagination } from './params.js';
 
 /** Shape of a paginated list response. */
-export interface ListResponse<T> {
+interface ListResponse<T> {
   data: T[];
   pagination: Pagination & { total: number };
 }
 
 /** Shape of a single-resource response. */
-export interface DataResponse<T> {
+interface DataResponse<T> {
   data: T;
 }
 
 /** Shape of a success-only response (typically for mutations). */
-export interface OkResponse {
+interface OkResponse {
   success: true;
 }
 

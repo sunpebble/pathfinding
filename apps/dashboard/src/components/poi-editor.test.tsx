@@ -59,7 +59,6 @@ describe('poiEditor', () => {
         guideId="99"
         dayNumber={2}
         poiIndex={1}
-        verifiedBy="admin"
         poi={{
           name: 'Tokyo Tower',
           latitude: 35.6586,

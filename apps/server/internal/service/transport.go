@@ -25,8 +25,8 @@ type TransportPOI struct {
 	Longitude float64 `json:"longitude"`
 }
 
-// HaversineDistance calculates distance between two lat/lon points in km.
-func HaversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
+// haversineDistance calculates distance between two lat/lon points in km.
+func haversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	const R = 6371.0 // Earth radius in km
 	dLat := (lat2 - lat1) * math.Pi / 180
 	dLon := (lon2 - lon1) * math.Pi / 180
@@ -77,7 +77,7 @@ func OptimizeRoute(pois []TransportPOI, mode string) ([]int, []TransportSegment,
 		bestDist := math.MaxFloat64
 		for j := 0; j < n; j++ {
 			if !visited[j] {
-				d := HaversineDistance(pois[current].Latitude, pois[current].Longitude, pois[j].Latitude, pois[j].Longitude)
+				d := haversineDistance(pois[current].Latitude, pois[current].Longitude, pois[j].Latitude, pois[j].Longitude)
 				if d < bestDist {
 					bestDist = d
 					bestNext = j
@@ -93,7 +93,7 @@ func OptimizeRoute(pois []TransportPOI, mode string) ([]int, []TransportSegment,
 	var segments []TransportSegment
 	optimizedTotal := 0.0
 	for i := 0; i < len(order)-1; i++ {
-		d := HaversineDistance(pois[order[i]].Latitude, pois[order[i]].Longitude, pois[order[i+1]].Latitude, pois[order[i+1]].Longitude)
+		d := haversineDistance(pois[order[i]].Latitude, pois[order[i]].Longitude, pois[order[i+1]].Latitude, pois[order[i+1]].Longitude)
 		optimizedTotal += d
 		segments = append(segments, TransportSegment{
 			From:            pois[order[i]].Name,
@@ -106,7 +106,7 @@ func OptimizeRoute(pois []TransportPOI, mode string) ([]int, []TransportSegment,
 	// Calculate original route distance
 	originalTotal := 0.0
 	for i := 0; i < n-1; i++ {
-		originalTotal += HaversineDistance(pois[i].Latitude, pois[i].Longitude, pois[i+1].Latitude, pois[i+1].Longitude)
+		originalTotal += haversineDistance(pois[i].Latitude, pois[i].Longitude, pois[i+1].Latitude, pois[i+1].Longitude)
 	}
 
 	savings := TransportSavings{

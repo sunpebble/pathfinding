@@ -8,6 +8,72 @@ import (
 	"unicode/utf8"
 )
 
+var (
+	// CleanContent patterns
+	scriptTagRe    = regexp.MustCompile(`(?is)<script[^>]*>.*?</script>`)
+	styleTagRe     = regexp.MustCompile(`(?is)<style[^>]*>.*?</style>`)
+	htmlTagRe      = regexp.MustCompile(`<[^>]+>`)
+	whitespaceRe   = regexp.MustCompile(`\s+`)
+
+	// splitGuideParagraphs patterns
+	horizSpaceRe   = regexp.MustCompile(`[ \t\f\v]+`)
+	multiNewlineRe = regexp.MustCompile(`\n{3,}`)
+	sentenceSplitRe = regexp.MustCompile(`[^。！？.!?]+[。！？.!?]?`)
+
+	// cleanGuideText patterns
+	nonNewlineSpaceRe    = regexp.MustCompile(`[^\S\n]+`)
+	leadingPhotoCountRe  = regexp.MustCompile(`^\d+张照片\s*`)
+	leadingGuideCountRe  = regexp.MustCompile(`^\d+篇游记\s*`)
+
+	// cleanGuideText replacement patterns (compiled once, applied in order)
+	guideTextReplacements = []struct {
+		re    *regexp.Regexp
+		value string
+	}{
+		{regexp.MustCompile(`图片加载失败`), " "},
+		{regexp.MustCompile(`(?:^|\s)\.\d{1,2}\.\d{1,2}发布·[\d.万wWkK]+阅读\s*`), " "},
+		{regexp.MustCompile(`\d{4}\.\d{1,2}\.\d{1,2}发布·[\d.万wWkK]+阅读\s*`), " "},
+		{regexp.MustCompile(`目的地\s*-\s*出行时间·天数\s*-\s*人均费用\(人民币\)\s*-`), " "},
+		{regexp.MustCompile(`出行人物\s*-`), " "},
+		{regexp.MustCompile(`\bDAY\d+\s+NaN(?:\.NaN)?[^。！？\n]{0,120}`), " "},
+		{regexp.MustCompile(`\bNaN(?:\.NaN)?\b`), " "},
+		{regexp.MustCompile(`(?i)QQ\s*\d{5,12}`), " "},
+		{regexp.MustCompile(`APP查看\s+[^。！？\n]{0,80}`), " "},
+		{regexp.MustCompile(`(?:本游记)?著作权归@\S{0,40}`), " "},
+		{regexp.MustCompile(`任何形式?转载[^。！？\n]{0,80}`), " "},
+		{regexp.MustCompile(`任何转载请联系作者[^。！？\n]{0,40}`), " "},
+		{regexp.MustCompile(`查看全部天?行程`), " "},
+		{regexp.MustCompile(`举报`), " "},
+	}
+
+	// removeHeadMetadata patterns
+	headPublishDateRe  = regexp.MustCompile(`\d{4}\.\d{1,2}\.\d{1,2}发布·[\d.万wWkK]+阅读\s*`)
+	headAuthorCitiesRe = regexp.MustCompile(`(?:^|\s)\S{1,40}\s+\d+国\d+城\s*`)
+
+	// removeMafengwoTripMeta pattern
+	tripMetaMarkerRe = regexp.MustCompile(`关注\s+(?:目的地|出行时间|DAY\d)`)
+
+	// truncateBeforeGuideBoilerplate patterns (compiled once, checked in order)
+	boilerplateStopRes = []*regexp.Regexp{
+		regexp.MustCompile(`本游记著作权归@`),
+		regexp.MustCompile(`著作权归@`),
+		regexp.MustCompile(`(?i)©\s*\d{4}\s*mafengwo\.cn`),
+		regexp.MustCompile(`APP内查看更多游记`),
+		regexp.MustCompile(`APP查看`),
+		regexp.MustCompile(`温馨提示\s*APP阅读体验更佳`),
+	}
+
+	// isSmallThumbnailURL pattern
+	smallThumbnailRe = regexp.MustCompile(`(?:^|[!/])(?:[1-9]\d|1[0-5]\d)x(?:[1-9]\d|1[0-5]\d)(?:[^\d]|$)`)
+
+	// ExtractTitle pattern
+	htmlTitleRe = regexp.MustCompile(`(?i)<title[^>]*>([^<]+)</title>`)
+
+	// ExtractExternalID patterns
+	externalIDRe         = regexp.MustCompile(`/(?:i|note)/(\d+)\.html`)
+	externalIDFallbackRe = regexp.MustCompile(`(\d+)\.html`)
+)
+
 // CleanContent strips HTML tags, scripts, styles, collapses whitespace, and
 // truncates to maxLen at a sentence boundary when possible.
 // The second return value reports whether truncation occurred, so callers can
@@ -17,17 +83,13 @@ func CleanContent(html string, maxLen int) (string, bool) {
 		maxLen = 10000
 	}
 	// Remove script tags
-	re := regexp.MustCompile(`(?is)<script[^>]*>.*?</script>`)
-	s := re.ReplaceAllString(html, "")
+	s := scriptTagRe.ReplaceAllString(html, "")
 	// Remove style tags
-	re = regexp.MustCompile(`(?is)<style[^>]*>.*?</style>`)
-	s = re.ReplaceAllString(s, "")
+	s = styleTagRe.ReplaceAllString(s, "")
 	// Remove all HTML tags
-	re = regexp.MustCompile(`<[^>]+>`)
-	s = re.ReplaceAllString(s, " ")
+	s = htmlTagRe.ReplaceAllString(s, " ")
 	// Collapse whitespace
-	re = regexp.MustCompile(`\s+`)
-	s = re.ReplaceAllString(s, " ")
+	s = whitespaceRe.ReplaceAllString(s, " ")
 	s = strings.TrimSpace(s)
 
 	runes := []rune(s)
@@ -73,10 +135,7 @@ func GenerateGuideMarkdownContent(title, content string, imageURLs []string) str
 	images := filterGuideImageURLs(imageURLs)
 	imageInterval := len(paragraphs) + 1
 	if len(images) > 0 && len(paragraphs) > 0 {
-		imageInterval = len(paragraphs) / (len(images) + 1)
-		if imageInterval < 1 {
-			imageInterval = 1
-		}
+		imageInterval = max(len(paragraphs)/(len(images)+1), 1)
 	}
 
 	imageIndex := 0
@@ -101,10 +160,8 @@ func GenerateGuideMarkdownContent(title, content string, imageURLs []string) str
 func splitGuideParagraphs(content string) []string {
 	content = strings.ReplaceAll(content, "\r\n", "\n")
 	content = strings.ReplaceAll(content, "\r", "\n")
-	re := regexp.MustCompile(`[ \t\f\v]+`)
-	content = re.ReplaceAllString(content, " ")
-	re = regexp.MustCompile(`\n{3,}`)
-	content = re.ReplaceAllString(content, "\n\n")
+	content = horizSpaceRe.ReplaceAllString(content, " ")
+	content = multiNewlineRe.ReplaceAllString(content, "\n\n")
 
 	rawParagraphs := strings.Split(content, "\n\n")
 	paragraphs := make([]string, 0, len(rawParagraphs))
@@ -119,18 +176,14 @@ func splitGuideParagraphs(content string) []string {
 		return paragraphs
 	}
 
-	sentenceRe := regexp.MustCompile(`[^。！？.!?]+[。！？.!?]?`)
-	sentences := sentenceRe.FindAllString(content, -1)
+	sentences := sentenceSplitRe.FindAllString(content, -1)
 	if len(sentences) == 0 {
 		return paragraphs
 	}
 
 	grouped := make([]string, 0, (len(sentences)+2)/3)
 	for index := 0; index < len(sentences); index += 3 {
-		end := index + 3
-		if end > len(sentences) {
-			end = len(sentences)
-		}
+		end := min(index+3, len(sentences))
 		paragraph := strings.TrimSpace(strings.Join(sentences[index:end], ""))
 		if paragraph != "" {
 			grouped = append(grouped, paragraph)
@@ -170,50 +223,26 @@ func filterGuideImageURLs(imageURLs []string) []string {
 func cleanGuideText(content, title string) string {
 	content = strings.ReplaceAll(content, "\r\n", "\n")
 	content = strings.ReplaceAll(content, "\r", "\n")
-	re := regexp.MustCompile(`[^\S\n]+`)
-	content = re.ReplaceAllString(content, " ")
-	re = regexp.MustCompile(`\n{3,}`)
-	content = re.ReplaceAllString(content, "\n\n")
+	content = nonNewlineSpaceRe.ReplaceAllString(content, " ")
+	content = multiNewlineRe.ReplaceAllString(content, "\n\n")
 	content = strings.TrimSpace(content)
 
 	content = truncateBeforeGuideBoilerplate(content)
 	content = removeLeadingNoiseBeforeTitle(content, title)
 	content = removeLeadingMafengwoBadges(content)
-	content = regexp.MustCompile(`^\d+张照片\s*`).ReplaceAllString(content, "")
-	content = regexp.MustCompile(`^\d+篇游记\s*`).ReplaceAllString(content, "")
+	content = leadingPhotoCountRe.ReplaceAllString(content, "")
+	content = leadingGuideCountRe.ReplaceAllString(content, "")
 	content = removeLeadingGuideTitle(content, title)
 
 	content = removeHeadMetadata(content)
 	content = removeMafengwoTripMeta(content)
 
-	replacements := []struct {
-		pattern string
-		value   string
-	}{
-		{`图片加载失败`, " "},
-		{`(?:^|\s)\.\d{1,2}\.\d{1,2}发布·[\d.万wWkK]+阅读\s*`, " "},
-		{`\d{4}\.\d{1,2}\.\d{1,2}发布·[\d.万wWkK]+阅读\s*`, " "},
-		{`目的地\s*-\s*出行时间·天数\s*-\s*人均费用\(人民币\)\s*-`, " "},
-		{`出行人物\s*-`, " "},
-		{`\bDAY\d+\s+NaN(?:\.NaN)?[^。！？\n]{0,120}`, " "},
-		{`\bNaN(?:\.NaN)?\b`, " "},
-		{`(?i)QQ\s*\d{5,12}`, " "},
-		{`APP查看\s+[^。！？\n]{0,80}`, " "},
-		{`(?:本游记)?著作权归@\S{0,40}`, " "},
-		{`任何形式?转载[^。！？\n]{0,80}`, " "},
-		{`任何转载请联系作者[^。！？\n]{0,40}`, " "},
-		{`查看全部天?行程`, " "},
-		{`举报`, " "},
-	}
-	for _, replacement := range replacements {
-		re = regexp.MustCompile(replacement.pattern)
-		content = re.ReplaceAllString(content, replacement.value)
+	for _, r := range guideTextReplacements {
+		content = r.re.ReplaceAllString(content, r.value)
 	}
 
-	re = regexp.MustCompile(`[^\S\n]+`)
-	content = re.ReplaceAllString(content, " ")
-	re = regexp.MustCompile(`\n{3,}`)
-	content = re.ReplaceAllString(content, "\n\n")
+	content = nonNewlineSpaceRe.ReplaceAllString(content, " ")
+	content = multiNewlineRe.ReplaceAllString(content, "\n\n")
 	return strings.TrimSpace(content)
 }
 
@@ -266,8 +295,8 @@ func removeHeadMetadata(content string) string {
 	}
 
 	head := string(headRunes)
-	head = regexp.MustCompile(`\d{4}\.\d{1,2}\.\d{1,2}发布·[\d.万wWkK]+阅读\s*`).ReplaceAllString(head, " ")
-	head = regexp.MustCompile(`(?:^|\s)\S{1,40}\s+\d+国\d+城\s*`).ReplaceAllString(head, " ")
+	head = headPublishDateRe.ReplaceAllString(head, " ")
+	head = headAuthorCitiesRe.ReplaceAllString(head, " ")
 
 	if utf8.RuneCountInString(content) <= 800 {
 		return head
@@ -289,7 +318,7 @@ func removeMafengwoTripMeta(content string) string {
 	if len(metaLeadRunes) > 80 {
 		metaLead = string(metaLeadRunes[:80])
 	}
-	if !regexp.MustCompile(`关注\s+(?:目的地|出行时间|DAY\d)`).MatchString(metaLead) {
+	if !tripMetaMarkerRe.MatchString(metaLead) {
 		return content
 	}
 
@@ -302,18 +331,9 @@ func removeMafengwoTripMeta(content string) string {
 }
 
 func truncateBeforeGuideBoilerplate(content string) string {
-	stopPatterns := []string{
-		`本游记著作权归@`,
-		`著作权归@`,
-		`(?i)©\s*\d{4}\s*mafengwo\.cn`,
-		`APP内查看更多游记`,
-		`APP查看`,
-		`温馨提示\s*APP阅读体验更佳`,
-	}
-
 	endIndex := len(content)
-	for _, pattern := range stopPatterns {
-		match := regexp.MustCompile(pattern).FindStringIndex(content)
+	for _, re := range boilerplateStopRes {
+		match := re.FindStringIndex(content)
 		if len(match) > 0 && match[0] < endIndex {
 			endIndex = match[0]
 		}
@@ -327,15 +347,14 @@ func removeLeadingGuideTitle(content, title string) string {
 		return content
 	}
 
-	if strings.HasPrefix(content, title) {
-		return strings.TrimSpace(strings.TrimPrefix(content, title))
+	if rest, ok := strings.CutPrefix(content, title); ok {
+		return strings.TrimSpace(rest)
 	}
 	return content
 }
 
 func isSmallThumbnailURL(imageURL string) bool {
-	re := regexp.MustCompile(`(?:^|[!/])(?:[1-9]\d|1[0-5]\d)x(?:[1-9]\d|1[0-5]\d)(?:[^\d]|$)`)
-	return re.MatchString(imageURL)
+	return smallThumbnailRe.MatchString(imageURL)
 }
 
 func isMafengwoChromeImage(imageURL string) bool {
@@ -344,8 +363,7 @@ func isMafengwoChromeImage(imageURL string) bool {
 
 // ExtractTitle extracts the <title> tag content from HTML.
 func ExtractTitle(html string) string {
-	re := regexp.MustCompile(`(?i)<title[^>]*>([^<]+)</title>`)
-	m := re.FindStringSubmatch(html)
+	m := htmlTitleRe.FindStringSubmatch(html)
 	if len(m) > 1 {
 		return strings.TrimSpace(m[1])
 	}
@@ -417,27 +435,14 @@ func CalculateQualityScore(title, content, author string, images []string, views
 	return math.Round(score*100) / 100
 }
 
-// DetermineCompletenessLevel returns "complete", "usable", or "incomplete".
-func DetermineCompletenessLevel(hasTitle, hasContent bool, contentLen int, hasImages, hasAuthor bool, score float64) string {
-	if hasTitle && hasContent && contentLen >= 500 && hasImages && hasAuthor && score >= 0.8 {
-		return "complete"
-	}
-	if hasTitle && hasContent && contentLen >= 100 && hasImages {
-		return "usable"
-	}
-	return "incomplete"
-}
-
 // ExtractExternalID extracts a numeric ID from a URL like "/i/24648165.html" → "24648165".
 func ExtractExternalID(url string) string {
-	re := regexp.MustCompile(`/(?:i|note)/(\d+)\.html`)
-	m := re.FindStringSubmatch(url)
+	m := externalIDRe.FindStringSubmatch(url)
 	if len(m) > 1 {
 		return m[1]
 	}
 	// Fallback: any number sequence at end
-	re = regexp.MustCompile(`(\d+)\.html`)
-	m = re.FindStringSubmatch(url)
+	m = externalIDFallbackRe.FindStringSubmatch(url)
 	if len(m) > 1 {
 		return m[1]
 	}
