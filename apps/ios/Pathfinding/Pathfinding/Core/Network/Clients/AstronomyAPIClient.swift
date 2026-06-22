@@ -45,39 +45,6 @@ actor AstronomyAPIClient {
     return result.data
   }
 
-  /// Fetch sun times for a date range
-  func fetchSunTimesRange(
-    latitude: Double,
-    longitude: Double,
-    startDate: String,
-    endDate: String,
-    timezone: String? = nil
-  ) async throws -> [SunTimes] {
-    var components = URLComponents(
-      url: await baseURL.appendingPathComponent("api/astronomy/sun-times/range"),
-      resolvingAgainstBaseURL: false
-    )!
-
-    var queryItems: [URLQueryItem] = [
-      URLQueryItem(name: "lat", value: String(latitude)),
-      URLQueryItem(name: "lng", value: String(longitude)),
-      URLQueryItem(name: "startDate", value: startDate),
-      URLQueryItem(name: "endDate", value: endDate),
-    ]
-    if let timezone = timezone {
-      queryItems.append(URLQueryItem(name: "timezone", value: timezone))
-    }
-    components.queryItems = queryItems
-
-    guard let url = components.url else {
-      throw APIError.invalidURL
-    }
-
-    let data = try await network.fetchWithRetry(url: url)
-    let result = try decoder.decode(SunTimesRangeResponse.self, from: data)
-    return result.data
-  }
-
   /// Fetch moon phase for a specific date
   func fetchMoonPhase(date: String? = nil) async throws -> MoonPhase {
     var components = URLComponents(
@@ -95,27 +62,6 @@ actor AstronomyAPIClient {
 
     let data = try await network.fetchWithRetry(url: url)
     let result = try decoder.decode(MoonPhaseResponse.self, from: data)
-    return result.data
-  }
-
-  /// Fetch moon phases for a date range
-  func fetchMoonPhases(startDate: String, endDate: String) async throws -> [MoonPhase] {
-    var components = URLComponents(
-      url: await baseURL.appendingPathComponent("api/astronomy/moon-phases"),
-      resolvingAgainstBaseURL: false
-    )!
-
-    components.queryItems = [
-      URLQueryItem(name: "startDate", value: startDate),
-      URLQueryItem(name: "endDate", value: endDate),
-    ]
-
-    guard let url = components.url else {
-      throw APIError.invalidURL
-    }
-
-    let data = try await network.fetchWithRetry(url: url)
-    let result = try decoder.decode(MoonPhasesResponse.self, from: data)
     return result.data
   }
 
@@ -176,43 +122,6 @@ actor AstronomyAPIClient {
 
     let data = try await network.fetchWithRetry(url: url)
     let result = try decoder.decode(StargazingSpotsResponse.self, from: data)
-    return result.data
-  }
-
-  /// Fetch combined astronomy data for a location
-  func fetchAstronomyData(
-    latitude: Double,
-    longitude: Double,
-    date: String? = nil,
-    timezone: String? = nil,
-    includeEvents: Bool = true,
-    includeSpots: Bool = true
-  ) async throws -> AstronomyData {
-    var components = URLComponents(
-      url: await baseURL.appendingPathComponent("api/astronomy/combined"),
-      resolvingAgainstBaseURL: false
-    )!
-
-    var queryItems: [URLQueryItem] = [
-      URLQueryItem(name: "lat", value: String(latitude)),
-      URLQueryItem(name: "lng", value: String(longitude)),
-      URLQueryItem(name: "includeEvents", value: includeEvents ? "true" : "false"),
-      URLQueryItem(name: "includeSpots", value: includeSpots ? "true" : "false"),
-    ]
-    if let date = date {
-      queryItems.append(URLQueryItem(name: "date", value: date))
-    }
-    if let timezone = timezone {
-      queryItems.append(URLQueryItem(name: "timezone", value: timezone))
-    }
-    components.queryItems = queryItems
-
-    guard let url = components.url else {
-      throw APIError.invalidURL
-    }
-
-    let data = try await network.fetchWithRetry(url: url)
-    let result = try decoder.decode(AstronomyDataResponse.self, from: data)
     return result.data
   }
 }

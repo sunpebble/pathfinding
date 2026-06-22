@@ -38,39 +38,6 @@ actor FlightAPIClient {
     return flightInfo
   }
 
-  /// Search flights by route (public API)
-  func searchFlightsByRoute(
-    departureAirport: String,
-    arrivalAirport: String,
-    date: String? = nil,
-    page: Int = 1,
-    pageSize: Int = 20
-  ) async throws -> FlightSearchResult {
-    var components = URLComponents(
-      url: await baseURL.appendingPathComponent("v1/flights/search"),
-      resolvingAgainstBaseURL: false
-    )!
-
-    var queryItems = [
-      URLQueryItem(name: "departureAirport", value: departureAirport),
-      URLQueryItem(name: "arrivalAirport", value: arrivalAirport),
-      URLQueryItem(name: "page", value: String(page)),
-      URLQueryItem(name: "pageSize", value: String(pageSize)),
-    ]
-    if let date = date {
-      queryItems.append(URLQueryItem(name: "date", value: date))
-    }
-    components.queryItems = queryItems
-
-    guard let url = components.url else {
-      throw APIError.invalidURL
-    }
-
-    let data = try await network.fetchWithRetry(url: url)
-    let result = try decoder.decode(FlightSearchResponse.self, from: data)
-    return FlightSearchResult(data: result.data, total: result.meta.totalCount)
-  }
-
   /// Fetch user's flight bookings (protected API)
   func fetchFlightBookings(
     page: Int = 1,

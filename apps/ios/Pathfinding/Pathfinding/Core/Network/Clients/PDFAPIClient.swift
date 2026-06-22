@@ -14,36 +14,6 @@ actor PDFAPIClient {
 
   // MARK: - PDF Export APIs
 
-  /// Fetch available PDF templates
-  func fetchPdfTemplates(language: String = "zh") async throws -> [String: PdfTemplate] {
-    var components = URLComponents(
-      url: aiServiceURL.appendingPathComponent("api/pdf/templates"),
-      resolvingAgainstBaseURL: false
-    )!
-
-    components.queryItems = [
-      URLQueryItem(name: "lang", value: language)
-    ]
-
-    guard let url = components.url else {
-      throw APIError.invalidURL
-    }
-
-    let data = try await network.fetchWithRetry(url: url)
-    let result = try decoder.decode(PdfTemplatesResponse.self, from: data)
-    return result.data
-  }
-
-  /// Get PDF preview info for a guide
-  func fetchGuidePdfPreview(guideId: String) async throws -> PdfPreviewInfo {
-    let url = aiServiceURL.appendingPathComponent("api/pdf/guide/\(guideId)/preview")
-
-    let body = EmptyBody()
-    let data = try await network.postWithRetry(url: url, body: body)
-    let result = try decoder.decode(PdfPreviewResponse.self, from: data)
-    return result.data
-  }
-
   /// Generate PDF for a guide and return the file URL
   func generateGuidePdf(
     guideId: String,

@@ -486,33 +486,6 @@ struct LinkItineraryResponse: Codable {
 
 // MARK: - Additional API Response/Request Types
 
-/// Flight search response (from route search)
-struct FlightSearchResponse: Codable {
-  let success: Bool
-  let data: [FlightInfo]
-  let meta: FlightSearchMeta
-
-  struct FlightSearchMeta: Codable {
-    let page: Int
-    let pageSize: Int
-    let totalCount: Int
-    let totalPages: Int
-
-    enum CodingKeys: String, CodingKey {
-      case page
-      case pageSize = "page_size"
-      case totalCount = "total_count"
-      case totalPages = "total_pages"
-    }
-  }
-}
-
-/// Flight search result (simplified for internal use)
-struct FlightSearchResult {
-  let data: [FlightInfo]
-  let total: Int
-}
-
 /// Flight bookings result (simplified for internal use)
 struct FlightBookingsResult {
   let data: [FlightBooking]

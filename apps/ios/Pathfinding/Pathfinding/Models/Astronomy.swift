@@ -338,31 +338,14 @@ enum PhotographyReminderType: String, Codable {
   }
 }
 
-// MARK: - Combined Astronomy Data
-
-struct AstronomyData: Codable {
-  let sunTimes: SunTimes
-  let moonPhase: MoonPhase
-  let upcomingEvents: [AstronomicalEvent]?
-  let nearbyStargazingSpots: [StargazingSpot]?
-}
-
 // MARK: - API Response Wrappers
 
 struct SunTimesResponse: Codable {
   let data: SunTimes
 }
 
-struct SunTimesRangeResponse: Codable {
-  let data: [SunTimes]
-}
-
 struct MoonPhaseResponse: Codable {
   let data: MoonPhase
-}
-
-struct MoonPhasesResponse: Codable {
-  let data: [MoonPhase]
 }
 
 struct AstronomicalEventsResponse: Codable {
@@ -371,8 +354,4 @@ struct AstronomicalEventsResponse: Codable {
 
 struct StargazingSpotsResponse: Codable {
   let data: [StargazingSpot]
-}
-
-struct AstronomyDataResponse: Codable {
-  let data: AstronomyData
 }
