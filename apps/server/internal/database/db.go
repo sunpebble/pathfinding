@@ -56,8 +56,3 @@ func convertDSN(dsn string) (string, error) {
 
 	return fmt.Sprintf("%s@tcp(%s)/%s?parseTime=true&charset=utf8mb4", userInfo, u.Host, dbName), nil
 }
-
-// Ping verifies the database connection.
-func (db *DB) Ping() error {
-	return db.DB.Ping()
-}

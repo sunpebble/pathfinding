@@ -10,6 +10,8 @@
  * @module
  */
 
+import { normalizeHeaders } from './shared';
+
 /** localStorage key used to persist the JWT auth token. */
 export const AUTH_TOKEN_STORAGE_KEY = 'pathfinding.dashboard.auth.token';
 
@@ -49,26 +51,6 @@ function buildUrl(basePath: string, path: string): string {
   const normalizedBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${normalizedBase}${normalizedPath}`;
-}
-
-function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
-  if (!headers) {
-    return {};
-  }
-
-  if (headers instanceof Headers) {
-    const normalized: Record<string, string> = {};
-    headers.forEach((value, key) => {
-      normalized[key] = value;
-    });
-    return normalized;
-  }
-
-  if (Array.isArray(headers)) {
-    return Object.fromEntries(headers);
-  }
-
-  return { ...headers };
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {

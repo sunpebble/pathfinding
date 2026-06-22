@@ -46,15 +46,6 @@ actor CollaborationAPIClient {
     return result.data
   }
 
-  /// Get only online collaborators
-  func getOnlineCollaborators(itineraryId: String) async throws -> [CollaboratorPresence] {
-    let url = await baseURL.appendingPathComponent("v1/itineraries/\(itineraryId)/collaboration/online")
-
-    let data = try await network.fetchWithRetry(url: url, forceRefresh: true)
-    let result = try decoder.decode(PresenceListResponse.self, from: data)
-    return result.data
-  }
-
   /// Update cursor position in collaborative session
   func updateCollaborationCursor(
     itineraryId: String,

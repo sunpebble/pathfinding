@@ -13,6 +13,7 @@
 
 import type { CrawlJob } from './crawler';
 import { getMockResponse } from './mock-data';
+import { parseErrorMessage, parseJsonResponse } from './shared';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -40,33 +41,6 @@ export class BackendApiError extends Error {
     this.status = status;
     this.data = data;
   }
-}
-
-/** Extract a human-readable error message from a parsed error response. */
-function parseErrorMessage(error: unknown, status: number): string {
-  if (error && typeof error === 'object') {
-    const message = 'message' in error ? error.message : undefined;
-    if (typeof message === 'string' && message.length > 0) {
-      return message;
-    }
-
-    const fallback = 'error' in error ? error.error : undefined;
-    if (typeof fallback === 'string' && fallback.length > 0) {
-      return fallback;
-    }
-  }
-
-  return `HTTP error ${status}`;
-}
-
-/** Safely parse a JSON response body, returning `undefined` for empty bodies. */
-async function parseJsonResponse<T>(res: Response): Promise<T> {
-  const text = await res.text();
-  if (!text) {
-    return undefined as T;
-  }
-
-  return JSON.parse(text) as T;
 }
 
 /** Convert a value to a string if non-empty, or `undefined`. */

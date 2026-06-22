@@ -130,41 +130,7 @@ enum DesignTokens {
     // MARK: - Display Fonts (探索者英雄字体)
 
     enum Display {
-      static var hero: Font { .system(size: scaled(48, maxSize: 64), weight: .bold, design: .rounded) }
-      static var jumbo: Font { .system(size: scaled(60, maxSize: 80), weight: .bold, design: .rounded) }
-      static var mega: Font { .system(size: scaled(72, maxSize: 96), weight: .bold, design: .rounded) }
-      static var small: Font { .system(size: scaled(32, maxSize: 44), weight: .bold, design: .rounded) }
-      static var featured: Font { .system(size: scaled(40, maxSize: 54), weight: .heavy, design: .rounded) }
       static var compact: Font { .system(size: scaled(28, maxSize: 38), weight: .bold, design: .rounded) }
-
-      private static func scaled(_ base: CGFloat, maxSize: CGFloat) -> CGFloat {
-        Typography.scaled(base, maxSize: maxSize)
-      }
-    }
-
-    // MARK: - Numeric Fonts (统计数字字体)
-
-    enum Numeric {
-      static var small: Font { .system(size: scaled(28, maxSize: 38), weight: .medium, design: .rounded) }
-      static var medium: Font { .system(size: scaled(36, maxSize: 48), weight: .light, design: .rounded) }
-      static var large: Font { .system(size: scaled(48, maxSize: 64), weight: .light, design: .monospaced) }
-      static var xlarge: Font { .system(size: scaled(56, maxSize: 72), weight: .light, design: .rounded) }
-      static var xxlarge: Font { .system(size: scaled(64, maxSize: 80), weight: .thin, design: .rounded) }
-      static var clock: Font { .system(size: scaled(80, maxSize: 100), weight: .ultraLight, design: .rounded) }
-
-      private static func scaled(_ base: CGFloat, maxSize: CGFloat) -> CGFloat {
-        Typography.scaled(base, maxSize: maxSize)
-      }
-    }
-
-    // MARK: - Explorer Card Fonts (探索者卡片字体)
-
-    enum Card {
-      static var title: Font { .system(size: scaled(18, maxSize: 27), weight: .bold, design: .rounded) }
-      static var subtitle: Font { .system(size: scaled(14, maxSize: 21), weight: .semibold, design: .rounded) }
-      static var stats: Font { .system(size: scaled(13, maxSize: 20), weight: .medium, design: .rounded) }
-      static var badge: Font { .system(size: scaled(11, maxSize: 17), weight: .bold, design: .rounded) }
-      static var micro: Font { .system(size: scaled(10, maxSize: 15), weight: .semibold, design: .rounded) }
 
       private static func scaled(_ base: CGFloat, maxSize: CGFloat) -> CGFloat {
         Typography.scaled(base, maxSize: maxSize)
@@ -174,53 +140,12 @@ enum DesignTokens {
     // MARK: - Map Legend Fonts (地图图例字体)
 
     enum MapLegend {
-      static var poiLabel: Font { .system(size: scaled(12, maxSize: 18), weight: .semibold, design: .rounded) }
-      static var distance: Font { .system(size: scaled(11, maxSize: 17), weight: .medium, design: .monospaced) }
       static var duration: Font { .system(size: scaled(13, maxSize: 20), weight: .bold, design: .rounded) }
-      static var annotation: Font { .system(size: scaled(10, maxSize: 15), weight: .regular, design: .default) }
 
       private static func scaled(_ base: CGFloat, maxSize: CGFloat) -> CGFloat {
         Typography.scaled(base, maxSize: maxSize)
       }
     }
-  }
-
-  // MARK: - Premium Typography (高端排版)
-
-  enum PremiumTypography {
-    static var heroTitle: Font { .system(size: 34, weight: .bold, design: .rounded) }
-    static var subtitle: Font { .system(size: 17, weight: .medium, design: .rounded) }
-    static var badge: Font { .system(size: 11, weight: .bold, design: .rounded) }
-  }
-
-  // MARK: - Expedition Colors (探索主题色)
-
-  enum Expedition {
-    static let deepIndigo = Color(red: 0.08, green: 0.05, blue: 0.20)
-    static let copper = Color(red: 0.80, green: 0.58, blue: 0.36)
-    static let premiumText = Color.white
-    static let mutedText = Color.white.opacity(0.7)
-    static let copperGlow: [Color] = [
-      Color(red: 0.80, green: 0.58, blue: 0.36),
-      Color(red: 0.90, green: 0.70, blue: 0.50),
-      Color(red: 0.80, green: 0.58, blue: 0.36),
-    ]
-    static let auroraGradient: [Color] = [
-      Color(red: 0.10, green: 0.80, blue: 0.60),
-      Color(red: 0.20, green: 0.50, blue: 0.90),
-      Color(red: 0.60, green: 0.20, blue: 0.80),
-      Color(red: 0.10, green: 0.70, blue: 0.90),
-    ]
-  }
-
-  // MARK: - Gradient Presets (渐变预设)
-
-  enum GradientPresets {
-    static let premium: [Color] = [
-      Color(red: 0.30, green: 0.20, blue: 0.80),
-      Color(red: 0.60, green: 0.20, blue: 0.60),
-      Color(red: 0.80, green: 0.30, blue: 0.40),
-    ]
   }
 
   // MARK: - Semantic Colors (Adaptive for Light/Dark Mode)
@@ -400,56 +325,6 @@ enum DesignTokens {
       static let canyon: Color = Color(red: 0.76, green: 0.42, blue: 0.27)
     }
 
-    // MARK: - Travel Status Colors (旅行状态色)
-
-    enum TravelStatus {
-      static let upcoming: Color = .cyan
-      static let upcomingBackground: Color = Color.cyan.opacity(0.15)
-      static let active: Color = .green
-      static let activeBackground: Color = Color.green.opacity(0.15)
-      static let completed: Color = .indigo
-      static let completedBackground: Color = Color.indigo.opacity(0.15)
-      static let cancelled: Color = .gray
-      static let cancelledBackground: Color = Color.gray.opacity(0.15)
-      static let draft: Color = .orange
-      static let draftBackground: Color = Color.orange.opacity(0.15)
-    }
-
-    // MARK: - Destination Accent Colors (目的地强调色)
-
-    enum Destination {
-      static func accentColor(for destination: String) -> Color {
-        let hash = abs(destination.hashValue)
-        let colors: [Color] = [
-          .indigo, .teal, .orange, .purple, .pink, .cyan,
-          Terrain.forest, Terrain.ocean, Terrain.mountain, Terrain.desert
-        ]
-        return colors[hash % colors.count]
-      }
-
-      static func gradient(for destination: String, colorScheme: ColorScheme) -> LinearGradient {
-        let primary = accentColor(for: destination)
-        let opacity = colorScheme == .dark ? 0.4 : 0.2
-        return LinearGradient(
-          colors: [primary.opacity(opacity), primary.opacity(opacity * 0.3), .clear],
-          startPoint: .topLeading,
-          endPoint: .bottomTrailing
-        )
-      }
-    }
-
-    // MARK: - Dark Mode Specific Colors
-
-    /// Muted color for dark mode (reduces eye strain)
-    static func muted(_ color: Color, for colorScheme: ColorScheme) -> Color {
-      colorScheme == .dark ? color.opacity(0.85) : color
-    }
-
-    /// Vibrant color for dark mode (increases visibility)
-    static func vibrant(_ color: Color, for colorScheme: ColorScheme) -> Color {
-      colorScheme == .dark ? color.opacity(1.0) : color.opacity(0.9)
-    }
-
     // MARK: - Gradients
 
     /// Card gradient
@@ -490,104 +365,6 @@ enum DesignTokens {
             startPoint: .top,
             endPoint: .bottom
           )
-    }
-
-    // MARK: - Explorer Gradient Presets (探索者渐变预设)
-
-    enum ExplorerGradients {
-      static func sunrise(for colorScheme: ColorScheme) -> LinearGradient {
-        let opacity = colorScheme == .dark ? 0.5 : 0.3
-        return LinearGradient(
-          colors: [
-            Color(red: 1.0, green: 0.6, blue: 0.2).opacity(opacity),
-            Color(red: 1.0, green: 0.4, blue: 0.4).opacity(opacity * 0.7),
-            Color(red: 0.6, green: 0.3, blue: 0.6).opacity(opacity * 0.4)
-          ],
-          startPoint: .top,
-          endPoint: .bottom
-        )
-      }
-
-      static func ocean(for colorScheme: ColorScheme) -> LinearGradient {
-        let opacity = colorScheme == .dark ? 0.5 : 0.3
-        return LinearGradient(
-          colors: [
-            Terrain.ocean.opacity(opacity),
-            Terrain.oceanLight.opacity(opacity * 0.6),
-            .cyan.opacity(opacity * 0.3)
-          ],
-          startPoint: .topLeading,
-          endPoint: .bottomTrailing
-        )
-      }
-
-      static func forest(for colorScheme: ColorScheme) -> LinearGradient {
-        let opacity = colorScheme == .dark ? 0.5 : 0.3
-        return LinearGradient(
-          colors: [
-            Terrain.forest.opacity(opacity),
-            Terrain.forestLight.opacity(opacity * 0.6),
-            .mint.opacity(opacity * 0.3)
-          ],
-          startPoint: .topLeading,
-          endPoint: .bottomTrailing
-        )
-      }
-
-      static func desert(for colorScheme: ColorScheme) -> LinearGradient {
-        let opacity = colorScheme == .dark ? 0.5 : 0.3
-        return LinearGradient(
-          colors: [
-            Terrain.desert.opacity(opacity),
-            Terrain.desertLight.opacity(opacity * 0.6),
-            .orange.opacity(opacity * 0.3)
-          ],
-          startPoint: .top,
-          endPoint: .bottom
-        )
-      }
-
-      static func mountain(for colorScheme: ColorScheme) -> LinearGradient {
-        let opacity = colorScheme == .dark ? 0.5 : 0.3
-        return LinearGradient(
-          colors: [
-            Terrain.mountain.opacity(opacity),
-            Terrain.mountainLight.opacity(opacity * 0.6),
-            .gray.opacity(opacity * 0.3)
-          ],
-          startPoint: .top,
-          endPoint: .bottom
-        )
-      }
-
-      static func northernLights(for colorScheme: ColorScheme) -> LinearGradient {
-        guard colorScheme == .dark else {
-          return LinearGradient(colors: [.clear], startPoint: .top, endPoint: .bottom)
-        }
-        return LinearGradient(
-          colors: [
-            Color(red: 0.2, green: 0.8, blue: 0.6).opacity(0.3),
-            Color(red: 0.4, green: 0.3, blue: 0.8).opacity(0.25),
-            Color(red: 0.6, green: 0.2, blue: 0.6).opacity(0.2),
-            .clear
-          ],
-          startPoint: .top,
-          endPoint: .bottom
-        )
-      }
-
-      static func twilight(for colorScheme: ColorScheme) -> LinearGradient {
-        let opacity = colorScheme == .dark ? 0.6 : 0.35
-        return LinearGradient(
-          colors: [
-            Color(red: 0.15, green: 0.1, blue: 0.35).opacity(opacity),
-            Color(red: 0.35, green: 0.15, blue: 0.45).opacity(opacity * 0.7),
-            Color(red: 0.6, green: 0.25, blue: 0.4).opacity(opacity * 0.4)
-          ],
-          startPoint: .top,
-          endPoint: .bottom
-        )
-      }
     }
 
     // MARK: - Placeholder Colors
@@ -652,23 +429,6 @@ extension Color {
   static let success = Color.green
   static let warning = Color.orange
   static let error = Color.red
-
-  // MARK: - Background Colors (Adaptive)
-
-  /// Primary background - adapts to light/dark mode
-  static var adaptiveBackground: Color {
-    DesignTokens.Colors.background
-  }
-
-  /// Secondary background for cards and elevated surfaces
-  static var adaptiveCardBackground: Color {
-    DesignTokens.Colors.cardBackground
-  }
-
-  /// Grouped background for lists
-  static var adaptiveGroupedBackground: Color {
-    DesignTokens.Colors.backgroundGrouped
-  }
 
   // MARK: - Background Gradients
 
@@ -835,12 +595,6 @@ extension View {
       )
   }
 
-  /// Apply section background with subtle gradient
-  func sectionBackground(for colorScheme: ColorScheme) -> some View {
-    self
-      .background(DesignTokens.Colors.sectionGradient(for: colorScheme))
-  }
-
   /// Apply Apple-native shadow with automatic color scheme adaptation
   func appleShadow(_ level: ShadowLevel = .sm) -> some View {
     modifier(AppleShadowModifier(level: level))
@@ -904,32 +658,6 @@ fileprivate struct AdaptiveAnimationModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     content.animation(reduceMotion ? nil : animation, value: trigger)
-  }
-}
-
-// MARK: - Focused Field Style
-
-struct FocusedFieldStyle: ViewModifier {
-  let isFocused: Bool
-  let isError: Bool
-
-  func body(content: Content) -> some View {
-    content
-      .overlay(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .stroke(
-            isError ? Color.red : (isFocused ? DesignTokens.Colors.accent : Color(.systemGray4)),
-            lineWidth: isFocused || isError ? 2 : 1
-          )
-      )
-      .animation(DesignTokens.Animation.quick, value: isFocused)
-      .animation(DesignTokens.Animation.quick, value: isError)
-  }
-}
-
-extension View {
-  func focusedFieldStyle(isFocused: Bool, isError: Bool = false) -> some View {
-    modifier(FocusedFieldStyle(isFocused: isFocused, isError: isError))
   }
 }
 

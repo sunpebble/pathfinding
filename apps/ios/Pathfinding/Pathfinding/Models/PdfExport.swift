@@ -86,52 +86,6 @@ enum PdfPageSize: String, Codable, CaseIterable {
   }
 }
 
-// MARK: - PDF Template Info
-
-/// PDF template information from API
-struct PdfTemplate: Codable {
-  let id: String
-  let name: String
-  let description: String
-  let previewColor: String
-
-  enum CodingKeys: String, CodingKey {
-    case id, name, description
-    case previewColor = "preview_color"
-  }
-}
-
-// MARK: - PDF Preview Info
-
-/// PDF preview information
-struct PdfPreviewInfo: Codable {
-  let guideId: String
-  let title: String
-  let daysCount: Int
-  let poisCount: Int
-  let hasCoverImage: Bool
-  let hasSummary: Bool
-  let hasTips: Bool
-  let availableTemplates: [String]
-  let availableLanguages: [String]
-  let availablePageSizes: [String]
-  let estimatedPages: Int
-
-  enum CodingKeys: String, CodingKey {
-    case guideId = "guide_id"
-    case title
-    case daysCount = "days_count"
-    case poisCount = "pois_count"
-    case hasCoverImage = "has_cover_image"
-    case hasSummary = "has_summary"
-    case hasTips = "has_tips"
-    case availableTemplates = "available_templates"
-    case availableLanguages = "available_languages"
-    case availablePageSizes = "available_page_sizes"
-    case estimatedPages = "estimated_pages"
-  }
-}
-
 // MARK: - PDF Export Options
 
 /// Options for PDF export
@@ -177,14 +131,3 @@ struct PdfExportOptions: Codable {
   }
 }
 
-// MARK: - API Responses
-
-/// Response for PDF templates
-struct PdfTemplatesResponse: Codable {
-  let data: [String: PdfTemplate]
-}
-
-/// Response for PDF preview
-struct PdfPreviewResponse: Codable {
-  let data: PdfPreviewInfo
-}

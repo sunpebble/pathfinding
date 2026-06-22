@@ -79,7 +79,6 @@ interface ItineraryEditorProps {
   onClose: () => void;
   itineraryId: string;
   days: LegacyDay[];
-  userId: string;
 }
 
 const transportModeOptions = [

@@ -952,31 +952,6 @@ struct HotelCalendarSyncView: View {
   }
 }
 
-// MARK: - Calendar Sync Button
-
-/// A button that shows calendar sync status and opens the sync sheet
-struct CalendarSyncButton: View {
-  let itinerary: SavedItinerary
-  @State private var showSyncSheet = false
-
-  private var calendarManager: CalendarManager { CalendarManager.shared }
-  private var isSynced: Bool { calendarManager.isSynced(itinerary.id.uuidString) }
-
-  var body: some View {
-    Button {
-      showSyncSheet = true
-    } label: {
-      Label(
-        isSynced ? "已同步" : "同步日历",
-        systemImage: isSynced ? "calendar.badge.checkmark" : "calendar.badge.plus"
-      )
-    }
-    .sheet(isPresented: $showSyncSheet) {
-      CalendarSyncView(itinerary: itinerary)
-    }
-  }
-}
-
 // MARK: - Compact Calendar Sync Button
 
 /// A compact icon-only button for toolbar use
@@ -997,104 +972,6 @@ struct CalendarSyncToolbarButton: View {
     }
     .sheet(isPresented: $showSyncSheet) {
       CalendarSyncView(itinerary: itinerary)
-    }
-  }
-}
-
-// MARK: - Flight Calendar Sync Button
-
-struct FlightCalendarSyncButton: View {
-  let booking: FlightBooking
-  @State private var showSyncSheet = false
-
-  private var calendarManager: CalendarManager { CalendarManager.shared }
-  private var isSynced: Bool { calendarManager.isFlightSynced(booking.id) }
-
-  var body: some View {
-    Button {
-      showSyncSheet = true
-    } label: {
-      Label(
-        isSynced ? "已同步" : "同步日历",
-        systemImage: isSynced ? "calendar.badge.checkmark" : "calendar.badge.plus"
-      )
-    }
-    .sheet(isPresented: $showSyncSheet) {
-      FlightCalendarSyncView(booking: booking)
-    }
-  }
-}
-
-// MARK: - Hotel Calendar Sync Button
-
-struct HotelCalendarSyncButton: View {
-  let booking: HotelBooking
-  @State private var showSyncSheet = false
-
-  private var calendarManager: CalendarManager { CalendarManager.shared }
-  private var isSynced: Bool { calendarManager.isHotelSynced(booking.id) }
-
-  var body: some View {
-    Button {
-      showSyncSheet = true
-    } label: {
-      Label(
-        isSynced ? "已同步" : "同步日历",
-        systemImage: isSynced ? "calendar.badge.checkmark" : "calendar.badge.plus"
-      )
-    }
-    .sheet(isPresented: $showSyncSheet) {
-      HotelCalendarSyncView(booking: booking)
-    }
-  }
-}
-
-// MARK: - Quick Sync Row
-
-/// A row component for quick calendar sync in list views
-struct CalendarSyncRow: View {
-  let title: String
-  let subtitle: String?
-  let isSynced: Bool
-  let onSync: () async -> Void
-  let onUnsync: () async -> Void
-
-  @State private var isLoading = false
-
-  var body: some View {
-    HStack {
-      VStack(alignment: .leading, spacing: 2) {
-        Text(title)
-          .font(.subheadline)
-        if let subtitle = subtitle {
-          Text(subtitle)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-      }
-
-      Spacer()
-
-      if isLoading {
-        ProgressView()
-          .controlSize(.small)
-      } else {
-        Button {
-          Task {
-            isLoading = true
-            if isSynced {
-              await onUnsync()
-            } else {
-              await onSync()
-            }
-            isLoading = false
-          }
-        } label: {
-          Image(systemName: isSynced ? "calendar.badge.checkmark" : "calendar.badge.plus")
-            .foregroundStyle(isSynced ? .green : .accentColor)
-        }
-        .buttonStyle(.plain)
-      }
     }
   }
 }

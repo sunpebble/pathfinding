@@ -22,5 +22,3 @@ export const logger = pino.pino({
 export function createLogger(context: string) {
   return logger.child({ context });
 }
-
-export type Logger = ReturnType<typeof createLogger>;

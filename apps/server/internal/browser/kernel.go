@@ -12,11 +12,6 @@ import (
 
 const kernelBaseURL = "https://api.onkernel.com"
 
-// KernelConfig 是 Kernel.sh 客户端的配置信息。
-type KernelConfig struct {
-	APIKey string
-}
-
 // CreateSessionOptions 是创建浏览器会话时的可选参数。
 type CreateSessionOptions struct {
 	Stealth        bool // 是否启用隐身模式，默认为 true

@@ -123,7 +123,6 @@ describe('itineraryEditor', () => {
         onClose={vi.fn()}
         itineraryId="42"
         days={[]}
-        userId="1"
       />,
       { wrapper: Wrapper },
     );
@@ -180,7 +179,6 @@ describe('itineraryEditor', () => {
         onClose={vi.fn()}
         itineraryId="42"
         days={[]}
-        userId="1"
       />,
       { wrapper: Wrapper },
     );
@@ -239,7 +237,6 @@ describe('itineraryEditor', () => {
         onClose={vi.fn()}
         itineraryId="42"
         days={[]}
-        userId="1"
       />,
       { wrapper: Wrapper },
     );
@@ -274,7 +271,6 @@ describe('itineraryEditor', () => {
         onClose={vi.fn()}
         itineraryId="42"
         days={[]}
-        userId="1"
       />,
       { wrapper: Wrapper },
     );

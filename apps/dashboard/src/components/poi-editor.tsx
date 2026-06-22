@@ -18,7 +18,6 @@ interface PoiEditorProps {
     longitude: number;
     address?: string;
   };
-  verifiedBy?: string;
 }
 
 export function PoiEditor({
@@ -28,7 +27,6 @@ export function PoiEditor({
   dayNumber,
   poiIndex,
   poi,
-  verifiedBy = 'admin',
 }: PoiEditorProps) {
   const queryClient = useQueryClient();
   const [latitude, setLatitude] = useState(poi.latitude.toString());
@@ -43,7 +41,7 @@ export function PoiEditor({
       poiIndex,
       latitude: input.latitude,
       longitude: input.longitude,
-      verifiedBy,
+      verifiedBy: 'admin',
     }),
   });
 

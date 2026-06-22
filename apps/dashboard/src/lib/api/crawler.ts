@@ -15,32 +15,13 @@
 import type { TravelGuideResponseDto } from '@pathfinding/types';
 
 import { getStoredAuthToken } from './client';
+import { normalizeHeaders, parseErrorMessage, parseJsonResponse } from './shared';
 
 // ---------------------------------------------------------------------------
 // Internals
 // ---------------------------------------------------------------------------
 
 const API_BASE = '/api/crawler';
-
-function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
-  if (!headers) {
-    return {};
-  }
-
-  if (headers instanceof Headers) {
-    const normalized: Record<string, string> = {};
-    headers.forEach((value, key) => {
-      normalized[key] = value;
-    });
-    return normalized;
-  }
-
-  if (Array.isArray(headers)) {
-    return Object.fromEntries(headers);
-  }
-
-  return { ...headers };
-}
 
 function buildRequestHeaders(headers?: HeadersInit): Record<string, string> {
   const normalized = normalizeHeaders(headers);
@@ -55,31 +36,6 @@ function buildRequestHeaders(headers?: HeadersInit): Record<string, string> {
   }
 
   return normalized;
-}
-
-function parseErrorMessage(error: unknown, status: number): string {
-  if (error && typeof error === 'object') {
-    const message = 'message' in error ? error.message : undefined;
-    if (typeof message === 'string' && message.length > 0) {
-      return message;
-    }
-
-    const fallback = 'error' in error ? error.error : undefined;
-    if (typeof fallback === 'string' && fallback.length > 0) {
-      return fallback;
-    }
-  }
-
-  return `HTTP error ${status}`;
-}
-
-async function parseJsonResponse<T>(res: Response): Promise<T> {
-  const text = await res.text();
-  if (!text) {
-    return undefined as T;
-  }
-
-  return JSON.parse(text) as T;
 }
 
 /**

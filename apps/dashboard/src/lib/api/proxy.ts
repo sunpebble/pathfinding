@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { BackendApiError, fetchBackendApi } from './backend';
+import { normalizeHeaders } from './shared';
 
 type ProxyBodyFactory = () => Promise<unknown> | unknown;
 
@@ -18,26 +19,6 @@ export interface BackendProxyOptions<TBackend, TClient = TBackend> {
 export function getBearerToken(request: Request): string | null {
   const auth = request.headers.get('Authorization');
   return auth?.startsWith('Bearer ') ? auth.slice(7) : null;
-}
-
-function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
-  if (!headers) {
-    return {};
-  }
-
-  if (headers instanceof Headers) {
-    const normalized: Record<string, string> = {};
-    headers.forEach((value, key) => {
-      normalized[key] = value;
-    });
-    return normalized;
-  }
-
-  if (Array.isArray(headers)) {
-    return Object.fromEntries(headers);
-  }
-
-  return { ...headers };
 }
 
 async function resolveBody(body: unknown | ProxyBodyFactory | undefined): Promise<unknown> {

@@ -596,7 +596,6 @@ export default function GuideDetailPage() {
           dayNumber={editingPoi.dayNumber}
           poiIndex={editingPoi.poiIndex}
           poi={editingPoi.poi}
-          verifiedBy="admin"
         />
       )}
 

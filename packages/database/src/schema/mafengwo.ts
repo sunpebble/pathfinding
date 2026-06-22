@@ -1,6 +1,6 @@
 /**
  * Mafengwo schema - 马蜂窝 crawled travel content.
- * Destinations, POIs, guides, Q&A, reviews, rankings, crawl tasks.
+ * Destinations and guides.
  */
 import {
   double,
@@ -55,6 +55,47 @@ export const mafengwoDestinations = mysqlTable(
   ],
 );
 
+// ── Mafengwo Guides (马蜂窝攻略) ─────────────────────
+export const mafengwoGuides = mysqlTable(
+  'mafengwo_guides',
+  {
+    id: id(),
+    guideId: varchar('guide_id', { length: 50 }).notNull(),
+    sourceUrl: text('source_url').notNull(),
+    title: varchar('title', { length: 500 }).notNull(),
+    destinationId: varchar('destination_id', { length: 50 }),
+    destinationName: varchar('destination_name', { length: 255 }),
+    authorName: varchar('author_name', { length: 100 }),
+    authorId: varchar('author_id', { length: 50 }),
+    summary: text('summary'),
+    content: text('content').notNull(),
+    contentHtml: text('content_html'),
+    /** Array of section objects {title, content, order} */
+    sections: json('sections').notNull(),
+    coverImageUrl: text('cover_image_url'),
+    /** Array of image URLs */
+    imageUrls: json('image_urls').notNull(),
+    viewsCount: int('views_count').notNull().default(0),
+    likesCount: int('likes_count').notNull().default(0),
+    savesCount: int('saves_count').notNull().default(0),
+    commentsCount: int('comments_count').notNull().default(0),
+    /** Array of tag strings */
+    tags: json('tags').notNull(),
+    publishedAt: timestamp('published_at', { mode: 'date' }),
+    qualityScore: int('quality_score').notNull().default(0),
+    crawledAt: timestamp('crawled_at', { mode: 'date' }).notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }),
+  },
+  t => [
+    // Unique business key (D1). Run scripts/dedupe-travel-guides.ts before db:push.
+    uniqueIndex('mafengwo_guides_guide_id_idx').on(t.guideId),
+    index('mafengwo_guides_destination_idx').on(t.destinationId),
+    index('mafengwo_guides_quality_idx').on(t.qualityScore),
+    index('mafengwo_guides_views_idx').on(t.viewsCount),
+  ],
+);
+
+// Restored: live crawl-pipeline staging tables (written by Go crawler apps/server, deduped by scripts/dedupe-travel-guides.ts).
 // ── Mafengwo POIs (马蜂窝景点/餐厅/酒店) ─────────────
 export const mafengwoPois = mysqlTable(
   'mafengwo_pois',
@@ -117,46 +158,6 @@ export const mafengwoPois = mysqlTable(
   ],
 );
 
-// ── Mafengwo Guides (马蜂窝攻略) ─────────────────────
-export const mafengwoGuides = mysqlTable(
-  'mafengwo_guides',
-  {
-    id: id(),
-    guideId: varchar('guide_id', { length: 50 }).notNull(),
-    sourceUrl: text('source_url').notNull(),
-    title: varchar('title', { length: 500 }).notNull(),
-    destinationId: varchar('destination_id', { length: 50 }),
-    destinationName: varchar('destination_name', { length: 255 }),
-    authorName: varchar('author_name', { length: 100 }),
-    authorId: varchar('author_id', { length: 50 }),
-    summary: text('summary'),
-    content: text('content').notNull(),
-    contentHtml: text('content_html'),
-    /** Array of section objects {title, content, order} */
-    sections: json('sections').notNull(),
-    coverImageUrl: text('cover_image_url'),
-    /** Array of image URLs */
-    imageUrls: json('image_urls').notNull(),
-    viewsCount: int('views_count').notNull().default(0),
-    likesCount: int('likes_count').notNull().default(0),
-    savesCount: int('saves_count').notNull().default(0),
-    commentsCount: int('comments_count').notNull().default(0),
-    /** Array of tag strings */
-    tags: json('tags').notNull(),
-    publishedAt: timestamp('published_at', { mode: 'date' }),
-    qualityScore: int('quality_score').notNull().default(0),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }).notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }),
-  },
-  t => [
-    // Unique business key (D1). Run scripts/dedupe-travel-guides.ts before db:push.
-    uniqueIndex('mafengwo_guides_guide_id_idx').on(t.guideId),
-    index('mafengwo_guides_destination_idx').on(t.destinationId),
-    index('mafengwo_guides_quality_idx').on(t.qualityScore),
-    index('mafengwo_guides_views_idx').on(t.viewsCount),
-  ],
-);
-
 // ── Mafengwo Q&A (马蜂窝问答) ────────────────────────
 export const mafengwoQa = mysqlTable(
   'mafengwo_qa',
@@ -187,36 +188,6 @@ export const mafengwoQa = mysqlTable(
   ],
 );
 
-// ── Mafengwo Reviews (马蜂窝评论) ────────────────────
-export const mafengwoReviews = mysqlTable(
-  'mafengwo_reviews',
-  {
-    id: id(),
-    reviewId: varchar('review_id', { length: 50 }).notNull(),
-    /** External POI ID reference */
-    poiExternalId: varchar('poi_external_id', { length: 50 }).notNull(),
-    poiName: varchar('poi_name', { length: 255 }),
-    authorName: varchar('author_name', { length: 100 }),
-    authorId: varchar('author_id', { length: 50 }),
-    authorAvatarUrl: text('author_avatar_url'),
-    rating: double('rating'),
-    content: text('content').notNull(),
-    /** Array of image URLs */
-    imageUrls: json('image_urls').notNull(),
-    likesCount: int('likes_count').notNull().default(0),
-    /** Array of tag strings */
-    tags: json('tags').notNull(),
-    visitDate: varchar('visit_date', { length: 20 }),
-    reviewCreatedAt: timestamp('review_created_at', { mode: 'date' }),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }).notNull(),
-  },
-  t => [
-    index('mafengwo_reviews_review_id_idx').on(t.reviewId),
-    index('mafengwo_reviews_poi_idx').on(t.poiExternalId),
-    index('mafengwo_reviews_rating_idx').on(t.rating),
-  ],
-);
-
 // ── Mafengwo Rankings (马蜂窝榜单) ───────────────────
 export const mafengwoRankings = mysqlTable(
   'mafengwo_rankings',
@@ -242,35 +213,5 @@ export const mafengwoRankings = mysqlTable(
     // Unique business key (D1): one ranking per (destination, type).
     // Run scripts/dedupe-travel-guides.ts before db:push.
     uniqueIndex('mafengwo_rankings_dest_type_idx').on(t.destinationId, t.rankingType),
-  ],
-);
-
-// ── Mafengwo Crawl Tasks (马蜂窝爬取任务) ────────────
-export const mafengwoCrawlTasks = mysqlTable(
-  'mafengwo_crawl_tasks',
-  {
-    id: id(),
-    /** Task type: destination_list, poi_list, guide_detail, etc. */
-    taskType: varchar('task_type', { length: 30 }).notNull(),
-    /** Task configuration JSON (destinationId, page, etc.) */
-    config: json('config').notNull(),
-    /** pending | running | completed | failed | cancelled */
-    status: varchar('status', { length: 20 }).notNull().default('pending'),
-    priority: int('priority').notNull().default(0),
-    itemsCollected: int('items_collected'),
-    errorMessage: text('error_message'),
-    retryCount: int('retry_count').notNull().default(0),
-    maxRetries: int('max_retries').notNull().default(3),
-    nextRetryAt: timestamp('next_retry_at', { mode: 'date' }),
-    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-    startedAt: timestamp('started_at', { mode: 'date' }),
-    completedAt: timestamp('completed_at', { mode: 'date' }),
-  },
-  t => [
-    index('mafengwo_crawl_status_idx').on(t.status),
-    index('mafengwo_crawl_type_idx').on(t.taskType),
-    index('mafengwo_crawl_priority_idx').on(t.priority),
-    index('mafengwo_crawl_status_priority_idx').on(t.status, t.priority),
-    index('mafengwo_crawl_next_retry_idx').on(t.status, t.nextRetryAt),
   ],
 );

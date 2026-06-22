@@ -262,11 +262,6 @@ struct CollaboratorsResponse: Decodable {
   let data: [CollaboratorWithPresence]
 }
 
-struct PresenceListResponse: Decodable {
-  let success: Bool
-  let data: [CollaboratorPresence]
-}
-
 struct OperationsListResponse: Decodable {
   let success: Bool
   let data: [EditOperation]
