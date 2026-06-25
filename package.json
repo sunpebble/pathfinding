@@ -1,7 +1,7 @@
 {
   "name": "pathfinding",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "packageManager": "pnpm@10.28.0",
   "description": "探路 - Travel planning app with offline-first architecture",
@@ -24,7 +24,6 @@
     "dev": "pnpm dev:db && nx run-many -t dev --projects=@pathfinding/api,dashboard --parallel=2",
     "dev:db": "docker-compose -f docker-compose.dev.yml up -d tidb && pnpm --filter @pathfinding/database dev:ensure-db",
     "dev:api": "pnpm --filter @pathfinding/api dev",
-
     "dev:dashboard": "nx run dashboard:dev",
     "db:generate": "pnpm --filter @pathfinding/database drizzle-kit generate",
     "db:migrate": "pnpm --filter @pathfinding/database drizzle-kit migrate",
