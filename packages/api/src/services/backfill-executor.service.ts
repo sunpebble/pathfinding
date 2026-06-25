@@ -1,12 +1,8 @@
+import type { ExecutorConfig, MafengwoListResponse } from './guide-import.service.js';
 import { crawlJobs, getDb, mafengwoDestinations, mafengwoGuides, travelGuides } from '@pathfinding/database';
 import { eq, inArray } from 'drizzle-orm';
 import { batchImportGuides } from './guide-import.service.js';
 import { syncGuideDestinations, updateUserGuide } from './guide-writer.js';
-
-export interface ExecutorConfig {
-  goServerUrl: string;
-  fetchImpl: typeof fetch;
-}
 
 const defaultConfig: ExecutorConfig = {
   goServerUrl: process.env.GO_SERVER_URL || 'http://localhost:3001',
@@ -19,19 +15,6 @@ interface CrawlerFetchResponse {
     url: string;
     title: string;
     content: string;
-  };
-  error?: string;
-}
-
-/** Go /api/crawler/mafengwo/list response (D10/D12 contract). */
-interface MafengwoListResponse {
-  success: boolean;
-  data?: {
-    city: string;
-    urls: string[];
-    total: number;
-    /** Absent flag is treated as NOT city-scoped (D10). */
-    cityScoped?: boolean;
   };
   error?: string;
 }

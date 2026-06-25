@@ -114,11 +114,7 @@ struct Activity: Identifiable, Codable, Hashable {
   }
 
   var formattedDate: String {
-    let date = Date(timeIntervalSince1970: createdAt / 1000)
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .abbreviated
-    formatter.locale = Locale(identifier: "zh_CN")
-    return formatter.localizedString(for: date, relativeTo: Date())
+    Date(timeIntervalSince1970: createdAt / 1000).relativeFormatted(unitsStyle: .abbreviated)
   }
 
   func hash(into hasher: inout Hasher) {

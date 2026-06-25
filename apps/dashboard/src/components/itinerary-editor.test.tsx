@@ -10,7 +10,7 @@ const mockCreateItineraryItem = vi.fn();
 const mockUpdateItineraryItem = vi.fn();
 const mockReorderItineraryItems = vi.fn();
 const mockRemoveItineraryItem = vi.fn();
-const mockSearchPois = vi.fn();
+const mockGetPois = vi.fn();
 const invalidateQueries = vi.fn();
 
 vi.mock('@tanstack/react-query', async () => {
@@ -34,7 +34,7 @@ vi.mock('@/lib/api/itineraries', () => ({
 }));
 
 vi.mock('@/lib/api/pois', () => ({
-  searchPois: (...args: unknown[]) => mockSearchPois(...args),
+  getPois: (...args: unknown[]) => mockGetPois(...args),
 }));
 
 function createQueryClient() {
@@ -111,7 +111,7 @@ describe('itineraryEditor', () => {
       .mockResolvedValueOnce(createItinerary([
         { id: 'day-1', dayNumber: 1, date: '2026-04-01', items: [createItem('item-1', 0, 'Tokyo Tower')] },
       ]));
-    mockSearchPois.mockResolvedValue({
+    mockGetPois.mockResolvedValue({
       data: [createPoi('501', 'Tokyo Tower')],
       pagination: { total: 1, limit: 20, offset: 0 },
     });

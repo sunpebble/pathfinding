@@ -142,11 +142,7 @@ struct ItineraryVersion: Codable, Identifiable {
 
   /// Relative time description
   var relativeTime: String {
-    let date = Date(timeIntervalSince1970: TimeInterval(createdAt) / 1000)
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .short
-    formatter.locale = Locale(identifier: "zh_CN")
-    return formatter.localizedString(for: date, relativeTo: Date())
+    Date(timeIntervalSince1970: TimeInterval(createdAt) / 1000).relativeFormatted()
   }
 }
 
@@ -182,11 +178,7 @@ struct ItineraryVersionListItem: Codable, Identifiable {
 
   /// Relative time description
   var relativeTime: String {
-    let date = Date(timeIntervalSince1970: TimeInterval(createdAt) / 1000)
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .short
-    formatter.locale = Locale(identifier: "zh_CN")
-    return formatter.localizedString(for: date, relativeTo: Date())
+    Date(timeIntervalSince1970: TimeInterval(createdAt) / 1000).relativeFormatted()
   }
 }
 

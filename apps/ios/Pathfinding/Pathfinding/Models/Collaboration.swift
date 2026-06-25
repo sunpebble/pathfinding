@@ -146,11 +146,7 @@ struct EditOperation: Identifiable, Codable, Sendable {
 
   /// Time formatted for display
   var timeAgo: String {
-    let date = Date(timeIntervalSince1970: timestamp / 1000)
-    let formatter = RelativeDateTimeFormatter()
-    formatter.locale = Locale(identifier: "zh_CN")
-    formatter.unitsStyle = .short
-    return formatter.localizedString(for: date, relativeTo: Date())
+    Date(timeIntervalSince1970: timestamp / 1000).relativeFormatted()
   }
 }
 

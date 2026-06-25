@@ -12,7 +12,6 @@
  */
 
 import type { CrawlJob } from './crawler';
-import { getMockResponse } from './mock-data';
 import { parseErrorMessage, parseJsonResponse } from './shared';
 
 // ---------------------------------------------------------------------------
@@ -147,19 +146,8 @@ export async function fetchBackendApi<T>(
       throw error;
     }
 
-    // In production, never fall back to mock data — re-throw immediately
-    if (process.env.NODE_ENV === 'production') {
-      throw error;
-    }
-
-    // Fall back to mock data only in development when the backend is unreachable
     const method = options?.method ?? 'GET';
-    const mock = getMockResponse(endpoint, method);
-    if (mock) {
-      console.warn(`[mock] Backend unavailable, returning mock data for ${method} ${endpoint}`);
-      return mock as T;
-    }
-    throw new Error(`Backend unavailable and no mock data for ${method} ${endpoint}`);
+    throw new Error(`Backend unavailable for ${method} ${endpoint}`);
   }
 }
 

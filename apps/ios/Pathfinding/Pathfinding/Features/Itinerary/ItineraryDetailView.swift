@@ -125,12 +125,6 @@ struct ItineraryDetailView: View {
       ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
       ToolbarItem(placement: .topBarTrailing) {
-        CalendarSyncToolbarButton(itinerary: itinerary)
-      }
-
-      ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-      ToolbarItem(placement: .topBarTrailing) {
         Menu {
           if availableDestinations.contains(.analysis) {
             Button {

@@ -107,18 +107,3 @@ export function getDb(): Database {
   }
   return _db;
 }
-
-/**
- * Gracefully close the singleton connection pool.
- *
- * Call this during server shutdown to release all database connections.
- * After calling this, the next {@link getDb} call will re-initialise a
- * fresh pool.
- */
-export async function closeDb(): Promise<void> {
-  if (_pool) {
-    await _pool.end();
-    _pool = null;
-    _db = null;
-  }
-}

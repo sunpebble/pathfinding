@@ -11,11 +11,9 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/pathfinding/server/internal/config"
-	"github.com/pathfinding/server/internal/cron"
 	"github.com/pathfinding/server/internal/database"
 	"github.com/pathfinding/server/internal/handler"
 	"github.com/pathfinding/server/internal/middleware"
-	"github.com/pathfinding/server/internal/store"
 )
 
 func main() {
@@ -52,28 +50,6 @@ func main() {
 	// Handler
 	h := handler.New(db, cfg)
 
-	// Batch crawl queue — 顺序消费 POST /batch 的任务（设计 D12）
-	batchRunner := handler.NewBatchRunner(h.ExecuteCrawlTask, time.Duration(cfg.CrawlerRateLimitSeconds)*time.Second)
-	h.Batch = batchRunner
-	batchRunner.Start()
-
-	// Cron jobs — stale 暂存数据刷新（设计 D12，CRAWLER_CRON_ENABLED 默认关闭）
-	var staleGuides cron.StaleGuideLister
-	if db != nil {
-		staleGuides = store.NewGuideQueries(db)
-	}
-	var guideRefresher cron.GuideRefresher
-	if h.Kernel != nil {
-		guideRefresher = h
-	}
-	cronMgr := cron.New(cron.Config{
-		Enabled:         cfg.CrawlerCronEnabled,
-		RefreshBatch:    cfg.CrawlerRefreshBatch,
-		RefreshInterval: time.Duration(cfg.CrawlerRefreshIntervalMinutes) * time.Minute,
-		RateLimit:       time.Duration(cfg.CrawlerRateLimitSeconds) * time.Second,
-	}, staleGuides, guideRefresher)
-	cronMgr.Start()
-
 	// Router
 	mux := http.NewServeMux()
 
@@ -86,13 +62,6 @@ func main() {
 	// Mafengwo crawlers
 	mux.HandleFunc("POST /api/crawler/mafengwo/list", h.HandleMafengwoList)
 	mux.HandleFunc("POST /api/crawler/mafengwo/detail", h.HandleMafengwoDetail)
-	mux.HandleFunc("POST /api/crawler/mafengwo/destination", h.HandleMafengwoDestination)
-	mux.HandleFunc("POST /api/crawler/mafengwo/guide", h.HandleMafengwoGuide)
-	mux.HandleFunc("POST /api/crawler/mafengwo/poi", h.HandleMafengwoPOI)
-	mux.HandleFunc("POST /api/crawler/mafengwo/qa", h.HandleMafengwoQA)
-	mux.HandleFunc("POST /api/crawler/mafengwo/ranking", h.HandleMafengwoRanking)
-	mux.HandleFunc("POST /api/crawler/mafengwo/batch", h.HandleMafengwoBatch)
-	mux.HandleFunc("GET /api/crawler/mafengwo/batch/{batchId}", h.HandleMafengwoBatchStatus)
 
 	// Weather
 	mux.HandleFunc("GET /api/weather/forecast", h.HandleWeatherForecast)
@@ -127,8 +96,6 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		cronMgr.Stop()
-		batchRunner.Stop()
 		if db != nil {
 			db.Close()
 		}

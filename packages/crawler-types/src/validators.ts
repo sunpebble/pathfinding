@@ -10,32 +10,21 @@ import type { CompletenessLevel, GuidePlatform } from './travel-guide.js';
 // ============================================================================
 
 /**
- * Guide data for validation (supports both snake_case and camelCase)
+ * Guide data for validation (camelCase).
  */
 export interface GuideValidationInput {
-  // Required fields (camelCase)
+  // Required fields
   sourcePlatform?: string;
   sourceExternalId?: string;
   content?: string;
   destinations?: string[];
 
-  // Required fields (snake_case - from crawler)
-  source_platform?: string;
-  source_external_id?: string;
-
-  // Optional numeric fields (camelCase)
+  // Optional numeric fields
   likesCount?: number;
   savesCount?: number;
   commentsCount?: number;
   viewsCount?: number;
   qualityScore?: number;
-
-  // Optional numeric fields (snake_case)
-  likes_count?: number;
-  saves_count?: number;
-  comments_count?: number;
-  views_count?: number;
-  quality_score?: number;
 
   // Allow other fields
   [key: string]: unknown;
@@ -90,17 +79,6 @@ export const TRUNCATION_PATTERNS = [
 // ============================================================================
 // Validation Functions
 // ============================================================================
-
-/**
- * Get value supporting both camelCase and snake_case keys
- */
-function getValue<T>(
-  input: GuideValidationInput,
-  camelKey: string,
-  snakeKey: string,
-): T | undefined {
-  return (input[camelKey] ?? input[snakeKey]) as T | undefined;
-}
 
 /**
  * Check if content appears to be truncated
@@ -423,7 +401,7 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
 
   // === ERROR-LEVEL: Required fields (blocks insertion) ===
 
-  const sourcePlatform = getValue<string>(input, 'sourcePlatform', 'source_platform');
+  const sourcePlatform = input.sourcePlatform;
   if (!sourcePlatform) {
     errors.push({
       field: 'sourcePlatform',
@@ -441,7 +419,7 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
     });
   }
 
-  const sourceExternalId = getValue<string>(input, 'sourceExternalId', 'source_external_id');
+  const sourceExternalId = input.sourceExternalId;
   if (!sourceExternalId) {
     errors.push({
       field: 'sourceExternalId',
@@ -563,11 +541,11 @@ export function validateGuideEnhanced(input: GuideValidationInput): EnhancedVali
     authorName: authorResult.authorName,
     destinations: Array.isArray(destinations) ? destinations : undefined,
     contentTruncated,
-    likesCount: getValue<number>(input, 'likesCount', 'likes_count'),
-    savesCount: getValue<number>(input, 'savesCount', 'saves_count'),
-    commentsCount: getValue<number>(input, 'commentsCount', 'comments_count'),
-    viewsCount: getValue<number>(input, 'viewsCount', 'views_count'),
-    qualityScore: getValue<number>(input, 'qualityScore', 'quality_score'),
+    likesCount: input.likesCount,
+    savesCount: input.savesCount,
+    commentsCount: input.commentsCount,
+    viewsCount: input.viewsCount,
+    qualityScore: input.qualityScore,
   });
 
   return {

@@ -10,20 +10,20 @@ import (
 
 var (
 	// CleanContent patterns
-	scriptTagRe    = regexp.MustCompile(`(?is)<script[^>]*>.*?</script>`)
-	styleTagRe     = regexp.MustCompile(`(?is)<style[^>]*>.*?</style>`)
-	htmlTagRe      = regexp.MustCompile(`<[^>]+>`)
-	whitespaceRe   = regexp.MustCompile(`\s+`)
+	scriptTagRe  = regexp.MustCompile(`(?is)<script[^>]*>.*?</script>`)
+	styleTagRe   = regexp.MustCompile(`(?is)<style[^>]*>.*?</style>`)
+	htmlTagRe    = regexp.MustCompile(`<[^>]+>`)
+	whitespaceRe = regexp.MustCompile(`\s+`)
 
 	// splitGuideParagraphs patterns
-	horizSpaceRe   = regexp.MustCompile(`[ \t\f\v]+`)
-	multiNewlineRe = regexp.MustCompile(`\n{3,}`)
+	horizSpaceRe    = regexp.MustCompile(`[ \t\f\v]+`)
+	multiNewlineRe  = regexp.MustCompile(`\n{3,}`)
 	sentenceSplitRe = regexp.MustCompile(`[^。！？.!?]+[。！？.!?]?`)
 
 	// cleanGuideText patterns
-	nonNewlineSpaceRe    = regexp.MustCompile(`[^\S\n]+`)
-	leadingPhotoCountRe  = regexp.MustCompile(`^\d+张照片\s*`)
-	leadingGuideCountRe  = regexp.MustCompile(`^\d+篇游记\s*`)
+	nonNewlineSpaceRe   = regexp.MustCompile(`[^\S\n]+`)
+	leadingPhotoCountRe = regexp.MustCompile(`^\d+张照片\s*`)
+	leadingGuideCountRe = regexp.MustCompile(`^\d+篇游记\s*`)
 
 	// cleanGuideText replacement patterns (compiled once, applied in order)
 	guideTextReplacements = []struct {
@@ -406,33 +406,6 @@ func ParseChineseNumber(s string) (int, bool) {
 		return 0, false
 	}
 	return int(math.Round(value * multiplier)), true
-}
-
-// CalculateQualityScore returns a 0-1 quality score.
-// Weights: title(20%), content length(40%), author(10%), images(20%), interaction(10%)
-func CalculateQualityScore(title, content, author string, images []string, views, likes int) float64 {
-	score := 0.0
-	// Title: 20%
-	if len(title) > 0 {
-		titleScore := math.Min(float64(utf8.RuneCountInString(title))/20.0, 1.0)
-		score += titleScore * 0.2
-	}
-	// Content length: 40%
-	contentLen := utf8.RuneCountInString(content)
-	contentScore := math.Min(float64(contentLen)/2000.0, 1.0)
-	score += contentScore * 0.4
-	// Author: 10%
-	if author != "" {
-		score += 0.1
-	}
-	// Images: 20%
-	imgScore := math.Min(float64(len(images))/5.0, 1.0)
-	score += imgScore * 0.2
-	// Interaction: 10%
-	total := views + likes
-	interScore := math.Min(float64(total)/1000.0, 1.0)
-	score += interScore * 0.1
-	return math.Round(score*100) / 100
 }
 
 // ExtractExternalID extracts a numeric ID from a URL like "/i/24648165.html" → "24648165".

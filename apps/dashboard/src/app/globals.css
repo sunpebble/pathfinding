@@ -84,6 +84,16 @@
   }
 }
 
+/* Text shimmer sweep (replaces framer-motion in Shimmer component) */
+@keyframes text-shimmer {
+  from {
+    background-position: 100% center;
+  }
+  to {
+    background-position: 0% center;
+  }
+}
+
 html,
 body {
   @apply antialiased;

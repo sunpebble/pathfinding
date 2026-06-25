@@ -14,52 +14,17 @@
 
 import type { TravelGuideResponseDto } from '@pathfinding/types';
 
-import { getStoredAuthToken } from './client';
-import { normalizeHeaders, parseErrorMessage, parseJsonResponse } from './shared';
+import { createApiClient } from './client';
 
 // ---------------------------------------------------------------------------
 // Internals
 // ---------------------------------------------------------------------------
 
-const API_BASE = '/api/crawler';
-
-function buildRequestHeaders(headers?: HeadersInit): Record<string, string> {
-  const normalized = normalizeHeaders(headers);
-
-  if (!normalized['Content-Type']) {
-    normalized['Content-Type'] = 'application/json';
-  }
-
-  const token = getStoredAuthToken();
-  if (token) {
-    normalized.Authorization = `Bearer ${token}`;
-  }
-
-  return normalized;
-}
-
 /**
- * Internal fetch wrapper for the crawler proxy routes.
- *
- * Automatically sets JSON content-type, parses responses, and
- * throws descriptive errors on non-2xx status codes.
+ * Shared transport for all crawler proxy routes — attaches the stored JWT,
+ * sets JSON content-type, parses responses, and throws on non-2xx status.
  */
-async function fetchApi<T>(
-  endpoint: string,
-  options?: RequestInit,
-): Promise<T> {
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers: buildRequestHeaders(options?.headers),
-  });
-
-  if (!res.ok) {
-    const error = await parseJsonResponse<unknown>(res).catch(() => undefined);
-    throw new Error(parseErrorMessage(error, res.status));
-  }
-
-  return parseJsonResponse<T>(res);
-}
+const client = createApiClient('/api/crawler');
 
 /** Build a query string from a flat params object, omitting undefined/empty values. */
 function buildQuery(params: Record<string, string | number | undefined>): string {
@@ -172,7 +137,7 @@ export async function getCrawlJobs(params?: {
   limit?: number;
   offset?: number;
 }): Promise<PaginatedResponse<CrawlJob>> {
-  return fetchApi(`/crawl-jobs${buildQuery({
+  return client.get(`/crawl-jobs${buildQuery({
     status: params?.status,
     platform: params?.platform,
     limit: params?.limit,
@@ -186,7 +151,7 @@ export async function getCrawlJobs(params?: {
  * @param id - Crawl job identifier.
  */
 export async function getCrawlJob(id: string): Promise<CrawlJob> {
-  const response = await fetchApi<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}`);
+  const response = await client.get<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}`);
   return response.data;
 }
 
@@ -198,10 +163,7 @@ export async function getCrawlJob(id: string): Promise<CrawlJob> {
 export async function createCrawlJob(
   input: CreateCrawlJobInput,
 ): Promise<CrawlJob> {
-  const response = await fetchApi<ApiEnvelope<CrawlJob>>('/crawl-jobs', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
+  const response = await client.post<ApiEnvelope<CrawlJob>>('/crawl-jobs', input);
   return response.data;
 }
 
@@ -211,7 +173,7 @@ export async function createCrawlJob(
  * @param id - Crawl job identifier.
  */
 export async function startCrawlJob(id: string): Promise<CrawlJob> {
-  const response = await fetchApi<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}/start`, { method: 'POST' });
+  const response = await client.post<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}/start`);
   return response.data;
 }
 
@@ -221,7 +183,7 @@ export async function startCrawlJob(id: string): Promise<CrawlJob> {
  * @param id - Crawl job identifier.
  */
 export async function cancelCrawlJob(id: string): Promise<CrawlJob> {
-  const response = await fetchApi<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}/cancel`, { method: 'POST' });
+  const response = await client.post<ApiEnvelope<CrawlJob>>(`/crawl-jobs/${id}/cancel`);
   return response.data;
 }
 
@@ -248,7 +210,7 @@ export interface SchedulerStatus {
 
 /** Fetch the current scheduler status and worker info. */
 export async function getSchedulerStatus(): Promise<SchedulerStatus> {
-  const response = await fetchApi<ApiEnvelope<SchedulerStatus>>(
+  const response = await client.get<ApiEnvelope<SchedulerStatus>>(
     '/crawl-jobs/scheduler/status',
   );
   return response.data;
@@ -262,9 +224,7 @@ export async function getSchedulerStatus(): Promise<SchedulerStatus> {
 export async function startScheduledTask(
   name: string,
 ): Promise<{ message: string }> {
-  return fetchApi(`/crawl-jobs/scheduler/tasks/${name}/start`, {
-    method: 'POST',
-  });
+  return client.post(`/crawl-jobs/scheduler/tasks/${name}/start`);
 }
 
 /**
@@ -275,9 +235,7 @@ export async function startScheduledTask(
 export async function stopScheduledTask(
   name: string,
 ): Promise<{ message: string }> {
-  return fetchApi(`/crawl-jobs/scheduler/tasks/${name}/stop`, {
-    method: 'POST',
-  });
+  return client.post(`/crawl-jobs/scheduler/tasks/${name}/stop`);
 }
 
 // ---------------------------------------------------------------------------
@@ -319,7 +277,7 @@ export async function getPOIs(params?: {
   limit?: number;
   offset?: number;
 }): Promise<PaginatedResponse<PoiRecord>> {
-  return fetchApi(`/pois${buildQuery({
+  return client.get(`/pois${buildQuery({
     q: params?.q,
     category: params?.category,
     city: params?.city,
@@ -356,21 +314,12 @@ export async function getTrainingDatasets(params?: {
   limit?: number;
   offset?: number;
 }): Promise<PaginatedResponse<TrainingDataset>> {
-  return fetchApi(`/training-datasets${buildQuery({
+  return client.get(`/training-datasets${buildQuery({
     type: params?.type,
     status: params?.status,
     limit: params?.limit,
     offset: params?.offset,
   })}`);
-}
-
-/**
- * Fetch a single training dataset by ID.
- *
- * @param id - Dataset identifier.
- */
-export async function getTrainingDataset(id: string): Promise<TrainingDataset> {
-  return fetchApi(`/training-datasets/${id}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -398,7 +347,7 @@ export async function getTravelGuides(params?: {
   sort?: string;
   order?: 'asc' | 'desc';
 }): Promise<PaginatedResponse<TravelGuide>> {
-  return fetchApi(`/guides${buildQuery({
+  return client.get(`/guides${buildQuery({
     platforms: params?.platforms,
     destinations: params?.destinations,
     q: params?.search,
@@ -419,54 +368,7 @@ export async function getTravelGuides(params?: {
 export async function getTravelGuide(
   id: string,
 ): Promise<{ data: TravelGuide }> {
-  return fetchApi(`/guides/${id}`);
-}
-
-/** Fetch guide recommendations based on destinations, tags, or platforms. */
-export async function getGuideRecommendations(params?: {
-  destinations?: string;
-  tags?: string;
-  platforms?: string;
-  limit?: number;
-  offset?: number;
-}): Promise<PaginatedResponse<TravelGuide>> {
-  return fetchApi(`/guides/recommendations${buildQuery({
-    destinations: params?.destinations,
-    tags: params?.tags,
-    platforms: params?.platforms,
-    limit: params?.limit,
-    offset: params?.offset,
-  })}`);
-}
-
-/** Fetch trending guides over a time period. */
-export async function getTrendingGuides(params?: {
-  days?: number;
-  platforms?: string;
-  limit?: number;
-}): Promise<{ data: TravelGuide[]; period_days: number }> {
-  return fetchApi(`/guides/trending${buildQuery({
-    days: params?.days,
-    platforms: params?.platforms,
-    limit: params?.limit,
-  })}`);
-}
-
-/** Full-text search across travel guides. */
-export async function searchGuides(params: {
-  q: string;
-  platforms?: string;
-  destinations?: string;
-  limit?: number;
-  offset?: number;
-}): Promise<PaginatedResponse<TravelGuide>> {
-  return fetchApi(`/guides/search${buildQuery({
-    q: params.q,
-    platforms: params.platforms,
-    destinations: params.destinations,
-    limit: params.limit,
-    offset: params.offset,
-  })}`);
+  return client.get(`/guides/${id}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -496,9 +398,7 @@ export interface BackfillAnalysis {
 }
 
 export async function getBackfillAnalysis(): Promise<BackfillAnalysis> {
-  const response = await fetchApi<ApiEnvelope<BackfillAnalysis>>('/backfill-analysis', {
-    method: 'POST',
-  });
+  const response = await client.post<ApiEnvelope<BackfillAnalysis>>('/backfill-analysis');
   return response.data;
 }
 
@@ -510,10 +410,7 @@ export interface CreateBackfillJobsInput {
 export async function createBackfillJobs(
   input: CreateBackfillJobsInput,
 ): Promise<{ jobsCreated: number }> {
-  const response = await fetchApi<ApiEnvelope<{ jobsCreated: number }>>('/backfill-jobs', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
+  const response = await client.post<ApiEnvelope<{ jobsCreated: number }>>('/backfill-jobs', input);
   return response.data;
 }
 
@@ -524,9 +421,7 @@ export interface BackfillExecutionResult {
 }
 
 export async function executeBackfillJobs(): Promise<BackfillExecutionResult> {
-  const response = await fetchApi<ApiEnvelope<BackfillExecutionResult>>('/backfill-execute', {
-    method: 'POST',
-  });
+  const response = await client.post<ApiEnvelope<BackfillExecutionResult>>('/backfill-execute');
   return response.data;
 }
 
@@ -539,9 +434,7 @@ export interface FullBackfillResult {
 }
 
 export async function executeFullBackfill(): Promise<FullBackfillResult> {
-  const response = await fetchApi<ApiEnvelope<FullBackfillResult>>('/backfill-all', {
-    method: 'POST',
-  });
+  const response = await client.post<ApiEnvelope<FullBackfillResult>>('/backfill-all');
   return response.data;
 }
 
@@ -558,10 +451,7 @@ export interface GuideDiscoveryResult {
 }
 
 export async function discoverGuides(platform: string, city: string): Promise<GuideDiscoveryResult> {
-  const response = await fetchApi<ApiEnvelope<GuideDiscoveryResult>>('/discover-guides', {
-    method: 'POST',
-    body: JSON.stringify({ platform, city }),
-  });
+  const response = await client.post<ApiEnvelope<GuideDiscoveryResult>>('/discover-guides', { platform, city });
   return response.data;
 }
 
@@ -573,9 +463,6 @@ export interface GuideImportResult {
 }
 
 export async function importGuides(platform: string, urls: string[]): Promise<GuideImportResult> {
-  const response = await fetchApi<ApiEnvelope<GuideImportResult>>('/import-guides', {
-    method: 'POST',
-    body: JSON.stringify({ platform, urls }),
-  });
+  const response = await client.post<ApiEnvelope<GuideImportResult>>('/import-guides', { platform, urls });
   return response.data;
 }

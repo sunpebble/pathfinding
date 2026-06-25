@@ -8,7 +8,6 @@ type ProxyBodyFactory = () => Promise<unknown> | unknown;
 export interface BackendProxyOptions<TBackend, TClient = TBackend> {
   endpoint: string;
   method?: string;
-  requireAuth?: boolean;
   body?: unknown | ProxyBodyFactory;
   headers?: HeadersInit;
   successStatus?: number;
@@ -33,10 +32,9 @@ export async function proxyBackendApiResponse<TBackend, TClient = TBackend>(
   request: NextRequest | Request,
   options: BackendProxyOptions<TBackend, TClient>,
 ) {
-  const requireAuth = options.requireAuth ?? true;
   const token = getBearerToken(request);
 
-  if (requireAuth && !token) {
+  if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

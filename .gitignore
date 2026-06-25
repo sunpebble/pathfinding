@@ -81,3 +81,6 @@ logs/security/
 
 # Superpowers SDD scratch (briefs, reports, diffs, ledger)
 .superpowers/
+
+# Compiled Go server binary (built fresh by Dockerfile)
+apps/server/server

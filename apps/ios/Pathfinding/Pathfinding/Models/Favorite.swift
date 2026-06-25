@@ -27,9 +27,7 @@ struct ItineraryLike: Codable, Identifiable, Hashable {
   }
 
   var timeAgo: String {
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .short
-    return formatter.localizedString(for: createdDate, relativeTo: Date())
+    createdDate.relativeFormatted(localeIdentifier: nil)
   }
 
   // MARK: - Hashable
@@ -116,9 +114,7 @@ struct ItineraryFavorite: Codable, Identifiable, Hashable {
   }
 
   var timeAgo: String {
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .short
-    return formatter.localizedString(for: createdDate, relativeTo: Date())
+    createdDate.relativeFormatted(localeIdentifier: nil)
   }
 
   // MARK: - Hashable

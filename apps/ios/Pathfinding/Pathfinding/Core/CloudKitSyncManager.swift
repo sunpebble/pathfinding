@@ -18,9 +18,7 @@ enum SyncStatus: Equatable {
     case .syncing:
       return "icloud.sync.status.syncing".localized
     case .success(let date):
-      let formatter = RelativeDateTimeFormatter()
-      formatter.unitsStyle = .abbreviated
-      return String(format: "icloud.sync.status.success".localized, formatter.localizedString(for: date, relativeTo: Date()))
+      return String(format: "icloud.sync.status.success".localized, date.relativeFormatted(unitsStyle: .abbreviated, localeIdentifier: nil))
     case .error(let message):
       return String(format: "icloud.sync.status.error".localized, message)
     }

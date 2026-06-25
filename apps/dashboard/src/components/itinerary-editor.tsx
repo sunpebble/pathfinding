@@ -25,7 +25,7 @@ import {
   reorderItineraryItems,
   updateItineraryItem,
 } from '@/lib/api/itineraries';
-import { searchPois } from '@/lib/api/pois';
+import { getPois } from '@/lib/api/pois';
 import { cn } from '@/lib/utils';
 
 interface PoiOption {
@@ -412,7 +412,7 @@ function DayEditor({
   const poisQuery = useQuery({
     queryKey: ['pois-search', cityId, searchQuery, selectedCategory, isSearching],
     enabled: Boolean(cityId && isSearching),
-    queryFn: () => searchPois({
+    queryFn: () => getPois({
       q: searchQuery || undefined,
       cityId,
       category: selectedCategory || undefined,

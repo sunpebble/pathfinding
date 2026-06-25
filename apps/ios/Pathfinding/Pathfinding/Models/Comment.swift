@@ -50,18 +50,7 @@ struct ItineraryComment: Codable, Identifiable, Hashable {
   }
 
   var timeAgo: String {
-    let now = Date()
-    let interval = now.timeIntervalSince(createdDate)
-
-    // Less than 1 minute
-    if interval < 60 {
-      return "刚刚"
-    }
-
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .short
-    formatter.locale = Locale(identifier: "zh_CN")
-    return formatter.localizedString(for: createdDate, relativeTo: now)
+    createdDate.relativeFormatted(justNowThreshold: 60)
   }
 
   // MARK: - Hashable
@@ -125,17 +114,7 @@ struct UserNotification: Codable, Identifiable, Hashable {
   }
 
   var timeAgo: String {
-    let now = Date()
-    let interval = now.timeIntervalSince(createdDate)
-
-    if interval < 60 {
-      return "刚刚"
-    }
-
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .short
-    formatter.locale = Locale(identifier: "zh_CN")
-    return formatter.localizedString(for: createdDate, relativeTo: now)
+    createdDate.relativeFormatted(justNowThreshold: 60)
   }
 
   var icon: String {

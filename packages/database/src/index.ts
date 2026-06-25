@@ -11,5 +11,5 @@
  * const allUsers = await db.select().from(users);
  * ```
  */
-export { closeDb, createDb, createPool, type Database, getDb } from './client.js';
+export { createDb, createPool, type Database, getDb } from './client.js';
 export * from './schema/index.js';

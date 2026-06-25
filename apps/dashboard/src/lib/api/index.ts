@@ -61,17 +61,13 @@ export {
   getBackfillAnalysis,
   getCrawlJob,
   getCrawlJobs,
-  getGuideRecommendations,
   getHealth,
   getPOIs,
   getSchedulerStatus,
-  getTrainingDataset,
   getTrainingDatasets,
   getTravelGuide,
   getTravelGuides,
-  getTrendingGuides,
   importGuides,
-  searchGuides,
   startCrawlJob,
   startScheduledTask,
   stopScheduledTask,
@@ -123,6 +119,6 @@ export type {
 // ---------------------------------------------------------------------------
 // POIs (authenticated)
 // ---------------------------------------------------------------------------
-export { getPoi, getPois, searchPois, updateGuidePoiCoordinates } from './pois';
+export { getPois, updateGuidePoiCoordinates } from './pois';
 
 export type { UpdateGuidePoiCoordinatesInput } from './pois';

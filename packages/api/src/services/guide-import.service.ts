@@ -6,22 +6,14 @@
  * D2 writer, D6 audit, D7 refresh, D9 destination mirror).
  *
  * Public API (`discoverNewGuides`, `importGuide`, `batchImportGuides`) is
- * unchanged so callers (crawl-jobs route, backfill-executor) are unaffected;
- * `syncGuideDestinations` is re-exported from `./guide-writer.js` for backfill.
+ * unchanged so callers (crawl-jobs route, backfill-executor) are unaffected.
  */
 import type { ImportContext, StagingSupplement } from './guide-normalize.js';
 import { getDb, mafengwoDestinations, mafengwoGuides, travelGuides } from '@pathfinding/database';
 import { eq } from 'drizzle-orm';
 import { fetchDetail } from './go-crawler-port.js';
 import { normalizeGuide } from './guide-normalize.js';
-import { persistIngestedGuide, syncGuideDestinations } from './guide-writer.js';
-
-// Re-exported for back-compat: backfill-executor mirrors a single destination
-// into guide_destinations via this writer (kept real through importOriginal).
-export { syncGuideDestinations };
-// ImportContext lives in guide-normalize now; re-export so existing callers
-// importing it from this module keep working.
-export type { ImportContext } from './guide-normalize.js';
+import { persistIngestedGuide } from './guide-writer.js';
 
 /**
  * Back-compat config shape. `createGoCrawlerPort` accepts
@@ -53,7 +45,8 @@ export interface PlatformDiscoveryResult {
   cityScoped: boolean;
 }
 
-interface MafengwoListResponse {
+/** Go /api/crawler/mafengwo/list response (D10/D12 contract). */
+export interface MafengwoListResponse {
   success: boolean;
   data?: {
     city: string;

@@ -55,9 +55,7 @@ struct ChatSession: Codable, Identifiable, Hashable {
   }
 
   var timeAgo: String {
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .short
-    return formatter.localizedString(for: lastMessageDate, relativeTo: Date())
+    lastMessageDate.relativeFormatted(localeIdentifier: nil)
   }
 
   // MARK: - Hashable

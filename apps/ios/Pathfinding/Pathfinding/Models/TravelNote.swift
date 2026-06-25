@@ -69,11 +69,7 @@ struct TravelNote: Codable, Identifiable, Hashable {
   // MARK: - Convenience
 
   var formattedDate: String {
-    let date = Date(timeIntervalSince1970: Double(createdAt) / 1000)
-    let formatter = RelativeDateTimeFormatter()
-    formatter.locale = Locale(identifier: "zh_CN")
-    formatter.unitsStyle = .short
-    return formatter.localizedString(for: date, relativeTo: Date())
+    Date(timeIntervalSince1970: Double(createdAt) / 1000).relativeFormatted()
   }
 
   var formattedTravelDate: String? {
@@ -214,11 +210,7 @@ struct NoteComment: Codable, Identifiable, Hashable {
   }
 
   var formattedDate: String {
-    let date = Date(timeIntervalSince1970: Double(createdAt) / 1000)
-    let formatter = RelativeDateTimeFormatter()
-    formatter.locale = Locale(identifier: "zh_CN")
-    formatter.unitsStyle = .short
-    return formatter.localizedString(for: date, relativeTo: Date())
+    Date(timeIntervalSince1970: Double(createdAt) / 1000).relativeFormatted()
   }
 }
 

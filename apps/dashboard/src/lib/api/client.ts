@@ -128,8 +128,6 @@ export function clearStoredAuthToken(): void {
 
 /** Return type of {@link createApiClient}. */
 export interface ApiClient {
-  /** Execute an arbitrary request against the base path. */
-  request: <T>(path: string, init?: RequestInit) => Promise<T>;
   /** `GET` request. */
   get: <T>(path: string, init?: RequestInit) => Promise<T>;
   /** `POST` request with optional JSON body. */
@@ -190,7 +188,6 @@ export function createApiClient(basePath: string): ApiClient {
   }
 
   return {
-    request,
     get<T>(path: string, init?: RequestInit) {
       return request<T>(path, { ...init, method: 'GET' });
     },

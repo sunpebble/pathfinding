@@ -41,27 +41,6 @@ export function getPois(query?: Record<string, string | number | undefined>): Pr
   return poisClient.get<PaginatedResponse<Poi>>(`/${buildQuerySuffix(query)}`);
 }
 
-/**
- * Fetch a single POI by ID.
- *
- * @param id - POI identifier.
- */
-export function getPoi(id: string | number): Promise<{ data: Poi }> {
-  return poisClient.get<{ data: Poi }>(`/${id}`);
-}
-
-/**
- * Search POIs with optional filter parameters.
- *
- * Currently delegates to {@link getPois}; exists as a semantic alias
- * in case the search endpoint diverges in the future.
- *
- * @param query - Key-value pairs appended as query string params.
- */
-export function searchPois(query?: Record<string, string | number | undefined>): Promise<PaginatedResponse<Poi>> {
-  return getPois(query);
-}
-
 /** Input for updating a guide POI's coordinates. */
 export interface UpdateGuidePoiCoordinatesInput {
   dayNumber: number;
