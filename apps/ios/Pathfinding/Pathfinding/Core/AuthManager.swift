@@ -9,7 +9,7 @@ actor AuthManager {
   static let shared = AuthManager()
 
   nonisolated static func resetPersistedSessionForTesting() {
-    let keychainService = "org.pathfinding.app"
+    let keychainService = "com.kunish.pathfinding"
     let keys = [
       "auth.accessToken",
       "auth.refreshToken",
@@ -33,10 +33,10 @@ actor AuthManager {
   private let session: URLSession
   private let decoder: JSONDecoder
   private let encoder: JSONEncoder
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "AuthManager")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "AuthManager")
 
   // Keychain keys
-  private let keychainService = "org.pathfinding.app"
+  private let keychainService = "com.kunish.pathfinding"
   private let accessTokenKey = "auth.accessToken"
   private let refreshTokenKey = "auth.refreshToken"
   private let userIdKey = "auth.userId"

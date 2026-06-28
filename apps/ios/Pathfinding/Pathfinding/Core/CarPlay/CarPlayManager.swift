@@ -7,7 +7,7 @@ import OSLog
 /// Main CarPlay Manager - Handles all CarPlay UI and navigation
 @MainActor
 final class CarPlayManager: NSObject {
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "CarPlayManager")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "CarPlayManager")
 
   // MARK: - Properties
 

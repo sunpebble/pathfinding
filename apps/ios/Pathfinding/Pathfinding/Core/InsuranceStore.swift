@@ -8,7 +8,7 @@ import OSLog
 final class InsuranceStore {
   static let shared = InsuranceStore()
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "InsuranceStore")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "InsuranceStore")
   private let authManager = AuthManager.shared
 
   // MARK: - State

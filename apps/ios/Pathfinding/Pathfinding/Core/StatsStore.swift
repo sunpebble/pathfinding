@@ -7,7 +7,7 @@ import OSLog
 final class StatsStore {
   static let shared = StatsStore()
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "StatsStore")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "StatsStore")
 
   // State
   var quickStats: QuickStats?

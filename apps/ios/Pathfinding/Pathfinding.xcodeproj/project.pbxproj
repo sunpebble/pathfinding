@@ -1320,7 +1320,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.pathfinding.app.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kunish.pathfinding.tests;
 				PRODUCT_MODULE_NAME = PathfindingTests;
 				PRODUCT_NAME = PathfindingTests;
 				SDKROOT = iphoneos;
@@ -1391,7 +1391,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.pathfinding.app.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kunish.pathfinding.uitests;
 				PRODUCT_MODULE_NAME = PathfindingUITests;
 				PRODUCT_NAME = PathfindingUITests;
 				SDKROOT = iphoneos;
@@ -1409,7 +1409,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.pathfinding.app.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kunish.pathfinding.tests;
 				PRODUCT_MODULE_NAME = PathfindingTests;
 				PRODUCT_NAME = PathfindingTests;
 				SDKROOT = iphoneos;
@@ -1434,7 +1434,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.pathfinding.app$(BUNDLE_ID_SUFFIX)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.kunish.pathfinding$(BUNDLE_ID_SUFFIX)";
 				SDKROOT = iphoneos;
 			};
 			name = Release;
@@ -1509,7 +1509,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.pathfinding.app.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kunish.pathfinding.uitests;
 				PRODUCT_MODULE_NAME = PathfindingUITests;
 				PRODUCT_NAME = PathfindingUITests;
 				SDKROOT = iphoneos;
@@ -1534,7 +1534,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.pathfinding.app$(BUNDLE_ID_SUFFIX)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.kunish.pathfinding$(BUNDLE_ID_SUFFIX)";
 				SDKROOT = iphoneos;
 			};
 			name = Staging;
@@ -1549,7 +1549,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.pathfinding.app.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kunish.pathfinding.tests;
 				PRODUCT_MODULE_NAME = PathfindingTests;
 				PRODUCT_NAME = PathfindingTests;
 				SDKROOT = iphoneos;
@@ -1567,7 +1567,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.pathfinding.app.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kunish.pathfinding.uitests;
 				PRODUCT_MODULE_NAME = PathfindingUITests;
 				PRODUCT_NAME = PathfindingUITests;
 				SDKROOT = iphoneos;
@@ -1592,7 +1592,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.pathfinding.app$(BUNDLE_ID_SUFFIX)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.kunish.pathfinding$(BUNDLE_ID_SUFFIX)";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;

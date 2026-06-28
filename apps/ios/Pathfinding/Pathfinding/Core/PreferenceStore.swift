@@ -7,7 +7,7 @@ import OSLog
 final class PreferenceStore {
   static let shared = PreferenceStore()
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "PreferenceStore")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "PreferenceStore")
 
   // MARK: - State
 

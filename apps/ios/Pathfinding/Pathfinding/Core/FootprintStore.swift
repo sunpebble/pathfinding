@@ -8,7 +8,7 @@ import CoreLocation
 final class FootprintStore {
   static let shared = FootprintStore()
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "FootprintStore")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "FootprintStore")
   private let decoder: JSONDecoder = {
     let decoder = JSONDecoder()
     return decoder

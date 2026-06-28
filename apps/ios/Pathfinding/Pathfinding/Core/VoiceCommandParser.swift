@@ -7,7 +7,7 @@ import OSLog
 final class VoiceCommandParser {
   static let shared = VoiceCommandParser()
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "VoiceCommand")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "VoiceCommand")
 
   // MARK: - Command Patterns
 

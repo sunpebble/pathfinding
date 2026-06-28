@@ -45,7 +45,7 @@ final class VoiceMemoManager {
 
   // MARK: - Private Properties
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "VoiceMemo")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "VoiceMemo")
   private var audioRecorder: AVAudioRecorder?
   private var audioPlayer: AVAudioPlayer?
   private var recordingTimer: Timer?

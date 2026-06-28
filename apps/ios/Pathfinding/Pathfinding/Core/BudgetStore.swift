@@ -48,7 +48,7 @@ final class BudgetStore {
   var errorMessage: String?
 
   private let apiClient = NetworkClient.shared
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "BudgetStore")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "BudgetStore")
 
   // MARK: - Category Operations
 

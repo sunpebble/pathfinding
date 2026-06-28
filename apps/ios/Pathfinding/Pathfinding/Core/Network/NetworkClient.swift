@@ -16,7 +16,7 @@ actor NetworkClient {
   let aiServiceURL: URL
   let session: URLSession
   let decoder: JSONDecoder
-  let logger = Logger(subsystem: "org.pathfinding.app", category: "NetworkClient")
+  let logger = Logger(subsystem: "com.kunish.pathfinding", category: "NetworkClient")
   private let authManager = AuthManager.shared
 
   // Response cache

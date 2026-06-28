@@ -5,7 +5,7 @@ import Speech
 /// Handles voice recognition for CarPlay
 @MainActor
 final class CarPlayVoiceCommandHandler {
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "CarPlayVoice")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "CarPlayVoice")
 
   private var audioEngine: AVAudioEngine?
   private var speechRecognizer: SFSpeechRecognizer?

@@ -204,7 +204,7 @@ final class CloudKitSyncManager {
     }
 
     // Initialize CloudKit container
-    container = CKContainer(identifier: "iCloud.org.pathfinding.app")
+    container = CKContainer(identifier: "iCloud.com.kunish.pathfinding")
 
     // Check account status
     Task {

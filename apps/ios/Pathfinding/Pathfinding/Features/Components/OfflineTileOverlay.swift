@@ -298,7 +298,7 @@ final class NetworkMonitor {
   private(set) var connectionType: NWInterface.InterfaceType?
 
   private let monitor = NWPathMonitor()
-  private let queue = DispatchQueue(label: "org.pathfinding.networkmonitor")
+  private let queue = DispatchQueue(label: "com.kunish.pathfinding.networkmonitor")
 
   private init() {
     startMonitoring()

@@ -41,7 +41,7 @@ final class SpeechRecognitionManager {
 
   // MARK: - Private Properties
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "SpeechRecognition")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "SpeechRecognition")
   private let speechRecognizer: SFSpeechRecognizer?
   private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
   private var recognitionTask: SFSpeechRecognitionTask?
