@@ -8,10 +8,6 @@
         <string>group.com.kunish.pathfinding</string>
     </array>
 
-    <!-- CarPlay Navigation Entitlement -->
-    <key>com.apple.developer.carplay-maps</key>
-    <true/>
-
     <!-- iCloud support -->
     <key>com.apple.developer.icloud-container-identifiers</key>
     <array>

@@ -968,8 +968,7 @@
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					13225BBD51391F257A6548A1 = {
-						DevelopmentTeam = "";
-						ProvisioningStyle = Automatic;
+						DevelopmentTeam = 62HCT6Q83X;
 					};
 					493C15AFC09F20C91AABBA79 = {
 						DevelopmentTeam = "";
@@ -1423,10 +1422,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Pathfinding/Pathfinding.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 62HCT6Q83X;
 				INFOPLIST_FILE = Pathfinding/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pathfinding;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1435,6 +1434,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kunish.pathfinding$(BUNDLE_ID_SUFFIX)";
+				PROVISIONING_PROFILE_SPECIFIER = "Pathfinding App Store";
 				SDKROOT = iphoneos;
 			};
 			name = Release;
@@ -1526,7 +1526,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 62HCT6Q83X;
 				INFOPLIST_FILE = Pathfinding/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pathfinding;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1584,7 +1584,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 62HCT6Q83X;
 				INFOPLIST_FILE = Pathfinding/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pathfinding;
 				LD_RUNPATH_SEARCH_PATHS = (
