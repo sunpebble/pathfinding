@@ -31,7 +31,7 @@ final class CommentStore {
   var errorMessage: String?
 
   private let apiClient = NetworkClient.shared
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "CommentStore")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "CommentStore")
 
   // MARK: - Comment Operations
 

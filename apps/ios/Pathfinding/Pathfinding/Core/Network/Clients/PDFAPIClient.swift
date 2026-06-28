@@ -8,7 +8,7 @@ actor PDFAPIClient {
   private let network = NetworkClient.shared
   private var decoder: JSONDecoder { network.decoder }
   private var aiServiceURL: URL { network.aiServiceURL }
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "PDFAPIClient")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "PDFAPIClient")
 
   private init() {}
 

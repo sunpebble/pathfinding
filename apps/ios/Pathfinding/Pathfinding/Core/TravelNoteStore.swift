@@ -56,7 +56,7 @@ final class TravelNoteStore {
   var errorMessage: String?
 
   private let apiClient = NetworkClient.shared
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "TravelNoteStore")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "TravelNoteStore")
 
   // MARK: - Public Notes (Discovery Feed)
 

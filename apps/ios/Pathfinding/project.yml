@@ -1,6 +1,6 @@
 name: Pathfinding
 options:
-  bundleIdPrefix: org.pathfinding
+  bundleIdPrefix: com.kunish
   deploymentTarget:
     iOS: '26.0'
   xcodeVersion: '27.0'
@@ -36,14 +36,23 @@ targets:
     settings:
       base:
         INFOPLIST_FILE: Pathfinding/Info.plist
-        PRODUCT_BUNDLE_IDENTIFIER: org.pathfinding.app$(BUNDLE_ID_SUFFIX)
+        PRODUCT_BUNDLE_IDENTIFIER: com.kunish.pathfinding$(BUNDLE_ID_SUFFIX)
         MARKETING_VERSION: 1.0.0
         CURRENT_PROJECT_VERSION: '1'
-        DEVELOPMENT_TEAM: ''
+        DEVELOPMENT_TEAM: '62HCT6Q83X'
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS: Pathfinding/Pathfinding.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: Pathfinding
+      configs:
+        # CI 发版用手动 distribution 签名（见 release-please.yml 的 testflight job）。
+        # 自动云签名在 ephemeral runner 会退化为 Development 并撞账户证书配额，
+        # 故 Release 固定 Manual + 导入的 Apple Distribution 证书 + App Store profile。
+        # Debug/Staging 仍走 base 的 Automatic（模拟器/本地开发）。
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: Pathfinding App Store
     configFiles:
       Debug: Config/Debug.xcconfig
       Release: Config/Release.xcconfig
@@ -61,7 +70,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_NAME: PathfindingTests
         PRODUCT_MODULE_NAME: PathfindingTests
-        PRODUCT_BUNDLE_IDENTIFIER: org.pathfinding.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.kunish.pathfinding.tests
         TEST_HOST: $(BUILT_PRODUCTS_DIR)/Pathfinding.app/Pathfinding
         BUNDLE_LOADER: $(TEST_HOST)
 
@@ -77,7 +86,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_NAME: PathfindingUITests
         PRODUCT_MODULE_NAME: PathfindingUITests
-        PRODUCT_BUNDLE_IDENTIFIER: org.pathfinding.app.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.kunish.pathfinding.uitests
         TEST_TARGET_NAME: Pathfinding
 
 schemes:

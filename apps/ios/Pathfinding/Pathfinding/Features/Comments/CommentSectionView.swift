@@ -1,7 +1,7 @@
 import SwiftUI
 import OSLog
 
-private let logger = Logger(subsystem: "org.pathfinding.app", category: "CommentSection")
+private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "CommentSection")
 
 // MARK: - Comment Section View
 

@@ -106,7 +106,7 @@ enum ShareCardSize: String, CaseIterable, Identifiable {
 final class ShareImageGenerator {
   static let shared = ShareImageGenerator()
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "ShareImageGenerator")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "ShareImageGenerator")
 
   private init() {}
 

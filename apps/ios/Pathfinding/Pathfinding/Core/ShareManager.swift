@@ -121,7 +121,7 @@ enum ShareError: LocalizedError {
 final class ShareManager {
   static let shared = ShareManager()
 
-  private let logger = Logger(subsystem: "org.pathfinding.app", category: "ShareManager")
+  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "ShareManager")
 
   // Share state
   private(set) var isSharing = false

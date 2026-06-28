@@ -5,7 +5,7 @@ import Foundation
 /// App Group identifier for sharing data between main app and widgets
 /// Shared constants for both main app and widget extension
 public enum WidgetAppGroupConstants {
-  public static let suiteName = "group.org.pathfinding.app"
+  public static let suiteName = "group.com.kunish.pathfinding"
 
   // UserDefaults keys for widget data
   public static let upcomingItineraryKey = "widget_upcoming_itinerary"

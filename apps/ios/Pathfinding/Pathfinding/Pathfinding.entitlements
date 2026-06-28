@@ -5,17 +5,13 @@
     <!-- App Groups for Widget data sharing -->
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.org.pathfinding.app</string>
+        <string>group.com.kunish.pathfinding</string>
     </array>
-
-    <!-- CarPlay Navigation Entitlement -->
-    <key>com.apple.developer.carplay-maps</key>
-    <true/>
 
     <!-- iCloud support -->
     <key>com.apple.developer.icloud-container-identifiers</key>
     <array>
-        <string>iCloud.org.pathfinding.app</string>
+        <string>iCloud.com.kunish.pathfinding</string>
     </array>
     <key>com.apple.developer.icloud-services</key>
     <array>
@@ -23,6 +19,6 @@
         <string>CloudDocuments</string>
     </array>
     <key>com.apple.developer.ubiquity-kvstore-identifier</key>
-    <string>$(TeamIdentifierPrefix)org.pathfinding.app</string>
+    <string>$(TeamIdentifierPrefix)com.kunish.pathfinding</string>
 </dict>
 </plist>
