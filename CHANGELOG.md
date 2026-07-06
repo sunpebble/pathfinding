@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/sunpebble/pathfinding/compare/v1.1.0...v1.2.0) (2026-07-06)
+
+
+### Features
+
+* migrate pathfinding to sunpebble flue backend ([3596643](https://github.com/sunpebble/pathfinding/commit/3596643c0721e971e326ab45deee8c0953030267))
+
+
+### Bug Fixes
+
+* eslint yaml/quotes and eol-last on dependabot.yml ([d4b1540](https://github.com/sunpebble/pathfinding/commit/d4b15403980f56a00db6d3abeb3d3a013b48afc0))
+* launch sunpebble ios app in simulator ([37378ab](https://github.com/sunpebble/pathfinding/commit/37378abc8e1c6a7a538b166aafc83bc0178c5f29))
+* satisfy eslint for release workflow and project.yml ([1455d5a](https://github.com/sunpebble/pathfinding/commit/1455d5a3f1aedddbc97fb008dd1c7b977f120782))
+
 ## [1.1.0](https://github.com/kunish-homelab/pathfinding/compare/v1.0.0...v1.1.0) (2026-06-25)
 
 
