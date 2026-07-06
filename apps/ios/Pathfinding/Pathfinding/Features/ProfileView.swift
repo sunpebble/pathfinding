@@ -250,46 +250,8 @@ struct ProfileView: View {
   private var heroView: some View {
     GlassEffectContainer {
       VStack(spacing: DesignTokens.Spacing.md) {
-        // Avatar + name row
-        HStack(spacing: DesignTokens.Spacing.lg) {
-          Image(systemName: "person.fill")
-            .font(.system(size: 32, weight: .medium))
-            .foregroundStyle(.white)
-            .padding(DesignTokens.Spacing.lg)
-            .glassEffect(.regular.tint(.purple.opacity(0.25)), in: Circle())
-
-          VStack(alignment: .leading, spacing: 6) {
-            Text(isLoggedIn ? (authViewModel.userEmail ?? "User") : "profile.guest".localized)
-              .font(.title2)
-              .fontWeight(.bold)
-              .foregroundStyle(.primary)
-            if isLoggedIn {
-              Text("profile.logged_in".localized)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            } else {
-              HStack(spacing: 4) {
-                Image(systemName: "arrow.right.circle.fill")
-                  .font(.caption)
-                  .foregroundStyle(.indigo)
-                Text("profile.login_prompt".localized)
-                  .font(.subheadline)
-                  .foregroundStyle(.secondary)
-              }
-            }
-          }
-          Spacer()
-          if !isLoggedIn {
-            Button {
-              showLogin = true
-            } label: {
-              Label("profile.sign_in".localized, systemImage: "person.crop.circle.badge.plus")
-                .labelStyle(.titleOnly)
-            }
-            .buttonStyle(.glassProminent)
-            .controlSize(.regular)
-          }
-        }
+        // Avatar + name row — whole row opens login when signed out (one affordance, not two)
+        headerIdentityRow
 
         Divider()
 
@@ -366,6 +328,61 @@ struct ProfileView: View {
     .backgroundExtensionEffect()
     .padding(.horizontal, DesignTokens.Spacing.md)
     .padding(.top, DesignTokens.Spacing.sm)
+  }
+
+  // MARK: - Header Identity Row
+
+  /// Avatar + name + subtitle. When signed out the whole row is a single
+  /// tappable sign-in affordance, replacing the previous redundant prompt + button.
+  @ViewBuilder
+  private var headerIdentityRow: some View {
+    let displayName = isLoggedIn
+      ? (authViewModel.userEmail ?? "User")
+      : "profile.guest".localized
+    let subtitle = isLoggedIn
+      ? "profile.logged_in".localized
+      : "profile.login_prompt".localized
+
+    let row = HStack(spacing: DesignTokens.Spacing.lg) {
+      Image(systemName: "person.fill")
+        .font(.system(size: 32, weight: .medium))
+        .foregroundStyle(.white)
+        .padding(DesignTokens.Spacing.lg)
+        .glassEffect(.regular.tint(.purple.opacity(0.25)), in: Circle())
+
+      VStack(alignment: .leading, spacing: 6) {
+        Text(displayName)
+          .font(.title2)
+          .fontWeight(.bold)
+          .foregroundStyle(.primary)
+        Text(subtitle)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+      }
+
+      Spacer()
+
+      if !isLoggedIn {
+        Image(systemName: "chevron.right")
+          .font(.subheadline.weight(.semibold))
+          .foregroundStyle(.secondary)
+      }
+    }
+    .contentShape(Rectangle())
+
+    if isLoggedIn {
+      row
+    } else {
+      Button {
+        showLogin = true
+      } label: {
+        row
+      }
+      .buttonStyle(.plain)
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel("\(displayName). \(subtitle)")
+      .accessibilityAddTraits(.isButton)
+    }
   }
 
   // MARK: - Data Loading
