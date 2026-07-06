@@ -241,6 +241,14 @@ private struct NewSessionSheet: View {
           Text("提供任何额外的上下文，如旅行偏好或限制条件")
         }
 
+        if let errorMessage = store.errorMessage {
+          Section {
+            Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+              .font(.footnote)
+              .foregroundStyle(.red)
+          }
+        }
+
         Section {
           HStack {
             Image(systemName: "sparkles")

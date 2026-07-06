@@ -280,10 +280,14 @@ struct ProfileView: View {
           }
           Spacer()
           if !isLoggedIn {
-            Button("profile.login_prompt".localized) {
+            Button {
               showLogin = true
+            } label: {
+              Label("profile.sign_in".localized, systemImage: "person.crop.circle.badge.plus")
+                .labelStyle(.titleOnly)
             }
-            .buttonStyle(.glass)
+            .buttonStyle(.glassProminent)
+            .controlSize(.regular)
           }
         }
 
@@ -329,23 +333,26 @@ struct ProfileView: View {
           Divider().frame(height: 50)
 
           Button { navigateToFollowManagement = true } label: {
-            HStack(spacing: 0) {
-              EnhancedStatItem(
-                value: "\(followStats?.followersCount ?? 0)",
-                label: "profile.followers".localized,
-                icon: "person.2.fill",
-                color: .pink,
-                index: 3
-              )
-              Divider().frame(height: 50)
-              EnhancedStatItem(
-                value: "\(followStats?.followingCount ?? 0)",
-                label: "profile.following".localized,
-                icon: "person.wave.2.fill",
-                color: .purple,
-                index: 4
-              )
-            }
+            EnhancedStatItem(
+              value: "\(followStats?.followersCount ?? 0)",
+              label: "profile.followers".localized,
+              icon: "person.2.fill",
+              color: .pink,
+              index: 3
+            )
+          }
+          .buttonStyle(.plain)
+
+          Divider().frame(height: 50)
+
+          Button { navigateToFollowManagement = true } label: {
+            EnhancedStatItem(
+              value: "\(followStats?.followingCount ?? 0)",
+              label: "profile.following".localized,
+              icon: "person.wave.2.fill",
+              color: .purple,
+              index: 4
+            )
           }
           .buttonStyle(.plain)
         }

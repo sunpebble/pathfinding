@@ -101,6 +101,7 @@
 // MARK: - Profile
 "profile.title" = "Profile";
 "profile.guest" = "Guest";
+"profile.sign_in" = "Sign in";
 "profile.login_prompt" = "Sign in to unlock more features";
 "profile.favorites" = "Favorites";
 "profile.trips" = "Trips";

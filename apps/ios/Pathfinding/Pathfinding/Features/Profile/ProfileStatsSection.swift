@@ -16,7 +16,7 @@ struct EnhancedStatItem: View {
       ZStack {
         Circle()
           .fill(color.opacity(0.15))
-          .frame(width: 48, height: 48)
+          .frame(width: 44, height: 44)
 
         Image(systemName: icon)
           .font(.system(size: 18, weight: .semibold))
@@ -30,11 +30,13 @@ struct EnhancedStatItem: View {
         .redacted(reason: isLoading ? .placeholder : [])
 
       Text(label)
-        .font(.caption)
+        .font(.caption2)
         .foregroundStyle(.secondary)
+        .lineLimit(1)
+        .minimumScaleFactor(0.65)
+        .allowsTightening(true)
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, DesignTokens.Spacing.sm)
   }
 }
-

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# iOS 一键启动脚本 — 探路 Pathfinding
+# iOS 一键启动脚本 — Sunpebble Trips
 # 自动完成: 环境检查 → 项目生成 → 模拟器启动 → 编译 → 安装 → 运行
 # =============================================================================
 
@@ -11,7 +11,8 @@ set -euo pipefail
 SIMULATOR_NAME="${IOS_SIMULATOR:-}"
 SIMULATOR_UDID=""
 SCHEME="${IOS_SCHEME:-Pathfinding-Debug}"
-BUNDLE_ID="${IOS_BUNDLE_ID:-org.pathfinding.app.debug}"
+USER_BUNDLE_ID="${IOS_BUNDLE_ID:-}"
+BUNDLE_ID="${USER_BUNDLE_ID:-com.sunpebble.trips.debug}"
 API_BASE_URL_OVERRIDE="${IOS_API_BASE_URL:-}"
 DERIVED_DATA="/tmp/pathfinding-build"
 PROJECT_DIR="apps/ios/Pathfinding"
@@ -74,6 +75,9 @@ while [[ $# -gt 0 ]]; do
 		;;
 	--release)
 		SCHEME="Pathfinding-Release"
+		if [ -z "$USER_BUNDLE_ID" ]; then
+			BUNDLE_ID="com.sunpebble.trips"
+		fi
 		shift
 		;;
 	--device)
@@ -104,7 +108,7 @@ cd "$ROOT_DIR"
 
 echo -e "${BOLD}${CYAN}"
 echo "  ╔═══════════════════════════════════╗"
-echo "  ║   探路 Pathfinding · iOS 启动     ║"
+echo "  ║   Sunpebble Trips · iOS 启动      ║"
 echo "  ╚═══════════════════════════════════╝"
 echo -e "${NC}"
 info "Scheme:    $SCHEME"
@@ -248,7 +252,14 @@ ok "编译成功 (${BUILD_TIME}s)"
 if [ "$BUILD_ONLY" = false ]; then
 	step "安装并启动 App"
 
+	BUILT_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_PATH/Info.plist" 2>/dev/null || true)
+	if [ -n "$BUILT_BUNDLE_ID" ] && [ "$BUILT_BUNDLE_ID" != "$BUNDLE_ID" ]; then
+		warn "构建产物 Bundle ID 为 $BUILT_BUNDLE_ID，使用构建产物值启动"
+		BUNDLE_ID="$BUILT_BUNDLE_ID"
+	fi
+
 	# 终止旧实例
+	xcrun simctl terminate "$SIMULATOR_UDID" "org.pathfinding.app.debug" 2>/dev/null || true
 	xcrun simctl terminate "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
 
 	# 安装

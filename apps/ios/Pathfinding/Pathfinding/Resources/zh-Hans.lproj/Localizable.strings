@@ -101,6 +101,7 @@
 // MARK: - Profile
 "profile.title" = "我的";
 "profile.guest" = "游客";
+"profile.sign_in" = "登录";
 "profile.login_prompt" = "点击登录体验更多功能";
 "profile.favorites" = "收藏";
 "profile.trips" = "行程";
