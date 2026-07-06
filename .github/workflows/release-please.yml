@@ -18,7 +18,7 @@ jobs:
       releases_created: ${{ steps.release.outputs.releases_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v4.2.0
+      - uses: googleapis/release-please-action@v5
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -27,7 +27,7 @@ jobs:
   testflight:
     needs: release-please
     if: ${{ needs.release-please.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
-    uses: sunpebble/ci/.github/workflows/ios-testflight.yml@v1.2
+    uses: sunpebble/ci/.github/workflows/ios-testflight.yml@v2
     with:
       working_directory: apps/ios/Pathfinding
       xcode_project: Pathfinding.xcodeproj
