@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # 手动补发一次 TestFlight 构建（release-please job 会空跑）
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -24,203 +24,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: node
 
-  # 原生 SwiftUI app 构建 → 手动 distribution 签名 → 上传 TestFlight。仅在产生 release
-  # 或手动触发时跑。iOS 26 / Swift 6 需要 Xcode 27，故用 macos-26 runner（GitHub 未提供
-  # 该镜像时改成带 Xcode 27 的可用 runner）。私有仓 macOS 按 10x 计费，故只在发版时跑。
-  # 签名方案见各 step 注释：参考 fresh_pantry —— 自动云签名在 ephemeral runner 上会退化为
-  # Development 并撞证书配额，故改用导入固定 Distribution 证书 + 预生成 profile 的手动签名。
   testflight:
-    name: Build & Upload to TestFlight
     needs: release-please
     if: ${{ needs.release-please.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
-    runs-on: macos-26
-    defaults:
-      run:
-        working-directory: apps/ios/Pathfinding
-    env:
+    uses: sunpebble/ci/.github/workflows/ios-testflight-pathfinding.yml@v1.1
+    secrets:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Install ASC API key
-        run: |
-          mkdir -p "$HOME/.appstoreconnect/private_keys"
-          printf '%s' "${{ secrets.ASC_API_KEY_P8 }}" > "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
-
-      # 持久化签名身份：导入预先导出的 Apple Distribution 证书（含私钥）到一次性 keychain。
-      # ephemeral runner 每次都是干净 keychain，若靠自动签名 Xcode 会每次新建证书，几次后撞
-      # 账户证书配额（"maximum number of certificates" → 连带 "No profiles found"）。导入固定
-      # 证书后自动/手动签名都复用它而不再新建。证书一次性导出方式见 README/PR 说明。
-      - name: Import Apple Distribution certificate (persistent signing identity)
-        env:
-          DIST_CERT_P12_BASE64: ${{ secrets.APPLE_DIST_CERT_P12_BASE64 }}
-          DIST_CERT_PASSWORD: ${{ secrets.APPLE_DIST_CERT_PASSWORD }}
-        run: |
-          CERT_PATH="$RUNNER_TEMP/dist_cert.p12"
-          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
-          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
-          LOGIN_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
-
-          echo -n "$DIST_CERT_P12_BASE64" | base64 --decode -o "$CERT_PATH"
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          # 不设 lock timeout：keychain 跨后续 step（archive / export）保持解锁
-          security set-keychain-settings "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          # 导入证书+私钥；-A 允许任意工具读取，set-key-partition-list 避免 codesign 弹授权框
-          security import "$CERT_PATH" -P "$DIST_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          # 关键：设为「默认 keychain」。ephemeral runner 上 xcodebuild 靠 default keychain 定位
-          # 签名身份；只把临时 keychain 加进 search list 不够。search list 再保留 login.keychain，
-          # 供 codesign 取 Apple WWDR 中间证书构建证书链。
-          security default-keychain -s "$KEYCHAIN_PATH"
-          if [ -f "$LOGIN_KEYCHAIN" ]; then
-            security list-keychains -d user -s "$KEYCHAIN_PATH" "$LOGIN_KEYCHAIN"
-          else
-            security list-keychains -d user -s "$KEYCHAIN_PATH"
-          fi
-
-          # 诊断：确认 Distribution 证书已可见
-          security find-identity -v -p codesigning
-
-      # 安装预生成的 App Store provisioning profile（经 ASC API 创建，关联上面导入的
-      # Distribution 证书）。Xcode 按 profile 内 UUID 索引，文件名随意；Release 配置 manual
-      # 签名据 PROVISIONING_PROFILE_SPECIFIER（profile 名）定位。pathfinding 仅主 App 一个
-      # target（com.kunish.pathfinding），故只装一个 profile。
-      - name: Install provisioning profile
-        env:
-          PROFILE_APP_BASE64: ${{ secrets.APPLE_PROFILE_APP_BASE64 }}
-        run: |
-          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILES_DIR"
-          echo -n "$PROFILE_APP_BASE64" | base64 --decode > "$PROFILES_DIR/pf_app_store.mobileprovision"
-          ls -la "$PROFILES_DIR"
-
-      - name: Generate Xcode project
-        run: xcodegen generate # project.yml 是工程唯一真源，CI 重新生成避免漂移
-
-      # 发版前质量门禁：跑 iOS 单元测试（Debug，模拟器无需签名）。失败即终止，不进 archive。
-      # 想省 macOS 分钟可删除本步骤。动态取任一可用 iPhone 模拟器 UDID（按设备名会撞
-      # destination ambiguous，按 UDID 唯一）。-only-testing 限定单测，避开 UITests 的慢/flaky。
-      - name: Run unit tests (gate)
-        run: |
-          UDID=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; c=[v for rt in d for v in d[rt] if v.get('isAvailable') and v['name'].startswith('iPhone')]; print(c[0]['udid'] if c else '')")
-          if [ -z "$UDID" ]; then echo 'no available iPhone simulator'; exit 1; fi
-          echo "Using simulator UDID: $UDID"
-          xcodebuild test \
-            -project Pathfinding.xcodeproj \
-            -scheme Pathfinding-Debug \
-            -destination "platform=iOS Simulator,id=$UDID" \
-            -only-testing:PathfindingTests
-
-      - name: Compute build number (UTC timestamp, monotonic)
-        id: bn
-        run: echo "build_number=$(date -u +%Y%m%d%H%M)" >> "$GITHUB_OUTPUT"
-
-      # marketing version 真源 = 根 package.json（release-please 用 release-type:node 维护）
-      - name: Read marketing version (release-please source of truth)
-        id: ver
-        run: |
-          VERSION=$(grep '"version"' ../../../package.json | head -1 | sed -E 's/.*"version": "(.+)".*/\1/')
-          echo "marketing_version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      # manual 显式 distribution 签名：Release 配置（project.yml）指定 CODE_SIGN_STYLE=Manual
-      # + Apple Distribution 身份 + App Store profile 名；证书已导入 keychain、profile 已安装。
-      # 不用 -allowProvisioningUpdates/-authenticationKey（自动签名路径在 archive 会退化为
-      # Development 并撞证书配额）。
-      - name: Archive (manual distribution signing)
-        run: |
-          xcodebuild archive \
-            -project Pathfinding.xcodeproj \
-            -scheme Pathfinding-Release \
-            -configuration Release \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            -archivePath build/Pathfinding.xcarchive \
-            MARKETING_VERSION=${{ steps.ver.outputs.marketing_version }} \
-            CURRENT_PROJECT_VERSION=${{ steps.bn.outputs.build_number }}
-
-      # manual 导出：ExportOptions.plist 把 bundle id 映射到已安装的 App Store profile。
-      # clean PATH 避免 Homebrew GNU rsync 触发 "Copy failed"。
-      - name: Export IPA
-        run: |
-          env PATH="/usr/bin:/bin:/usr/sbin:/sbin" xcodebuild -exportArchive \
-            -archivePath build/Pathfinding.xcarchive \
-            -exportPath build/ipa \
-            -exportOptionsPlist ExportOptions.plist
-
-      - name: Upload to TestFlight (one retry)
-        run: |
-          ipas=(build/ipa/*.ipa)
-          IPA="${ipas[0]}"
-          echo "Uploading: $IPA"
-          for attempt in 1 2; do
-            if xcrun altool --upload-app -f "$IPA" -t ios \
-                 --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"; then
-              echo "upload ok"; exit 0
-            fi
-            echo "upload attempt $attempt failed; retrying in 30s"; sleep 30
-          done
-          echo "upload failed after retries"; exit 1
-
-  # TODO: Docker build/push job is disabled because Dockerfiles do not exist yet.
-  # Create apps/api/Dockerfile and apps/crawler/Dockerfile before re-enabling.
-  # docker-publish:
-  #   needs: release-please
-  #   if: ${{ needs.release-please.outputs.releases_created == 'true' }}
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       app:
-  #         - name: api
-  #           dockerfile: apps/api/Dockerfile
-  #           image: pathfinding-api
-  #         - name: crawler
-  #           dockerfile: apps/crawler/Dockerfile
-  #           image: pathfinding-crawler
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4.2.2
-  #
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3.12.0
-  #
-  #     - name: Log in to GitHub Container Registry
-  #       uses: docker/login-action@v3.6.0
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #
-  #     - name: Extract metadata
-  #       id: meta
-  #       uses: docker/metadata-action@v5.10.0
-  #       with:
-  #         images: ghcr.io/${{ github.repository_owner }}/${{ matrix.app.image }}
-  #         tags: |
-  #           type=semver,pattern={{version}},value=${{ needs.release-please.outputs.tag_name }}
-  #           type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.tag_name }}
-  #           type=semver,pattern={{major}},value=${{ needs.release-please.outputs.tag_name }}
-  #           type=raw,value=latest
-  #
-  #     - name: Build and push Docker image
-  #       uses: docker/build-push-action@v6.18.0
-  #       with:
-  #         context: .
-  #         file: ${{ matrix.app.dockerfile }}
-  #         push: true
-  #         tags: ${{ steps.meta.outputs.tags }}
-  #         labels: ${{ steps.meta.outputs.labels }}
-  #         cache-from: type=gha
-  #         cache-to: type=gha,mode=max
-  #         platforms: linux/amd64,linux/arm64
+      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+      APPLE_DIST_CERT_P12_BASE64: ${{ secrets.APPLE_DIST_CERT_P12_BASE64 }}
+      APPLE_DIST_CERT_PASSWORD: ${{ secrets.APPLE_DIST_CERT_PASSWORD }}
+      APPLE_PROFILE_APP_BASE64: ${{ secrets.APPLE_PROFILE_APP_BASE64 }}
