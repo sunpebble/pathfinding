@@ -67,6 +67,9 @@ __pycache__/
 # Playwright MCP screenshots
 .playwright-mcp/
 
+# Codex local artifacts
+.codex/
+
 # Auto Claude data directory
 .auto-claude/
 

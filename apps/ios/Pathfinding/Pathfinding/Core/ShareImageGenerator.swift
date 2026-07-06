@@ -106,7 +106,7 @@ enum ShareCardSize: String, CaseIterable, Identifiable {
 final class ShareImageGenerator {
   static let shared = ShareImageGenerator()
 
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "ShareImageGenerator")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "ShareImageGenerator")
 
   private init() {}
 
@@ -660,11 +660,11 @@ private struct ShareCardFooter: View {
           .foregroundColor(style.accentColor)
 
         VStack(alignment: .leading, spacing: 0) {
-          Text("探路")
+          Text("Sunpebble")
             .font(.system(size: 18, weight: .bold))
             .foregroundColor(style.primaryTextColor)
 
-          Text("Pathfinding")
+          Text("Trips")
             .font(.system(size: 10))
             .foregroundColor(style.secondaryTextColor)
         }
@@ -694,7 +694,7 @@ private struct ShareCardFooter: View {
   BlogPostShareCard(
     blogPost: BlogPost(
       id: "1",
-      title: "东京5日深度游攻略 | 小众景点+美食推荐",
+      title: "东京5日行程 | 小众景点+美食推荐",
       authorName: "旅行达人小明",
       content: nil,
       contentHtml: nil,
@@ -709,7 +709,7 @@ private struct ShareCardFooter: View {
       savesCount: 234,
       createdAt: nil,
       destinations: ["东京"],
-      aiSummary: "一份超详细的东京深度游攻略,涵盖浅草寺、新宿、涩谷等经典景点,以及隐藏的小众打卡地。",
+      aiSummary: "一份可编辑的东京深度游行程，涵盖浅草寺、新宿、涩谷等经典景点，以及隐藏的小众打卡地。",
       aiTips: nil,
       aiBestTime: "3-5月",
       aiDuration: "5天",

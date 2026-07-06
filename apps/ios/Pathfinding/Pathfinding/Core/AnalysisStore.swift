@@ -7,7 +7,7 @@ import OSLog
 final class AnalysisStore {
   static let shared = AnalysisStore()
 
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "AnalysisStore")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "AnalysisStore")
 
   // State
   var currentReport: ItineraryAnalysisReport?

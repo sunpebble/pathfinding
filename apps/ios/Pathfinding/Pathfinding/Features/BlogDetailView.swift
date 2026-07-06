@@ -81,7 +81,7 @@ struct BlogDetailView: View {
         }
         .buttonStyle(.glass)
         .accessibilityLabel(isLiked ? "取消喜欢" : "喜欢")
-        .accessibilityHint(isLiked ? "取消喜欢这篇攻略" : "标记喜欢这篇攻略")
+        .accessibilityHint(isLiked ? "取消喜欢这份行程内容" : "标记喜欢这份行程内容")
 
         Button {
           withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
@@ -94,7 +94,7 @@ struct BlogDetailView: View {
         }
         .buttonStyle(.glass)
         .accessibilityLabel(isSaved ? "取消收藏" : "收藏")
-        .accessibilityHint(isSaved ? "取消收藏这篇攻略" : "收藏这篇攻略")
+        .accessibilityHint(isSaved ? "取消收藏这份行程内容" : "收藏这份行程内容")
 
         Button {
           showShareSheet = true
@@ -103,7 +103,7 @@ struct BlogDetailView: View {
         }
         .buttonStyle(.glass)
         .accessibilityLabel("分享")
-        .accessibilityHint("分享这篇攻略")
+        .accessibilityHint("分享这份行程内容")
 
         // PDF Export button
         if guide.aiDays != nil {
@@ -114,7 +114,7 @@ struct BlogDetailView: View {
           }
           .buttonStyle(.glass)
           .accessibilityLabel("导出 PDF")
-          .accessibilityHint("将攻略导出为 PDF 文件")
+          .accessibilityHint("将行程内容导出为 PDF 文件")
         }
       }
     }
@@ -162,9 +162,9 @@ struct BlogDetailView: View {
     BlogDetailView(
       guide: BlogPost(
         id: "preview-1",
-        title: "东京 3 日深度游攻略",
+        title: "东京 3 日行程",
         authorName: "旅行者小明",
-        content: "这是一篇示例攻略原文内容。",
+        content: "这是一份示例行程内容。",
         contentHtml: nil,
         contentMarkdown: nil,
         summary: "东京经典三日游",

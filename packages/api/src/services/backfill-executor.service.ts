@@ -1,38 +1,13 @@
-import type { ExecutorConfig, MafengwoListResponse } from './guide-import.service.js';
-import { crawlJobs, getDb, mafengwoDestinations, mafengwoGuides, travelGuides } from '@pathfinding/database';
+import type { ExecutorConfig } from './guide-import.service.js';
+import { crawlJobs, getDb, mafengwoGuides, travelGuides } from '@pathfinding/database';
 import { eq, inArray } from 'drizzle-orm';
-import { batchImportGuides } from './guide-import.service.js';
+import { fetchCrawlerContent } from './crawler-fetch.service.js';
+import { MAFENGWO_CRAWLER_DISABLED_MESSAGE } from './guide-import.service.js';
 import { syncGuideDestinations, updateUserGuide } from './guide-writer.js';
 
 const defaultConfig: ExecutorConfig = {
-  goServerUrl: process.env.GO_SERVER_URL || 'http://localhost:3001',
   fetchImpl: globalThis.fetch,
 };
-
-interface CrawlerFetchResponse {
-  success: boolean;
-  data?: {
-    url: string;
-    title: string;
-    content: string;
-  };
-  error?: string;
-}
-
-async function fetchUrlContent(
-  url: string,
-  cfg: ExecutorConfig,
-): Promise<CrawlerFetchResponse> {
-  const response = await cfg.fetchImpl(`${cfg.goServerUrl}/api/crawler/fetch`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url }),
-  });
-  if (!response.ok) {
-    throw new Error(`内容抓取失败：HTTP ${response.status}`);
-  }
-  return response.json() as Promise<CrawlerFetchResponse>;
-}
 
 /**
  * Sync a travel_guides row from the mafengwo_guides staging table (D2: the
@@ -133,7 +108,7 @@ async function fetchAndUpdateGuide(
   cfg: ExecutorConfig,
 ): Promise<boolean> {
   const db = getDb();
-  const result = await fetchUrlContent(sourceUrl, cfg);
+  const result = await fetchCrawlerContent(sourceUrl, cfg.fetchImpl);
 
   // Crawler-reported failure is a real failure — surface it to the caller
   // instead of silently counting the guide as "not updated".
@@ -185,67 +160,13 @@ function emptyCounters(): BackfillCounters {
   return { processed: 0, imported: 0, updated: 0, rejected: 0, skipped: 0, failed: 0 };
 }
 
-/**
- * D12: destination_fill performs a REAL import — Go /list (with mddId from
- * mafengwo_destinations when known) → batchImportGuides through the
- * guide-import main pipeline → true per-action counts. A city whose list
- * crawl fails counts as failed; HTTP 200 alone is never success.
- */
 async function runDestinationFill(
-  jobId: number,
   targetDestinations: string[],
-  cfg: ExecutorConfig,
   counters: BackfillCounters,
 ): Promise<void> {
-  const db = getDb();
-
   for (const cityName of targetDestinations) {
-    try {
-      const [destination] = await db
-        .select()
-        .from(mafengwoDestinations)
-        .where(eq(mafengwoDestinations.name, cityName))
-        .limit(1);
-
-      const requestBody: Record<string, unknown> = { city: cityName, scrollCount: 5 };
-      if (destination?.mddId) {
-        requestBody.mddId = destination.mddId;
-      }
-
-      const response = await cfg.fetchImpl(
-        `${cfg.goServerUrl}/api/crawler/mafengwo/list`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody),
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`列表爬取失败：HTTP ${response.status}`);
-      }
-
-      const listResult = (await response.json()) as MafengwoListResponse;
-      if (!listResult.success || !listResult.data) {
-        throw new Error(listResult.error || '列表爬取未返回数据');
-      }
-
-      const batch = await batchImportGuides('mafengwo', listResult.data.urls, cfg, {
-        city: cityName,
-        cityScoped: listResult.data.cityScoped === true,
-        jobId,
-      });
-
-      counters.imported += batch.imported;
-      counters.updated += batch.updated;
-      counters.rejected += batch.rejected;
-      counters.skipped += batch.skipped;
-      counters.failed += batch.failed;
-      counters.processed += batch.imported + batch.updated;
-    }
-    catch (err) {
-      counters.failed++;
-      console.error(`填充目的地 ${cityName} 失败：`, err);
-    }
+    counters.failed++;
+    console.warn(`跳过目的地 ${cityName}：${MAFENGWO_CRAWLER_DISABLED_MESSAGE}`);
   }
 }
 
@@ -291,7 +212,9 @@ export async function executeBackfillJob(
   jobId: number,
   overrideConfig?: Partial<ExecutorConfig>,
 ): Promise<BackfillExecutionResult> {
-  const cfg = { ...defaultConfig, ...overrideConfig };
+  const cfg: ExecutorConfig = {
+    fetchImpl: overrideConfig?.fetchImpl ?? defaultConfig.fetchImpl,
+  };
   const db = getDb();
 
   const [job] = await db
@@ -324,7 +247,7 @@ export async function executeBackfillJob(
       await runFieldBackfill((config.targetGuideIds ?? []) as number[], cfg, counters);
     }
     else if (job.jobType === 'destination_fill') {
-      await runDestinationFill(jobId, (config.targetDestinations ?? []) as string[], cfg, counters);
+      await runDestinationFill((config.targetDestinations ?? []) as string[], counters);
     }
 
     await db

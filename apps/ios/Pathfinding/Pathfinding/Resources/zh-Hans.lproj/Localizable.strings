@@ -1,8 +1,8 @@
 /*
   Localizable.strings (Simplified Chinese)
-  Pathfinding
+  Sunpebble Trips
 
-  Chinese localization for Pathfinding app
+  Chinese localization for Sunpebble Trips
 */
 
 // MARK: - Common
@@ -40,37 +40,37 @@
 
 // MARK: - Discover
 "discover.title" = "发现";
-"discover.search_placeholder" = "搜索目的地、攻略...";
-"discover.featured" = "精选攻略";
+"discover.search_placeholder" = "搜索目的地、行程...";
+"discover.featured" = "精选行程";
 "discover.recent" = "最近更新";
 "discover.hot_cities" = "热门城市";
-"discover.empty_title" = "暂无攻略";
-"guide.ai" = "AI 精选";
+"discover.empty_title" = "暂无行程";
+"guide.ai" = "AI 辅助";
 
 // MARK: - Search
-"search.idle_title" = "搜索攻略";
+"search.idle_title" = "搜索行程";
 "search.idle_description" = "输入目的地或关键词，开始探索";
 
 // MARK: - Home
-"home.title" = "探路";
-"home.welcome" = "欢迎使用探路";
+"home.title" = "Sunpebble Trips";
+"home.welcome" = "欢迎使用 Sunpebble Trips";
 "home.discover" = "发现精彩旅途";
 "home.popular_destinations" = "热门目的地";
 "home.recommended" = "为你推荐";
 "home.recent" = "最近浏览";
 "home.hero_title" = "发现旅途";
-"home.hero_subtitle" = "探索精选攻略，开启下一段旅程";
+"home.hero_subtitle" = "整理行程、地点和提醒，轻松准备下一段旅程";
 "home.section.featured" = "精选推荐";
-"home.section.recent" = "最新攻略";
+"home.section.recent" = "最近行程";
 "home.load_failed" = "加载失败";
-"home.no_guides" = "暂无攻略";
+"home.no_guides" = "暂无行程";
 "home.pull_to_refresh" = "下拉刷新加载最新内容";
 
 // MARK: - Guides
-"guides.title" = "旅行攻略";
-"guides.empty" = "暂无攻略";
-"guides.empty_description" = "稍后再来看看吧";
-"guides.search_placeholder" = "搜索攻略...";
+"guides.title" = "旅行行程";
+"guides.empty" = "暂无行程";
+"guides.empty_description" = "先创建一份可编辑行程吧";
+"guides.search_placeholder" = "搜索行程...";
 "guides.filter" = "筛选";
 "guides.sort" = "排序";
 "guides.sort.latest" = "最新";
@@ -80,7 +80,7 @@
 // MARK: - Itinerary
 "itinerary.title" = "我的行程";
 "itinerary.empty" = "暂无行程";
-"itinerary.empty_description" = "从攻略中导入或创建新行程";
+"itinerary.empty_description" = "手动创建，或用 AI 生成一份可编辑行程";
 "itinerary.empty.ai" = "AI 生成行程";
 "itinerary.empty.browse" = "浏览公开行程";
 "itinerary.create" = "创建行程";
@@ -275,11 +275,11 @@
 
 // MARK: - About
 "about.title" = "关于";
-"about.app_name" = "Pathfinding";
+"about.app_name" = "Sunpebble Trips";
 "about.version" = "版本 %@";
-"about.tagline" = "发现精彩旅途，AI 智能规划你的每一段旅程";
+"about.tagline" = "小而精的旅行行程工具。";
 "about.developer" = "开发者";
-"about.developer_name" = "Pathfinding Team";
+"about.developer_name" = "Sunpebble";
 "about.build_number" = "版本号";
 "about.swift_version" = "Swift 版本";
 "about.min_ios" = "最低支持系统";

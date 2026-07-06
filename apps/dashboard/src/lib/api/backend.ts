@@ -1,10 +1,10 @@
 /**
- * Crawler backend proxy — server-side only.
+ * Sunpebble Trips backend proxy — server-side only.
  *
  * Deep module that hides HTTP transport, response parsing, and
  * data normalization behind simple exports:
  *
- * - {@link fetchBackendApi} — typed fetch against the crawler backend
+ * - {@link fetchBackendApi} — typed fetch against the Trips backend
  * - {@link normalizeTravelGuide} — snake_case / camelCase field normalizer
  * - {@link normalizeCrawlJob} — same for crawl jobs
  *
@@ -19,9 +19,9 @@ import { parseErrorMessage, parseJsonResponse } from './shared';
 // ---------------------------------------------------------------------------
 
 /** Default backend URL when `NEXT_PUBLIC_API_URL` is not set. */
-const DEFAULT_BACKEND_API_URL = 'http://localhost:3001';
+const DEFAULT_BACKEND_API_URL = 'https://api.trips.sunpebblelabs.com';
 
-/** Resolve the crawler backend base URL from the environment. */
+/** Resolve the Trips backend base URL from the environment. */
 export function getBackendApiBaseUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL || DEFAULT_BACKEND_API_URL;
 }

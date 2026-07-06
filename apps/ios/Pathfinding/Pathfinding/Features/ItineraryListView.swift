@@ -5,7 +5,6 @@ struct ItineraryListView: View {
   private var store: ItineraryStore { ItineraryStore.shared }
   @State private var showCreateSheet = false
   @State private var showVoiceItinerary = false
-  @State private var showDiscovery = false
   @State private var showAIPlanner = false
 
   var body: some View {
@@ -38,9 +37,6 @@ struct ItineraryListView: View {
       }
       .fullScreenCover(isPresented: $showVoiceItinerary) {
         VoiceItineraryView()
-      }
-      .sheet(isPresented: $showDiscovery) {
-        PublicItineraryDiscoveryView()
       }
       .sheet(isPresented: $showAIPlanner) {
         AIPlannerSheet { itinerary in
@@ -80,18 +76,12 @@ struct ItineraryListView: View {
       } label: {
         Label("itinerary.create".localized, systemImage: "plus")
       }
-
-      Button {
-        showDiscovery = true
-      } label: {
-        Label("发现公共行程", systemImage: "globe")
-      }
     } label: {
       Image(systemName: "ellipsis.circle")
         .symbolRenderingMode(.hierarchical)
     }
     .accessibilityLabel("更多操作")
-    .accessibilityHint("打开菜单，包含 AI 规划、语音输入、创建行程和发现公共行程")
+    .accessibilityHint("打开菜单，包含 AI 规划、语音输入和创建行程")
   }
 
   // MARK: - Memory Monitoring
@@ -119,8 +109,6 @@ struct ItineraryListView: View {
     } actions: {
       Button("itinerary.empty.ai".localized) { showAIPlanner = true }
         .buttonStyle(.glassProminent)
-      Button("itinerary.empty.browse".localized) { showDiscovery = true }
-        .buttonStyle(.glass)
     }
   }
 

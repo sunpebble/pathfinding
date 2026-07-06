@@ -15,37 +15,5 @@ services:
       timeout: 5s
       retries: 5
 
-  # Go backend — replaces old Motia TS backend
-  server:
-    build:
-      context: apps/server
-      dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
-    environment:
-      - DATABASE_URL=mysql://root@tidb:4000/pathfinding
-      - PORT=3000
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma3:latest}
-      - KERNEL_API_KEY=${KERNEL_API_KEY:-}
-      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY:-}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - 'http://localhost:3000/health'
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
-    restart: unless-stopped
-    depends_on:
-      tidb:
-        condition: service_healthy
-
 volumes:
   tidb-data:

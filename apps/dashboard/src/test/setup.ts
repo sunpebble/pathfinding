@@ -28,6 +28,9 @@ export const mockRouter = {
 
 export const mockPathname = vi.fn(() => '/');
 export const mockParams = vi.fn(() => ({}));
+export const mockNotFound = vi.fn(() => {
+  throw new Error('NEXT_NOT_FOUND');
+});
 
 export function createMockAuthUser(overrides: Partial<User> = {}): User {
   return {
@@ -80,6 +83,7 @@ export function createMockAuthApi() {
 }
 
 vi.mock('next/navigation', () => ({
+  notFound: mockNotFound,
   useParams: mockParams,
   usePathname: mockPathname,
   useRouter: vi.fn(() => mockRouter),

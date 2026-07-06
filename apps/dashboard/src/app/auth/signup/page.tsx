@@ -91,7 +91,7 @@ export default function SignUpPage() {
             创建账号
           </h1>
           <p className="mt-2 text-stone-500">
-            开始规划你的下一段冒险旅程
+            开始整理你的下一段行程
           </p>
         </div>
 

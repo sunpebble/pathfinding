@@ -29,7 +29,7 @@ describe('header', () => {
 
   it('renders the dashboard title', () => {
     render(<Header />);
-    expect(screen.getByText('探路抓取仪表盘')).toBeDefined();
+    expect(screen.getByText('Sunpebble Trips 控制台')).toBeDefined();
   });
 
   it('renders auth button', () => {

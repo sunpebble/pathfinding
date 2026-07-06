@@ -493,7 +493,7 @@ struct EmptyCountdownView: View {
         .font(.subheadline)
         .foregroundStyle(.secondary)
 
-      Text("打开探路添加行程")
+      Text("打开 Sunpebble Trips 添加行程")
         .font(.caption2)
         .foregroundStyle(.tertiary)
     }

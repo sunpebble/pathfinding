@@ -9,9 +9,7 @@ BUNDLE_ID_SUFFIX = .staging
 
 // API Configuration
 // API base URL for CRUD operations
-PF_API_BASE_URL = https:$(SLASH)/api.pathfinding.org
-// AI Service URL for AI/LLM, weather, transport, translations AI, PDF export
-PF_AI_SERVICE_URL = https:$(SLASH)/ai-staging.pathfinding.org
+PF_API_BASE_URL = https:$(SLASH)/api.trips.sunpebblelabs.com
 PF_API_TIMEOUT = 30
 
 // Staging uses release optimization but with debug symbols

@@ -1,6 +1,5 @@
 import type { CompletenessLevel } from '@pathfinding/crawler-types';
 import type { GuideDestination, travelGuides } from '@pathfinding/database';
-import type { RawCrawlDetail } from './go-crawler-port.js';
 import { createHash } from 'node:crypto';
 import {
   calculateCompletenessLevel,
@@ -30,6 +29,27 @@ export interface StagingSupplement {
   commentsCount?: number;
   savesCount?: number;
   publishedAt?: Date | null;
+}
+
+export interface RawCrawlDetail {
+  url: string;
+  externalId: string;
+  title: string;
+  content: string;
+  contentHtml?: string;
+  contentMarkdown?: string;
+  contentTruncated?: boolean;
+  author: string;
+  views?: number | string | null;
+  likes?: number | string | null;
+  viewsRaw?: string;
+  likesRaw?: string;
+  coverImage: string;
+  images: string[];
+  publishedAt?: string;
+  qualityScore?: number;
+  saved?: boolean;
+  saveError?: string;
 }
 
 export interface RawCrawlAudit {
@@ -113,7 +133,7 @@ function asStringArray(value: unknown): string[] {
 }
 
 /**
- * Pure raw -> CanonicalGuide. `requestUrl` is the URL we asked Go to crawl (audit/dedup identity);
+ * Pure raw -> CanonicalGuide. `requestUrl` is the source URL used for audit/dedup identity;
  *  inject `clock` for deterministic crawledAt/lastUpdatedAt.
  */
 export function normalizeGuide(
@@ -129,7 +149,7 @@ export function normalizeGuide(
   const warnings: string[] = [];
 
   if (detail.saveError) {
-    warnings.push(`Go 暂存层保存失败：${detail.saveError}`);
+    warnings.push(`暂存层保存失败：${detail.saveError}`);
   }
 
   const cleaning = cleanContent(detail.content ?? '');

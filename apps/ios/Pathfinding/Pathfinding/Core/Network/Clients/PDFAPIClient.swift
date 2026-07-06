@@ -7,8 +7,7 @@ actor PDFAPIClient {
 
   private let network = NetworkClient.shared
   private var decoder: JSONDecoder { network.decoder }
-  private var aiServiceURL: URL { network.aiServiceURL }
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "PDFAPIClient")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "PDFAPIClient")
 
   private init() {}
 
@@ -19,7 +18,7 @@ actor PDFAPIClient {
     guideId: String,
     options: PdfExportOptions
   ) async throws -> URL {
-    let url = aiServiceURL.appendingPathComponent("api/pdf/guide/\(guideId)")
+    let url = await network.url(for: "api/pdf/guide/\(guideId)")
 
     logger.info("Generating PDF for guide \(guideId)")
 

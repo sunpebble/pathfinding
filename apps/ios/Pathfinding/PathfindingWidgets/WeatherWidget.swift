@@ -457,7 +457,7 @@ struct EmptyWeatherView: View {
         .font(.subheadline)
         .foregroundStyle(.secondary)
 
-      Text("打开探路查看目的地天气")
+      Text("打开 Sunpebble Trips 查看目的地天气")
         .font(.caption2)
         .foregroundStyle(.tertiary)
     }

@@ -8,6 +8,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { deepSeekCompletion, DeepSeekConfigError } from '../lib/deepseek.js';
 import { parsePagination, parsePositiveInt } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
@@ -112,6 +113,24 @@ const createMessageSchema = z.object({
   content: z.string(),
 });
 
+const quickChatSchema = z.object({
+  message: z.string().trim().min(1),
+  context: z.unknown().optional(),
+});
+
+function contextText(value: unknown) {
+  if (value === undefined || value === null)
+    return '';
+  if (typeof value === 'string')
+    return value;
+  try {
+    return JSON.stringify(value);
+  }
+  catch {
+    return '';
+  }
+}
+
 app.post('/messages', authRequired(), zValidator('json', createMessageSchema), async (c) => {
   const body = c.req.valid('json');
   const userId = Number(c.get('userId'));
@@ -135,6 +154,33 @@ app.post('/messages', authRequired(), zValidator('json', createMessageSchema), a
     .where(eq(chatSessions.id, body.sessionId));
 
   return c.json({ id: result!.id }, 201);
+});
+
+app.post('/query', zValidator('json', quickChatSchema), async (c) => {
+  const { message, context } = c.req.valid('json');
+  const extra = contextText(context);
+  const system = `你是 Sunpebble Trips 的旅行助手。回答简洁、具体、可执行。${extra ? `\n上下文：${extra}` : ''}`;
+
+  try {
+    const content = await deepSeekCompletion([
+      { role: 'system', content: system },
+      { role: 'user', content: message },
+    ], { signal: c.req.raw.signal });
+
+    return c.json({
+      success: true,
+      data: {
+        content,
+        metadata: null,
+      },
+    });
+  }
+  catch (err) {
+    const error = err instanceof DeepSeekConfigError
+      ? 'DeepSeek API key not configured'
+      : 'AI service unavailable';
+    return c.json({ success: false, error }, 503);
+  }
 });
 
 // ── DELETE /sessions/:id — Archive/delete a session ────

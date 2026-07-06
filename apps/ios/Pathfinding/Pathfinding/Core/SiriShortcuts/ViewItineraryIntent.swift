@@ -18,7 +18,7 @@ struct ViewItineraryIntent: AppIntent {
     let count = store.paginatedItineraries.count
 
     if count == 0 {
-      return .result(dialog: IntentDialog("你还没有保存任何行程。快去发现精彩的旅行攻略吧！"))
+      return .result(dialog: IntentDialog("你还没有保存任何行程。先创建一份可编辑行程吧！"))
     }
 
     // Get upcoming itineraries

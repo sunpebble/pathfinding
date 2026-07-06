@@ -121,7 +121,7 @@ enum ShareError: LocalizedError {
 final class ShareManager {
   static let shared = ShareManager()
 
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "ShareManager")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "ShareManager")
 
   // Share state
   private(set) var isSharing = false
@@ -446,7 +446,7 @@ extension ShareManager {
   func buildShareContent(from blogPost: BlogPost, shareUrl: URL? = nil) -> ShareContent {
     let description = blogPost.aiSummary ?? blogPost.summary ?? blogPost.content?.prefix(100).description
 
-    var hashtags = ["探路", "旅行"]
+    var hashtags = ["SunpebbleTrips", "旅行"]
     if let destinations = blogPost.destinations {
       hashtags.append(contentsOf: destinations.prefix(3))
     }
@@ -466,7 +466,7 @@ extension ShareManager {
       description = "\(cityName) \(daysCount)日游行程"
     }
 
-    var hashtags = ["探路", "旅行规划"]
+    var hashtags = ["SunpebbleTrips", "旅行规划"]
     if let cityName = itinerary.cityName {
       hashtags.append(cityName)
     }

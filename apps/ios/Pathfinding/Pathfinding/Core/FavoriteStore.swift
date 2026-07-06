@@ -46,7 +46,7 @@ final class FavoriteStore {
   var errorMessage: String?
 
   private let apiClient = NetworkClient.shared
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "FavoriteStore")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "FavoriteStore")
 
   private init() {}
 

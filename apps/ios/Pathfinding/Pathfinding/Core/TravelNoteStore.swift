@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-/// Store for managing travel notes (游记)
+/// Store for managing travel notes
 @Observable
 @MainActor
 final class TravelNoteStore {
@@ -56,7 +56,7 @@ final class TravelNoteStore {
   var errorMessage: String?
 
   private let apiClient = NetworkClient.shared
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "TravelNoteStore")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "TravelNoteStore")
 
   // MARK: - Public Notes (Discovery Feed)
 

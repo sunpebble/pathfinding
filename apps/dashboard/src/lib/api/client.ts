@@ -13,7 +13,7 @@
 import { normalizeHeaders } from './shared';
 
 /** localStorage key used to persist the JWT auth token. */
-export const AUTH_TOKEN_STORAGE_KEY = 'pathfinding.dashboard.auth.token';
+export const AUTH_TOKEN_STORAGE_KEY = 'sunpebble.trips.dashboard.auth.token';
 
 /**
  * Structured error thrown when a non-2xx response is received.

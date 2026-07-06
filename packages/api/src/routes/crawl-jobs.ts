@@ -15,7 +15,7 @@ import { adminRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 import { executeAllPendingBackfillJobs } from '../services/backfill-executor.service.js';
 import { computeIngestStats, generateBackfillJobs, runFullAnalysis } from '../services/backfill.service.js';
-import { batchImportGuides, discoverNewGuides } from '../services/guide-import.service.js';
+import { batchImportGuides, discoverNewGuides, MAFENGWO_CRAWLER_DISABLED_MESSAGE } from '../services/guide-import.service.js';
 
 // ── Zod schemas ────────────────────────────────────────
 const createJobSchema = z.object({
@@ -286,7 +286,16 @@ app.get('/ingest-stats', adminRequired(), zValidator('query', ingestStatsQuerySc
 app.post('/discover-guides', adminRequired(), zValidator('json', discoverGuidesSchema), async (c) => {
   const { platform, city } = c.req.valid('json');
 
-  const result = await discoverNewGuides(platform, city);
+  let result;
+  try {
+    result = await discoverNewGuides(platform, city);
+  }
+  catch (error) {
+    if (error instanceof Error && error.message === MAFENGWO_CRAWLER_DISABLED_MESSAGE) {
+      throw new ApiError(503, error.message);
+    }
+    throw error;
+  }
 
   return jsonData(c, result);
 });

@@ -5,7 +5,7 @@ import OSLog
 /// CarPlay Scene Delegate - Entry point for CarPlay functionality
 /// Manages the lifecycle of CarPlay connection and disconnection
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "CarPlay")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "CarPlay")
 
   /// The CarPlay interface controller
   var interfaceController: CPInterfaceController?

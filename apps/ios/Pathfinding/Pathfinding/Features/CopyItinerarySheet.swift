@@ -731,7 +731,7 @@ struct OriginalAuthorBadge: View {
   CopyGuideSheet(
     guide: BlogPost(
       id: "1",
-      title: "京都赏樱攻略",
+      title: "京都赏樱行程",
       authorName: "旅行达人",
       content: nil,
       contentHtml: nil,

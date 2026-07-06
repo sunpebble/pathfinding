@@ -63,10 +63,10 @@ export default function SignInPage() {
             <Compass className="h-8 w-8 text-emerald-600" />
           </div>
           <h1 className="text-3xl font-bold text-stone-900">
-            欢迎回到探路
+            欢迎回到 Sunpebble Trips
           </h1>
           <p className="mt-2 text-stone-500">
-            登录以访问你的旅行仪表盘
+            登录以继续整理你的行程
           </p>
         </div>
 

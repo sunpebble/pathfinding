@@ -21,7 +21,7 @@ final class GuideStore {
   // MARK: - Cache Configuration
   private let cacheValidityDuration: TimeInterval = 5 * 60 // 5 minutes
 
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "GuideStore")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "GuideStore")
 
   private init() {}
 

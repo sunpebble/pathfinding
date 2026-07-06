@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
 import { requestWithAuth } from '../test/helpers.js';
 
@@ -48,6 +48,14 @@ function createUpdateChain() {
   return { set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }) };
 }
 
+function stubDeepSeek(content: string) {
+  vi.stubGlobal('fetch', vi.fn(async () =>
+    new Response(JSON.stringify({ choices: [{ message: { content } }] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })));
+}
+
 describe('chat routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-jwt-secret';
@@ -55,6 +63,11 @@ describe('chat routes', () => {
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
     mockDb.delete.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.DEEPSEEK_API_KEY;
   });
 
   describe('gET /api/chat/sessions', () => {
@@ -147,6 +160,25 @@ describe('chat routes', () => {
         method: 'DELETE',
       });
       expect(response.status).toBe(400);
+    });
+  });
+
+  describe('pOST /api/chat/query', () => {
+    it('returns DeepSeek quick chat response', async () => {
+      process.env.DEEPSEEK_API_KEY = 'test-key';
+      stubDeepSeek('建议先确定城市和天数。');
+
+      const response = await createApp().request('/api/chat/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: '怎么规划京都？' }),
+      });
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toMatchObject({
+        success: true,
+        data: { content: '建议先确定城市和天数。' },
+      });
     });
   });
 });

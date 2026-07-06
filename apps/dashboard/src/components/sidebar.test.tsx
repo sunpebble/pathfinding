@@ -35,19 +35,16 @@ describe('sidebar', () => {
 
   it('renders the logo and brand name', () => {
     render(<Sidebar />);
-    expect(screen.getByText('探路')).toBeDefined();
+    expect(screen.getByText('Sunpebble Trips')).toBeDefined();
   });
 
   it('renders all main navigation items', () => {
     render(<Sidebar />);
     expect(screen.getByText('总览')).toBeDefined();
     expect(screen.getByText('AI 助手')).toBeDefined();
-    expect(screen.getByText('爬取任务')).toBeDefined();
     expect(screen.getByText('兴趣点')).toBeDefined();
-    expect(screen.getByText('旅行攻略')).toBeDefined();
     expect(screen.getByText('行程计划')).toBeDefined();
-    expect(screen.getByText('训练数据')).toBeDefined();
-    expect(screen.getByText('创建任务')).toBeDefined();
+    expect(screen.getByText('费用分摊')).toBeDefined();
   });
 
   it('renders secondary navigation items', () => {
@@ -59,21 +56,21 @@ describe('sidebar', () => {
     vi.mocked(usePathname).mockReturnValue('/overview');
     render(<Sidebar />);
     const overviewLink = screen.getByText('总览').closest('a');
-    expect(overviewLink?.className).toContain('bg-emerald-500');
+    expect(overviewLink?.className).toContain('bg-amber-400');
   });
 
-  it('highlights active navigation item for jobs path', () => {
-    vi.mocked(usePathname).mockReturnValue('/jobs');
+  it('highlights active navigation item for itineraries path', () => {
+    vi.mocked(usePathname).mockReturnValue('/itineraries');
     render(<Sidebar />);
-    const jobsLink = screen.getByText('爬取任务').closest('a');
-    expect(jobsLink?.className).toContain('bg-emerald-500');
+    const itinerariesLink = screen.getByText('行程计划').closest('a');
+    expect(itinerariesLink?.className).toContain('bg-amber-400');
   });
 
-  it('highlights active navigation item for nested jobs path', () => {
-    vi.mocked(usePathname).mockReturnValue('/jobs/123');
+  it('highlights active navigation item for nested itineraries path', () => {
+    vi.mocked(usePathname).mockReturnValue('/itineraries/123');
     render(<Sidebar />);
-    const jobsLink = screen.getByText('爬取任务').closest('a');
-    expect(jobsLink?.className).toContain('bg-emerald-500');
+    const itinerariesLink = screen.getByText('行程计划').closest('a');
+    expect(itinerariesLink?.className).toContain('bg-amber-400');
   });
 
   it('renders correct hrefs for navigation links', () => {
@@ -81,11 +78,11 @@ describe('sidebar', () => {
     expect(
       screen.getByText('总览').closest('a')?.getAttribute('href'),
     ).toBe('/overview');
-    expect(
-      screen.getByText('爬取任务').closest('a')?.getAttribute('href'),
-    ).toBe('/jobs');
     expect(screen.getByText('兴趣点').closest('a')?.getAttribute('href')).toBe(
       '/pois',
+    );
+    expect(screen.getByText('行程计划').closest('a')?.getAttribute('href')).toBe(
+      '/itineraries',
     );
     expect(
       screen.getByText('设置').closest('a')?.getAttribute('href'),

@@ -13,8 +13,8 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: '探路 Pathfinding — 智能旅行规划',
-  description: '用 AI 驱动的旅行规划平台，让每一段旅程都成为独特的探索之旅',
+  title: 'Sunpebble Trips — 行程工具',
+  description: 'Sunpebble Trips 是一个安静、可编辑的旅行行程工具。',
 };
 
 export default function RootLayout({

@@ -1,9 +1,11 @@
+import { flue } from '@flue/runtime/routing';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger as honoLogger } from 'hono/logger';
 /**
  * Main Hono application — mounts middleware and route modules.
  */
+import { registerDeepSeekProvider } from './lib/deepseek.js';
 import { createLogger } from './lib/logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { rateLimit } from './middleware/rate-limit.js';
@@ -11,8 +13,10 @@ import { securityHeaders } from './middleware/security-headers.js';
 
 // ── Route modules ────────────────────────────────────────────────
 
+import agentRoutes from './routes/agent.js';
 // Auth & users
 import authRoutes from './routes/auth.js';
+import auxiliaryRoutes from './routes/auxiliary.js';
 
 // Travel — notes, budgets, expenses, currency
 import budgetsRoutes from './routes/budgets.js';
@@ -24,6 +28,7 @@ import collectionsRoutes from './routes/collections.js';
 import commentsRoutes from './routes/comments.js';
 // Admin & crawlers
 import crawlJobsRoutes from './routes/crawl-jobs.js';
+import crawlerFetchRoutes from './routes/crawler-fetch.js';
 import currencyRoutes from './routes/currency.js';
 
 import expenseSplittingRoutes from './routes/expense-splitting.js';
@@ -62,6 +67,8 @@ const log = createLogger('api');
 // ---------------------------------------------------------------------------
 
 export function createApp() {
+  registerDeepSeekProvider();
+
   const app = new Hono();
   const isProduction = process.env.NODE_ENV === 'production';
   const corsOrigin = process.env.CORS_ORIGIN ?? (isProduction ? '' : '*');
@@ -104,6 +111,12 @@ export function createApp() {
   // Health & system
   app.route('/health', healthRoutes);
 
+  // AI agent compatibility routes
+  app.route('/api/agent', agentRoutes);
+  app.route('/api', agentRoutes);
+  app.route('/api', auxiliaryRoutes);
+  app.route('/api/crawler', crawlerFetchRoutes);
+
   // Auth & users
   app.route('/api/auth', authRoutes);
   app.route('/api/users', usersRoutes);
@@ -145,6 +158,9 @@ export function createApp() {
   // Uploads
   app.route('/api/uploads', uploadsRoutes);
 
+  // Flue native routes: /agents/:name/:id, /workflows/:name, /runs/:runId
+  app.route('/', flue());
+
   // ── Catch-all 404 ──────────────────────────────────────
   app.notFound((c) => {
     return c.json({ error: 'Not found' }, 404);
@@ -154,3 +170,5 @@ export function createApp() {
 }
 
 export type AppType = ReturnType<typeof createApp>;
+
+export default createApp();

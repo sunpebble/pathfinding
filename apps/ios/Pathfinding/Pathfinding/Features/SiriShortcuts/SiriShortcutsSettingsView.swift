@@ -28,7 +28,7 @@ struct SiriShortcutsSettingsView: View {
       } header: {
         Text("系统快捷指令")
       } footer: {
-        Text("探路支持Siri语音控制，你可以说「嘿Siri，查看今日行程」来快速查看今天的安排。")
+        Text("Sunpebble Trips 支持 Siri 语音控制，你可以说「嘿 Siri，查看今日行程」来快速查看今天的安排。")
       }
 
       // Custom Shortcuts Section
@@ -62,7 +62,7 @@ struct SiriShortcutsSettingsView: View {
         SiriTipRow(
           icon: "clock.arrow.circlepath",
           title: "智能建议",
-          description: "探路会根据你的使用习惯自动推荐快捷指令"
+          description: "Sunpebble Trips 会根据你的使用习惯自动推荐快捷指令"
         )
 
         SiriTipRow(

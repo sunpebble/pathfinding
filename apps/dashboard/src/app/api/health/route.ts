@@ -3,8 +3,7 @@
  * Returns the health status of the Dashboard and its dependent services
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-const AI_SERVICE_URL = process.env.NEXT_PUBLIC_AI_SERVICE_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.trips.sunpebblelabs.com';
 
 async function checkService(url: string) {
   const start = Date.now();
@@ -33,17 +32,7 @@ export async function GET() {
     checks.api = { status: 'error' };
   }
 
-  // Check AI Service health when configured
-  if (AI_SERVICE_URL) {
-    try {
-      checks.aiService = await checkService(AI_SERVICE_URL);
-    }
-    catch {
-      checks.aiService = { status: 'error' };
-    }
-  }
-
-  // Overall status is ok if the primary backend API is healthy
+  // Overall status is ok if the unified backend API is healthy
   const overallStatus = checks.api?.status === 'ok' ? 'ok' : 'degraded';
 
   return Response.json(

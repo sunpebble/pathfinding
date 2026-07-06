@@ -1,8 +1,8 @@
 /*
   Localizable.strings (English)
-  Pathfinding
+  Sunpebble Trips
 
-  English localization for Pathfinding app
+  English localization for Sunpebble Trips
 */
 
 // MARK: - Common
@@ -40,37 +40,37 @@
 
 // MARK: - Discover
 "discover.title" = "Discover";
-"discover.search_placeholder" = "Search destinations, guides...";
+"discover.search_placeholder" = "Search destinations and itineraries...";
 "discover.featured" = "Featured";
 "discover.recent" = "Recent";
 "discover.hot_cities" = "Hot Cities";
-"discover.empty_title" = "No Guides Yet";
-"guide.ai" = "AI Curated";
+"discover.empty_title" = "No Itineraries Yet";
+"guide.ai" = "AI Assisted";
 
 // MARK: - Search
-"search.idle_title" = "Search Guides";
+"search.idle_title" = "Search Itineraries";
 "search.idle_description" = "Enter a destination or keyword to start exploring";
 
 // MARK: - Home
-"home.title" = "Pathfinding";
-"home.welcome" = "Welcome to Pathfinding";
+"home.title" = "Sunpebble Trips";
+"home.welcome" = "Welcome to Sunpebble Trips";
 "home.discover" = "Discover Amazing Journeys";
 "home.popular_destinations" = "Popular Destinations";
 "home.recommended" = "Recommended for You";
 "home.recent" = "Recently Viewed";
 "home.hero_title" = "Discover Journeys";
-"home.hero_subtitle" = "Explore curated guides and start your next adventure";
+"home.hero_subtitle" = "Plan places, days, notes, and reminders without the noise.";
 "home.section.featured" = "Featured";
-"home.section.recent" = "Latest Guides";
+"home.section.recent" = "Recent Itineraries";
 "home.load_failed" = "Failed to Load";
-"home.no_guides" = "No Guides";
+"home.no_guides" = "No Itineraries";
 "home.pull_to_refresh" = "Pull to refresh for new content";
 
 // MARK: - Guides
-"guides.title" = "Travel Guides";
-"guides.empty" = "No Guides Available";
-"guides.empty_description" = "Check back later for new content";
-"guides.search_placeholder" = "Search guides...";
+"guides.title" = "Travel Itineraries";
+"guides.empty" = "No Itineraries Available";
+"guides.empty_description" = "Create an editable itinerary first";
+"guides.search_placeholder" = "Search itineraries...";
 "guides.filter" = "Filter";
 "guides.sort" = "Sort";
 "guides.sort.latest" = "Latest";
@@ -80,7 +80,7 @@
 // MARK: - Itinerary
 "itinerary.title" = "My Itineraries";
 "itinerary.empty" = "No Itineraries";
-"itinerary.empty_description" = "Import from guides or create a new itinerary";
+"itinerary.empty_description" = "Create a trip manually or generate an editable plan with AI.";
 "itinerary.empty.ai" = "Generate with AI";
 "itinerary.empty.browse" = "Browse Public Itineraries";
 "itinerary.create" = "Create Itinerary";
@@ -275,11 +275,11 @@
 
 // MARK: - About
 "about.title" = "About";
-"about.app_name" = "Pathfinding";
+"about.app_name" = "Sunpebble Trips";
 "about.version" = "Version %@";
-"about.tagline" = "Discover amazing journeys, AI-powered itinerary planning for every trip";
+"about.tagline" = "A small, polished trip-planning tool.";
 "about.developer" = "Developer";
-"about.developer_name" = "Pathfinding Team";
+"about.developer_name" = "Sunpebble";
 "about.build_number" = "Build Number";
 "about.swift_version" = "Swift Version";
 "about.min_ios" = "Minimum iOS";

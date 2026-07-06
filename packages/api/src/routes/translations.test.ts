@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
 import { requestWithAuth } from '../test/helpers.js';
 
@@ -54,6 +54,14 @@ function createUpdateChain() {
   return { set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }) };
 }
 
+function stubDeepSeek(content: string) {
+  vi.stubGlobal('fetch', vi.fn(async () =>
+    new Response(JSON.stringify({ choices: [{ message: { content } }] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })));
+}
+
 describe('translation routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-jwt-secret';
@@ -61,6 +69,11 @@ describe('translation routes', () => {
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
     mockDb.delete.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.DEEPSEEK_API_KEY;
   });
 
   describe('gET /api/translations/categories', () => {
@@ -198,6 +211,61 @@ describe('translation routes', () => {
       const body = await response.json();
       expect(body.data).toBeDefined();
       expect(body.data.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('pOST /api/translations/text', () => {
+    it('translates text with DeepSeek', async () => {
+      process.env.DEEPSEEK_API_KEY = 'test-key';
+      stubDeepSeek('你好');
+
+      const response = await createApp().request('/api/translations/text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: 'Hello', source_lang: 'en', target_lang: 'zh' }),
+      });
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toMatchObject({
+        success: true,
+        data: {
+          source_text: 'Hello',
+          source_lang: 'en',
+          target_text: '你好',
+          target_lang: 'zh',
+        },
+      });
+    });
+  });
+
+  describe('pOST /api/translations/detect', () => {
+    it('detects language with DeepSeek', async () => {
+      process.env.DEEPSEEK_API_KEY = 'test-key';
+      stubDeepSeek('en');
+
+      const response = await createApp().request('/api/translations/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: 'Hello' }),
+      });
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toMatchObject({
+        success: true,
+        data: { language: 'en' },
+      });
+    });
+  });
+
+  describe('pOST /api/translations/photo', () => {
+    it('returns 501 while OCR is not migrated', async () => {
+      const response = await createApp().request('/api/translations/photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_base64: 'x', target_lang: 'zh' }),
+      });
+
+      expect(response.status).toBe(501);
     });
   });
 });

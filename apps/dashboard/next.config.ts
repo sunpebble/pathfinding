@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
         source: '/api/itinerary-collaborators/:path*',
         destination: `${apiUrl}/api/itinerary-collaborators/:path*`,
       },
-      // AI Service for AI/weather/transport/pdf
+      // Compatibility proxy for legacy auxiliary routes.
       {
         source: '/api/ai-service/:path*',
         destination: `${aiServiceUrl}/api/:path*`,

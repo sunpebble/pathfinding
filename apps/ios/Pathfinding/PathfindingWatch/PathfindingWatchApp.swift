@@ -149,7 +149,7 @@ struct WatchHomeView: View {
           Text("安全")
         }
       }
-      .navigationTitle("探路")
+      .navigationTitle("Sunpebble Trips")
       .onAppear {
         sessionManager.requestTodayItinerary()
         sessionManager.requestFlights()

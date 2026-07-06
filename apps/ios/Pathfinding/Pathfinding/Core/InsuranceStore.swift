@@ -8,7 +8,7 @@ import OSLog
 final class InsuranceStore {
   static let shared = InsuranceStore()
 
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "InsuranceStore")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "InsuranceStore")
   private let authManager = AuthManager.shared
 
   // MARK: - State
@@ -50,8 +50,7 @@ final class InsuranceStore {
   private let decoder: JSONDecoder
 
   private init() {
-    let urlString = AppConfig.apiBaseURL.replacingOccurrences(of: ":3001", with: ":8000")
-    self.baseURL = URL(string: urlString)!
+    self.baseURL = URL(string: AppConfig.apiBaseURL)!
 
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = 30

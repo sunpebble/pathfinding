@@ -31,6 +31,7 @@ export default antfu({
     'node_modules/**',
     '.nx/**',
     '.next/**',
+    'apps/dashboard/next-env.d.ts',
     'coverage/**',
     '**/coverage/**',
     'pnpm-workspace.yaml',

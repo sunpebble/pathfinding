@@ -8,11 +8,11 @@
 set -euo pipefail
 
 # ── 配置 ─────────────────────────────────────────────────────────────────────
-SIMULATOR_NAME="${IOS_SIMULATOR:-iPhone 17 Pro Max}"
+SIMULATOR_NAME="${IOS_SIMULATOR:-}"
+SIMULATOR_UDID=""
 SCHEME="${IOS_SCHEME:-Pathfinding-Debug}"
 BUNDLE_ID="${IOS_BUNDLE_ID:-org.pathfinding.app.debug}"
 API_BASE_URL_OVERRIDE="${IOS_API_BASE_URL:-}"
-AI_SERVICE_URL_OVERRIDE="${IOS_AI_SERVICE_URL:-}"
 DERIVED_DATA="/tmp/pathfinding-build"
 PROJECT_DIR="apps/ios/Pathfinding"
 XCODEPROJ="$PROJECT_DIR/Pathfinding.xcodeproj"
@@ -45,7 +45,7 @@ ${BOLD}用法:${NC} $0 [选项]
 ${BOLD}选项:${NC}
   --clean         编译前清理构建缓存
   --release       使用 Release scheme 编译
-  --device <名称> 指定模拟器设备 (默认: $SIMULATOR_NAME)
+  --device <名称> 指定模拟器设备 (默认: 自动选择第一个可用 iPhone)
   --skip-gen      跳过 XcodeGen 项目生成
   --build-only    仅编译，不安装运行
   --open          编译后在 Xcode 中打开项目
@@ -56,7 +56,6 @@ ${BOLD}环境变量:${NC}
   IOS_SCHEME      构建 scheme
   IOS_BUNDLE_ID   App Bundle ID
   IOS_API_BASE_URL  覆盖 PF_API_BASE_URL
-  IOS_AI_SERVICE_URL 覆盖 PF_AI_SERVICE_URL
 EOF
 	exit 0
 }
@@ -109,13 +108,10 @@ echo "  ║   探路 Pathfinding · iOS 启动     ║"
 echo "  ╚═══════════════════════════════════╝"
 echo -e "${NC}"
 info "Scheme:    $SCHEME"
-info "设备:      $SIMULATOR_NAME"
+info "设备:      ${SIMULATOR_NAME:-自动选择可用 iPhone}"
 info "Bundle ID: $BUNDLE_ID"
 if [ -n "$API_BASE_URL_OVERRIDE" ]; then
 	info "API URL:   $API_BASE_URL_OVERRIDE"
-fi
-if [ -n "$AI_SERVICE_URL_OVERRIDE" ]; then
-	info "AI URL:    $AI_SERVICE_URL_OVERRIDE"
 fi
 
 # ── 1. 环境检查 ──────────────────────────────────────────────────────────────
@@ -124,6 +120,32 @@ step "检查开发环境"
 command -v xcodebuild &>/dev/null || fail "未找到 xcodebuild，请安装 Xcode 命令行工具: xcode-select --install"
 command -v xcrun &>/dev/null || fail "未找到 xcrun，请安装 Xcode 命令行工具"
 ok "Xcode CLI 工具就绪"
+
+resolve_simulator() {
+	local line=""
+	if [ -n "$SIMULATOR_NAME" ]; then
+		line=$(xcrun simctl list devices available | grep -F "$SIMULATOR_NAME (" | head -1 || true)
+		if [ -z "$line" ]; then
+			warn "未找到模拟器 '$SIMULATOR_NAME'，可用设备:"
+			xcrun simctl list devices available | grep -E "iPhone|iPad" | head -10
+			echo ""
+			fail "请使用 --device <名称> 指定有效设备，或创建: xcrun simctl create '$SIMULATOR_NAME' ..."
+		fi
+	else
+		line=$(xcrun simctl list devices available | grep -E "^[[:space:]]+iPhone .*\\([0-9A-F-]{36}\\) \\((Booted|Shutdown)\\)" | head -1 || true)
+		if [ -z "$line" ]; then
+			warn "未找到可用 iPhone 模拟器，改用任意 iOS 模拟器"
+			line=$(xcrun simctl list devices available | grep -E "^[[:space:]]+.*\\([0-9A-F-]{36}\\) \\((Booted|Shutdown)\\)" | head -1 || true)
+		fi
+		[ -n "$line" ] || fail "未找到可用 iOS 模拟器"
+	fi
+
+	SIMULATOR_NAME=$(echo "$line" | sed -E 's/^[[:space:]]*(.*) \([0-9A-F-]{36}\) \((Booted|Shutdown)\).*/\1/')
+	SIMULATOR_UDID=$(echo "$line" | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+}
+
+resolve_simulator
+ok "模拟器目标: $SIMULATOR_NAME ($SIMULATOR_UDID)"
 
 if ! command -v xcodegen &>/dev/null; then
 	warn "XcodeGen 未安装，正在通过 Homebrew 安装..."
@@ -167,26 +189,18 @@ fi
 if [ "$BUILD_ONLY" = false ]; then
 	step "准备模拟器"
 
-	# 检查设备是否存在（精确匹配设备名，避免 "iPhone 15" 误匹配 "iPhone 15 Pro"）
-	if ! xcrun simctl list devices available | grep -qF "$SIMULATOR_NAME ("; then
-		warn "未找到模拟器 '$SIMULATOR_NAME'，可用设备:"
-		xcrun simctl list devices available | grep -E "iPhone|iPad" | head -10
-		echo ""
-		fail "请使用 --device <名称> 指定有效设备，或创建: xcrun simctl create '$SIMULATOR_NAME' ..."
-	fi
-
 	# 启动模拟器
-	BOOT_STATUS=$(xcrun simctl list devices | grep -F "$SIMULATOR_NAME (" | head -1)
+	BOOT_STATUS=$(xcrun simctl list devices "$SIMULATOR_UDID" | grep -F "$SIMULATOR_UDID" | head -1)
 	if echo "$BOOT_STATUS" | grep -qF "(Booted)"; then
 		ok "模拟器已运行: $SIMULATOR_NAME"
 	else
 		info "正在启动模拟器: $SIMULATOR_NAME"
-		xcrun simctl boot "$SIMULATOR_NAME" 2>/dev/null || true
+		xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
 		# 打开 Simulator.app 使其可见
 		open -a Simulator 2>/dev/null || true
 		# 等待模拟器就绪
 		for i in $(seq 1 15); do
-			if xcrun simctl list devices | grep -F "$SIMULATOR_NAME (" | grep -qF "(Booted)"; then
+			if xcrun simctl list devices "$SIMULATOR_UDID" | grep -qF "(Booted)"; then
 				break
 			fi
 			sleep 1
@@ -203,16 +217,12 @@ BUILD_START=$(date +%s)
 XCODEBUILD_ARGS=(
 	-project "$XCODEPROJ"
 	-scheme "$SCHEME"
-	-destination "platform=iOS Simulator,name=$SIMULATOR_NAME"
+	-destination "platform=iOS Simulator,id=$SIMULATOR_UDID"
 	-derivedDataPath "$DERIVED_DATA"
 )
 
 if [ -n "$API_BASE_URL_OVERRIDE" ]; then
 	XCODEBUILD_ARGS+=("PF_API_BASE_URL=$API_BASE_URL_OVERRIDE")
-fi
-
-if [ -n "$AI_SERVICE_URL_OVERRIDE" ]; then
-	XCODEBUILD_ARGS+=("PF_AI_SERVICE_URL=$AI_SERVICE_URL_OVERRIDE")
 fi
 
 xcodebuild \
@@ -239,14 +249,14 @@ if [ "$BUILD_ONLY" = false ]; then
 	step "安装并启动 App"
 
 	# 终止旧实例
-	xcrun simctl terminate booted "$BUNDLE_ID" 2>/dev/null || true
+	xcrun simctl terminate "$SIMULATOR_UDID" "$BUNDLE_ID" 2>/dev/null || true
 
 	# 安装
-	xcrun simctl install booted "$APP_PATH" || fail "安装到模拟器失败"
+	xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH" || fail "安装到模拟器失败"
 	ok "App 已安装"
 
 	# 启动
-	xcrun simctl launch booted "$BUNDLE_ID" || fail "启动 App 失败"
+	xcrun simctl launch "$SIMULATOR_UDID" "$BUNDLE_ID" || fail "启动 App 失败"
 	ok "App 已启动: $BUNDLE_ID"
 fi
 

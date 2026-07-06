@@ -1,15 +1,14 @@
-# 探路 Pathfinding - Travel Itinerary Platform
+# Sunpebble Trips
 
-[![CI](https://github.com/kunish-homelab/pathfinding/actions/workflows/ci.yml/badge.svg)](https://github.com/kunish-homelab/pathfinding/actions/workflows/ci.yml)
+A focused Sunpebble travel itinerary app for planning days, places, notes, and reminders.
 
-A mobile-first travel itinerary planning application with offline support, POI recommendations, and community sharing features.
+A mobile-first travel itinerary planning application with offline support and private trip editing.
 
 ## 📱 Features
 
 - **Create & Manage Itineraries**: Plan trips by selecting destination cities and date ranges
 - **Add POIs**: Add attractions, restaurants, and other points of interest to your timeline
 - **Smart Recommendations**: Browse POIs sorted by rating, filtered by category
-- **Community Sharing**: Copy and customize public itineraries from other travelers
 - **Edit & Reorder**: Drag-and-drop to reorder items, edit details with undo/redo support
 - **Transport Planning**: Set transit modes between POIs with time/distance estimates
 - **Reminders**: Get push notifications before scheduled activities
@@ -19,10 +18,10 @@ A mobile-first travel itinerary planning application with offline support, POI r
 
 **Tech Stack**:
 
-- **Backend API**: Hono + TiDB - handles CRUD, auth, and shared data APIs
+- **Backend API**: Hono + TiDB + Flue runtime - handles CRUD, auth, shared data APIs, and agent routes
 - **Frontend**: Next.js (Dashboard), SwiftUI (iOS)
-- **Backend Services**: Go (crawler & auxiliary HTTP server)
-- **AI**: Ollama with Gemma 3 model
+- **Backend Services**: TypeScript API on Flue
+- **AI**: DeepSeek API through Flue/compat routes (`DEEPSEEK_API_KEY`, optional `DEEPSEEK_MODEL` / `MODEL_SPECIFIER`)
 - **Geocoding**: Nominatim (OpenStreetMap)
 - **Build**: pnpm workspaces + nx
 
@@ -31,17 +30,16 @@ A mobile-first travel itinerary planning application with offline support, POI r
 ```
 apps/
 ├── dashboard/        # Next.js admin dashboard
-├── ios/              # SwiftUI iOS app (iOS 17+)
-│   └── Pathfinding/
-│       ├── Config/   # xcconfig files (Debug/Staging/Release)
-│       └── Pathfinding/
-│           ├── Core/     # APIClient, AppConfig, AuthManager
-│           ├── Models/   # Data models
-│           └── Features/ # SwiftUI views
-└── server/           # Go backend (crawler & auxiliary HTTP)
+└── ios/              # SwiftUI iOS app (iOS 17+)
+    └── Pathfinding/
+        ├── Config/   # xcconfig files (Debug/Staging/Release)
+        └── Pathfinding/
+            ├── Core/     # APIClient, AppConfig, AuthManager
+            ├── Models/   # Data models
+            └── Features/ # SwiftUI views
 
 packages/
-├── api/              # Shared backend API (Hono)
+├── api/              # Shared backend API (Hono + Flue runtime)
 ├── constants/        # Shared constants
 ├── crawler-types/    # Crawler type definitions
 ├── database/         # TiDB schema and database access (Drizzle)
@@ -63,7 +61,7 @@ packages/
 ### Base URLs
 
 - **API (Local)**: `http://localhost:3000/api`
-- **API (Production)**: `https://api.pathfinding.org/api`
+- **API (Production)**: `https://api.trips.sunpebblelabs.com/api`
 
 ### Authentication
 
@@ -81,6 +79,12 @@ The primary backend for data operations is the shared API service:
 
 - `/api/guides/*` - Travel guides
 - `/api/chat/sessions/*` - Chat session management
+- `/api/agent/chat/stream` - DeepSeek-backed planning chat stream
+- `/api/agent/plan/*` - DeepSeek-backed itinerary planning
+- `/agents/trips-planner/:id` - Native Flue agent endpoint
+- `/api/crawler/fetch` - Generic HTML fetch and text cleanup
+- `/api/weather/forecast` - Weather forecast proxy
+- `/api/transport/optimize` - POI route ordering helper
 - `/api/translations/*` - Translation data
 - `/api/pois/*` - Points of interest
 - `/api/follows/*` - User follows
@@ -92,7 +96,9 @@ The primary backend for data operations is the shared API service:
 - `/api/collections/*` - Collections
 - `/api/share/*` - Share events
 
-See `packages/api/src/routes/` for route implementations.
+See `packages/api/src/routes/` for route implementations. Mafengwo list/detail
+crawlers are disabled by default because the old browser-backed parser has not
+been migrated to the TypeScript API.
 
 ---
 
@@ -280,7 +286,7 @@ All error responses follow this format:
 2. **Clone and Install**:
 
    ```bash
-   git clone git@github.com:kunish-homelab/pathfinding.git
+   git clone git@github.com:sunpebble/trips.git
    cd pathfinding
    pnpm install
    ```
@@ -294,7 +300,7 @@ All error responses follow this format:
 4. **Start Development Servers**:
 
    ```bash
-    pnpm dev              # Starts Dashboard
+    pnpm dev              # Starts API and Dashboard
     pnpm dev:api          # Starts API service (separate terminal)
    ```
 
@@ -310,15 +316,16 @@ All error responses follow this format:
 
 6. **Run Tests**:
    ```bash
-   pnpm lint      # Lint all packages (includes formatting via eslint-plugin-format)
-   pnpm test      # Run tests
+   pnpm lint                                  # Lint all packages
+   pnpm test                                  # Run tests
+   pnpm --filter @pathfinding/api flue:build # Verify Flue runtime build
    ```
 
 ---
 
 ## 🐳 Docker
 
-> **Note**: Docker setup is a work-in-progress. Currently the TiDB database service and the Go server (`apps/server`) are available in Docker. The Node API (`packages/api`) runs natively via `pnpm dev:api`.
+> **Note**: Docker setup is a work-in-progress. The compose file currently provides TiDB for local development. The TypeScript API (`packages/api`) runs natively via `pnpm dev:api`.
 
 ### Quick Start with Docker Compose
 
@@ -335,7 +342,7 @@ All error responses follow this format:
    docker compose -f docker-compose.dev.yml up tidb -d
    ```
 
-3. **Start all services (production)**:
+3. **Start local database**:
 
    ```bash
    docker compose -f docker-compose.dev.yml up -d

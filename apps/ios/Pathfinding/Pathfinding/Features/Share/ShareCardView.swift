@@ -113,12 +113,12 @@ struct ShareCardView: View {
           .foregroundStyle(style.accentColor)
 
         VStack(alignment: .leading, spacing: 0) {
-          Text("探路")
+          Text("Sunpebble")
             .font(.subheadline)
             .fontWeight(.bold)
             .foregroundStyle(style.primaryTextColor)
 
-          Text("Pathfinding")
+          Text("Trips")
             .font(.caption2)
             .foregroundStyle(style.secondaryTextColor)
         }
@@ -435,9 +435,9 @@ struct QuickShareButton: View {
 #Preview("Share Card View") {
   ShareCardView(
     content: .custom(
-      title: "东京5日深度游攻略",
+      title: "东京5日行程",
       subtitle: "旅行达人推荐",
-      description: "一份超详细的东京深度游攻略,涵盖经典景点和小众打卡地。",
+      description: "一份可编辑的东京深度游行程，涵盖经典景点和小众打卡地。",
       stats: [("clock", "5天"), ("yensign.circle", "8000元")]
     ),
     style: .modern,
@@ -454,9 +454,9 @@ struct QuickShareButton: View {
     var body: some View {
       ShareCardPreviewContainer(
         content: .custom(
-          title: "东京5日深度游攻略",
+          title: "东京5日行程",
           subtitle: "旅行达人推荐",
-          description: "一份超详细的东京深度游攻略,涵盖经典景点和小众打卡地。",
+          description: "一份可编辑的东京深度游行程，涵盖经典景点和小众打卡地。",
           stats: [("clock", "5天"), ("yensign.circle", "8000元")]
         ),
         selectedStyle: $style,

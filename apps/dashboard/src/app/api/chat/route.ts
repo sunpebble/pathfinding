@@ -1,11 +1,14 @@
 /**
  * Chat API Route Handler
- * Proxies requests to AI Service and converts SSE format to Vercel AI SDK compatible format
+ * Proxies requests to the unified backend and converts SSE format to Vercel AI SDK compatible format.
  */
 
 import { createUIMessageStream, createUIMessageStreamResponse } from 'ai';
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:3001';
+const BACKEND_API_URL
+  = process.env.AI_SERVICE_URL
+    || process.env.NEXT_PUBLIC_API_URL
+    || 'https://api.trips.sunpebblelabs.com';
 
 export const maxDuration = 60;
 
@@ -48,8 +51,8 @@ export async function POST(req: Request) {
     // Generate session ID if not provided
     const chatSessionId = sessionId || `chat-${Date.now()}`;
 
-    // Call AI Service SSE endpoint
-    const response = await fetch(`${AI_SERVICE_URL}/api/agent/chat/stream`, {
+    // Call unified backend SSE endpoint
+    const response = await fetch(`${BACKEND_API_URL}/api/agent/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

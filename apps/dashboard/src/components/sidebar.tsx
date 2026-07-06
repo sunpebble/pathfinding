@@ -1,14 +1,10 @@
 'use client';
 
 import {
-  BookOpen,
   Bot,
-  Database,
   LayoutDashboard,
-  ListTodo,
   MapPin,
   Menu,
-  PlusCircle,
   Receipt,
   Route,
   Settings,
@@ -22,13 +18,9 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: '总览', href: '/overview', icon: LayoutDashboard },
   { name: 'AI 助手', href: '/chat', icon: Bot },
-  { name: '爬取任务', href: '/jobs', icon: ListTodo },
   { name: '兴趣点', href: '/pois', icon: MapPin },
-  { name: '旅行攻略', href: '/guides', icon: BookOpen },
   { name: '行程计划', href: '/itineraries', icon: Route },
   { name: '费用分摊', href: '/expenses', icon: Receipt },
-  { name: '训练数据', href: '/datasets', icon: Database },
-  { name: '创建任务', href: '/jobs/create', icon: PlusCircle },
 ];
 
 const secondaryNavigation = [
@@ -42,15 +34,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     <>
       {/* Logo */}
       <div className="flex h-20 items-center gap-3 px-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-400/10 ring-1 ring-emerald-400/30">
-          <svg className="h-7 w-7 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
-          </svg>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F7B733] text-[#232733] ring-1 ring-[#F7B733]/40">
+          <Route className="h-6 w-6" aria-hidden="true" />
         </div>
         <div>
-          <span className="block text-xl font-semibold tracking-tight text-white">探路</span>
-          <span className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500">Pathfinding</span>
+          <span className="block text-xl font-semibold tracking-tight text-white">Sunpebble Trips</span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em] text-stone-500">Small, polished apps.</span>
         </div>
       </div>
 
@@ -69,11 +58,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               className={cn(
                 'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all focus-explorer',
                 isActive
-                  ? 'bg-emerald-500/15 text-white ring-1 ring-emerald-400/20 shadow-sm shadow-emerald-950/20'
+                  ? 'bg-amber-400/15 text-white ring-1 ring-amber-300/20 shadow-sm shadow-stone-950/20'
                   : 'text-stone-400 hover:bg-white/5 hover:text-white',
               )}
             >
-              <item.icon className={cn('h-5 w-5 transition-colors', isActive ? 'text-emerald-300' : 'text-stone-500 group-hover:text-stone-300')} />
+              <item.icon className={cn('h-5 w-5 transition-colors', isActive ? 'text-amber-300' : 'text-stone-500 group-hover:text-stone-300')} />
               {item.name}
             </Link>
           );

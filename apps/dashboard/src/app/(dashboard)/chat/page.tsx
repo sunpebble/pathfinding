@@ -68,7 +68,7 @@ export default function ChatPage() {
           <div>
             <h1 className="text-lg font-semibold text-stone-950 dark:text-stone-50">AI 助手</h1>
             <p className="text-sm text-stone-500 dark:text-stone-400">
-              旅行规划 · 内容审核 · 数据探索
+              旅行规划 · 地点整理 · 行程问答
             </p>
           </div>
         </div>
@@ -82,7 +82,7 @@ export default function ChatPage() {
                 <ConversationEmptyState
                   icon={<Bot className="h-8 w-8" />}
                   title="你好！我是你的 AI 助手"
-                  description="我可以帮你规划旅行行程、查询天气和景点信息、审核内容质量，或者探索数据库中的旅行数据。"
+                  description="我可以帮你规划旅行行程、查询天气和景点信息，或者整理现有行程里的地点。"
                 >
                   <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-2">
                     <SuggestionCard
@@ -97,16 +97,16 @@ export default function ChatPage() {
                       onClick={() => handleSubmit({ text: '上海明天天气怎么样？' })}
                     />
                     <SuggestionCard
-                      title="搜索攻略"
-                      description="有哪些关于成都美食的攻略？"
+                      title="整理地点"
+                      description="帮我列出成都三天行程里的美食地点"
                       onClick={() =>
-                        handleSubmit({ text: '有哪些关于成都美食的攻略？' })}
+                        handleSubmit({ text: '帮我列出成都三天行程里的美食地点' })}
                     />
                     <SuggestionCard
-                      title="数据统计"
-                      description="目前数据库里有多少条攻略？"
+                      title="行程检查"
+                      description="检查我的行程是否太赶"
                       onClick={() =>
-                        handleSubmit({ text: '目前数据库里有多少条攻略？' })}
+                        handleSubmit({ text: '检查我的行程是否太赶' })}
                     />
                   </div>
                 </ConversationEmptyState>

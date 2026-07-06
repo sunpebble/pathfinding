@@ -1,22 +1,15 @@
 import Foundation
 import OSLog
 
-/// Service type for API routing
-enum APIServiceType {
-  case api         // CRUD operations - guides, chat sessions, translations data, etc.
-  case aiService   // AI/LLM, weather, transport, translations AI, PDF export
-}
-
 /// Base networking client with shared infrastructure for all API clients
 /// Provides retry logic, authentication, caching, and request building
 actor NetworkClient {
   static let shared = NetworkClient()
 
   let apiBaseURL: URL
-  let aiServiceURL: URL
   let session: URLSession
   let decoder: JSONDecoder
-  let logger = Logger(subsystem: "com.kunish.pathfinding", category: "NetworkClient")
+  let logger = Logger(subsystem: "com.sunpebble.trips", category: "NetworkClient")
   private let authManager = AuthManager.shared
 
   // Response cache
@@ -27,25 +20,9 @@ actor NetworkClient {
     let cachedAt: Date
   }
 
-  /// Paths that should be routed to AI Service
-  private static let aiServicePaths: Set<String> = [
-    "api/ai",
-    "api/weather",
-    "api/transport",
-    "api/pdf",
-    "api/flights",
-    "api/translations/text",
-    "api/translations/photo",
-    "api/translations/detect",
-    "api/translations/batch",
-    "api/chat/query",
-  ]
-
-  init(apiBaseURL: String? = nil, aiServiceURL: String? = nil) {
+  init(apiBaseURL: String? = nil) {
     let apiBaseUrlString = apiBaseURL ?? AppConfig.apiBaseURL
-    let aiServiceUrlString = aiServiceURL ?? AppConfig.aiServiceURL
     self.apiBaseURL = URL(string: apiBaseUrlString)!
-    self.aiServiceURL = URL(string: aiServiceUrlString)!
 
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = AppConfig.networkTimeoutRequest
@@ -60,26 +37,6 @@ actor NetworkClient {
     self.decoder = JSONDecoder()
   }
 
-  /// Determine which service to use for a given path
-  func serviceType(for path: String) -> APIServiceType {
-    for aiPath in Self.aiServicePaths {
-      if path.hasPrefix(aiPath) {
-        return .aiService
-      }
-    }
-    return .api
-  }
-
-  /// Get base URL for a given path
-  func baseURL(for path: String) -> URL {
-    switch serviceType(for: path) {
-    case .api:
-      return apiBaseURL
-    case .aiService:
-      return aiServiceURL
-    }
-  }
-
   /// Default baseURL - points to API server for CRUD operations
   var baseURL: URL {
     apiBaseURL
@@ -87,7 +44,7 @@ actor NetworkClient {
 
   /// Construct full URL for a given path, routing to the appropriate service
   func url(for path: String) -> URL {
-    baseURL(for: path).appendingPathComponent(path)
+    apiBaseURL.appendingPathComponent(path)
   }
 
   // MARK: - Request Building

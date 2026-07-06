@@ -373,7 +373,7 @@ struct EmptyExchangeRateView: View {
         .font(.subheadline)
         .foregroundStyle(.secondary)
 
-      Text("打开探路设置目的地货币")
+      Text("打开 Sunpebble Trips 设置目的地货币")
         .font(.caption2)
         .foregroundStyle(.tertiary)
     }

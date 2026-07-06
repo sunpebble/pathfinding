@@ -95,7 +95,7 @@ export const mafengwoGuides = mysqlTable(
   ],
 );
 
-// Restored: live crawl-pipeline staging tables (written by Go crawler apps/server, deduped by scripts/dedupe-travel-guides.ts).
+// Restored: live crawl-pipeline staging tables, deduped by scripts/dedupe-travel-guides.ts.
 // ── Mafengwo POIs (马蜂窝景点/餐厅/酒店) ─────────────
 export const mafengwoPois = mysqlTable(
   'mafengwo_pois',

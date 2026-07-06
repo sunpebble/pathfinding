@@ -49,6 +49,7 @@ enum ThemeMode: String, CaseIterable, Identifiable {
 
 /// Available accent colors for the app
 enum AccentColorOption: String, CaseIterable, Identifiable {
+  case sunpebble = "sunpebble"
   case indigo = "indigo"
   case blue = "blue"
   case purple = "purple"
@@ -64,6 +65,7 @@ enum AccentColorOption: String, CaseIterable, Identifiable {
 
   var displayName: String {
     switch self {
+    case .sunpebble: return "Sunpebble"
     case .indigo: return "color.indigo".localized
     case .blue: return "color.blue".localized
     case .purple: return "color.purple".localized
@@ -79,6 +81,7 @@ enum AccentColorOption: String, CaseIterable, Identifiable {
 
   var color: Color {
     switch self {
+    case .sunpebble: return Color(red: 0.97, green: 0.72, blue: 0.20)
     case .indigo: return .indigo
     case .blue: return .blue
     case .purple: return .purple
@@ -94,6 +97,7 @@ enum AccentColorOption: String, CaseIterable, Identifiable {
 
   var uiColor: UIColor {
     switch self {
+    case .sunpebble: return UIColor(red: 0.97, green: 0.72, blue: 0.20, alpha: 1)
     case .indigo: return .systemIndigo
     case .blue: return .systemBlue
     case .purple: return .systemPurple
@@ -110,6 +114,7 @@ enum AccentColorOption: String, CaseIterable, Identifiable {
   /// Secondary color that pairs well with this accent
   var secondaryColor: Color {
     switch self {
+    case .sunpebble: return Color(red: 0.86, green: 0.46, blue: 0.10)
     case .indigo: return .purple
     case .blue: return .cyan
     case .purple: return .pink
@@ -140,7 +145,7 @@ final class ThemeManager {
   private(set) var currentMode: ThemeMode = .system
 
   /// Current accent color selected by the user
-  private(set) var accentColor: AccentColorOption = .indigo
+  private(set) var accentColor: AccentColorOption = .sunpebble
 
   /// Keys for UserDefaults storage
   private let themeKey = "app_theme_mode"
@@ -194,7 +199,7 @@ final class ThemeManager {
   /// Reset all theme settings to defaults
   func resetToDefaults() {
     currentMode = .system
-    accentColor = .indigo
+    accentColor = .sunpebble
 
     saveSettings()
     notifyThemeChange()
@@ -212,7 +217,7 @@ final class ThemeManager {
     // Load accent color
     if let savedColor = UserDefaults.standard.string(forKey: accentColorKey),
        let color = AccentColorOption(rawValue: savedColor) {
-      accentColor = color
+      accentColor = color == .indigo ? .sunpebble : color
     }
   }
 
@@ -249,7 +254,7 @@ extension EnvironmentValues {
 // MARK: - Accent Color Environment Key
 
 private struct AccentColorKey: EnvironmentKey {
-  static let defaultValue: Color = .indigo
+  static let defaultValue = Color(red: 0.97, green: 0.72, blue: 0.20)
 }
 
 extension EnvironmentValues {
@@ -279,4 +284,3 @@ extension View {
     modifier(ThemeModifier(themeManager: manager))
   }
 }
-

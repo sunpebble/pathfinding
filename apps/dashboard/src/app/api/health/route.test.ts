@@ -5,15 +5,13 @@ describe('dashboard health route', () => {
     vi.resetModules();
     vi.restoreAllMocks();
     process.env.NEXT_PUBLIC_API_URL = 'http://api.example.com';
-    process.env.AI_SERVICE_URL = 'http://ai.example.com';
   });
 
   afterEach(() => {
     delete process.env.NEXT_PUBLIC_API_URL;
-    delete process.env.AI_SERVICE_URL;
   });
 
-  it('reports ok when the backend API is healthy even if AI service is unavailable', async () => {
+  it('reports ok when the unified backend API is healthy', async () => {
     const fetchMock = vi.fn(async (input: string | URL) => {
       const url = String(input);
 

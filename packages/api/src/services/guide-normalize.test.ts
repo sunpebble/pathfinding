@@ -1,4 +1,4 @@
-import type { RawCrawlDetail } from './go-crawler-port.js';
+import type { RawCrawlDetail } from './guide-normalize.js';
 import { describe, expect, it } from 'vitest';
 import { normalizeGuide } from './guide-normalize.js';
 

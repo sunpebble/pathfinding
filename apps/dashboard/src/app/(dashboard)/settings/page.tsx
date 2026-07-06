@@ -3,13 +3,13 @@ import { DashboardCard, DashboardPageHeader } from '@/components/ui/dashboard-pr
 
 export default function SettingsPage() {
   const crawlerApiUrl
-    = process.env.NEXT_PUBLIC_CRAWLER_API_URL || 'http://localhost:3001';
+    = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
   return (
     <div className="space-y-6">
       <DashboardPageHeader
         title="设置"
-        description="配置抓取面板设置"
+        description="配置 Sunpebble Trips 控制台"
         icon={Settings}
       />
 
@@ -24,7 +24,7 @@ export default function SettingsPage() {
               htmlFor="api_url"
               className="block text-sm font-medium text-stone-700"
             >
-              抓取 API 地址
+              Sunpebble Trips API 地址
             </label>
             <input
               type="text"
@@ -34,7 +34,7 @@ export default function SettingsPage() {
               className="dashboard-control mt-1 block w-full bg-stone-50 text-stone-500"
             />
             <p className="mt-1 text-xs text-stone-500">
-              通过 NEXT_PUBLIC_CRAWLER_API_URL 环境变量配置
+              通过 NEXT_PUBLIC_API_URL 环境变量配置
             </p>
           </div>
         </div>

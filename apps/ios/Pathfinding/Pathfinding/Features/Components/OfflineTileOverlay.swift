@@ -68,7 +68,7 @@ final class OfflineTileOverlay: MKTileOverlay {
   ) {
     let url = self.url(forTilePath: path)
     var request = URLRequest(url: url)
-    request.setValue("Pathfinding-iOS/1.0", forHTTPHeaderField: "User-Agent")
+    request.setValue("SunpebbleTrips-iOS/1.0", forHTTPHeaderField: "User-Agent")
 
     nonisolated(unsafe) let callback = result
     URLSession.shared.dataTask(with: request) { data, response, error in
@@ -298,7 +298,7 @@ final class NetworkMonitor {
   private(set) var connectionType: NWInterface.InterfaceType?
 
   private let monitor = NWPathMonitor()
-  private let queue = DispatchQueue(label: "com.kunish.pathfinding.networkmonitor")
+  private let queue = DispatchQueue(label: "com.sunpebble.trips.networkmonitor")
 
   private init() {
     startMonitoring()

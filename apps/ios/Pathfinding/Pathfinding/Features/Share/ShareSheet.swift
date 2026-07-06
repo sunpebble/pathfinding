@@ -326,7 +326,7 @@ struct ShareSheet: View {
       shareContent = ShareContent(
         title: title,
         description: description,
-        hashtags: ["探路", "旅行"]
+        hashtags: ["SunpebbleTrips", "旅行"]
       )
     }
 
@@ -509,9 +509,9 @@ private struct PlatformButton: View {
     title: "东京5日游",
     subtitle: "精选行程",
     content: .custom(
-      title: "东京5日深度游攻略",
+      title: "东京5日行程",
       subtitle: "旅行达人推荐",
-      description: "一份超详细的东京深度游攻略,涵盖经典景点和小众打卡地。",
+      description: "一份可编辑的东京深度游行程，涵盖经典景点和小众打卡地。",
       stats: [("clock", "5天"), ("yensign.circle", "8000元")]
     ),
     onDismiss: {}

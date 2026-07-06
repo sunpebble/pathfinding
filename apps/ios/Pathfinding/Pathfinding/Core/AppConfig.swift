@@ -48,7 +48,7 @@ enum AppConfig {
 
   // MARK: - API Configuration
 
-  /// API base URL for CRUD operations (guides, chat sessions, translations data, etc.)
+  /// API base URL for CRUD operations (itineraries, chat sessions, translations data, etc.)
   static var apiBaseURL: String {
     if let url = processEnvironment["PF_API_BASE_URL"], !url.isEmpty {
       return url
@@ -61,32 +61,11 @@ enum AppConfig {
     // Fallback based on environment
     switch Environment.current {
     case .development:
-      return "http://127.0.0.1:3000"
+      return "https://api.trips.sunpebblelabs.com"
     case .staging:
-      return "https://api.pathfinding.org"
+      return "https://api.trips.sunpebblelabs.com"
     case .production:
-      return "https://api.pathfinding.org"
-    }
-  }
-
-  /// AI Service URL for AI/LLM, weather, transport, translations AI, PDF export
-  static var aiServiceURL: String {
-    if let url = processEnvironment["PF_AI_SERVICE_URL"], !url.isEmpty {
-      return url
-    }
-
-    // Read from Info.plist (set via xcconfig)
-    if let url = infoPlistString(forKey: "PFAIServiceURL"), !url.isEmpty {
-      return url
-    }
-    // Fallback based on environment
-    switch Environment.current {
-    case .development:
-      return "http://127.0.0.1:3001"
-    case .staging:
-      return "https://ai.pathfinding.org"
-    case .production:
-      return "https://ai.pathfinding.org"
+      return "https://api.trips.sunpebblelabs.com"
     }
   }
 
@@ -172,11 +151,10 @@ enum AppConfig {
     guard isDebugLoggingEnabled else { return }
     print("""
       ╔═══════════════════════════════════════════════╗
-      ║           Pathfinding Configuration           ║
+      ║         Sunpebble Trips Configuration         ║
       ╠═══════════════════════════════════════════════╣
       ║ Environment: \(Environment.current.rawValue.padding(toLength: 30, withPad: " ", startingAt: 0)) ║
       ║ API Base URL: \(apiBaseURL.prefix(28).padding(toLength: 28, withPad: " ", startingAt: 0)) ║
-      ║ AI Service URL: \(aiServiceURL.prefix(27).padding(toLength: 27, withPad: " ", startingAt: 0)) ║
       ║ Version: \(fullVersionString.padding(toLength: 34, withPad: " ", startingAt: 0)) ║
       ║ Debug Logging: \(isDebugLoggingEnabled ? "Enabled " : "Disabled")                       ║
       ║ Network Logging: \(isNetworkLoggingEnabled ? "Enabled " : "Disabled")                     ║

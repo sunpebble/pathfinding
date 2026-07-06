@@ -6,7 +6,7 @@ actor AIPlannerAPIClient {
     static let shared = AIPlannerAPIClient()
 
     private let network = NetworkClient.shared
-    private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "AIPlannerAPI")
+    private let logger = Logger(subsystem: "com.sunpebble.trips", category: "AIPlannerAPI")
 
     private init() {}
 

@@ -16,76 +16,40 @@ struct SignupView: View {
   @State private var headerAppeared = false
   @State private var formAppeared = false
 
+  private let brandAccent = Color(red: 0.97, green: 0.72, blue: 0.20)
+  private let brandInk = Color(red: 0.14, green: 0.15, blue: 0.20)
+
   var body: some View {
     NavigationStack {
       ZStack {
-        // Full-screen explorer background
         Color(.systemGroupedBackground)
           .ignoresSafeArea()
 
-        // Full-screen purple gradient (top → bottom)
         LinearGradient(
           colors: [
-            Color.purple.opacity(colorScheme == .dark ? 0.18 : 0.10),
-            Color.purple.opacity(colorScheme == .dark ? 0.06 : 0.03),
-            Color.purple.opacity(colorScheme == .dark ? 0.02 : 0.01)
+            brandAccent.opacity(colorScheme == .dark ? 0.14 : 0.10),
+            brandInk.opacity(colorScheme == .dark ? 0.10 : 0.03),
+            Color(.systemGroupedBackground)
           ],
           startPoint: .top,
           endPoint: .bottom
         )
         .ignoresSafeArea()
 
-        // Topographic lines — full screen
-        TopographicLinesView(
-          lineCount: 8,
-          lineColor: Color.purple.opacity(colorScheme == .dark ? 0.08 : 0.04)
-        )
-        .ignoresSafeArea()
-
-        // Compass decoration (top-right)
-        VStack {
-          HStack {
-            Spacer()
-            CompassRoseDecoration(
-              size: 180,
-              color: .purple,
-              opacity: colorScheme == .dark ? 0.08 : 0.05
-            )
-          }
-          .padding(.trailing, -40)
-          .padding(.top, 60)
-          Spacer()
-        }
-        .ignoresSafeArea()
-
-        // Noise texture overlay
-        NoiseTextureOverlay(opacity: colorScheme == .dark ? 0.02 : 0.015)
-          .ignoresSafeArea()
-
         ScrollView {
           VStack(spacing: 0) {
             // MARK: - Hero Header
             VStack(spacing: DesignTokens.Spacing.md) {
-              // App Icon — Globe for new exploration
               ZStack {
                 Circle()
-                  .fill(
-                    LinearGradient(
-                      colors: [
-                        Color(red: 0.45, green: 0.25, blue: 0.75),
-                        Color(red: 0.60, green: 0.35, blue: 0.85)
-                      ],
-                      startPoint: .topLeading,
-                      endPoint: .bottomTrailing
-                    )
-                  )
+                  .fill(brandAccent)
                   .frame(width: 76, height: 76)
 
-                Image(systemName: "globe.americas.fill")
+                Image(systemName: "sun.max.fill")
                   .font(.system(size: 34, weight: .medium))
-                  .foregroundStyle(.white)
+                  .foregroundStyle(brandInk)
               }
-              .shadow(color: .purple.opacity(0.3), radius: 20, y: 10)
+              .shadow(color: brandAccent.opacity(0.24), radius: 16, y: 8)
               .padding(.top, DesignTokens.Spacing.xxl)
 
               VStack(spacing: DesignTokens.Spacing.xs) {
@@ -93,7 +57,7 @@ struct SignupView: View {
                   .font(DesignTokens.Typography.Display.compact)
                   .fontWeight(.bold)
 
-                Text("注册探路，开始你的冒险旅程")
+                Text("注册 Sunpebble Trips，开始整理你的行程")
                   .font(.subheadline)
                   .foregroundStyle(.secondary)
               }
@@ -303,7 +267,7 @@ struct SignupView: View {
                 Text("登录")
                   .font(.subheadline)
                   .fontWeight(.semibold)
-                  .foregroundStyle(Color.purple)
+                  .foregroundStyle(brandAccent)
               }
             }
             .padding(.top, DesignTokens.Spacing.lg)

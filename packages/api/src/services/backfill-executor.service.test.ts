@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { executeAllPendingBackfillJobs, executeBackfillJob } from './backfill-executor.service.js';
+import { MAFENGWO_CRAWLER_DISABLED_MESSAGE } from './guide-import.service.js';
 
 function createMockDb(overrides?: {
   jobs?: Array<Record<string, unknown>>;
@@ -130,30 +131,8 @@ vi.mock('@pathfinding/database', () => ({
   rawCrawlRecords: 'raw_crawl_records',
 }));
 
-const { batchImportGuidesMock } = vi.hoisted(() => ({
-  batchImportGuidesMock: vi.fn(),
-}));
-
-// D12: destination_fill delegates to the guide-import main pipeline; mock only
-// batchImportGuides and keep the rest (syncGuideDestinations) real.
-vi.mock('./guide-import.service.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./guide-import.service.js')>();
-  return {
-    ...actual,
-    batchImportGuides: batchImportGuidesMock,
-  };
-});
-
 beforeEach(() => {
   vi.clearAllMocks();
-  batchImportGuidesMock.mockResolvedValue({
-    imported: 0,
-    updated: 0,
-    rejected: 0,
-    failed: 0,
-    skipped: 0,
-    results: [],
-  });
 });
 
 describe('backfill-executor.service', () => {
@@ -302,17 +281,45 @@ describe('backfill-executor.service', () => {
       expect(guideUpdates.length).toBe(0);
     });
 
-    it('counts crawler-reported fetch failures as failed instead of hiding them', async () => {
-      // Arrange: non-mafengwo guide forces the /fetch path; crawler says failure.
+    it('updates non-mafengwo guides through the TS crawler fetch service', async () => {
+      // Arrange: non-mafengwo guide forces the direct source URL fetch path.
+      const { getDb } = await import('@pathfinding/database');
+      const mockDb = createMockDb({
+        guides: [{ id: 101, platform: 'other', externalId: null, sourceUrl: 'https://example.com/1', content: '', title: '' }],
+      });
+      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
+      const mockFetch = vi.fn().mockResolvedValue(new Response(
+        '<html><head><title>Fetched Title</title></head><body><p>Fetched content。</p></body></html>',
+        { status: 200, statusText: 'OK' },
+      ));
+
+      // Act
+      const result = await executeBackfillJob(1, { fetchImpl: mockFetch });
+
+      // Assert
+      expect(result.processed).toBe(1);
+      expect(result.updated).toBe(1);
+      expect(mockFetch).toHaveBeenCalledWith(
+        new URL('https://example.com/1'),
+        expect.objectContaining({
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TravelBot/1.0)' },
+        }),
+      );
+      const guideUpdates = mockDb.updateSets.filter(u => u.table === 'travel_guides');
+      expect(guideUpdates.at(-1)?.values).toMatchObject({
+        title: 'Fetched Title',
+        content: 'Fetched Title Fetched content。',
+      });
+    });
+
+    it('counts crawler fetch failures as failed instead of hiding them', async () => {
+      // Arrange: non-mafengwo guide forces the direct source URL fetch path.
       const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
         guides: [{ id: 101, platform: 'other', externalId: null, sourceUrl: 'https://example.com/1', content: '', title: 'Guide 101' }],
       });
       vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ success: false, error: '验证码拦截' }),
-      });
+      const mockFetch = vi.fn().mockRejectedValue(new Error('验证码拦截'));
 
       // Act
       const result = await executeBackfillJob(1, { fetchImpl: mockFetch });
@@ -329,7 +336,7 @@ describe('backfill-executor.service', () => {
         guides: [{ id: 101, platform: 'other', externalId: null, sourceUrl: 'https://example.com/1', content: '', title: 'Guide 101' }],
       });
       vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
-      const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 502, json: vi.fn() });
+      const mockFetch = vi.fn().mockResolvedValue(new Response('bad gateway', { status: 502, statusText: 'Bad Gateway' }));
 
       // Act
       const result = await executeBackfillJob(1, { fetchImpl: mockFetch });
@@ -339,136 +346,41 @@ describe('backfill-executor.service', () => {
       expect(result.processed).toBe(0);
     });
 
-    it('destination_fill imports discovered URLs through the guide-import pipeline (D12)', async () => {
-      // Arrange: list crawl finds two URLs, city-scoped via mddId.
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
-          success: true,
-          data: { city: 'Paris', urls: ['https://m.example.com/1', 'https://m.example.com/2'], total: 2, cityScoped: true },
-        }),
-      });
-      batchImportGuidesMock.mockResolvedValue({
-        imported: 1,
-        updated: 1,
-        rejected: 0,
-        failed: 0,
-        skipped: 0,
-        results: [],
-      });
-
+    it('destination_fill marks mafengwo source work as failed without calling the removed crawler', async () => {
       const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
-        jobs: [{ id: 2, jobType: 'destination_fill', config: { targetDestinations: ['Paris'] }, status: 'pending', platform: 'multi' }],
+        jobs: [{ id: 2, jobType: 'destination_fill', config: { targetDestinations: ['Paris', 'Tokyo'] }, status: 'pending', platform: 'multi' }],
       });
       vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
+      const fetchImpl = vi.fn();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-      // Act
-      const result = await executeBackfillJob(2, { fetchImpl: mockFetch });
+      try {
+        const result = await executeBackfillJob(2, { fetchImpl });
 
-      // Assert: mddId from mafengwo_destinations is forwarded to Go /list.
-      const requestBody = JSON.parse(
-        (mockFetch.mock.calls[0]?.[1] as { body: string }).body,
-      );
-      expect(requestBody).toEqual({ city: 'Paris', scrollCount: 5, mddId: '10573' });
+        expect(fetchImpl).not.toHaveBeenCalled();
+        expect(result.success).toBe(true);
+        expect(result.processed).toBe(0);
+        expect(result.imported).toBe(0);
+        expect(result.updated).toBe(0);
+        expect(result.failed).toBe(2);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining(MAFENGWO_CRAWLER_DISABLED_MESSAGE));
 
-      // Import goes through the main pipeline with city/cityScoped/jobId context.
-      expect(batchImportGuidesMock).toHaveBeenCalledWith(
-        'mafengwo',
-        ['https://m.example.com/1', 'https://m.example.com/2'],
-        expect.objectContaining({ fetchImpl: mockFetch }),
-        { city: 'Paris', cityScoped: true, jobId: 2 },
-      );
-
-      // Real counts, not response.ok.
-      expect(result.success).toBe(true);
-      expect(result.processed).toBe(2);
-      expect(result.imported).toBe(1);
-      expect(result.updated).toBe(1);
-      expect(result.failed).toBe(0);
-
-      // D16: counters land in crawl_jobs.progress.
-      const jobUpdates = mockDb.updateSets.filter(u => u.table === 'crawl_jobs');
-      const completion = jobUpdates.at(-1)!.values;
-      expect(completion.status).toBe('completed');
-      expect(completion.progress).toEqual({
-        processed: 2,
-        imported: 1,
-        updated: 1,
-        rejected: 0,
-        skipped: 0,
-        failed: 0,
-      });
-    });
-
-    it('destination_fill treats a missing cityScoped flag as not city-scoped (D10)', async () => {
-      // Arrange
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
-          success: true,
-          data: { city: 'Paris', urls: ['https://m.example.com/1'], total: 1 },
-        }),
-      });
-
-      const { getDb } = await import('@pathfinding/database');
-      const mockDb = createMockDb({
-        jobs: [{ id: 2, jobType: 'destination_fill', config: { targetDestinations: ['Paris'] }, status: 'pending', platform: 'multi' }],
-      });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
-
-      // Act
-      await executeBackfillJob(2, { fetchImpl: mockFetch });
-
-      // Assert
-      expect(batchImportGuidesMock).toHaveBeenCalledWith(
-        'mafengwo',
-        ['https://m.example.com/1'],
-        expect.anything(),
-        expect.objectContaining({ cityScoped: false }),
-      );
-    });
-
-    it('destination_fill counts a failed list crawl as failed and never fakes success', async () => {
-      // Arrange: HTTP 500 from Go /list.
-      const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 500, json: vi.fn() });
-
-      const { getDb } = await import('@pathfinding/database');
-      const mockDb = createMockDb({
-        jobs: [{ id: 2, jobType: 'destination_fill', config: { targetDestinations: ['Paris'] }, status: 'pending', platform: 'multi' }],
-      });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
-
-      // Act
-      const result = await executeBackfillJob(2, { fetchImpl: mockFetch });
-
-      // Assert
-      expect(batchImportGuidesMock).not.toHaveBeenCalled();
-      expect(result.failed).toBe(1);
-      expect(result.processed).toBe(0);
-      expect(result.imported).toBe(0);
-    });
-
-    it('destination_fill counts an unsuccessful list payload as failed', async () => {
-      // Arrange: HTTP 200 but the crawler reports failure.
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ success: false, error: '触发反爬' }),
-      });
-
-      const { getDb } = await import('@pathfinding/database');
-      const mockDb = createMockDb({
-        jobs: [{ id: 2, jobType: 'destination_fill', config: { targetDestinations: ['Paris'] }, status: 'pending', platform: 'multi' }],
-      });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
-
-      // Act
-      const result = await executeBackfillJob(2, { fetchImpl: mockFetch });
-
-      // Assert
-      expect(batchImportGuidesMock).not.toHaveBeenCalled();
-      expect(result.failed).toBe(1);
-      expect(result.processed).toBe(0);
+        const jobUpdates = mockDb.updateSets.filter(u => u.table === 'crawl_jobs');
+        const completion = jobUpdates.at(-1)!.values;
+        expect(completion.status).toBe('completed');
+        expect(completion.progress).toEqual({
+          processed: 0,
+          imported: 0,
+          updated: 0,
+          rejected: 0,
+          skipped: 0,
+          failed: 2,
+        });
+      }
+      finally {
+        warn.mockRestore();
+      }
     });
   });
 

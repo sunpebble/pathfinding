@@ -20,6 +20,7 @@ overrides:
   'next@<16.2.5': '^16.2.5'
   'drizzle-orm@<0.45.2': '^0.45.2'
   'vite': '^7.3.5'
+  '@flue/cli>vite': '^8.0.14'
   'defu@<6.1.5': '^6.1.5'
   'picomatch@<4.0.4': '^4.0.4'
   'node-forge@<1.4.0': '^1.4.0'

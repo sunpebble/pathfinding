@@ -83,7 +83,7 @@ final class ItineraryStore {
 
   // MARK: - CRUD Operations
 
-  /// 从攻略保存行程
+  /// 从外部内容保存行程
   func save(from guide: BlogPost) {
     // 检查是否已保存过
     guard !allItineraries.contains(where: { $0.blogId == guide.id }) else { return }
@@ -194,7 +194,7 @@ final class ItineraryStore {
 
   /// 从BlogPost复制行程 - 本地存储
   /// - Parameters:
-  ///   - guide: 要复制的攻略
+  ///   - guide: 要复制的外部内容
   ///   - selectedDays: 可选的选择天数（nil表示全部复制）
   ///   - newStartDate: 新行程的开始日期
   /// - Returns: 复制后的新行程

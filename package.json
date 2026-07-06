@@ -4,10 +4,10 @@
   "version": "1.1.0",
   "private": true,
   "packageManager": "pnpm@10.28.0",
-  "description": "探路 - Travel planning app with offline-first architecture",
+  "description": "Sunpebble Trips - focused travel itinerary planning",
   "author": {
-    "name": "kunish",
-    "email": "kunish.butt@gmail.com"
+    "name": "Sunpebble",
+    "email": "support@sunpebblelabs.com"
   },
   "license": "ISC",
   "keywords": [
@@ -59,11 +59,6 @@
     "@types/node": "^22.0.0",
     "drizzle-orm": "^0.44.7"
   },
-  "__dependency_notes__": [
-    "Root devDependencies include runtime libraries for repo-level TypeScript scripts under scripts/.",
-    "- cheerio: scripts/crawl-mafengwo.ts parses remote HTML.",
-    "- playwright: scripts/crawl-mafengwo.ts runs the browser-based Mafengwo crawler required by path-bound WAF cookies."
-  ],
   "devDependencies": {
     "@antfu/eslint-config": "^7.6.1",
     "@commitlint/cli": "^20.4.2",
@@ -72,14 +67,12 @@
     "@eslint/js": "^10.0.1",
     "@nx/next": "^22.5.3",
     "@vitest/coverage-v8": "^4.1.0",
-    "cheerio": "^1.2.0",
     "eslint": "^10.0.2",
     "eslint-plugin-format": "^2.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "nx": "^22.5.3",
-    "playwright": "^1.58.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.5"
   }

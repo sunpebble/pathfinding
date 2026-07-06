@@ -1,12 +1,11 @@
 /**
  * 批量 AI 游记处理脚本
  *
- * 使用自定义 AI API 处理未处理的游记。
+ * 使用 DeepSeek API 处理未处理的游记。
  *
  * D8: 筛选条件为字段级（enrichedData.aiDays 缺失才处理，DB 级 JSON_EXTRACT 过滤），
  *     写回为读-合并-写（保留既有 key，AI 产物 key 以最新值替换）。
- * D14: prompt 不再要求 LLM 输出经纬度；AI 提取 POI 名称后由 geocoding 服务
- *     （高德，GCJ-02→WGS-84）解析坐标并校验范围/城市一致性。
+ * D14: prompt 不再要求 LLM 输出经纬度；坐标应由独立维护任务补齐。
  *
  * 使用方法:
  *   npx tsx scripts/batch-ai-process.ts --limit 10
@@ -14,31 +13,25 @@
  *
  * 环境变量:
  *   DATABASE_URL - TiDB 连接字符串
- *   AI_BASE_URL - AI API 基础 URL (默认: https://o.kunish.org)
- *   AI_API_KEY - AI API 密钥
- *   AI_MODEL - 使用的模型 (默认: gemini-3-pro-high)
- *   AMAP_API_KEY - 高德地理编码 key（未配置时坐标标记为 pending，绝不写 0,0）
+ *   DEEPSEEK_BASE_URL - DeepSeek API 基础 URL (默认: https://api.deepseek.com)
+ *   DEEPSEEK_API_KEY - DeepSeek API 密钥
+ *   DEEPSEEK_MODEL - 使用的模型
  */
 
-import type { GeocodingProvider } from '../packages/api/src/services/geocoding.service.js';
-import { aiDaysToDayItineraries } from '@pathfinding/guide-shape';
 import { asc, sql } from 'drizzle-orm';
-import {
-  buildGeocodingMetrics,
-  createGeocodingProvider,
-  geocodeAiDays,
-} from '../packages/api/src/services/geocoding.service.js';
-import { applyGuideEnrichment } from '../packages/api/src/services/guide-writer.js';
+import { getDeepSeekBaseURL, getDeepSeekModel } from '../packages/api/src/lib/deepseek.js';
+import { updateUserGuide } from '../packages/api/src/services/guide-writer.js';
 import { createDb, travelGuideAiData, travelGuides } from '../packages/database/src/index';
+import { aiDaysToDayItineraries } from '../packages/guide-shape/src/index.js';
 
 // ============================================
 // 配置
 // ============================================
 
 const config = {
-  aiBaseUrl: process.env.AI_BASE_URL || 'https://o.kunish.org',
-  aiApiKey: process.env.AI_API_KEY || '',
-  aiModel: process.env.AI_MODEL || 'gemini-3-pro-high',
+  aiBaseUrl: (process.env.DEEPSEEK_BASE_URL?.trim() || getDeepSeekBaseURL()).replace(/\/+$/, ''),
+  aiApiKey: process.env.DEEPSEEK_API_KEY || '',
+  aiModel: process.env.DEEPSEEK_MODEL || getDeepSeekModel(),
   batchSize: 10,
   delayBetweenRequests: 2000, // 2 秒
 };
@@ -60,7 +53,7 @@ interface POI {
   name: string;
   type: string;
   description?: string;
-  /** D14: 由 geocoding 服务写入（WGS-84），LLM 不再输出。 */
+  /** D14: 坐标由独立维护任务写入，LLM 不再输出。 */
   latitude?: number;
   longitude?: number;
   address?: string;
@@ -199,7 +192,7 @@ ${content.slice(0, 15000)}
 `;
 
   try {
-    const response = await fetch(`${config.aiBaseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${config.aiBaseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -213,6 +206,8 @@ ${content.slice(0, 15000)}
         ],
         temperature: 0.3,
         max_tokens: 4096,
+        response_format: { type: 'json_object' },
+        thinking: { type: 'disabled' },
       }),
     });
 
@@ -303,25 +298,6 @@ ${content.slice(0, 15000)}
 // 主流程
 // ============================================
 
-/** 取游记第一个目的地名，作为地理编码的城市上下文。 */
-function firstDestinationName(destinations: unknown): string | undefined {
-  if (!Array.isArray(destinations)) {
-    return undefined;
-  }
-  for (const item of destinations) {
-    if (typeof item === 'string' && item.trim()) {
-      return item.trim();
-    }
-    if (item && typeof item === 'object' && typeof (item as { name?: unknown }).name === 'string') {
-      const name = (item as { name: string }).name.trim();
-      if (name) {
-        return name;
-      }
-    }
-  }
-  return undefined;
-}
-
 /** 仅保留有值的 key，避免 undefined 覆盖既有 enrichedData。 */
 function pickDefined(record: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
@@ -332,7 +308,6 @@ function pickDefined(record: Record<string, unknown>): Record<string, unknown> {
 async function processGuide(
   db: ReturnType<typeof createDb>,
   guide: Guide,
-  geocodingProvider: GeocodingProvider,
 ): Promise<boolean> {
   log(`Processing guide: ${guide.id}`, {
     title: guide.title?.slice(0, 50),
@@ -347,16 +322,7 @@ async function processGuide(
       return false;
     }
 
-    // D14: AI 只提取 POI 名称，坐标由地理编码服务解析并校验。
-    let geocodedDays: DayPlan[] | undefined;
-    let geocodingMetrics: ReturnType<typeof buildGeocodingMetrics> = null;
-    if (aiResult.aiDays && aiResult.aiDays.length > 0) {
-      const city = firstDestinationName(guide.destinations);
-      const { days, stats } = await geocodeAiDays(aiResult.aiDays, city, geocodingProvider);
-      geocodedDays = days;
-      geocodingMetrics = buildGeocodingMetrics(days);
-      log(`Geocoded guide ${guide.id}`, { city: city ?? null, ...stats });
-    }
+    const aiDays = aiResult.aiDays && aiResult.aiDays.length > 0 ? aiResult.aiDays : undefined;
 
     // 保存 AI 处理结果到 travel_guide_ai_data 表
     await db.insert(travelGuideAiData).values({
@@ -377,15 +343,14 @@ async function processGuide(
       aiBestTime: aiResult.aiBestTime,
       aiDuration: aiResult.aiDuration,
       aiBudget: aiResult.aiBudget,
-      aiDays: geocodedDays ?? [],
+      aiDays: aiDays ?? [],
       contentMarkdown: aiResult.contentMarkdown,
-      geocodingMetrics: geocodingMetrics ?? undefined,
     });
     const enrichedData = { ...(guide.enrichedData ?? {}), ...aiPatch };
 
-    await applyGuideEnrichment(db as never, guide.id, {
+    await updateUserGuide(db as never, guide.id, {
       enrichedData,
-      dayItineraries: geocodedDays ? aiDaysToDayItineraries(geocodedDays) : null,
+      dayItineraries: aiDays ? aiDaysToDayItineraries(aiDays) : null,
       lastUpdatedAt: new Date(),
     });
 
@@ -419,7 +384,7 @@ async function main() {
 
   // 验证配置
   if (!config.aiApiKey) {
-    console.error('Error: AI_API_KEY environment variable is required');
+    console.error('Error: DEEPSEEK_API_KEY environment variable is required');
     process.exit(1);
   }
 
@@ -433,11 +398,6 @@ async function main() {
     aiModel: config.aiModel,
     limit: processAll ? 'all' : limit,
   });
-
-  const geocodingProvider = createGeocodingProvider();
-  if (!process.env.AMAP_API_KEY) {
-    log('Warning: AMAP_API_KEY 未配置，POI 坐标将标记为 pending（不会写入占位坐标）');
-  }
 
   // 创建数据库连接
   const db = createDb();
@@ -472,7 +432,7 @@ async function main() {
     }
 
     for (const guide of pendingGuides) {
-      const success = await processGuide(db, guide, geocodingProvider);
+      const success = await processGuide(db, guide);
 
       if (success) {
         totalProcessed++;

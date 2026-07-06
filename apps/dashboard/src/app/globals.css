@@ -1,8 +1,7 @@
 @import 'tailwindcss';
 
 /* ============================
-   探路 Pathfinding — Explorer Design System
-   Color palette inspired by iOS DesignSystem.swift
+   Sunpebble Trips — restrained product UI
    ============================ */
 
 :root {
@@ -11,10 +10,10 @@
   --foreground: #1c1917; /* stone-900 */
   --background-secondary: #f5f5f4; /* stone-100 */
 
-  /* Explorer accent — Terrain Emerald */
-  --accent: #059669; /* emerald-600 */
-  --accent-light: #34d399; /* emerald-400 */
-  --accent-bg: rgba(5, 150, 105, 0.08);
+  /* Sunpebble accent */
+  --accent: #f7b733;
+  --accent-light: #ffd36a;
+  --accent-bg: rgba(247, 183, 51, 0.12);
 
   /* Terrain palette (from iOS DesignSystem Terrain colors) */
   --terrain-forest: rgb(46, 125, 51);
@@ -31,7 +30,7 @@
   --sidebar-text: #a8a29e;
   --sidebar-active-bg: #292524;
 
-  /* Dashboard Explorer Polish */
+  /* Dashboard product polish */
   --dashboard-bg: #f7f5f2;
   --dashboard-surface: rgba(255, 255, 255, 0.92);
   --dashboard-surface-strong: #ffffff;
@@ -48,9 +47,9 @@
     --foreground: #e7e5e4; /* stone-200 */
     --background-secondary: #1c1917; /* stone-900 */
 
-    --accent: #34d399; /* emerald-400 */
-    --accent-light: #6ee7b7; /* emerald-300 */
-    --accent-bg: rgba(52, 211, 153, 0.1);
+    --accent: #ffd36a;
+    --accent-light: #ffe39b;
+    --accent-bg: rgba(255, 211, 106, 0.12);
 
     --card-bg: #1c1917;
     --card-border: rgba(255, 255, 255, 0.08);
@@ -134,18 +133,18 @@ body {
 }
 
 /* ============================
-   Explorer focus ring
+   Sunpebble focus ring
    ============================ */
 .focus-explorer:focus-visible {
-  @apply outline-none ring-2 ring-emerald-500/40 ring-offset-2;
+  @apply outline-none ring-2 ring-amber-400/50 ring-offset-2;
 }
 
 /* ============================
-   Dashboard explorer polish
+   Dashboard polish
    ============================ */
 .dashboard-pattern {
   background:
-    radial-gradient(circle at top left, rgba(5, 150, 105, 0.08), transparent 32rem),
+    radial-gradient(circle at top left, rgba(247, 183, 51, 0.12), transparent 32rem),
     linear-gradient(135deg, rgba(255, 255, 255, 0.72), transparent 28rem), var(--dashboard-bg);
 }
 
@@ -162,7 +161,7 @@ body {
 }
 
 .dashboard-control {
-  @apply rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 shadow-sm transition-colors placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-200;
+  @apply rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 shadow-sm transition-colors placeholder:text-stone-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-200;
 }
 
 /* ============================

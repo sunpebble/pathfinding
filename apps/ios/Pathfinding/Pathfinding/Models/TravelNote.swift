@@ -1,6 +1,6 @@
 import Foundation
 
-/// Travel note (游记) model for user-generated travel content
+/// Travel note model for user-generated travel content
 struct TravelNote: Codable, Identifiable, Hashable {
   let id: String
   let authorId: String

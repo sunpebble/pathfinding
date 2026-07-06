@@ -17,8 +17,8 @@
 	<string>manual</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>com.kunish.pathfinding</key>
-		<string>Pathfinding App Store</string>
+		<key>com.sunpebble.trips</key>
+		<string>Sunpebble Trips App Store</string>
 	</dict>
 	<key>destination</key>
 	<string>export</string>

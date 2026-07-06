@@ -30,7 +30,7 @@ export function DashboardPageHeader({
     <div className={cn('flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between', className)}>
       <div className="flex min-w-0 items-start gap-3">
         {Icon && (
-          <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/70 dark:bg-emerald-900/30 dark:text-emerald-300">
+          <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800 ring-1 ring-amber-200/70 dark:bg-amber-900/30 dark:text-amber-300">
             <Icon className="h-5 w-5" aria-hidden="true" />
           </div>
         )}
@@ -117,7 +117,7 @@ export function DashboardLoadingState({
 }) {
   return (
     <div className={cn('flex min-h-52 flex-col items-center justify-center gap-3 text-stone-500', className)}>
-      <Loader2 className="h-7 w-7 animate-spin text-emerald-600" aria-hidden="true" />
+      <Loader2 className="h-7 w-7 animate-spin text-amber-600" aria-hidden="true" />
       <span className="text-sm">{label}</span>
     </div>
   );

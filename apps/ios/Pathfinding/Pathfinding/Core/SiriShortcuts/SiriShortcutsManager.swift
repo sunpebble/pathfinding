@@ -11,7 +11,7 @@ import OSLog
 final class SiriShortcutsManager {
   static let shared = SiriShortcutsManager()
 
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "SiriShortcuts")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "SiriShortcuts")
 
   /// Pending navigation action from Siri
   private(set) var pendingNavigation: SiriNavigationAction?

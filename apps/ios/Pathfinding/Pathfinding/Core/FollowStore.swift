@@ -7,7 +7,7 @@ import OSLog
 final class FollowStore {
   static let shared = FollowStore()
 
-  private let logger = Logger(subsystem: "com.kunish.pathfinding", category: "FollowStore")
+  private let logger = Logger(subsystem: "com.sunpebble.trips", category: "FollowStore")
 
   // Current user's followers and following
   var followers: [FollowUser] = []

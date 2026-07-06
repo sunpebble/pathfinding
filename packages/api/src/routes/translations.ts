@@ -14,11 +14,123 @@ import { and, desc, eq, like, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
+import { deepSeekCompletion, DeepSeekConfigError } from '../lib/deepseek.js';
 import { escapeLikePattern } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
 const app = new Hono<{ Variables: AuthVariables }>();
+
+const translateTextSchema = z.object({
+  text: z.string().trim().min(1),
+  target_lang: z.string().trim().min(1).optional(),
+  targetLang: z.string().trim().min(1).optional(),
+  source_lang: z.string().trim().optional(),
+  sourceLang: z.string().trim().optional(),
+});
+
+const translateBatchSchema = z.object({
+  texts: z.array(z.string().trim().min(1)).min(1).max(20),
+  target_lang: z.string().trim().min(1).optional(),
+  targetLang: z.string().trim().min(1).optional(),
+  source_lang: z.string().trim().optional(),
+  sourceLang: z.string().trim().optional(),
+});
+
+const detectLanguageSchema = z.object({
+  text: z.string().trim().min(1),
+});
+
+function targetLang(body: { target_lang?: string; targetLang?: string }) {
+  const lang = body.target_lang ?? body.targetLang;
+  if (!lang)
+    throw new ApiError(400, '缺少target_lang参数');
+  return lang;
+}
+
+function sourceLang(body: { source_lang?: string; sourceLang?: string }) {
+  return body.source_lang ?? body.sourceLang ?? 'auto';
+}
+
+function translationBody(sourceText: string, sourceLanguage: string, targetText: string, targetLanguage: string) {
+  return {
+    source_text: sourceText,
+    source_lang: sourceLanguage,
+    target_text: targetText,
+    target_lang: targetLanguage,
+    confidence: null,
+    alternatives: null,
+    pinyin: null,
+    pronunciation: null,
+  };
+}
+
+function aiError(err: unknown) {
+  return err instanceof DeepSeekConfigError
+    ? 'DeepSeek API key not configured'
+    : 'AI service unavailable';
+}
+
+async function translateText(text: string, from: string, to: string, signal?: AbortSignal) {
+  return deepSeekCompletion([
+    { role: 'system', content: `Translate from ${from} to ${to}. Return only the translated text.` },
+    { role: 'user', content: text },
+  ], { signal });
+}
+
+// ── POST /text — DeepSeek text translation ─────────────
+app.post('/text', zValidator('json', translateTextSchema), async (c) => {
+  const body = c.req.valid('json');
+  const to = targetLang(body);
+  const from = sourceLang(body);
+
+  try {
+    const translated = await translateText(body.text, from, to, c.req.raw.signal);
+    return c.json({ success: true, data: translationBody(body.text, from, translated, to) });
+  }
+  catch (err) {
+    return c.json({ success: false, error: aiError(err) }, 503);
+  }
+});
+
+// ── POST /batch — DeepSeek batch text translation ──────
+app.post('/batch', zValidator('json', translateBatchSchema), async (c) => {
+  const body = c.req.valid('json');
+  const to = targetLang(body);
+  const from = sourceLang(body);
+
+  try {
+    const data = [];
+    for (const text of body.texts) {
+      const translated = await translateText(text, from, to, c.req.raw.signal);
+      data.push(translationBody(text, from, translated, to));
+    }
+    return c.json({ success: true, data, count: data.length });
+  }
+  catch (err) {
+    return c.json({ success: false, error: aiError(err) }, 503);
+  }
+});
+
+// ── POST /detect — DeepSeek language detection ─────────
+app.post('/detect', zValidator('json', detectLanguageSchema), async (c) => {
+  const { text } = c.req.valid('json');
+
+  try {
+    const language = await deepSeekCompletion([
+      { role: 'system', content: 'Detect the language. Return only a short BCP-47 language code such as en, zh, ja, ko, fr.' },
+      { role: 'user', content: text },
+    ], { signal: c.req.raw.signal });
+    return c.json({ success: true, data: { language: language.trim().toLowerCase().split(/\s+/)[0] } });
+  }
+  catch (err) {
+    return c.json({ success: false, error: aiError(err) }, 503);
+  }
+});
+
+app.post('/photo', () => {
+  throw new ApiError(501, 'Photo translation is not available in the TypeScript API');
+});
 
 // ── GET /categories — List translation categories ──────
 app.get('/categories', async (c) => {

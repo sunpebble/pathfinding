@@ -273,7 +273,7 @@ struct PdfExportSheet: View {
   PdfExportSheet(
     guide: BlogPost(
       id: "preview-1",
-      title: "东京5日深度游攻略",
+      title: "东京5日深度游行程",
       authorName: "旅行达人",
       content: nil,
       contentHtml: nil,
@@ -288,7 +288,7 @@ struct PdfExportSheet: View {
       savesCount: 456,
       createdAt: "2024-01-15",
       destinations: nil,
-      aiSummary: "这是一份详细的东京5日游攻略",
+      aiSummary: "这是一份详细的东京5日游行程",
       aiTips: ["提前购买JR Pass", "下载Google Maps离线地图"],
       aiBestTime: "3-5月或10-11月",
       aiDuration: "5天4夜",

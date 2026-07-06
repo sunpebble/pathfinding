@@ -27,7 +27,7 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-stone-200/70 bg-white/85 px-4 shadow-sm shadow-stone-950/5 backdrop-blur-xl sm:px-6 dark:border-stone-800 dark:bg-stone-950/80">
       <div className="flex min-w-0 items-center gap-4 pl-12 lg:pl-0">
         <h1 className="truncate text-sm font-semibold tracking-wide text-stone-900 sm:text-base dark:text-stone-100">
-          探路抓取仪表盘
+          Sunpebble Trips 控制台
         </h1>
       </div>
 

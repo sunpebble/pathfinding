@@ -51,76 +51,40 @@ struct LoginView: View {
   @State private var headerAppeared = false
   @State private var formAppeared = false
 
+  private let brandAccent = Color(red: 0.97, green: 0.72, blue: 0.20)
+  private let brandInk = Color(red: 0.14, green: 0.15, blue: 0.20)
+
   var body: some View {
     NavigationStack {
       ZStack {
-        // Full-screen explorer background
         Color(.systemGroupedBackground)
           .ignoresSafeArea()
 
-        // Full-screen teal gradient (top → bottom)
         LinearGradient(
           colors: [
-            Color.teal.opacity(colorScheme == .dark ? 0.18 : 0.10),
-            Color.teal.opacity(colorScheme == .dark ? 0.06 : 0.03),
-            Color.teal.opacity(colorScheme == .dark ? 0.02 : 0.01)
+            brandAccent.opacity(colorScheme == .dark ? 0.14 : 0.10),
+            brandInk.opacity(colorScheme == .dark ? 0.10 : 0.03),
+            Color(.systemGroupedBackground)
           ],
           startPoint: .top,
           endPoint: .bottom
         )
         .ignoresSafeArea()
 
-        // Topographic lines — full screen
-        TopographicLinesView(
-          lineCount: 8,
-          lineColor: Color.teal.opacity(colorScheme == .dark ? 0.08 : 0.04)
-        )
-        .ignoresSafeArea()
-
-        // Compass decoration (top-right)
-        VStack {
-          HStack {
-            Spacer()
-            CompassRoseDecoration(
-              size: 180,
-              color: .teal,
-              opacity: colorScheme == .dark ? 0.08 : 0.05
-            )
-          }
-          .padding(.trailing, -40)
-          .padding(.top, 60)
-          Spacer()
-        }
-        .ignoresSafeArea()
-
-        // Noise texture overlay
-        NoiseTextureOverlay(opacity: colorScheme == .dark ? 0.02 : 0.015)
-          .ignoresSafeArea()
-
         ScrollView {
           VStack(spacing: 0) {
             // MARK: - Hero Header
             VStack(spacing: DesignTokens.Spacing.md) {
-              // App Icon — Compass
               ZStack {
                 Circle()
-                  .fill(
-                    LinearGradient(
-                      colors: [
-                        Color(red: 0.05, green: 0.60, blue: 0.45),
-                        Color(red: 0.10, green: 0.75, blue: 0.55)
-                      ],
-                      startPoint: .topLeading,
-                      endPoint: .bottomTrailing
-                    )
-                  )
+                  .fill(brandAccent)
                   .frame(width: 76, height: 76)
 
-                Image(systemName: "safari.fill")
+                Image(systemName: "sun.max.fill")
                   .font(.system(size: 34, weight: .medium))
-                  .foregroundStyle(.white)
+                  .foregroundStyle(brandInk)
               }
-              .shadow(color: Color.teal.opacity(0.3), radius: 20, y: 10)
+              .shadow(color: brandAccent.opacity(0.24), radius: 16, y: 8)
               .padding(.top, DesignTokens.Spacing.xxl)
 
               VStack(spacing: DesignTokens.Spacing.xs) {
@@ -128,7 +92,7 @@ struct LoginView: View {
                   .font(DesignTokens.Typography.Display.compact)
                   .fontWeight(.bold)
 
-                Text("登录探路，继续你的冒险旅程")
+                Text("登录 Sunpebble Trips，继续整理你的行程")
                   .font(.subheadline)
                   .foregroundStyle(.secondary)
               }
@@ -311,7 +275,7 @@ struct LoginView: View {
                 Text("注册")
                   .font(.subheadline)
                   .fontWeight(.semibold)
-                  .foregroundStyle(Color.teal)
+                  .foregroundStyle(brandAccent)
               }
               .accessibilityIdentifier("show-signup-button")
             }
@@ -415,7 +379,7 @@ struct LoginView: View {
             }
           }
           .disabled(countdown > 0 || !isValidPhoneNumber || isSendingCode)
-          .foregroundStyle(countdown > 0 || !isValidPhoneNumber ? .secondary : Color.teal)
+          .foregroundStyle(countdown > 0 || !isValidPhoneNumber ? .secondary : brandAccent)
           .padding(.trailing, DesignTokens.Spacing.xs)
         }
         .background(DesignTokens.Colors.fillQuaternary)
@@ -468,7 +432,7 @@ struct LoginView: View {
           } label: {
             Text("忘记密码？")
               .font(.caption)
-              .foregroundStyle(Color.teal)
+              .foregroundStyle(brandAccent)
           }
         }
 
