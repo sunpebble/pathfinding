@@ -111,6 +111,7 @@
 		86490BF86D4ED61BC0D5CFD2 /* Itinerary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCD6E098FBFC8F2FA0BE8AD /* Itinerary.swift */; };
 		876B51C4C288C1DE8FD69FBB /* BlogDetailPoiAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AEFDF80FED13BD882DB99D1 /* BlogDetailPoiAnnotation.swift */; };
 		883D57E21B447D0F6CBABDA1 /* PoiEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9C4D9885656593374D8FE7 /* PoiEditView.swift */; };
+		8A1FF1648D445B54CE852D14 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05E5CDDDEBC53537F67BC826 /* ScreenshotTests.swift */; };
 		8B149AD0BDE2B8E309971678 /* DebugMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA83A2A926AD19E47B886675 /* DebugMenuView.swift */; };
 		8BF80A1ADD409182F746A829 /* CityAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5130FBEDAD70C0FBA030C7F /* CityAPIClient.swift */; };
 		8C0CA3722560758A7B9E6535 /* CachedAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150DD530C2F4383B398260A8 /* CachedAsyncImage.swift */; };
@@ -223,6 +224,7 @@
 		032B3EAC1B9257E7B83335B4 /* NetworkClient+Generic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkClient+Generic.swift"; sourceTree = "<group>"; };
 		03EB7C5914880CEB79C806F6 /* GuideStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideStore.swift; sourceTree = "<group>"; };
 		0587DE650547388197EBB66D /* FootprintStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FootprintStore.swift; sourceTree = "<group>"; };
+		05E5CDDDEBC53537F67BC826 /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		0874DFDB23D30F0DFAC99401 /* PDFAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFAPIClient.swift; sourceTree = "<group>"; };
 		08C22D18715DAE2244022C97 /* CopyItinerarySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyItinerarySheet.swift; sourceTree = "<group>"; };
 		0CCA70C322E27307AFF6393C /* TimelineSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineSection.swift; sourceTree = "<group>"; };
@@ -857,6 +859,7 @@
 			isa = PBXGroup;
 			children = (
 				B3714BC33E60C76CAC38F263 /* EmailLoginFlowUITests.swift */,
+				05E5CDDDEBC53537F67BC826 /* ScreenshotTests.swift */,
 			);
 			path = PathfindingUITests;
 			sourceTree = "<group>";
@@ -1021,6 +1024,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				71BF5CBD294A01C9FA2C53F5 /* EmailLoginFlowUITests.swift in Sources */,
+				8A1FF1648D445B54CE852D14 /* ScreenshotTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
