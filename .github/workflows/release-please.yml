@@ -27,11 +27,17 @@ jobs:
   testflight:
     needs: release-please
     if: ${{ needs.release-please.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
-    uses: sunpebble/ci/.github/workflows/ios-testflight-pathfinding.yml@v1.1
-    secrets:
-      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-      ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
-      APPLE_DIST_CERT_P12_BASE64: ${{ secrets.APPLE_DIST_CERT_P12_BASE64 }}
-      APPLE_DIST_CERT_PASSWORD: ${{ secrets.APPLE_DIST_CERT_PASSWORD }}
-      APPLE_PROFILE_APP_BASE64: ${{ secrets.APPLE_PROFILE_APP_BASE64 }}
+    uses: sunpebble/ci/.github/workflows/ios-testflight.yml@v1.2
+    with:
+      working_directory: apps/ios/Pathfinding
+      xcode_project: Pathfinding.xcodeproj
+      scheme: Pathfinding-Release
+      ipa_basename: Pathfinding
+      build_number_strategy: utc_timestamp
+      marketing_version_from_repo_package_json: true
+      archive_configuration: Release
+      export_subdirectory: ipa
+      run_test_gate: true
+      test_scheme: Pathfinding-Debug
+      test_only: PathfindingTests
+    secrets: inherit
