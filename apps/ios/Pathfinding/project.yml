@@ -39,7 +39,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.sunpebble.trips$(BUNDLE_ID_SUFFIX)
         MARKETING_VERSION: 1.0.0
         CURRENT_PROJECT_VERSION: '1'
-        DEVELOPMENT_TEAM: '62HCT6Q83X'
+        DEVELOPMENT_TEAM: 62HCT6Q83X
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS: Pathfinding/Pathfinding.entitlements
