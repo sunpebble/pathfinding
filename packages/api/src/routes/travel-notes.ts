@@ -1,6 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { getDb, travelNotes } from '@pathfinding/database';
+import { travelNotes } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
  * Travel Notes routes — list, create.
@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authOptional, authRequired } from '../middleware/auth.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET / — List travel notes ──────────────────────────
 app.get('/', authOptional(), async (c) => {
@@ -21,7 +21,7 @@ app.get('/', authOptional(), async (c) => {
   const visibility = c.req.query('visibility') ?? 'public';
   const offset = (page - 1) * pageSize;
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [];
   if (userId) {
@@ -74,7 +74,7 @@ const createNoteSchema = z.object({
 app.post('/', authRequired(), zValidator('json', createNoteSchema), async (c) => {
   const { title, content, visibility } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(travelNotes).values({
     authorId: Number(c.get('userId')),

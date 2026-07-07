@@ -1,7 +1,7 @@
 import type { SQL } from 'drizzle-orm';
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { getDb, poiAnswers, poiQuestions } from '@pathfinding/database';
+import { poiAnswers, poiQuestions } from '@pathfinding/database';
 import { asc, desc, eq, sql } from 'drizzle-orm';
 /**
  * POI Q&A routes — questions and answers.
@@ -13,7 +13,7 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET /questions — List questions for a POI ──────────
 app.get('/questions', async (c) => {
@@ -26,7 +26,7 @@ app.get('/questions', async (c) => {
     throw new ApiError(400, '缺少poiId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const pid = Number(poiId);
   const offset = (page - 1) * pageSize;
 
@@ -80,7 +80,7 @@ const createQuestionSchema = z.object({
 app.post('/questions', authRequired(), zValidator('json', createQuestionSchema), async (c) => {
   const { poiId, title, content, tags } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(poiQuestions).values({
     poiId,
@@ -105,7 +105,7 @@ app.get('/answers', async (c) => {
     throw new ApiError(400, '缺少questionId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const qid = Number(questionId);
   const offset = (page - 1) * pageSize;
 
@@ -145,7 +145,7 @@ const createAnswerSchema = z.object({
 app.post('/answers', authRequired(), zValidator('json', createAnswerSchema), async (c) => {
   const { questionId, content } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(poiAnswers).values({
     questionId,

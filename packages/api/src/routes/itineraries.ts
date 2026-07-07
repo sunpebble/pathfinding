@@ -1,7 +1,7 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { Database } from '@pathfinding/database';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  getDb,
   itineraries,
   itineraryDays,
   itineraryItems,
@@ -25,12 +25,10 @@ import {
   findScopedItems,
 } from '../services/itinerary-access.service.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 type ItineraryRow = typeof itineraries.$inferSelect;
 
-async function getItineraryDto(itineraryId: number) {
-  const db = getDb();
-
+async function getItineraryDto(db: Database, itineraryId: number) {
   const result = await db
     .select()
     .from(itineraries)
@@ -75,7 +73,7 @@ app.get('/', authOptional(), async (c) => {
   );
   const authUserId = c.get('userId');
 
-  const db = getDb();
+  const db = c.get('db');
 
   let whereClause;
   if (userId) {
@@ -117,7 +115,7 @@ app.get('/:id', authOptional(), async (c) => {
   if (!itineraryId) {
     return c.json({ error: 'Invalid ID' }, 400);
   }
-  const db = getDb();
+  const db = c.get('db');
   const authUserId = c.get('userId');
 
   const result = await db
@@ -142,7 +140,7 @@ app.get('/:id', authOptional(), async (c) => {
     }
   }
 
-  const dto = await getItineraryDto(itineraryId);
+  const dto = await getItineraryDto(db, itineraryId);
   return jsonData(c, dto);
 });
 
@@ -159,7 +157,7 @@ const createItinerarySchema = z.object({
 app.post('/', authRequired(), zValidator('json', createItinerarySchema), async (c) => {
   const body = c.req.valid('json');
   const userId = Number(c.get('userId'));
-  const db = getDb();
+  const db = c.get('db');
 
   const [result] = await db
     .insert(itineraries)
@@ -193,7 +191,7 @@ app.patch(
   async (c) => {
     const authUserId = parsePositiveInt(c.get('userId'));
     const body = c.req.valid('json');
-    const db = getDb();
+    const db = c.get('db');
 
     if (!authUserId) {
       return c.json({ error: '无效的认证用户' }, 401);
@@ -247,7 +245,7 @@ app.patch(
 // ── DELETE /:id — Delete itinerary ─────────────────────
 app.delete('/:id', authRequired(), async (c) => {
   const authUserId = parsePositiveInt(c.get('userId'));
-  const db = getDb();
+  const db = c.get('db');
 
   if (!authUserId) {
     return c.json({ error: '无效的认证用户' }, 401);
@@ -304,7 +302,7 @@ app.post('/:id/days', authRequired(), zValidator('json', createDaySchema), async
   const { id } = c.req.param();
   const body = c.req.valid('json');
   const authUserId = parsePositiveInt(c.get('userId'));
-  const db = getDb();
+  const db = c.get('db');
 
   if (!authUserId) {
     return c.json({ error: '无效的认证用户' }, 401);
@@ -351,7 +349,7 @@ app.post(
     const dayId = parsePositiveInt(c.req.param('dayId'));
     const authUserId = parsePositiveInt(c.get('userId'));
     const body = c.req.valid('json');
-    const db = getDb();
+    const db = c.get('db');
 
     if (!authUserId) {
       return c.json({ error: '无效的认证用户' }, 401);
@@ -434,7 +432,7 @@ app.patch(
       return c.json({ error: '一个或多个行程项目未找到' }, 404);
     }
 
-    const db = getDb();
+    const db = c.get('db');
     await db.transaction(async (tx) => {
       await Promise.all(
         body.itemIds.map((itemId, orderIndex) => tx
@@ -444,7 +442,7 @@ app.patch(
       );
     });
 
-    const itinerary = await getItineraryDto(itineraryId);
+    const itinerary = await getItineraryDto(db, itineraryId);
     return jsonData(c, itinerary);
   },
 );
@@ -501,13 +499,13 @@ app.patch(
       return c.json({ error: '没有需要更新的字段' }, 400);
     }
 
-    const db = getDb();
+    const db = c.get('db');
     await db
       .update(itineraryItems)
       .set(updates)
       .where(eq(itineraryItems.id, itemId));
 
-    const itinerary = await getItineraryDto(itineraryId);
+    const itinerary = await getItineraryDto(db, itineraryId);
     return jsonData(c, itinerary);
   },
 );
@@ -541,10 +539,10 @@ app.delete('/:id/days/:dayId/items/:itemId', authRequired(), async (c) => {
     return c.json({ error: '行程项目不存在' }, 404);
   }
 
-  const db = getDb();
+  const db = c.get('db');
   await db.delete(itineraryItems).where(eq(itineraryItems.id, itemId));
 
-  const itinerary = await getItineraryDto(itineraryId);
+  const itinerary = await getItineraryDto(db, itineraryId);
   return c.json({ success: true, data: itinerary });
 });
 
@@ -571,13 +569,13 @@ app.delete('/:id/days/:dayId', authRequired(), async (c) => {
     return c.json({ error: '行程日不存在' }, 404);
   }
 
-  const db = getDb();
+  const db = c.get('db');
   await db.transaction(async (tx) => {
     await tx.delete(itineraryItems).where(eq(itineraryItems.dayId, dayId));
     await tx.delete(itineraryDays).where(eq(itineraryDays.id, dayId));
   });
 
-  const itinerary = await getItineraryDto(itineraryId);
+  const itinerary = await getItineraryDto(db, itineraryId);
   return c.json({ success: true, data: itinerary });
 });
 

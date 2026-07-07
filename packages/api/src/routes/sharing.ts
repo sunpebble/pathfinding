@@ -1,8 +1,7 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { randomBytes } from 'node:crypto';
 import { zValidator } from '@hono/zod-validator';
 import {
-  getDb,
   shareEventLogs,
   shareEvents,
   shareLinks,
@@ -19,7 +18,7 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 function generateShareCode(): string {
   return randomBytes(6).toString('base64url');
@@ -36,7 +35,7 @@ app.post('/link', authRequired(), zValidator('json', createShareLinkSchema), asy
   const { resourceType, resourceId, platform } = c.req.valid('json');
 
   const userId = Number(c.get('userId'));
-  const db = getDb();
+  const db = c.get('db');
   const shareCode = generateShareCode();
 
   const result = await db.insert(shareLinks).values({
@@ -75,7 +74,7 @@ const trackShareSchema = z.object({
 app.post('/track', zValidator('json', trackShareSchema), async (c) => {
   const { shareCode, eventType } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   // Find share link by code
   const link = await db
@@ -114,7 +113,7 @@ app.get('/stats', async (c) => {
     throw new ApiError(400, '缺少resourceId或resourceType参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const rid = Number(resourceId);
 
   if (!Number.isFinite(rid) || rid <= 0) {

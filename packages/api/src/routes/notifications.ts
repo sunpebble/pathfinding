@@ -1,7 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  getDb,
   notifications,
   notificationSettings,
 } from '@pathfinding/database';
@@ -14,7 +13,7 @@ import { z } from 'zod';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET / — List user's notifications ──────────────────
 app.get('/', authRequired(), async (c) => {
@@ -24,7 +23,7 @@ app.get('/', authRequired(), async (c) => {
   const unreadOnly = c.req.query('unreadOnly') === 'true';
   const offset = (page - 1) * pageSize;
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [eq(notifications.userId, userId)];
   if (unreadOnly) {
@@ -49,7 +48,7 @@ app.get('/', authRequired(), async (c) => {
 app.get('/unread-count', authRequired(), async (c) => {
   const userId = Number(c.get('userId'));
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db
     .select({ count: sql<number>`count(*)` })
@@ -72,7 +71,7 @@ const markReadSchema = z.object({
 app.post('/read', authRequired(), zValidator('json', markReadSchema), async (c) => {
   const { notificationId } = c.req.valid('json');
   const userId = Number(c.get('userId'));
-  const db = getDb();
+  const db = c.get('db');
 
   await db
     .update(notifications)
@@ -90,7 +89,7 @@ app.post('/read', authRequired(), zValidator('json', markReadSchema), async (c) 
 // ── POST /read-all — Mark all notifications as read ────
 app.post('/read-all', authRequired(), async (c) => {
   const userId = Number(c.get('userId'));
-  const db = getDb();
+  const db = c.get('db');
 
   await db
     .update(notifications)
@@ -109,7 +108,7 @@ app.post('/read-all', authRequired(), async (c) => {
 app.get('/settings', authRequired(), async (c) => {
   const userId = Number(c.get('userId'));
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db
     .select()
@@ -145,7 +144,7 @@ const updateSettingsSchema = z.object({
 app.put('/settings', authRequired(), zValidator('json', updateSettingsSchema), async (c) => {
   const body = c.req.valid('json');
   const userId = Number(c.get('userId'));
-  const db = getDb();
+  const db = c.get('db');
 
   const existing = await db
     .select()

@@ -1,5 +1,5 @@
-import type { AuthVariables } from '../middleware/auth.js';
-import { currencyHistory, currencyRates, getDb } from '@pathfinding/database';
+import type { AppContext } from '../env.js';
+import { currencyHistory, currencyRates } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
  * Currency routes — exchange rates, history, cache stats.
@@ -8,13 +8,13 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET /rates — Get cached exchange rates ─────────────
 app.get('/rates', async (c) => {
   const base = c.req.query('base') ?? 'CNY';
 
-  const db = getDb();
+  const db = c.get('db');
 
   const rates = await db
     .select()
@@ -32,7 +32,7 @@ app.get('/history', async (c) => {
   const target = c.req.query('target') ?? 'USD';
   const days = Number.parseInt(c.req.query('days') ?? '30', 10);
 
-  const db = getDb();
+  const db = c.get('db');
 
   const history = await db
     .select()
@@ -51,7 +51,7 @@ app.get('/history', async (c) => {
 
 // ── GET /stats — Get currency cache statistics ─────────
 app.get('/stats', async (c) => {
-  const db = getDb();
+  const db = c.get('db');
 
   const [totalResult, latestResult] = await Promise.all([
     db

@@ -1,6 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { getDb, pushTokens } from '@pathfinding/database';
+import { pushTokens } from '@pathfinding/database';
 import { and, eq } from 'drizzle-orm';
 /**
  * Push token routes — register, deactivate, and list push tokens.
@@ -9,7 +9,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { authRequired } from '../middleware/auth.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 const registerPushTokenSchema = z.object({
   token: z.string().min(1),
@@ -26,7 +26,7 @@ app.post('/', authRequired(), zValidator('json', registerPushTokenSchema), async
   const userId = Number(c.get('userId'));
   const body = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   // Upsert: check if token already exists for this user
   const existing = await db
@@ -68,7 +68,7 @@ app.delete('/', authRequired(), zValidator('json', deletePushTokenSchema), async
   const userId = Number(c.get('userId'));
   const body = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   await db
     .update(pushTokens)
@@ -86,7 +86,7 @@ app.delete('/', authRequired(), zValidator('json', deletePushTokenSchema), async
 // ── GET / — List user's active push tokens ─────────────
 app.get('/', authRequired(), async (c) => {
   const userId = Number(c.get('userId'));
-  const db = getDb();
+  const db = c.get('db');
 
   const tokens = await db
     .select()

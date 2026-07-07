@@ -1,7 +1,7 @@
-import type { Env } from '../env.js';
-import type { AuthVariables } from '../middleware/auth.js';
+import type { Database } from '@pathfinding/database';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { chatMessages, chatSessions, getDb } from '@pathfinding/database';
+import { chatMessages, chatSessions } from '@pathfinding/database';
 import { and, desc, eq } from 'drizzle-orm';
 /**
  * Chat routes — sessions and messages.
@@ -14,14 +14,13 @@ import { parsePagination, parsePositiveInt } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 /**
  * Verify that a chat session exists and belongs to the given user.
  * Throws ApiError(403) if not found or owned by someone else.
  */
-async function requireOwnedSession(sessionId: number, userId: number): Promise<void> {
-  const db = getDb();
+async function requireOwnedSession(db: Database, sessionId: number, userId: number): Promise<void> {
   const session = await db
     .select({ userId: chatSessions.userId })
     .from(chatSessions)
@@ -39,7 +38,7 @@ app.get('/sessions', authRequired(), async (c) => {
   const includeArchived = c.req.query('includeArchived') === 'true';
   const { limit } = parsePagination(c.req.query('limit'), undefined, 50);
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [eq(chatSessions.userId, userId)];
   if (!includeArchived) {
@@ -64,7 +63,7 @@ const createSessionSchema = z.object({
 
 app.post('/sessions', authRequired(), zValidator('json', createSessionSchema), async (c) => {
   const body = c.req.valid('json');
-  const db = getDb();
+  const db = c.get('db');
 
   const [result] = await db
     .insert(chatSessions)
@@ -94,9 +93,9 @@ app.get('/messages', authRequired(), async (c) => {
     return c.json({ error: '缺少或无效的sessionId参数' }, 400);
   }
 
-  await requireOwnedSession(parsedSessionId, userId);
+  await requireOwnedSession(c.get('db'), parsedSessionId, userId);
 
-  const db = getDb();
+  const db = c.get('db');
   const results = await db
     .select()
     .from(chatMessages)
@@ -136,9 +135,9 @@ app.post('/messages', authRequired(), zValidator('json', createMessageSchema), a
   const body = c.req.valid('json');
   const userId = Number(c.get('userId'));
 
-  await requireOwnedSession(body.sessionId, userId);
+  await requireOwnedSession(c.get('db'), body.sessionId, userId);
 
-  const db = getDb();
+  const db = c.get('db');
   const [result] = await db
     .insert(chatMessages)
     .values({
@@ -193,10 +192,10 @@ app.delete('/sessions/:id', authRequired(), async (c) => {
     return c.json({ error: '无效的会话ID' }, 400);
   }
 
-  await requireOwnedSession(parsedId, userId);
+  await requireOwnedSession(c.get('db'), parsedId, userId);
 
   // Soft-delete by archiving
-  const db = getDb();
+  const db = c.get('db');
   await db
     .update(chatSessions)
     .set({ isArchived: true })

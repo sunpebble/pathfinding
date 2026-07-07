@@ -1,12 +1,11 @@
 /**
  * Health check routes.
  */
-import type { Env } from '../env.js';
-import { getDb } from '@pathfinding/database';
+import type { AppContext } from '../env.js';
 import { sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<AppContext>();
 
 /** GET / — basic liveness probe. */
 app.get('/', (c) => {
@@ -19,7 +18,7 @@ app.get('/', (c) => {
 /** GET /ready — readiness probe with DB connectivity check. */
 app.get('/ready', async (c) => {
   try {
-    const db = getDb();
+    const db = c.get('db');
     await db.execute(sql`SELECT 1`);
   }
   catch {

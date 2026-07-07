@@ -1,5 +1,7 @@
+import type { Database } from '@pathfinding/database';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { cities, getDb, pois } from '@pathfinding/database';
+import { cities, pois } from '@pathfinding/database';
 import { and, eq, gte, inArray, like, or, sql } from 'drizzle-orm';
 /**
  * POI routes — list, get by ID, search, nearby.
@@ -10,7 +12,7 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { escapeLikePattern, parsePagination, parsePositiveInt } from '../lib/params.js';
 import { jsonData, jsonList } from '../lib/response.js';
 
-const app = new Hono();
+const app = new Hono<AppContext>();
 
 /** D13 list parameters — q/cityId/city/category/min_quality validated via Zod. */
 const listPoisQuerySchema = z.object({
@@ -26,8 +28,7 @@ const listPoisQuerySchema = z.object({
  * yields an empty list — callers must return an empty result instead of
  * silently dropping the filter.
  */
-async function findCityIdsByName(cityName: string): Promise<number[]> {
-  const db = getDb();
+async function findCityIdsByName(db: Database, cityName: string): Promise<number[]> {
   const rows = await db
     .select({ id: cities.id })
     .from(cities)
@@ -44,7 +45,7 @@ app.get('/', zValidator('query', listPoisQuerySchema), async (c) => {
     c.req.query('offset'),
   );
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [];
   if (q) {
@@ -54,7 +55,7 @@ app.get('/', zValidator('query', listPoisQuerySchema), async (c) => {
     conditions.push(eq(pois.cityId, cityId));
   }
   if (city) {
-    const cityIds = await findCityIdsByName(city);
+    const cityIds = await findCityIdsByName(db, city);
     if (cityIds.length === 0) {
       return jsonList(c, [], { limit, offset }, 0);
     }
@@ -97,7 +98,7 @@ app.get('/nearby', async (c) => {
     return c.json({ error: '缺少lat/lng参数' }, 400);
   }
 
-  const db = getDb();
+  const db = c.get('db');
 
   // Haversine-based distance calculation (approximate)
   const distanceSql = sql`(
@@ -138,7 +139,7 @@ app.get('/:id', async (c) => {
   const id = parsePositiveInt(c.req.param('id'));
   if (!id)
     return c.json({ error: 'Invalid ID' }, 400);
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db
     .select()

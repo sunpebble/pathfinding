@@ -1,5 +1,5 @@
-import type { AuthVariables } from '../middleware/auth.js';
-import { getDb, itineraries, itineraryLikes } from '@pathfinding/database';
+import type { AppContext } from '../env.js';
+import { itineraries, itineraryLikes } from '@pathfinding/database';
 import { desc, eq, sql } from 'drizzle-orm';
 /**
  * Likes routes — user's liked itineraries.
@@ -9,14 +9,14 @@ import { Hono } from 'hono';
 import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET / — List user's liked itineraries ──────────────
 app.get('/', authRequired(), async (c) => {
   const page = Number.parseInt(c.req.query('page') ?? '1', 10);
   const pageSize = Number.parseInt(c.req.query('pageSize') ?? '20', 10);
 
-  const db = getDb();
+  const db = c.get('db');
   const uid = Number(c.get('userId'));
   const offset = (page - 1) * pageSize;
 

@@ -1,6 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { expenses, getDb, itineraries } from '@pathfinding/database';
+import { expenses, itineraries } from '@pathfinding/database';
 import { and, desc, eq } from 'drizzle-orm';
 /**
  * Expenses routes.
@@ -13,7 +13,7 @@ import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 import { findEditable } from '../services/itinerary-access.service.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET / — Get expenses for an itinerary ──────────────
 app.get('/', authRequired(), async (c) => {
@@ -24,7 +24,7 @@ app.get('/', authRequired(), async (c) => {
     throw new ApiError(400, '缺少itineraryId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const iid = Number(itineraryId);
 
   // Verify the user owns or has access to this itinerary
@@ -66,7 +66,7 @@ app.post('/', authRequired(), zValidator('json', createExpenseSchema), async (c)
   const { itineraryId, amount, category, description, date, currency } = c.req.valid('json');
   const userId = Number(c.get('userId'));
 
-  const db = getDb();
+  const db = c.get('db');
   const editableItinerary = await findEditable(Number(itineraryId), userId);
 
   if (!editableItinerary) {

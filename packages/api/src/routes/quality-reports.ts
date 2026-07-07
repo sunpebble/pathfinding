@@ -1,6 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { dataQualityReports, getDb } from '@pathfinding/database';
+import { dataQualityReports } from '@pathfinding/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 /**
  * Data Quality Reports routes — dashboard quality report management.
@@ -26,7 +26,7 @@ const deleteReportSchema = z.object({
   id: z.number(),
 });
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET / — List quality reports ───────────────────────
 app.get('/', adminRequired(), async (c) => {
@@ -37,7 +37,7 @@ app.get('/', adminRequired(), async (c) => {
     c.req.query('offset'),
   );
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [];
   if (datasetId) {
@@ -79,7 +79,7 @@ app.get('/', adminRequired(), async (c) => {
 app.post('/', adminRequired(), zValidator('json', createReportSchema), async (c) => {
   const { datasetId, reportType, metrics, issues } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(dataQualityReports).values({
     datasetId: datasetId ? Number(datasetId) : 0,
@@ -107,7 +107,7 @@ app.get('/report', adminRequired(), async (c) => {
     throw new ApiError(400, '缺少id参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const report = await db
     .select()
     .from(dataQualityReports)
@@ -125,7 +125,7 @@ app.get('/report', adminRequired(), async (c) => {
 app.delete('/', adminRequired(), zValidator('json', deleteReportSchema), async (c) => {
   const { id } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   await db
     .delete(dataQualityReports)
     .where(eq(dataQualityReports.id, Number(id)));
@@ -135,7 +135,7 @@ app.delete('/', adminRequired(), zValidator('json', deleteReportSchema), async (
 
 // ── GET /summary — Get quality reports summary ─────────
 app.get('/summary', adminRequired(), async (c) => {
-  const db = getDb();
+  const db = c.get('db');
 
   const [totalResult, byTypeResult] = await Promise.all([
     db

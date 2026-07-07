@@ -1,6 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { getDb, trainingDatasets } from '@pathfinding/database';
+import { trainingDatasets } from '@pathfinding/database';
 import { and, desc, eq, like, sql } from 'drizzle-orm';
 /**
  * Training Datasets routes — dashboard training dataset management.
@@ -36,7 +36,7 @@ const updateDatasetSchema = z.object({
   generatedAt: z.string().optional(),
 });
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET / — List training datasets ─────────────────────
 app.get('/', adminRequired(), async (c) => {
@@ -47,7 +47,7 @@ app.get('/', adminRequired(), async (c) => {
     c.req.query('offset'),
   );
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [];
   if (name) {
@@ -90,7 +90,7 @@ app.post('/', adminRequired(), zValidator('json', createDatasetSchema), async (c
   const { name, version, generationParams, status }
     = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(trainingDatasets).values({
     name,
@@ -118,7 +118,7 @@ app.get('/dataset', adminRequired(), async (c) => {
     throw new ApiError(400, '缺少id参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const dataset = await db
     .select()
     .from(trainingDatasets)
@@ -136,7 +136,7 @@ app.get('/dataset', adminRequired(), async (c) => {
 app.delete('/', adminRequired(), zValidator('json', deleteDatasetSchema), async (c) => {
   const { id } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   await db.delete(trainingDatasets).where(eq(trainingDatasets.id, Number(id)));
 
   return jsonOk(c);
@@ -146,7 +146,7 @@ app.delete('/', adminRequired(), zValidator('json', deleteDatasetSchema), async 
 app.patch('/', adminRequired(), zValidator('json', updateDatasetSchema), async (c) => {
   const { id, status } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const datasetId = Number(id);
 
   const updates: Record<string, unknown> = { updatedAt: new Date() };

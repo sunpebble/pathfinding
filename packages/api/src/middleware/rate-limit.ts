@@ -1,3 +1,4 @@
+import type { Database } from '@pathfinding/database';
 /**
  * Database-backed rate limiter using the `rate_limits` table.
  *
@@ -13,7 +14,7 @@
  * ```
  */
 import type { Context, MiddlewareHandler } from 'hono';
-import { getDb, rateLimits } from '@pathfinding/database';
+import { rateLimits } from '@pathfinding/database';
 import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import { createMiddleware } from 'hono/factory';
 import { ApiError } from './error-handler.js';
@@ -108,7 +109,7 @@ interface RateLimitOptions {
 export function rateLimit(options: RateLimitOptions): MiddlewareHandler {
   const { max, windowSec, keyGenerator, memoryOnly } = options;
 
-  return createMiddleware(async (c, next) => {
+  return createMiddleware<{ Variables: { db: Database } }>(async (c, next) => {
     const key = keyGenerator
       ? keyGenerator(c)
       : c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown';
@@ -128,7 +129,7 @@ export function rateLimit(options: RateLimitOptions): MiddlewareHandler {
     }
     else {
       try {
-        const db = getDb();
+        const db = c.get('db');
         const now = new Date();
 
         // Try to find an existing non-expired entry for this key

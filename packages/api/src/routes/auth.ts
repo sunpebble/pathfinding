@@ -1,8 +1,7 @@
 import type { InferSelectModel } from 'drizzle-orm';
-import type { Env } from '../env.js';
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { authAccounts, getDb, users } from '@pathfinding/database';
+import { authAccounts, users } from '@pathfinding/database';
 import { and, eq } from 'drizzle-orm';
 /**
  * Auth routes — login, logout, verify session, current user.
@@ -23,7 +22,7 @@ import {
 } from '../services/auth.service.js';
 import { verifyAppleToken, verifyGoogleToken } from '../services/oauth.service.js';
 
-const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── POST /signin — Email/password sign-in ──────────────
 const signinSchema = z.object({
@@ -35,7 +34,7 @@ const signinSchema = z.object({
 
 app.post('/signin', zValidator('json', signinSchema), async (c) => {
   const { email, password, flow, name } = c.req.valid('json');
-  const db = getDb();
+  const db = c.get('db');
 
   if (flow === 'signUp') {
     // Check if user exists
@@ -178,7 +177,7 @@ const socialLoginSchema = z.object({
 
 app.post('/social', zValidator('json', socialLoginSchema), async (c) => {
   const { provider, idToken, name } = c.req.valid('json');
-  const db = getDb();
+  const db = c.get('db');
 
   let providerAccountId: string;
   let email: string | undefined;
@@ -284,7 +283,7 @@ app.get('/verify', authRequired(), async (c) => {
 // ── GET /me — Get current user info ────────────────────
 app.get('/me', authRequired(), async (c) => {
   const userId = c.get('userId');
-  const db = getDb();
+  const db = c.get('db');
 
   const userRows = await db
     .select()

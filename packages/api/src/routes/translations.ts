@@ -1,8 +1,6 @@
-import type { Env } from '../env.js';
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  getDb,
   offlineTranslationPacks,
   savedTranslations,
   translationPhrases,
@@ -20,7 +18,7 @@ import { escapeLikePattern } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 const translateTextSchema = z.object({
   text: z.string().trim().min(1),
@@ -137,7 +135,7 @@ app.post('/photo', () => {
 app.get('/categories', async (c) => {
   const sourceLang = c.req.query('sourceLang');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [];
   if (sourceLang) {
@@ -168,7 +166,7 @@ app.get('/phrases', async (c) => {
     throw new ApiError(400, '缺少category参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [eq(translationPhrases.category, category)];
   if (sourceLang) {
@@ -195,7 +193,7 @@ app.get('/phrases/search', async (c) => {
     throw new ApiError(400, '缺少查询参数 q');
   }
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [like(translationPhrases.sourceText, `%${escapeLikePattern(query)}%`)];
   if (category) {
@@ -222,7 +220,7 @@ app.get('/saved', authRequired(), async (c) => {
   const limit = Number.parseInt(c.req.query('limit') ?? '50', 10);
   const offset = Number.parseInt(c.req.query('offset') ?? '0', 10);
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [eq(savedTranslations.userId, userId)];
   if (translationType) {
@@ -255,7 +253,7 @@ const saveTranslationSchema = z.object({
 app.post('/saved', authRequired(), zValidator('json', saveTranslationSchema), async (c) => {
   const { sourceText, sourceLang, targetText, targetLang, translationType } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(savedTranslations).values({
     userId: Number(c.get('userId')),
@@ -278,7 +276,7 @@ app.delete('/saved', authRequired(), zValidator('json', deleteTranslationSchema)
   const { id } = c.req.valid('json');
   const userId = Number(c.get('userId'));
 
-  const db = getDb();
+  const db = c.get('db');
 
   // Verify ownership before deleting
   const existing = await db
@@ -310,7 +308,7 @@ app.post('/saved/favorite', authRequired(), zValidator('json', favoriteTranslati
   const { id } = c.req.valid('json');
   const userId = Number(c.get('userId'));
 
-  const db = getDb();
+  const db = c.get('db');
 
   // Verify ownership before toggling favorite
   const existing = await db
@@ -342,7 +340,7 @@ app.get('/packs', async (c) => {
   const sourceLang = c.req.query('sourceLang');
   const targetLang = c.req.query('targetLang');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [eq(offlineTranslationPacks.isActive, true)];
   if (sourceLang) {

@@ -1,6 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { crawlJobs, getDb } from '@pathfinding/database';
+import { crawlJobs } from '@pathfinding/database';
 import { and, desc, eq } from 'drizzle-orm';
 /**
  * Crawl Jobs routes — dashboard crawl job management.
@@ -64,7 +64,7 @@ const ingestStatsQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(90).default(7),
 });
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET / — List crawl jobs ────────────────────────────
 app.get('/', adminRequired(), async (c) => {
@@ -72,7 +72,7 @@ app.get('/', adminRequired(), async (c) => {
   const platform = c.req.query('platform');
   const { limit } = parsePagination(c.req.query('limit'), undefined, 50);
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [];
   if (status) {
@@ -98,7 +98,7 @@ app.get('/', adminRequired(), async (c) => {
 app.post('/', adminRequired(), zValidator('json', createJobSchema), async (c) => {
   const { platform, jobType, config } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(crawlJobs).values({
     platform,
@@ -125,7 +125,7 @@ app.get('/job', adminRequired(), async (c) => {
     throw new ApiError(400, '缺少id参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const job = await db
     .select()
     .from(crawlJobs)
@@ -143,7 +143,7 @@ app.get('/job', adminRequired(), async (c) => {
 app.delete('/', adminRequired(), zValidator('json', deleteJobSchema), async (c) => {
   const { id } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   await db.delete(crawlJobs).where(eq(crawlJobs.id, Number(id)));
 
   return jsonOk(c);
@@ -153,7 +153,7 @@ app.delete('/', adminRequired(), zValidator('json', deleteJobSchema), async (c) 
 app.post('/start', adminRequired(), zValidator('json', startJobSchema), async (c) => {
   const { id } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const jobId = Number(id);
 
   await db
@@ -174,7 +174,7 @@ app.post('/start', adminRequired(), zValidator('json', startJobSchema), async (c
 app.post('/complete', adminRequired(), zValidator('json', completeJobSchema), async (c) => {
   const { id, statistics } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const jobId = Number(id);
 
   await db
@@ -200,7 +200,7 @@ app.post('/complete', adminRequired(), zValidator('json', completeJobSchema), as
 app.post('/fail', adminRequired(), zValidator('json', failJobSchema), async (c) => {
   const { id, errorMessage, statistics } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const jobId = Number(id);
 
   await db

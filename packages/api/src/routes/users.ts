@@ -1,7 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  getDb,
   profiles,
   userFollows,
   users,
@@ -17,14 +16,14 @@ import { parsePagination, parsePositiveInt } from '../lib/params.js';
 import { jsonData, jsonList, jsonOk } from '../lib/response.js';
 import { authRequired } from '../middleware/auth.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET /:id — Get user profile ────────────────────────
 app.get('/:id', async (c) => {
   const id = parsePositiveInt(c.req.param('id'));
   if (!id)
     return c.json({ error: 'Invalid ID' }, 400);
-  const db = getDb();
+  const db = c.get('db');
 
   const userRows = await db
     .select()
@@ -83,7 +82,7 @@ app.patch(
     }
 
     const body = c.req.valid('json');
-    const db = getDb();
+    const db = c.get('db');
 
     // Upsert profile within a transaction to prevent race conditions
     await db.transaction(async (tx) => {
@@ -143,7 +142,7 @@ app.get('/:id/followers', async (c) => {
     c.req.query('offset'),
   );
 
-  const db = getDb();
+  const db = c.get('db');
 
   const [results, countResult] = await Promise.all([
     db
@@ -171,7 +170,7 @@ app.get('/:id/following', async (c) => {
     c.req.query('offset'),
   );
 
-  const db = getDb();
+  const db = c.get('db');
 
   const [results, countResult] = await Promise.all([
     db
@@ -201,7 +200,7 @@ app.post(
   async (c) => {
     const { followingId } = c.req.valid('json');
     const followerId = Number(c.get('userId'));
-    const db = getDb();
+    const db = c.get('db');
 
     // Prevent self-follow
     if (followerId === followingId) {
@@ -254,7 +253,7 @@ app.delete(
   async (c) => {
     const { followingId } = c.req.valid('json');
     const followerId = Number(c.get('userId'));
-    const db = getDb();
+    const db = c.get('db');
 
     await db.transaction(async (tx) => {
       await tx
@@ -293,7 +292,7 @@ app.get('/:id/follow/status', async (c) => {
     return c.json({ error: '缺少followingId参数' }, 400);
   }
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db
     .select()

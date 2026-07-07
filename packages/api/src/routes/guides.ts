@@ -1,7 +1,8 @@
+import type { Database } from '@pathfinding/database';
 import type { TravelGuideResponseDto } from '@pathfinding/types';
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { getDb, guideDestinations, travelGuides } from '@pathfinding/database';
+import { guideDestinations, travelGuides } from '@pathfinding/database';
 import { toResponseDto } from '@pathfinding/guide-shape';
 import { and, asc, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
 /**
@@ -16,7 +17,7 @@ import { authRequired } from '../middleware/auth.js';
 import { runFullAnalysis } from '../services/backfill.service.js';
 import { applyPoiCoordinateFix, createUserGuide, updateUserGuide } from '../services/guide-writer.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 function parseGuideOrder(value: string | undefined): 'asc' | 'desc' {
   return value === 'asc' ? 'asc' : 'desc';
@@ -27,8 +28,7 @@ function parseGuideOrder(value: string | undefined): 'asc' | 'desc' {
  * guide_destinations auxiliary table (D13, performance rule: fetch IDs from
  * the lightweight table first, then batch-fetch the heavy rows).
  */
-async function findGuideIdsByDestinations(names: string[]): Promise<number[]> {
-  const db = getDb();
+async function findGuideIdsByDestinations(db: Database, names: string[]): Promise<number[]> {
   const rows = await db
     .select({ guideId: guideDestinations.guideId })
     .from(guideDestinations)
@@ -75,7 +75,7 @@ app.get('/', async (c) => {
       ? order === 'asc' ? asc(travelGuides.qualityScore) : desc(travelGuides.qualityScore)
       : desc(travelGuides.createdAt);
 
-  const db = getDb();
+  const db = c.get('db');
 
   const conditions = [];
   if (platform) {
@@ -91,7 +91,7 @@ app.get('/', async (c) => {
     conditions.push(lte(travelGuides.qualityScore, maxQuality));
   }
   if (destinationNames.length > 0) {
-    const guideIds = await findGuideIdsByDestinations(destinationNames);
+    const guideIds = await findGuideIdsByDestinations(db, destinationNames);
     if (guideIds.length === 0) {
       return jsonList(c, [], { limit, offset }, 0);
     }
@@ -123,7 +123,7 @@ app.get('/search', async (c) => {
   const destination = c.req.query('destination');
   const { limit } = parsePagination(c.req.query('limit'), undefined, 30);
 
-  const db = getDb();
+  const db = c.get('db');
 
   let whereClause;
   if (q) {
@@ -152,7 +152,7 @@ app.get('/search', async (c) => {
 // ── GET /destinations — Popular destinations ───────────
 app.get('/destinations', async (c) => {
   const { limit } = parsePagination(c.req.query('limit'), undefined, 10);
-  const db = getDb();
+  const db = c.get('db');
 
   // Use JSON_TABLE or a simpler aggregation depending on MySQL/TiDB version.
   // Fallback: fetch guides and aggregate in JS.
@@ -185,8 +185,7 @@ app.get('/destinations', async (c) => {
  * Fetch a guide by ID and return its client representation.
  * Returns `null` if not found.
  */
-async function findGuideById(id: number): Promise<TravelGuideResponseDto | null> {
-  const db = getDb();
+async function findGuideById(db: Database, id: number): Promise<TravelGuideResponseDto | null> {
   const result = await db
     .select()
     .from(travelGuides)
@@ -202,7 +201,7 @@ app.get('/by-id', async (c) => {
   if (!id)
     return c.json({ error: '缺少id参数' }, 400);
 
-  const guide = await findGuideById(id);
+  const guide = await findGuideById(c.get('db'), id);
   if (!guide) {
     return c.json({ error: '攻略不存在' }, 404);
   }
@@ -212,7 +211,7 @@ app.get('/by-id', async (c) => {
 
 // ── GET /stats — Guide statistics ──────────────────────
 app.get('/stats', async (c) => {
-  const db = getDb();
+  const db = c.get('db');
 
   const countResult = await db
     .select({
@@ -252,7 +251,7 @@ app.get('/:id', async (c) => {
   if (!id)
     return c.json({ error: 'Invalid ID' }, 400);
 
-  const guide = await findGuideById(id);
+  const guide = await findGuideById(c.get('db'), id);
   if (!guide) {
     return c.json({ error: '攻略不存在' }, 404);
   }
@@ -280,7 +279,7 @@ const createGuideSchema = z.object({
 
 app.post('/', authRequired(), zValidator('json', createGuideSchema), async (c) => {
   const body = c.req.valid('json');
-  const db = getDb();
+  const db = c.get('db');
 
   const id = await createUserGuide(db, {
     platform: body.platform,
@@ -318,7 +317,7 @@ app.patch('/:id', authRequired(), zValidator('json', updateGuideSchema), async (
   if (!id)
     return c.json({ error: 'Invalid ID' }, 400);
   const body = c.req.valid('json');
-  const db = getDb();
+  const db = c.get('db');
 
   const updates: Record<string, unknown> = {};
   if (body.title !== undefined)
@@ -347,7 +346,7 @@ app.patch('/:id/poi-coordinates', authRequired(), zValidator('json', updateGuide
   if (!guideId) {
     return c.json({ error: 'Invalid ID' }, 400);
   }
-  const db = getDb();
+  const db = c.get('db');
   const outcome = await applyPoiCoordinateFix(db, guideId, {
     dayNumber: body.dayNumber,
     poiIndex: body.poiIndex,

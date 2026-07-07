@@ -1,8 +1,7 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
 import {
   commentReports,
-  getDb,
   guideCommentLikes,
   guideComments,
 } from '@pathfinding/database';
@@ -17,7 +16,7 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET / — List comments for a guide ──────────────────
 app.get('/', async (c) => {
@@ -33,7 +32,7 @@ app.get('/', async (c) => {
     throw new ApiError(400, '缺少itineraryId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const guideId = Number(itineraryId);
   const offset = (page - 1) * pageSize;
 
@@ -86,7 +85,7 @@ app.post('/', authRequired(), zValidator('json', createCommentSchema), async (c)
   const userId = c.get('userId');
   const { itineraryId, content, parentId } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const guideId = Number(itineraryId);
   const userIdNum = Number(userId);
 
@@ -131,7 +130,7 @@ app.patch('/', authRequired(), zValidator('json', updateCommentSchema), async (c
   const userId = c.get('userId');
   const { id, content } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const commentId = Number(id);
 
   // Verify ownership
@@ -168,7 +167,7 @@ app.delete('/', authRequired(), zValidator('json', deleteCommentSchema), async (
   const userId = c.get('userId');
   const { id } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const commentId = Number(id);
 
   // Soft-delete: mark as deleted
@@ -193,7 +192,7 @@ app.get('/replies', async (c) => {
     throw new ApiError(400, '缺少commentId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const parentId = Number(commentId);
 
   const replies = await db
@@ -219,7 +218,7 @@ app.post('/like', authRequired(), zValidator('json', likeCommentSchema), async (
   const userId = c.get('userId');
   const { commentId } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const cid = Number(commentId);
   const uid = Number(userId);
 
@@ -289,7 +288,7 @@ app.post('/report', authRequired(), zValidator('json', reportCommentSchema), asy
   const userId = c.get('userId');
   const { commentId, reason, description } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(commentReports).values({
     commentId: Number(commentId),

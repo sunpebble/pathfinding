@@ -1,7 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
 import {
-  getDb,
   itineraryCollaborators,
   users,
 } from '@pathfinding/database';
@@ -13,7 +12,7 @@ import { parsePositiveInt } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { findAccessible, findOwned } from '../services/itinerary-access.service.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 function isDuplicateError(error: unknown) {
   return error instanceof Error
@@ -55,7 +54,7 @@ app.get('/', authRequired(), async (c) => {
 
   const accessibleItinerary = accessResult.itinerary;
 
-  const db = getDb();
+  const db = c.get('db');
   const ownerRows = await db
     .select()
     .from(users)
@@ -113,7 +112,7 @@ app.post(
       return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
-    const db = getDb();
+    const db = c.get('db');
     const matchedUsers = await db
       .select()
       .from(users)
@@ -199,7 +198,7 @@ app.patch(
       return c.json({ error: '无效的协作者ID' }, 400);
     }
 
-    const db = getDb();
+    const db = c.get('db');
     const collaboratorRows = await db
       .select()
       .from(itineraryCollaborators)
@@ -242,7 +241,7 @@ app.delete('/:id', authRequired(), async (c) => {
     return c.json({ error: '无效的协作者ID' }, 400);
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const collaboratorRows = await db
     .select()
     .from(itineraryCollaborators)

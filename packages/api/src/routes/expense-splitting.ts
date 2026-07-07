@@ -1,8 +1,7 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
 import {
   expenseParticipants,
-  getDb,
   settlements,
   sharedExpenses,
   tripMembers,
@@ -18,7 +17,7 @@ import { parsePositiveInt } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ═══════════════════════════════════════════════════════════
 // Trip Members
@@ -32,7 +31,7 @@ app.get('/members', authRequired(), async (c) => {
     throw new ApiError(400, '缺少itineraryId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const iid = Number(itineraryId);
 
   const members = await db
@@ -54,7 +53,7 @@ const createMemberSchema = z.object({
 app.post('/members', authRequired(), zValidator('json', createMemberSchema), async (c) => {
   const { itineraryId, name, userId, isRegistered } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(tripMembers).values({
     itineraryId: Number(itineraryId),
@@ -74,7 +73,7 @@ app.delete('/members/:id', authRequired(), async (c) => {
     throw new ApiError(400, '无效的成员ID');
   }
 
-  const db = getDb();
+  const db = c.get('db');
 
   const existing = await db
     .select()
@@ -103,7 +102,7 @@ app.get('/expenses', authRequired(), async (c) => {
     throw new ApiError(400, '缺少itineraryId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const iid = Number(itineraryId);
 
   const expenses = await db
@@ -155,7 +154,7 @@ app.post('/expenses', authRequired(), zValidator('json', createExpenseSchema), a
     participantMemberIds,
   } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const resolvedSplitType = splitType ?? 'equal';
 
   // Create the shared expense
@@ -199,7 +198,7 @@ app.delete('/expenses/:id', authRequired(), async (c) => {
     throw new ApiError(400, '无效的费用ID');
   }
 
-  const db = getDb();
+  const db = c.get('db');
 
   const existing = await db
     .select()
@@ -230,7 +229,7 @@ app.get('/settlements', authRequired(), async (c) => {
     throw new ApiError(400, '缺少itineraryId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const iid = Number(itineraryId);
 
   const items = await db
@@ -253,7 +252,7 @@ const createSettlementSchema = z.object({
 app.post('/settlements', authRequired(), zValidator('json', createSettlementSchema), async (c) => {
   const { itineraryId, fromMemberId, toMemberId, amount, currency } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
 
   const result = await db.insert(settlements).values({
     itineraryId: Number(itineraryId),
@@ -274,7 +273,7 @@ app.patch('/settlements/:id/settle', authRequired(), async (c) => {
     throw new ApiError(400, '无效的结算ID');
   }
 
-  const db = getDb();
+  const db = c.get('db');
 
   const existing = await db
     .select()
@@ -309,7 +308,7 @@ app.get('/balance', authRequired(), async (c) => {
     throw new ApiError(400, '缺少itineraryId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const iid = Number(itineraryId);
 
   // Fetch all members

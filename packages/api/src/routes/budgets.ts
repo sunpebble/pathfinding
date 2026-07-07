@@ -1,6 +1,6 @@
-import type { AuthVariables } from '../middleware/auth.js';
+import type { AppContext } from '../env.js';
 import { zValidator } from '@hono/zod-validator';
-import { getDb, itineraries, itineraryBudgets } from '@pathfinding/database';
+import { itineraries, itineraryBudgets } from '@pathfinding/database';
 import { and, eq } from 'drizzle-orm';
 /**
  * Budgets & Expenses routes.
@@ -12,7 +12,7 @@ import { convertKeysToSnakeCase } from '../lib/case-converter.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<AppContext>();
 
 // ── GET /budgets — Get budget for an itinerary ─────────
 app.get('/', authRequired(), async (c) => {
@@ -23,7 +23,7 @@ app.get('/', authRequired(), async (c) => {
     throw new ApiError(400, '缺少itineraryId参数');
   }
 
-  const db = getDb();
+  const db = c.get('db');
   const iid = Number(itineraryId);
 
   // Verify the user owns this itinerary
@@ -62,7 +62,7 @@ const createBudgetSchema = z.object({
 app.post('/', authRequired(), zValidator('json', createBudgetSchema), async (c) => {
   const { itineraryId, totalBudget, currency, categoryBudgets } = c.req.valid('json');
 
-  const db = getDb();
+  const db = c.get('db');
   const iid = Number(itineraryId);
   const uid = Number(c.get('userId'));
 
