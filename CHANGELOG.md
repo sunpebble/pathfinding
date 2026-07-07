@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/sunpebble/pathfinding/compare/v1.2.0...v1.2.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* **ci:** restore manual iOS signing for TestFlight archive ([713906f](https://github.com/sunpebble/pathfinding/commit/713906fa14e985836bce47d925376742ee0bdc02))
+
 ## [1.2.0](https://github.com/sunpebble/pathfinding/compare/v1.1.0...v1.2.0) (2026-07-06)
 
 
