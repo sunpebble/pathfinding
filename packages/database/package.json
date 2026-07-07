@@ -14,12 +14,10 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "dev:ensure-db": "node scripts/ensure-dev-db.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "drizzle-orm": "^0.44.0",
-    "mysql2": "^3.22.5"
+    "drizzle-orm": "^0.44.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20260707.1",
