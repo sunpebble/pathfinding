@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/sunpebble/pathfinding/compare/v1.2.3...v1.2.4) (2026-07-07)
+
+
+### Bug Fixes
+
+* **ios:** declare ITSAppUsesNonExemptEncryption to skip export compliance prompt ([a3a4018](https://github.com/sunpebble/pathfinding/commit/a3a4018c0cea4da4474623286770b738cd13d82e))
+
 ## [1.2.3](https://github.com/sunpebble/pathfinding/compare/v1.2.2...v1.2.3) (2026-07-07)
 
 
