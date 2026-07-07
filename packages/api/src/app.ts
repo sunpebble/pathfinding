@@ -88,6 +88,9 @@ export function createApp() {
   // Security headers
   app.use('*', securityHeaders());
 
+  // Per-request db injection (D1 binding → Drizzle instance)
+  app.use('*', dbMiddleware);
+
   // Rate limiting for auth routes (stricter, DB-backed)
   app.use('/api/auth/*', rateLimit({ max: 20, windowSec: 60 }));
 
@@ -99,9 +102,6 @@ export function createApp() {
 
   // Global error handler
   app.onError(errorHandler);
-
-  // Per-request db injection (D1 binding → Drizzle instance)
-  app.use('*', dbMiddleware);
 
   // ── Routes ─────────────────────────────────────────────
 
