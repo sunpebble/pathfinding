@@ -66,6 +66,8 @@ export default antfu({
     // Allow non-component exports in files with components
     'react-refresh/only-export-components': 'off',
 
+    'react/set-state-in-effect': 'off',
+
     // Stricter TypeScript rules (non-type-aware)
     'ts/no-explicit-any': 'error',
   },
