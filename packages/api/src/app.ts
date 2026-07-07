@@ -1,3 +1,4 @@
+import type { Env, Vars } from './env.js';
 import { flue } from '@flue/runtime/routing';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -7,6 +8,7 @@ import { logger as honoLogger } from 'hono/logger';
  */
 import { registerDeepSeekProvider } from './lib/deepseek.js';
 import { createLogger } from './lib/logger.js';
+import { dbMiddleware } from './middleware/db.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { rateLimit } from './middleware/rate-limit.js';
 import { securityHeaders } from './middleware/security-headers.js';
@@ -69,7 +71,7 @@ const log = createLogger('api');
 export function createApp() {
   registerDeepSeekProvider();
 
-  const app = new Hono();
+  const app = new Hono<{ Bindings: Env; Variables: Vars }>();
   const isProduction = process.env.NODE_ENV === 'production';
   const corsOrigin = process.env.CORS_ORIGIN ?? (isProduction ? '' : '*');
 
@@ -105,6 +107,9 @@ export function createApp() {
 
   // Global error handler
   app.onError(errorHandler);
+
+  // Per-request db injection (D1 binding → Drizzle instance)
+  app.use('*', dbMiddleware);
 
   // ── Routes ─────────────────────────────────────────────
 
