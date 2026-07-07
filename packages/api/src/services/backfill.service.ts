@@ -1,3 +1,4 @@
+import type { Database } from '@pathfinding/database';
 /**
  * Backfill gap analysis (D9) — every aggregate is computed at the database
  * level over the FULL table (no limit(500)/limit(1000) truncation). Only the
@@ -5,7 +6,7 @@
  * reflect the whole dataset.
  */
 import type { SQL } from 'drizzle-orm';
-import { cities, crawlJobs, getDb, guideDestinations, travelGuides } from '@pathfinding/database';
+import { cities, crawlJobs, guideDestinations, travelGuides } from '@pathfinding/database';
 import { asc, desc, gte, notExists, sql } from 'drizzle-orm';
 
 const BACKFILLABLE_FIELDS = [
@@ -74,9 +75,7 @@ export interface BackfillAnalysis {
 /**
  * Top-N guides with the most missing fields, filtered and ranked in SQL.
  */
-export async function analyzeFieldGaps(limit = 100): Promise<FieldGap[]> {
-  const db = getDb();
-
+export async function analyzeFieldGaps(db: Database, limit = 100): Promise<FieldGap[]> {
   const rows = await db
     .select({
       guideId: travelGuides.id,
@@ -111,9 +110,7 @@ export async function analyzeFieldGaps(limit = 100): Promise<FieldGap[]> {
 /**
  * Full-table field gap aggregation (single COUNT/SUM query, no row fetch).
  */
-export async function summarizeFieldGaps(): Promise<FieldGapSummary> {
-  const db = getDb();
-
+export async function summarizeFieldGaps(db: Database): Promise<FieldGapSummary> {
   const [row] = await db
     .select({
       totalGuides: sql<number>`COUNT(*)`,
@@ -149,10 +146,9 @@ export async function summarizeFieldGaps(): Promise<FieldGapSummary> {
  * bounded by DESTINATION_GAP_LIST_LIMIT.
  */
 export async function analyzeDestinationGaps(
+  db: Database,
   limit = DESTINATION_GAP_LIST_LIMIT,
 ): Promise<{ gaps: DestinationGap[]; total: number }> {
-  const db = getDb();
-
   const coveredSubquery = db
     .select({ one: sql`1` })
     .from(guideDestinations)
@@ -182,10 +178,10 @@ export async function analyzeDestinationGaps(
 }
 
 export async function generateBackfillJobs(
+  db: Database,
   fieldGapGuideIds?: number[],
   destinationGapCities?: string[],
 ): Promise<{ jobsCreated: number }> {
-  const db = getDb();
   let jobsCreated = 0;
 
   if (fieldGapGuideIds && fieldGapGuideIds.length > 0) {
@@ -225,10 +221,10 @@ export async function generateBackfillJobs(
   return { jobsCreated };
 }
 
-export async function runFullAnalysis(limit = 100): Promise<BackfillAnalysis> {
-  const fieldGaps = await analyzeFieldGaps(limit);
-  const fieldSummary = await summarizeFieldGaps();
-  const { gaps: destinationGaps, total: totalDestinationGaps } = await analyzeDestinationGaps();
+export async function runFullAnalysis(db: Database, limit = 100): Promise<BackfillAnalysis> {
+  const fieldGaps = await analyzeFieldGaps(db, limit);
+  const fieldSummary = await summarizeFieldGaps(db);
+  const { gaps: destinationGaps, total: totalDestinationGaps } = await analyzeDestinationGaps(db);
 
   return {
     fieldGaps,
@@ -269,9 +265,7 @@ function formatLocalDate(date: Date): string {
  * by crawled_at for rows whose crawl day differs from their creation day
  * (i.e. genuine refreshes, not initial imports).
  */
-export async function computeIngestStats(days: number): Promise<IngestStats> {
-  const db = getDb();
-
+export async function computeIngestStats(db: Database, days: number): Promise<IngestStats> {
   const since = new Date();
   since.setHours(0, 0, 0, 0);
   since.setDate(since.getDate() - (days - 1));
@@ -305,7 +299,7 @@ export async function computeIngestStats(days: number): Promise<IngestStats> {
     });
   }
 
-  const summary = await summarizeFieldGaps();
+  const summary = await summarizeFieldGaps(db);
   const fieldFillRates = Object.fromEntries(
     BACKFILLABLE_FIELDS.map((field) => {
       if (summary.totalGuides === 0) {

@@ -134,7 +134,7 @@ app.get('/:id', authOptional(), async (c) => {
       throw new ApiError(401, '需要授权令牌');
     }
 
-    const access = await findAccessible(itinerary.id, Number.parseInt(authUserId, 10));
+    const access = await findAccessible(db, itinerary.id, Number.parseInt(authUserId, 10));
     if (!access) {
       return c.json({ error: '行程不存在或无权访问' }, 403);
     }
@@ -313,7 +313,7 @@ app.post('/:id/days', authRequired(), zValidator('json', createDaySchema), async
     return c.json({ error: '无效的行程ID' }, 400);
   }
 
-  const editableItinerary = await findEditable(itineraryId, authUserId);
+  const editableItinerary = await findEditable(db, itineraryId, authUserId);
   if (!editableItinerary) {
     return c.json({ error: '行程不存在或无权访问' }, 403);
   }
@@ -359,12 +359,12 @@ app.post(
       return c.json({ error: '无效的行程项目路径' }, 400);
     }
 
-    const editableItinerary = await findEditable(itineraryId, authUserId);
+    const editableItinerary = await findEditable(db, itineraryId, authUserId);
     if (!editableItinerary) {
       return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
-    const scopedDay = await findScopedDay(itineraryId, dayId);
+    const scopedDay = await findScopedDay(db, itineraryId, dayId);
     if (!scopedDay) {
       return c.json({ error: '行程日不存在' }, 404);
     }
@@ -408,6 +408,7 @@ app.patch(
     const dayId = parsePositiveInt(c.req.param('dayId'));
     const authUserId = parsePositiveInt(c.get('userId'));
     const body = c.req.valid('json');
+    const db = c.get('db');
 
     if (!authUserId) {
       return c.json({ error: '无效的认证用户' }, 401);
@@ -417,22 +418,21 @@ app.patch(
       return c.json({ error: '无效的行程项目路径' }, 400);
     }
 
-    const editableItinerary = await findEditable(itineraryId, authUserId);
+    const editableItinerary = await findEditable(db, itineraryId, authUserId);
     if (!editableItinerary) {
       return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
-    const scopedDay = await findScopedDay(itineraryId, dayId);
+    const scopedDay = await findScopedDay(db, itineraryId, dayId);
     if (!scopedDay) {
       return c.json({ error: '行程日不存在' }, 404);
     }
 
-    const scopedItems = await findScopedItems(dayId, body.itemIds);
+    const scopedItems = await findScopedItems(db, dayId, body.itemIds);
     if (scopedItems.length !== body.itemIds.length) {
       return c.json({ error: '一个或多个行程项目未找到' }, 404);
     }
 
-    const db = c.get('db');
     await db.transaction(async (tx) => {
       await Promise.all(
         body.itemIds.map((itemId, orderIndex) => tx
@@ -457,6 +457,7 @@ app.patch(
     const itemId = parsePositiveInt(c.req.param('itemId'));
     const authUserId = parsePositiveInt(c.get('userId'));
     const body = c.req.valid('json');
+    const db = c.get('db');
 
     if (!authUserId) {
       return c.json({ error: '无效的认证用户' }, 401);
@@ -466,17 +467,17 @@ app.patch(
       return c.json({ error: '无效的行程项目路径' }, 400);
     }
 
-    const editableItinerary = await findEditable(itineraryId, authUserId);
+    const editableItinerary = await findEditable(db, itineraryId, authUserId);
     if (!editableItinerary) {
       return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
-    const scopedDay = await findScopedDay(itineraryId, dayId);
+    const scopedDay = await findScopedDay(db, itineraryId, dayId);
     if (!scopedDay) {
       return c.json({ error: '行程日不存在' }, 404);
     }
 
-    const scopedItem = await findScopedItem(dayId, itemId);
+    const scopedItem = await findScopedItem(db, dayId, itemId);
     if (!scopedItem) {
       return c.json({ error: '行程项目不存在' }, 404);
     }
@@ -499,7 +500,6 @@ app.patch(
       return c.json({ error: '没有需要更新的字段' }, 400);
     }
 
-    const db = c.get('db');
     await db
       .update(itineraryItems)
       .set(updates)
@@ -515,6 +515,7 @@ app.delete('/:id/days/:dayId/items/:itemId', authRequired(), async (c) => {
   const dayId = parsePositiveInt(c.req.param('dayId'));
   const itemId = parsePositiveInt(c.req.param('itemId'));
   const authUserId = parsePositiveInt(c.get('userId'));
+  const db = c.get('db');
 
   if (!authUserId) {
     return c.json({ error: '无效的认证用户' }, 401);
@@ -524,22 +525,21 @@ app.delete('/:id/days/:dayId/items/:itemId', authRequired(), async (c) => {
     return c.json({ error: '无效的行程项目路径' }, 400);
   }
 
-  const editableItinerary = await findEditable(itineraryId, authUserId);
+  const editableItinerary = await findEditable(db, itineraryId, authUserId);
   if (!editableItinerary) {
     return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
-  const scopedDay = await findScopedDay(itineraryId, dayId);
+  const scopedDay = await findScopedDay(db, itineraryId, dayId);
   if (!scopedDay) {
     return c.json({ error: '行程日不存在' }, 404);
   }
 
-  const scopedItem = await findScopedItem(dayId, itemId);
+  const scopedItem = await findScopedItem(db, dayId, itemId);
   if (!scopedItem) {
     return c.json({ error: '行程项目不存在' }, 404);
   }
 
-  const db = c.get('db');
   await db.delete(itineraryItems).where(eq(itineraryItems.id, itemId));
 
   const itinerary = await getItineraryDto(db, itineraryId);
@@ -550,6 +550,7 @@ app.delete('/:id/days/:dayId', authRequired(), async (c) => {
   const itineraryId = parsePositiveInt(c.req.param('id'));
   const dayId = parsePositiveInt(c.req.param('dayId'));
   const authUserId = parsePositiveInt(c.get('userId'));
+  const db = c.get('db');
 
   if (!authUserId) {
     return c.json({ error: '无效的认证用户' }, 401);
@@ -559,17 +560,16 @@ app.delete('/:id/days/:dayId', authRequired(), async (c) => {
     return c.json({ error: '无效的行程日路径' }, 400);
   }
 
-  const editableItinerary = await findEditable(itineraryId, authUserId);
+  const editableItinerary = await findEditable(db, itineraryId, authUserId);
   if (!editableItinerary) {
     return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
-  const scopedDay = await findScopedDay(itineraryId, dayId);
+  const scopedDay = await findScopedDay(db, itineraryId, dayId);
   if (!scopedDay) {
     return c.json({ error: '行程日不存在' }, 404);
   }
 
-  const db = c.get('db');
   await db.transaction(async (tx) => {
     await tx.delete(itineraryItems).where(eq(itineraryItems.dayId, dayId));
     await tx.delete(itineraryDays).where(eq(itineraryDays.id, dayId));

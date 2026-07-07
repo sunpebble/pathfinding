@@ -1,3 +1,4 @@
+import type { Database } from '@pathfinding/database';
 import type { JWTPayload } from 'jose';
 /**
  * JWT-based authentication middleware.
@@ -14,7 +15,7 @@ import type { JWTPayload } from 'jose';
  * database. This enables server-side token revocation on logout.
  * Tokens without `sid` (legacy) remain valid but cannot be revoked.
  */
-import type { Env } from '../env.js';
+import type { Env, Vars } from '../env.js';
 import { createMiddleware } from 'hono/factory';
 import { createLogger } from '../lib/logger.js';
 import { isSessionValid, verifyToken } from '../services/auth.service.js';
@@ -43,10 +44,10 @@ function extractToken(authHeader: string | undefined): string | null {
  * If the JWT has no `sid` claim (legacy token) we skip the check so
  * existing tokens aren't immediately invalidated.
  */
-async function verifySession(payload: Record<string, unknown>): Promise<void> {
+async function verifySession(db: Database, payload: Record<string, unknown>): Promise<void> {
   const sid = payload.sid;
   if (typeof sid === 'string') {
-    const valid = await isSessionValid(sid);
+    const valid = await isSessionValid(db, sid);
     if (!valid) {
       throw new ApiError(401, '会话已失效，请重新登录');
     }
@@ -60,12 +61,14 @@ async function verifySession(payload: Record<string, unknown>): Promise<void> {
  * the token extraction → JWT verification → session check → error
  * handling pipeline.
  *
+ * @param db         Drizzle 数据库实例（用于服务端会话校验）。
  * @param authHeader 请求的 `Authorization` 头部（可为空）。
  * @param jwtSecret  JWT 签名密钥（来自请求级 `c.env.JWT_SECRET`）。
  * @returns The verified JWT payload and the user ID.
  * @throws ApiError on missing/invalid tokens or misconfigured secrets.
  */
 async function requireValidToken(
+  db: Database,
   authHeader: string | undefined,
   jwtSecret: string,
 ): Promise<{ payload: JWTPayload; userId: string }> {
@@ -87,7 +90,7 @@ async function requireValidToken(
     }
 
     // Verify session hasn't been revoked
-    await verifySession(payload);
+    await verifySession(db, payload);
 
     return { payload, userId };
   }
@@ -108,9 +111,10 @@ async function requireValidToken(
  * Require a valid JWT. Returns 401 if missing / invalid.
  */
 export function authRequired() {
-  return createMiddleware<{ Bindings: Env; Variables: AuthVariables }>(
+  return createMiddleware<{ Bindings: Env; Variables: AuthVariables & Vars }>(
     async (c, next) => {
-      const { userId } = await requireValidToken(c.req.header('Authorization'), c.env.JWT_SECRET);
+      const db = c.get('db');
+      const { userId } = await requireValidToken(db, c.req.header('Authorization'), c.env.JWT_SECRET);
       c.set('userId', userId);
       await next();
     },
@@ -122,7 +126,7 @@ export function authRequired() {
  * `c.get('userId')` will be the user ID or `undefined`.
  */
 export function authOptional() {
-  return createMiddleware<{ Bindings: Env; Variables: Partial<AuthVariables> }>(
+  return createMiddleware<{ Bindings: Env; Variables: Partial<AuthVariables> & Vars }>(
     async (c, next) => {
       const token = extractToken(c.req.header('Authorization'));
       if (token && c.env.JWT_SECRET) {
@@ -132,7 +136,8 @@ export function authOptional() {
           if (userId && typeof userId === 'string') {
             // Session check — silently skip if invalid
             try {
-              await verifySession(payload);
+              const db = c.get('db');
+              await verifySession(db, payload);
               c.set('userId', userId);
             }
             catch {
@@ -153,9 +158,10 @@ export function authOptional() {
  * Require a valid JWT AND admin role. Returns 403 if not admin.
  */
 export function adminRequired() {
-  return createMiddleware<{ Bindings: Env; Variables: AuthVariables }>(
+  return createMiddleware<{ Bindings: Env; Variables: AuthVariables & Vars }>(
     async (c, next) => {
-      const { payload, userId } = await requireValidToken(c.req.header('Authorization'), c.env.JWT_SECRET);
+      const db = c.get('db');
+      const { payload, userId } = await requireValidToken(db, c.req.header('Authorization'), c.env.JWT_SECRET);
       c.set('userId', userId);
 
       // Check admin role via JWT claim or environment allowlist

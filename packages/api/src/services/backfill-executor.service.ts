@@ -1,5 +1,6 @@
+import type { Database } from '@pathfinding/database';
 import type { ExecutorConfig } from './guide-import.service.js';
-import { crawlJobs, getDb, mafengwoGuides, travelGuides } from '@pathfinding/database';
+import { crawlJobs, mafengwoGuides, travelGuides } from '@pathfinding/database';
 import { eq, inArray } from 'drizzle-orm';
 import { fetchCrawlerContent } from './crawler-fetch.service.js';
 import { MAFENGWO_CRAWLER_DISABLED_MESSAGE } from './guide-import.service.js';
@@ -21,10 +22,10 @@ const defaultConfig: ExecutorConfig = {
  *   guide_destinations (D9); publishedAt fills only when missing.
  */
 async function syncFromMafengwoGuide(
+  db: Database,
   guideId: number,
   externalId: string,
 ): Promise<boolean> {
-  const db = getDb();
   const [mafengwoGuide] = await db
     .select()
     .from(mafengwoGuides)
@@ -103,11 +104,11 @@ async function syncFromMafengwoGuide(
 }
 
 async function fetchAndUpdateGuide(
+  db: Database,
   guideId: number,
   sourceUrl: string,
   cfg: ExecutorConfig,
 ): Promise<boolean> {
-  const db = getDb();
   const result = await fetchCrawlerContent(sourceUrl, cfg.fetchImpl);
 
   // Crawler-reported failure is a real failure — surface it to the caller
@@ -171,11 +172,11 @@ async function runDestinationFill(
 }
 
 async function runFieldBackfill(
+  db: Database,
   targetGuideIds: number[],
   cfg: ExecutorConfig,
   counters: BackfillCounters,
 ): Promise<void> {
-  const db = getDb();
   const guides = await db
     .select()
     .from(travelGuides)
@@ -186,11 +187,11 @@ async function runFieldBackfill(
       let updated = false;
 
       if (guide.platform === 'mafengwo' && guide.externalId) {
-        updated = await syncFromMafengwoGuide(guide.id, guide.externalId);
+        updated = await syncFromMafengwoGuide(db, guide.id, guide.externalId);
       }
 
       if (!updated && guide.sourceUrl) {
-        updated = await fetchAndUpdateGuide(guide.id, guide.sourceUrl, cfg);
+        updated = await fetchAndUpdateGuide(db, guide.id, guide.sourceUrl, cfg);
       }
 
       if (updated) {
@@ -209,13 +210,13 @@ async function runFieldBackfill(
 }
 
 export async function executeBackfillJob(
+  db: Database,
   jobId: number,
   overrideConfig?: Partial<ExecutorConfig>,
 ): Promise<BackfillExecutionResult> {
   const cfg: ExecutorConfig = {
     fetchImpl: overrideConfig?.fetchImpl ?? defaultConfig.fetchImpl,
   };
-  const db = getDb();
 
   const [job] = await db
     .select()
@@ -244,7 +245,7 @@ export async function executeBackfillJob(
 
   try {
     if (job.jobType === 'field_backfill') {
-      await runFieldBackfill((config.targetGuideIds ?? []) as number[], cfg, counters);
+      await runFieldBackfill(db, (config.targetGuideIds ?? []) as number[], cfg, counters);
     }
     else if (job.jobType === 'destination_fill') {
       await runDestinationFill((config.targetDestinations ?? []) as string[], counters);
@@ -298,10 +299,9 @@ export interface BackfillBatchSummary {
 }
 
 export async function executeAllPendingBackfillJobs(
+  db: Database,
   overrideConfig?: Partial<ExecutorConfig>,
 ): Promise<BackfillBatchSummary> {
-  const db = getDb();
-
   const pendingJobs = await db
     .select()
     .from(crawlJobs)
@@ -320,7 +320,7 @@ export async function executeAllPendingBackfillJobs(
 
   for (const job of pendingJobs) {
     if (job.jobType === 'field_backfill' || job.jobType === 'destination_fill') {
-      const result = await executeBackfillJob(job.id, overrideConfig);
+      const result = await executeBackfillJob(db, job.id, overrideConfig);
       summary.executed++;
       summary.totalProcessed += result.processed;
       summary.totalImported += result.imported;

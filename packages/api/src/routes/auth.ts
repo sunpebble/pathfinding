@@ -65,7 +65,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
     });
 
     // Create server-side session for token revocation support
-    const sessionId = await createSession(userId);
+    const sessionId = await createSession(db, userId);
 
     // Generate JWT with session ID
     const token = await generateToken(userId, email, c.env.JWT_SECRET, sessionId);
@@ -123,7 +123,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
   const userId = String(user.id);
 
   // Create server-side session for token revocation support
-  const sessionId = await createSession(userId);
+  const sessionId = await createSession(db, userId);
 
   // Generate JWT with session ID
   const token = await generateToken(userId, email, c.env.JWT_SECRET, sessionId);
@@ -143,6 +143,7 @@ const signoutSchema = z.object({
 
 app.post('/signout', authRequired(), zValidator('json', signoutSchema), async (c) => {
   const userId = c.get('userId');
+  const db = c.get('db');
   const body = c.req.valid('json');
 
   // Extract session ID from the current token to delete it server-side
@@ -151,13 +152,13 @@ app.post('/signout', authRequired(), zValidator('json', signoutSchema), async (c
 
   if (body?.allDevices) {
     // Revoke all sessions for this user
-    await deleteAllSessions(userId);
+    await deleteAllSessions(db, userId);
   }
   else if (tokenStr) {
     try {
       const payload = await verifyToken(tokenStr, c.env.JWT_SECRET);
       if (typeof payload.sid === 'string') {
-        await deleteSession(payload.sid);
+        await deleteSession(db, payload.sid);
       }
     }
     catch {
@@ -259,7 +260,7 @@ app.post('/social', zValidator('json', socialLoginSchema), async (c) => {
   }
 
   // Create session and generate JWT
-  const sessionId = await createSession(userId);
+  const sessionId = await createSession(db, userId);
 
   // Get user email for the token
   const userRows = await db.select().from(users).where(eq(users.id, Number(userId))).limit(1);

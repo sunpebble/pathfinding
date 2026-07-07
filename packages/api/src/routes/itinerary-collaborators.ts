@@ -38,6 +38,7 @@ const updateCollaboratorSchema = z.object({
 app.get('/', authRequired(), async (c) => {
   const itineraryId = parsePositiveInt(c.req.query('itineraryId') ?? '');
   const authUserId = parsePositiveInt(c.get('userId'));
+  const db = c.get('db');
 
   if (!authUserId) {
     return c.json({ error: '无效的认证用户' }, 401);
@@ -47,14 +48,13 @@ app.get('/', authRequired(), async (c) => {
     return c.json({ error: '无效的行程ID' }, 400);
   }
 
-  const accessResult = await findAccessible(itineraryId, authUserId);
+  const accessResult = await findAccessible(db, itineraryId, authUserId);
   if (!accessResult?.itinerary) {
     return c.json({ error: '行程不存在或无权访问' }, 403);
   }
 
   const accessibleItinerary = accessResult.itinerary;
 
-  const db = c.get('db');
   const ownerRows = await db
     .select()
     .from(users)
@@ -102,17 +102,17 @@ app.post(
   async (c) => {
     const authUserId = parsePositiveInt(c.get('userId'));
     const body = c.req.valid('json');
+    const db = c.get('db');
 
     if (!authUserId) {
       return c.json({ error: '无效的认证用户' }, 401);
     }
 
-    const ownedItinerary = await findOwned(body.itineraryId, authUserId);
+    const ownedItinerary = await findOwned(db, body.itineraryId, authUserId);
     if (!ownedItinerary) {
       return c.json({ error: '行程不存在或无权访问' }, 403);
     }
 
-    const db = c.get('db');
     const matchedUsers = await db
       .select()
       .from(users)
@@ -210,7 +210,7 @@ app.patch(
       return c.json({ error: '协作者不存在' }, 404);
     }
 
-    const ownedItinerary = await findOwned(collaborator.itineraryId, authUserId);
+    const ownedItinerary = await findOwned(db, collaborator.itineraryId, authUserId);
     if (!ownedItinerary) {
       return c.json({ error: '行程不存在或无权访问' }, 403);
     }
@@ -253,7 +253,7 @@ app.delete('/:id', authRequired(), async (c) => {
     return c.json({ error: '协作者不存在' }, 404);
   }
 
-  const ownedItinerary = await findOwned(collaborator.itineraryId, authUserId);
+  const ownedItinerary = await findOwned(db, collaborator.itineraryId, authUserId);
   if (!ownedItinerary) {
     return c.json({ error: '行程不存在或无权访问' }, 403);
   }

@@ -1,3 +1,4 @@
+import type { Database } from '@pathfinding/database';
 /**
  * Authentication service — deep module for credential management.
  *
@@ -10,16 +11,16 @@
  *   verifyPassword(plain, stored) → boolean
  *   generateToken(userId, email, secret, sessionId?) → JWT
  *   verifyToken(token, secret) → payload
- *   createSession(userId) → sessionId
- *   deleteSession(sessionId) → void
- *   isSessionValid(sessionId) → boolean
+ *   createSession(db, userId) → sessionId
+ *   deleteSession(db, sessionId) → void
+ *   isSessionValid(db, sessionId) → boolean
  *
  * 注意：`secret`（JWT 签名密钥）由调用方通过参数透传，来源为请求
  * 级 `c.env.JWT_SECRET`（见 middleware/auth.ts、routes/auth.ts）。
  */
 import { Buffer } from 'node:buffer';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { authSessions, getDb } from '@pathfinding/database';
+import { authSessions } from '@pathfinding/database';
 import { and, eq, gt } from 'drizzle-orm';
 import * as jose from 'jose';
 
@@ -102,8 +103,7 @@ const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days (matches JWT)
  * Create a new server-side session for the user.
  * Returns the numeric session ID to embed in the JWT.
  */
-export async function createSession(userId: string): Promise<string> {
-  const db = getDb();
+export async function createSession(db: Database, userId: string): Promise<string> {
   const expirationTime = new Date(Date.now() + SESSION_DURATION_MS);
 
   const [result] = await db.insert(authSessions).values({
@@ -117,24 +117,21 @@ export async function createSession(userId: string): Promise<string> {
 /**
  * Delete a session (logout / revocation).
  */
-export async function deleteSession(sessionId: string): Promise<void> {
-  const db = getDb();
+export async function deleteSession(db: Database, sessionId: string): Promise<void> {
   await db.delete(authSessions).where(eq(authSessions.id, Number(sessionId)));
 }
 
 /**
  * Delete all sessions for a user (e.g. "log out everywhere").
  */
-export async function deleteAllSessions(userId: string): Promise<void> {
-  const db = getDb();
+export async function deleteAllSessions(db: Database, userId: string): Promise<void> {
   await db.delete(authSessions).where(eq(authSessions.userId, Number(userId)));
 }
 
 /**
  * Check whether a session exists and hasn't expired.
  */
-export async function isSessionValid(sessionId: string): Promise<boolean> {
-  const db = getDb();
+export async function isSessionValid(db: Database, sessionId: string): Promise<boolean> {
   const now = new Date();
 
   const rows = await db

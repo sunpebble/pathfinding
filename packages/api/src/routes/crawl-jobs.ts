@@ -225,7 +225,8 @@ app.post('/fail', adminRequired(), zValidator('json', failJobSchema), async (c) 
 
 // ── POST /backfill-analysis — Run gap analysis ─────────
 app.post('/backfill-analysis', adminRequired(), async (c) => {
-  const analysis = await runFullAnalysis(100);
+  const db = c.get('db');
+  const analysis = await runFullAnalysis(db, 100);
   return jsonData(c, analysis);
 });
 
@@ -238,31 +239,35 @@ app.post('/backfill-jobs', adminRequired(), zValidator('json', backfillJobsSchem
     throw new ApiError(400, '至少需要选择一个补齐目标');
   }
 
-  const result = await generateBackfillJobs(fieldGapGuideIds, destinationGapCities);
+  const db = c.get('db');
+  const result = await generateBackfillJobs(db, fieldGapGuideIds, destinationGapCities);
 
   return jsonData(c, result, 201);
 });
 
 // ── POST /backfill-execute — Execute pending backfill jobs ───
 app.post('/backfill-execute', adminRequired(), async (c) => {
-  const result = await executeAllPendingBackfillJobs();
+  const db = c.get('db');
+  const result = await executeAllPendingBackfillJobs(db);
   return jsonData(c, result);
 });
 
 // ── POST /backfill-all — One-click full backfill (analyze + create + execute) ───
 app.post('/backfill-all', adminRequired(), async (c) => {
-  const analysis = await runFullAnalysis(100);
+  const db = c.get('db');
+  const analysis = await runFullAnalysis(db, 100);
   const guideIds = analysis.fieldGaps.map(g => g.guideId);
   const cities = analysis.destinationGaps.map(g => g.cityName);
 
   if (guideIds.length > 0 || cities.length > 0) {
     await generateBackfillJobs(
+      db,
       guideIds.length > 0 ? guideIds : undefined,
       cities.length > 0 ? cities : undefined,
     );
   }
 
-  const execution = await executeAllPendingBackfillJobs();
+  const execution = await executeAllPendingBackfillJobs(db);
 
   return jsonData(c, {
     analysis: {
@@ -277,7 +282,8 @@ app.post('/backfill-all', adminRequired(), async (c) => {
 app.get('/ingest-stats', adminRequired(), zValidator('query', ingestStatsQuerySchema), async (c) => {
   const { days } = c.req.valid('query');
 
-  const stats = await computeIngestStats(days);
+  const db = c.get('db');
+  const stats = await computeIngestStats(db, days);
 
   return jsonData(c, stats);
 });

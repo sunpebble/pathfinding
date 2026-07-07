@@ -233,7 +233,8 @@ app.get('/stats', async (c) => {
 
 // ── GET /gap-report — Data gap summary ─────────────────
 app.get('/gap-report', async (c) => {
-  const analysis = await runFullAnalysis(100);
+  const db = c.get('db');
+  const analysis = await runFullAnalysis(db, 100);
 
   return jsonData(c, {
     totalGuides: analysis.totalGuides,

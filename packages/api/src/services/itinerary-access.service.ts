@@ -1,3 +1,4 @@
+import type { Database } from '@pathfinding/database';
 /**
  * Itinerary access-control service — deep module for permission checks.
  *
@@ -5,15 +6,15 @@
  * across `itineraries.ts` and `itinerary-collaborators.ts`.
  *
  * Interface:
- *   findOwned(itineraryId, userId)  → row | null
- *   findAccessible(itineraryId, userId) → { itinerary, access } | null
- *   findEditable(itineraryId, userId)   → { itinerary, access } | null
- *   findScopedDay(itineraryId, dayId)   → row | null
- *   findScopedItem(dayId, itemId)       → row | null
- *   findScopedItems(dayId, itemIds)     → rows
+ *   findOwned(db, itineraryId, userId)  → row | null
+ *   findAccessible(db, itineraryId, userId) → { itinerary, access } | null
+ *   findEditable(db, itineraryId, userId)   → { itinerary, access } | null
+ *   findScopedDay(db, itineraryId, dayId)   → row | null
+ *   findScopedItem(db, dayId, itemId)       → row | null
+ *   findScopedItems(db, dayId, itemIds)     → rows
  */
 import {
-  getDb,
+
   itineraries,
   itineraryCollaborators,
   itineraryDays,
@@ -35,8 +36,7 @@ export interface AccessResult {
 /**
  * Find an itinerary owned by the given user. Returns `null` if no match.
  */
-export async function findOwned(itineraryId: number, userId: number) {
-  const db = getDb();
+export async function findOwned(db: Database, itineraryId: number, userId: number) {
   const result = await db
     .select()
     .from(itineraries)
@@ -55,11 +55,11 @@ export async function findOwned(itineraryId: number, userId: number) {
  * Check whether `userId` has a collaborator record with one of `allowedRoles`.
  */
 async function findCollaboratorRole(
+  db: Database,
   itineraryId: number,
   userId: number,
   allowedRoles: CollaboratorRole[],
 ) {
-  const db = getDb();
   const result = await db
     .select()
     .from(itineraryCollaborators)
@@ -84,15 +84,17 @@ async function findCollaboratorRole(
  * Find an itinerary that the user can *read* (as owner or viewer/editor).
  */
 export async function findAccessible(
+  db: Database,
   itineraryId: number,
   userId: number,
 ): Promise<AccessResult | null> {
-  const owned = await findOwned(itineraryId, userId);
+  const owned = await findOwned(db, itineraryId, userId);
   if (owned) {
     return { itinerary: owned, access: 'owner' };
   }
 
   const collaborator = await findCollaboratorRole(
+    db,
     itineraryId,
     userId,
     ['viewer', 'editor'],
@@ -101,7 +103,6 @@ export async function findAccessible(
     return null;
 
   // Fetch the itinerary itself for callers that need it.
-  const db = getDb();
   const rows = await db
     .select()
     .from(itineraries)
@@ -118,15 +119,17 @@ export async function findAccessible(
  * Find an itinerary that the user can *write* to (as owner or editor).
  */
 export async function findEditable(
+  db: Database,
   itineraryId: number,
   userId: number,
 ): Promise<AccessResult | null> {
-  const owned = await findOwned(itineraryId, userId);
+  const owned = await findOwned(db, itineraryId, userId);
   if (owned) {
     return { itinerary: owned, access: 'owner' };
   }
 
   const collaborator = await findCollaboratorRole(
+    db,
     itineraryId,
     userId,
     ['editor'],
@@ -142,8 +145,7 @@ export async function findEditable(
 // ---------------------------------------------------------------------------
 
 /** Find a day that belongs to the given itinerary. */
-export async function findScopedDay(itineraryId: number, dayId: number) {
-  const db = getDb();
+export async function findScopedDay(db: Database, itineraryId: number, dayId: number) {
   const result = await db
     .select()
     .from(itineraryDays)
@@ -159,8 +161,7 @@ export async function findScopedDay(itineraryId: number, dayId: number) {
 }
 
 /** Find an item that belongs to the given day. */
-export async function findScopedItem(dayId: number, itemId: number) {
-  const db = getDb();
+export async function findScopedItem(db: Database, dayId: number, itemId: number) {
   const result = await db
     .select()
     .from(itineraryItems)
@@ -176,8 +177,7 @@ export async function findScopedItem(dayId: number, itemId: number) {
 }
 
 /** Find multiple items that belong to the given day. */
-export async function findScopedItems(dayId: number, itemIds: number[]) {
-  const db = getDb();
+export async function findScopedItems(db: Database, dayId: number, itemIds: number[]) {
   return db
     .select()
     .from(itineraryItems)

@@ -1,10 +1,11 @@
+import type { Database } from '@pathfinding/database';
 /**
  * Push notification service — send push notifications to user devices.
  *
  * Currently logs notifications for development. Actual APNs/FCM
  * integration requires platform credentials to be configured.
  */
-import { getDb, pushTokens } from '@pathfinding/database';
+import { pushTokens } from '@pathfinding/database';
 import { and, eq } from 'drizzle-orm';
 import { createLogger } from '../lib/logger.js';
 
@@ -13,6 +14,7 @@ const log = createLogger('push-service');
 /**
  * Send a push notification to all active devices for a user.
  *
+ * @param db      - Drizzle database instance
  * @param userId  - Target user ID
  * @param title   - Notification title
  * @param body    - Notification body text
@@ -20,13 +22,12 @@ const log = createLogger('push-service');
  * @returns Number of tokens the notification was sent to
  */
 export async function sendPushNotification(
+  db: Database,
   userId: number,
   title: string,
   body: string,
   _data?: Record<string, unknown>,
 ): Promise<number> {
-  const db = getDb();
-
   const tokens = await db
     .select()
     .from(pushTokens)

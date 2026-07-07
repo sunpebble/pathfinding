@@ -67,7 +67,7 @@ app.post('/', authRequired(), zValidator('json', createExpenseSchema), async (c)
   const userId = Number(c.get('userId'));
 
   const db = c.get('db');
-  const editableItinerary = await findEditable(Number(itineraryId), userId);
+  const editableItinerary = await findEditable(db, Number(itineraryId), userId);
 
   if (!editableItinerary) {
     throw new ApiError(403, '行程不存在或无权编辑');

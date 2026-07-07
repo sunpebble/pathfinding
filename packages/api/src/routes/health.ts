@@ -19,7 +19,7 @@ app.get('/', (c) => {
 app.get('/ready', async (c) => {
   try {
     const db = c.get('db');
-    await db.execute(sql`SELECT 1`);
+    await db.run(sql`SELECT 1`);
   }
   catch {
     return c.json({
