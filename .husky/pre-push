@@ -7,7 +7,7 @@ pnpm typecheck || {
   exit 1
 }
 
-pnpm -r --if-present --filter '!@pathfinding/dashboard' run test || {
+pnpm -r --if-present run test || {
   echo "Tests failed. Please fix failing tests before pushing."
   exit 1
 }
