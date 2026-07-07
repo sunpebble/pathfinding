@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "pathfinding-api",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pathfinding",
+      // Replaced after `wrangler d1 create pathfinding` (Task 6.2)
+      "database_id": "REPLACE_AFTER_wrangler_d1_create",
+      "migrations_dir": "../../packages/database/drizzle"
+    }
+  ],
+  "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "pathfinding-uploads" }],
+  "routes": [{ "pattern": "api.trips.sunpebblelabs.com", "custom_domain": true }],
+  "vars": { "CORS_ORIGIN": "https://trips.sunpebblelabs.com" },
+  // Flue DO classes (e.g. FlueRegistry) backfilled in Task 6.3 after first `flue build`
+  "migrations": []
+}
