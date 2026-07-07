@@ -14,8 +14,10 @@ struct BudgetOverviewView: View {
   @Environment(\.colorScheme) private var colorScheme
 
   enum ChartType: String, CaseIterable {
-    case category = "分类"
-    case daily = "每日"
+    case category = "budget.chart.category"
+    case daily = "budget.chart.daily"
+
+    var title: String { rawValue.localized }
   }
 
   var body: some View {
@@ -38,7 +40,7 @@ struct BudgetOverviewView: View {
       }
     }
     .background(DesignTokens.Colors.backgroundGrouped)
-    .navigationTitle("预算追踪")
+    .navigationTitle("budget.overview.title".localized)
     .navigationBarTitleDisplayMode(.large)
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
@@ -46,13 +48,13 @@ struct BudgetOverviewView: View {
           Button {
             showEditBudget = true
           } label: {
-            Label("设置预算", systemImage: "slider.horizontal.3")
+            Label("budget.edit.title_new".localized, systemImage: "slider.horizontal.3")
           }
 
           Button {
             showAddExpense = true
           } label: {
-            Label("添加支出", systemImage: "plus.circle")
+            Label("expense.add".localized, systemImage: "plus.circle")
           }
         } label: {
           Image(systemName: "ellipsis.circle")
@@ -89,7 +91,7 @@ struct BudgetOverviewView: View {
           Text(itineraryTitle)
             .font(.subheadline)
             .foregroundStyle(.secondary)
-          Text("预算概览")
+          Text("budget.overview.header".localized)
             .font(.title2)
             .fontWeight(.bold)
         }
@@ -111,21 +113,21 @@ struct BudgetOverviewView: View {
       if let summary = budgetStore.summary, let budget = summary.budget {
         HStack(spacing: DesignTokens.Spacing.xl) {
           BudgetAmountView(
-            title: "总预算",
+            title: "budget.edit.total".localized,
             amount: budget.total,
             currency: budget.currency,
             color: .blue
           )
 
           BudgetAmountView(
-            title: "已支出",
+            title: "budget.overview.spent".localized,
             amount: summary.totalSpent,
             currency: budget.currency,
             color: summary.isOverBudget ? .red : .orange
           )
 
           BudgetAmountView(
-            title: "剩余",
+            title: "budget.overview.remaining".localized,
             amount: max(0, summary.remaining),
             currency: budget.currency,
             color: summary.isOverBudget ? .red : .green
@@ -146,11 +148,11 @@ struct BudgetOverviewView: View {
             .font(.largeTitle)
             .foregroundStyle(.secondary)
 
-          Text("尚未设置预算")
+          Text("budget.overview.no_budget".localized)
             .font(.headline)
             .foregroundStyle(.secondary)
 
-          Button("设置预算") {
+          Button("budget.edit.title_new".localized) {
             showEditBudget = true
           }
           .buttonStyle(.glassProminent)
@@ -167,9 +169,9 @@ struct BudgetOverviewView: View {
   private var chartSection: some View {
     VStack(spacing: DesignTokens.Spacing.md) {
       // Chart type picker
-      Picker("图表类型", selection: $selectedChartType) {
+      Picker("budget.overview.chart_type".localized, selection: $selectedChartType) {
         ForEach(ChartType.allCases, id: \.self) { type in
-          Text(type.rawValue).tag(type)
+          Text(type.title).tag(type)
         }
       }
       .pickerStyle(.segmented)
@@ -196,7 +198,7 @@ struct BudgetOverviewView: View {
          !summary.spendingByCategory.isEmpty {
         Chart(summary.spendingByCategory) { item in
           SectorMark(
-            angle: .value("金额", item.spent),
+            angle: .value("budget.chart.amount".localized, item.spent),
             innerRadius: .ratio(0.5),
             angularInset: 1.5
           )
@@ -217,8 +219,8 @@ struct BudgetOverviewView: View {
       if !budgetStore.dailyTrend.isEmpty {
         Chart(budgetStore.dailyTrend) { item in
           BarMark(
-            x: .value("日期", item.date),
-            y: .value("金额", item.amount)
+            x: .value("budget.chart.date".localized, item.date),
+            y: .value("budget.chart.amount".localized, item.amount)
           )
           .foregroundStyle(DesignTokens.Colors.accent.gradient)
           .cornerRadius(4)
@@ -248,7 +250,7 @@ struct BudgetOverviewView: View {
         .font(.largeTitle)
         .foregroundStyle(.tertiary)
 
-      Text("暂无支出数据")
+      Text("budget.overview.no_data".localized)
         .font(.subheadline)
         .foregroundStyle(.secondary)
     }
@@ -259,7 +261,7 @@ struct BudgetOverviewView: View {
 
   private var categoryBreakdownSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-      Text("分类明细")
+      Text("budget.overview.category_breakdown".localized)
         .font(.headline)
 
       if let summary = budgetStore.summary,
@@ -268,7 +270,7 @@ struct BudgetOverviewView: View {
           CategorySpendingRow(item: item)
         }
       } else {
-        Text("暂无分类支出")
+        Text("budget.overview.no_category_spending".localized)
           .font(.subheadline)
           .foregroundStyle(.secondary)
           .frame(maxWidth: .infinity)
@@ -284,7 +286,7 @@ struct BudgetOverviewView: View {
   private var recentExpensesSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
       HStack {
-        Text("最近支出")
+        Text("budget.overview.recent_expenses".localized)
           .font(.headline)
 
         Spacer()
@@ -295,7 +297,7 @@ struct BudgetOverviewView: View {
             budgetStore: budgetStore
           )
         } label: {
-          Text("查看全部")
+          Text("expense.view_all".localized)
             .font(.subheadline)
             .foregroundStyle(.blue)
         }
@@ -307,11 +309,11 @@ struct BudgetOverviewView: View {
             .font(.largeTitle)
             .foregroundStyle(.tertiary)
 
-          Text("暂无支出记录")
+          Text("expense.empty".localized)
             .font(.subheadline)
             .foregroundStyle(.secondary)
 
-          Button("添加支出") {
+          Button("expense.add".localized) {
             showAddExpense = true
           }
           .buttonStyle(.glass)
@@ -350,7 +352,7 @@ struct BudgetStatusBadge: View {
   var body: some View {
     HStack(spacing: 4) {
       Image(systemName: isOverBudget ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
-      Text(isOverBudget ? "超支" : "\(Int(percentUsed))%")
+      Text(isOverBudget ? "budget.overview.over_budget".localized : "\(Int(percentUsed))%")
     }
     .font(.caption)
     .fontWeight(.semibold)

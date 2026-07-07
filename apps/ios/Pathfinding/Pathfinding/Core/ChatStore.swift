@@ -54,7 +54,7 @@ final class ChatStore {
       logger.info("Fetched \(response.data.count) chat sessions")
     } catch {
       logger.error("Failed to fetch sessions: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
     }
 
     isLoadingSessions = false
@@ -94,7 +94,7 @@ final class ChatStore {
       }
     } catch {
       logger.error("Failed to create session: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
     }
 
     isCreatingSession = false
@@ -132,7 +132,7 @@ final class ChatStore {
       return true
     } catch {
       logger.error("Failed to archive session: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       return false
     }
   }
@@ -157,7 +157,7 @@ final class ChatStore {
       return true
     } catch {
       logger.error("Failed to delete session: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       return false
     }
   }
@@ -180,7 +180,7 @@ final class ChatStore {
       return true
     } catch {
       logger.error("Failed to update session title: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       return false
     }
   }
@@ -224,7 +224,7 @@ final class ChatStore {
       logger.info("Fetched \(response.data.count) messages for session \(sessionId)")
     } catch {
       logger.error("Failed to fetch messages: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
     }
 
     isLoadingMessages = false
@@ -268,7 +268,7 @@ final class ChatStore {
       return true
     } catch {
       logger.error("Failed to send message: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       pendingUserMessage = nil
       pendingAssistantMessage = nil
       isSending = false
@@ -293,7 +293,7 @@ final class ChatStore {
       return true
     } catch {
       logger.error("Failed to clear messages: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       return false
     }
   }
@@ -319,7 +319,7 @@ final class ChatStore {
       return response.data
     } catch {
       logger.error("Quick chat failed: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       return nil
     }
   }

@@ -31,7 +31,7 @@ struct ChatSessionListView: View {
           }
         }
       }
-      .navigationTitle("AI 旅行助手")
+      .navigationTitle("chat.title".localized)
       .toolbar {
         ToolbarItem(placement: .primaryAction) {
           Button {
@@ -39,8 +39,8 @@ struct ChatSessionListView: View {
           } label: {
             Image(systemName: "plus.circle.fill")
           }
-          .accessibilityLabel("新建对话")
-          .accessibilityHint("创建一个新的聊天对话")
+          .accessibilityLabel("chat.new_session".localized)
+          .accessibilityHint("chat.new_session_hint".localized)
         }
       }
       .task {
@@ -54,11 +54,11 @@ struct ChatSessionListView: View {
           showNewSessionSheet = false
         }
       }
-      .alert("删除对话", isPresented: $showDeleteAlert) {
-        Button("取消", role: .cancel) {
+      .alert("chat.delete_session".localized, isPresented: $showDeleteAlert) {
+        Button("common.cancel".localized, role: .cancel) {
           sessionToDelete = nil
         }
-        Button("删除", role: .destructive) {
+        Button("common.delete".localized, role: .destructive) {
           if let session = sessionToDelete {
             Task {
               _ = await store.deleteSession(session)
@@ -66,7 +66,7 @@ struct ChatSessionListView: View {
           }
         }
       } message: {
-        Text("确定要删除这个对话吗？此操作无法撤销。")
+        Text("chat.delete_session_message".localized)
       }
     }
   }
@@ -85,7 +85,7 @@ struct ChatSessionListView: View {
             sessionToDelete = session
             showDeleteAlert = true
           } label: {
-            Label("删除", systemImage: "trash")
+            Label("common.delete".localized, systemImage: "trash")
           }
 
           Button {
@@ -93,7 +93,7 @@ struct ChatSessionListView: View {
               _ = await store.archiveSession(session)
             }
           } label: {
-            Label("归档", systemImage: "archivebox")
+            Label("chat.archive".localized, systemImage: "archivebox")
           }
           .tint(.orange)
         }
@@ -103,14 +103,14 @@ struct ChatSessionListView: View {
               _ = await store.archiveSession(session)
             }
           } label: {
-            Label("归档", systemImage: "archivebox")
+            Label("chat.archive".localized, systemImage: "archivebox")
           }
 
           Button(role: .destructive) {
             sessionToDelete = session
             showDeleteAlert = true
           } label: {
-            Label("删除", systemImage: "trash")
+            Label("common.delete".localized, systemImage: "trash")
           }
         }
       }
@@ -183,14 +183,14 @@ private struct EmptySessionsView: View {
 
   var body: some View {
     ContentUnavailableView {
-      Label("暂无对话", systemImage: "bubble.left.and.bubble.right")
+      Label("chat.empty".localized, systemImage: "bubble.left.and.bubble.right")
     } description: {
-      Text("开始与 AI 旅行助手对话，获取个性化的旅行推荐。")
+      Text("chat.empty_description".localized)
     } actions: {
       Button {
         onCreateNew()
       } label: {
-        Label("开始新对话", systemImage: "plus.circle.fill")
+        Label("chat.start_new".localized, systemImage: "plus.circle.fill")
       }
       .buttonStyle(.borderedProminent)
     }
@@ -203,7 +203,7 @@ private struct LoadingView: View {
   var body: some View {
     VStack(spacing: DesignTokens.Spacing.md) {
       ProgressView()
-      Text("加载中...")
+      Text("common.loading".localized)
         .font(.subheadline)
         .foregroundStyle(.secondary)
     }
@@ -225,20 +225,20 @@ private struct NewSessionSheet: View {
     NavigationStack {
       Form {
         Section {
-          TextField("对话标题（可选）", text: $title)
+          TextField("chat.session_title_placeholder".localized, text: $title)
         } header: {
-          Text("标题")
+          Text("chat.session_title".localized)
         } footer: {
-          Text("留空将根据您的第一条消息自动生成")
+          Text("chat.session_title_footer".localized)
         }
 
         Section {
-          TextField("附加上下文", text: $context, axis: .vertical)
+          TextField("chat.context_placeholder".localized, text: $context, axis: .vertical)
             .lineLimit(3...6)
         } header: {
-          Text("上下文")
+          Text("chat.context".localized)
         } footer: {
-          Text("提供任何额外的上下文，如旅行偏好或限制条件")
+          Text("chat.context_footer".localized)
         }
 
         if let errorMessage = store.errorMessage {
@@ -253,34 +253,34 @@ private struct NewSessionSheet: View {
           HStack {
             Image(systemName: "sparkles")
               .foregroundStyle(.yellow)
-            Text("AI 旅行助手")
+            Text("chat.title".localized)
               .font(.headline)
           }
 
-          Text("我可以帮助您：")
+          Text("chat.capabilities_intro".localized)
             .font(.subheadline)
             .foregroundStyle(.secondary)
 
           VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            FeatureRow(icon: "mappin.circle.fill", text: "景点推荐", color: .red)
-            FeatureRow(icon: "calendar", text: "行程规划", color: .blue)
-            FeatureRow(icon: "lightbulb.fill", text: "旅行建议", color: .yellow)
-            FeatureRow(icon: "fork.knife", text: "美食推荐", color: .orange)
+            FeatureRow(icon: "mappin.circle.fill", text: "chat.feature.attractions".localized, color: .red)
+            FeatureRow(icon: "calendar", text: "chat.feature.planning".localized, color: .blue)
+            FeatureRow(icon: "lightbulb.fill", text: "chat.feature.tips".localized, color: .yellow)
+            FeatureRow(icon: "fork.knife", text: "chat.feature.food".localized, color: .orange)
           }
         } header: {
-          Text("功能")
+          Text("chat.features".localized)
         }
       }
-      .navigationTitle("新建对话")
+      .navigationTitle("chat.new_session".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") {
+          Button("common.cancel".localized) {
             onDismiss()
           }
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button("创建") {
+          Button("common.create".localized) {
             Task {
               isCreating = true
               let session = await store.createSession(
@@ -344,7 +344,7 @@ struct ChatConversationView: View {
                 if store.isLoadingMessages {
                   ProgressView()
                 } else {
-                  Text("加载更多消息")
+                  Text("chat.load_more".localized)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
@@ -384,7 +384,7 @@ struct ChatConversationView: View {
       // Quick Replies
       if store.messages.isEmpty && !store.isSending {
         QuickRepliesView { suggestion in
-          inputText = suggestion.chineseText
+          inputText = "chat.quick_reply.\(suggestion.rawValue)".localized
           sendMessage()
         }
       }
@@ -405,27 +405,27 @@ struct ChatConversationView: View {
           Button {
             showClearAlert = true
           } label: {
-            Label("清空对话", systemImage: "trash")
+            Label("chat.clear".localized, systemImage: "trash")
           }
         } label: {
           Image(systemName: "ellipsis.circle")
         }
-        .accessibilityLabel("更多操作")
-        .accessibilityHint("打开菜单，包含清空对话等选项")
+        .accessibilityLabel("chat.more_actions".localized)
+        .accessibilityHint("chat.more_actions_hint".localized)
       }
     }
     .task {
       await store.selectSession(session)
     }
-    .alert("清空对话", isPresented: $showClearAlert) {
-      Button("取消", role: .cancel) {}
-      Button("清空", role: .destructive) {
+    .alert("chat.clear".localized, isPresented: $showClearAlert) {
+      Button("common.cancel".localized, role: .cancel) {}
+      Button("chat.clear_confirm".localized, role: .destructive) {
         Task {
           _ = await store.clearMessages()
         }
       }
     } message: {
-      Text("这将删除此对话中的所有消息。")
+      Text("chat.clear_message".localized)
     }
   }
 
@@ -513,7 +513,7 @@ private struct MetadataView: View {
       // POI Recommendations
       if let pois = metadata.pois, !pois.isEmpty {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-          Text("推荐地点")
+          Text("chat.recommended_pois".localized)
             .font(.caption)
             .fontWeight(.semibold)
             .foregroundStyle(.secondary)
@@ -701,7 +701,7 @@ private struct QuickRepliesView: View {
           Button {
             onSelect(suggestion)
           } label: {
-            Label(suggestion.chineseText, systemImage: suggestion.icon)
+            Label("chat.quick_reply.\(suggestion.rawValue)".localized, systemImage: suggestion.icon)
               .font(.subheadline)
               .padding(.horizontal, DesignTokens.Spacing.md)
               .padding(.vertical, DesignTokens.Spacing.sm)
@@ -728,7 +728,7 @@ private struct InputBar: View {
 
   var body: some View {
     HStack(spacing: DesignTokens.Spacing.sm) {
-      TextField("随便问我关于旅行的问题...", text: $text, axis: .vertical)
+      TextField("chat.input_placeholder".localized, text: $text, axis: .vertical)
         .lineLimit(1...4)
         .padding(DesignTokens.Spacing.sm)
         .background(Color(.systemGray6))

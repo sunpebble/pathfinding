@@ -408,3 +408,255 @@
 "timezone.home_zone" = "Home Timezone";
 "timezone.departure" = "Departure";
 "timezone.destination" = "Destination";
+
+// MARK: - Common (Additions)
+"common.create" = "Create";
+
+// MARK: - Create Trip
+"create_trip.title" = "New Trip";
+"create_trip.section.basic" = "Basic Info";
+"create_trip.name_placeholder" = "Trip Name";
+"create_trip.name_required" = "Please enter a trip name";
+"create_trip.destination_placeholder" = "Destination";
+"create_trip.section.schedule" = "Schedule";
+"create_trip.date_error" = "End date cannot be earlier than start date";
+"create_trip.default_title" = "My Trip";
+
+// MARK: - Itinerary (Additions)
+"itinerary.menu.ai_planner" = "AI Planner";
+"itinerary.menu.voice_input" = "Voice Input";
+"itinerary.menu.more" = "More Actions";
+"itinerary.menu.more_hint" = "Opens a menu with AI planner, voice input and new trip";
+"itinerary.from_author" = "From %@";
+"itinerary.schedule" = "Schedule";
+"itinerary.title_placeholder" = "Trip Title";
+"itinerary.copy" = "Copy Itinerary";
+"itinerary.analysis" = "Trip Analysis";
+"itinerary.budget_management" = "Budget";
+"itinerary.more_features" = "More Features";
+"itinerary.stop_accessibility" = "Stop %d, %@";
+"itinerary.stop_selected" = "Selected";
+"itinerary.stop_hint" = "Double tap to locate on the map";
+
+// MARK: - Day Edit
+"day_edit.title" = "Day %d - Edit";
+"day_edit.add_poi" = "Add Place";
+
+// MARK: - POI Edit
+"poi_edit.title" = "Edit Place";
+"poi_edit.section.basic" = "Basic Info";
+"poi_edit.name_placeholder" = "Place name (type to search)";
+"poi_edit.unknown_place" = "Unknown Place";
+"poi_edit.time" = "Time";
+"poi_edit.time_placeholder" = "e.g. 10:00";
+"poi_edit.notes_placeholder" = "Add a note";
+
+// MARK: - Login
+"login.skip" = "Skip";
+"login.welcome" = "Welcome Back";
+"login.subtitle" = "Sign in to Sunpebble Trips to keep planning your trips";
+"login.method.phone" = "Phone";
+"login.method.email" = "Email";
+"login.phone" = "Phone Number";
+"login.phone_placeholder" = "Enter phone number";
+"login.code" = "Verification Code";
+"login.code_placeholder" = "Enter code";
+"login.get_code" = "Get Code";
+"login.email_placeholder" = "Enter email address";
+"login.password_placeholder" = "Enter password";
+"login.signing_in" = "Signing In...";
+"login.other_methods" = "Or continue with";
+"login.wechat" = "Sign in with WeChat";
+"login.apple" = "Sign in with Apple";
+"login.no_account" = "Don't have an account?";
+"login.invalid_phone" = "Please enter a valid phone number";
+
+// MARK: - Budget Edit
+"budget.edit.title_new" = "Set Budget";
+"budget.edit.title_edit" = "Edit Budget";
+"budget.edit.total" = "Total Budget";
+"budget.edit.total_footer" = "Set the total budget for this trip";
+"budget.edit.categories" = "Category Budgets";
+"budget.edit.categories_footer" = "Set a budget cap per category (optional)";
+"budget.edit.over_allocated" = "Category budgets exceed the total budget";
+"budget.edit.allocated" = "Allocated";
+"budget.edit.unallocated" = "Unallocated";
+"budget.edit.notes" = "Notes";
+"budget.edit.notes_placeholder" = "Budget notes (optional)";
+"budget.edit.quick_actions" = "Quick Actions";
+"budget.edit.auto_allocate" = "Auto-Allocate Budget";
+"budget.edit.clear_categories" = "Clear Category Budgets";
+"budget.edit.pick_currency" = "Choose Currency";
+
+// MARK: - Currencies
+"currency.cny" = "Chinese Yuan";
+"currency.usd" = "US Dollar";
+"currency.eur" = "Euro";
+"currency.jpy" = "Japanese Yen";
+"currency.gbp" = "British Pound";
+"currency.hkd" = "Hong Kong Dollar";
+"currency.twd" = "New Taiwan Dollar";
+"currency.krw" = "South Korean Won";
+"currency.thb" = "Thai Baht";
+"currency.sgd" = "Singapore Dollar";
+
+// MARK: - Insurance
+"insurance.tab.recommend" = "For You";
+"insurance.tab.products" = "Products";
+"insurance.tab.my" = "My Policies";
+"insurance.tab.claim_guide" = "Claims";
+"insurance.compare_count" = "Compare (%d)";
+"insurance.destination_placeholder" = "Enter destination";
+"insurance.trip_days" = "Trip Days";
+"insurance.get_recommendations" = "Get Recommendations";
+"insurance.loading_recommendations" = "Getting recommendations...";
+"insurance.recommended" = "Recommended Insurance";
+"insurance.product_count" = "%d plans";
+"insurance.no_recommendations" = "No Recommendations";
+"insurance.no_recommendations_hint" = "Enter a destination and trip days to get recommendations";
+"insurance.no_products" = "No Products";
+"insurance.no_products_hint" = "Pull to refresh insurance products";
+"insurance.no_insurance" = "No Insurance";
+"insurance.no_insurance_hint" = "You haven't purchased any travel insurance yet";
+"insurance.no_guides" = "No Guides";
+"insurance.no_guides_hint" = "Claim guides are being prepared";
+"insurance.coverage_label" = "Coverage %@";
+"insurance.risk_assessment" = "Destination Risk Assessment";
+"insurance.risk_factors" = "Risk Factors";
+"insurance.travel_advisory" = "Travel Advisory";
+"insurance.status.active" = "Active";
+"insurance.status.pending" = "Pending";
+"insurance.status.expired" = "Expired";
+"insurance.status.cancelled" = "Cancelled";
+"insurance.status.claimed" = "Claimed";
+"insurance.policy" = "Insurance Policy";
+"insurance.policy_number" = "Policy No.:";
+"insurance.coverage_period" = "Coverage Period";
+"insurance.premium" = "Premium";
+"insurance.insured_count" = "Insured: %d";
+"insurance.steps_count" = "%d steps";
+"insurance.documents_count" = "%d documents";
+"insurance.max_coverage" = "Max Coverage";
+"insurance.coverage_days" = "Coverage Days";
+"insurance.days_range" = "%d-%d days";
+"insurance.days_range_title" = "Days Range";
+"insurance.coverage_details" = "Coverage Details";
+"insurance.features" = "Features";
+"insurance.exclusions" = "Exclusions";
+"insurance.contact" = "Contact";
+"insurance.call" = "Call";
+"insurance.visit" = "Visit";
+"insurance.purchase_now" = "Purchase Now";
+"insurance.detail_title" = "Insurance Details";
+"insurance.compare_title" = "Compare Products";
+"insurance.compare_item" = "Item";
+"insurance.coverage" = "Coverage";
+"insurance.rating" = "Rating";
+"insurance.review_count" = "Reviews";
+"insurance.time_limit" = "Time limit: %@";
+"insurance.required_documents" = "Required Documents";
+"insurance.claim_steps" = "Claim Steps";
+"insurance.faq" = "FAQ";
+"insurance.claim_guide_title" = "Claim Guide";
+
+// MARK: - Budget Overview
+"budget.overview.title" = "Budget Tracker";
+"budget.overview.header" = "Budget Overview";
+"budget.overview.spent" = "Spent";
+"budget.overview.remaining" = "Remaining";
+"budget.overview.no_budget" = "No Budget Set";
+"budget.overview.chart_type" = "Chart Type";
+"budget.overview.no_data" = "No Expense Data";
+"budget.overview.category_breakdown" = "Category Breakdown";
+"budget.overview.no_category_spending" = "No category spending yet";
+"budget.overview.recent_expenses" = "Recent Expenses";
+"budget.overview.over_budget" = "Over Budget";
+"budget.chart.category" = "Category";
+"budget.chart.daily" = "Daily";
+"budget.chart.amount" = "Amount";
+"budget.chart.date" = "Date";
+
+// MARK: - Expenses
+"expense.add" = "Add Expense";
+"expense.edit" = "Edit Expense";
+"expense.empty" = "No Expenses";
+"expense.view_all" = "View All";
+"expense.list.title" = "Expenses";
+"expense.list.summary" = "%d expenses · Total %@";
+"expense.list.empty_category" = "No expenses in this category";
+"expense.list.date_format" = "EEEE, MMM d";
+"expense.sort.date_desc" = "Newest First";
+"expense.sort.date_asc" = "Oldest First";
+"expense.sort.amount_desc" = "Amount: High to Low";
+"expense.sort.amount_asc" = "Amount: Low to High";
+"expense.delete.title" = "Confirm Delete";
+"expense.delete.message" = "Delete \"%@\"? This action cannot be undone.";
+"expense.form.amount" = "Amount";
+"expense.form.category" = "Category";
+"expense.form.pick_category" = "Choose Category";
+"expense.form.description" = "Description";
+"expense.form.description_placeholder" = "Expense description";
+"expense.form.date" = "Date";
+"expense.form.time" = "Time";
+"expense.form.date_time" = "Date & Time";
+"expense.form.include_time" = "Include Time";
+"expense.form.payment_method" = "Payment Method";
+"expense.form.notes_placeholder" = "Notes (optional)";
+
+// MARK: - Payment Methods
+"payment.cash" = "Cash";
+"payment.wechat" = "WeChat Pay";
+"payment.alipay" = "Alipay";
+"payment.credit_card" = "Credit Card";
+"payment.debit_card" = "Debit Card";
+"payment.other" = "Other";
+
+// MARK: - Signup
+"signup.title" = "Create Account";
+"signup.subtitle" = "Sign up for Sunpebble Trips to start organizing your trips";
+"signup.password_placeholder" = "Enter password (at least 8 characters)";
+"signup.confirm_password" = "Confirm Password";
+"signup.confirm_password_placeholder" = "Re-enter password";
+"signup.signing_up" = "Signing Up...";
+"signup.wechat" = "Sign up with WeChat";
+"signup.apple" = "Sign up with Apple";
+"signup.have_account" = "Already have an account?";
+"signup.password_too_short" = "Password must be at least 8 characters";
+"signup.password_mismatch" = "Passwords do not match";
+"signup.form_invalid" = "Please fill in all fields and make sure passwords match";
+
+// MARK: - Chat
+"chat.title" = "AI Travel Assistant";
+"chat.new_session" = "New Chat";
+"chat.new_session_hint" = "Create a new chat conversation";
+"chat.delete_session" = "Delete Conversation";
+"chat.delete_session_message" = "Delete this conversation? This action cannot be undone.";
+"chat.archive" = "Archive";
+"chat.empty" = "No Conversations";
+"chat.empty_description" = "Chat with the AI travel assistant to get personalized travel recommendations.";
+"chat.start_new" = "Start New Chat";
+"chat.session_title" = "Title";
+"chat.session_title_placeholder" = "Conversation title (optional)";
+"chat.session_title_footer" = "Leave blank to auto-generate from your first message";
+"chat.context" = "Context";
+"chat.context_placeholder" = "Additional context";
+"chat.context_footer" = "Provide any extra context, such as travel preferences or constraints";
+"chat.capabilities_intro" = "I can help you with:";
+"chat.feature.attractions" = "Attraction recommendations";
+"chat.feature.planning" = "Itinerary planning";
+"chat.feature.tips" = "Travel tips";
+"chat.feature.food" = "Food recommendations";
+"chat.features" = "Features";
+"chat.load_more" = "Load more messages";
+"chat.clear" = "Clear Conversation";
+"chat.clear_confirm" = "Clear";
+"chat.clear_message" = "This will delete all messages in this conversation.";
+"chat.more_actions" = "More Actions";
+"chat.more_actions_hint" = "Opens a menu with options such as clearing the conversation";
+"chat.recommended_pois" = "Recommended Places";
+"chat.input_placeholder" = "Ask me anything about travel...";
+"chat.quick_reply.recommend_restaurant" = "Recommend nearby restaurants";
+"chat.quick_reply.recommend_attraction" = "Recommend popular attractions";
+"chat.quick_reply.get_tips" = "Travel tips";
+"chat.quick_reply.optimize_route" = "Optimize route";
+"chat.quick_reply.check_weather" = "Check weather";

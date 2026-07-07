@@ -13,10 +13,12 @@ struct ExpenseListView: View {
   @State private var showDeleteConfirmation = false
 
   enum SortOrder: String, CaseIterable {
-    case dateDesc = "最新优先"
-    case dateAsc = "最早优先"
-    case amountDesc = "金额从高到低"
-    case amountAsc = "金额从低到高"
+    case dateDesc = "expense.sort.date_desc"
+    case dateAsc = "expense.sort.date_asc"
+    case amountDesc = "expense.sort.amount_desc"
+    case amountAsc = "expense.sort.amount_asc"
+
+    var title: String { rawValue.localized }
   }
 
   private var filteredExpenses: [Expense] {
@@ -59,7 +61,7 @@ struct ExpenseListView: View {
       }
     }
     .background(DesignTokens.Colors.backgroundGrouped)
-    .navigationTitle("支出明细")
+    .navigationTitle("expense.list.title".localized)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
@@ -83,11 +85,11 @@ struct ExpenseListView: View {
         budgetStore: budgetStore
       )
     }
-    .alert("确认删除", isPresented: $showDeleteConfirmation) {
-      Button("取消", role: .cancel) {
+    .alert("expense.delete.title".localized, isPresented: $showDeleteConfirmation) {
+      Button("common.cancel".localized, role: .cancel) {
         expenseToDelete = nil
       }
-      Button("删除", role: .destructive) {
+      Button("common.delete".localized, role: .destructive) {
         if let expense = expenseToDelete {
           Task {
             await budgetStore.deleteExpense(expenseId: expense.id, itineraryId: itineraryId)
@@ -97,7 +99,7 @@ struct ExpenseListView: View {
       }
     } message: {
       if let expense = expenseToDelete {
-        Text("确定要删除「\(expense.description)」吗？此操作无法撤销。")
+        Text("expense.delete.message".localized(expense.description))
       }
     }
     .task {
@@ -116,7 +118,7 @@ struct ExpenseListView: View {
         HStack(spacing: DesignTokens.Spacing.xs) {
           // All categories button
           CategoryFilterChip(
-            name: "全部",
+            name: "common.all".localized,
             icon: "square.grid.2x2",
             color: .indigo,
             isSelected: selectedCategory == nil
@@ -148,7 +150,7 @@ struct ExpenseListView: View {
               sortOrder = order
             } label: {
               HStack {
-                Text(order.rawValue)
+                Text(order.title)
                 if sortOrder == order {
                   Image(systemName: "checkmark")
                 }
@@ -158,7 +160,7 @@ struct ExpenseListView: View {
         } label: {
           HStack(spacing: 4) {
             Image(systemName: "arrow.up.arrow.down")
-            Text(sortOrder.rawValue)
+            Text(sortOrder.title)
           }
           .font(.caption)
           .foregroundStyle(.secondary)
@@ -167,7 +169,7 @@ struct ExpenseListView: View {
         Spacer()
 
         // Total
-        Text("共 \(filteredExpenses.count) 笔，合计 \(formatAmount(totalAmount))")
+        Text("expense.list.summary".localized(filteredExpenses.count, formatAmount(totalAmount)))
           .font(.caption)
           .foregroundStyle(.secondary)
       }
@@ -194,13 +196,13 @@ struct ExpenseListView: View {
                   expenseToDelete = expense
                   showDeleteConfirmation = true
                 } label: {
-                  Label("删除", systemImage: "trash")
+                  Label("common.delete".localized, systemImage: "trash")
                 }
 
                 Button {
                   expenseToEdit = expense
                 } label: {
-                  Label("编辑", systemImage: "pencil")
+                  Label("common.edit".localized, systemImage: "pencil")
                 }
                 .tint(.orange)
               }
@@ -228,21 +230,21 @@ struct ExpenseListView: View {
         .font(.system(size: 60))
         .foregroundStyle(.tertiary)
 
-      Text("暂无支出记录")
+      Text("expense.empty".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
       if selectedCategory != nil {
-        Text("当前分类下没有支出")
+        Text("expense.list.empty_category".localized)
           .font(.subheadline)
           .foregroundStyle(.tertiary)
 
-        Button("查看全部") {
+        Button("expense.view_all".localized) {
           selectedCategory = nil
         }
         .buttonStyle(.glass)
       } else {
-        Button("添加支出") {
+        Button("expense.add".localized) {
           showAddExpense = true
         }
         .buttonStyle(.glassProminent)
@@ -285,8 +287,8 @@ struct ExpenseListView: View {
     guard let date = formatter.date(from: dateStr) else { return dateStr }
 
     let displayFormatter = DateFormatter()
-    displayFormatter.dateFormat = "M月d日 EEEE"
-    displayFormatter.locale = Locale(identifier: "zh_CN")
+    displayFormatter.dateFormat = "expense.list.date_format".localized
+    displayFormatter.locale = LocalizationManager.shared.currentLocale
     return displayFormatter.string(from: date)
   }
 }

@@ -62,13 +62,13 @@ struct ItineraryListView: View {
       Button {
         showAIPlanner = true
       } label: {
-        Label("AI 规划", systemImage: "sparkles")
+        Label("itinerary.menu.ai_planner".localized, systemImage: "sparkles")
       }
 
       Button {
         showVoiceItinerary = true
       } label: {
-        Label("语音输入", systemImage: "mic.fill")
+        Label("itinerary.menu.voice_input".localized, systemImage: "mic.fill")
       }
 
       Button {
@@ -80,8 +80,8 @@ struct ItineraryListView: View {
       Image(systemName: "ellipsis.circle")
         .symbolRenderingMode(.hierarchical)
     }
-    .accessibilityLabel("更多操作")
-    .accessibilityHint("打开菜单，包含 AI 规划、语音输入和创建行程")
+    .accessibilityLabel("itinerary.menu.more".localized)
+    .accessibilityHint("itinerary.menu.more_hint".localized)
   }
 
   // MARK: - Memory Monitoring
@@ -242,14 +242,14 @@ struct ItineraryCard: View {
 
       // Original author attribution
       if let author = itinerary.originalAuthor?.displayName {
-        Text("来自 \(author)")
+        Text("itinerary.from_author".localized(author))
           .font(.caption2)
           .foregroundStyle(.blue.opacity(0.7))
       }
 
       HStack(spacing: DesignTokens.Spacing.sm) {
-        Label("\(daysCount)天", systemImage: "calendar")
-        Label("\(totalPOICount)景点", systemImage: "mappin")
+        Label("itinerary.days".localized(daysCount), systemImage: "calendar")
+        Label("itinerary.poi_count".localized(totalPOICount), systemImage: "mappin")
       }
       .font(.caption)
       .foregroundStyle(.tertiary)
@@ -286,8 +286,8 @@ struct CreateItinerarySheet: View {
   var body: some View {
     NavigationStack {
       Form {
-        Section("基本信息") {
-          TextField("行程名称", text: $title)
+        Section("create_trip.section.basic".localized) {
+          TextField("create_trip.name_placeholder".localized, text: $title)
             .onChange(of: title) { _, newValue in
               if newValue.count > titleMaxLength {
                 title = String(newValue.prefix(titleMaxLength))
@@ -295,7 +295,7 @@ struct CreateItinerarySheet: View {
             }
           HStack {
             if hasAttemptedSubmit && isTitleEmpty {
-              Text("请输入行程名称")
+              Text("create_trip.name_required".localized)
                 .font(.caption)
                 .foregroundStyle(.red)
             }
@@ -304,32 +304,32 @@ struct CreateItinerarySheet: View {
               .font(.caption)
               .foregroundStyle(title.count > titleMaxLength * 9 / 10 ? (title.count >= titleMaxLength ? .red : .orange) : .secondary)
           }
-          TextField("目的地", text: $destination)
+          TextField("create_trip.destination_placeholder".localized, text: $destination)
         }
 
-        Section("时间安排") {
-          DatePicker("开始日期", selection: $startDate, displayedComponents: .date)
-          DatePicker("结束日期", selection: $endDate, displayedComponents: .date)
+        Section("create_trip.section.schedule".localized) {
+          DatePicker("itinerary.start_date".localized, selection: $startDate, displayedComponents: .date)
+          DatePicker("itinerary.end_date".localized, selection: $endDate, displayedComponents: .date)
           if !isDateRangeValid {
-            Text("结束日期不能早于开始日期")
+            Text("create_trip.date_error".localized)
               .font(.caption)
               .foregroundStyle(.red)
           }
         }
       }
-      .navigationTitle("新建行程")
+      .navigationTitle("create_trip.title".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Button("取消") { dismiss() }
+          Button("common.cancel".localized) { dismiss() }
         }
         ToolbarItem(placement: .topBarTrailing) {
-          Button("创建") {
+          Button("common.create".localized) {
             hasAttemptedSubmit = true
             guard isFormValid else { return }
             let daysInfo = Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 1
             let itinerary = SavedItinerary(
-              title: title.isEmpty ? "我的行程" : title,
+              title: title.isEmpty ? "create_trip.default_title".localized : title,
               destination: destination.isEmpty ? nil : destination,
               daysCount: max(1, daysInfo + 1)
             )

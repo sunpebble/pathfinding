@@ -11,10 +11,19 @@ struct InsuranceListView: View {
   @State private var selectedProductsForCompare: Set<String> = []
 
   enum InsuranceTab: String, CaseIterable {
-    case recommend = "推荐"
-    case products = "全部产品"
-    case myInsurance = "我的保险"
-    case claimGuide = "理赔指南"
+    case recommend
+    case products
+    case myInsurance
+    case claimGuide
+
+    var title: String {
+      switch self {
+      case .recommend: return "insurance.tab.recommend".localized
+      case .products: return "insurance.tab.products".localized
+      case .myInsurance: return "insurance.tab.my".localized
+      case .claimGuide: return "insurance.tab.claim_guide".localized
+      }
+    }
   }
 
   var body: some View {
@@ -23,7 +32,7 @@ struct InsuranceListView: View {
         // Tab Picker
         Picker("", selection: $selectedTab) {
           ForEach(InsuranceTab.allCases, id: \.self) { tab in
-            Text(tab.rawValue).tag(tab)
+            Text(tab.title).tag(tab)
           }
         }
         .pickerStyle(.segmented)
@@ -44,14 +53,14 @@ struct InsuranceListView: View {
           }
         }
       }
-      .navigationTitle("旅行保险")
+      .navigationTitle("profile.insurance".localized)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           if selectedTab == .products && !selectedProductsForCompare.isEmpty {
             Button {
               showCompareSheet = true
             } label: {
-              Label("比较 (\(selectedProductsForCompare.count))", systemImage: "arrow.left.arrow.right")
+              Label("insurance.compare_count".localized(selectedProductsForCompare.count), systemImage: "arrow.left.arrow.right")
             }
           }
         }
@@ -72,7 +81,7 @@ struct InsuranceListView: View {
           HStack {
             Image(systemName: "magnifyingglass")
               .foregroundStyle(.secondary)
-            TextField("输入目的地", text: $searchDestination)
+            TextField("insurance.destination_placeholder".localized, text: $searchDestination)
               .textFieldStyle(.plain)
           }
           .padding(DesignTokens.Spacing.sm)
@@ -80,10 +89,10 @@ struct InsuranceListView: View {
           .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
 
           HStack {
-            Text("行程天数")
+            Text("insurance.trip_days".localized)
               .foregroundStyle(.secondary)
             Spacer()
-            Stepper("\(tripDays) 天", value: $tripDays, in: 1...365)
+            Stepper("itinerary.days".localized(tripDays), value: $tripDays, in: 1...365)
           }
 
           Button {
@@ -93,7 +102,7 @@ struct InsuranceListView: View {
           } label: {
             HStack {
               Image(systemName: "sparkles")
-              Text("获取推荐")
+              Text("insurance.get_recommendations".localized)
             }
             .frame(maxWidth: .infinity)
           }
@@ -112,15 +121,15 @@ struct InsuranceListView: View {
 
         // Recommended Products
         if store.isLoadingRecommendations {
-          ProgressView("获取推荐中...")
+          ProgressView("insurance.loading_recommendations".localized)
             .padding()
         } else if !store.recommendedProducts.isEmpty {
           VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             HStack {
-              Text("推荐保险")
+              Text("insurance.recommended".localized)
                 .font(.headline)
               Spacer()
-              Text("\(store.recommendedProducts.count) 款")
+              Text("insurance.product_count".localized(store.recommendedProducts.count))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
@@ -140,9 +149,9 @@ struct InsuranceListView: View {
           }
         } else if !searchDestination.isEmpty {
           ContentUnavailableView {
-            Label("暂无推荐", systemImage: "shield.slash")
+            Label("insurance.no_recommendations".localized, systemImage: "shield.slash")
           } description: {
-            Text("输入目的地和行程天数获取推荐")
+            Text("insurance.no_recommendations_hint".localized)
           }
         }
       }
@@ -161,12 +170,12 @@ struct InsuranceListView: View {
   private var allProductsView: some View {
     Group {
       if store.isLoadingProducts {
-        ProgressView("加载中...")
+        ProgressView("common.loading".localized)
       } else if store.products.isEmpty {
         ContentUnavailableView {
-          Label("暂无产品", systemImage: "shield.slash")
+          Label("insurance.no_products".localized, systemImage: "shield.slash")
         } description: {
-          Text("下拉刷新获取保险产品")
+          Text("insurance.no_products_hint".localized)
         }
       } else {
         ScrollView {
@@ -210,17 +219,17 @@ struct InsuranceListView: View {
   private var myInsuranceView: some View {
     Group {
       if store.isLoadingUserInsurances {
-        ProgressView("加载中...")
+        ProgressView("common.loading".localized)
       } else if store.userInsurances.isEmpty {
         ContentUnavailableView {
-          Label("暂无保险", systemImage: "shield")
+          Label("insurance.no_insurance".localized, systemImage: "shield")
         } description: {
-          Text("您还没有购买任何旅行保险")
+          Text("insurance.no_insurance_hint".localized)
         } actions: {
           Button {
             selectedTab = .recommend
           } label: {
-            Label("获取推荐", systemImage: "sparkles")
+            Label("insurance.get_recommendations".localized, systemImage: "sparkles")
           }
           .buttonStyle(.glassProminent)
         }
@@ -249,12 +258,12 @@ struct InsuranceListView: View {
   private var claimGuideView: some View {
     Group {
       if store.isLoadingClaimGuides {
-        ProgressView("加载中...")
+        ProgressView("common.loading".localized)
       } else if store.claimGuides.isEmpty {
         ContentUnavailableView {
-          Label("暂无指南", systemImage: "doc.text")
+          Label("insurance.no_guides".localized, systemImage: "doc.text")
         } description: {
-          Text("理赔指南正在准备中")
+          Text("insurance.no_guides_hint".localized)
         }
       } else {
         ScrollView {
@@ -333,7 +342,7 @@ struct InsuranceProductCard: View {
 
           HStack(spacing: DesignTokens.Spacing.sm) {
             Label(product.formattedPrice, systemImage: "yensign.circle")
-            Label("保额 \(product.formattedCoverage)", systemImage: "shield")
+            Label("insurance.coverage_label".localized(product.formattedCoverage), systemImage: "shield")
           }
           .font(.caption)
           .foregroundStyle(.secondary)
@@ -406,7 +415,7 @@ struct RiskProfileCard: View {
       HStack {
         Image(systemName: "exclamationmark.triangle.fill")
           .foregroundStyle(riskColor)
-        Text("目的地风险评估")
+        Text("insurance.risk_assessment".localized)
           .font(.headline)
         Spacer()
         Text(profile.riskLevelEnum?.displayName ?? profile.riskLevel)
@@ -424,7 +433,7 @@ struct RiskProfileCard: View {
       // Risk factors
       if !profile.riskFactors.isEmpty {
         VStack(alignment: .leading, spacing: 4) {
-          Text("风险因素")
+          Text("insurance.risk_factors".localized)
             .font(.subheadline)
             .fontWeight(.medium)
 
@@ -444,7 +453,7 @@ struct RiskProfileCard: View {
       // Travel advisory
       if let advisory = profile.travelAdvisory {
         VStack(alignment: .leading, spacing: 4) {
-          Text("旅行建议")
+          Text("insurance.travel_advisory".localized)
             .font(.subheadline)
             .fontWeight(.medium)
           Text(advisory)
@@ -481,11 +490,11 @@ struct UserInsuranceCard: View {
 
   var statusText: String {
     switch insurance.status {
-    case "active": return "生效中"
-    case "pending": return "待生效"
-    case "expired": return "已过期"
-    case "cancelled": return "已取消"
-    case "claimed": return "已理赔"
+    case "active": return "insurance.status.active".localized
+    case "pending": return "insurance.status.pending".localized
+    case "expired": return "insurance.status.expired".localized
+    case "cancelled": return "insurance.status.cancelled".localized
+    case "claimed": return "insurance.status.claimed".localized
     default: return insurance.status
     }
   }
@@ -497,7 +506,7 @@ struct UserInsuranceCard: View {
           Text(product.name)
             .font(.headline)
         } else {
-          Text("保险保单")
+          Text("insurance.policy".localized)
             .font(.headline)
         }
 
@@ -515,7 +524,7 @@ struct UserInsuranceCard: View {
 
       if let policyNumber = insurance.policyNumber {
         HStack {
-          Text("保单号:")
+          Text("insurance.policy_number".localized)
             .foregroundStyle(.secondary)
           Text(policyNumber)
             .fontWeight(.medium)
@@ -525,7 +534,7 @@ struct UserInsuranceCard: View {
 
       HStack(spacing: DesignTokens.Spacing.md) {
         VStack(alignment: .leading) {
-          Text("保障期间")
+          Text("insurance.coverage_period".localized)
             .font(.caption)
             .foregroundStyle(.secondary)
           Text("\(insurance.startDate) - \(insurance.endDate)")
@@ -535,7 +544,7 @@ struct UserInsuranceCard: View {
         Spacer()
 
         VStack(alignment: .trailing) {
-          Text("保费")
+          Text("insurance.premium".localized)
             .font(.caption)
             .foregroundStyle(.secondary)
           Text(insurance.formattedPrice)
@@ -561,7 +570,7 @@ struct UserInsuranceCard: View {
       HStack {
         Image(systemName: "person.2")
           .foregroundStyle(.secondary)
-        Text("被保人: \(insurance.insuredPersons.count)人")
+        Text("insurance.insured_count".localized(insurance.insuredPersons.count))
       }
       .font(.caption)
       .foregroundStyle(.secondary)
@@ -595,8 +604,8 @@ struct ClaimGuideCard: View {
         .lineLimit(2)
 
       HStack(spacing: DesignTokens.Spacing.sm) {
-        Label("\(guide.steps.count)步骤", systemImage: "list.number")
-        Label("\(guide.requiredDocuments.count)材料", systemImage: "doc.on.doc")
+        Label("insurance.steps_count".localized(guide.steps.count), systemImage: "list.number")
+        Label("insurance.documents_count".localized(guide.requiredDocuments.count), systemImage: "doc.on.doc")
         if let timeLimit = guide.timeLimit {
           Label(timeLimit, systemImage: "clock")
         }
@@ -643,7 +652,7 @@ struct InsuranceDetailView: View {
 
           HStack(spacing: DesignTokens.Spacing.lg) {
             VStack(alignment: .leading) {
-              Text("保费")
+              Text("insurance.premium".localized)
                 .font(.caption)
                 .foregroundStyle(.secondary)
               Text(product.formattedPrice)
@@ -653,7 +662,7 @@ struct InsuranceDetailView: View {
             }
 
             VStack(alignment: .leading) {
-              Text("最高保额")
+              Text("insurance.max_coverage".localized)
                 .font(.caption)
                 .foregroundStyle(.secondary)
               Text(product.formattedCoverage)
@@ -662,10 +671,10 @@ struct InsuranceDetailView: View {
             }
 
             VStack(alignment: .leading) {
-              Text("保障天数")
+              Text("insurance.coverage_days".localized)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-              Text("\(product.minDays)-\(product.maxDays)天")
+              Text("insurance.days_range".localized(product.minDays, product.maxDays))
                 .font(.title3)
                 .fontWeight(.semibold)
             }
@@ -677,7 +686,7 @@ struct InsuranceDetailView: View {
 
         // Coverage Details
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-          Text("保障内容")
+          Text("insurance.coverage_details".localized)
             .font(.headline)
             .padding(.horizontal, DesignTokens.Spacing.md)
 
@@ -714,7 +723,7 @@ struct InsuranceDetailView: View {
 
         // Features
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-          Text("产品特点")
+          Text("insurance.features".localized)
             .font(.headline)
             .padding(.horizontal, DesignTokens.Spacing.md)
 
@@ -738,7 +747,7 @@ struct InsuranceDetailView: View {
         // Exclusions
         if let exclusions = product.exclusions, !exclusions.isEmpty {
           VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("不保事项")
+            Text("insurance.exclusions".localized)
               .font(.headline)
               .padding(.horizontal, DesignTokens.Spacing.md)
 
@@ -763,7 +772,7 @@ struct InsuranceDetailView: View {
 
         // Contact Info
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-          Text("联系方式")
+          Text("insurance.contact".localized)
             .font(.headline)
             .padding(.horizontal, DesignTokens.Spacing.md)
 
@@ -779,7 +788,7 @@ struct InsuranceDetailView: View {
                     openURL(url)
                   }
                 } label: {
-                  Text("拨打")
+                  Text("insurance.call".localized)
                     .font(.caption)
                 }
                 .buttonStyle(.glass)
@@ -811,7 +820,7 @@ struct InsuranceDetailView: View {
         } label: {
           HStack {
             Image(systemName: "cart")
-            Text("立即投保")
+            Text("insurance.purchase_now".localized)
           }
           .frame(maxWidth: .infinity)
           .padding(.vertical, DesignTokens.Spacing.sm)
@@ -822,7 +831,7 @@ struct InsuranceDetailView: View {
       .padding(.vertical, DesignTokens.Spacing.md)
     }
     .background(Color(.systemGroupedBackground))
-    .navigationTitle("保险详情")
+    .navigationTitle("insurance.detail_title".localized)
     .navigationBarTitleDisplayMode(.inline)
   }
 }
@@ -841,18 +850,18 @@ struct InsuranceCompareView: View {
     NavigationStack {
       Group {
         if isLoading {
-          ProgressView("加载中...")
+          ProgressView("common.loading".localized)
         } else if products.isEmpty {
-          ContentUnavailableView("无法加载", systemImage: "xmark.circle")
+          ContentUnavailableView("error.load_failed".localized, systemImage: "xmark.circle")
         } else {
           compareContent
         }
       }
-      .navigationTitle("产品比较")
+      .navigationTitle("insurance.compare_title".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          Button("完成") { dismiss() }
+          Button("common.done".localized) { dismiss() }
         }
       }
     }
@@ -867,7 +876,7 @@ struct InsuranceCompareView: View {
       VStack(spacing: 0) {
         // Product headers
         HStack(spacing: 1) {
-          Text("对比项")
+          Text("insurance.compare_item".localized)
             .font(.caption)
             .fontWeight(.medium)
             .frame(width: 80)
@@ -892,13 +901,13 @@ struct InsuranceCompareView: View {
         }
 
         // Compare rows
-        compareRow("保费", values: products.map { $0.formattedPrice })
-        compareRow("保额", values: products.map { $0.formattedCoverage })
-        compareRow("天数范围", values: products.map { "\($0.minDays)-\($0.maxDays)天" })
-        compareRow("评分", values: products.map {
+        compareRow("insurance.premium".localized, values: products.map { $0.formattedPrice })
+        compareRow("insurance.coverage".localized, values: products.map { $0.formattedCoverage })
+        compareRow("insurance.days_range_title".localized, values: products.map { "insurance.days_range".localized($0.minDays, $0.maxDays) })
+        compareRow("insurance.rating".localized, values: products.map {
           $0.rating != nil ? String(format: "%.1f", $0.rating!) : "-"
         })
-        compareRow("评价数", values: products.map { "\($0.reviewCount)" })
+        compareRow("insurance.review_count".localized, values: products.map { "\($0.reviewCount)" })
       }
       .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
       .padding(DesignTokens.Spacing.md)
@@ -948,7 +957,7 @@ struct ClaimGuideDetailView: View {
             HStack {
               Image(systemName: "clock")
                 .foregroundStyle(.orange)
-              Text("时限: \(timeLimit)")
+              Text("insurance.time_limit".localized(timeLimit))
             }
             .font(.subheadline)
           }
@@ -959,7 +968,7 @@ struct ClaimGuideDetailView: View {
 
         // Required Documents
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-          Text("所需材料")
+          Text("insurance.required_documents".localized)
             .font(.headline)
             .padding(.horizontal, DesignTokens.Spacing.md)
 
@@ -982,7 +991,7 @@ struct ClaimGuideDetailView: View {
 
         // Steps
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-          Text("理赔步骤")
+          Text("insurance.claim_steps".localized)
             .font(.headline)
             .padding(.horizontal, DesignTokens.Spacing.md)
 
@@ -1031,7 +1040,7 @@ struct ClaimGuideDetailView: View {
         // FAQs
         if let faqs = guide.faqs, !faqs.isEmpty {
           VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("常见问题")
+            Text("insurance.faq".localized)
               .font(.headline)
               .padding(.horizontal, DesignTokens.Spacing.md)
 
@@ -1059,7 +1068,7 @@ struct ClaimGuideDetailView: View {
         // Contact Info
         if let contact = guide.contactInfo {
           VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("联系方式")
+            Text("insurance.contact".localized)
               .font(.headline)
               .padding(.horizontal, DesignTokens.Spacing.md)
 
@@ -1075,7 +1084,7 @@ struct ClaimGuideDetailView: View {
                       openURL(url)
                     }
                   } label: {
-                    Text("拨打")
+                    Text("insurance.call".localized)
                       .font(.caption)
                   }
                   .buttonStyle(.glass)
@@ -1103,7 +1112,7 @@ struct ClaimGuideDetailView: View {
                       openURL(url)
                     }
                   } label: {
-                    Text("访问")
+                    Text("insurance.visit".localized)
                       .font(.caption)
                   }
                   .buttonStyle(.glass)
@@ -1122,7 +1131,7 @@ struct ClaimGuideDetailView: View {
       .padding(.vertical, DesignTokens.Spacing.md)
     }
     .background(Color(.systemGroupedBackground))
-    .navigationTitle("理赔指南")
+    .navigationTitle("insurance.claim_guide_title".localized)
     .navigationBarTitleDisplayMode(.inline)
   }
 }

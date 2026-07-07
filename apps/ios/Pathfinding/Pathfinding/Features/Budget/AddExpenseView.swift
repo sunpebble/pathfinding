@@ -101,7 +101,7 @@ struct ExpenseForm: View {
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
       } header: {
-        Text("金额")
+        Text("expense.form.amount".localized)
       }
 
       // Category Section
@@ -126,7 +126,7 @@ struct ExpenseForm: View {
                 .background(Color(.systemGray5))
                 .clipShape(Circle())
 
-              Text("选择分类")
+              Text("expense.form.pick_category".localized)
                 .foregroundStyle(.secondary)
             }
 
@@ -138,40 +138,40 @@ struct ExpenseForm: View {
           }
         }
       } header: {
-        Text("分类")
+        Text("expense.form.category".localized)
       }
 
       // Description Section
       Section {
-        TextField("支出说明", text: Bindable(model).description)
+        TextField("expense.form.description_placeholder".localized, text: Bindable(model).description)
       } header: {
-        Text("说明")
+        Text("expense.form.description".localized)
       }
 
       // Date & Time Section
       Section {
         DatePicker(
-          "日期",
+          "expense.form.date".localized,
           selection: Bindable(model).date,
           displayedComponents: .date
         )
 
-        Toggle("记录时间", isOn: Bindable(model).includeTime)
+        Toggle("expense.form.include_time".localized, isOn: Bindable(model).includeTime)
 
         if model.includeTime {
           DatePicker(
-            "时间",
+            "expense.form.time".localized,
             selection: Bindable(model).time,
             displayedComponents: .hourAndMinute
           )
         }
       } header: {
-        Text("日期时间")
+        Text("expense.form.date_time".localized)
       }
 
       // Payment Method Section
       Section {
-        Picker("支付方式", selection: Bindable(model).paymentMethod) {
+        Picker("expense.form.payment_method".localized, selection: Bindable(model).paymentMethod) {
           ForEach(PaymentMethod.allCases, id: \.self) { method in
             Label(method.displayName, systemImage: method.icon)
               .tag(method)
@@ -179,15 +179,15 @@ struct ExpenseForm: View {
         }
         .pickerStyle(.menu)
       } header: {
-        Text("支付方式")
+        Text("expense.form.payment_method".localized)
       }
 
       // Notes Section
       Section {
-        TextField("备注（可选）", text: Bindable(model).notes, axis: .vertical)
+        TextField("expense.form.notes_placeholder".localized, text: Bindable(model).notes, axis: .vertical)
           .lineLimit(3...6)
       } header: {
-        Text("备注")
+        Text("budget.edit.notes".localized)
       }
     }
     .sheet(isPresented: Bindable(model).showCategoryPicker) {
@@ -217,14 +217,14 @@ struct AddExpenseView: View {
         model: model,
         currencyLabel: budgetStore.budget?.currency ?? "CNY"
       )
-      .navigationTitle("添加支出")
+      .navigationTitle("expense.add".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") { dismiss() }
+          Button("common.cancel".localized) { dismiss() }
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button("保存") { saveExpense() }
+          Button("common.save".localized) { saveExpense() }
             .disabled(!model.isValid || budgetStore.isSubmitting)
         }
       }
@@ -303,11 +303,11 @@ struct CategoryPickerView: View {
         }
         .padding(DesignTokens.Spacing.md)
       }
-      .navigationTitle("选择分类")
+      .navigationTitle("expense.form.pick_category".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") { dismiss() }
+          Button("common.cancel".localized) { dismiss() }
         }
       }
     }
@@ -375,14 +375,14 @@ struct EditExpenseView: View {
         model: model,
         currencyLabel: expense.currency
       )
-      .navigationTitle("编辑支出")
+      .navigationTitle("expense.edit".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") { dismiss() }
+          Button("common.cancel".localized) { dismiss() }
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button("保存") { updateExpense() }
+          Button("common.save".localized) { updateExpense() }
             .disabled(!model.isValid || budgetStore.isSubmitting)
         }
       }

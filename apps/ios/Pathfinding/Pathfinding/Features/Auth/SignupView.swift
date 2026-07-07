@@ -53,11 +53,11 @@ struct SignupView: View {
               .padding(.top, DesignTokens.Spacing.xxl)
 
               VStack(spacing: DesignTokens.Spacing.xs) {
-                Text("创建账号")
+                Text("signup.title".localized)
                   .font(DesignTokens.Typography.Display.compact)
                   .fontWeight(.bold)
 
-                Text("注册 Sunpebble Trips，开始整理你的行程")
+                Text("signup.subtitle".localized)
                   .font(.subheadline)
                   .foregroundStyle(.secondary)
               }
@@ -71,12 +71,12 @@ struct SignupView: View {
               VStack(spacing: DesignTokens.Spacing.md) {
                 // Email Field
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                  Text("邮箱")
+                  Text("auth.email".localized)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(DesignTokens.Colors.textSecondary)
 
-                  TextField("输入邮箱地址", text: $email)
+                  TextField("login.email_placeholder".localized, text: $email)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.emailAddress)
                     .autocorrectionDisabled()
@@ -92,12 +92,12 @@ struct SignupView: View {
 
                 // Password Field
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                  Text("密码")
+                  Text("auth.password".localized)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(DesignTokens.Colors.textSecondary)
 
-                  SecureField("输入密码（至少8位）", text: $password)
+                  SecureField("signup.password_placeholder".localized, text: $password)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .accessibilityIdentifier("signup-password-field")
@@ -122,12 +122,12 @@ struct SignupView: View {
 
                 // Confirm Password Field
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                  Text("确认密码")
+                  Text("signup.confirm_password".localized)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(DesignTokens.Colors.textSecondary)
 
-                  SecureField("再次输入密码", text: $confirmPassword)
+                  SecureField("signup.confirm_password_placeholder".localized, text: $confirmPassword)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .accessibilityIdentifier("signup-confirm-password-field")
@@ -168,7 +168,7 @@ struct SignupView: View {
                       .progressViewStyle(.circular)
                       .tint(.white)
                   }
-                  Text(isLoading ? "注册中..." : "注册")
+                  Text(isLoading ? "signup.signing_up".localized : "auth.signup".localized)
                     .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
@@ -200,7 +200,7 @@ struct SignupView: View {
                 .fill(DesignTokens.Colors.separator)
                 .frame(height: 0.5)
 
-              Text("其他方式")
+              Text("login.other_methods".localized)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
@@ -222,7 +222,7 @@ struct SignupView: View {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                   Image(systemName: "message.fill")
                     .font(.body)
-                  Text("微信注册")
+                  Text("signup.wechat".localized)
                     .fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity)
@@ -242,7 +242,7 @@ struct SignupView: View {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                   Image(systemName: "apple.logo")
                     .font(.body)
-                  Text("Apple 注册")
+                  Text("signup.apple".localized)
                     .fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity)
@@ -257,14 +257,14 @@ struct SignupView: View {
 
             // MARK: - Login Link
             HStack(spacing: 4) {
-              Text("已有账号？")
+              Text("signup.have_account".localized)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
               Button {
                 showLogin = true
               } label: {
-                Text("登录")
+                Text("auth.login".localized)
                   .font(.subheadline)
                   .fontWeight(.semibold)
                   .foregroundStyle(brandAccent)
@@ -278,7 +278,7 @@ struct SignupView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .topBarTrailing) {
-            Button("跳过") {
+            Button("login.skip".localized) {
               dismiss()
             }
             .font(.subheadline)
@@ -311,10 +311,10 @@ struct SignupView: View {
       return nil
     }
     if password.count < 8 {
-      return "密码至少需要8个字符"
+      return "signup.password_too_short".localized
     }
     if !confirmPassword.isEmpty && password != confirmPassword {
-      return "两次输入的密码不一致"
+      return "signup.password_mismatch".localized
     }
     return nil
   }
@@ -323,7 +323,7 @@ struct SignupView: View {
 
   private func handleSignup() async {
     guard isFormValid else {
-      errorMessage = "请确保所有字段都已填写且密码匹配"
+      errorMessage = "signup.form_invalid".localized
       return
     }
 

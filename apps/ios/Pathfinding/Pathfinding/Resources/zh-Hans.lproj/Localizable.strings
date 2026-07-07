@@ -29,7 +29,7 @@
 "common.none" = "无";
 "common.yes" = "是";
 "common.no" = "否";
-"common.ok" = "好��";
+"common.ok" = "好的";
 
 // MARK: - Tab Bar
 "tab.discover" = "发现";
@@ -408,3 +408,255 @@
 "timezone.home_zone" = "主时区";
 "timezone.departure" = "出发地";
 "timezone.destination" = "目的地";
+
+// MARK: - Common (Additions)
+"common.create" = "创建";
+
+// MARK: - Create Trip
+"create_trip.title" = "新建行程";
+"create_trip.section.basic" = "基本信息";
+"create_trip.name_placeholder" = "行程名称";
+"create_trip.name_required" = "请输入行程名称";
+"create_trip.destination_placeholder" = "目的地";
+"create_trip.section.schedule" = "时间安排";
+"create_trip.date_error" = "结束日期不能早于开始日期";
+"create_trip.default_title" = "我的行程";
+
+// MARK: - Itinerary (Additions)
+"itinerary.menu.ai_planner" = "AI 规划";
+"itinerary.menu.voice_input" = "语音输入";
+"itinerary.menu.more" = "更多操作";
+"itinerary.menu.more_hint" = "打开菜单，包含 AI 规划、语音输入和创建行程";
+"itinerary.from_author" = "来自 %@";
+"itinerary.schedule" = "行程安排";
+"itinerary.title_placeholder" = "行程标题";
+"itinerary.copy" = "复制行程";
+"itinerary.analysis" = "行程分析";
+"itinerary.budget_management" = "预算管理";
+"itinerary.more_features" = "更多功能";
+"itinerary.stop_accessibility" = "第 %d 站，%@";
+"itinerary.stop_selected" = "已选中";
+"itinerary.stop_hint" = "双击在地图上定位";
+
+// MARK: - Day Edit
+"day_edit.title" = "第 %d 天 - 编辑";
+"day_edit.add_poi" = "添加地点";
+
+// MARK: - POI Edit
+"poi_edit.title" = "编辑地点";
+"poi_edit.section.basic" = "基本信息";
+"poi_edit.name_placeholder" = "地点名称 (输入关键字搜索)";
+"poi_edit.unknown_place" = "未知地点";
+"poi_edit.time" = "时间";
+"poi_edit.time_placeholder" = "例如 10:00";
+"poi_edit.notes_placeholder" = "添加备注";
+
+// MARK: - Login
+"login.skip" = "跳过";
+"login.welcome" = "欢迎回来";
+"login.subtitle" = "登录 Sunpebble Trips，继续整理你的行程";
+"login.method.phone" = "手机号登录";
+"login.method.email" = "邮箱登录";
+"login.phone" = "手机号";
+"login.phone_placeholder" = "输入手机号";
+"login.code" = "验证码";
+"login.code_placeholder" = "输入验证码";
+"login.get_code" = "获取验证码";
+"login.email_placeholder" = "输入邮箱地址";
+"login.password_placeholder" = "输入密码";
+"login.signing_in" = "登录中...";
+"login.other_methods" = "其他方式";
+"login.wechat" = "微信登录";
+"login.apple" = "Apple 登录";
+"login.no_account" = "还没有账号？";
+"login.invalid_phone" = "请输入正确的手机号";
+
+// MARK: - Budget Edit
+"budget.edit.title_new" = "设置预算";
+"budget.edit.title_edit" = "编辑预算";
+"budget.edit.total" = "总预算";
+"budget.edit.total_footer" = "设置此次行程的总预算金额";
+"budget.edit.categories" = "分类预算";
+"budget.edit.categories_footer" = "为每个分类设置预算上限（可选）";
+"budget.edit.over_allocated" = "分类预算总和超过了总预算";
+"budget.edit.allocated" = "已分配";
+"budget.edit.unallocated" = "未分配";
+"budget.edit.notes" = "备注";
+"budget.edit.notes_placeholder" = "预算备注（可选）";
+"budget.edit.quick_actions" = "快捷操作";
+"budget.edit.auto_allocate" = "自动分配预算";
+"budget.edit.clear_categories" = "清空分类预算";
+"budget.edit.pick_currency" = "选择货币";
+
+// MARK: - Currencies
+"currency.cny" = "人民币";
+"currency.usd" = "美元";
+"currency.eur" = "欧元";
+"currency.jpy" = "日元";
+"currency.gbp" = "英镑";
+"currency.hkd" = "港币";
+"currency.twd" = "新台币";
+"currency.krw" = "韩元";
+"currency.thb" = "泰铢";
+"currency.sgd" = "新加坡元";
+
+// MARK: - Insurance
+"insurance.tab.recommend" = "推荐";
+"insurance.tab.products" = "全部产品";
+"insurance.tab.my" = "我的保险";
+"insurance.tab.claim_guide" = "理赔指南";
+"insurance.compare_count" = "比较 (%d)";
+"insurance.destination_placeholder" = "输入目的地";
+"insurance.trip_days" = "行程天数";
+"insurance.get_recommendations" = "获取推荐";
+"insurance.loading_recommendations" = "获取推荐中...";
+"insurance.recommended" = "推荐保险";
+"insurance.product_count" = "%d 款";
+"insurance.no_recommendations" = "暂无推荐";
+"insurance.no_recommendations_hint" = "输入目的地和行程天数获取推荐";
+"insurance.no_products" = "暂无产品";
+"insurance.no_products_hint" = "下拉刷新获取保险产品";
+"insurance.no_insurance" = "暂无保险";
+"insurance.no_insurance_hint" = "您还没有购买任何旅行保险";
+"insurance.no_guides" = "暂无指南";
+"insurance.no_guides_hint" = "理赔指南正在准备中";
+"insurance.coverage_label" = "保额 %@";
+"insurance.risk_assessment" = "目的地风险评估";
+"insurance.risk_factors" = "风险因素";
+"insurance.travel_advisory" = "旅行建议";
+"insurance.status.active" = "生效中";
+"insurance.status.pending" = "待生效";
+"insurance.status.expired" = "已过期";
+"insurance.status.cancelled" = "已取消";
+"insurance.status.claimed" = "已理赔";
+"insurance.policy" = "保险保单";
+"insurance.policy_number" = "保单号:";
+"insurance.coverage_period" = "保障期间";
+"insurance.premium" = "保费";
+"insurance.insured_count" = "被保人: %d人";
+"insurance.steps_count" = "%d步骤";
+"insurance.documents_count" = "%d材料";
+"insurance.max_coverage" = "最高保额";
+"insurance.coverage_days" = "保障天数";
+"insurance.days_range" = "%d-%d天";
+"insurance.days_range_title" = "天数范围";
+"insurance.coverage_details" = "保障内容";
+"insurance.features" = "产品特点";
+"insurance.exclusions" = "不保事项";
+"insurance.contact" = "联系方式";
+"insurance.call" = "拨打";
+"insurance.visit" = "访问";
+"insurance.purchase_now" = "立即投保";
+"insurance.detail_title" = "保险详情";
+"insurance.compare_title" = "产品比较";
+"insurance.compare_item" = "对比项";
+"insurance.coverage" = "保额";
+"insurance.rating" = "评分";
+"insurance.review_count" = "评价数";
+"insurance.time_limit" = "时限: %@";
+"insurance.required_documents" = "所需材料";
+"insurance.claim_steps" = "理赔步骤";
+"insurance.faq" = "常见问题";
+"insurance.claim_guide_title" = "理赔指南";
+
+// MARK: - Budget Overview
+"budget.overview.title" = "预算追踪";
+"budget.overview.header" = "预算概览";
+"budget.overview.spent" = "已支出";
+"budget.overview.remaining" = "剩余";
+"budget.overview.no_budget" = "尚未设置预算";
+"budget.overview.chart_type" = "图表类型";
+"budget.overview.no_data" = "暂无支出数据";
+"budget.overview.category_breakdown" = "分类明细";
+"budget.overview.no_category_spending" = "暂无分类支出";
+"budget.overview.recent_expenses" = "最近支出";
+"budget.overview.over_budget" = "超支";
+"budget.chart.category" = "分类";
+"budget.chart.daily" = "每日";
+"budget.chart.amount" = "金额";
+"budget.chart.date" = "日期";
+
+// MARK: - Expenses
+"expense.add" = "添加支出";
+"expense.edit" = "编辑支出";
+"expense.empty" = "暂无支出记录";
+"expense.view_all" = "查看全部";
+"expense.list.title" = "支出明细";
+"expense.list.summary" = "共 %d 笔，合计 %@";
+"expense.list.empty_category" = "当前分类下没有支出";
+"expense.list.date_format" = "M月d日 EEEE";
+"expense.sort.date_desc" = "最新优先";
+"expense.sort.date_asc" = "最早优先";
+"expense.sort.amount_desc" = "金额从高到低";
+"expense.sort.amount_asc" = "金额从低到高";
+"expense.delete.title" = "确认删除";
+"expense.delete.message" = "确定要删除「%@」吗？此操作无法撤销。";
+"expense.form.amount" = "金额";
+"expense.form.category" = "分类";
+"expense.form.pick_category" = "选择分类";
+"expense.form.description" = "说明";
+"expense.form.description_placeholder" = "支出说明";
+"expense.form.date" = "日期";
+"expense.form.time" = "时间";
+"expense.form.date_time" = "日期时间";
+"expense.form.include_time" = "记录时间";
+"expense.form.payment_method" = "支付方式";
+"expense.form.notes_placeholder" = "备注（可选）";
+
+// MARK: - Payment Methods
+"payment.cash" = "现金";
+"payment.wechat" = "微信支付";
+"payment.alipay" = "支付宝";
+"payment.credit_card" = "信用卡";
+"payment.debit_card" = "借记卡";
+"payment.other" = "其他";
+
+// MARK: - Signup
+"signup.title" = "创建账号";
+"signup.subtitle" = "注册 Sunpebble Trips，开始整理你的行程";
+"signup.password_placeholder" = "输入密码（至少8位）";
+"signup.confirm_password" = "确认密码";
+"signup.confirm_password_placeholder" = "再次输入密码";
+"signup.signing_up" = "注册中...";
+"signup.wechat" = "微信注册";
+"signup.apple" = "Apple 注册";
+"signup.have_account" = "已有账号？";
+"signup.password_too_short" = "密码至少需要8个字符";
+"signup.password_mismatch" = "两次输入的密码不一致";
+"signup.form_invalid" = "请确保所有字段都已填写且密码匹配";
+
+// MARK: - Chat
+"chat.title" = "AI 旅行助手";
+"chat.new_session" = "新建对话";
+"chat.new_session_hint" = "创建一个新的聊天对话";
+"chat.delete_session" = "删除对话";
+"chat.delete_session_message" = "确定要删除这个对话吗？此操作无法撤销。";
+"chat.archive" = "归档";
+"chat.empty" = "暂无对话";
+"chat.empty_description" = "开始与 AI 旅行助手对话，获取个性化的旅行推荐。";
+"chat.start_new" = "开始新对话";
+"chat.session_title" = "标题";
+"chat.session_title_placeholder" = "对话标题（可选）";
+"chat.session_title_footer" = "留空将根据您的第一条消息自动生成";
+"chat.context" = "上下文";
+"chat.context_placeholder" = "附加上下文";
+"chat.context_footer" = "提供任何额外的上下文，如旅行偏好或限制条件";
+"chat.capabilities_intro" = "我可以帮助您：";
+"chat.feature.attractions" = "景点推荐";
+"chat.feature.planning" = "行程规划";
+"chat.feature.tips" = "旅行建议";
+"chat.feature.food" = "美食推荐";
+"chat.features" = "功能";
+"chat.load_more" = "加载更多消息";
+"chat.clear" = "清空对话";
+"chat.clear_confirm" = "清空";
+"chat.clear_message" = "这将删除此对话中的所有消息。";
+"chat.more_actions" = "更多操作";
+"chat.more_actions_hint" = "打开菜单，包含清空对话等选项";
+"chat.recommended_pois" = "推荐地点";
+"chat.input_placeholder" = "随便问我关于旅行的问题...";
+"chat.quick_reply.recommend_restaurant" = "推荐附近餐厅";
+"chat.quick_reply.recommend_attraction" = "推荐热门景点";
+"chat.quick_reply.get_tips" = "旅行小贴士";
+"chat.quick_reply.optimize_route" = "优化路线";
+"chat.quick_reply.check_weather" = "查看天气";

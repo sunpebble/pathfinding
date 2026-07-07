@@ -398,20 +398,7 @@ enum PaymentMethod: String, CaseIterable, Codable {
   case other = "other"
 
   var displayName: String {
-    switch self {
-    case .cash:
-      return "现金"
-    case .wechat:
-      return "微信支付"
-    case .alipay:
-      return "支付宝"
-    case .creditCard:
-      return "信用卡"
-    case .debitCard:
-      return "借记卡"
-    case .other:
-      return "其他"
-    }
+    "payment.\(rawValue)".localized
   }
 
   var icon: String {

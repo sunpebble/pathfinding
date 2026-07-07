@@ -7,8 +7,8 @@ enum LoginMethod: String, CaseIterable {
 
   var title: String {
     switch self {
-    case .phone: return "手机号登录"
-    case .email: return "邮箱登录"
+    case .phone: return "login.method.phone".localized
+    case .email: return "login.method.email".localized
     }
   }
 
@@ -88,11 +88,11 @@ struct LoginView: View {
               .padding(.top, DesignTokens.Spacing.xxl)
 
               VStack(spacing: DesignTokens.Spacing.xs) {
-                Text("欢迎回来")
+                Text("login.welcome".localized)
                   .font(DesignTokens.Typography.Display.compact)
                   .fontWeight(.bold)
 
-                Text("登录 Sunpebble Trips，继续整理你的行程")
+                Text("login.subtitle".localized)
                   .font(.subheadline)
                   .foregroundStyle(.secondary)
               }
@@ -176,7 +176,7 @@ struct LoginView: View {
                       .progressViewStyle(.circular)
                       .tint(.white)
                   }
-                  Text(isLoading ? "登录中..." : "登录")
+                  Text(isLoading ? "login.signing_in".localized : "auth.login".localized)
                     .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
@@ -208,7 +208,7 @@ struct LoginView: View {
                 .fill(DesignTokens.Colors.separator)
                 .frame(height: 0.5)
 
-              Text("其他方式")
+              Text("login.other_methods".localized)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
@@ -230,7 +230,7 @@ struct LoginView: View {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                   Image(systemName: "message.fill")
                     .font(.body)
-                  Text("微信登录")
+                  Text("login.wechat".localized)
                     .fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity)
@@ -250,7 +250,7 @@ struct LoginView: View {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                   Image(systemName: "apple.logo")
                     .font(.body)
-                  Text("Apple 登录")
+                  Text("login.apple".localized)
                     .fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity)
@@ -265,14 +265,14 @@ struct LoginView: View {
 
             // MARK: - Sign Up Link
             HStack(spacing: DesignTokens.Spacing.xxs) {
-              Text("还没有账号？")
+              Text("login.no_account".localized)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
               Button {
                 showSignup = true
               } label: {
-                Text("注册")
+                Text("auth.signup".localized)
                   .font(.subheadline)
                   .fontWeight(.semibold)
                   .foregroundStyle(brandAccent)
@@ -287,8 +287,12 @@ struct LoginView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .topBarTrailing) {
-            Button("跳过") {
+            Button("login.skip".localized) {
               authViewModel.continueAsGuest()
+              // When shown as a sheet (e.g. from Profile) guest mode may already
+              // be active, so the state change alone won't close it — dismiss
+              // explicitly. As the launch gate this is a harmless no-op.
+              dismiss()
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
@@ -318,7 +322,7 @@ struct LoginView: View {
     VStack(spacing: DesignTokens.Spacing.md) {
       // Phone Number Field
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text("手机号")
+        Text("login.phone".localized)
           .font(.subheadline)
           .fontWeight(.medium)
           .foregroundStyle(DesignTokens.Colors.textSecondary)
@@ -332,7 +336,7 @@ struct LoginView: View {
           Divider()
             .frame(height: 20)
 
-          TextField("输入手机号", text: $phoneNumber)
+          TextField("login.phone_placeholder".localized, text: $phoneNumber)
             .textInputAutocapitalization(.never)
             .keyboardType(.phonePad)
             .autocorrectionDisabled()
@@ -349,13 +353,13 @@ struct LoginView: View {
 
       // Verification Code Field
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text("验证码")
+        Text("login.code".localized)
           .font(.subheadline)
           .fontWeight(.medium)
           .foregroundStyle(DesignTokens.Colors.textSecondary)
 
         HStack {
-          TextField("输入验证码", text: $verificationCode)
+          TextField("login.code_placeholder".localized, text: $verificationCode)
             .textInputAutocapitalization(.never)
             .keyboardType(.numberPad)
             .autocorrectionDisabled()
@@ -372,7 +376,7 @@ struct LoginView: View {
                 .progressViewStyle(.circular)
                 .frame(width: 100)
             } else {
-              Text(countdown > 0 ? "\(countdown)s" : "获取验证码")
+              Text(countdown > 0 ? "\(countdown)s" : "login.get_code".localized)
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .frame(width: 100)
@@ -398,12 +402,12 @@ struct LoginView: View {
     VStack(spacing: DesignTokens.Spacing.md) {
       // Email Field
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text("邮箱")
+        Text("auth.email".localized)
           .font(.subheadline)
           .fontWeight(.medium)
           .foregroundStyle(DesignTokens.Colors.textSecondary)
 
-        TextField("输入邮箱地址", text: $email)
+        TextField("login.email_placeholder".localized, text: $email)
           .textInputAutocapitalization(.never)
           .keyboardType(.emailAddress)
           .autocorrectionDisabled()
@@ -420,7 +424,7 @@ struct LoginView: View {
       // Password Field
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
         HStack {
-          Text("密码")
+          Text("auth.password".localized)
             .font(.subheadline)
             .fontWeight(.medium)
             .foregroundStyle(DesignTokens.Colors.textSecondary)
@@ -430,13 +434,13 @@ struct LoginView: View {
           Button {
             // TODO: Implement forgot password
           } label: {
-            Text("忘记密码？")
+            Text("auth.forgot_password".localized)
               .font(.caption)
               .foregroundStyle(brandAccent)
           }
         }
 
-        SecureField("输入密码", text: $password)
+        SecureField("login.password_placeholder".localized, text: $password)
           .textInputAutocapitalization(.never)
           .autocorrectionDisabled()
           .accessibilityIdentifier("login-password-field")
@@ -473,7 +477,7 @@ struct LoginView: View {
 
   private func sendVerificationCode() async {
     guard isValidPhoneNumber else {
-      errorMessage = "请输入正确的手机号"
+      errorMessage = "login.invalid_phone".localized
       return
     }
 

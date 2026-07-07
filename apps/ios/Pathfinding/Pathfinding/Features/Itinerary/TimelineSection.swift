@@ -14,7 +14,7 @@ struct TimelineSection: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
-      Label("行程安排", systemImage: "map")
+      Label("itinerary.schedule".localized, systemImage: "map")
         .font(.headline)
         .padding(.horizontal)
 

@@ -34,8 +34,8 @@ struct PoiEditView: View {
 
   var body: some View {
     Form {
-      Section("基本信息") {
-        TextField("地点名称 (输入关键字搜索)", text: $poi.name)
+      Section("poi_edit.section.basic".localized) {
+        TextField("poi_edit.name_placeholder".localized, text: $poi.name)
           .onChange(of: poi.name) { _, newValue in
             debouncer.send(newValue)
           }
@@ -46,7 +46,7 @@ struct PoiEditView: View {
               selectLocation(item)
             } label: {
               VStack(alignment: .leading) {
-                Text(item.name ?? "未知地点")
+                Text(item.name ?? "poi_edit.unknown_place".localized)
                   .foregroundStyle(.primary)
                 if let title = item.address?.fullAddress {
                   Text(title)
@@ -59,9 +59,9 @@ struct PoiEditView: View {
         }
 
         HStack {
-          Text("时间")
+          Text("poi_edit.time".localized)
           Spacer()
-          TextField("例如 10:00", text: Binding(
+          TextField("poi_edit.time_placeholder".localized, text: Binding(
             get: { poi.time ?? "" },
             set: { poi.time = $0.isEmpty ? nil : $0 }
           ))
@@ -69,19 +69,19 @@ struct PoiEditView: View {
         }
       }
 
-      Section("备注") {
-        TextField("添加备注", text: Binding(
+      Section("itinerary.notes".localized) {
+        TextField("poi_edit.notes_placeholder".localized, text: Binding(
           get: { poi.description ?? "" },
           set: { poi.description = $0.isEmpty ? nil : $0 }
         ), axis: .vertical)
         .lineLimit(3...6)
       }
     }
-    .navigationTitle("编辑地点")
+    .navigationTitle("poi_edit.title".localized)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
-        Button("完成") { dismiss() }
+        Button("common.done".localized) { dismiss() }
       }
     }
     .task {

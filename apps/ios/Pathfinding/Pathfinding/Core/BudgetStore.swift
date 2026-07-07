@@ -64,7 +64,7 @@ final class BudgetStore {
       logger.info("Fetched \(self.categories.count) expense categories")
     } catch {
       logger.error("Failed to fetch categories: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
     }
 
     isLoadingCategories = false
@@ -87,7 +87,7 @@ final class BudgetStore {
       return true
     } catch {
       logger.error("Failed to seed categories: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       isSubmitting = false
       return false
     }
@@ -117,7 +117,7 @@ final class BudgetStore {
       logger.info("Fetched budget for itinerary \(itineraryId)")
     } catch {
       logger.error("Failed to fetch budget: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
     }
 
     isLoadingBudget = false
@@ -159,7 +159,7 @@ final class BudgetStore {
       return true
     } catch {
       logger.error("Failed to save budget: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       isSubmitting = false
       return false
     }
@@ -179,7 +179,7 @@ final class BudgetStore {
       return true
     } catch {
       logger.error("Failed to delete budget: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       isSubmitting = false
       return false
     }
@@ -210,7 +210,7 @@ final class BudgetStore {
       logger.info("Fetched \(self.expenses.count) expenses for itinerary \(itineraryId)")
     } catch {
       logger.error("Failed to fetch expenses: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
     }
 
     isLoadingExpenses = false
@@ -266,7 +266,7 @@ final class BudgetStore {
       return true
     } catch {
       logger.error("Failed to create expense: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       isSubmitting = false
       return false
     }
@@ -311,7 +311,7 @@ final class BudgetStore {
       return true
     } catch {
       logger.error("Failed to update expense: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       isSubmitting = false
       return false
     }
@@ -334,7 +334,7 @@ final class BudgetStore {
       return true
     } catch {
       logger.error("Failed to delete expense: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
       isSubmitting = false
       return false
     }
@@ -357,7 +357,7 @@ final class BudgetStore {
       logger.info("Fetched budget summary for itinerary \(itineraryId)")
     } catch {
       logger.error("Failed to fetch budget summary: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
     }
 
     isLoadingSummary = false
@@ -383,7 +383,7 @@ final class BudgetStore {
       logger.info("Fetched spending trend for itinerary \(itineraryId)")
     } catch {
       logger.error("Failed to fetch spending trend: \(error.localizedDescription)")
-      errorMessage = error.localizedDescription
+      errorMessage = error.userFacingMessage
     }
   }
 

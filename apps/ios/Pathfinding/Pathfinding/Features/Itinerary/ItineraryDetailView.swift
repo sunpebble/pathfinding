@@ -58,7 +58,7 @@ struct ItineraryDetailView: View {
 
         VStack(alignment: .leading, spacing: 16) {
           // Editable Title
-          TextField("行程标题", text: $localTitle, axis: .vertical)
+          TextField("itinerary.title_placeholder".localized, text: $localTitle, axis: .vertical)
             .font(.title2)
             .fontWeight(.bold)
             .lineLimit(nil)
@@ -119,7 +119,7 @@ struct ItineraryDetailView: View {
         } label: {
           Image(systemName: "doc.on.doc")
         }
-        .accessibilityLabel("复制行程")
+        .accessibilityLabel("itinerary.copy".localized)
       }
 
       ToolbarSpacer(.fixed, placement: .topBarTrailing)
@@ -130,20 +130,20 @@ struct ItineraryDetailView: View {
             Button {
               activeDestination = .analysis
             } label: {
-              Label("行程分析", systemImage: "chart.bar.xaxis")
+              Label("itinerary.analysis".localized, systemImage: "chart.bar.xaxis")
             }
           }
           if availableDestinations.contains(.budget) {
             Button {
               activeDestination = .budget
             } label: {
-              Label("预算管理", systemImage: "creditcard")
+              Label("itinerary.budget_management".localized, systemImage: "creditcard")
             }
           }
         } label: {
           Image(systemName: "ellipsis.circle")
         }
-        .accessibilityLabel("更多功能")
+        .accessibilityLabel("itinerary.more_features".localized)
       }
     }
     .navigationDestination(item: $activeDestination) { destination in

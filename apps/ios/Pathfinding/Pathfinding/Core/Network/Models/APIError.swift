@@ -48,6 +48,23 @@ enum APIError: LocalizedError {
   }
 }
 
+// MARK: - User-Facing Message
+
+extension Error {
+  /// Message suitable for display in the UI: network failures get a friendly
+  /// localized description instead of raw NSURLError text ("A server with the
+  /// specified hostname could not be found."). Keep the raw error in logs.
+  var userFacingMessage: String {
+    if self is URLError {
+      return "error.network_description".localized
+    }
+    if let apiError = self as? APIError, case .networkError = apiError {
+      return "error.network_description".localized
+    }
+    return localizedDescription
+  }
+}
+
 // MARK: - Empty Response
 
 /// Empty response type for API calls that don't return data

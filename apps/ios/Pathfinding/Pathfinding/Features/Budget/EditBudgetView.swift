@@ -1,5 +1,23 @@
 import SwiftUI
 
+/// Display symbols for the currencies supported by the budget editor.
+/// Shared by the amount formatter, category rows and the currency picker so
+/// all three always agree (NumberFormatter with the device locale renders
+/// e.g. "CN¥" for CNY in English, and `Locale.currencySymbol` ignores the
+/// selected currency entirely).
+let budgetCurrencySymbols: [String: String] = [
+  "CNY": "¥",
+  "USD": "$",
+  "EUR": "€",
+  "JPY": "¥",
+  "GBP": "£",
+  "HKD": "HK$",
+  "TWD": "NT$",
+  "KRW": "₩",
+  "THB": "฿",
+  "SGD": "S$",
+]
+
 /// Form view for editing budget settings
 struct EditBudgetView: View {
   let itineraryId: String
@@ -12,6 +30,7 @@ struct EditBudgetView: View {
   @State private var categoryBudgets: [String: String] = [:] // categoryId -> amount string
   @State private var notes: String = ""
   @State private var showCurrencyPicker = false
+  @State private var saveErrorMessage: String?
 
   private let currencies = ["CNY", "USD", "EUR", "JPY", "GBP", "HKD", "TWD", "KRW", "THB", "SGD"]
 
@@ -54,9 +73,9 @@ struct EditBudgetView: View {
           }
           .padding(.vertical, DesignTokens.Spacing.sm)
         } header: {
-          Text("总预算")
+          Text("budget.edit.total".localized)
         } footer: {
-          Text("设置此次行程的总预算金额")
+          Text("budget.edit.total_footer".localized)
         }
 
         // Category Budgets Section
@@ -71,7 +90,7 @@ struct EditBudgetView: View {
 
           // Summary row
           HStack {
-            Text("已分配")
+            Text("budget.edit.allocated".localized)
               .foregroundStyle(.secondary)
             Spacer()
             Text(formatAmount(totalCategoryBudget))
@@ -79,7 +98,7 @@ struct EditBudgetView: View {
           }
 
           HStack {
-            Text("未分配")
+            Text("budget.edit.unallocated".localized)
               .foregroundStyle(remainingToAllocate < 0 ? .red : .secondary)
             Spacer()
             Text(formatAmount(remainingToAllocate))
@@ -87,22 +106,22 @@ struct EditBudgetView: View {
               .foregroundStyle(remainingToAllocate < 0 ? .red : .primary)
           }
         } header: {
-          Text("分类预算")
+          Text("budget.edit.categories".localized)
         } footer: {
           if remainingToAllocate < 0 {
-            Text("分类预算总和超过了总预算")
+            Text("budget.edit.over_allocated".localized)
               .foregroundStyle(.red)
           } else {
-            Text("为每个分类设置预算上限（可选）")
+            Text("budget.edit.categories_footer".localized)
           }
         }
 
         // Notes Section
         Section {
-          TextField("预算备注（可选）", text: $notes, axis: .vertical)
+          TextField("budget.edit.notes_placeholder".localized, text: $notes, axis: .vertical)
             .lineLimit(3...6)
         } header: {
-          Text("备注")
+          Text("budget.edit.notes".localized)
         }
 
         // Quick Allocation Section
@@ -110,34 +129,42 @@ struct EditBudgetView: View {
           Button {
             autoAllocateBudget()
           } label: {
-            Label("自动分配预算", systemImage: "wand.and.stars")
+            Label("budget.edit.auto_allocate".localized, systemImage: "wand.and.stars")
           }
 
           Button {
             clearCategoryBudgets()
           } label: {
-            Label("清空分类预算", systemImage: "trash")
+            Label("budget.edit.clear_categories".localized, systemImage: "trash")
               .foregroundStyle(.red)
           }
         } header: {
-          Text("快捷操作")
+          Text("budget.edit.quick_actions".localized)
         }
       }
-      .navigationTitle(budgetStore.budget == nil ? "设置预算" : "编辑预算")
+      .navigationTitle(budgetStore.budget == nil ? "budget.edit.title_new".localized : "budget.edit.title_edit".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") {
+          Button("common.cancel".localized) {
             dismiss()
           }
         }
 
         ToolbarItem(placement: .confirmationAction) {
-          Button("保存") {
+          Button("common.save".localized) {
             saveBudget()
           }
           .disabled(!isValid || budgetStore.isSubmitting)
         }
+      }
+      .alert("error.save_failed".localized, isPresented: Binding(
+        get: { saveErrorMessage != nil },
+        set: { if !$0 { saveErrorMessage = nil } }
+      )) {
+        Button("common.ok".localized, role: .cancel) {}
+      } message: {
+        Text(saveErrorMessage ?? "")
       }
       .sheet(isPresented: $showCurrencyPicker) {
         CurrencyPickerView(
@@ -199,6 +226,9 @@ struct EditBudgetView: View {
         // Refresh summary after saving
         await budgetStore.fetchSummary(itineraryId: itineraryId)
         dismiss()
+      } else {
+        // Surface why saving failed instead of silently staying open
+        saveErrorMessage = budgetStore.errorMessage ?? "error.unknown_description".localized
       }
     }
   }
@@ -232,6 +262,7 @@ struct EditBudgetView: View {
     let formatter = NumberFormatter()
     formatter.numberStyle = .currency
     formatter.currencyCode = currency
+    formatter.currencySymbol = budgetCurrencySymbols[currency] ?? currency
     formatter.maximumFractionDigits = 0
     return formatter.string(from: NSNumber(value: amount)) ?? "\(currency) \(Int(amount))"
   }
@@ -276,8 +307,7 @@ struct CategoryBudgetRow: View {
   }
 
   private var currencySymbol: String {
-    let locale = Locale(identifier: "en_US")
-    return locale.currencySymbol ?? currency
+    budgetCurrencySymbols[currency] ?? currency
   }
 }
 
@@ -289,31 +319,20 @@ struct CurrencyPickerView: View {
 
   @Environment(\.dismiss) private var dismiss
 
-  private let currencyNames: [String: String] = [
-    "CNY": "人民币",
-    "USD": "美元",
-    "EUR": "欧元",
-    "JPY": "日元",
-    "GBP": "英镑",
-    "HKD": "港币",
-    "TWD": "新台币",
-    "KRW": "韩元",
-    "THB": "泰铢",
-    "SGD": "新加坡元",
-  ]
-
-  private let currencySymbols: [String: String] = [
-    "CNY": "¥",
-    "USD": "$",
-    "EUR": "€",
-    "JPY": "¥",
-    "GBP": "£",
-    "HKD": "HK$",
-    "TWD": "NT$",
-    "KRW": "₩",
-    "THB": "฿",
-    "SGD": "S$",
-  ]
+  private var currencyNames: [String: String] {
+    [
+      "CNY": "currency.cny".localized,
+      "USD": "currency.usd".localized,
+      "EUR": "currency.eur".localized,
+      "JPY": "currency.jpy".localized,
+      "GBP": "currency.gbp".localized,
+      "HKD": "currency.hkd".localized,
+      "TWD": "currency.twd".localized,
+      "KRW": "currency.krw".localized,
+      "THB": "currency.thb".localized,
+      "SGD": "currency.sgd".localized,
+    ]
+  }
 
   var body: some View {
     NavigationStack {
@@ -324,7 +343,7 @@ struct CurrencyPickerView: View {
             dismiss()
           } label: {
             HStack {
-              Text(currencySymbols[currency] ?? currency)
+              Text(budgetCurrencySymbols[currency] ?? currency)
                 .font(.headline)
                 .frame(width: 40, alignment: .leading)
 
@@ -348,11 +367,11 @@ struct CurrencyPickerView: View {
           }
         }
       }
-      .navigationTitle("选择货币")
+      .navigationTitle("budget.edit.pick_currency".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") {
+          Button("common.cancel".localized) {
             dismiss()
           }
         }

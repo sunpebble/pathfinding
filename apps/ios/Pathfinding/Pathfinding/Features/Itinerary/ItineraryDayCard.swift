@@ -20,7 +20,7 @@ struct ItineraryDayCard: View {
         onSelect()
       } label: {
         HStack {
-          Text("第 \(day.dayNumber) 天")
+          Text("itinerary.day".localized(day.dayNumber))
             .font(.headline)
             .foregroundStyle(.primary)
           if let theme = day.theme {
@@ -86,9 +86,9 @@ struct ItineraryDayCard: View {
             }
           }
           .accessibilityElement(children: .combine)
-          .accessibilityLabel("第 \(poiIndex + 1) 站，\(poi.name)")
-          .accessibilityValue(isSelected ? "已选中" : "")
-          .accessibilityHint("双击在地图上定位")
+          .accessibilityLabel("itinerary.stop_accessibility".localized(poiIndex + 1, poi.name))
+          .accessibilityValue(isSelected ? "itinerary.stop_selected".localized : "")
+          .accessibilityHint("itinerary.stop_hint".localized)
         }
       }
       .padding(.leading, 4)
