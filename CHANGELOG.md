@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/sunpebble/pathfinding/compare/v1.3.0...v1.3.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* **ios:** budget/login/day-edit P1 fixes; localize hardcoded zh strings; friendly errors ([9bae14b](https://github.com/sunpebble/pathfinding/commit/9bae14bc8820a79bb2d88c12c1dd468d8922bf85))
+
 ## [1.3.0](https://github.com/sunpebble/pathfinding/compare/v1.2.4...v1.3.0) (2026-07-07)
 
 
