@@ -103,6 +103,7 @@
 "profile.guest" = "游客";
 "profile.sign_in" = "登录";
 "profile.login_prompt" = "点击登录体验更多功能";
+"profile.logged_in" = "已登录";
 "profile.favorites" = "收藏";
 "profile.trips" = "行程";
 "profile.footprints" = "足迹";
@@ -137,6 +138,11 @@
 "icloud.sync_favorites" = "同步收藏";
 "icloud.sync_preferences" = "同步偏好设置";
 "icloud.sync_now" = "立即同步";
+"icloud.sync.disabled" = "未开启";
+"icloud.sync.status.idle" = "等待同步";
+"icloud.sync.status.syncing" = "正在同步…";
+"icloud.sync.status.success" = "上次同步: %@";
+"icloud.sync.status.error" = "同步失败: %@";
 "icloud.about" = "关于 iCloud 同步";
 "icloud.about_description" = "启用 iCloud 同步后，你的行程、收藏和偏好设置将自动同步到所有登录同一 Apple ID 的设备。数据以加密形式存储在 iCloud 中。";
 

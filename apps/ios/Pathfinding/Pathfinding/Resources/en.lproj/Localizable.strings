@@ -103,6 +103,7 @@
 "profile.guest" = "Guest";
 "profile.sign_in" = "Sign in";
 "profile.login_prompt" = "Sign in to unlock more features";
+"profile.logged_in" = "Signed in";
 "profile.favorites" = "Favorites";
 "profile.trips" = "Trips";
 "profile.footprints" = "Footprints";
@@ -137,6 +138,11 @@
 "icloud.sync_favorites" = "Sync Favorites";
 "icloud.sync_preferences" = "Sync Preferences";
 "icloud.sync_now" = "Sync Now";
+"icloud.sync.disabled" = "Off";
+"icloud.sync.status.idle" = "Waiting to sync";
+"icloud.sync.status.syncing" = "Syncing…";
+"icloud.sync.status.success" = "Last synced %@";
+"icloud.sync.status.error" = "Sync failed: %@";
 "icloud.about" = "About iCloud Sync";
 "icloud.about_description" = "When iCloud Sync is enabled, your itineraries, favorites, and preferences will automatically sync across all devices signed in with the same Apple ID. Data is stored encrypted in iCloud.";
 

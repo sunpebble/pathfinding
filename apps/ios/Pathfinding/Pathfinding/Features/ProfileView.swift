@@ -23,6 +23,13 @@ struct ProfileView: View {
   var body: some View {
     NavigationStack {
       List {
+        // MARK: - Glass Hero (scrolls with content; pinned variant hid rows and ate scroll gestures)
+        Section {
+          heroView
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+
         // MARK: - Travel Stats Section
         Section {
           NavigationLink {
@@ -222,9 +229,6 @@ struct ProfileView: View {
       }
       .listStyle(.insetGrouped)
       .navigationTitle("profile.title".localized)
-      .safeAreaInset(edge: .top) {
-        heroView
-      }
       .sheet(isPresented: $showLogin) {
         LoginView()
       }
@@ -318,16 +322,10 @@ struct ProfileView: View {
           }
           .buttonStyle(.plain)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-          "\(favoriteStore.totalFavoritesCount) 个收藏，\(favoriteStore.totalLikesCount) 个喜欢，\(footprintStore.visitedCities.count) 个足迹，\(followStats?.followersCount ?? 0) 个关注者，\(followStats?.followingCount ?? 0) 个关注"
-        )
       }
       .padding(DesignTokens.Spacing.md)
+      .cardSurface()
     }
-    .backgroundExtensionEffect()
-    .padding(.horizontal, DesignTokens.Spacing.md)
-    .padding(.top, DesignTokens.Spacing.sm)
   }
 
   // MARK: - Header Identity Row
