@@ -97,11 +97,11 @@ struct InsuranceListView: View {
             }
             .frame(maxWidth: .infinity)
           }
-          .buttonStyle(.primary)
+          .buttonStyle(.glassProminent)
           .disabled(searchDestination.isEmpty)
         }
         .padding(DesignTokens.Spacing.md)
-        .cardStyle()
+        .cardSurface()
         .padding(.horizontal, DesignTokens.Spacing.md)
 
         // Risk Profile
@@ -222,7 +222,7 @@ struct InsuranceListView: View {
           } label: {
             Label("获取推荐", systemImage: "sparkles")
           }
-          .buttonStyle(.primary)
+          .buttonStyle(.glassProminent)
         }
       } else {
         ScrollView {
@@ -567,7 +567,7 @@ struct UserInsuranceCard: View {
       .foregroundStyle(.secondary)
     }
     .padding(DesignTokens.Spacing.md)
-    .subtleCardStyle()
+    .cardSurface()
   }
 }
 
@@ -605,7 +605,7 @@ struct ClaimGuideCard: View {
       .foregroundStyle(.secondary)
     }
     .padding(DesignTokens.Spacing.md)
-    .subtleCardStyle()
+    .cardSurface()
   }
 }
 
@@ -782,7 +782,7 @@ struct InsuranceDetailView: View {
                   Text("拨打")
                     .font(.caption)
                 }
-                .buttonStyle(.secondary)
+                .buttonStyle(.glass)
               }
             }
 
@@ -816,7 +816,7 @@ struct InsuranceDetailView: View {
           .frame(maxWidth: .infinity)
           .padding(.vertical, DesignTokens.Spacing.sm)
         }
-        .buttonStyle(.primary)
+        .buttonStyle(.glassProminent)
         .padding(.horizontal, DesignTokens.Spacing.md)
       }
       .padding(.vertical, DesignTokens.Spacing.md)
@@ -1078,7 +1078,7 @@ struct ClaimGuideDetailView: View {
                     Text("拨打")
                       .font(.caption)
                   }
-                  .buttonStyle(.secondary)
+                  .buttonStyle(.glass)
                 }
               }
 
@@ -1106,7 +1106,7 @@ struct ClaimGuideDetailView: View {
                     Text("访问")
                       .font(.caption)
                   }
-                  .buttonStyle(.secondary)
+                  .buttonStyle(.glass)
                 }
               }
             }

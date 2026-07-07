@@ -153,7 +153,7 @@ struct BudgetOverviewView: View {
           Button("设置预算") {
             showEditBudget = true
           }
-          .buttonStyle(.primary)
+          .buttonStyle(.glassProminent)
         }
         .padding(.vertical, DesignTokens.Spacing.lg)
       }
@@ -314,7 +314,7 @@ struct BudgetOverviewView: View {
           Button("添加支出") {
             showAddExpense = true
           }
-          .buttonStyle(.secondary)
+          .buttonStyle(.glass)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, DesignTokens.Spacing.lg)

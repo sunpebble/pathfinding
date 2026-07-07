@@ -458,7 +458,7 @@ struct LikedItineraryCard: View {
         Spacer(minLength: 0)
       }
       .padding(DesignTokens.Spacing.sm)
-      .adaptiveSubtleCardStyle(radius: DesignTokens.Radius.md, colorScheme: colorScheme)
+      .cardSurface()
     }
   }
 }
@@ -551,7 +551,7 @@ struct FavoritedItineraryCard: View {
         }
       }
       .padding(DesignTokens.Spacing.sm)
-      .adaptiveSubtleCardStyle(radius: DesignTokens.Radius.md, colorScheme: colorScheme)
+      .cardSurface()
       .contextMenu {
         if onMove != nil {
           Button {
@@ -625,7 +625,7 @@ struct CollectionCard: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .adaptiveSubtleCardStyle(radius: DesignTokens.Radius.md, colorScheme: colorScheme)
+    .cardSurface()
   }
 }
 

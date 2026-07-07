@@ -173,7 +173,7 @@ struct SignupView: View {
                 }
                 .frame(maxWidth: .infinity)
               }
-              .buttonStyle(.primary)
+              .buttonStyle(.glassProminent)
               .accessibilityIdentifier("signup-submit-button")
               .disabled(isLoading || !isFormValid)
             }

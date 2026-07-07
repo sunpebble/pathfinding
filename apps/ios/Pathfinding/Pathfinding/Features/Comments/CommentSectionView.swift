@@ -30,7 +30,7 @@ struct CommentSectionView: View {
             Label("Add Comment", systemImage: "plus.circle.fill")
               .font(.subheadline)
           }
-          .buttonStyle(.secondary)
+          .buttonStyle(.glass)
         }
         
         // Comment List
@@ -358,7 +358,7 @@ struct CommentRow: View {
       }
     }
     .padding(DesignTokens.Spacing.md)
-    .subtleCardStyle()
+    .cardSurface()
     .sheet(isPresented: $showReportSheet) {
       ReportCommentSheet(commentId: comment.id, store: store) {
         showReportSheet = false

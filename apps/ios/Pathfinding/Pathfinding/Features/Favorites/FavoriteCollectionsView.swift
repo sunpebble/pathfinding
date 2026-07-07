@@ -348,7 +348,7 @@ struct CollectionDetailView: View {
     }
     .padding(DesignTokens.Spacing.md)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .adaptiveSubtleCardStyle(radius: DesignTokens.Radius.md, colorScheme: colorScheme)
+    .cardSurface()
   }
 
   // MARK: - Loading View

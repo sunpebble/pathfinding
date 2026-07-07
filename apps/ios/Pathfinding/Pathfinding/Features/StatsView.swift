@@ -327,7 +327,7 @@ struct GenerateReviewCard: View {
         Text("stats.generate_button".localized)
           .fontWeight(.semibold)
       }
-      .buttonStyle(.primary)
+      .buttonStyle(.glassProminent)
     }
     .padding(DesignTokens.Spacing.xl)
     .frame(maxWidth: .infinity)

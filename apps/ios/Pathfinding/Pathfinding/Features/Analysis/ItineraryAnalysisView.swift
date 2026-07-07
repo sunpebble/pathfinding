@@ -98,7 +98,7 @@ struct AnalysisErrorView: View {
         Text("重试")
           .fontWeight(.semibold)
       }
-      .buttonStyle(.primary)
+      .buttonStyle(.glassProminent)
     }
     .padding()
   }
@@ -119,7 +119,7 @@ struct AnalysisEmptyView: View {
         Text("开始分析")
           .fontWeight(.semibold)
       }
-      .buttonStyle(.primary)
+      .buttonStyle(.glassProminent)
     }
   }
 }

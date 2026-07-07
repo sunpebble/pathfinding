@@ -181,7 +181,7 @@ struct LoginView: View {
                 }
                 .frame(maxWidth: .infinity)
               }
-              .buttonStyle(.primary)
+              .buttonStyle(.glassProminent)
               .accessibilityIdentifier("login-submit-button")
               .disabled(isLoginDisabled)
             }

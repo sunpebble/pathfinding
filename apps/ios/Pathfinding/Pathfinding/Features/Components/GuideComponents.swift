@@ -124,7 +124,7 @@ struct FeaturedCard: View {
       .padding(DesignTokens.Spacing.sm)
     }
     .frame(width: 280)
-    .cardStyle(radius: DesignTokens.Radius.lg)
+    .cardSurface()
   }
 
   private func formatNumber(_ num: Int) -> String {
@@ -233,7 +233,7 @@ struct CompactGuideCard: View {
       .frame(maxWidth: .infinity, alignment: .leading)
     }
     .padding(DesignTokens.Spacing.sm)
-    .subtleCardStyle(radius: DesignTokens.Radius.md)
+    .cardSurface()
   }
 }
 
@@ -316,7 +316,7 @@ struct GuideListRow: View {
       }
     }
     .padding(DesignTokens.Spacing.sm)
-    .subtleCardStyle(radius: DesignTokens.Radius.sm)
+    .cardSurface()
   }
 
   private func formatNumber(_ num: Int) -> String {
@@ -393,6 +393,6 @@ struct GuideListRowSkeleton: View {
       }
     }
     .padding(DesignTokens.Spacing.sm)
-    .subtleCardStyle(radius: DesignTokens.Radius.sm)
+    .cardSurface()
   }
 }

@@ -496,32 +496,6 @@ extension View {
     )
   }
 
-  /// Apply card styling with shadow
-  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
-  func cardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
-    self
-      .background(DesignTokens.Colors.cardBackground)
-      .clipShape(RoundedRectangle(cornerRadius: radius))
-      .shadow(
-        color: DesignTokens.Shadow.md.color,
-        radius: DesignTokens.Shadow.md.radius,
-        y: DesignTokens.Shadow.md.y
-      )
-  }
-
-  /// Apply subtle card styling
-  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
-  func subtleCardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
-    self
-      .background(DesignTokens.Colors.cardBackground)
-      .clipShape(RoundedRectangle(cornerRadius: radius))
-      .shadow(
-        color: DesignTokens.Shadow.sm.color,
-        radius: DesignTokens.Shadow.sm.radius,
-        y: DesignTokens.Shadow.sm.y
-      )
-  }
-
   /// Apply card styling with adaptive shadow for color scheme
   @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
   func adaptiveCardStyle(radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
@@ -535,41 +509,6 @@ extension View {
           .stroke(border, lineWidth: colorScheme == .dark ? 0.5 : 0)
       )
       .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
-  }
-
-  /// Apply subtle card styling with adaptive shadow for color scheme
-  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
-  func adaptiveSubtleCardStyle(radius: CGFloat = DesignTokens.Radius.md, colorScheme: ColorScheme) -> some View {
-    let shadow = DesignTokens.Shadow.sm(for: colorScheme)
-    let border = DesignTokens.Colors.cardBorder(for: colorScheme)
-    return self
-      .background(DesignTokens.Colors.cardBackground)
-      .clipShape(RoundedRectangle(cornerRadius: radius))
-      .overlay(
-        RoundedRectangle(cornerRadius: radius)
-          .stroke(border, lineWidth: colorScheme == .dark ? 0.5 : 0)
-      )
-      .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
-  }
-
-  /// Glassmorphism effect
-  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
-  func glassCard(radius: CGFloat = DesignTokens.Radius.md) -> some View {
-    self
-      .background(.ultraThinMaterial)
-      .clipShape(RoundedRectangle(cornerRadius: radius))
-  }
-
-  /// Elevated card style for dark mode
-  @available(*, deprecated, message: "iOS 26: use cardSurface(tint:) backed by system glass")
-  func elevatedCardStyle(radius: CGFloat = DesignTokens.Radius.md) -> some View {
-    self
-      .background(DesignTokens.Colors.surfaceElevated)
-      .clipShape(RoundedRectangle(cornerRadius: radius))
-      .overlay(
-        RoundedRectangle(cornerRadius: radius)
-          .stroke(DesignTokens.Colors.border.opacity(0.1), lineWidth: 0.5)
-      )
   }
 
   /// Dark mode optimized card with glow effect
@@ -661,89 +600,6 @@ fileprivate struct AdaptiveAnimationModifier: ViewModifier {
   }
 }
 
-// MARK: - Custom Button Styles
-
-@available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
-struct PrimaryButtonStyle: ButtonStyle {
-  @Environment(\.isEnabled) private var isEnabled
-  @Environment(\.colorScheme) private var colorScheme
-
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .font(.headline)
-      .foregroundStyle(.white)
-      .padding(.horizontal, DesignTokens.Spacing.lg)
-      .padding(.vertical, DesignTokens.Spacing.sm)
-      .background(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .fill(isEnabled ? DesignTokens.Colors.primaryGradient : LinearGradient(colors: [.gray], startPoint: .leading, endPoint: .trailing))
-      )
-      .shadow(
-        color: isEnabled && colorScheme == .dark ? DesignTokens.Colors.accent.opacity(0.4) : .clear,
-        radius: 8,
-        y: 2
-      )
-      .scaleEffect(configuration.isPressed ? 0.96 : 1)
-      .animation(DesignTokens.Animation.quick, value: configuration.isPressed)
-  }
-}
-
-@available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
-struct SecondaryButtonStyle: ButtonStyle {
-  @Environment(\.colorScheme) private var colorScheme
-
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .font(.subheadline)
-      .fontWeight(.medium)
-      .foregroundStyle(DesignTokens.Colors.accent)
-      .padding(.horizontal, DesignTokens.Spacing.md)
-      .padding(.vertical, DesignTokens.Spacing.xs)
-      .background(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
-          .fill(DesignTokens.Colors.accentBackground(opacity: 0.12, for: colorScheme))
-      )
-      .scaleEffect(configuration.isPressed ? 0.96 : 1)
-      .animation(DesignTokens.Animation.quick, value: configuration.isPressed)
-  }
-}
-
-/// Outline button style for dark mode
-@available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
-struct OutlineButtonStyle: ButtonStyle {
-  @Environment(\.colorScheme) private var colorScheme
-
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .font(.subheadline)
-      .fontWeight(.medium)
-      .foregroundStyle(DesignTokens.Colors.accent)
-      .padding(.horizontal, DesignTokens.Spacing.md)
-      .padding(.vertical, DesignTokens.Spacing.xs)
-      .background(
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
-          .stroke(DesignTokens.Colors.accent, lineWidth: 1.5)
-      )
-      .scaleEffect(configuration.isPressed ? 0.96 : 1)
-      .animation(DesignTokens.Animation.quick, value: configuration.isPressed)
-  }
-}
-
-extension ButtonStyle where Self == PrimaryButtonStyle {
-  @available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
-  static var primary: PrimaryButtonStyle { PrimaryButtonStyle() }
-}
-
-extension ButtonStyle where Self == SecondaryButtonStyle {
-  @available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
-  static var secondary: SecondaryButtonStyle { SecondaryButtonStyle() }
-}
-
-extension ButtonStyle where Self == OutlineButtonStyle {
-  @available(*, deprecated, message: "iOS 26: use .buttonStyle(.glassProminent) for primary, .buttonStyle(.glass) for secondary")
-  static var outline: OutlineButtonStyle { OutlineButtonStyle() }
-}
-
 // MARK: - Badge Component
 
 struct Badge: View {
@@ -831,33 +687,23 @@ struct StatLabel: View {
       // Buttons
       VStack(spacing: 12) {
         Button("Primary Button") {}
-          .buttonStyle(.primary)
+          .buttonStyle(.glassProminent)
 
         Button("Secondary Button") {}
-          .buttonStyle(.secondary)
+          .buttonStyle(.glass)
       }
 
       // Cards
       VStack(spacing: 12) {
-        Text("Card Style")
+        Text("Card Surface")
           .padding()
           .frame(maxWidth: .infinity)
-          .cardStyle()
+          .cardSurface()
 
-        Text("Subtle Card")
+        Text("Tinted Card Surface")
           .padding()
           .frame(maxWidth: .infinity)
-          .subtleCardStyle()
-
-        Text("Glass Card")
-          .padding()
-          .frame(maxWidth: .infinity)
-          .glassCard()
-
-        Text("Elevated Card")
-          .padding()
-          .frame(maxWidth: .infinity)
-          .elevatedCardStyle()
+          .cardSurface(tint: .accentColor.opacity(0.3))
       }
       .padding(.horizontal)
 
@@ -901,33 +747,23 @@ struct StatLabel: View {
       // Buttons
       VStack(spacing: 12) {
         Button("Primary Button") {}
-          .buttonStyle(.primary)
+          .buttonStyle(.glassProminent)
 
         Button("Secondary Button") {}
-          .buttonStyle(.secondary)
+          .buttonStyle(.glass)
       }
 
       // Cards
       VStack(spacing: 12) {
-        Text("Card Style")
+        Text("Card Surface")
           .padding()
           .frame(maxWidth: .infinity)
-          .cardStyle()
+          .cardSurface()
 
-        Text("Subtle Card")
+        Text("Tinted Card Surface")
           .padding()
           .frame(maxWidth: .infinity)
-          .subtleCardStyle()
-
-        Text("Glass Card")
-          .padding()
-          .frame(maxWidth: .infinity)
-          .glassCard()
-
-        Text("Elevated Card")
-          .padding()
-          .frame(maxWidth: .infinity)
-          .elevatedCardStyle()
+          .cardSurface(tint: .accentColor.opacity(0.3))
       }
       .padding(.horizontal)
 

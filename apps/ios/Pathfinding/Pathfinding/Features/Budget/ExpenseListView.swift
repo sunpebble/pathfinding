@@ -240,12 +240,12 @@ struct ExpenseListView: View {
         Button("查看全部") {
           selectedCategory = nil
         }
-        .buttonStyle(.secondary)
+        .buttonStyle(.glass)
       } else {
         Button("添加支出") {
           showAddExpense = true
         }
-        .buttonStyle(.primary)
+        .buttonStyle(.glassProminent)
       }
 
       Spacer()
