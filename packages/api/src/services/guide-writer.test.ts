@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { applyPoiCoordinateFix, createUserGuide, persistIngestedGuide, updateUserGuide } from './guide-writer.js';
 
 vi.mock('@pathfinding/database', () => ({
-  getDb: vi.fn(),
+  createDb: vi.fn(),
   travelGuides: 'travel_guides',
   guideDestinations: 'guide_destinations',
   rawCrawlRecords: 'raw_crawl_records',
@@ -30,13 +30,14 @@ function createMockDb(state: { travelGuides?: Array<Record<string, unknown>>; gu
         return { where: vi.fn(() => thenable), limit: vi.fn().mockResolvedValue(rows) };
       }),
     })),
-    // values() returns a thenable array (awaited by persistIngestedGuide → insertResult[0].insertId)
-    // that ALSO exposes $returningId() (used by createUserGuide → [{ id }]) so the one mock covers both writers.
+    // values() returns a thenable array (awaited by recordRawCrawl/syncGuideDestinations)
+    // that ALSO exposes .returning() (used by persistIngestedGuide/createUserGuide → [{ id }])
+    // so the one mock covers both writers.
     insert: vi.fn((table: unknown) => ({
       values: vi.fn((values: Record<string, unknown>) => {
         inserts.push({ table, values });
         return Object.assign(Promise.resolve([{ insertId: 999 }]), {
-          $returningId: () => Promise.resolve([{ id: 999 }]),
+          returning: () => Promise.resolve([{ id: 999 }]),
         });
       }),
     })),

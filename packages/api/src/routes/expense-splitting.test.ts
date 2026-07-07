@@ -16,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -28,8 +27,8 @@ function createSelectChain(result: unknown) {
   return { from, where, limit };
 }
 
-function createInsertChain(insertId: number) {
-  return { values: vi.fn().mockResolvedValue([{ insertId: String(insertId) }]) };
+function createInsertChain(id: number) {
+  return { values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id }]) }) };
 }
 
 function createUpdateChain() {
@@ -38,7 +37,6 @@ function createUpdateChain() {
 
 describe('expense-splitting routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();

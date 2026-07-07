@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -15,7 +15,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -46,8 +45,8 @@ function createPaginatedSelectChain(result: unknown) {
   return { from, where, orderBy, limit, offset };
 }
 
-function createInsertChain(insertId: number) {
-  return { values: vi.fn().mockResolvedValue([{ insertId: String(insertId) }]) };
+function createInsertChain(id: number) {
+  return { values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id }]) }) };
 }
 
 function createUpdateChain() {
@@ -64,7 +63,6 @@ function stubDeepSeek(content: string) {
 
 describe('translation routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -73,7 +71,6 @@ describe('translation routes', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    delete process.env.DEEPSEEK_API_KEY;
   });
 
   describe('gET /api/translations/categories', () => {
@@ -83,7 +80,7 @@ describe('translation routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/translations/categories');
+      const response = await requestWithEnv(createApp(), '/api/translations/categories');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
@@ -97,12 +94,12 @@ describe('translation routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/translations/phrases?category=greetings');
+      const response = await requestWithEnv(createApp(), '/api/translations/phrases?category=greetings');
       expect(response.status).toBe(200);
     });
 
     it('returns 400 when category is missing', async () => {
-      const response = await createApp().request('/api/translations/phrases');
+      const response = await requestWithEnv(createApp(), '/api/translations/phrases');
       expect(response.status).toBe(400);
     });
   });
@@ -114,12 +111,12 @@ describe('translation routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/translations/phrases/search?q=hello');
+      const response = await requestWithEnv(createApp(), '/api/translations/phrases/search?q=hello');
       expect(response.status).toBe(200);
     });
 
     it('returns 400 when query is missing', async () => {
-      const response = await createApp().request('/api/translations/phrases/search');
+      const response = await requestWithEnv(createApp(), '/api/translations/phrases/search');
       expect(response.status).toBe(400);
     });
   });
@@ -199,14 +196,14 @@ describe('translation routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/translations/packs');
+      const response = await requestWithEnv(createApp(), '/api/translations/packs');
       expect(response.status).toBe(200);
     });
   });
 
   describe('gET /api/translations/languages', () => {
     it('returns supported languages', async () => {
-      const response = await createApp().request('/api/translations/languages');
+      const response = await requestWithEnv(createApp(), '/api/translations/languages');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
@@ -216,14 +213,13 @@ describe('translation routes', () => {
 
   describe('pOST /api/translations/text', () => {
     it('translates text with DeepSeek', async () => {
-      process.env.DEEPSEEK_API_KEY = 'test-key';
       stubDeepSeek('你好');
 
-      const response = await createApp().request('/api/translations/text', {
+      const response = await requestWithEnv(createApp(), '/api/translations/text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: 'Hello', source_lang: 'en', target_lang: 'zh' }),
-      });
+      }, { DEEPSEEK_API_KEY: 'test-key' });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
@@ -240,14 +236,13 @@ describe('translation routes', () => {
 
   describe('pOST /api/translations/detect', () => {
     it('detects language with DeepSeek', async () => {
-      process.env.DEEPSEEK_API_KEY = 'test-key';
       stubDeepSeek('en');
 
-      const response = await createApp().request('/api/translations/detect', {
+      const response = await requestWithEnv(createApp(), '/api/translations/detect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: 'Hello' }),
-      });
+      }, { DEEPSEEK_API_KEY: 'test-key' });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
@@ -259,7 +254,7 @@ describe('translation routes', () => {
 
   describe('pOST /api/translations/photo', () => {
     it('returns 501 while OCR is not migrated', async () => {
-      const response = await createApp().request('/api/translations/photo', {
+      const response = await requestWithEnv(createApp(), '/api/translations/photo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image_base64: 'x', target_lang: 'zh' }),

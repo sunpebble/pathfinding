@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
+import { requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -13,7 +14,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -48,7 +48,6 @@ function createCountSelectChain(count: number) {
 
 describe('poi routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -63,7 +62,7 @@ describe('poi routes', () => {
       const countChain = createCountSelectChain(1);
       mockDb.select.mockReturnValueOnce(chain).mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/pois');
+      const response = await requestWithEnv(createApp(), '/api/pois');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
@@ -77,12 +76,12 @@ describe('poi routes', () => {
       const countChain = createCountSelectChain(1);
       mockDb.select.mockReturnValueOnce(chain).mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/pois?q=tower&cityId=1&category=attraction');
+      const response = await requestWithEnv(createApp(), '/api/pois?q=tower&cityId=1&category=attraction');
       expect(response.status).toBe(200);
     });
 
     it('returns 400 for invalid cityId', async () => {
-      const response = await createApp().request('/api/pois?cityId=abc');
+      const response = await requestWithEnv(createApp(), '/api/pois?cityId=abc');
       expect(response.status).toBe(400);
     });
 
@@ -93,7 +92,7 @@ describe('poi routes', () => {
       mockDb.select.mockReturnValueOnce(chain).mockReturnValueOnce(countChain);
 
       // Act
-      const response = await createApp().request('/api/pois?limit=10&offset=30');
+      const response = await requestWithEnv(createApp(), '/api/pois?limit=10&offset=30');
 
       // Assert
       expect(response.status).toBe(200);
@@ -117,7 +116,7 @@ describe('poi routes', () => {
         .mockReturnValueOnce(countChain);
 
       // Act
-      const response = await createApp().request(`/api/pois?city=${encodeURIComponent('上海')}`);
+      const response = await requestWithEnv(createApp(), `/api/pois?city=${encodeURIComponent('上海')}`);
 
       // Assert
       expect(response.status).toBe(200);
@@ -133,7 +132,7 @@ describe('poi routes', () => {
       mockDb.select.mockReturnValueOnce(cityChain);
 
       // Act
-      const response = await createApp().request('/api/pois?city=Atlantis');
+      const response = await requestWithEnv(createApp(), '/api/pois?city=Atlantis');
 
       // Assert
       expect(response.status).toBe(200);
@@ -150,7 +149,7 @@ describe('poi routes', () => {
       mockDb.select.mockReturnValueOnce(chain).mockReturnValueOnce(countChain);
 
       // Act
-      const response = await createApp().request('/api/pois?min_quality=4');
+      const response = await requestWithEnv(createApp(), '/api/pois?min_quality=4');
 
       // Assert
       expect(response.status).toBe(200);
@@ -158,7 +157,7 @@ describe('poi routes', () => {
     });
 
     it('rejects an out-of-range min_quality', async () => {
-      const response = await createApp().request('/api/pois?min_quality=9');
+      const response = await requestWithEnv(createApp(), '/api/pois?min_quality=9');
       expect(response.status).toBe(400);
     });
   });
@@ -170,7 +169,7 @@ describe('poi routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/pois/nearby?lat=48.8584&lng=2.2945&radius=5');
+      const response = await requestWithEnv(createApp(), '/api/pois/nearby?lat=48.8584&lng=2.2945&radius=5');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
@@ -182,12 +181,12 @@ describe('poi routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/pois/nearby?lat=48.8584&lng=2.2945&category=attraction');
+      const response = await requestWithEnv(createApp(), '/api/pois/nearby?lat=48.8584&lng=2.2945&category=attraction');
       expect(response.status).toBe(200);
     });
 
     it('returns 400 when lat/lng are missing', async () => {
-      const response = await createApp().request('/api/pois/nearby');
+      const response = await requestWithEnv(createApp(), '/api/pois/nearby');
       expect(response.status).toBe(400);
     });
   });
@@ -199,7 +198,7 @@ describe('poi routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/pois/1');
+      const response = await requestWithEnv(createApp(), '/api/pois/1');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
@@ -209,12 +208,12 @@ describe('poi routes', () => {
       const chain = createSelectChain([]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/pois/999');
+      const response = await requestWithEnv(createApp(), '/api/pois/999');
       expect(response.status).toBe(404);
     });
 
     it('returns 400 for invalid ID', async () => {
-      const response = await createApp().request('/api/pois/abc');
+      const response = await requestWithEnv(createApp(), '/api/pois/abc');
       expect(response.status).toBe(400);
     });
   });

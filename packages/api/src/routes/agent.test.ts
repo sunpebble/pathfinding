@@ -1,5 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
+import { requestWithEnv } from '../test/helpers.js';
+
+const mockDb = {
+  select: vi.fn(),
+  insert: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock('@pathfinding/database', async () => {
+  const actual = await vi.importActual<typeof import('@pathfinding/database')>('@pathfinding/database');
+  return {
+    ...actual,
+    createDb: vi.fn(() => mockDb),
+  };
+});
 
 interface DeepSeekRequestBody {
   model?: string;
@@ -33,10 +49,9 @@ const planJSON = JSON.stringify({
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  delete process.env.DEEPSEEK_API_KEY;
-  delete process.env.DEEPSEEK_MODEL;
-  delete process.env.MODEL_SPECIFIER;
 });
+
+const deepseekEnv = { DEEPSEEK_API_KEY: 'test-key' };
 
 function stubDeepSeek(content: string, onBody?: (body: DeepSeekRequestBody) => void) {
   const fetchMock: typeof fetch = async (_input, init) => {
@@ -60,14 +75,13 @@ function stubDeepSeek(content: string, onBody?: (body: DeepSeekRequestBody) => v
 
 describe('agent compatibility routes', () => {
   it('streams chat output as SSE token events', async () => {
-    process.env.DEEPSEEK_API_KEY = 'test-key';
     stubDeepSeek('可以，建议先确定预算和天数。');
 
-    const response = await createApp().request('/api/agent/chat/stream', {
+    const response = await requestWithEnv(createApp(), '/api/agent/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId: 'chat-test', message: '帮我规划京都' }),
-    });
+    }, deepseekEnv);
 
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toContain('text/event-stream');
@@ -75,15 +89,14 @@ describe('agent compatibility routes', () => {
   });
 
   it('generates and stores an AI plan with DeepSeek JSON mode', async () => {
-    process.env.DEEPSEEK_API_KEY = 'test-key';
     let requestBody: DeepSeekRequestBody | undefined;
     stubDeepSeek(planJSON, body => requestBody = body);
 
-    const response = await createApp().request('/api/agent/plan/start', {
+    const response = await requestWithEnv(createApp(), '/api/agent/plan/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId: 'plan-test', message: '京都三天' }),
-    });
+    }, deepseekEnv);
 
     expect(response.status).toBe(200);
     const body = await response.json() as {
@@ -103,13 +116,13 @@ describe('agent compatibility routes', () => {
     });
     expect(requestBody?.response_format).toEqual({ type: 'json_object' });
 
-    const statusResponse = await createApp().request('/api/agent/plan/plan-test/status');
+    const statusResponse = await requestWithEnv(createApp(), '/api/agent/plan/plan-test/status');
     expect(statusResponse.status).toBe(200);
     const statusBody = await statusResponse.json() as { hasFinalPlan: boolean; duration: number };
     expect(statusBody.hasFinalPlan).toBe(true);
     expect(statusBody.duration).toBe(1);
 
-    const resultResponse = await createApp().request('/api/agent/plan/plan-test/result');
+    const resultResponse = await requestWithEnv(createApp(), '/api/agent/plan/plan-test/result');
     expect(resultResponse.status).toBe(200);
     const resultBody = await resultResponse.json() as { completed: boolean; plan: { title: string } };
     expect(resultBody.completed).toBe(true);
@@ -120,7 +133,7 @@ describe('agent compatibility routes', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
-    const response = await createApp().request('/api/agent/chat/stream', {
+    const response = await requestWithEnv(createApp(), '/api/agent/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: '你好' }),

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -16,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -54,7 +53,6 @@ function createCountChain(result: unknown) {
 
 describe('user routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -74,7 +72,7 @@ describe('user routes', () => {
         .mockReturnValueOnce(userChain)
         .mockReturnValueOnce(profileChain);
 
-      const response = await createApp().request('/api/users/1');
+      const response = await requestWithEnv(createApp(), '/api/users/1');
 
       expect(response.status).toBe(200);
       const body = await response.json();
@@ -87,13 +85,13 @@ describe('user routes', () => {
       const emptyChain = createSelectChain([]);
       mockDb.select.mockReturnValueOnce(emptyChain);
 
-      const response = await createApp().request('/api/users/999');
+      const response = await requestWithEnv(createApp(), '/api/users/999');
 
       expect(response.status).toBe(404);
     });
 
     it('returns 400 for invalid user ID', async () => {
-      const response = await createApp().request('/api/users/abc');
+      const response = await requestWithEnv(createApp(), '/api/users/abc');
 
       expect(response.status).toBe(400);
     });
@@ -139,7 +137,7 @@ describe('user routes', () => {
     });
 
     it('requires auth', async () => {
-      const response = await createApp().request('/api/users/1', {
+      const response = await requestWithEnv(createApp(), '/api/users/1', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ displayName: 'Anon' }),
@@ -156,7 +154,7 @@ describe('user routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(followChain);
 
-      const response = await createApp().request('/api/users/1/follow/status?followingId=2');
+      const response = await requestWithEnv(createApp(), '/api/users/1/follow/status?followingId=2');
 
       expect(response.status).toBe(200);
       const body = await response.json();
@@ -167,7 +165,7 @@ describe('user routes', () => {
       const emptyChain = createSelectChain([]);
       mockDb.select.mockReturnValueOnce(emptyChain);
 
-      const response = await createApp().request('/api/users/1/follow/status?followingId=3');
+      const response = await requestWithEnv(createApp(), '/api/users/1/follow/status?followingId=3');
 
       expect(response.status).toBe(200);
       const body = await response.json();
@@ -175,7 +173,7 @@ describe('user routes', () => {
     });
 
     it('returns 400 when followingId is missing', async () => {
-      const response = await createApp().request('/api/users/1/follow/status');
+      const response = await requestWithEnv(createApp(), '/api/users/1/follow/status');
 
       expect(response.status).toBe(400);
     });
@@ -191,14 +189,14 @@ describe('user routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/users/1/followers');
+      const response = await requestWithEnv(createApp(), '/api/users/1/followers');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
     });
 
     it('returns 400 for invalid user ID', async () => {
-      const response = await createApp().request('/api/users/abc/followers');
+      const response = await requestWithEnv(createApp(), '/api/users/abc/followers');
       expect(response.status).toBe(400);
     });
   });
@@ -213,14 +211,14 @@ describe('user routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/users/1/following');
+      const response = await requestWithEnv(createApp(), '/api/users/1/following');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
     });
 
     it('returns 400 for invalid user ID', async () => {
-      const response = await createApp().request('/api/users/abc/following');
+      const response = await requestWithEnv(createApp(), '/api/users/abc/following');
       expect(response.status).toBe(400);
     });
   });

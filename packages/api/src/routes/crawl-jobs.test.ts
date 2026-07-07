@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -15,7 +15,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -36,8 +35,8 @@ function createOrderBySelectChain(result: unknown) {
   return { from, where, orderBy, limit };
 }
 
-function createInsertChain(insertId: number) {
-  return { values: vi.fn().mockResolvedValue([{ insertId: String(insertId) }]) };
+function createInsertChain(id: number) {
+  return { values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id }]) }) };
 }
 
 /**
@@ -112,8 +111,6 @@ function createUpdateChain() {
 
 describe('crawl-jobs routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
-    process.env.ADMIN_EMAILS = 'owner@example.com';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -314,7 +311,7 @@ describe('crawl-jobs routes', () => {
     });
 
     it('requires admin auth', async () => {
-      const response = await createApp().request('/api/crawl-jobs/ingest-stats');
+      const response = await requestWithEnv(createApp(), '/api/crawl-jobs/ingest-stats');
       expect(response.status).toBe(401);
     });
   });

@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
+import { requestWithEnv } from '../test/helpers.js';
 
-const mockExecute = vi.fn();
+const mockRun = vi.fn();
 const mockDb = {
   select: vi.fn(),
   insert: vi.fn(),
   update: vi.fn(),
   delete: vi.fn(),
   transaction: vi.fn(),
-  execute: mockExecute,
+  run: mockRun,
 };
 
 vi.mock('@pathfinding/database', async () => {
@@ -17,17 +18,16 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
 describe('health routes', () => {
   beforeEach(() => {
-    mockExecute.mockReset();
+    mockRun.mockReset();
   });
 
   it('gET /health returns ok status', async () => {
-    const response = await createApp().request('/health');
+    const response = await requestWithEnv(createApp(), '/health');
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -36,9 +36,9 @@ describe('health routes', () => {
   });
 
   it('gET /health/ready returns ready when DB is available', async () => {
-    mockExecute.mockResolvedValueOnce([{ 1: 1 }]);
+    mockRun.mockResolvedValueOnce([{ 1: 1 }]);
 
-    const response = await createApp().request('/health/ready');
+    const response = await requestWithEnv(createApp(), '/health/ready');
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -47,9 +47,9 @@ describe('health routes', () => {
   });
 
   it('gET /health/ready returns 503 when DB is unavailable', async () => {
-    mockExecute.mockRejectedValueOnce(new Error('Connection refused'));
+    mockRun.mockRejectedValueOnce(new Error('Connection refused'));
 
-    const response = await createApp().request('/health/ready');
+    const response = await requestWithEnv(createApp(), '/health/ready');
 
     expect(response.status).toBe(503);
     const body = await response.json();

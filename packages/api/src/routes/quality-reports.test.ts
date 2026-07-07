@@ -15,7 +15,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -58,14 +57,12 @@ function createGroupBySelectChain(result: unknown) {
   return { from, groupBy };
 }
 
-function createInsertChain(insertId: number) {
-  return { values: vi.fn().mockResolvedValue([{ insertId: String(insertId) }]) };
+function createInsertChain(id: number) {
+  return { values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id }]) }) };
 }
 
 describe('quality-reports routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
-    process.env.ADMIN_EMAILS = 'owner@example.com';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();

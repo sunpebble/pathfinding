@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -14,7 +14,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -35,7 +34,6 @@ function createUpdateChain(result: unknown) {
 
 describe('sharing routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -43,9 +41,9 @@ describe('sharing routes', () => {
 
   describe('pOST /api/sharing/link', () => {
     it('creates a share link', async () => {
-      // Insert share link
-      const insertValues1 = vi.fn().mockResolvedValue([{ insertId: '42' }]);
-      // Insert share event
+      // Insert share link (uses .returning())
+      const insertValues1 = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 42 }]) });
+      // Insert share event (direct .values())
       const insertValues2 = vi.fn().mockResolvedValue([{ insertId: '43' }]);
 
       mockDb.insert
@@ -69,7 +67,7 @@ describe('sharing routes', () => {
     });
 
     it('requires auth', async () => {
-      const response = await createApp().request('/api/sharing/link', {
+      const response = await requestWithEnv(createApp(), '/api/sharing/link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resourceType: 'itinerary', resourceId: 5 }),
@@ -94,7 +92,7 @@ describe('sharing routes', () => {
       const updateChain = createUpdateChain([]);
       mockDb.update.mockReturnValueOnce(updateChain);
 
-      const response = await createApp().request('/api/sharing/track', {
+      const response = await requestWithEnv(createApp(), '/api/sharing/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -112,7 +110,7 @@ describe('sharing routes', () => {
       const emptyChain = createSelectChain([]);
       mockDb.select.mockReturnValueOnce(emptyChain);
 
-      const response = await createApp().request('/api/sharing/track', {
+      const response = await requestWithEnv(createApp(), '/api/sharing/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -128,7 +126,7 @@ describe('sharing routes', () => {
 
   describe('gET /api/sharing/stats', () => {
     it('returns 400 when resourceId or resourceType missing', async () => {
-      const response = await createApp().request('/api/sharing/stats');
+      const response = await requestWithEnv(createApp(), '/api/sharing/stats');
       expect(response.status).toBe(400);
     });
 
@@ -141,7 +139,7 @@ describe('sharing routes', () => {
       const from = vi.fn().mockReturnValue({ where });
       mockDb.select.mockReturnValueOnce({ from });
 
-      const response = await createApp().request('/api/sharing/stats?resourceId=5&resourceType=itinerary');
+      const response = await requestWithEnv(createApp(), '/api/sharing/stats?resourceId=5&resourceType=itinerary');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.total_links).toBe(2);

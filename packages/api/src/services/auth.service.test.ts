@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   generateToken,
   hashPassword,
@@ -7,12 +7,13 @@ import {
   verifyToken,
 } from './auth.service.js';
 
+const TEST_SECRET = 'test-jwt-secret-for-auth-service';
+
 vi.mock('@pathfinding/database', async () => {
   const actual = await vi.importActual<typeof import('@pathfinding/database')>('@pathfinding/database');
   return {
     ...actual,
     createDb: vi.fn(() => ({})),
-    getDb: vi.fn(() => ({})),
   };
 });
 
@@ -62,51 +63,35 @@ describe('auth.service — needsPasswordMigration', () => {
 });
 
 describe('auth.service — JWT tokens', () => {
-  beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret-for-auth-service';
-  });
-
-  afterEach(() => {
-    delete process.env.JWT_SECRET;
-    // Reset the module cache so getJwtSecret picks up the next test's env
-    vi.resetModules();
-  });
-
   it('generateToken creates a valid JWT that can be verified', async () => {
-    const token = await generateToken('42', 'user@example.com');
+    const token = await generateToken('42', 'user@example.com', TEST_SECRET);
     expect(typeof token).toBe('string');
     expect(token.split('.')).toHaveLength(3);
 
-    const payload = await verifyToken(token);
+    const payload = await verifyToken(token, TEST_SECRET);
     expect(payload.sub).toBe('42');
     expect(payload.email).toBe('user@example.com');
   });
 
   it('generateToken includes session ID when provided', async () => {
-    const token = await generateToken('42', 'user@example.com', '99');
-    const payload = await verifyToken(token);
+    const token = await generateToken('42', 'user@example.com', TEST_SECRET, '99');
+    const payload = await verifyToken(token, TEST_SECRET);
     expect(payload.sid).toBe('99');
   });
 
   it('generateToken omits session ID when not provided', async () => {
-    const token = await generateToken('42', 'user@example.com');
-    const payload = await verifyToken(token);
+    const token = await generateToken('42', 'user@example.com', TEST_SECRET);
+    const payload = await verifyToken(token, TEST_SECRET);
     expect(payload.sid).toBeUndefined();
   });
 
   it('verifyToken throws for an invalid token', async () => {
-    await expect(verifyToken('invalid-token')).rejects.toThrow();
+    await expect(verifyToken('invalid-token', TEST_SECRET)).rejects.toThrow();
   });
 
   it('verifyToken throws for a token signed with a different secret', async () => {
-    // Generate with current secret
-    const token = await generateToken('42', 'user@example.com');
+    const token = await generateToken('42', 'user@example.com', TEST_SECRET);
 
-    // Switch env to a different secret and reimport the module to get a fresh cache
-    process.env.JWT_SECRET = 'completely-different-secret';
-    vi.resetModules();
-    const { verifyToken: freshVerify } = await import('./auth.service.js');
-
-    await expect(freshVerify(token)).rejects.toThrow();
+    await expect(verifyToken(token, 'completely-different-secret')).rejects.toThrow();
   });
 });

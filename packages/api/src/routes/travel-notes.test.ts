@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -16,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -39,7 +38,6 @@ function createPaginatedSelectChain(items: unknown[], count: number) {
 
 describe('travel-notes routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
   });
@@ -56,7 +54,7 @@ describe('travel-notes routes', () => {
       .mockReturnValueOnce(itemsChain)
       .mockReturnValueOnce(countChain);
 
-    const response = await createApp().request('/api/travel-notes');
+    const response = await requestWithEnv(createApp(), '/api/travel-notes');
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -84,8 +82,8 @@ describe('travel-notes routes', () => {
   });
 
   it('pOST /api/travel-notes creates a new note', async () => {
-    const insertResult = vi.fn().mockResolvedValue([{ insertId: 33 }]);
-    mockDb.insert.mockReturnValueOnce({ values: insertResult });
+    const insertValues = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 33 }]) });
+    mockDb.insert.mockReturnValueOnce({ values: insertValues });
 
     const response = await requestWithAuth(createApp(), '/api/travel-notes', {
       method: 'POST',
@@ -103,7 +101,7 @@ describe('travel-notes routes', () => {
   });
 
   it('pOST /api/travel-notes requires auth', async () => {
-    const response = await createApp().request('/api/travel-notes', {
+    const response = await requestWithEnv(createApp(), '/api/travel-notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

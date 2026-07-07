@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
+import { requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -15,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -44,7 +44,7 @@ describe('currency routes', () => {
     ]);
     mockDb.select.mockReturnValueOnce(rateChain);
 
-    const response = await createApp().request('/api/currency/rates');
+    const response = await requestWithEnv(createApp(), '/api/currency/rates');
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -56,7 +56,7 @@ describe('currency routes', () => {
     const emptyChain = createSelectChain([]);
     mockDb.select.mockReturnValueOnce(emptyChain);
 
-    const response = await createApp().request('/api/currency/rates');
+    const response = await requestWithEnv(createApp(), '/api/currency/rates');
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -74,7 +74,7 @@ describe('currency routes', () => {
     ]);
     mockDb.select.mockReturnValueOnce(rateChain);
 
-    const response = await createApp().request('/api/currency/rates?base=USD');
+    const response = await requestWithEnv(createApp(), '/api/currency/rates?base=USD');
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -88,7 +88,7 @@ describe('currency routes', () => {
     ]);
     mockDb.select.mockReturnValueOnce(historyChain);
 
-    const response = await createApp().request('/api/currency/history?base=CNY&target=USD&days=2');
+    const response = await requestWithEnv(createApp(), '/api/currency/history?base=CNY&target=USD&days=2');
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -104,7 +104,7 @@ describe('currency routes', () => {
       .mockReturnValueOnce(countChain)
       .mockReturnValueOnce(latestChain);
 
-    const response = await createApp().request('/api/currency/stats');
+    const response = await requestWithEnv(createApp(), '/api/currency/stats');
 
     expect(response.status).toBe(200);
     const body = await response.json();

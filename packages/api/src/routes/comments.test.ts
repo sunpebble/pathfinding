@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -15,7 +15,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -46,7 +45,6 @@ function createUpdateChain(result: unknown) {
 
 describe('comment routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -55,7 +53,7 @@ describe('comment routes', () => {
 
   describe('gET /api/comments', () => {
     it('returns 400 when itineraryId is missing', async () => {
-      const response = await createApp().request('/api/comments');
+      const response = await requestWithEnv(createApp(), '/api/comments');
       expect(response.status).toBe(400);
     });
 
@@ -72,7 +70,7 @@ describe('comment routes', () => {
         .mockReturnValueOnce(commentsChain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/comments?itineraryId=5');
+      const response = await requestWithEnv(createApp(), '/api/comments?itineraryId=5');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.success).toBe(true);
@@ -83,7 +81,7 @@ describe('comment routes', () => {
 
   describe('pOST /api/comments', () => {
     it('creates a comment', async () => {
-      const insertValues = vi.fn().mockResolvedValue([{ insertId: '10' }]);
+      const insertValues = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 10 }]) });
       mockDb.insert.mockReturnValueOnce({ values: insertValues });
 
       const response = await requestWithAuth(createApp(), '/api/comments', {
@@ -102,7 +100,7 @@ describe('comment routes', () => {
     });
 
     it('requires auth', async () => {
-      const response = await createApp().request('/api/comments', {
+      const response = await requestWithEnv(createApp(), '/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ itineraryId: 5, content: 'Hello' }),
@@ -172,7 +170,7 @@ describe('comment routes', () => {
 
   describe('gET /api/comments/replies', () => {
     it('returns 400 when commentId is missing', async () => {
-      const response = await createApp().request('/api/comments/replies');
+      const response = await requestWithEnv(createApp(), '/api/comments/replies');
       expect(response.status).toBe(400);
     });
 
@@ -182,7 +180,7 @@ describe('comment routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(repliesChain);
 
-      const response = await createApp().request('/api/comments/replies?commentId=10');
+      const response = await requestWithEnv(createApp(), '/api/comments/replies?commentId=10');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.success).toBe(true);

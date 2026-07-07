@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -16,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -61,7 +60,6 @@ function createDeleteChain(result: unknown) {
 
 describe('itinerary mutation routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -553,7 +551,6 @@ describe('itinerary mutation routes', () => {
 
 describe('itinerary read permissions', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -619,7 +616,6 @@ describe('itinerary read permissions', () => {
 
 describe('itinerary read routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -634,7 +630,7 @@ describe('itinerary read routes', () => {
 
     mockDb.select.mockReturnValueOnce(itineraryChain);
 
-    const response = await createApp().request('/api/itineraries/9');
+    const response = await requestWithEnv(createApp(), '/api/itineraries/9');
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({ error: '需要授权令牌' });
@@ -677,7 +673,7 @@ describe('itinerary read routes', () => {
 
     mockDb.select.mockReturnValueOnce(listChain).mockReturnValueOnce(countChain);
 
-    const response = await createApp().request('/api/itineraries?visibility=private');
+    const response = await requestWithEnv(createApp(), '/api/itineraries?visibility=private');
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({

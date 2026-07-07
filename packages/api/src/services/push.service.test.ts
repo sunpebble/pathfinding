@@ -1,3 +1,4 @@
+import type { Database } from '@pathfinding/database';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { sendPushNotification } from './push.service.js';
 
@@ -14,7 +15,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -43,7 +43,7 @@ describe('push.service — sendPushNotification', () => {
     const chain = createSelectChain([]);
     mockDb.select.mockReturnValueOnce(chain);
 
-    const count = await sendPushNotification(1, 'Test', 'Hello');
+    const count = await sendPushNotification(mockDb as unknown as Database, 1, 'Test', 'Hello');
     expect(count).toBe(0);
   });
 
@@ -54,7 +54,7 @@ describe('push.service — sendPushNotification', () => {
     ]);
     mockDb.select.mockReturnValueOnce(chain);
 
-    const count = await sendPushNotification(1, 'New Message', 'You have a new message');
+    const count = await sendPushNotification(mockDb as unknown as Database, 1, 'New Message', 'You have a new message');
     expect(count).toBe(2);
   });
 
@@ -64,7 +64,7 @@ describe('push.service — sendPushNotification', () => {
     ]);
     mockDb.select.mockReturnValueOnce(chain);
 
-    const count = await sendPushNotification(42, 'Reminder', 'Check your itinerary');
+    const count = await sendPushNotification(mockDb as unknown as Database, 42, 'Reminder', 'Check your itinerary');
     expect(count).toBe(1);
   });
 });

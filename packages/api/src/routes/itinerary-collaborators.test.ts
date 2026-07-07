@@ -16,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -30,17 +29,17 @@ function createSelectChain(result: unknown) {
 }
 
 function createInsertChain(result: unknown) {
-  const returningId = vi.fn().mockResolvedValue(result);
-  const values = vi.fn().mockReturnValue({ $returningId: returningId });
+  const returning = vi.fn().mockResolvedValue(result);
+  const values = vi.fn().mockReturnValue({ returning });
 
-  return { values, returningId };
+  return { values, returning };
 }
 
 function createRejectedInsertChain(error: Error) {
-  const returningId = vi.fn().mockRejectedValue(error);
-  const values = vi.fn().mockReturnValue({ $returningId: returningId });
+  const returning = vi.fn().mockRejectedValue(error);
+  const values = vi.fn().mockReturnValue({ returning });
 
-  return { values, returningId };
+  return { values, returning };
 }
 
 function createUpdateChain(result: unknown) {
@@ -58,7 +57,6 @@ function createDeleteChain(result: unknown) {
 
 describe('itinerary collaborator routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();

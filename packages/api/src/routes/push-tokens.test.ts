@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -14,7 +14,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -35,7 +34,6 @@ function createUpdateChain(result: unknown) {
 
 describe('push-token routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -178,7 +176,7 @@ describe('push-token routes', () => {
     });
 
     it('requires auth', async () => {
-      const response = await createApp().request('/api/push-tokens');
+      const response = await requestWithEnv(createApp(), '/api/push-tokens');
       expect(response.status).toBe(401);
     });
   });

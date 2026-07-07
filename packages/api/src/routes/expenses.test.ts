@@ -16,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -31,7 +30,6 @@ function createSelectChain(result: unknown) {
 
 describe('expense routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -73,8 +71,8 @@ describe('expense routes', () => {
     const ownershipFrom = vi.fn().mockReturnValue({ where: ownershipWhere });
     mockDb.select.mockReturnValueOnce({ from: ownershipFrom });
 
-    const insertResult = vi.fn().mockResolvedValue([{ insertId: 77 }]);
-    mockDb.insert.mockReturnValueOnce({ values: insertResult });
+    const insertValues = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 77 }]) });
+    mockDb.insert.mockReturnValueOnce({ values: insertValues });
 
     const response = await requestWithAuth(createApp(), '/api/expenses', {
       method: 'POST',
@@ -98,9 +96,6 @@ describe('expense routes', () => {
     mockDb.select
       .mockReturnValueOnce(ownerCheck)
       .mockReturnValueOnce(collaboratorCheck);
-
-    const insertResult = vi.fn().mockResolvedValue([{ insertId: 77 }]);
-    mockDb.insert.mockReturnValueOnce({ values: insertResult });
 
     const response = await requestWithAuth(createApp(), '/api/expenses', {
       method: 'POST',

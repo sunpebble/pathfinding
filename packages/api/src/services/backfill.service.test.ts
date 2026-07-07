@@ -1,3 +1,4 @@
+import type { Database } from '@pathfinding/database';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockDb = {
@@ -5,11 +6,14 @@ const mockDb = {
   insert: vi.fn(),
 };
 
+/** Cast view of mockDb for passing to service functions that expect Database. */
+const db = mockDb as unknown as Database;
+
 vi.mock('@pathfinding/database', async () => {
   const actual = await vi.importActual<typeof import('@pathfinding/database')>('@pathfinding/database');
   return {
     ...actual,
-    getDb: vi.fn(() => mockDb),
+    createDb: vi.fn(() => mockDb),
   };
 });
 
@@ -82,7 +86,7 @@ describe('backfill.service', () => {
       mockDb.select.mockReturnValueOnce(chain);
 
       // Act
-      const result = await analyzeFieldGaps(10);
+      const result = await analyzeFieldGaps(db, 10);
 
       // Assert
       expect(result).toEqual([
@@ -104,7 +108,7 @@ describe('backfill.service', () => {
       mockDb.select.mockReturnValueOnce(createRankedSelectChain([]));
 
       // Act / Assert
-      await expect(analyzeFieldGaps(10)).resolves.toEqual([]);
+      await expect(analyzeFieldGaps(db, 10)).resolves.toEqual([]);
     });
   });
 
@@ -115,7 +119,7 @@ describe('backfill.service', () => {
       mockDb.select.mockReturnValueOnce(createAggregateSelectChain([summaryRow]));
 
       // Act
-      const result = await summarizeFieldGaps();
+      const result = await summarizeFieldGaps(db);
 
       // Assert
       expect(result).toEqual({
@@ -141,7 +145,7 @@ describe('backfill.service', () => {
       ]));
 
       // Act
-      const result = await summarizeFieldGaps();
+      const result = await summarizeFieldGaps(db);
 
       // Assert
       expect(result.totalGuides).toBe(10);
@@ -155,7 +159,7 @@ describe('backfill.service', () => {
       mockDb.select.mockReturnValueOnce(createAggregateSelectChain([]));
 
       // Act / Assert
-      await expect(summarizeFieldGaps()).rejects.toThrow('字段缺口聚合查询未返回结果');
+      await expect(summarizeFieldGaps(db)).rejects.toThrow('字段缺口聚合查询未返回结果');
     });
   });
 
@@ -175,7 +179,7 @@ describe('backfill.service', () => {
         .mockReturnValueOnce(countChain);
 
       // Act
-      const result = await analyzeDestinationGaps(100);
+      const result = await analyzeDestinationGaps(db, 100);
 
       // Assert
       expect(result.gaps).toEqual([
@@ -193,7 +197,7 @@ describe('backfill.service', () => {
 
       mockDb.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
 
-      const result = await generateBackfillJobs([1, 2, 3]);
+      const result = await generateBackfillJobs(db, [1, 2, 3]);
 
       expect(result.jobsCreated).toBe(1);
       expect(mockDb.insert).toHaveBeenCalled();
@@ -204,7 +208,7 @@ describe('backfill.service', () => {
 
       mockDb.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
 
-      const result = await generateBackfillJobs(undefined, ['Chengdu', 'Hangzhou']);
+      const result = await generateBackfillJobs(db, undefined, ['Chengdu', 'Hangzhou']);
 
       expect(result.jobsCreated).toBe(1);
     });
@@ -222,7 +226,7 @@ describe('backfill.service', () => {
         .mockReturnValueOnce(createWhereSelectChain([{ total: 1 }]));
 
       // Act
-      const analysis = await runFullAnalysis(10);
+      const analysis = await runFullAnalysis(db, 10);
 
       // Assert
       expect(analysis.totalGuides).toBe(10);
@@ -276,7 +280,7 @@ describe('backfill.service', () => {
         .mockReturnValueOnce(createAggregateSelectChain([summaryRow]));
 
       // Act
-      const stats = await computeIngestStats(3);
+      const stats = await computeIngestStats(db, 3);
       vi.useRealTimers();
 
       // Assert
@@ -308,7 +312,7 @@ describe('backfill.service', () => {
         ]));
 
       // Act
-      const stats = await computeIngestStats(1);
+      const stats = await computeIngestStats(db, 1);
 
       // Assert
       expect(stats.totalGuides).toBe(0);

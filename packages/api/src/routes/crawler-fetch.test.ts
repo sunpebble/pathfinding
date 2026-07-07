@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
+import { requestWithEnv } from '../test/helpers.js';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -7,7 +8,7 @@ afterEach(() => {
 
 describe('crawler fetch route', () => {
   it('rejects invalid JSON', async () => {
-    const response = await createApp().request('/api/crawler/fetch', {
+    const response = await requestWithEnv(createApp(), '/api/crawler/fetch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: 'not json',
@@ -21,7 +22,7 @@ describe('crawler fetch route', () => {
   });
 
   it('rejects invalid URLs', async () => {
-    const response = await createApp().request('/api/crawler/fetch', {
+    const response = await requestWithEnv(createApp(), '/api/crawler/fetch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: 'not-a-url' }),
@@ -48,7 +49,7 @@ describe('crawler fetch route', () => {
       });
     vi.stubGlobal('fetch', vi.fn(fetchMock));
 
-    const response = await createApp().request('/api/crawler/fetch', {
+    const response = await requestWithEnv(createApp(), '/api/crawler/fetch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: 'https://www.mafengwo.cn/i/24648165.html' }),
@@ -77,7 +78,7 @@ describe('crawler fetch route', () => {
     const fetchMock: typeof fetch = async () => new Response('blocked', { status: 403, statusText: 'Forbidden' });
     vi.stubGlobal('fetch', vi.fn(fetchMock));
 
-    const response = await createApp().request('/api/crawler/fetch', {
+    const response = await requestWithEnv(createApp(), '/api/crawler/fetch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: 'https://www.xiaohongshu.com/explore/12345' }),

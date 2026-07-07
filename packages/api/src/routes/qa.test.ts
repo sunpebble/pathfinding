@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -15,7 +15,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -37,8 +36,8 @@ function createCountSelectChain(result: unknown) {
   return { from, where, limit };
 }
 
-function createInsertChain(insertId: number) {
-  return { values: vi.fn().mockResolvedValue([{ insertId: String(insertId) }]) };
+function createInsertChain(id: number) {
+  return { values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id }]) }) };
 }
 
 function createUpdateChain() {
@@ -47,7 +46,6 @@ function createUpdateChain() {
 
 describe('qa routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -65,14 +63,14 @@ describe('qa routes', () => {
         .mockReturnValueOnce(itemsChain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/qa/questions?poiId=1');
+      const response = await requestWithEnv(createApp(), '/api/qa/questions?poiId=1');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
     });
 
     it('returns 400 when poiId is missing', async () => {
-      const response = await createApp().request('/api/qa/questions');
+      const response = await requestWithEnv(createApp(), '/api/qa/questions');
       expect(response.status).toBe(400);
     });
   });
@@ -93,7 +91,7 @@ describe('qa routes', () => {
     });
 
     it('requires auth', async () => {
-      const response = await createApp().request('/api/qa/questions', {
+      const response = await requestWithEnv(createApp(), '/api/qa/questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ poiId: 1, title: 'New Question' }),
@@ -113,12 +111,12 @@ describe('qa routes', () => {
         .mockReturnValueOnce(itemsChain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/qa/answers?questionId=1');
+      const response = await requestWithEnv(createApp(), '/api/qa/answers?questionId=1');
       expect(response.status).toBe(200);
     });
 
     it('returns 400 when questionId is missing', async () => {
-      const response = await createApp().request('/api/qa/answers');
+      const response = await requestWithEnv(createApp(), '/api/qa/answers');
       expect(response.status).toBe(400);
     });
   });

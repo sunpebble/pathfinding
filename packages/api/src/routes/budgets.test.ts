@@ -16,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -37,7 +36,6 @@ function createUpdateChain(result: unknown) {
 
 describe('budget routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -114,8 +112,8 @@ describe('budget routes', () => {
       .mockReturnValueOnce(ownershipChain)
       .mockReturnValueOnce(existingChain);
 
-    const insertResult = vi.fn().mockResolvedValue([{ insertId: 42 }]);
-    mockDb.insert.mockReturnValueOnce({ values: insertResult });
+    const insertValues = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: 42 }]) });
+    mockDb.insert.mockReturnValueOnce({ values: insertValues });
 
     const response = await requestWithAuth(createApp(), '/api/budgets', {
       method: 'POST',

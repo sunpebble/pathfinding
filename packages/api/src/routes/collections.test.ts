@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -16,7 +16,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -30,7 +29,6 @@ function createSelectChain(result: unknown) {
 
 describe('collection routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
   });
 
@@ -62,7 +60,7 @@ describe('collection routes', () => {
   });
 
   it('gET /api/collections requires auth', async () => {
-    const response = await createApp().request('/api/collections');
+    const response = await requestWithEnv(createApp(), '/api/collections');
 
     expect(response.status).toBe(401);
   });

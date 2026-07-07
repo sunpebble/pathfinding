@@ -9,7 +9,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => ({})),
-    getDb: vi.fn(() => ({})),
   };
 });
 

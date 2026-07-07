@@ -1,3 +1,4 @@
+import type { Database } from '@pathfinding/database';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { executeAllPendingBackfillJobs, executeBackfillJob } from './backfill-executor.service.js';
 import { MAFENGWO_CRAWLER_DISABLED_MESSAGE } from './guide-import.service.js';
@@ -122,7 +123,7 @@ function createMockDb(overrides?: {
 }
 
 vi.mock('@pathfinding/database', () => ({
-  getDb: vi.fn(),
+  createDb: vi.fn(),
   crawlJobs: 'crawl_jobs',
   travelGuides: 'travel_guides',
   mafengwoGuides: 'mafengwo_guides',
@@ -138,21 +139,17 @@ beforeEach(() => {
 describe('backfill-executor.service', () => {
   describe('executeBackfillJob', () => {
     it('should throw if job not found', async () => {
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({ jobs: [] });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
 
-      await expect(executeBackfillJob(999)).rejects.toThrow('任务不存在');
+      await expect(executeBackfillJob(mockDb as unknown as Database, 999)).rejects.toThrow('任务不存在');
     });
 
     it('should throw if job is not pending', async () => {
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
         jobs: [{ id: 1, jobType: 'field_backfill', config: { targetGuideIds: [101] }, status: 'running', platform: 'multi' }],
       });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
 
-      await expect(executeBackfillJob(1)).rejects.toThrow('任务状态为 running，需要为 pending');
+      await expect(executeBackfillJob(mockDb as unknown as Database, 1)).rejects.toThrow('任务状态为 running，需要为 pending');
     });
 
     it('should execute field_backfill job', async () => {
@@ -164,11 +161,9 @@ describe('backfill-executor.service', () => {
         }),
       });
 
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb();
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
 
-      const result = await executeBackfillJob(1, { fetchImpl: mockFetch });
+      const result = await executeBackfillJob(mockDb as unknown as Database, 1, { fetchImpl: mockFetch });
 
       expect(result).toBeDefined();
       expect(typeof result.success).toBe('boolean');
@@ -176,7 +171,6 @@ describe('backfill-executor.service', () => {
 
     it('should sync counts/publishedAt from staging and mirror guide_destinations', async () => {
       const stagingPublishedAt = new Date('2023-08-12T00:00:00Z');
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
         guides: [{
           id: 101,
@@ -211,9 +205,8 @@ describe('backfill-executor.service', () => {
         }],
         guideDestinations: [],
       });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
 
-      const result = await executeBackfillJob(1, { fetchImpl: vi.fn() });
+      const result = await executeBackfillJob(mockDb as unknown as Database, 1, { fetchImpl: vi.fn() });
 
       expect(result.success).toBe(true);
       expect(result.processed).toBe(1);
@@ -234,7 +227,6 @@ describe('backfill-executor.service', () => {
     });
 
     it('should not duplicate guide_destinations rows that already exist', async () => {
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
         guides: [{
           id: 101,
@@ -265,9 +257,8 @@ describe('backfill-executor.service', () => {
         }],
         guideDestinations: [{ destination: 'Beijing' }],
       });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
 
-      await executeBackfillJob(1, {
+      await executeBackfillJob(mockDb as unknown as Database, 1, {
         fetchImpl: vi.fn().mockResolvedValue({
           ok: true,
           json: vi.fn().mockResolvedValue({ success: false }),
@@ -283,18 +274,16 @@ describe('backfill-executor.service', () => {
 
     it('updates non-mafengwo guides through the TS crawler fetch service', async () => {
       // Arrange: non-mafengwo guide forces the direct source URL fetch path.
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
         guides: [{ id: 101, platform: 'other', externalId: null, sourceUrl: 'https://example.com/1', content: '', title: '' }],
       });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
       const mockFetch = vi.fn().mockResolvedValue(new Response(
         '<html><head><title>Fetched Title</title></head><body><p>Fetched content。</p></body></html>',
         { status: 200, statusText: 'OK' },
       ));
 
       // Act
-      const result = await executeBackfillJob(1, { fetchImpl: mockFetch });
+      const result = await executeBackfillJob(mockDb as unknown as Database, 1, { fetchImpl: mockFetch });
 
       // Assert
       expect(result.processed).toBe(1);
@@ -314,15 +303,13 @@ describe('backfill-executor.service', () => {
 
     it('counts crawler fetch failures as failed instead of hiding them', async () => {
       // Arrange: non-mafengwo guide forces the direct source URL fetch path.
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
         guides: [{ id: 101, platform: 'other', externalId: null, sourceUrl: 'https://example.com/1', content: '', title: 'Guide 101' }],
       });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
       const mockFetch = vi.fn().mockRejectedValue(new Error('验证码拦截'));
 
       // Act
-      const result = await executeBackfillJob(1, { fetchImpl: mockFetch });
+      const result = await executeBackfillJob(mockDb as unknown as Database, 1, { fetchImpl: mockFetch });
 
       // Assert
       expect(result.failed).toBe(1);
@@ -331,15 +318,13 @@ describe('backfill-executor.service', () => {
 
     it('counts non-OK fetch HTTP responses as failed', async () => {
       // Arrange
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
         guides: [{ id: 101, platform: 'other', externalId: null, sourceUrl: 'https://example.com/1', content: '', title: 'Guide 101' }],
       });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
       const mockFetch = vi.fn().mockResolvedValue(new Response('bad gateway', { status: 502, statusText: 'Bad Gateway' }));
 
       // Act
-      const result = await executeBackfillJob(1, { fetchImpl: mockFetch });
+      const result = await executeBackfillJob(mockDb as unknown as Database, 1, { fetchImpl: mockFetch });
 
       // Assert
       expect(result.failed).toBe(1);
@@ -347,16 +332,14 @@ describe('backfill-executor.service', () => {
     });
 
     it('destination_fill marks mafengwo source work as failed without calling the removed crawler', async () => {
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb({
         jobs: [{ id: 2, jobType: 'destination_fill', config: { targetDestinations: ['Paris', 'Tokyo'] }, status: 'pending', platform: 'multi' }],
       });
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
       const fetchImpl = vi.fn();
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
       try {
-        const result = await executeBackfillJob(2, { fetchImpl });
+        const result = await executeBackfillJob(mockDb as unknown as Database, 2, { fetchImpl });
 
         expect(fetchImpl).not.toHaveBeenCalled();
         expect(result.success).toBe(true);
@@ -391,11 +374,9 @@ describe('backfill-executor.service', () => {
         json: vi.fn().mockResolvedValue({ success: true, data: {} }),
       });
 
-      const { getDb } = await import('@pathfinding/database');
       const mockDb = createMockDb();
-      vi.mocked(getDb).mockReturnValue(mockDb as unknown as ReturnType<typeof import('@pathfinding/database').getDb>);
 
-      const result = await executeAllPendingBackfillJobs({ fetchImpl: mockFetch });
+      const result = await executeAllPendingBackfillJobs(mockDb as unknown as Database, { fetchImpl: mockFetch });
 
       expect(typeof result.executed).toBe('number');
       expect(typeof result.totalProcessed).toBe('number');

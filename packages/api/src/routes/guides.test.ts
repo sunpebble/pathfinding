@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithAuth } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -15,7 +15,6 @@ vi.mock('@pathfinding/database', async () => {
   return {
     ...actual,
     createDb: vi.fn(() => mockDb),
-    getDb: vi.fn(() => mockDb),
   };
 });
 
@@ -63,7 +62,7 @@ function createSearchSelectChain(result: unknown) {
 function createInsertReturningChain(id: number) {
   return {
     values: vi.fn().mockReturnValue({
-      $returningId: vi.fn().mockResolvedValue([{ id }]),
+      returning: vi.fn().mockResolvedValue([{ id }]),
     }),
   };
 }
@@ -114,7 +113,6 @@ const richGuideMock = {
 
 describe('guides routes', () => {
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-jwt-secret';
     mockDb.select.mockReset();
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -129,7 +127,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides');
+      const response = await requestWithEnv(createApp(), '/api/guides');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
@@ -143,7 +141,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides?platform=xiaohongshu&min_quality=0.8');
+      const response = await requestWithEnv(createApp(), '/api/guides?platform=xiaohongshu&min_quality=0.8');
       expect(response.status).toBe(200);
     });
 
@@ -154,7 +152,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides?max_quality=0.5&sort=quality_score&order=asc');
+      const response = await requestWithEnv(createApp(), '/api/guides?max_quality=0.5&sort=quality_score&order=asc');
       expect(response.status).toBe(200);
       expect(chain.where).toHaveBeenCalledWith(expect.anything());
       expect(countChain.where).toHaveBeenCalledWith(expect.anything());
@@ -167,7 +165,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides?limit=5&offset=10&sort=quality_score&order=asc');
+      const response = await requestWithEnv(createApp(), '/api/guides?limit=5&offset=10&sort=quality_score&order=asc');
       expect(response.status).toBe(200);
 
       const body = await response.json();
@@ -208,7 +206,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides');
+      const response = await requestWithEnv(createApp(), '/api/guides');
       expect(response.status).toBe(200);
 
       const body = await response.json();
@@ -228,7 +226,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides');
+      const response = await requestWithEnv(createApp(), '/api/guides');
       expect(response.status).toBe(200);
 
       const body = await response.json();
@@ -245,7 +243,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(countChain);
 
       // Act
-      const response = await createApp().request('/api/guides');
+      const response = await requestWithEnv(createApp(), '/api/guides');
 
       // Assert
       const body = await response.json();
@@ -261,7 +259,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(countChain);
 
       // Act
-      const response = await createApp().request('/api/guides?q=Paris');
+      const response = await requestWithEnv(createApp(), '/api/guides?q=Paris');
 
       // Assert
       expect(response.status).toBe(200);
@@ -280,7 +278,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(countChain);
 
       // Act
-      const response = await createApp().request('/api/guides?destinations=Paris,%20London');
+      const response = await requestWithEnv(createApp(), '/api/guides?destinations=Paris,%20London');
 
       // Assert
       expect(response.status).toBe(200);
@@ -296,7 +294,7 @@ describe('guides routes', () => {
       mockDb.select.mockReturnValueOnce(destChain);
 
       // Act
-      const response = await createApp().request('/api/guides?destinations=Atlantis');
+      const response = await requestWithEnv(createApp(), '/api/guides?destinations=Atlantis');
 
       // Assert
       expect(response.status).toBe(200);
@@ -320,7 +318,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides');
+      const response = await requestWithEnv(createApp(), '/api/guides');
       expect(response.status).toBe(200);
 
       const body = await response.json();
@@ -336,7 +334,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides/search?q=paris');
+      const response = await requestWithEnv(createApp(), '/api/guides/search?q=paris');
       expect(response.status).toBe(200);
     });
 
@@ -347,7 +345,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides/search?destination=Paris');
+      const response = await requestWithEnv(createApp(), '/api/guides/search?destination=Paris');
       expect(response.status).toBe(200);
     });
 
@@ -358,7 +356,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(chain)
         .mockReturnValueOnce(countChain);
 
-      const response = await createApp().request('/api/guides/search');
+      const response = await requestWithEnv(createApp(), '/api/guides/search');
       expect(response.status).toBe(200);
     });
   });
@@ -370,7 +368,7 @@ describe('guides routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/guides/destinations');
+      const response = await requestWithEnv(createApp(), '/api/guides/destinations');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
@@ -382,7 +380,7 @@ describe('guides routes', () => {
       const chain = createSelectChain([guideMock]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/guides/by-id?id=1');
+      const response = await requestWithEnv(createApp(), '/api/guides/by-id?id=1');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.title).toBe('Paris Guide');
@@ -400,7 +398,7 @@ describe('guides routes', () => {
       }]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/guides/by-id?id=1');
+      const response = await requestWithEnv(createApp(), '/api/guides/by-id?id=1');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.content_html).toBe('<p>富文本内容</p>');
@@ -410,7 +408,7 @@ describe('guides routes', () => {
     });
 
     it('returns 400 when id is missing', async () => {
-      const response = await createApp().request('/api/guides/by-id');
+      const response = await requestWithEnv(createApp(), '/api/guides/by-id');
       expect(response.status).toBe(400);
     });
 
@@ -418,7 +416,7 @@ describe('guides routes', () => {
       const chain = createSelectChain([]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/guides/by-id?id=999');
+      const response = await requestWithEnv(createApp(), '/api/guides/by-id?id=999');
       expect(response.status).toBe(404);
     });
   });
@@ -431,7 +429,7 @@ describe('guides routes', () => {
       ]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/guides/stats');
+      const response = await requestWithEnv(createApp(), '/api/guides/stats');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.total).toBe(15);
@@ -444,14 +442,14 @@ describe('guides routes', () => {
       const chain = createSelectChain([guideMock]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/guides/1');
+      const response = await requestWithEnv(createApp(), '/api/guides/1');
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data).toBeDefined();
     });
 
     it('returns 400 for invalid ID', async () => {
-      const response = await createApp().request('/api/guides/abc');
+      const response = await requestWithEnv(createApp(), '/api/guides/abc');
       expect(response.status).toBe(400);
     });
 
@@ -459,7 +457,7 @@ describe('guides routes', () => {
       const chain = createSelectChain([]);
       mockDb.select.mockReturnValueOnce(chain);
 
-      const response = await createApp().request('/api/guides/999');
+      const response = await requestWithEnv(createApp(), '/api/guides/999');
       expect(response.status).toBe(404);
     });
   });
@@ -669,7 +667,7 @@ describe('guides routes', () => {
         .mockReturnValueOnce(gapCountChain);
 
       // Act
-      const response = await createApp().request('/api/guides/gap-report');
+      const response = await requestWithEnv(createApp(), '/api/guides/gap-report');
 
       // Assert
       expect(response.status).toBe(200);
