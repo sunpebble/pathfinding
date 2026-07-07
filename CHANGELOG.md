@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/sunpebble/pathfinding/compare/v1.2.2...v1.2.3) (2026-07-07)
+
+
+### Bug Fixes
+
+* **ios:** add brand app icon set and CFBundleIconName ([5720e52](https://github.com/sunpebble/pathfinding/commit/5720e52a16742fb88527606ab9d4f27265d7c370))
+
 ## [1.2.2](https://github.com/sunpebble/pathfinding/compare/v1.2.1...v1.2.2) (2026-07-07)
 
 
