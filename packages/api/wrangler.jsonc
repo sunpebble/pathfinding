@@ -15,6 +15,12 @@
   "r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "pathfinding-uploads" }],
   "routes": [{ "pattern": "api.trips.sunpebblelabs.com", "custom_domain": true }],
   "vars": { "CORS_ORIGIN": "https://trips.sunpebblelabs.com" },
-  // Flue DO classes (e.g. FlueRegistry) backfilled in Task 6.3 after first `flue build`
-  "migrations": []
+  // Flue DO classes backfilled in Task 6.3 after first `flue build --target cloudflare`.
+  // Discovered from dist/<worker>/wrangler.json `durable_objects.bindings` + build output:
+  //   FLUE_REGISTRY -> FlueRegistry (sqlite storage)
+  //   FLUE_TRIPS_PLANNER_AGENT -> FlueTripsPlannerAgent (sqlite storage, from agents/trips-planner.ts)
+  // `tag` starts at v1; append new entries (v2, v3, ...) as DO classes are added/removed.
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["FlueRegistry", "FlueTripsPlannerAgent"] }
+  ]
 }
