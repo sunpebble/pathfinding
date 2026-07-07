@@ -56,6 +56,7 @@ git checkout feat/backend-cloudflare-workers && git checkout -b refactor/phase1-
 ### Task 1: 后端爬虫域整树删除
 
 **Files:**
+
 - Delete（路由+测试）: `packages/api/src/routes/{crawl-jobs,quality-reports,training-datasets,crawler-fetch,guides}.ts` 及同名 `.test.ts`（共 10 个）
 - Delete（服务+测试）: `packages/api/src/services/{backfill.service,backfill-executor.service,guide-content,guide-import.service,guide-normalize,guide-writer}.ts` 及同名 `.test.ts`；`packages/api/src/services/crawler-fetch.service.ts`（共 13 个）
 - Delete（整包）: `packages/guide-shape/`、`packages/crawler-types/`
@@ -63,6 +64,7 @@ git checkout feat/backend-cloudflare-workers && git checkout -b refactor/phase1-
 - Modify: `packages/api/src/app.ts`、`packages/api/package.json`、`packages/api/flue.config.ts`
 
 **Interfaces:**
+
 - Produces: `/api/guides`、`/api/crawler`、`/api/crawl-jobs`、`/api/quality-reports`、`/api/training-datasets` 不复存在；`@pathfinding/guide-shape`、`@pathfinding/crawler-types` 包不复存在。后续任务（4、6、8）以此为前提。
 
 - [ ] **Step 1: 删除文件与整包**
@@ -134,10 +136,12 @@ git add -A && git commit -m "refactor(api): remove crawler/guide legacy domain (
 ### Task 2: 后端社区壳删除（含 users 的 follow 端点）
 
 **Files:**
+
 - Delete: `packages/api/src/routes/{comments,likes,favorites,collections,notifications,push-tokens,qa,travel-notes}.ts` 及同名 `.test.ts`（共 16 个）；`packages/api/src/services/push.service.ts` + `.test.ts`
 - Modify: `packages/api/src/app.ts`、`packages/api/src/routes/users.ts`、`packages/api/src/routes/users.test.ts`
 
 **Interfaces:**
+
 - Produces: `/api/comments|collections|favorites|likes|travel-notes|notifications|push-tokens|qa` 与 `/api/users/:id/follow*` 不复存在。Task 4 删对应表，Task 8-9 删 iOS 调用方。
 
 - [ ] **Step 1: 删除文件**
@@ -184,6 +188,7 @@ git add -A && git commit -m "refactor(api): remove community shell (comments/lik
 ### Task 3: 后端 translations 路由与 501 stub 删除
 
 **Files:**
+
 - Delete: `packages/api/src/routes/translations.ts`、`packages/api/src/routes/translations.test.ts`
 - Modify: `packages/api/src/app.ts`、`packages/api/src/routes/auxiliary.ts`、`packages/api/src/routes/auxiliary.test.ts`
 
@@ -217,10 +222,12 @@ git add -A && git commit -m "refactor(api): drop translations routes and 501 pdf
 ### Task 4: schema 收缩（删 23 张表的定义）
 
 **Files:**
+
 - Delete: `packages/database/src/schema/{crawl,guides,mafengwo,translations,notifications,travel-notes}.ts`
 - Modify: `packages/database/src/schema/index.ts`、`packages/database/src/schema/itineraries.ts`、`packages/database/src/schema/pois.ts`、`packages/database/src/schema/profiles.ts`、`packages/api/src/routes/users.ts`（+test）
 
 **Interfaces:**
+
 - Produces: schema 仅剩核心域（sqlite-core 方言，CF 迁移已完成方言转换）。D1 迁移文件的重生成放在 Task 5，本任务只改 TS 代码。
 
 - [ ] **Step 1: 删 schema 文件与 barrel**
@@ -258,9 +265,11 @@ git add -A && git commit -m "refactor(db): shrink schema to core domain (drop cr
 ### Task 5: D1 baseline 迁移重生成
 
 **Files:**
+
 - Modify/Regenerate: `packages/database/drizzle/0000_*.sql`、`packages/database/drizzle/0001_updated_at_triggers.sql`、`packages/database/drizzle/meta/`
 
 **Interfaces:**
+
 - Consumes: Task 4 收缩后的 schema。
 - Produces: 干净的 D1 baseline（约 25 张表，不含任何遗留表）。生产 D1 尚未创建、无任何已应用迁移（CF 迁移 spec §0：无数据迁移），因此**重生成而非追加 DROP 迁移**是安全且正确的。原 spec §6 的「rename 冷备」随旧 TiDB 整体废弃而作废。
 
@@ -303,12 +312,14 @@ git add -A && git commit -m "refactor(db): regenerate clean D1 baseline without 
 ### Task 6: dashboard 爬虫代理与孤儿页面清理
 
 **Files:**
+
 - Delete: `src/app/api/crawler/` 整目录（14 条路由 + `route-handlers.test.ts`）；页面 `src/app/(dashboard)/{jobs,guides,datasets,pois}/` 整目录（含 `jobs/[id]`、`guides/[id]`、`pois/page.test.tsx` 等）；`src/lib/api/{crawler,crawler.test,backend,backend.test,proxy,proxy.test}.ts`；`src/components/{poi-editor,poi-editor.test,geocoding-confidence-badge}.tsx`；孤儿组件 `src/components/safe-html.tsx`、`src/components/ui/status-badge.tsx`、`src/components/ui/platform-badge.tsx`（均以 grep 复核零引用后删）
 - Modify: `src/hooks/use-health-status.ts`、`src/lib/api/index.ts`、`src/lib/api/pois.ts`、`src/types/api.ts`（孤儿类型 `GuideWithAI`/`AiDay`）
 
 （以下路径均相对 `apps/dashboard/`。）
 
 **Interfaces:**
+
 - Consumes: Task 1 已删后端 `/api/crawler/*` 等端点。
 - Produces: `src/lib/api/index.ts` 不再 re-export crawler/backend 符号；`use-health-status.ts` 自带 `getHealth`。
 
@@ -364,6 +375,7 @@ git add -A && git commit -m "refactor(dashboard): remove crawler proxy chain, or
 ### Task 7: dashboard 坏承诺与导航收尾
 
 **Files:**
+
 - Modify: `src/app/(dashboard)/itineraries/[id]/page.tsx`、`src/app/page.tsx`、`src/app/auth/signin/page.tsx`、`src/components/sidebar.tsx`、`src/components/sidebar.test.tsx`、`src/app/(dashboard)/overview/page.tsx`、`src/app/(dashboard)/settings/page.tsx`
 - Delete: `src/components/pdf-export-button.tsx`
 
@@ -394,10 +406,12 @@ git add -A && git commit -m "refactor(dashboard): drop broken pdf export & forgo
 ### Task 8: iOS 发现/攻略死代码树删除 + BlogPost 收缩
 
 **Files:**（均相对 `apps/ios/Pathfinding/`）
+
 - Delete: `Pathfinding/Features/DiscoverView.swift`、`Features/Search/SearchView.swift`、`Features/PublicItineraryDiscoveryView.swift`、`Features/BlogDetailView.swift`、`Features/BlogDetail/`（13 文件）、`Features/CityEncyclopediaView.swift`、`Features/Encyclopedia/`（5 文件）、`Features/PdfExportSheet.swift`、`Features/DebugMenuView.swift`、`Core/GuideStore.swift`、`Core/Network/Clients/{GuideAPIClient,CityAPIClient,PDFAPIClient}.swift`、`Features/Components/{GuideComponents,MarkdownContentView,RichTextContentView,PlainTextContentView,HTMLContentParser,ImageViewer,ShimmerView,ActivityShareSheet}.swift`、`Models/{City,CityEncyclopedia,PdfExport}.swift`、`PathfindingTests/{SearchViewQueryTests,CityEncyclopediaReachabilityTests,MarkdownContentParserTests}.swift`
 - Modify: `Models/BlogPost.swift`、`Models/SavedItinerary.swift`、`Core/ItineraryStore.swift`、`Core/Network/Clients/ItineraryAPIClient.swift`、`Core/ShareManager.swift`、`Core/ShareImageGenerator.swift`、`Features/Share/ShareSheet.swift`、`Features/Share/ShareCardView.swift`、`Features/CopyItinerarySheet.swift`、`Features/Settings/CacheSettingsView.swift`、`Core/PreferenceStore.swift`
 
 **Interfaces:**
+
 - Produces: `BlogPost`、`GuideStore` 等类型消失；`AiDay`/`AiPoi`/`TransportInfo` 保留于 `Models/BlogPost.swift`（**不要**整删该文件）。
 
 - [ ] **Step 1: 删除死代码树**
@@ -440,6 +454,7 @@ git add -A && git commit -m "refactor(ios): remove discover/guide/encyclopedia d
 ### Task 9: iOS 社区壳 + 保险删除（ProfileView 手术）
 
 **Files:**（相对 `apps/ios/Pathfinding/`）
+
 - Delete: `Core/{FollowStore,CommentStore,TravelNoteStore,FavoriteStore,InsuranceStore}.swift`、`Features/Follow/{FollowViews,UserProfileView}.swift`、`Features/Comments/CommentSectionView.swift`、`Features/Favorites/{FavoriteCollectionsView,LikeFavoriteComponents,MyFavoritesView,MyLikesView}.swift`、`Features/Insurance/InsuranceView.swift`、`Models/{ActivityFeed,Follow,Comment,Favorite,TravelNote,Insurance}.swift`
 - Modify: `Features/ProfileView.swift`
 
@@ -466,6 +481,7 @@ git add -A && git commit -m "refactor(ios): remove community shell (follow/comme
 ### Task 10: iOS 死模块清理（协作/翻译死模型）
 
 **Files:**（相对 `apps/ios/Pathfinding/`）
+
 - Delete: `Features/Collaboration/{CollaborationModifiers,CollaborationViews}.swift`、`Core/CollaborationManager.swift`、`Core/Network/Clients/CollaborationAPIClient.swift`、`Models/Collaboration.swift`、`Models/Translation.swift`、`Core/Network/Models/APIRequestTypes.swift`
 
 - [ ] **Step 1: 删除 + 复核**
@@ -491,6 +507,7 @@ git add -A && git commit -m "refactor(ios): remove dead collaboration module and
 ### Task 11: iOS 登录残留清理
 
 **Files:**（相对 `apps/ios/Pathfinding/`）
+
 - Modify: `Features/Auth/LoginView.swift`、`Core/AuthManager.swift`、`Features/Settings/APISettingsSheet.swift`、`Features/ProfileView.swift`、`PathfindingUITests/EmailLoginFlowUITests.swift`
 
 - [ ] **Step 1: LoginView 收敛为「邮箱 + Apple」**
@@ -527,6 +544,7 @@ git add -A && git commit -m "refactor(ios): drop phone/wechat login and dead for
 ### Task 12: iOS 文案清理 + 全量测试
 
 **Files:**（相对 `apps/ios/Pathfinding/`）
+
 - Modify: `Pathfinding/Resources/zh-Hans.lproj/Localizable.strings`、`Pathfinding/Resources/en.lproj/Localizable.strings`
 
 - [ ] **Step 1: 删聚合器文案 key**（两个语言文件行号一致）
@@ -561,6 +579,7 @@ git add -A && git commit -m "refactor(ios): purge aggregator-era strings and orp
 ### Task 13: 文档失效引用清理 + 终验
 
 **Files:**
+
 - Modify: `CLAUDE.md`、`CONTEXT.md`、`README.md`
 
 （全面重写属 Phase 3；本任务只删「描述已不存在代码」的内容，防误导。）

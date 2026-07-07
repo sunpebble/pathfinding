@@ -25,6 +25,7 @@
 ## File Structure（改动地图）
 
 **`packages/database/`（Phase 1）**
+
 - Modify: `src/schema/columns.ts` — 方言助手（id/fk/createdAt/updatedAt）改 sqlite-core
 - Modify: `src/schema/*.ts`（17 文件）— `mysqlTable`→`sqliteTable` + 列类型映射（机械规程）
 - Rewrite: `src/client.ts` — `mysql2` 单例 → D1 工厂 `createDb(d1)`
@@ -33,6 +34,7 @@
 - Modify: `package.json` — 去 `mysql2`，无需新增（drizzle 已在）
 
 **`packages/api/`（Phase 2–5）**
+
 - Create: `src/env.ts` — `Env`（Bindings）类型 + `db` 变量类型导出
 - Create: `src/middleware/db.ts` — 每请求注入 db 到上下文
 - Modify: `src/app.ts` — 装配 db 中间件；`process.env`→默认值兜底；`registerDeepSeekProvider` 移除
@@ -45,6 +47,7 @@
 - Modify: `src/server.ts` — 标注仅脚本用（或删）
 
 **根/CI（Phase 6）**
+
 - Create: `packages/api/wrangler.jsonc`
 - Create: `.github/workflows/deploy-api.yml`
 
@@ -57,9 +60,11 @@
 ## Task 1.1: 重写 `columns.ts` 方言助手（sqlite-core）
 
 **Files:**
+
 - Modify: `packages/database/src/schema/columns.ts`
 
 **Interfaces:**
+
 - Produces: `id()`→`integer('id',{mode:'number'}).primaryKey({autoIncrement:true})`；`fk(name)`→`integer(name)`；`createdAt()`→`integer('created_at',{mode:'timestamp'}).notNull().defaultNow()`；`updatedAt()`→`integer('updated_at',{mode:'timestamp'}).notNull().defaultNow()`（`onUpdateNow` 移除，由触发器实现）。
 
 - [ ] **Step 1: 重写 `columns.ts`**
@@ -104,6 +109,7 @@ git commit -m "refactor(database): rewrite columns helpers for sqlite-core"
 ## Task 1.2: schema 文件批量 mysql→sqlite（机械规程）
 
 **Files:**
+
 - Modify: `packages/database/src/schema/*.ts`（17 文件，不含已改的 `columns.ts`）
 
 **机械变换规程（对每个文件逐条应用，确定性）：**
@@ -141,6 +147,7 @@ export const favoriteCollections = mysqlTable('favorite_collections', {
   sortOrder: int('sort_order').notNull().default(0),
 });
 ```
+
 ```ts
 // AFTER
 import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
@@ -182,10 +189,12 @@ git commit -m "refactor(database): migrate all schemas from mysql-core to sqlite
 ## Task 1.3: 重写 `client.ts` 为 D1 工厂
 
 **Files:**
+
 - Modify: `packages/database/src/client.ts`
 - Modify: `packages/database/src/index.ts`（导出签名变化）
 
 **Interfaces:**
+
 - Produces: `createDb(d1: D1Database): Database`（每请求由中间件调用）；删除 `getDb`/`createPool`（mysql2 单例/池不再存在）。
 - 消费方注意：`api` 包 Phase 2 会把所有 `getDb()` 改为 `c.get('db')`，故此处**不再导出 `getDb`**——保留会让旧调用静默走错。`index.ts` 同步去掉 `getDb`/`createPool` 导出。
 
@@ -231,10 +240,12 @@ git commit -m "refactor(database): replace mysql2 singleton with D1 createDb fac
 ## Task 1.4: drizzle.config 切 sqlite + 生成迁移 + updatedAt 触发器
 
 **Files:**
+
 - Modify: `packages/database/drizzle.config.ts`
 - Create: `packages/database/drizzle/0001_updated_at_triggers.sql`（触发器补丁，命名并入 drizzle 迁移序）
 
 **Interfaces:**
+
 - Produces: `drizzle-kit generate`（dialect sqlite）产出建表 SQL；触发器 SQL 接在其后；最终由 `wrangler d1 migrations apply` 执行（Phase 6）。
 
 - [ ] **Step 1: 改 `drizzle.config.ts`**
@@ -296,11 +307,13 @@ git commit -m "build(database): switch drizzle-kit to sqlite, add D1 migrations 
 ## Task 2.1: `Env` 类型 + db 注入中间件
 
 **Files:**
+
 - Create: `packages/api/src/env.ts`
 - Create: `packages/api/src/middleware/db.ts`
 - Modify: `packages/api/src/app.ts`
 
 **Interfaces:**
+
 - Produces: `Env`（Bindings）、`Vars`（`{ db: Database }`）、`createDb` 复用自 `@pathfinding/database`。app 顶层泛型 `{ Bindings: Env; Variables: Vars }`。
 - 消费：Task 1.3 的 `createDb(d1)`。
 
@@ -351,7 +364,9 @@ export const dbMiddleware = createMiddleware<{ Bindings: Env; Variables: Vars }>
 // app.ts 内，全局中间件区
 app.use('*', dbMiddleware);
 ```
+
 并把根 app 泛型改为 `new Hono<{ Bindings: Env; Variables: Vars }>()`，`import type { Env, Vars } from './env.js';`。
+
 > 子路由 `new Hono<{ Variables: AuthVariables }>()` 在后续 Task 2.4 统一加 `db: Database` 到 Variables（或改用共享 `AppVars` 类型）。
 
 - [ ] **Step 4: typecheck**
@@ -369,11 +384,13 @@ git commit -m "feat(api): add Env bindings type and per-request db injection mid
 ## Task 2.2: deepseek 改每次调用传 key + 移除 registerDeepSeekProvider
 
 **Files:**
+
 - Modify: `packages/api/src/lib/deepseek.ts`
 - Modify: `packages/api/src/app.ts`（移除 `registerDeepSeekProvider()` 调用与 import）
 - Modify: 调用 `deepSeekCompletion` 的处：`src/routes/chat.ts`、`src/routes/agent.ts`、`src/agents/trips-planner.ts`（及任何引用）
 
 **Interfaces:**
+
 - Produces: `deepSeekCompletion(messages, opts: { apiKey: string; signal?: AbortSignal }): Promise<string>`、`class DeepSeekConfigError`。
 - 消费方：调用点改为 `deepSeekCompletion(msgs, { apiKey: c.env.DEEPSEEK_API_KEY ?? '', signal: c.req.raw.signal })`。
 
@@ -394,6 +411,7 @@ export async function deepSeekCompletion(
   // ...
 }
 ```
+
 > 保留 `DeepSeekConfigError` 导出；删掉模块顶对 `process.env.DEEPSEEK_API_KEY` 的读取。
 
 - [ ] **Step 2: 改调用点**
@@ -419,9 +437,11 @@ git commit -m "refactor(api): pass DEEPSEEK key per-call, drop module-level prov
 ## Task 2.3: `process.env` → `c.env`（请求路径配置）
 
 **Files:**
+
 - Modify: `src/middleware/auth.ts`、`src/middleware/security-headers.ts`、`src/middleware/error-handler.ts`、`src/lib/logger.ts`、`src/routes/health.ts`、`src/routes/auxiliary.ts`、`src/services/auth.service.ts`、`src/services/oauth.service.ts`
 
 **规程：**
+
 - 请求处理内读 `process.env.JWT_SECRET` 等 → 从 `c.env` 取（middleware/handler 有 `c`）。
 - 被多处调用的纯函数（如 `auth.service` 的 `verifyToken`、`signToken`）改为**接收 secret 作参数**，由调用方从 `c.env.JWT_SECRET` 透传。
 - `logger.ts` 若仅按 `process.env.LOG_LEVEL` 决定级别：改为函数工厂 `createLogger(category, level?)`，由 app 启动时从 `c.env` 传，或保留读 `process.env`（dev 本地 workerd 也注入 env，可保留少量只读场景）。**原则：运行期鉴权/密钥必须走 `c.env`；纯日志级别可放宽。**
@@ -434,6 +454,7 @@ export async function verifyToken(token: string, secret: string): Promise<JWTPay
   // jose importKey/verifyJWT 用传入的 secret，不再读 process.env.JWT_SECRET
 }
 ```
+
 ```ts
 // middleware/auth.ts：调用处从 c.env 取
 const payload = await verifyToken(token, c.env.JWT_SECRET);
@@ -454,20 +475,25 @@ git commit -m "refactor(api): route runtime config and secrets through c.env"
 ## Task 2.4: 路由 `getDb()`→`c.get('db')` + 子 app Variables 统一（机械规程）
 
 **Files:**
+
 - Modify: 全部 `src/routes/*.ts`（~26 文件）、`src/middleware/rate-limit.ts`
 
 **机械规程：**
+
 1. 每个 handler 开头的 `const db = getDb();`（或内联 `getDb()`）→ `const db = c.get('db');`。
 2. 子 app 顶层 `new Hono<{ Variables: AuthVariables }>()` → `new Hono<{ Bindings: Env; Variables: AuthVariables & { db: Database } }>()`（或定义共享 `type AppContext = { Bindings: Env; Variables: AuthVariables & { db: Database } }` 于 `env.ts`，各路由改用它）。**推荐共享类型，减少重复。**
 
 **共享类型（加入 `env.ts`）：**
+
 ```ts
 import type { AuthVariables } from './middleware/auth.js';
 export type AppContext = { Bindings: Env; Variables: AuthVariables & Vars };
 ```
+
 > 注意循环 import：`Vars` 用 `Database`，`AppContext` 用 `AuthVariables`；`env.ts` 只 `import type`，无运行期循环。
 
 **样例（`chat.ts` handler）：**
+
 ```ts
 // BEFORE
 const app = new Hono<{ Variables: AuthVariables }>();
@@ -476,6 +502,7 @@ app.get('/sessions', authRequired(), async (c) => {
   // ...
 });
 ```
+
 ```ts
 // AFTER
 import type { AppContext } from '../env.js';
@@ -502,19 +529,23 @@ git commit -m "refactor(api): replace getDb() with per-request c.get('db'); unif
 ## Task 2.5: `$returningId()` → `.returning({ id })`
 
 **Files:**
+
 - Modify: 用到 `.$returningId()` 的路由/服务：`routes/{auth,itineraries,itinerary-collaborators,chat,guides}.ts`、`services/{auth.service,guide-writer}.ts`
 
 **规程：**
+
 ```ts
 // BEFORE
 const [result] = await db.insert(chatSessions).values({...}).$returningId();
 // 后续读 result!.id
 ```
+
 ```ts
 // AFTER（D1 支持 RETURNING）
 const [result] = await db.insert(chatSessions).values({...}).returning({ id: chatSessions.id });
 // 读 result.id
 ```
+
 > 多处把 `[result] = ...$returningId()` 后 `result!.id` 改为 `result.id`（非空断言可保留或按上下文去掉）。
 
 - [ ] **Step 1: 全量替换 `.$returningId()` 为 `.returning({ id: <table>.id })`**
@@ -532,13 +563,16 @@ git commit -m "refactor(api): use D1 .returning({id}) instead of \$returningId()
 ## Task 2.6: 5 个 service 改收 `db` 参数
 
 **Files:**
+
 - Modify: `services/{auth,push,itinerary-access,backfill,backfill-executor}.service.ts` 及其调用点
 
 **规程：**
+
 - 每个 service 函数签名加 `db: Database` 首参（去掉函数内 `getDb()`）。
 - 调用点（路由）从 `c.get('db')` 透传。
 
 **样例（`itinerary-access.service.ts`）：**
+
 ```ts
 // BEFORE
 export async function assertCanEdit(itineraryId: number, userId: number) {
@@ -546,6 +580,7 @@ export async function assertCanEdit(itineraryId: number, userId: number) {
   // ...
 }
 ```
+
 ```ts
 // AFTER
 import type { Database } from '@pathfinding/database';
@@ -553,6 +588,7 @@ export async function assertCanEdit(db: Database, itineraryId: number, userId: n
   // ...
 }
 ```
+
 路由侧：`await assertCanEdit(c.get('db'), id, userId)`。
 
 - [ ] **Step 1: 改 5 个 service 签名 + 调用点**
@@ -574,9 +610,11 @@ git commit -m "refactor(api): thread db into services instead of global getDb()"
 ## Task 3.1: 重写 `uploads.ts` 用 R2
 
 **Files:**
+
 - Rewrite: `packages/api/src/routes/uploads.ts`
 
 **Interfaces:**
+
 - 消费：`c.env.UPLOADS: R2Bucket`、`c.get('userId')`。
 - 保留对外 URL 契约：`{ url: "/api/uploads/${filename}" }`。
 
@@ -668,11 +706,13 @@ git commit -m "refactor(api): rewrite uploads route to use R2 instead of node:fs
 ## Task 4.1: api 包脚本切 cloudflare target + 退役 server.ts
 
 **Files:**
+
 - Modify: `packages/api/package.json`
 - Modify: `packages/api/src/server.ts`（顶部加注释标注仅脚本用）或删除
 - Modify: 根 `package.json` 的 `dev`/`dev:api` 脚本
 
 **规程：**
+
 - `packages/api/package.json`：
   - `dev` → `flue dev --target cloudflare`（Flue 本地 workerd，默认 3583；如需 3000 加 `--port` 视 Flue 支持而定，先用默认）。
   - 删 `flue:dev`/`flue:build`（node target）、`start`（`tsx dist/server.mjs`）、`@hono/node-server` 依赖；保留 `flue:build:cloudflare` 改名 `build`。
@@ -699,10 +739,12 @@ git commit -m "build(api): switch dev to flue --target cloudflare, retire node-s
 ## Task 5.1: 改测试 mock 装配（经上下文注入 db）
 
 **Files:**
+
 - Modify: `packages/api/src/test/helpers.ts`（`requestWithAuth` 等）
 - Modify: 受影响测试：`vi.mock('@pathfinding/database')` 的所有 `*.test.ts`
 
 **规程：**
+
 - 现有 mock 提供 `getDb`/`createDb` 返回 `mockDb` 链。改为：mock `@pathfinding/database` 的 `createDb` 返回 mockDb 链；test app 工厂在构造时注入一个假 binding `DB`（miniflare D1 或直接把 `createDb` mock 后让 `dbMiddleware` 得到 mockDb）。
 - **最简**：`vi.mock('@pathfinding/database', () => ({ createDb: () => mockDb, ...actual schema }))`；test app `createApp()` 时 `app.use('*', async (c,n)=>{ c.set('env'...)})`——但中间件调 `createDb(c.env.DB)`，故测试需提供 `c.env.DB`。**做法**：让 `createDb` mock 忽略入参直接返回 mockDb；测试构造 app 后直接用（中间件会 `createDb(undefined as any)` → mockDb）。即在测试里：
 
@@ -713,6 +755,7 @@ export async function requestWithAuth(app, path, init?) {
   return app.request(path, init, { JWT_SECRET: 'test-jwt-secret' /* , DB, UPLOADS 按需 mock */ });
 }
 ```
+
 > `app.request(path, init, env)` 第三参即注入 `c.env`。测试统一传 `{ JWT_SECRET }`；涉及 R2 的 uploads 测试另传假 `UPLOADS`。
 
 - [ ] **Step 1: 改 `helpers.ts`：`requestWithAuth(app,path,init,env?)` 透传 env**
@@ -737,6 +780,7 @@ git commit -m "test(api): adapt mock harness to context-injected db and c.env"
 ## Task 5.2: 新增覆盖（db 中间件 / R2 / env）+ 本地 D1 集成测
 
 **Files:**
+
 - Create: `packages/api/src/middleware/db.test.ts`
 - Create: `packages/api/src/routes/uploads.test.ts`
 - Create: `packages/api/src/test/d1-integration.test.ts`（用 `@cloudflare/vitest-pool-workers`，覆盖 updatedAt 触发器 / RETURNING / json 列）
@@ -761,9 +805,11 @@ git commit -m "test(api): cover db middleware, R2 uploads, and D1 integration se
 ## Task 6.1: 创建 `wrangler.jsonc`（源根）
 
 **Files:**
+
 - Create: `packages/api/wrangler.jsonc`
 
 **Interfaces:**
+
 - `database_id` 在执行 `wrangler d1 create pathfinding` 后回填；R2 bucket 同理。
 
 - [ ] **Step 1: 建 `packages/api/wrangler.jsonc`**
@@ -788,6 +834,7 @@ git commit -m "test(api): cover db middleware, R2 uploads, and D1 integration se
   "migrations": []
 }
 ```
+
 > `migrations`（Flue DO）在 Task 6.3 首次 `flue build` 后据 `dist/<worker>/wrangler.json` 提示补 `FlueRegistry` 等 `new_sqlite_classes`。
 
 - [ ] **Step 2: Commit**
@@ -800,22 +847,26 @@ git commit -m "chore(api): add source-root wrangler.jsonc (D1/R2/custom domain)"
 ## Task 6.2: 一次性资源创建 + secrets（手动，记录到 README/ops）
 
 **Files:**
+
 - Create: `docs/superpowers/ops/cloudflare-workers-setup.md`（操作 runbook）
 
 - [ ] **Step 1: 创建 D1 + R2（手动，本地 wrangler 登录后）**
 
 Run:
+
 ```bash
 npx wrangler d1 create pathfinding            # 回填 database_id 到 wrangler.jsonc
 npx wrangler r2 bucket create pathfinding-uploads
 npx wrangler secret put JWT_SECRET            # 输入生产 secret
 npx wrangler secret put DEEPSEEK_API_KEY      # 若启用
 ```
+
 > 注：`wrangler secret put` 需在 `packages/api/` 下、指向生成的 `dist/<worker>/wrangler.json`；首次需先 build（Task 6.3）。或用 `--config`。
 
 - [ ] **Step 2: 写 ops runbook**，含：上述命令、所需 GitHub Secrets（`CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`）、**回滚步骤**（`npx wrangler deployments rollback --config packages/api/dist/<worker>/wrangler.json`，Custom Domain 不变）、监控/排错提示。
 
 runbook 必含的回滚段落（最低要求）：
+
 ```md
 ## 回滚
 npx wrangler deployments list --config packages/api/dist/<worker>/wrangler.json
@@ -833,6 +884,7 @@ git commit -m "docs(ops): cloudflare workers one-time setup runbook (d1/r2/secre
 ## Task 6.3: 首次构建 + dry-run + 回填 Flue DO migrations
 
 **Files:**
+
 - Modify: `packages/api/wrangler.jsonc`（补 `migrations`）
 
 - [ ] **Step 1: 本地构建**
@@ -856,6 +908,7 @@ git commit -m "chore(api): register flue durable-object migrations in wrangler.j
 ## Task 6.4: CI 部署工作流
 
 **Files:**
+
 - Create: `.github/workflows/deploy-api.yml`
 
 - [ ] **Step 1: 写 deploy workflow**
@@ -927,10 +980,12 @@ git commit -m "ci: deploy api worker to cloudflare on push to main"
 - [ ] **Step 3: 验证 DNS + health**
 
 Run:
+
 ```bash
 dig +short api.trips.sunpebblelabs.com A         # 应有记录（Workers custom domain）
 curl -sS -m 15 -w "\nHTTP %{http_code}\n" https://api.trips.sunpebblelabs.com/health
 ```
+
 Expected: A 记录存在；`/health` 200。
 
 - [ ] **Step 4: 冒烟关键端点**（auth signup/signin → 带 token 打 `/api/itineraries`、`/api/chat/sessions`）

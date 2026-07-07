@@ -12,40 +12,43 @@
 push 到 `main` 即自动部署到生产 Worker（自定义域名 `api.trips.sunpebblelabs.com`）。
 
 **已确认约束**：
+
 - 数据库：**改用 Cloudflare D1**（MySQL→SQLite），**无数据需迁移**（schema-only）。
 - 上传：**本次迁移到 R2**。
 - 部署：**仅 push 到 `main` 自动部署**（不要 PR preview）。
 - 框架：**沿用 Flue 的 `--target cloudflare`**（保留 agent/workflow 能力）。
 
 **不在本 spec 范围**（独立后续项目）：
+
 - iOS「助手 tab 永久转圈」的客户端修复（未登录门、错误兜底、重试 UI）。
 - iOS 与 chat API 的**契约不匹配**修复（`success` 字段、`chat/sessions/:id/messages`
   路径、PATCH/DELETE、`context` 类型）。这些在 Workers 后端可用后单独处理。
 
 ## 1. 现状审计（迁移工作面量化）
 
-| 维度 | 现状 | 迁移影响 |
-|---|---|---|
-| 运行时 | Hono `app.ts` 导出 `app.fetch`，**Workers 兼容**；Flue 已有 `flue build --target cloudflare` | 运行时层改动小 |
-| HTTP 入口 | `src/server.ts` 用 `@hono/node-server` + `process.on/exit` | Node-only，退役（dev 切 cloudflare target） |
-| DB 驱动 | `mysql2/promise` + `drizzle-orm/mysql2`，**全局单例** `getDb()`（`database/src/client.ts`） | 不兼容 Workers，全面重写 |
-| `getDb()` 调用 | **31 个文件、~130 处**；含 **5 个 service**（`auth`/`push`/`itinerary-access`/`backfill`/`backfill-executor`） | 每请求注入 + service 收 `db` 参数 |
-| schema | 17 文件、~74 张 `mysqlTable`；方言集中在 `schema/columns.ts` 4 个助手 | 方言重写（核心在 `columns.ts`） |
-| `process.env` | 12 个非测试文件（auth/deepseek/cors/logger/security-headers/health 等） | 改 `c.env`；模块级读取需重构 |
-| 上传 | `routes/uploads.ts` 用 `node:fs`/`node:path` | 重写为 R2 |
-| 密码/哈希 | `auth.service.ts` 用 `scryptSync`/`randomBytes`/`timingSafeEqual`/`Buffer` | 靠 `nodejs_compat` 保留 |
-| `$returningId()` | 自定义 MySQL 助手，路由 + `auth.service`/`guide-writer` + 测试使用 | 改 D1 原生 `.returning({ id })` |
-| CI | `.github/workflows/ci.yml` 只有质量+构建，**无部署** | 新增部署工作流 |
+| 维度             | 现状                                                                                                           | 迁移影响                                    |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 运行时           | Hono `app.ts` 导出 `app.fetch`，**Workers 兼容**；Flue 已有 `flue build --target cloudflare`                   | 运行时层改动小                              |
+| HTTP 入口        | `src/server.ts` 用 `@hono/node-server` + `process.on/exit`                                                     | Node-only，退役（dev 切 cloudflare target） |
+| DB 驱动          | `mysql2/promise` + `drizzle-orm/mysql2`，**全局单例** `getDb()`（`database/src/client.ts`）                    | 不兼容 Workers，全面重写                    |
+| `getDb()` 调用   | **31 个文件、~130 处**；含 **5 个 service**（`auth`/`push`/`itinerary-access`/`backfill`/`backfill-executor`） | 每请求注入 + service 收 `db` 参数           |
+| schema           | 17 文件、~74 张 `mysqlTable`；方言集中在 `schema/columns.ts` 4 个助手                                          | 方言重写（核心在 `columns.ts`）             |
+| `process.env`    | 12 个非测试文件（auth/deepseek/cors/logger/security-headers/health 等）                                        | 改 `c.env`；模块级读取需重构                |
+| 上传             | `routes/uploads.ts` 用 `node:fs`/`node:path`                                                                   | 重写为 R2                                   |
+| 密码/哈希        | `auth.service.ts` 用 `scryptSync`/`randomBytes`/`timingSafeEqual`/`Buffer`                                     | 靠 `nodejs_compat` 保留                     |
+| `$returningId()` | 自定义 MySQL 助手，路由 + `auth.service`/`guide-writer` + 测试使用                                             | 改 D1 原生 `.returning({ id })`             |
+| CI               | `.github/workflows/ci.yml` 只有质量+构建，**无部署**                                                           | 新增部署工作流                              |
 
 ## 2. 方案选型
 
-| 方案 | 说明 | 取舍 | 结论 |
-|---|---|---|---|
-| **A（采用）** | 沿用 Flue cloudflare target | 保留 agent/workflow（`trips-planner` 等）；Flue 生成 Worker 入口、合并 binding、默认 `nodejs_compat`；改动面最小 | ✅ |
-| B | Worker 端弃 Flue，裸 Hono Worker | 丢 Flue agent 运行时（`/agents`、`/runs`、`trips-planner` 全坏）；Node/Worker 两套割裂；改动更大 | ✗ |
-| C | 薄 Worker 网关 + 后端仍跑 Node | 不满足"迁移技术栈到 worker" | ✗ |
+| 方案          | 说明                             | 取舍                                                                                                             | 结论 |
+| ------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---- |
+| **A（采用）** | 沿用 Flue cloudflare target      | 保留 agent/workflow（`trips-planner` 等）；Flue 生成 Worker 入口、合并 binding、默认 `nodejs_compat`；改动面最小 | ✅   |
+| B             | Worker 端弃 Flue，裸 Hono Worker | 丢 Flue agent 运行时（`/agents`、`/runs`、`trips-planner` 全坏）；Node/Worker 两套割裂；改动更大                 | ✗    |
+| C             | 薄 Worker 网关 + 后端仍跑 Node   | 不满足"迁移技术栈到 worker"                                                                                      | ✗    |
 
 **Flue cloudflare target 关键事实**（官方文档）：
+
 - `flue build --target cloudflare` 产出 `dist/<worker>/`，内含生成好的 `wrangler.json`（入口、合并的 binding、Vite 产物）。
 - 部署用**产物里的** config：`wrangler deploy --config dist/<worker>/wrangler.json`。
 - 源根 `wrangler.jsonc` 由项目持有：声明 D1/R2/DO binding、有序迁移历史、`compatibility_*`、自定义域名。
@@ -57,6 +60,7 @@ push 到 `main` 即自动部署到生产 Worker（自定义域名 `api.trips.sun
 D1 无连接池，binding 是每请求的；全局单例模式在 Workers 上不成立。资源一律经请求上下文流转。
 
 **Bindings/Env 类型**：
+
 ```ts
 type Env = {
   DB: D1Database;
@@ -87,13 +91,14 @@ type Env = {
 
 **方言集中改写 `packages/database/src/schema/columns.ts`**：
 
-| 现状（mysql-core） | D1（sqlite-core） |
-|---|---|
-| `bigint('id',{mode:'number',unsigned}).autoincrement()` | `integer('id',{mode:'number'}).autoincrement()` |
-| `bigint fk` | `integer` |
-| `timestamp({mode:'date'}).defaultNow()` | `integer({mode:'timestamp'}).notNull().defaultNow()` |
+| 现状（mysql-core）                                      | D1（sqlite-core）                                    |
+| ------------------------------------------------------- | ---------------------------------------------------- |
+| `bigint('id',{mode:'number',unsigned}).autoincrement()` | `integer('id',{mode:'number'}).autoincrement()`      |
+| `bigint fk`                                             | `integer`                                            |
+| `timestamp({mode:'date'}).defaultNow()`                 | `integer({mode:'timestamp'}).notNull().defaultNow()` |
 
 **表级列类型映射**（每表改 import + 个别列）：
+
 - `double` → `real`
 - `boolean` → `integer({ mode:'boolean' })`
 - `json` → `text({ mode:'json' })`（`.$type<>()` 不变）
@@ -105,6 +110,7 @@ type Env = {
 改动、语义与 MySQL 一致（备选"应用层显式 set"被否，因要改 30+ update 站点、易漏）。
 
 **迁移管线**：
+
 - `drizzle.config.ts`：`dialect:'mysql'` → `'sqlite'`，凭据走 wrangler（`dbCredentials:{ wranglerConfigPath, dbName }`）。
 - `drizzle-kit generate`（sqlite）产出 SQL → 落 D1 migrations 目录 → CI 里 `wrangler d1 migrations apply pathfinding --remote`。
 - `updatedAt` 触发器作为额外 SQL 补丁接在 drizzle 生成之后（或在 `drizzle/` 里手维护）。
@@ -116,6 +122,7 @@ workerd + 本地 D1 文件，端口 3583）；**停用 node-target / `server.ts`
 ## 5. uploads → R2 + nodejs_compat 兼容面
 
 **R2 重写 `routes/uploads.ts`**（`c.env.UPLOADS: R2Bucket`）：
+
 - POST `/`：`parseBody` 取 file → `env.UPLOADS.put("${userId}/${filename}", body, { httpMetadata:{ contentType } })`；返回 `{ url:"/api/uploads/${filename}" }`（URL 契约不变）。
 - GET `/:filename`：`env.UPLOADS.get(key)` → 流式 `new Response(obj.body, { headers:{'Content-Type':...} })`；保留 `authRequired`。
 - DELETE `/:filename`：`env.UPLOADS.delete(key)`。
@@ -123,13 +130,13 @@ workerd + 本地 D1 文件，端口 3583）；**停用 node-target / `server.ts`
 
 **nodejs_compat 兼容面**（Flue 默认开，无需额外 flag）：
 
-| 文件 | Node API | 处理 |
-|---|---|---|
-| `auth.service.ts` | `scryptSync`/`randomBytes`/`timingSafeEqual`/`Buffer` | **保留**（nodejs_compat；scrypt ~50–100ms CPU，付费 Workers 够用） |
-| `guide-normalize.ts` | `createHash` | 保留 |
-| `sharing.ts` | `randomBytes` | 保留 |
-| `uploads.ts` | `fs`/`path`/`Buffer` | **重写为 R2** |
-| `server.ts` | `process`/node-server | dev 已切 cloudflare target，**退役** |
+| 文件                 | Node API                                              | 处理                                                               |
+| -------------------- | ----------------------------------------------------- | ------------------------------------------------------------------ |
+| `auth.service.ts`    | `scryptSync`/`randomBytes`/`timingSafeEqual`/`Buffer` | **保留**（nodejs_compat；scrypt ~50–100ms CPU，付费 Workers 够用） |
+| `guide-normalize.ts` | `createHash`                                          | 保留                                                               |
+| `sharing.ts`         | `randomBytes`                                         | 保留                                                               |
+| `uploads.ts`         | `fs`/`path`/`Buffer`                                  | **重写为 R2**                                                      |
+| `server.ts`          | `process`/node-server                                 | dev 已切 cloudflare target，**退役**                               |
 
 **密码哈希（已决策）**：继续用 scrypt（靠 nodejs_compat），不换 Web Crypto——无数据要迁移，
 scrypt 能跑且改动最小（YAGNI）。
@@ -137,6 +144,7 @@ scrypt 能跑且改动最小（YAGNI）。
 ## 6. wrangler.jsonc + 自定义域名 + CI 部署
 
 **`packages/api/wrangler.jsonc`**（Flue 把生成的入口/DO binding/migration 与之合并）：
+
 ```jsonc
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
@@ -149,6 +157,7 @@ scrypt 能跑且改动最小（YAGNI）。
   "migrations": [ /* Flue 拥有的 DO 迁移，首次 flue build 后据产物补 FlueRegistry 等 */ ]
 }
 ```
+
 - `JWT_SECRET` / `DEEPSEEK_API_KEY` 走 `wrangler secret put`（一次设置，跨部署持久）；
   `CORS_ORIGIN` / `ADMIN_EMAILS` 可放 `vars`。
 - 一次性资源创建（手动，首次部署前）：`wrangler d1 create pathfinding`（回填 `database_id`）、
@@ -159,11 +168,13 @@ scrypt 能跑且改动最小（YAGNI）。
 
 **CI 部署工作流**（新增 `.github/workflows/deploy-api.yml`，`on: push: branches:[main]`，
 路径过滤 `packages/api/**`、`packages/database/**` 等）：
+
 1. checkout + pnpm + node（复用 ci.yml 模式）
 2. `pnpm build:packages`
 3. `pnpm --filter @pathfinding/api exec flue build --target cloudflare`
 4. `npx wrangler d1 migrations apply pathfinding --remote --config dist/<worker>/wrangler.json`
 5. `npx wrangler deploy --config dist/<worker>/wrangler.json`
+
 - GitHub Secrets：`CLOUDFLARE_API_TOKEN`（Workers/D1/R2 编辑权限）、`CLOUDFLARE_ACCOUNT_ID`。
 - 与 `ci.yml` 关系：质量检查仍走 `ci.yml`；**deploy 作为独立 workflow + 路径过滤**，职责清晰。
 
