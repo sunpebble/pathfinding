@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/sunpebble/pathfinding/compare/v1.3.1...v1.3.2) (2026-07-07)
+
+
+### Bug Fixes
+
+* **ios:** make profile hero a scrolling glass card and add missing strings ([2c2f93d](https://github.com/sunpebble/pathfinding/commit/2c2f93dfc302a98abb17ef7096cf9a91073d9514))
+
 ## [1.3.1](https://github.com/sunpebble/pathfinding/compare/v1.3.0...v1.3.1) (2026-07-07)
 
 
