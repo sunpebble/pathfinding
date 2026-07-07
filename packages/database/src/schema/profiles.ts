@@ -3,28 +3,27 @@
  */
 import {
   index,
-  int,
-  mysqlTable,
+  integer,
+  sqliteTable,
   text,
   uniqueIndex,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Profiles ───────────────────────────────────────────
-export const profiles = mysqlTable(
+export const profiles = sqliteTable(
   'profiles',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    email: varchar('email', { length: 255 }).notNull(),
-    phone: varchar('phone', { length: 50 }),
-    displayName: varchar('display_name', { length: 255 }),
+    email: text('email').notNull(),
+    phone: text('phone'),
+    displayName: text('display_name'),
     avatarUrl: text('avatar_url'),
     bio: text('bio'),
-    expoPushToken: varchar('expo_push_token', { length: 255 }),
-    followersCount: int('followers_count').default(0),
-    followingCount: int('following_count').default(0),
+    expoPushToken: text('expo_push_token'),
+    followersCount: integer('followers_count').default(0),
+    followingCount: integer('following_count').default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -36,7 +35,7 @@ export const profiles = mysqlTable(
 );
 
 // ── User Follows ───────────────────────────────────────
-export const userFollows = mysqlTable(
+export const userFollows = sqliteTable(
   'user_follows',
   {
     id: id(),

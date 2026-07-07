@@ -1,16 +1,16 @@
 /**
  * Expense Splitting schema - trip members, shared expenses, participants, settlements.
  */
-import { boolean, double, index, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core';
+import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
-export const tripMembers = mysqlTable('trip_members', {
+export const tripMembers = sqliteTable('trip_members', {
   id: id(),
   itineraryId: fk('itinerary_id').notNull(),
   userId: fk('user_id'),
-  name: varchar('name', { length: 255 }).notNull(),
+  name: text('name').notNull(),
   avatarUrl: text('avatar_url'),
-  isRegistered: boolean('is_registered').notNull().default(false),
+  isRegistered: integer('is_registered', { mode: 'boolean' }).notNull().default(false),
   createdAt: createdAt(),
 }, t => [
   index('trip_members_itin_idx').on(t.itineraryId),
@@ -18,16 +18,16 @@ export const tripMembers = mysqlTable('trip_members', {
   index('trip_members_user_idx').on(t.userId),
 ]);
 
-export const sharedExpenses = mysqlTable('shared_expenses', {
+export const sharedExpenses = sqliteTable('shared_expenses', {
   id: id(),
   itineraryId: fk('itinerary_id').notNull(),
   paidByMemberId: fk('paid_by_member_id').notNull(),
-  amount: double('amount').notNull(),
-  currency: varchar('currency', { length: 10 }).notNull().default('CNY'),
-  category: varchar('category', { length: 50 }),
+  amount: real('amount').notNull(),
+  currency: text('currency').notNull().default('CNY'),
+  category: text('category'),
   description: text('description'),
-  date: varchar('date', { length: 10 }),
-  splitType: varchar('split_type', { length: 20 }).notNull().default('equal'),
+  date: text('date'),
+  splitType: text('split_type').notNull().default('equal'),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 }, t => [
@@ -37,12 +37,12 @@ export const sharedExpenses = mysqlTable('shared_expenses', {
   index('shared_exp_category_idx').on(t.category),
 ]);
 
-export const expenseParticipants = mysqlTable('expense_participants', {
+export const expenseParticipants = sqliteTable('expense_participants', {
   id: id(),
   expenseId: fk('expense_id').notNull(),
   memberId: fk('member_id').notNull(),
-  shareAmount: double('share_amount').notNull(),
-  isPaid: boolean('is_paid').notNull().default(false),
+  shareAmount: real('share_amount').notNull(),
+  isPaid: integer('is_paid', { mode: 'boolean' }).notNull().default(false),
   createdAt: createdAt(),
 }, t => [
   index('exp_participants_expense_idx').on(t.expenseId),
@@ -50,15 +50,15 @@ export const expenseParticipants = mysqlTable('expense_participants', {
   index('exp_participants_pair_idx').on(t.expenseId, t.memberId),
 ]);
 
-export const settlements = mysqlTable('settlements', {
+export const settlements = sqliteTable('settlements', {
   id: id(),
   itineraryId: fk('itinerary_id').notNull(),
   fromMemberId: fk('from_member_id').notNull(),
   toMemberId: fk('to_member_id').notNull(),
-  amount: double('amount').notNull(),
-  currency: varchar('currency', { length: 10 }).notNull().default('CNY'),
-  isSettled: boolean('is_settled').notNull().default(false),
-  settledAt: timestamp('settled_at', { mode: 'date' }),
+  amount: real('amount').notNull(),
+  currency: text('currency').notNull().default('CNY'),
+  isSettled: integer('is_settled', { mode: 'boolean' }).notNull().default(false),
+  settledAt: integer('settled_at', { mode: 'timestamp' }),
   createdAt: createdAt(),
 }, t => [
   index('settlements_itin_idx').on(t.itineraryId),

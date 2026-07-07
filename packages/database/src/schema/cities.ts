@@ -2,28 +2,28 @@
  * Cities schema - city reference data.
  */
 import {
-  boolean,
-  double,
   index,
-  mysqlTable,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+  integer,
+  real,
+  sqliteTable,
+  text,
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, id, updatedAt } from './columns';
 
 // ── Cities ─────────────────────────────────────────────
-export const cities = mysqlTable(
+export const cities = sqliteTable(
   'cities',
   {
     id: id(),
-    name: varchar('name', { length: 255 }).notNull(),
-    nameEn: varchar('name_en', { length: 255 }),
-    timezone: varchar('timezone', { length: 100 }),
-    countryCode: varchar('country_code', { length: 10 }),
-    latitude: double('latitude').notNull(),
-    longitude: double('longitude').notNull(),
-    utcOffset: double('utc_offset'),
-    utcOffsetDst: double('utc_offset_dst'),
-    hasDst: boolean('has_dst').default(false),
+    name: text('name').notNull(),
+    nameEn: text('name_en'),
+    timezone: text('timezone'),
+    countryCode: text('country_code'),
+    latitude: real('latitude').notNull(),
+    longitude: real('longitude').notNull(),
+    utcOffset: real('utc_offset'),
+    utcOffsetDst: real('utc_offset_dst'),
+    hasDst: integer('has_dst', { mode: 'boolean' }).default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

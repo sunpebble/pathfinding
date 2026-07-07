@@ -2,29 +2,25 @@
  * Sharing schema - share links, events, event logs.
  */
 import {
-  boolean,
   index,
-  int,
-  json,
-  mysqlTable,
+  integer,
+  sqliteTable,
   text,
-  timestamp,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id } from './columns';
 
-export const shareLinks = mysqlTable(
+export const shareLinks = sqliteTable(
   'share_links',
   {
     id: id(),
-    shareCode: varchar('share_code', { length: 50 }).notNull(),
-    resourceType: varchar('resource_type', { length: 30 }).notNull(),
+    shareCode: text('share_code').notNull(),
+    resourceType: text('resource_type').notNull(),
     resourceId: fk('resource_id').notNull(),
     ownerId: fk('owner_id').notNull(),
-    isActive: boolean('is_active').notNull().default(true),
-    expiresAt: timestamp('expires_at', { mode: 'date' }),
-    viewCount: int('view_count').notNull().default(0),
-    metadata: json('metadata'),
+    isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+    viewCount: integer('view_count').notNull().default(0),
+    metadata: text('metadata', { mode: 'json' }),
     createdAt: createdAt(),
   },
   t => [
@@ -37,15 +33,15 @@ export const shareLinks = mysqlTable(
   ],
 );
 
-export const shareEvents = mysqlTable(
+export const shareEvents = sqliteTable(
   'share_events',
   {
     id: id(),
-    resourceType: varchar('resource_type', { length: 30 }).notNull(),
+    resourceType: text('resource_type').notNull(),
     resourceId: fk('resource_id').notNull(),
     sharerId: fk('sharer_id').notNull(),
-    platform: varchar('platform', { length: 30 }),
-    eventType: varchar('event_type', { length: 20 }).notNull(),
+    platform: text('platform'),
+    eventType: text('event_type').notNull(),
     shareLinkId: fk('share_link_id'),
     createdAt: createdAt(),
   },
@@ -59,15 +55,15 @@ export const shareEvents = mysqlTable(
   ],
 );
 
-export const shareEventLogs = mysqlTable(
+export const shareEventLogs = sqliteTable(
   'share_event_logs',
   {
     id: id(),
     shareLinkId: fk('share_link_id').notNull(),
-    resourceType: varchar('resource_type', { length: 30 }).notNull(),
+    resourceType: text('resource_type').notNull(),
     resourceId: fk('resource_id').notNull(),
-    eventType: varchar('event_type', { length: 20 }).notNull(),
-    ipAddress: varchar('ip_address', { length: 45 }),
+    eventType: text('event_type').notNull(),
+    ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
     referrer: text('referrer'),
     createdAt: createdAt(),

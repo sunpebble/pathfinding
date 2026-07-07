@@ -2,30 +2,27 @@
  * Notifications schema - notifications, push tokens, settings, scheduled notifications.
  */
 import {
-  boolean,
   index,
-  json,
-  mysqlTable,
+  integer,
+  sqliteTable,
   text,
-  timestamp,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Notifications ──────────────────────────────────────
-export const notifications = mysqlTable(
+export const notifications = sqliteTable(
   'notifications',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    type: varchar('type', { length: 50 }).notNull(),
-    title: varchar('title', { length: 500 }),
+    type: text('type').notNull(),
+    title: text('title'),
     body: text('body'),
-    data: json('data'),
-    isRead: boolean('is_read').notNull().default(false),
-    readAt: timestamp('read_at', { mode: 'date' }),
-    isPushPending: boolean('is_push_pending').notNull().default(false),
-    pushSentAt: timestamp('push_sent_at', { mode: 'date' }),
+    data: text('data', { mode: 'json' }),
+    isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+    readAt: integer('read_at', { mode: 'timestamp' }),
+    isPushPending: integer('is_push_pending', { mode: 'boolean' }).notNull().default(false),
+    pushSentAt: integer('push_sent_at', { mode: 'timestamp' }),
     createdAt: createdAt(),
   },
   t => [
@@ -38,14 +35,14 @@ export const notifications = mysqlTable(
 );
 
 // ── Push Tokens ────────────────────────────────────────
-export const pushTokens = mysqlTable(
+export const pushTokens = sqliteTable(
   'push_tokens',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    token: varchar('token', { length: 255 }).notNull(),
-    platform: varchar('platform', { length: 20 }),
-    isActive: boolean('is_active').notNull().default(true),
+    token: text('token').notNull(),
+    platform: text('platform'),
+    isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -57,16 +54,16 @@ export const pushTokens = mysqlTable(
 );
 
 // ── Notification Settings ──────────────────────────────
-export const notificationSettings = mysqlTable(
+export const notificationSettings = sqliteTable(
   'notification_settings',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    pushEnabled: boolean('push_enabled').notNull().default(true),
-    emailEnabled: boolean('email_enabled').notNull().default(false),
-    quietHoursStart: varchar('quiet_hours_start', { length: 5 }),
-    quietHoursEnd: varchar('quiet_hours_end', { length: 5 }),
-    categories: json('categories'),
+    pushEnabled: integer('push_enabled', { mode: 'boolean' }).notNull().default(true),
+    emailEnabled: integer('email_enabled', { mode: 'boolean' }).notNull().default(false),
+    quietHoursStart: text('quiet_hours_start'),
+    quietHoursEnd: text('quiet_hours_end'),
+    categories: text('categories', { mode: 'json' }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -74,18 +71,18 @@ export const notificationSettings = mysqlTable(
 );
 
 // ── Scheduled Notifications ────────────────────────────
-export const scheduledNotifications = mysqlTable(
+export const scheduledNotifications = sqliteTable(
   'scheduled_notifications',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    type: varchar('type', { length: 50 }).notNull(),
-    title: varchar('title', { length: 500 }),
+    type: text('type').notNull(),
+    title: text('title'),
     body: text('body'),
-    data: json('data'),
-    scheduledFor: timestamp('scheduled_for', { mode: 'date' }).notNull(),
-    status: varchar('status', { length: 20 }).notNull().default('pending'),
-    sentAt: timestamp('sent_at', { mode: 'date' }),
+    data: text('data', { mode: 'json' }),
+    scheduledFor: integer('scheduled_for', { mode: 'timestamp' }).notNull(),
+    status: text('status').notNull().default('pending'),
+    sentAt: integer('sent_at', { mode: 'timestamp' }),
     createdAt: createdAt(),
   },
   t => [

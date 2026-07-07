@@ -1,21 +1,21 @@
 /**
  * Crawl schema - crawl jobs, raw records, training datasets, quality reports, blog posts.
  */
-import { index, int, json, mysqlTable, text, timestamp, varchar } from 'drizzle-orm/mysql-core';
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Crawl Jobs ─────────────────────────────────────────
-export const crawlJobs = mysqlTable(
+export const crawlJobs = sqliteTable(
   'crawl_jobs',
   {
     id: id(),
-    platform: varchar('platform', { length: 50 }).notNull(),
-    jobType: varchar('job_type', { length: 30 }),
-    config: json('config'),
-    status: varchar('status', { length: 20 }).notNull().default('pending'),
-    progress: json('progress'),
-    startedAt: timestamp('started_at', { mode: 'date' }),
-    completedAt: timestamp('completed_at', { mode: 'date' }),
+    platform: text('platform').notNull(),
+    jobType: text('job_type'),
+    config: text('config', { mode: 'json' }),
+    status: text('status').notNull().default('pending'),
+    progress: text('progress', { mode: 'json' }),
+    startedAt: integer('started_at', { mode: 'timestamp' }),
+    completedAt: integer('completed_at', { mode: 'timestamp' }),
     error: text('error'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -27,19 +27,19 @@ export const crawlJobs = mysqlTable(
 );
 
 // ── Raw Crawl Records ──────────────────────────────────
-export const rawCrawlRecords = mysqlTable(
+export const rawCrawlRecords = sqliteTable(
   'raw_crawl_records',
   {
     id: id(),
     jobId: fk('job_id').notNull(),
-    status: varchar('status', { length: 20 }).notNull().default('pending'),
+    status: text('status').notNull().default('pending'),
     url: text('url'),
-    rawData: json('raw_data'),
-    processedData: json('processed_data'),
+    rawData: text('raw_data', { mode: 'json' }),
+    processedData: text('processed_data', { mode: 'json' }),
     /** SHA-256 hex digest of the raw payload, for dedup / replay (crawler-types RawCrawlRecord.content_hash) */
-    contentHash: varchar('content_hash', { length: 64 }),
+    contentHash: text('content_hash'),
     /** Parse pipeline status (crawler-types ParseStatus): pending | success | failed | skipped | rejected */
-    parseStatus: varchar('parse_status', { length: 20 }).notNull().default('pending'),
+    parseStatus: text('parse_status').notNull().default('pending'),
     error: text('error'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -54,16 +54,16 @@ export const rawCrawlRecords = mysqlTable(
 );
 
 // ── Training Datasets ──────────────────────────────────
-export const trainingDatasets = mysqlTable(
+export const trainingDatasets = sqliteTable(
   'training_datasets',
   {
     id: id(),
-    name: varchar('name', { length: 255 }).notNull(),
-    version: int('version').notNull().default(1),
+    name: text('name').notNull(),
+    version: integer('version').notNull().default(1),
     description: text('description'),
-    status: varchar('status', { length: 20 }).notNull().default('draft'),
-    recordCount: int('record_count').notNull().default(0),
-    config: json('config'),
+    status: text('status').notNull().default('draft'),
+    recordCount: integer('record_count').notNull().default(0),
+    config: text('config', { mode: 'json' }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -75,15 +75,15 @@ export const trainingDatasets = mysqlTable(
 );
 
 // ── Data Quality Reports ───────────────────────────────
-export const dataQualityReports = mysqlTable(
+export const dataQualityReports = sqliteTable(
   'data_quality_reports',
   {
     id: id(),
     datasetId: fk('dataset_id').notNull(),
-    reportType: varchar('report_type', { length: 30 }),
-    metrics: json('metrics'),
-    issues: json('issues'),
-    generatedAt: timestamp('generated_at', { mode: 'date' }),
+    reportType: text('report_type'),
+    metrics: text('metrics', { mode: 'json' }),
+    issues: text('issues', { mode: 'json' }),
+    generatedAt: integer('generated_at', { mode: 'timestamp' }),
     createdAt: createdAt(),
   },
   t => [
@@ -92,17 +92,17 @@ export const dataQualityReports = mysqlTable(
 );
 
 // ── Travel Blog Posts ──────────────────────────────────
-export const travelBlogPosts = mysqlTable(
+export const travelBlogPosts = sqliteTable(
   'travel_blog_posts',
   {
     id: id(),
-    platform: varchar('platform', { length: 50 }).notNull(),
-    externalId: varchar('external_id', { length: 255 }),
-    title: varchar('title', { length: 500 }),
+    platform: text('platform').notNull(),
+    externalId: text('external_id'),
+    title: text('title'),
     url: text('url'),
     content: text('content'),
-    authorName: varchar('author_name', { length: 255 }),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }),
+    authorName: text('author_name'),
+    crawledAt: integer('crawled_at', { mode: 'timestamp' }),
     createdAt: createdAt(),
   },
   t => [

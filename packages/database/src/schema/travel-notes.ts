@@ -3,29 +3,28 @@
  */
 import {
   index,
-  int,
-  mysqlTable,
+  integer,
+  sqliteTable,
   text,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Travel Notes ───────────────────────────────────────
-export const travelNotes = mysqlTable(
+export const travelNotes = sqliteTable(
   'travel_notes',
   {
     id: id(),
     authorId: fk('author_id').notNull(),
-    title: varchar('title', { length: 500 }).notNull(),
+    title: text('title').notNull(),
     content: text('content'),
     coverImageUrl: text('cover_image_url'),
-    visibility: varchar('visibility', { length: 20 }).notNull().default('public'),
+    visibility: text('visibility').notNull().default('public'),
     itineraryId: fk('itinerary_id'),
-    status: varchar('status', { length: 20 }).notNull().default('draft'),
-    likesCount: int('likes_count').notNull().default(0),
-    commentsCount: int('comments_count').notNull().default(0),
-    viewsCount: int('views_count').notNull().default(0),
-    savesCount: int('saves_count').notNull().default(0),
+    status: text('status').notNull().default('draft'),
+    likesCount: integer('likes_count').notNull().default(0),
+    commentsCount: integer('comments_count').notNull().default(0),
+    viewsCount: integer('views_count').notNull().default(0),
+    savesCount: integer('saves_count').notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

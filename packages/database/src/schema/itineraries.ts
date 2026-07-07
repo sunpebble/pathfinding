@@ -2,17 +2,13 @@
  * Itineraries schema - itineraries, days, items, collaborators, comments, likes, etc.
  */
 import {
-  boolean,
-  double,
   index,
-  int,
-  json,
-  mysqlTable,
+  integer,
+  real,
+  sqliteTable,
   text,
-  timestamp,
   uniqueIndex,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── JSON column type definitions ───────────────────────
@@ -20,16 +16,16 @@ import { createdAt, fk, id, updatedAt } from './columns';
 export type CategoryBudgets = Record<string, number>;
 
 // ── Itineraries ────────────────────────────────────────
-export const itineraries = mysqlTable(
+export const itineraries = sqliteTable(
   'itineraries',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    title: varchar('title', { length: 500 }).notNull(),
+    title: text('title').notNull(),
     cityId: fk('city_id').notNull(),
-    startDate: varchar('start_date', { length: 10 }).notNull(),
-    endDate: varchar('end_date', { length: 10 }).notNull(),
-    visibility: varchar('visibility', { length: 20 }).notNull().default('private'),
+    startDate: text('start_date').notNull(),
+    endDate: text('end_date').notNull(),
+    visibility: text('visibility').notNull().default('private'),
     coverImageUrl: text('cover_image_url'),
     copiedFromId: fk('copied_from_id'),
     createdAt: createdAt(),
@@ -45,13 +41,13 @@ export const itineraries = mysqlTable(
 );
 
 // ── Itinerary Days ─────────────────────────────────────
-export const itineraryDays = mysqlTable(
+export const itineraryDays = sqliteTable(
   'itinerary_days',
   {
     id: id(),
     itineraryId: fk('itinerary_id').notNull(),
-    dayNumber: int('day_number').notNull(),
-    date: varchar('date', { length: 10 }).notNull(),
+    dayNumber: integer('day_number').notNull(),
+    date: text('date').notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -59,16 +55,16 @@ export const itineraryDays = mysqlTable(
 );
 
 // ── Itinerary Items ────────────────────────────────────
-export const itineraryItems = mysqlTable(
+export const itineraryItems = sqliteTable(
   'itinerary_items',
   {
     id: id(),
     dayId: fk('day_id').notNull(),
     poiId: fk('poi_id').notNull(),
-    orderIndex: int('order_index').notNull(),
-    startTime: varchar('start_time', { length: 5 }),
-    endTime: varchar('end_time', { length: 5 }),
-    transportMode: varchar('transport_mode', { length: 20 }).notNull(),
+    orderIndex: integer('order_index').notNull(),
+    startTime: text('start_time'),
+    endTime: text('end_time'),
+    transportMode: text('transport_mode').notNull(),
     notes: text('notes'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -77,13 +73,13 @@ export const itineraryItems = mysqlTable(
 );
 
 // ── Itinerary Collaborators ────────────────────────────
-export const itineraryCollaborators = mysqlTable(
+export const itineraryCollaborators = sqliteTable(
   'itinerary_collaborators',
   {
     id: id(),
     userId: fk('user_id').notNull(),
     itineraryId: fk('itinerary_id').notNull(),
-    role: varchar('role', { length: 20 }).notNull(),
+    role: text('role').notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -95,17 +91,17 @@ export const itineraryCollaborators = mysqlTable(
 );
 
 // ── Comment Reports ────────────────────────────────────
-export const commentReports = mysqlTable(
+export const commentReports = sqliteTable(
   'comment_reports',
   {
     id: id(),
     commentId: fk('comment_id').notNull(),
     userId: fk('user_id').notNull(),
-    reason: varchar('reason', { length: 50 }).notNull(),
+    reason: text('reason').notNull(),
     description: text('description'),
-    status: varchar('status', { length: 20 }).notNull().default('pending'),
+    status: text('status').notNull().default('pending'),
     createdAt: createdAt(),
-    reviewedAt: timestamp('reviewed_at', { mode: 'date' }),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
     reviewedBy: fk('reviewed_by'),
   },
   t => [
@@ -117,7 +113,7 @@ export const commentReports = mysqlTable(
 );
 
 // ── Itinerary Likes ────────────────────────────────────
-export const itineraryLikes = mysqlTable(
+export const itineraryLikes = sqliteTable(
   'itinerary_likes',
   {
     id: id(),
@@ -133,16 +129,16 @@ export const itineraryLikes = mysqlTable(
 );
 
 // ── Favorite Collections ───────────────────────────────
-export const favoriteCollections = mysqlTable(
+export const favoriteCollections = sqliteTable(
   'favorite_collections',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    name: varchar('name', { length: 255 }).notNull(),
+    name: text('name').notNull(),
     description: text('description'),
     coverImageUrl: text('cover_image_url'),
-    isDefault: boolean('is_default').notNull().default(false),
-    sortOrder: int('sort_order').notNull().default(0),
+    isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+    sortOrder: integer('sort_order').notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -154,7 +150,7 @@ export const favoriteCollections = mysqlTable(
 );
 
 // ── Itinerary Favorites ────────────────────────────────
-export const itineraryFavorites = mysqlTable(
+export const itineraryFavorites = sqliteTable(
   'itinerary_favorites',
   {
     id: id(),
@@ -174,15 +170,15 @@ export const itineraryFavorites = mysqlTable(
 );
 
 // ── Itinerary Budgets ──────────────────────────────────
-export const itineraryBudgets = mysqlTable(
+export const itineraryBudgets = sqliteTable(
   'itinerary_budgets',
   {
     id: id(),
     itineraryId: fk('itinerary_id').notNull(),
     userId: fk('user_id').notNull(),
-    totalBudget: double('total_budget'),
-    currency: varchar('currency', { length: 10 }).notNull().default('CNY'),
-    categoryBudgets: json('category_budgets').$type<CategoryBudgets>(),
+    totalBudget: real('total_budget'),
+    currency: text('currency').notNull().default('CNY'),
+    categoryBudgets: text('category_budgets', { mode: 'json' }).$type<CategoryBudgets>(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -193,17 +189,17 @@ export const itineraryBudgets = mysqlTable(
 );
 
 // ── Expenses ───────────────────────────────────────────
-export const expenses = mysqlTable(
+export const expenses = sqliteTable(
   'expenses',
   {
     id: id(),
     itineraryId: fk('itinerary_id').notNull(),
     userId: fk('user_id').notNull(),
     categoryId: fk('category_id'),
-    amount: double('amount').notNull(),
-    currency: varchar('currency', { length: 10 }).notNull().default('CNY'),
+    amount: real('amount').notNull(),
+    currency: text('currency').notNull().default('CNY'),
     description: text('description'),
-    date: varchar('date', { length: 10 }).notNull(),
+    date: text('date').notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

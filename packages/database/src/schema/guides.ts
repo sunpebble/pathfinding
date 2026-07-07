@@ -2,17 +2,13 @@
  * Guides schema - travel guides, comments, AI data, recommendations, refetch tasks.
  */
 import {
-  boolean,
-  double,
   index,
-  int,
-  json,
-  mysqlTable,
+  integer,
+  real,
+  sqliteTable,
   text,
-  timestamp,
   uniqueIndex,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── JSON column type definitions ───────────────────────
@@ -26,35 +22,35 @@ export interface PoiCoordinate { name: string; lat: number; lng: number; categor
 export interface DayItinerary { day: number; title?: string; pois: PoiCoordinate[] }
 
 // ── Travel Guides ──────────────────────────────────────
-export const travelGuides = mysqlTable(
+export const travelGuides = sqliteTable(
   'travel_guides',
   {
     id: id(),
-    platform: varchar('platform', { length: 50 }).notNull(),
-    externalId: varchar('external_id', { length: 255 }),
-    title: varchar('title', { length: 500 }).notNull(),
+    platform: text('platform').notNull(),
+    externalId: text('external_id'),
+    title: text('title').notNull(),
     content: text('content'),
-    authorName: varchar('author_name', { length: 255 }),
+    authorName: text('author_name'),
     authorUrl: text('author_url'),
-    publishedAt: timestamp('published_at', { mode: 'date' }),
+    publishedAt: integer('published_at', { mode: 'timestamp' }),
     sourceUrl: text('source_url'),
     coverImageUrl: text('cover_image_url'),
-    imageUrls: json('image_urls').$type<string[]>(),
-    destinations: json('destinations').$type<GuideDestination[]>(),
-    tags: json('tags').$type<string[]>(),
-    category: varchar('category', { length: 50 }),
-    viewCount: int('view_count').notNull().default(0),
-    likeCount: int('like_count').notNull().default(0),
-    commentCount: int('comment_count').notNull().default(0),
-    qualityScore: double('quality_score'),
-    completenessScore: double('completeness_score'),
+    imageUrls: text('image_urls', { mode: 'json' }).$type<string[]>(),
+    destinations: text('destinations', { mode: 'json' }).$type<GuideDestination[]>(),
+    tags: text('tags', { mode: 'json' }).$type<string[]>(),
+    category: text('category'),
+    viewCount: integer('view_count').notNull().default(0),
+    likeCount: integer('like_count').notNull().default(0),
+    commentCount: integer('comment_count').notNull().default(0),
+    qualityScore: real('quality_score'),
+    completenessScore: real('completeness_score'),
     /** Completeness level from crawler-types validators: complete | usable | incomplete */
-    completenessLevel: varchar('completeness_level', { length: 20 }),
-    enrichedData: json('enriched_data').$type<Record<string, unknown>>(),
-    geoData: json('geo_data').$type<GeoData>(),
-    dayItineraries: json('day_itineraries').$type<DayItinerary[]>(),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }),
-    lastUpdatedAt: timestamp('last_updated_at', { mode: 'date' }),
+    completenessLevel: text('completeness_level'),
+    enrichedData: text('enriched_data', { mode: 'json' }).$type<Record<string, unknown>>(),
+    geoData: text('geo_data', { mode: 'json' }).$type<GeoData>(),
+    dayItineraries: text('day_itineraries', { mode: 'json' }).$type<DayItinerary[]>(),
+    crawledAt: integer('crawled_at', { mode: 'timestamp' }),
+    lastUpdatedAt: integer('last_updated_at', { mode: 'timestamp' }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -70,12 +66,12 @@ export const travelGuides = mysqlTable(
 );
 
 // ── Guide Destinations ─────────────────────────────────
-export const guideDestinations = mysqlTable(
+export const guideDestinations = sqliteTable(
   'guide_destinations',
   {
     id: id(),
     guideId: fk('guide_id').notNull(),
-    destination: varchar('destination', { length: 255 }).notNull(),
+    destination: text('destination').notNull(),
     createdAt: createdAt(),
   },
   t => [
@@ -86,17 +82,17 @@ export const guideDestinations = mysqlTable(
 );
 
 // ── Travel Guide AI Data ───────────────────────────────
-export const travelGuideAiData = mysqlTable(
+export const travelGuideAiData = sqliteTable(
   'travel_guide_ai_data',
   {
     id: id(),
     guideId: fk('guide_id').notNull(),
-    version: int('version').notNull().default(1),
+    version: integer('version').notNull().default(1),
     aiSummary: text('ai_summary'),
-    aiTags: json('ai_tags').$type<string[]>(),
-    aiCategories: json('ai_categories').$type<string[]>(),
+    aiTags: text('ai_tags', { mode: 'json' }).$type<string[]>(),
+    aiCategories: text('ai_categories', { mode: 'json' }).$type<string[]>(),
     aiQualityNotes: text('ai_quality_notes'),
-    processedAt: timestamp('processed_at', { mode: 'date' }),
+    processedAt: integer('processed_at', { mode: 'timestamp' }),
     createdAt: createdAt(),
   },
   t => [
@@ -106,7 +102,7 @@ export const travelGuideAiData = mysqlTable(
 );
 
 // ── Guide Comments ─────────────────────────────────────
-export const guideComments = mysqlTable(
+export const guideComments = sqliteTable(
   'guide_comments',
   {
     id: id(),
@@ -114,10 +110,10 @@ export const guideComments = mysqlTable(
     userId: fk('user_id').notNull(),
     parentId: fk('parent_id'),
     content: text('content').notNull(),
-    likesCount: int('likes_count').notNull().default(0),
-    repliesCount: int('replies_count').notNull().default(0),
-    isEdited: boolean('is_edited').notNull().default(false),
-    isDeleted: boolean('is_deleted').notNull().default(false),
+    likesCount: integer('likes_count').notNull().default(0),
+    repliesCount: integer('replies_count').notNull().default(0),
+    isEdited: integer('is_edited', { mode: 'boolean' }).notNull().default(false),
+    isDeleted: integer('is_deleted', { mode: 'boolean' }).notNull().default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -130,7 +126,7 @@ export const guideComments = mysqlTable(
 );
 
 // ── Guide Comment Likes ────────────────────────────────
-export const guideCommentLikes = mysqlTable(
+export const guideCommentLikes = sqliteTable(
   'guide_comment_likes',
   {
     id: id(),
@@ -146,14 +142,14 @@ export const guideCommentLikes = mysqlTable(
 );
 
 // ── Guide Recommendations ──────────────────────────────
-export const guideRecommendations = mysqlTable(
+export const guideRecommendations = sqliteTable(
   'guide_recommendations',
   {
     id: id(),
     userId: fk('user_id').notNull(),
     guideId: fk('guide_id').notNull(),
-    score: double('score').notNull(),
-    reason: varchar('reason', { length: 100 }),
+    score: real('score').notNull(),
+    reason: text('reason'),
     createdAt: createdAt(),
   },
   t => [
@@ -164,15 +160,15 @@ export const guideRecommendations = mysqlTable(
 );
 
 // ── Refetch Tasks ──────────────────────────────────────
-export const refetchTasks = mysqlTable(
+export const refetchTasks = sqliteTable(
   'refetch_tasks',
   {
     id: id(),
     guideId: fk('guide_id').notNull(),
-    status: varchar('status', { length: 20 }).notNull().default('pending'),
+    status: text('status').notNull().default('pending'),
     reason: text('reason'),
-    retryCount: int('retry_count').notNull().default(0),
-    nextRetryAt: timestamp('next_retry_at', { mode: 'date' }),
+    retryCount: integer('retry_count').notNull().default(0),
+    nextRetryAt: integer('next_retry_at', { mode: 'timestamp' }),
     lastError: text('last_error'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

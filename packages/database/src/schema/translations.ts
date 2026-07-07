@@ -2,23 +2,20 @@
  * Translations schema - phrases, saved translations, offline packs, content translations.
  */
 import {
-  boolean,
   index,
-  int,
-  mysqlTable,
+  integer,
+  sqliteTable,
   text,
-  timestamp,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
-export const translationPhrases = mysqlTable(
+export const translationPhrases = sqliteTable(
   'translation_phrases',
   {
     id: id(),
-    category: varchar('category', { length: 50 }).notNull(),
-    sourceLanguage: varchar('source_language', { length: 10 }).notNull(),
-    targetLanguage: varchar('target_language', { length: 10 }).notNull(),
+    category: text('category').notNull(),
+    sourceLanguage: text('source_language').notNull(),
+    targetLanguage: text('target_language').notNull(),
     sourceText: text('source_text').notNull(),
     translatedText: text('translated_text').notNull(),
     pronunciation: text('pronunciation'),
@@ -33,19 +30,19 @@ export const translationPhrases = mysqlTable(
   ],
 );
 
-export const savedTranslations = mysqlTable(
+export const savedTranslations = sqliteTable(
   'saved_translations',
   {
     id: id(),
     userId: fk('user_id').notNull(),
     sourceText: text('source_text').notNull(),
     translatedText: text('translated_text').notNull(),
-    sourceLanguage: varchar('source_language', { length: 10 }).notNull(),
-    targetLanguage: varchar('target_language', { length: 10 }).notNull(),
-    translationType: varchar('translation_type', { length: 20 }).notNull().default('phrase'),
-    isFavorite: boolean('is_favorite').notNull().default(false),
-    lastUsedAt: timestamp('last_used_at', { mode: 'date' }),
-    useCount: int('use_count').notNull().default(1),
+    sourceLanguage: text('source_language').notNull(),
+    targetLanguage: text('target_language').notNull(),
+    translationType: text('translation_type').notNull().default('phrase'),
+    isFavorite: integer('is_favorite', { mode: 'boolean' }).notNull().default(false),
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+    useCount: integer('use_count').notNull().default(1),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -57,18 +54,18 @@ export const savedTranslations = mysqlTable(
   ],
 );
 
-export const offlineTranslationPacks = mysqlTable(
+export const offlineTranslationPacks = sqliteTable(
   'offline_translation_packs',
   {
     id: id(),
-    sourceLanguage: varchar('source_language', { length: 10 }).notNull(),
-    targetLanguage: varchar('target_language', { length: 10 }).notNull(),
-    packName: varchar('pack_name', { length: 255 }).notNull(),
+    sourceLanguage: text('source_language').notNull(),
+    targetLanguage: text('target_language').notNull(),
+    packName: text('pack_name').notNull(),
     description: text('description'),
-    size: int('size'),
-    phraseCount: int('phrase_count'),
-    version: int('version').notNull().default(1),
-    isActive: boolean('is_active').notNull().default(true),
+    size: integer('size'),
+    phraseCount: integer('phrase_count'),
+    version: integer('version').notNull().default(1),
+    isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
     downloadUrl: text('download_url'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -81,14 +78,14 @@ export const offlineTranslationPacks = mysqlTable(
   ],
 );
 
-export const userOfflinePacks = mysqlTable(
+export const userOfflinePacks = sqliteTable(
   'user_offline_packs',
   {
     id: id(),
     userId: fk('user_id').notNull(),
     packId: fk('pack_id').notNull(),
-    downloadedAt: timestamp('downloaded_at', { mode: 'date' }),
-    version: int('version'),
+    downloadedAt: integer('downloaded_at', { mode: 'timestamp' }),
+    version: integer('version'),
     createdAt: createdAt(),
   },
   t => [
@@ -98,14 +95,14 @@ export const userOfflinePacks = mysqlTable(
   ],
 );
 
-export const contentTranslations = mysqlTable(
+export const contentTranslations = sqliteTable(
   'content_translations',
   {
     id: id(),
-    entityType: varchar('entity_type', { length: 50 }).notNull(),
+    entityType: text('entity_type').notNull(),
     entityId: fk('entity_id').notNull(),
-    field: varchar('field', { length: 100 }).notNull(),
-    language: varchar('language', { length: 10 }).notNull(),
+    field: text('field').notNull(),
+    language: text('language').notNull(),
     translatedContent: text('translated_content').notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

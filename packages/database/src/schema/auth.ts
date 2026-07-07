@@ -3,29 +3,26 @@
  * Replaces Convex Auth tables (authTables) + custom auth tables.
  */
 import {
-  boolean,
   index,
-  int,
-  mysqlTable,
+  integer,
+  sqliteTable,
   text,
-  timestamp,
   uniqueIndex,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Users ──────────────────────────────────────────────
-export const users = mysqlTable(
+export const users = sqliteTable(
   'users',
   {
     id: id(),
-    name: varchar('name', { length: 255 }),
-    email: varchar('email', { length: 255 }),
-    emailVerificationTime: timestamp('email_verification_time', { mode: 'date' }),
-    phone: varchar('phone', { length: 50 }),
-    phoneVerificationTime: timestamp('phone_verification_time', { mode: 'date' }),
+    name: text('name'),
+    email: text('email'),
+    emailVerificationTime: integer('email_verification_time', { mode: 'timestamp' }),
+    phone: text('phone'),
+    phoneVerificationTime: integer('phone_verification_time', { mode: 'timestamp' }),
     image: text('image'),
-    isAnonymous: boolean('is_anonymous'),
+    isAnonymous: integer('is_anonymous', { mode: 'boolean' }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -36,28 +33,28 @@ export const users = mysqlTable(
 );
 
 // ── Auth Sessions ──────────────────────────────────────
-export const authSessions = mysqlTable(
+export const authSessions = sqliteTable(
   'auth_sessions',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    expirationTime: timestamp('expiration_time', { mode: 'date' }).notNull(),
+    expirationTime: integer('expiration_time', { mode: 'timestamp' }).notNull(),
     createdAt: createdAt(),
   },
   t => [index('auth_sessions_user_idx').on(t.userId)],
 );
 
 // ── Auth Accounts ──────────────────────────────────────
-export const authAccounts = mysqlTable(
+export const authAccounts = sqliteTable(
   'auth_accounts',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    provider: varchar('provider', { length: 100 }).notNull(),
-    providerAccountId: varchar('provider_account_id', { length: 255 }).notNull(),
+    provider: text('provider').notNull(),
+    providerAccountId: text('provider_account_id').notNull(),
     secret: text('secret'),
-    emailVerified: varchar('email_verified', { length: 255 }),
-    phoneVerified: varchar('phone_verified', { length: 50 }),
+    emailVerified: text('email_verified'),
+    phoneVerified: text('phone_verified'),
     createdAt: createdAt(),
   },
   t => [
@@ -67,13 +64,13 @@ export const authAccounts = mysqlTable(
 );
 
 // ── Rate Limits (general) ──────────────────────────────
-export const rateLimits = mysqlTable(
+export const rateLimits = sqliteTable(
   'rate_limits',
   {
     id: id(),
-    key: varchar('key', { length: 255 }).notNull(),
-    count: int('count').notNull().default(0),
-    expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+    key: text('key').notNull(),
+    count: integer('count').notNull().default(0),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
     createdAt: createdAt(),
   },
   t => [index('rate_limits_key_idx').on(t.key)],

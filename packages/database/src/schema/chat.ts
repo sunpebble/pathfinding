@@ -2,27 +2,24 @@
  * Chat schema - AI chat sessions and messages.
  */
 import {
-  boolean,
   index,
-  json,
-  mysqlTable,
+  integer,
+  sqliteTable,
   text,
-  timestamp,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { createdAt, fk, id, updatedAt } from './columns';
 
 // ── Chat Sessions ──────────────────────────────────────
-export const chatSessions = mysqlTable(
+export const chatSessions = sqliteTable(
   'chat_sessions',
   {
     id: id(),
     userId: fk('user_id').notNull(),
-    title: varchar('title', { length: 500 }),
-    isArchived: boolean('is_archived').notNull().default(false),
-    lastMessageAt: timestamp('last_message_at', { mode: 'date' }),
+    title: text('title'),
+    isArchived: integer('is_archived', { mode: 'boolean' }).notNull().default(false),
+    lastMessageAt: integer('last_message_at', { mode: 'timestamp' }),
     itineraryId: fk('itinerary_id'),
-    metadata: json('metadata'),
+    metadata: text('metadata', { mode: 'json' }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -35,14 +32,14 @@ export const chatSessions = mysqlTable(
 );
 
 // ── Chat Messages ──────────────────────────────────────
-export const chatMessages = mysqlTable(
+export const chatMessages = sqliteTable(
   'chat_messages',
   {
     id: id(),
     sessionId: fk('session_id').notNull(),
-    role: varchar('role', { length: 20 }).notNull(),
+    role: text('role').notNull(),
     content: text('content').notNull(),
-    metadata: json('metadata'),
+    metadata: text('metadata', { mode: 'json' }),
     createdAt: createdAt(),
   },
   t => [

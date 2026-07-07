@@ -3,49 +3,46 @@
  * Destinations and guides.
  */
 import {
-  double,
   index,
-  int,
-  json,
-  mysqlTable,
+  integer,
+  real,
+  sqliteTable,
   text,
-  timestamp,
   uniqueIndex,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 import { id } from './columns';
 
 // ── Mafengwo Destinations (马蜂窝目的地) ───────────────
-export const mafengwoDestinations = mysqlTable(
+export const mafengwoDestinations = sqliteTable(
   'mafengwo_destinations',
   {
     id: id(),
     /** 马蜂窝目的地 ID */
-    mddId: varchar('mdd_id', { length: 50 }).notNull(),
+    mddId: text('mdd_id').notNull(),
     sourceUrl: text('source_url').notNull(),
-    name: varchar('name', { length: 255 }).notNull(),
-    nameEn: varchar('name_en', { length: 255 }),
-    country: varchar('country', { length: 100 }),
-    province: varchar('province', { length: 100 }),
+    name: text('name').notNull(),
+    nameEn: text('name_en'),
+    country: text('country'),
+    province: text('province'),
     description: text('description'),
     coverImageUrl: text('cover_image_url'),
     /** Array of image URLs */
-    imageUrls: json('image_urls').notNull(),
-    latitude: double('latitude'),
-    longitude: double('longitude'),
-    timezone: varchar('timezone', { length: 50 }),
-    bestTravelTime: varchar('best_travel_time', { length: 255 }),
-    avgStayDays: varchar('avg_stay_days', { length: 50 }),
-    climate: varchar('climate', { length: 255 }),
-    language: varchar('language', { length: 100 }),
-    currency: varchar('currency', { length: 50 }),
-    visa: varchar('visa', { length: 255 }),
-    travelNotesCount: int('travel_notes_count').notNull().default(0),
-    poisCount: int('pois_count').notNull().default(0),
-    questionsCount: int('questions_count').notNull().default(0),
-    guidesCount: int('guides_count'),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }).notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }),
+    imageUrls: text('image_urls', { mode: 'json' }).notNull(),
+    latitude: real('latitude'),
+    longitude: real('longitude'),
+    timezone: text('timezone'),
+    bestTravelTime: text('best_travel_time'),
+    avgStayDays: text('avg_stay_days'),
+    climate: text('climate'),
+    language: text('language'),
+    currency: text('currency'),
+    visa: text('visa'),
+    travelNotesCount: integer('travel_notes_count').notNull().default(0),
+    poisCount: integer('pois_count').notNull().default(0),
+    questionsCount: integer('questions_count').notNull().default(0),
+    guidesCount: integer('guides_count'),
+    crawledAt: integer('crawled_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }),
   },
   t => [
     // Unique business key (D1). Run scripts/dedupe-travel-guides.ts before db:push.
@@ -56,35 +53,35 @@ export const mafengwoDestinations = mysqlTable(
 );
 
 // ── Mafengwo Guides (马蜂窝攻略) ─────────────────────
-export const mafengwoGuides = mysqlTable(
+export const mafengwoGuides = sqliteTable(
   'mafengwo_guides',
   {
     id: id(),
-    guideId: varchar('guide_id', { length: 50 }).notNull(),
+    guideId: text('guide_id').notNull(),
     sourceUrl: text('source_url').notNull(),
-    title: varchar('title', { length: 500 }).notNull(),
-    destinationId: varchar('destination_id', { length: 50 }),
-    destinationName: varchar('destination_name', { length: 255 }),
-    authorName: varchar('author_name', { length: 100 }),
-    authorId: varchar('author_id', { length: 50 }),
+    title: text('title').notNull(),
+    destinationId: text('destination_id'),
+    destinationName: text('destination_name'),
+    authorName: text('author_name'),
+    authorId: text('author_id'),
     summary: text('summary'),
     content: text('content').notNull(),
     contentHtml: text('content_html'),
     /** Array of section objects {title, content, order} */
-    sections: json('sections').notNull(),
+    sections: text('sections', { mode: 'json' }).notNull(),
     coverImageUrl: text('cover_image_url'),
     /** Array of image URLs */
-    imageUrls: json('image_urls').notNull(),
-    viewsCount: int('views_count').notNull().default(0),
-    likesCount: int('likes_count').notNull().default(0),
-    savesCount: int('saves_count').notNull().default(0),
-    commentsCount: int('comments_count').notNull().default(0),
+    imageUrls: text('image_urls', { mode: 'json' }).notNull(),
+    viewsCount: integer('views_count').notNull().default(0),
+    likesCount: integer('likes_count').notNull().default(0),
+    savesCount: integer('saves_count').notNull().default(0),
+    commentsCount: integer('comments_count').notNull().default(0),
     /** Array of tag strings */
-    tags: json('tags').notNull(),
-    publishedAt: timestamp('published_at', { mode: 'date' }),
-    qualityScore: int('quality_score').notNull().default(0),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }).notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }),
+    tags: text('tags', { mode: 'json' }).notNull(),
+    publishedAt: integer('published_at', { mode: 'timestamp' }),
+    qualityScore: integer('quality_score').notNull().default(0),
+    crawledAt: integer('crawled_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }),
   },
   t => [
     // Unique business key (D1). Run scripts/dedupe-travel-guides.ts before db:push.
@@ -97,55 +94,55 @@ export const mafengwoGuides = mysqlTable(
 
 // Restored: live crawl-pipeline staging tables, deduped by scripts/dedupe-travel-guides.ts.
 // ── Mafengwo POIs (马蜂窝景点/餐厅/酒店) ─────────────
-export const mafengwoPois = mysqlTable(
+export const mafengwoPois = sqliteTable(
   'mafengwo_pois',
   {
     id: id(),
     /** 马蜂窝 POI ID */
-    poiId: varchar('poi_id', { length: 50 }).notNull(),
+    poiId: text('poi_id').notNull(),
     sourceUrl: text('source_url').notNull(),
-    name: varchar('name', { length: 255 }).notNull(),
-    nameEn: varchar('name_en', { length: 255 }),
+    name: text('name').notNull(),
+    nameEn: text('name_en'),
     /** attraction | restaurant | hotel | shopping | entertainment | transport */
-    category: varchar('category', { length: 30 }).notNull(),
-    destinationId: varchar('destination_id', { length: 50 }),
-    destinationName: varchar('destination_name', { length: 255 }),
+    category: text('category').notNull(),
+    destinationId: text('destination_id'),
+    destinationName: text('destination_name'),
     address: text('address'),
-    latitude: double('latitude'),
-    longitude: double('longitude'),
-    rating: double('rating'),
-    ratingCount: int('rating_count').notNull().default(0),
-    priceLevel: int('price_level'),
-    priceRange: varchar('price_range', { length: 100 }),
-    ticketPrice: varchar('ticket_price', { length: 100 }),
+    latitude: real('latitude'),
+    longitude: real('longitude'),
+    rating: real('rating'),
+    ratingCount: integer('rating_count').notNull().default(0),
+    priceLevel: integer('price_level'),
+    priceRange: text('price_range'),
+    ticketPrice: text('ticket_price'),
     openingHours: text('opening_hours'),
-    phone: varchar('phone', { length: 50 }),
+    phone: text('phone'),
     website: text('website'),
     description: text('description'),
     /** Array of tip strings */
-    tips: json('tips').notNull(),
+    tips: text('tips', { mode: 'json' }).notNull(),
     /** Array of highlight strings */
-    highlights: json('highlights').notNull(),
+    highlights: text('highlights', { mode: 'json' }).notNull(),
     coverImageUrl: text('cover_image_url'),
     /** Array of image URLs */
-    imageUrls: json('image_urls').notNull(),
-    reviewsCount: int('reviews_count').notNull().default(0),
-    savesCount: int('saves_count').notNull().default(0),
+    imageUrls: text('image_urls', { mode: 'json' }).notNull(),
+    reviewsCount: integer('reviews_count').notNull().default(0),
+    savesCount: integer('saves_count').notNull().default(0),
     /** Array of tag strings */
-    tags: json('tags').notNull(),
+    tags: text('tags', { mode: 'json' }).notNull(),
     // Restaurant specific
-    cuisineType: varchar('cuisine_type', { length: 100 }),
+    cuisineType: text('cuisine_type'),
     /** Array of dish name strings */
-    signatureDishes: json('signature_dishes').notNull(),
+    signatureDishes: text('signature_dishes', { mode: 'json' }).notNull(),
     // Hotel specific
-    starRating: int('star_rating'),
+    starRating: integer('star_rating'),
     /** Array of amenity strings */
-    amenities: json('amenities').notNull(),
-    checkInTime: varchar('check_in_time', { length: 20 }),
-    checkOutTime: varchar('check_out_time', { length: 20 }),
-    qualityScore: int('quality_score').notNull().default(0),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }).notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }),
+    amenities: text('amenities', { mode: 'json' }).notNull(),
+    checkInTime: text('check_in_time'),
+    checkOutTime: text('check_out_time'),
+    qualityScore: integer('quality_score').notNull().default(0),
+    crawledAt: integer('crawled_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }),
   },
   t => [
     // Unique business key (D1). Run scripts/dedupe-travel-guides.ts before db:push.
@@ -159,26 +156,26 @@ export const mafengwoPois = mysqlTable(
 );
 
 // ── Mafengwo Q&A (马蜂窝问答) ────────────────────────
-export const mafengwoQa = mysqlTable(
+export const mafengwoQa = sqliteTable(
   'mafengwo_qa',
   {
     id: id(),
-    questionId: varchar('question_id', { length: 50 }).notNull(),
+    questionId: text('question_id').notNull(),
     sourceUrl: text('source_url').notNull(),
-    title: varchar('title', { length: 500 }).notNull(),
+    title: text('title').notNull(),
     content: text('content').notNull(),
-    destinationId: varchar('destination_id', { length: 50 }),
-    destinationName: varchar('destination_name', { length: 255 }),
-    authorName: varchar('author_name', { length: 100 }),
-    authorId: varchar('author_id', { length: 50 }),
-    answersCount: int('answers_count').notNull().default(0),
-    viewsCount: int('views_count').notNull().default(0),
+    destinationId: text('destination_id'),
+    destinationName: text('destination_name'),
+    authorName: text('author_name'),
+    authorId: text('author_id'),
+    answersCount: integer('answers_count').notNull().default(0),
+    viewsCount: integer('views_count').notNull().default(0),
     /** Array of tag strings */
-    tags: json('tags').notNull(),
+    tags: text('tags', { mode: 'json' }).notNull(),
     /** Best answer object {content, authorName, authorId, likesCount, createdAt} */
-    bestAnswer: json('best_answer'),
-    questionCreatedAt: timestamp('question_created_at', { mode: 'date' }),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }).notNull(),
+    bestAnswer: text('best_answer', { mode: 'json' }),
+    questionCreatedAt: integer('question_created_at', { mode: 'timestamp' }),
+    crawledAt: integer('crawled_at', { mode: 'timestamp' }).notNull(),
   },
   t => [
     // Unique business key (D1). Run scripts/dedupe-travel-guides.ts before db:push.
@@ -189,22 +186,22 @@ export const mafengwoQa = mysqlTable(
 );
 
 // ── Mafengwo Rankings (马蜂窝榜单) ───────────────────
-export const mafengwoRankings = mysqlTable(
+export const mafengwoRankings = sqliteTable(
   'mafengwo_rankings',
   {
     id: id(),
-    rankingId: varchar('ranking_id', { length: 50 }).notNull(),
+    rankingId: text('ranking_id').notNull(),
     sourceUrl: text('source_url').notNull(),
     /** must_visit | food | hotel | shopping | hidden_gem */
-    rankingType: varchar('ranking_type', { length: 30 }).notNull(),
-    title: varchar('title', { length: 500 }).notNull(),
-    destinationId: varchar('destination_id', { length: 50 }),
-    destinationName: varchar('destination_name', { length: 255 }),
+    rankingType: text('ranking_type').notNull(),
+    title: text('title').notNull(),
+    destinationId: text('destination_id'),
+    destinationName: text('destination_name'),
     description: text('description'),
     /** Array of ranking item objects {rank, poiExternalId, name, ...} */
-    items: json('items').notNull(),
-    crawledAt: timestamp('crawled_at', { mode: 'date' }).notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }),
+    items: text('items', { mode: 'json' }).notNull(),
+    crawledAt: integer('crawled_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }),
   },
   t => [
     index('mafengwo_rankings_ranking_id_idx').on(t.rankingId),
