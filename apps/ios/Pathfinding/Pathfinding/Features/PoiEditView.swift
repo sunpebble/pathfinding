@@ -48,7 +48,7 @@ struct PoiEditView: View {
               VStack(alignment: .leading) {
                 Text(item.name ?? "未知地点")
                   .foregroundStyle(.primary)
-                if let title = item.placemark.title {
+                if let title = item.address?.fullAddress {
                   Text(title)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -112,8 +112,8 @@ struct PoiEditView: View {
 
   private func selectLocation(_ item: MKMapItem) {
     poi.name = item.name ?? poi.name
-    poi.latitude = item.placemark.coordinate.latitude
-    poi.longitude = item.placemark.coordinate.longitude
+    poi.latitude = item.location.coordinate.latitude
+    poi.longitude = item.location.coordinate.longitude
     searchResults = []
   }
 }

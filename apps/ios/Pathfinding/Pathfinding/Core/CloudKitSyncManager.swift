@@ -259,7 +259,7 @@ final class CloudKitSyncManager {
       // Create custom zone if needed
       let zoneExists = UserDefaults.standard.bool(forKey: "iCloudZoneCreated")
       if !zoneExists {
-        try await privateDatabase.save(itineraryZone)
+        _ = try await privateDatabase.save(itineraryZone)
         UserDefaults.standard.set(true, forKey: "iCloudZoneCreated")
         NSLog("[CloudKit] Created custom zone: \(itineraryZone.zoneID.zoneName)")
       }
@@ -276,7 +276,7 @@ final class CloudKitSyncManager {
         notificationInfo.shouldSendContentAvailable = true
         subscription.notificationInfo = notificationInfo
 
-        try await privateDatabase.save(subscription)
+        _ = try await privateDatabase.save(subscription)
         UserDefaults.standard.set(true, forKey: "iCloudSubscriptionCreated")
         NSLog("[CloudKit] Created subscription for zone changes")
       }
@@ -456,7 +456,7 @@ final class CloudKitSyncManager {
     guard isSyncEnabled && isICloudAvailable else { return }
 
     let record = recordFromItinerary(itinerary)
-    try await privateDatabase.save(record)
+    _ = try await privateDatabase.save(record)
 
     NSLog("[CloudKit] Uploaded itinerary: \(itinerary.title)")
   }

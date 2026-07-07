@@ -407,9 +407,8 @@ final class CarPlayManager: NSObject {
     // Create point of interest item
     let poiItem = CPPointOfInterest(
       location: MKMapItem(
-        placemark: MKPlacemark(
-          coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)
-        )
+        location: CLLocation(latitude: lat, longitude: lng),
+        address: nil
       ),
       title: poi.name,
       subtitle: poi.type,
@@ -432,9 +431,8 @@ final class CarPlayManager: NSObject {
       let tripPreview = CPTrip(
         origin: MKMapItem.forCurrentLocation(),
         destination: MKMapItem(
-          placemark: MKPlacemark(
-            coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)
-          )
+          location: CLLocation(latitude: lat, longitude: lng),
+          address: nil
         ),
         routeChoices: []
       )
@@ -459,9 +457,7 @@ final class CarPlayManager: NSObject {
     logger.info("Starting navigation to: \(poi.name)")
 
     // Use Apple Maps for navigation
-    let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
-    let placemark = MKPlacemark(coordinate: coordinate)
-    let mapItem = MKMapItem(placemark: placemark)
+    let mapItem = MKMapItem(location: CLLocation(latitude: lat, longitude: lng), address: nil)
     mapItem.name = poi.name
 
     mapItem.openInMaps(launchOptions: [

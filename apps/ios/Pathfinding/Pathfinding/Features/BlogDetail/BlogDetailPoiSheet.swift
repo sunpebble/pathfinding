@@ -85,9 +85,7 @@ struct BlogDetailPoiSheet: View {
   }
 
   private func openInMaps(name: String, lat: Double, lng: Double) {
-    let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
-    let placemark = MKPlacemark(coordinate: coordinate)
-    let mapItem = MKMapItem(placemark: placemark)
+    let mapItem = MKMapItem(location: CLLocation(latitude: lat, longitude: lng), address: nil)
     mapItem.name = name
     mapItem.openInMaps(launchOptions: [
       MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking

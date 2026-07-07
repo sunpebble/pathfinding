@@ -65,9 +65,7 @@ struct NavigateToNextPOIIntent: AppIntent {
       UserDefaults.standard.set(lon, forKey: "siri_navigate_longitude")
 
       // Open Maps with directions
-      let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-      let placemark = MKPlacemark(coordinate: coordinate)
-      let mapItem = MKMapItem(placemark: placemark)
+      let mapItem = MKMapItem(location: CLLocation(latitude: lat, longitude: lon), address: nil)
       mapItem.name = poi.name
 
       // Launch Apple Maps with directions
