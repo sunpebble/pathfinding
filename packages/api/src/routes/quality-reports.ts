@@ -17,9 +17,9 @@ import { ApiError } from '../middleware/error-handler.js';
 // ── Zod schemas ────────────────────────────────────────
 const createReportSchema = z.object({
   reportType: z.string().min(1),
-  metrics: z.record(z.unknown()),
+  metrics: z.record(z.string(), z.unknown()),
   datasetId: z.number().optional(),
-  issues: z.array(z.record(z.unknown())).optional(),
+  issues: z.array(z.record(z.string(), z.unknown())).optional(),
 });
 
 const deleteReportSchema = z.object({

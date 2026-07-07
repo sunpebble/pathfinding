@@ -58,7 +58,7 @@ app.get('/sessions', authRequired(), async (c) => {
 // ── POST /sessions — Create a new chat session ─────────
 const createSessionSchema = z.object({
   title: z.string().default('新对话'),
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
 });
 
 app.post('/sessions', authRequired(), zValidator('json', createSessionSchema), async (c) => {

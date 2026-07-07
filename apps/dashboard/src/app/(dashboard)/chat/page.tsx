@@ -192,7 +192,7 @@ function MessageBubble({
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(setCopied, 2000, false);
     }
     catch {}
   }, []);
