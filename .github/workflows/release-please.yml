@@ -12,6 +12,30 @@ permissions:
   packages: write
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace packages
+        run: pnpm --filter @pathfinding/types run build
+
+      - name: TypeScript Check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
   release-please:
     runs-on: ubuntu-latest
     outputs:
@@ -26,21 +50,7 @@ jobs:
 
   testflight:
     name: Build & Upload to TestFlight
-    needs: release-please
+    needs: [release-please, quality]
     if: ${{ needs.release-please.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
-    uses: sunpebble/ci/.github/workflows/ios-testflight.yml@v2
-    with:
-      working_directory: apps/ios/Pathfinding
-      xcode_project: Pathfinding.xcodeproj
-      scheme: Pathfinding-Release
-      ipa_basename: Pathfinding
-      run_xcodegen: true
-      build_number_strategy: utc_timestamp
-      marketing_version_from_repo_package_json: true
-      archive_configuration: Release
-      export_subdirectory: ipa
-      upload_ipa_path: apps/ios/Pathfinding/build/ipa/Pathfinding.ipa
-      run_test_gate: true
-      test_scheme: Pathfinding-Debug
-      test_only: PathfindingTests
+    uses: sunpebble/ci/.github/workflows/ios-testflight-pathfinding.yml@v2
     secrets: inherit
