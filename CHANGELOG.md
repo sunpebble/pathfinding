@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.2](https://github.com/sunpebble/pathfinding/compare/v1.2.1...v1.2.2) (2026-07-07)
+
+
+### Bug Fixes
+
+* **ci:** typecheck, profile validation, and zod record schemas ([d60c002](https://github.com/sunpebble/pathfinding/commit/d60c002bb3a29da1c6c9afe06b9121dce6e6f7c4))
+* **dashboard:** satisfy react/static-components lint after eslint bump ([441e9f3](https://github.com/sunpebble/pathfinding/commit/441e9f3fca612516ac1b47541f35607a659f4bd1))
+* **deps:** align vite 8 override with @vitejs/plugin-react for dashboard tests ([6b7f597](https://github.com/sunpebble/pathfinding/commit/6b7f597b253da757b4b546c52ad06daf8628b816))
+
 ## [1.2.1](https://github.com/sunpebble/pathfinding/compare/v1.2.0...v1.2.1) (2026-07-07)
 
 
