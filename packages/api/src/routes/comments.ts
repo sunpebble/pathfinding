@@ -89,14 +89,14 @@ app.post('/', authRequired(), zValidator('json', createCommentSchema), async (c)
   const guideId = Number(itineraryId);
   const userIdNum = Number(userId);
 
-  const result = await db.insert(guideComments).values({
+  const [result] = await db.insert(guideComments).values({
     guideId,
     userId: userIdNum,
     content,
     parentId: parentId ? Number(parentId) : null,
-  });
+  }).returning({ id: guideComments.id });
 
-  const commentId = Number(result[0].insertId);
+  const commentId = result!.id;
 
   return c.json(
     {
@@ -290,16 +290,16 @@ app.post('/report', authRequired(), zValidator('json', reportCommentSchema), asy
 
   const db = c.get('db');
 
-  const result = await db.insert(commentReports).values({
+  const [result] = await db.insert(commentReports).values({
     commentId: Number(commentId),
     userId: Number(userId),
     reason,
     description: description ?? null,
-  });
+  }).returning({ id: commentReports.id });
 
   return c.json({
     data: {
-      id: Number(result[0].insertId),
+      id: result!.id,
       success: true,
     },
   });

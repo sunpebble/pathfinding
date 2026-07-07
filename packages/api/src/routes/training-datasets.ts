@@ -92,15 +92,15 @@ app.post('/', adminRequired(), zValidator('json', createDatasetSchema), async (c
 
   const db = c.get('db');
 
-  const result = await db.insert(trainingDatasets).values({
+  const [result] = await db.insert(trainingDatasets).values({
     name,
     version,
     description: null,
     status: status ?? 'draft',
     config: generationParams ?? null,
-  });
+  }).returning({ id: trainingDatasets.id });
 
-  const datasetId = Number(result[0].insertId);
+  const datasetId = result!.id;
   const dataset = await db
     .select()
     .from(trainingDatasets)

@@ -255,16 +255,16 @@ app.post('/saved', authRequired(), zValidator('json', saveTranslationSchema), as
 
   const db = c.get('db');
 
-  const result = await db.insert(savedTranslations).values({
+  const [result] = await db.insert(savedTranslations).values({
     userId: Number(c.get('userId')),
     sourceText,
     translatedText: targetText,
     sourceLanguage: sourceLang,
     targetLanguage: targetLang,
     translationType,
-  });
+  }).returning({ id: savedTranslations.id });
 
-  return c.json({ id: Number(result[0].insertId) }, 201);
+  return c.json({ id: result!.id }, 201);
 });
 
 // ── DELETE /saved — Delete a saved translation ─────────

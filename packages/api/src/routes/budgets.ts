@@ -104,14 +104,14 @@ app.post('/', authRequired(), zValidator('json', createBudgetSchema), async (c) 
     budgetId = Number(existing[0].id);
   }
   else {
-    const result = await db.insert(itineraryBudgets).values({
+    const [result] = await db.insert(itineraryBudgets).values({
       itineraryId: iid,
       userId: uid,
       totalBudget,
       currency: currency ?? 'CNY',
       categoryBudgets: categoryBudgets ?? {},
-    });
-    budgetId = Number(result[0].insertId);
+    }).returning({ id: itineraryBudgets.id });
+    budgetId = result!.id;
   }
 
   return c.json({ id: budgetId }, 201);

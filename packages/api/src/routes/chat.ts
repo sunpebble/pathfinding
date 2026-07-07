@@ -72,7 +72,7 @@ app.post('/sessions', authRequired(), zValidator('json', createSessionSchema), a
       title: body.title,
       metadata: body.context ?? null,
     })
-    .$returningId();
+    .returning({ id: chatSessions.id });
 
   const session = await db
     .select()
@@ -145,7 +145,7 @@ app.post('/messages', authRequired(), zValidator('json', createMessageSchema), a
       role: body.role,
       content: body.content,
     })
-    .$returningId();
+    .returning({ id: chatMessages.id });
 
   // Update session's lastMessageAt
   await db

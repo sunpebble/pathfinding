@@ -146,14 +146,14 @@ export async function persistIngestedGuide(db: Database, result: NormalizeResult
       outcome = { success: true, guideId: existing.id, action: 'updated', message: '游记已刷新', warnings };
     }
     else {
-      const insertResult = await db.insert(travelGuides).values({
+      const [insertResult] = await db.insert(travelGuides).values({
         platform: guide.platform,
         externalId: guide.externalId ?? null,
         ...guide.values,
         title: guide.values.title ?? UNTITLED,
         enrichedData: guide.enrichedNew,
-      });
-      const guideId = Number(insertResult[0].insertId);
+      }).returning({ id: travelGuides.id });
+      const guideId = insertResult!.id;
       await syncGuideDestinations(db, guideId, guide.destinationNames);
       outcome = { success: true, guideId, action: 'inserted', message: '游记导入成功', warnings };
     }
@@ -172,7 +172,7 @@ export type UserGuideInsert = typeof travelGuides.$inferInsert;
 export type UserGuidePatch = Partial<typeof travelGuides.$inferInsert>;
 
 export async function createUserGuide(db: Database, input: UserGuideInsert): Promise<number> {
-  const [result] = await db.insert(travelGuides).values(input).$returningId();
+  const [result] = await db.insert(travelGuides).values(input).returning({ id: travelGuides.id });
   return result!.id;
 }
 

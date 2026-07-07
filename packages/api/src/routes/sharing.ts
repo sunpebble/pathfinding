@@ -38,12 +38,12 @@ app.post('/link', authRequired(), zValidator('json', createShareLinkSchema), asy
   const db = c.get('db');
   const shareCode = generateShareCode();
 
-  const result = await db.insert(shareLinks).values({
+  const [result] = await db.insert(shareLinks).values({
     shareCode,
     resourceType,
     resourceId,
     ownerId: userId,
-  });
+  }).returning({ id: shareLinks.id });
 
   // Also create a share event
   await db.insert(shareEvents).values({
@@ -56,7 +56,7 @@ app.post('/link', authRequired(), zValidator('json', createShareLinkSchema), asy
 
   return c.json(
     convertKeysToSnakeCase({
-      id: Number(result[0].insertId),
+      id: result!.id,
       shareCode,
       resourceType,
       resourceId,

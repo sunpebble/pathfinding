@@ -52,7 +52,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
     const [result] = await db.insert(users).values({
       email,
       name: name ?? null,
-    }).$returningId();
+    }).returning({ id: users.id });
 
     const userId = String(result!.id);
 
@@ -235,7 +235,7 @@ app.post('/social', zValidator('json', socialLoginSchema), async (c) => {
         email: email ?? null,
         name: userName ?? null,
         image: picture ?? null,
-      }).$returningId();
+      }).returning({ id: users.id });
       userId = String(result!.id);
     }
     else {

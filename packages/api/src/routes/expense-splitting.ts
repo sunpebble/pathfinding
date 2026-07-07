@@ -55,14 +55,14 @@ app.post('/members', authRequired(), zValidator('json', createMemberSchema), asy
 
   const db = c.get('db');
 
-  const result = await db.insert(tripMembers).values({
+  const [result] = await db.insert(tripMembers).values({
     itineraryId: Number(itineraryId),
     name,
     userId: userId ? Number(userId) : null,
     isRegistered: isRegistered ?? false,
-  });
+  }).returning({ id: tripMembers.id });
 
-  return c.json({ id: Number(result[0].insertId) }, 201);
+  return c.json({ id: result!.id }, 201);
 });
 
 // ── DELETE /members/:id — Remove a trip member ─────────────
@@ -158,7 +158,7 @@ app.post('/expenses', authRequired(), zValidator('json', createExpenseSchema), a
   const resolvedSplitType = splitType ?? 'equal';
 
   // Create the shared expense
-  const result = await db.insert(sharedExpenses).values({
+  const [result] = await db.insert(sharedExpenses).values({
     itineraryId: Number(itineraryId),
     paidByMemberId: Number(paidByMemberId),
     amount,
@@ -167,9 +167,9 @@ app.post('/expenses', authRequired(), zValidator('json', createExpenseSchema), a
     description: description ?? null,
     date: date ?? null,
     splitType: resolvedSplitType,
-  });
+  }).returning({ id: sharedExpenses.id });
 
-  const expenseId = Number(result[0].insertId);
+  const expenseId = result!.id;
 
   // Create expense participants
   const shareAmount = resolvedSplitType === 'equal'
@@ -254,15 +254,15 @@ app.post('/settlements', authRequired(), zValidator('json', createSettlementSche
 
   const db = c.get('db');
 
-  const result = await db.insert(settlements).values({
+  const [result] = await db.insert(settlements).values({
     itineraryId: Number(itineraryId),
     fromMemberId: Number(fromMemberId),
     toMemberId: Number(toMemberId),
     amount,
     currency: currency ?? 'CNY',
-  });
+  }).returning({ id: settlements.id });
 
-  return c.json({ id: Number(result[0].insertId) }, 201);
+  return c.json({ id: result!.id }, 201);
 });
 
 // ── PATCH /settlements/:id/settle — Mark as settled ────────

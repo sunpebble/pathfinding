@@ -109,7 +109,7 @@ export async function createSession(userId: string): Promise<string> {
   const [result] = await db.insert(authSessions).values({
     userId: Number(userId),
     expirationTime,
-  }).$returningId();
+  }).returning({ id: authSessions.id });
 
   return String(result!.id);
 }

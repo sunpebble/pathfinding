@@ -157,7 +157,7 @@ app.post(
           userId: targetUser.id,
           role: body.role,
         })
-        .$returningId();
+        .returning({ id: itineraryCollaborators.id });
     }
     catch (error) {
       if (isDuplicateError(error)) {

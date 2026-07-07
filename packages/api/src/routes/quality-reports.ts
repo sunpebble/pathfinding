@@ -81,15 +81,15 @@ app.post('/', adminRequired(), zValidator('json', createReportSchema), async (c)
 
   const db = c.get('db');
 
-  const result = await db.insert(dataQualityReports).values({
+  const [result] = await db.insert(dataQualityReports).values({
     datasetId: datasetId ? Number(datasetId) : 0,
     reportType,
     metrics,
     issues: issues ?? null,
     generatedAt: new Date(),
-  });
+  }).returning({ id: dataQualityReports.id });
 
-  const reportId = Number(result[0].insertId);
+  const reportId = result!.id;
   const report = await db
     .select()
     .from(dataQualityReports)

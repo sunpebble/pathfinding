@@ -170,7 +170,7 @@ app.post('/', authRequired(), zValidator('json', createItinerarySchema), async (
       visibility: body.visibility,
       coverImageUrl: body.coverImageUrl ?? null,
     })
-    .$returningId();
+    .returning({ id: itineraries.id });
 
   return jsonData(c, { id: result!.id }, 201);
 });
@@ -325,7 +325,7 @@ app.post('/:id/days', authRequired(), zValidator('json', createDaySchema), async
       dayNumber: body.dayNumber,
       date: body.date,
     })
-    .$returningId();
+    .returning({ id: itineraryDays.id });
 
   return jsonData(c, { id: result!.id }, 201);
 });
@@ -380,7 +380,7 @@ app.post(
         transportMode: body.transportMode,
         notes: body.notes ?? null,
       })
-      .$returningId();
+      .returning({ id: itineraryItems.id });
 
     return jsonData(c, { id: result!.id }, 201);
   },

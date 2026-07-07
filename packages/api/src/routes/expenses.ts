@@ -73,7 +73,7 @@ app.post('/', authRequired(), zValidator('json', createExpenseSchema), async (c)
     throw new ApiError(403, '行程不存在或无权编辑');
   }
 
-  const result = await db.insert(expenses).values({
+  const [result] = await db.insert(expenses).values({
     itineraryId: Number(itineraryId),
     userId,
     categoryId: Number(category),
@@ -81,9 +81,9 @@ app.post('/', authRequired(), zValidator('json', createExpenseSchema), async (c)
     description: description ?? '',
     date: date ?? new Date().toISOString().split('T')[0]!,
     currency: currency ?? 'CNY',
-  });
+  }).returning({ id: expenses.id });
 
-  return c.json({ id: Number(result[0].insertId) }, 201);
+  return c.json({ id: result!.id }, 201);
 });
 
 export default app;

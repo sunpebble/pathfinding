@@ -82,7 +82,7 @@ app.post('/questions', authRequired(), zValidator('json', createQuestionSchema),
 
   const db = c.get('db');
 
-  const result = await db.insert(poiQuestions).values({
+  const [result] = await db.insert(poiQuestions).values({
     poiId,
     userId: Number(c.get('userId')),
     title,
@@ -90,9 +90,9 @@ app.post('/questions', authRequired(), zValidator('json', createQuestionSchema),
     category: 'general',
     tags: tags ?? null,
     lastActivityAt: new Date(),
-  });
+  }).returning({ id: poiQuestions.id });
 
-  return c.json({ id: Number(result[0].insertId) }, 201);
+  return c.json({ id: result!.id }, 201);
 });
 
 // ── GET /answers — List answers for a question ─────────
@@ -147,11 +147,11 @@ app.post('/answers', authRequired(), zValidator('json', createAnswerSchema), asy
 
   const db = c.get('db');
 
-  const result = await db.insert(poiAnswers).values({
+  const [result] = await db.insert(poiAnswers).values({
     questionId,
     userId: Number(c.get('userId')),
     content,
-  });
+  }).returning({ id: poiAnswers.id });
 
   // Update answer count on the question
   await db
@@ -162,7 +162,7 @@ app.post('/answers', authRequired(), zValidator('json', createAnswerSchema), asy
     })
     .where(eq(poiQuestions.id, questionId));
 
-  return c.json({ id: Number(result[0].insertId) }, 201);
+  return c.json({ id: result!.id }, 201);
 });
 
 export default app;

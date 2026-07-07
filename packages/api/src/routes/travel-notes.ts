@@ -76,14 +76,14 @@ app.post('/', authRequired(), zValidator('json', createNoteSchema), async (c) =>
 
   const db = c.get('db');
 
-  const result = await db.insert(travelNotes).values({
+  const [result] = await db.insert(travelNotes).values({
     authorId: Number(c.get('userId')),
     title,
     content,
     visibility: visibility ?? 'public',
-  });
+  }).returning({ id: travelNotes.id });
 
-  return c.json({ id: Number(result[0].insertId) }, 201);
+  return c.json({ id: result!.id }, 201);
 });
 
 export default app;

@@ -100,13 +100,13 @@ app.post('/', adminRequired(), zValidator('json', createJobSchema), async (c) =>
 
   const db = c.get('db');
 
-  const result = await db.insert(crawlJobs).values({
+  const [result] = await db.insert(crawlJobs).values({
     platform,
     jobType: jobType ?? null,
     config,
-  });
+  }).returning({ id: crawlJobs.id });
 
-  const jobId = Number(result[0].insertId);
+  const jobId = result!.id;
 
   const job = await db
     .select()
