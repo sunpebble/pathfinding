@@ -4,6 +4,14 @@
 状态：已与维护者确认关键取舍，待审阅
 前置审计：本设计基于对 API / 数据库 / iOS / dashboard / 家族风格的六路并行审计（2026-07-07）。
 
+> **2026-07-08 更新**：后端部署形态由
+> `2026-07-08-backend-cloudflare-workers-migration-design.md`（Cloudflare Workers +
+> D1 + R2 + CI）接管并优先。受其影响：§6「迁移体系正规化」的 TiDB/docker 一键起库改为
+> 本地 workerd + 本地 D1；§6「表退役 rename 冷备」作废（生产走全新 D1、无数据迁移，
+> baseline 直接不含遗留表）；§10 的「uploads 本地磁盘生产化已知项」由 R2 迁移解决；
+> 「flue beta 不动」修正为采用 flue cloudflare target。其余定位、功能清单、流程与
+> iOS 数据层设计（§3-§5、§7-§8）不受影响。
+
 ## 1. 背景与诊断
 
 产品于 2026-07-06（commit 3596643）从「马蜂窝攻略爬虫聚合器」转向「个人行程规划工具」，
