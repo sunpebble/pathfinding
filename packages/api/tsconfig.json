@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "types": ["node", "@cloudflare/workers-types"],
+    "types": ["node", "@cloudflare/workers-types", "@cloudflare/vitest-pool-workers/types"],
     "outDir": "dist"
   },
   "include": ["src"]

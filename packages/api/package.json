@@ -11,7 +11,9 @@
     "build": "flue build --target cloudflare",
     "build:lib": "tsdown",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run && vitest run --config vitest.d1.config.ts",
+    "test:node": "vitest run",
+    "test:d1": "vitest run --config vitest.d1.config.ts"
   },
   "dependencies": {
     "@flue/runtime": "1.0.0-beta.9",
@@ -30,6 +32,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.18.1",
     "@cloudflare/workers-types": "5.20260707.1",
     "@flue/cli": "1.0.0-beta.9",
     "@types/node": "^26.1.0",
