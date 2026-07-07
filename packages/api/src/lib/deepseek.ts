@@ -1,5 +1,3 @@
-import { registerProvider } from '@flue/runtime';
-
 export type DeepSeekRole = 'system' | 'user' | 'assistant';
 
 export interface DeepSeekMessage {
@@ -8,6 +6,7 @@ export interface DeepSeekMessage {
 }
 
 interface DeepSeekCompletionOptions {
+  apiKey: string;
   jsonMode?: boolean;
   signal?: AbortSignal;
 }
@@ -62,30 +61,6 @@ export function getDeepSeekModelSpecifier() {
   return `deepseek/${getDeepSeekModel()}`;
 }
 
-export function registerDeepSeekProvider() {
-  registerProvider('deepseek', {
-    api: 'openai-completions',
-    baseUrl: getDeepSeekBaseURL(),
-    apiKey: process.env.DEEPSEEK_API_KEY,
-    contextWindow: 64_000,
-    maxTokens: 4_096,
-    models: {
-      [getDeepSeekModel()]: {
-        contextWindow: 64_000,
-        maxTokens: 4_096,
-      },
-    },
-  });
-}
-
-function requireDeepSeekAPIKey() {
-  const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
-  if (!apiKey) {
-    throw new DeepSeekConfigError();
-  }
-  return apiKey;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -110,9 +85,12 @@ function extractAssistantContent(payload: unknown) {
 
 export async function deepSeekCompletion(
   messages: DeepSeekMessage[],
-  options: DeepSeekCompletionOptions = {},
-) {
-  const apiKey = requireDeepSeekAPIKey();
+  opts: DeepSeekCompletionOptions,
+): Promise<string> {
+  if (!opts.apiKey) {
+    throw new DeepSeekConfigError('DeepSeek API key not configured');
+  }
+
   const body: Record<string, unknown> = {
     model: getDeepSeekModel(),
     messages,
@@ -120,18 +98,18 @@ export async function deepSeekCompletion(
     thinking: { type: 'disabled' },
   };
 
-  if (options.jsonMode) {
+  if (opts.jsonMode) {
     body.response_format = { type: 'json_object' };
   }
 
   const response = await fetch(`${getDeepSeekBaseURL()}/chat/completions`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${opts.apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
-    signal: options.signal,
+    signal: opts.signal,
   });
 
   const responseText = await response.text();

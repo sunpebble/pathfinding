@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import type { Env } from '../env.js';
 import type { DeepSeekMessage } from '../lib/deepseek.js';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -40,7 +41,7 @@ interface AIPlanTransport {
   note?: string;
 }
 
-const app = new Hono();
+const app = new Hono<{ Bindings: Env }>();
 const plans = new Map<string, AIPlanDraft>();
 
 const chatRequestSchema = z.object({
@@ -205,11 +206,11 @@ function parsePlan(content: string, sessionId: string): AIPlanDraft {
   return plan;
 }
 
-async function generatePlan(sessionId: string, prompt: string) {
+async function generatePlan(sessionId: string, prompt: string, apiKey: string) {
   const content = await deepSeekCompletion([
     { role: 'system', content: planSystemPrompt },
     { role: 'user', content: prompt },
-  ], { jsonMode: true });
+  ], { apiKey, jsonMode: true });
 
   const plan = parsePlan(content, sessionId);
   plans.set(sessionId, plan);
@@ -228,6 +229,7 @@ app.post('/chat/stream', async (c) => {
 
   try {
     const content = await deepSeekCompletion(chatMessages(parsed.data.message, parsed.data.context), {
+      apiKey: c.env.DEEPSEEK_API_KEY ?? '',
       signal: c.req.raw.signal,
     });
     return sseTokenResponse(content);
@@ -246,7 +248,7 @@ app.post('/plan/start', async (c) => {
   const sessionId = parsed.data.sessionId || createSessionId();
 
   try {
-    const { plan, response } = await generatePlan(sessionId, parsed.data.message);
+    const { plan, response } = await generatePlan(sessionId, parsed.data.message, c.env.DEEPSEEK_API_KEY ?? '');
     return c.json({
       success: true,
       sessionId,
@@ -274,7 +276,7 @@ app.post('/plan/:sessionId/feedback', async (c) => {
   }
 
   try {
-    const { plan, response } = await generatePlan(sessionId, prompt);
+    const { plan, response } = await generatePlan(sessionId, prompt, c.env.DEEPSEEK_API_KEY ?? '');
     return c.json({
       success: true,
       sessionId,
@@ -330,6 +332,7 @@ app.post('/ai/chat', async (c) => {
 
   try {
     const response = await deepSeekCompletion(chatMessages(parsed.data.message, parsed.data.context), {
+      apiKey: c.env.DEEPSEEK_API_KEY ?? '',
       signal: c.req.raw.signal,
     });
     return c.json({ success: true, response });

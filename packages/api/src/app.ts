@@ -6,7 +6,6 @@ import { logger as honoLogger } from 'hono/logger';
 /**
  * Main Hono application — mounts middleware and route modules.
  */
-import { registerDeepSeekProvider } from './lib/deepseek.js';
 import { createLogger } from './lib/logger.js';
 import { dbMiddleware } from './middleware/db.js';
 import { errorHandler } from './middleware/error-handler.js';
@@ -69,8 +68,6 @@ const log = createLogger('api');
 // ---------------------------------------------------------------------------
 
 export function createApp() {
-  registerDeepSeekProvider();
-
   const app = new Hono<{ Bindings: Env; Variables: Vars }>();
   const isProduction = process.env.NODE_ENV === 'production';
   const corsOrigin = process.env.CORS_ORIGIN ?? (isProduction ? '' : '*');

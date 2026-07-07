@@ -1,3 +1,4 @@
+import type { Env } from '../env.js';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import { chatMessages, chatSessions, getDb } from '@pathfinding/database';
@@ -13,7 +14,7 @@ import { parsePagination, parsePositiveInt } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 /**
  * Verify that a chat session exists and belongs to the given user.
@@ -165,7 +166,7 @@ app.post('/query', zValidator('json', quickChatSchema), async (c) => {
     const content = await deepSeekCompletion([
       { role: 'system', content: system },
       { role: 'user', content: message },
-    ], { signal: c.req.raw.signal });
+    ], { apiKey: c.env.DEEPSEEK_API_KEY ?? '', signal: c.req.raw.signal });
 
     return c.json({
       success: true,

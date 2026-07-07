@@ -1,3 +1,4 @@
+import type { Env } from '../env.js';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import {
@@ -19,7 +20,7 @@ import { escapeLikePattern } from '../lib/params.js';
 import { authRequired } from '../middleware/auth.js';
 import { ApiError } from '../middleware/error-handler.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 const translateTextSchema = z.object({
   text: z.string().trim().min(1),
@@ -71,11 +72,11 @@ function aiError(err: unknown) {
     : 'AI service unavailable';
 }
 
-async function translateText(text: string, from: string, to: string, signal?: AbortSignal) {
+async function translateText(text: string, from: string, to: string, opts: { apiKey: string; signal?: AbortSignal }) {
   return deepSeekCompletion([
     { role: 'system', content: `Translate from ${from} to ${to}. Return only the translated text.` },
     { role: 'user', content: text },
-  ], { signal });
+  ], opts);
 }
 
 // ── POST /text — DeepSeek text translation ─────────────
@@ -85,7 +86,7 @@ app.post('/text', zValidator('json', translateTextSchema), async (c) => {
   const from = sourceLang(body);
 
   try {
-    const translated = await translateText(body.text, from, to, c.req.raw.signal);
+    const translated = await translateText(body.text, from, to, { apiKey: c.env.DEEPSEEK_API_KEY ?? '', signal: c.req.raw.signal });
     return c.json({ success: true, data: translationBody(body.text, from, translated, to) });
   }
   catch (err) {
@@ -102,7 +103,7 @@ app.post('/batch', zValidator('json', translateBatchSchema), async (c) => {
   try {
     const data = [];
     for (const text of body.texts) {
-      const translated = await translateText(text, from, to, c.req.raw.signal);
+      const translated = await translateText(text, from, to, { apiKey: c.env.DEEPSEEK_API_KEY ?? '', signal: c.req.raw.signal });
       data.push(translationBody(text, from, translated, to));
     }
     return c.json({ success: true, data, count: data.length });
@@ -120,7 +121,7 @@ app.post('/detect', zValidator('json', detectLanguageSchema), async (c) => {
     const language = await deepSeekCompletion([
       { role: 'system', content: 'Detect the language. Return only a short BCP-47 language code such as en, zh, ja, ko, fr.' },
       { role: 'user', content: text },
-    ], { signal: c.req.raw.signal });
+    ], { apiKey: c.env.DEEPSEEK_API_KEY ?? '', signal: c.req.raw.signal });
     return c.json({ success: true, data: { language: language.trim().toLowerCase().split(/\s+/)[0] } });
   }
   catch (err) {
