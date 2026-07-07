@@ -23,7 +23,7 @@ A mobile-first travel itinerary planning application with offline support and pr
 - **Backend Services**: TypeScript API on Flue
 - **AI**: DeepSeek API through Flue/compat routes (`DEEPSEEK_API_KEY`, optional `DEEPSEEK_MODEL` / `MODEL_SPECIFIER`)
 - **Geocoding**: Nominatim (OpenStreetMap)
-- **Build**: pnpm workspaces + nx
+- **Build**: pnpm workspaces
 
 **Project Structure**:
 

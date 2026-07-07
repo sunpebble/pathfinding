@@ -1,6 +1,6 @@
 # Pathfinding
 
-Travel itinerary planning app. Nx monorepo: API (Flue/Hono + Drizzle + TiDB), Dashboard (Next.js + React 19 + Tailwind v4), iOS (SwiftUI).
+Travel itinerary planning app. pnpm workspace: API (Flue/Hono + Drizzle + TiDB), Dashboard (Next.js + React 19 + Tailwind v4), iOS (SwiftUI).
 
 ## Commands
 
