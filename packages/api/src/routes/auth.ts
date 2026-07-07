@@ -1,4 +1,5 @@
 import type { InferSelectModel } from 'drizzle-orm';
+import type { Env } from '../env.js';
 import type { AuthVariables } from '../middleware/auth.js';
 import { zValidator } from '@hono/zod-validator';
 import { authAccounts, getDb, users } from '@pathfinding/database';
@@ -22,7 +23,7 @@ import {
 } from '../services/auth.service.js';
 import { verifyAppleToken, verifyGoogleToken } from '../services/oauth.service.js';
 
-const app = new Hono<{ Variables: AuthVariables }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ── POST /signin — Email/password sign-in ──────────────
 const signinSchema = z.object({
@@ -68,7 +69,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
     const sessionId = await createSession(userId);
 
     // Generate JWT with session ID
-    const token = await generateToken(userId, email, sessionId);
+    const token = await generateToken(userId, email, c.env.JWT_SECRET, sessionId);
 
     return c.json({
       token,
@@ -126,7 +127,7 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
   const sessionId = await createSession(userId);
 
   // Generate JWT with session ID
-  const token = await generateToken(userId, email, sessionId);
+  const token = await generateToken(userId, email, c.env.JWT_SECRET, sessionId);
 
   return c.json({
     token,
@@ -155,7 +156,7 @@ app.post('/signout', authRequired(), zValidator('json', signoutSchema), async (c
   }
   else if (tokenStr) {
     try {
-      const payload = await verifyToken(tokenStr);
+      const payload = await verifyToken(tokenStr, c.env.JWT_SECRET);
       if (typeof payload.sid === 'string') {
         await deleteSession(payload.sid);
       }
@@ -186,14 +187,14 @@ app.post('/social', zValidator('json', socialLoginSchema), async (c) => {
 
   // Verify token based on provider
   if (provider === 'google') {
-    const googleUser = await verifyGoogleToken(idToken);
+    const googleUser = await verifyGoogleToken(idToken, c.env.GOOGLE_CLIENT_ID ?? '');
     providerAccountId = googleUser.sub;
     email = googleUser.email;
     userName = userName || googleUser.name;
     picture = googleUser.picture;
   }
   else {
-    const appleUser = await verifyAppleToken(idToken);
+    const appleUser = await verifyAppleToken(idToken, c.env.APPLE_CLIENT_ID);
     providerAccountId = appleUser.sub;
     email = appleUser.email;
   }
@@ -265,7 +266,7 @@ app.post('/social', zValidator('json', socialLoginSchema), async (c) => {
   const userRows = await db.select().from(users).where(eq(users.id, Number(userId))).limit(1);
   const userEmail = userRows[0]?.email ?? email ?? '';
 
-  const token = await generateToken(userId, userEmail, sessionId);
+  const token = await generateToken(userId, userEmail, c.env.JWT_SECRET, sessionId);
 
   return c.json({
     token,

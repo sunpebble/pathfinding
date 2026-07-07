@@ -1,11 +1,12 @@
 /**
  * Health check routes.
  */
+import type { Env } from '../env.js';
 import { getDb } from '@pathfinding/database';
 import { sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 
-const app = new Hono();
+const app = new Hono<{ Bindings: Env }>();
 
 /** GET / — basic liveness probe. */
 app.get('/', (c) => {
@@ -31,7 +32,7 @@ app.get('/ready', async (c) => {
 
   return c.json({
     status: 'ready',
-    version: process.env.APP_VERSION ?? '0.0.1',
+    version: c.env.APP_VERSION ?? '0.0.1',
     timestamp: new Date().toISOString(),
   });
 });

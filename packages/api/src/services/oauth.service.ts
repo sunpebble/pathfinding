@@ -19,16 +19,21 @@ const appleJWKS = jose.createRemoteJWKSet(
 /**
  * Verify a Google ID token using Google's JWKS endpoint.
  * Validates the JWT signature, issuer, and audience.
+ *
+ * @param idToken  Google 颁发的 ID token。
+ * @param clientId 期望的 audience（由调用方从 `c.env.GOOGLE_CLIENT_ID` 透传）。
  */
-export async function verifyGoogleToken(idToken: string): Promise<GoogleUserInfo> {
-  const expectedClientId = process.env.GOOGLE_CLIENT_ID;
-  if (!expectedClientId) {
-    throw new Error('GOOGLE_CLIENT_ID 环境变量是 Google 令牌验证所必需的');
+export async function verifyGoogleToken(
+  idToken: string,
+  clientId: string,
+): Promise<GoogleUserInfo> {
+  if (!clientId) {
+    throw new Error('GOOGLE_CLIENT_ID 是 Google 令牌验证所必需的（通过 c.env 透传）');
   }
 
   const { payload } = await jose.jwtVerify(idToken, googleJWKS, {
     issuer: ['accounts.google.com', 'https://accounts.google.com'],
-    audience: expectedClientId,
+    audience: clientId,
   });
 
   if (!payload.sub || typeof payload.sub !== 'string') {
@@ -50,18 +55,23 @@ export async function verifyGoogleToken(idToken: string): Promise<GoogleUserInfo
 /**
  * Verify an Apple ID token using Apple's JWKS endpoint.
  * Validates the JWT signature, issuer, and audience.
+ *
+ * @param identityToken Apple 颁发的 identity token。
+ * @param clientId      期望的 audience（由调用方从 `c.env.APPLE_CLIENT_ID` 透传）。
+ *                      未提供时跳过 audience 校验（保持原行为）。
  */
-export async function verifyAppleToken(identityToken: string): Promise<{
+export async function verifyAppleToken(
+  identityToken: string,
+  clientId?: string,
+): Promise<{
   sub: string;
   email?: string;
 }> {
-  const expectedClientId = process.env.APPLE_CLIENT_ID;
-
   const verifyOptions: jose.JWTVerifyOptions = {
     issuer: 'https://appleid.apple.com',
   };
-  if (expectedClientId) {
-    verifyOptions.audience = expectedClientId;
+  if (clientId) {
+    verifyOptions.audience = clientId;
   }
 
   const { payload } = await jose.jwtVerify(

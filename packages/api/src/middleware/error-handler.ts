@@ -13,6 +13,8 @@ import { createLogger } from '../lib/logger.js';
 
 const log = createLogger('error-handler');
 
+// NODE_ENV 在模块加载期解析一次：是否隐藏错误详情是启动期决定，非密钥，
+// 不会随请求变化，故保留 process.env 读取（与 lib/logger.ts 同处理）。
 const isProduction = process.env.NODE_ENV === 'production';
 
 // ---------------------------------------------------------------------------

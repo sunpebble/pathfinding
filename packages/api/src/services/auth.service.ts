@@ -8,11 +8,14 @@
  * Interface surface:
  *   hashPassword(plain) → hash
  *   verifyPassword(plain, stored) → boolean
- *   generateToken(userId, email, sessionId?) → JWT
- *   verifyToken(token) → payload
+ *   generateToken(userId, email, secret, sessionId?) → JWT
+ *   verifyToken(token, secret) → payload
  *   createSession(userId) → sessionId
  *   deleteSession(sessionId) → void
  *   isSessionValid(sessionId) → boolean
+ *
+ * 注意：`secret`（JWT 签名密钥）由调用方通过参数透传，来源为请求
+ * 级 `c.env.JWT_SECRET`（见 middleware/auth.ts、routes/auth.ts）。
  */
 import { Buffer } from 'node:buffer';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
@@ -21,20 +24,12 @@ import { and, eq, gt } from 'drizzle-orm';
 import * as jose from 'jose';
 
 // ---------------------------------------------------------------------------
-// JWT secret — resolved once, cached.
+// JWT helpers
 // ---------------------------------------------------------------------------
 
-let _jwtSecret: Uint8Array | null = null;
-
-function getJwtSecret(): Uint8Array {
-  if (!_jwtSecret) {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw new Error('JWT_SECRET 环境变量是必需的');
-    }
-    _jwtSecret = new TextEncoder().encode(secret);
-  }
-  return _jwtSecret;
+/** 将字符串密钥编码为 jose 所需的 Uint8Array。调用方负责保证非空。 */
+function encodeSecret(secret: string): Uint8Array {
+  return new TextEncoder().encode(secret);
 }
 
 // ---------------------------------------------------------------------------
@@ -169,10 +164,16 @@ const JWT_EXPIRATION = '30d';
  * If a `sessionId` is provided it is included as the `sid` claim,
  * enabling server-side revocation. Tokens without `sid` remain valid
  * but cannot be revoked (backward compatibility).
+ *
+ * @param userId    用户 ID（写入 `sub` 声明）。
+ * @param email     用户邮箱（写入 `email` 声明）。
+ * @param secret    JWT 签名密钥（由调用方从 `c.env.JWT_SECRET` 透传）。
+ * @param sessionId 可选的服务端会话 ID（写入 `sid` 声明，支持吊销）。
  */
 export async function generateToken(
   userId: string,
   email: string,
+  secret: string,
   sessionId?: string,
 ): Promise<string> {
   const claims: Record<string, unknown> = { sub: userId, email };
@@ -184,14 +185,20 @@ export async function generateToken(
     .setProtectedHeader({ alg: JWT_ALGORITHM })
     .setIssuedAt()
     .setExpirationTime(JWT_EXPIRATION)
-    .sign(getJwtSecret());
+    .sign(encodeSecret(secret));
 }
 
 /**
  * Verify and decode a JWT. Throws on invalid/expired tokens.
+ *
+ * @param token  待校验的 JWT 字符串。
+ * @param secret JWT 签名密钥（由调用方从 `c.env.JWT_SECRET` 透传）。
  */
-export async function verifyToken(token: string): Promise<jose.JWTPayload> {
-  const { payload } = await jose.jwtVerify(token, getJwtSecret(), {
+export async function verifyToken(
+  token: string,
+  secret: string,
+): Promise<jose.JWTPayload> {
+  const { payload } = await jose.jwtVerify(token, encodeSecret(secret), {
     algorithms: [JWT_ALGORITHM],
   });
   return payload;

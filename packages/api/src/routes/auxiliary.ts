@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import type { Env } from '../env.js';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
@@ -14,7 +15,7 @@ interface WeatherCacheEntry {
   timestamp: number;
 }
 
-const app = new Hono();
+const app = new Hono<{ Bindings: Env }>();
 const weatherCache = new Map<string, WeatherCacheEntry>();
 const weatherCacheTTL = 30 * 60 * 1000;
 
@@ -170,7 +171,7 @@ app.get('/weather/forecast', async (c) => {
     return jsonError(c, 400, 'Valid lat and lon required');
   }
 
-  const apiKey = process.env.OPENWEATHERMAP_API_KEY?.trim();
+  const apiKey = c.env.OPENWEATHERMAP_API_KEY?.trim();
   if (!apiKey) {
     return jsonError(c, 503, 'OpenWeatherMap API key not configured');
   }
