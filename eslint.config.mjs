@@ -28,6 +28,10 @@ export default antfu({
     '.planning/**',
     'dist/**',
     '**/dist/**',
+    // Flue + Wrangler build/deploy intermediates (generated, not source)
+    '**/.flue-vite/**',
+    '**/.flue-vite.wrangler.jsonc',
+    '**/.wrangler/**',
     'node_modules/**',
     '.nx/**',
     '.next/**',
