@@ -22,7 +22,7 @@ export function convertKeysToSnakeCase(obj: unknown): unknown {
   if (typeof obj === 'object' && !(obj instanceof Date)) {
     const converted: Record<string, unknown> = {};
     for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (Object.hasOwn(obj, key)) {
         const newKey = toSnakeCase(key);
         converted[newKey] = convertKeysToSnakeCase(
           (obj as Record<string, unknown>)[key],

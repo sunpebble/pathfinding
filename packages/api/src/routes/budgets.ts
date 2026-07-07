@@ -56,7 +56,7 @@ const createBudgetSchema = z.object({
   itineraryId: z.number(),
   totalBudget: z.number(),
   currency: z.string().optional(),
-  categoryBudgets: z.record(z.number()).optional(),
+  categoryBudgets: z.record(z.string(), z.number()).optional(),
 });
 
 app.post('/', authRequired(), zValidator('json', createBudgetSchema), async (c) => {

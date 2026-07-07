@@ -18,10 +18,10 @@ import { ApiError } from '../middleware/error-handler.js';
 const createDatasetSchema = z.object({
   name: z.string().min(1),
   version: z.number(),
-  generationParams: z.record(z.unknown()).optional(),
-  outputFormats: z.record(z.unknown()).optional(),
+  generationParams: z.record(z.string(), z.unknown()).optional(),
+  outputFormats: z.record(z.string(), z.unknown()).optional(),
   status: z.string().optional(),
-  statistics: z.record(z.unknown()).optional(),
+  statistics: z.record(z.string(), z.unknown()).optional(),
 });
 
 const deleteDatasetSchema = z.object({
@@ -31,8 +31,8 @@ const deleteDatasetSchema = z.object({
 const updateDatasetSchema = z.object({
   id: z.number(),
   status: z.string().optional(),
-  statistics: z.record(z.unknown()).optional(),
-  storagePaths: z.record(z.unknown()).optional(),
+  statistics: z.record(z.string(), z.unknown()).optional(),
+  storagePaths: z.record(z.string(), z.unknown()).optional(),
   generatedAt: z.string().optional(),
 });
 

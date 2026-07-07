@@ -1,18 +1,13 @@
 echo "Running quality checks before push..."
 
-# TODO: Re-enable full typecheck after fixing pre-existing type errors in:
-# - packages/utils/src/geoUtils.ts (strict null checks)
-# - packages/constants/src/transportModes.ts (missing bus/subway)
-# - packages/convex (requires convex dev to generate types)
-# - apps/crawler and apps/dashboard (convex strict mode)
-# For now, only run typecheck on packages without pre-existing issues
-pnpm --filter @pathfinding/logger typecheck || {
+pnpm --filter @pathfinding/types run build || exit 1
+
+pnpm typecheck || {
   echo "TypeScript check failed. Please fix type errors before pushing."
   exit 1
 }
 
-# Run tests
-pnpm test || {
+pnpm -r --if-present --filter '!@pathfinding/dashboard' run test || {
   echo "Tests failed. Please fix failing tests before pushing."
   exit 1
 }

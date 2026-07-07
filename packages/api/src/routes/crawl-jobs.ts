@@ -21,7 +21,7 @@ import { batchImportGuides, discoverNewGuides, MAFENGWO_CRAWLER_DISABLED_MESSAGE
 const createJobSchema = z.object({
   name: z.string().min(1),
   platform: z.string().min(1),
-  config: z.record(z.unknown()),
+  config: z.record(z.string(), z.unknown()),
   jobType: z.string().optional(),
   scheduleCron: z.string().optional(),
 });
@@ -36,13 +36,13 @@ const startJobSchema = z.object({
 
 const completeJobSchema = z.object({
   id: z.number(),
-  statistics: z.record(z.unknown()).optional(),
+  statistics: z.record(z.string(), z.unknown()).optional(),
 });
 
 const failJobSchema = z.object({
   id: z.number(),
   errorMessage: z.string().min(1),
-  statistics: z.record(z.unknown()).optional(),
+  statistics: z.record(z.string(), z.unknown()).optional(),
 });
 
 const backfillJobsSchema = z.object({
