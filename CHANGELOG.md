@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/sunpebble/pathfinding/compare/v1.2.4...v1.3.0) (2026-07-07)
+
+
+### Features
+
+* **ios:** glassify remaining button/card call sites and drop legacy styles ([eaec788](https://github.com/sunpebble/pathfinding/commit/eaec788d5ce709dc8686772d4a522dd9da4daf5f))
+
+
+### Bug Fixes
+
+* **ios:** migrate deprecated MKPlacemark APIs to MKMapItem location/address ([3d82586](https://github.com/sunpebble/pathfinding/commit/3d82586187844a9985c6288d89eba0240304f2fa))
+
 ## [1.2.4](https://github.com/sunpebble/pathfinding/compare/v1.2.3...v1.2.4) (2026-07-07)
 
 
