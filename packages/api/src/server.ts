@@ -1,4 +1,6 @@
 /**
+ * @deprecated Node-only server entry. Dev/prod now run via Flue's `--target cloudflare` (workerd). Retained only as a reference for ad-hoc Node scripts.
+ *
  * HTTP server entry point — starts the Hono app on @hono/node-server.
  */
 import { serve } from '@hono/node-server';
