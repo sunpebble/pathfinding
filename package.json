@@ -22,7 +22,7 @@
     "build:packages": "pnpm --filter @pathfinding/types run build",
     "build:apps": "pnpm --filter @pathfinding/dashboard run build",
     "dev": "pnpm dev:db && pnpm --parallel --filter @pathfinding/api --filter @pathfinding/dashboard run dev",
-    "dev:db": "docker-compose -f docker-compose.dev.yml up -d tidb && pnpm --filter @pathfinding/database dev:ensure-db",
+    "dev:db": "echo \"DB is local D1 via 'pnpm dev:api' (flue --target cloudflare); no separate DB boot needed.\"",
     "dev:api": "pnpm --filter @pathfinding/api dev",
     "dev:dashboard": "pnpm --filter @pathfinding/dashboard dev",
     "db:generate": "pnpm --filter @pathfinding/database drizzle-kit generate",
