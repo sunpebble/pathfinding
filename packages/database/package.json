@@ -19,12 +19,12 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.44.0",
-    "mysql2": "^3.14.0"
+    "mysql2": "^3.22.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20260702.1",
-    "@types/node": "^22.0.0",
-    "drizzle-kit": "^0.31.0",
-    "typescript": "^5.9.3"
+    "@cloudflare/workers-types": "5.20260707.1",
+    "@types/node": "^26.1.0",
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^6.0.3"
   }
 }
