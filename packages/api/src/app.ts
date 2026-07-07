@@ -69,20 +69,15 @@ const log = createLogger('api');
 
 export function createApp() {
   const app = new Hono<{ Bindings: Env; Variables: Vars }>();
-  const isProduction = process.env.NODE_ENV === 'production';
-  const corsOrigin = process.env.CORS_ORIGIN ?? (isProduction ? '' : '*');
-
-  if (isProduction && !process.env.CORS_ORIGIN) {
-    throw new Error('CORS_ORIGIN must be set in production');
-  }
 
   // ── Global middleware ──────────────────────────────────
 
-  // CORS — allow all origins in dev, restrict in production
+  // CORS — read origin per-request from c.env.CORS_ORIGIN (Workers injects vars/secrets
+  // per-request into env, not at module load). Defaults to '*' in dev when unset.
   app.use(
     '*',
     cors({
-      origin: corsOrigin,
+      origin: (_origin, c) => c.env.CORS_ORIGIN ?? '*',
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Content-Type', 'Authorization'],
       exposeHeaders: ['X-Request-Id'],
