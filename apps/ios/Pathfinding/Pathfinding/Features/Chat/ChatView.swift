@@ -4,6 +4,8 @@ import SwiftUI
 
 /// List of chat sessions with the AI assistant
 struct ChatSessionListView: View {
+  @EnvironmentObject private var authViewModel: AuthViewModel
+  @Environment(AppState.self) private var appState
   @State private var store = ChatStore()
   @State private var showNewSessionSheet = false
   @State private var showDeleteAlert = false
@@ -12,59 +14,79 @@ struct ChatSessionListView: View {
   @AppStorage("hasShownSwipeHint") private var hasShownSwipeHint = false
 
   var body: some View {
-    NavigationStack {
-      ZStack {
-        // Explorer background
-        ExplorerPageBackground(style: .list, accentColor: .cyan)
+    if !authViewModel.isAuthenticated {
+      // ponytail: guest-mode users can't call chat API — gate before .task fires.
+      ContentUnavailableView {
+        Label("chat.login_required".localized, systemImage: "bubble.left.and.bubble.right.fill")
+      } description: {
+        Text("chat.login_required_description".localized)
+      } actions: {
+        Button {
+          appState.selectedTab = .profile
+        } label: {
+          Label("chat.go_login".localized, systemImage: "person.crop.circle.badge.plus")
+        }
+        .buttonStyle(.borderedProminent)
+      }
+    } else {
+      NavigationStack {
+        ZStack {
+          // Explorer background
+          ExplorerPageBackground(style: .list, accentColor: .cyan)
 
-        Group {
-          if store.isLoadingSessions && store.sessions.isEmpty {
-            LoadingView()
-          } else if store.sessions.isEmpty {
-            EmptySessionsView {
+          Group {
+            if store.isLoadingSessions && store.sessions.isEmpty && store.errorMessage == nil {
+              LoadingView()
+            } else if store.errorMessage != nil && store.sessions.isEmpty {
+              ChatErrorRetryView(message: store.errorMessage!) {
+                Task { await store.fetchSessions() }
+              }
+            } else if store.sessions.isEmpty {
+              EmptySessionsView {
+                showNewSessionSheet = true
+              }
+            } else {
+              sessionsList
+            }
+          }
+        }
+        .navigationTitle("chat.title".localized)
+        .toolbar {
+          ToolbarItem(placement: .primaryAction) {
+            Button {
               showNewSessionSheet = true
+            } label: {
+              Image(systemName: "plus.circle.fill")
             }
-          } else {
-            sessionsList
+            .accessibilityLabel("chat.new_session".localized)
+            .accessibilityHint("chat.new_session_hint".localized)
           }
         }
-      }
-      .navigationTitle("chat.title".localized)
-      .toolbar {
-        ToolbarItem(placement: .primaryAction) {
-          Button {
-            showNewSessionSheet = true
-          } label: {
-            Image(systemName: "plus.circle.fill")
+        .task {
+          await store.fetchSessions()
+        }
+        .refreshable {
+          await store.fetchSessions()
+        }
+        .sheet(isPresented: $showNewSessionSheet) {
+          NewSessionSheet(store: store) {
+            showNewSessionSheet = false
           }
-          .accessibilityLabel("chat.new_session".localized)
-          .accessibilityHint("chat.new_session_hint".localized)
         }
-      }
-      .task {
-        await store.fetchSessions()
-      }
-      .refreshable {
-        await store.fetchSessions()
-      }
-      .sheet(isPresented: $showNewSessionSheet) {
-        NewSessionSheet(store: store) {
-          showNewSessionSheet = false
-        }
-      }
-      .alert("chat.delete_session".localized, isPresented: $showDeleteAlert) {
-        Button("common.cancel".localized, role: .cancel) {
-          sessionToDelete = nil
-        }
-        Button("common.delete".localized, role: .destructive) {
-          if let session = sessionToDelete {
-            Task {
-              _ = await store.deleteSession(session)
+        .alert("chat.delete_session".localized, isPresented: $showDeleteAlert) {
+          Button("common.cancel".localized, role: .cancel) {
+            sessionToDelete = nil
+          }
+          Button("common.delete".localized, role: .destructive) {
+            if let session = sessionToDelete {
+              Task {
+                _ = await store.deleteSession(session)
+              }
             }
           }
+        } message: {
+          Text("chat.delete_session_message".localized)
         }
-      } message: {
-        Text("chat.delete_session_message".localized)
       }
     }
   }
@@ -188,6 +210,27 @@ private struct LoadingView: View {
   }
 }
 
+// MARK: - Error Retry View
+
+private struct ChatErrorRetryView: View {
+  let message: String
+  let onRetry: () -> Void
+
+  var body: some View {
+    ContentUnavailableView {
+      Label("error.load_failed".localized, systemImage: "exclamationmark.triangle.fill")
+    } description: {
+      Text(message)
+        .foregroundStyle(.secondary)
+    } actions: {
+      Button(action: onRetry) {
+        Label("common.retry".localized, systemImage: "arrow.clockwise")
+      }
+      .buttonStyle(.borderedProminent)
+    }
+  }
+}
+
 // MARK: - New Session Sheet
 
 private struct NewSessionSheet: View {
@@ -301,6 +344,7 @@ struct ChatConversationView: View {
   let store: ChatStore
 
   @State private var inputText = ""
+  @State private var failedMessage: String?
   @FocusState private var isInputFocused: Bool
 
   var body: some View {
@@ -333,6 +377,23 @@ struct ChatConversationView: View {
 
       Divider()
 
+      // Send-failure banner (tap to retry the same content)
+      if let failed = failedMessage {
+        Button {
+          retrySend(failed)
+        } label: {
+          HStack(spacing: DesignTokens.Spacing.xs) {
+            Image(systemName: "exclamationmark.circle.fill")
+            Text("chat.send_failed_retry".localized)
+          }
+          .font(.footnote)
+          .fontWeight(.medium)
+          .foregroundStyle(.red)
+          .padding(.vertical, DesignTokens.Spacing.xs)
+        }
+        .accessibilityLabel("chat.send_failed_retry".localized)
+      }
+
       // Quick Replies
       if store.messages.isEmpty && !store.isSending {
         QuickRepliesView { suggestion in
@@ -361,8 +422,18 @@ struct ChatConversationView: View {
     guard !content.isEmpty else { return }
 
     inputText = ""
+    failedMessage = nil
     Task {
-      _ = await store.sendMessage(content)
+      let ok = await store.sendMessage(content)
+      if !ok { failedMessage = content }
+    }
+  }
+
+  private func retrySend(_ content: String) {
+    failedMessage = nil
+    Task {
+      let ok = await store.sendMessage(content)
+      if !ok { failedMessage = content }
     }
   }
 }
@@ -544,4 +615,6 @@ private struct InputBar: View {
 
 #Preview {
   ChatSessionListView()
+    .environmentObject(AuthViewModel())
+    .environment(AppState())
 }

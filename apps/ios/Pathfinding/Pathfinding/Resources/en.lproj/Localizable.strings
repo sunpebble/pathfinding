@@ -582,3 +582,7 @@
 "chat.quick_reply.get_tips" = "Travel tips";
 "chat.quick_reply.optimize_route" = "Optimize route";
 "chat.quick_reply.check_weather" = "Check weather";
+"chat.login_required" = "Sign in to use AI assistant";
+"chat.login_required_description" = "Sign in to view your chat history and talk to the AI assistant.";
+"chat.go_login" = "Go to Login";
+"chat.send_failed_retry" = "Send failed, tap to retry";

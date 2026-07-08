@@ -582,3 +582,7 @@
 "chat.quick_reply.get_tips" = "旅行小贴士";
 "chat.quick_reply.optimize_route" = "优化路线";
 "chat.quick_reply.check_weather" = "查看天气";
+"chat.login_required" = "请登录后使用 AI 助手";
+"chat.login_required_description" = "登录后即可查看历史会话并与 AI 对话。";
+"chat.go_login" = "去登录";
+"chat.send_failed_retry" = "发送失败，点击重试";

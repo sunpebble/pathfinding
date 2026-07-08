@@ -12,7 +12,8 @@ final class ChatStore {
   private(set) var messages: [ChatMessage] = []
 
   private(set) var isLoadingSessions = false
-  private(set) var isLoadingMessages = false
+  // ponytail: write-only outside re-entry guard — private, no external readers.
+  private var isLoadingMessages = false
   private(set) var isSending = false
   private(set) var isCreatingSession = false
 
@@ -168,12 +169,6 @@ final class ChatStore {
   }
 
   // MARK: - Helper Methods
-
-  /// Clear current session state
-  func clearCurrentSession() {
-    currentSession = nil
-    messages = []
-  }
 
   private func removeSessionLocally(_ sessionId: Int) {
     if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
