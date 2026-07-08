@@ -128,6 +128,68 @@ app.get('/sessions/:id/messages', authRequired(), async (c) => {
   return c.json({ data: convertKeysToSnakeCase(results) });
 });
 
+// ── POST /sessions/:id/messages — Send a message and get an in-session AI reply ──
+const sendSessionMessageSchema = z.object({ content: z.string().trim().min(1) });
+
+app.post('/sessions/:id/messages', authRequired(), zValidator('json', sendSessionMessageSchema), async (c) => {
+  const userId = Number(c.get('userId'));
+  const sessionId = parsePositiveInt(c.req.param('id'));
+  if (!sessionId) {
+    return c.json({ error: '无效的会话ID' }, 400);
+  }
+
+  const { content } = c.req.valid('json');
+  const db = c.get('db');
+  await requireOwnedSession(db, sessionId, userId);
+
+  // 1) Take the latest ≤20 messages as context.
+  const history = await db
+    .select()
+    .from(chatMessages)
+    .where(eq(chatMessages.sessionId, sessionId))
+    .orderBy(desc(chatMessages.createdAt))
+    .limit(20);
+
+  const system = '你是 Sunpebble Trips 的旅行助手。结合会话历史，回答简洁、具体、可执行。';
+  const promptMessages = [
+    { role: 'system' as const, content: system },
+    ...history.slice().reverse().map(m => ({ role: m.role as 'system' | 'user' | 'assistant', content: m.content })),
+    { role: 'user' as const, content },
+  ];
+
+  // 2) Fetch the AI reply first; only persist on success (D1 has no cross-fetch transactions).
+  let reply: string;
+  try {
+    reply = await deepSeekCompletion(promptMessages, {
+      apiKey: c.env.DEEPSEEK_API_KEY ?? '',
+      signal: c.req.raw.signal,
+    });
+  }
+  catch {
+    return c.json({ error: 'AI service unavailable' }, 503);
+  }
+
+  // 3) Persist the user message and the assistant reply, then bump lastMessageAt.
+  const [userRow] = await db
+    .insert(chatMessages)
+    .values({ sessionId, role: 'user', content })
+    .returning();
+  const [assistantRow] = await db
+    .insert(chatMessages)
+    .values({ sessionId, role: 'assistant', content: reply })
+    .returning();
+
+  await db
+    .update(chatSessions)
+    .set({ lastMessageAt: new Date() })
+    .where(eq(chatSessions.id, sessionId));
+
+  return c.json(
+    { data: { user_message: convertKeysToSnakeCase(userRow!), assistant_message: convertKeysToSnakeCase(assistantRow!) } },
+    201,
+  );
+});
+
 // ── POST /messages — Add a message to a session ────────
 const createMessageSchema = z.object({
   sessionId: z.number(),

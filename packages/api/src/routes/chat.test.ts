@@ -144,6 +144,78 @@ describe('chat routes', () => {
     });
   });
 
+  describe('pOST /api/chat/sessions/:id/messages (send-and-reply)', () => {
+    it('persists user+assistant messages and returns both', async () => {
+      stubDeepSeek('sure- reply');
+      const ownChain = createSelectChain([{ userId: 1 }]);
+      const historyChain = createOrderBySelectChain([]);
+      mockDb.select.mockReturnValueOnce(ownChain).mockReturnValueOnce(historyChain);
+      mockDb.insert
+        .mockReturnValueOnce({
+          values: () => ({
+            returning: vi.fn().mockResolvedValue([{ id: 10, sessionId: 5, role: 'user', content: 'hi', createdAt: new Date() }]),
+          }),
+        })
+        .mockReturnValueOnce({
+          values: () => ({
+            returning: vi.fn().mockResolvedValue([{ id: 11, sessionId: 5, role: 'assistant', content: 'sure- reply', createdAt: new Date() }]),
+          }),
+        });
+      mockDb.update.mockReturnValueOnce(createUpdateChain());
+
+      const response = await requestWithAuth(
+        createApp(),
+        '/api/chat/sessions/5/messages',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: 'hi' }),
+        },
+        {},
+        { DEEPSEEK_API_KEY: 'test-key' },
+      );
+      expect(response.status).toBe(201);
+      const body = await response.json();
+      expect(body.data.user_message.content).toBe('hi');
+      expect(body.data.assistant_message.content).toBe('sure- reply');
+      expect(mockDb.insert).toHaveBeenCalledTimes(2);
+    });
+
+    it('returns 503 and persists nothing when AI fails', async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => {
+        throw new Error('upstream down');
+      }));
+      const ownChain = createSelectChain([{ userId: 1 }]);
+      const historyChain = createOrderBySelectChain([]);
+      mockDb.select.mockReturnValueOnce(ownChain).mockReturnValueOnce(historyChain);
+
+      const response = await requestWithAuth(
+        createApp(),
+        '/api/chat/sessions/5/messages',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: 'hi' }),
+        },
+        {},
+        { DEEPSEEK_API_KEY: 'test-key' },
+      );
+      expect(response.status).toBe(503);
+      expect(mockDb.insert).not.toHaveBeenCalled();
+    });
+
+    it('rejects non-owner with 403', async () => {
+      const ownChain = createSelectChain([{ userId: 999 }]);
+      mockDb.select.mockReturnValueOnce(ownChain);
+      const response = await requestWithAuth(createApp(), '/api/chat/sessions/5/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: 'hi' }),
+      });
+      expect(response.status).toBe(403);
+    });
+  });
+
   describe('pOST /api/chat/messages', () => {
     it('creates a message', async () => {
       const sessionChain = createSelectChain([{ userId: 1 }]);
