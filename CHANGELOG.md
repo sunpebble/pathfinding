@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.4.0](https://github.com/sunpebble/pathfinding/compare/v1.3.2...v1.4.0) (2026-07-08)
+
+
+### Features
+
+* **api:** add Env bindings type and per-request db injection middleware ([cc40638](https://github.com/sunpebble/pathfinding/commit/cc40638efada02c03344221e446c9ba8a9cd890b))
+* **api:** add GET /sessions/:id/messages (session-scoped message list) ([c5af5d6](https://github.com/sunpebble/pathfinding/commit/c5af5d6979cd1d94e99a98fe06435400af9668d4))
+* **api:** add POST /sessions/:id/messages send-and-reply (persist on AI success) ([62e8412](https://github.com/sunpebble/pathfinding/commit/62e84125e6ed3a89e67a2a78fbf3bb00b04c9781))
+* **ios:** chat auth gate, error fallback, no-clear-on-refresh, send-fail retry ([0f42b26](https://github.com/sunpebble/pathfinding/commit/0f42b268471f0e1daf777dfe58f1498740f65e73))
+
+
+### Bug Fixes
+
+* **api:** backfill real D1 database_id in wrangler.jsonc ([47241cf](https://github.com/sunpebble/pathfinding/commit/47241cf4195f61999e3e4990978a557abb87873e))
+* **api:** keep GET /sessions/:id/messages additive — revert toChatDto refactor of existing routes ([356fcd7](https://github.com/sunpebble/pathfinding/commit/356fcd7f99349b9935d2d3020a3a76372e5ffcc6))
+* **api:** lazy rate-limit sweep, no top-level setInterval ([6387af0](https://github.com/sunpebble/pathfinding/commit/6387af0c8a7dedee94127138d656f980628d57c2))
+* **api:** read CORS origin per-request from c.env (was wide-open on Workers) ([a15397b](https://github.com/sunpebble/pathfinding/commit/a15397bad874bc8e806ee11bd193a035fd2cd8fd))
+* **api:** register dbMiddleware before rate-limit so DB limiter has c.get('db') ([d962d6c](https://github.com/sunpebble/pathfinding/commit/d962d6c02f97d6995d04fa8eee8c1ea022539f0d))
+* **api:** route pino logs to console (fs.write incompatible with Workers) ([277523b](https://github.com/sunpebble/pathfinding/commit/277523b2add431704262f5b6dcfe9896f7178c29))
+* **ci:** add wrangler devDependency so deploy workflow can invoke it ([165048c](https://github.com/sunpebble/pathfinding/commit/165048c56cc82805c776d4a603be5d66ca6459db))
+* **database:** import D1Database explicitly so consumers typecheck without ambient globals ([84e534a](https://github.com/sunpebble/pathfinding/commit/84e534ada97160d2392ab9031fc3e934fb148f84))
+* **database:** unbreak root dev:db script after D1 migration (no TiDB boot) ([c05c198](https://github.com/sunpebble/pathfinding/commit/c05c19823ce58166a966918a7d6be69dd88b0f6c))
+* **ios:** drop phantom messageCount, nullable lastMessageAt, real-shape fixtures ([deb805f](https://github.com/sunpebble/pathfinding/commit/deb805fe9e9920082c07484d0dd788808d481fb8))
+* **ios:** localize remaining hardcoded-Chinese screens to en/zh catalog ([5d164e4](https://github.com/sunpebble/pathfinding/commit/5d164e48797904f633acb09d98cf44c8f5c25f0a))
+* **ios:** resolve smoke-test UI issues in itinerary list and AI planner ([9cb18fe](https://github.com/sunpebble/pathfinding/commit/9cb18fe3bb6ca0f73781762ce8798022957fdec8))
+
 ## [1.3.2](https://github.com/sunpebble/pathfinding/compare/v1.3.1...v1.3.2) (2026-07-07)
 
 
