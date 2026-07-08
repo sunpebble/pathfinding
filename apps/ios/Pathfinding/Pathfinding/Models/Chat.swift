@@ -2,57 +2,31 @@ import Foundation
 
 // MARK: - Chat Session Model
 
-/// Chat session with AI travel assistant
+/// Chat session with AI travel assistant.
+/// Decodes the API shape: snake_case keys, numeric id, ISO8601 dates.
 struct ChatSession: Codable, Identifiable, Hashable {
-  let id: String
-  let userId: String
+  let id: Int
+  let userId: Int
   let title: String
-  let itineraryId: String?
-  let guideId: String?
-  let context: String?
   let messageCount: Int
-  let lastMessageAt: Double
+  let lastMessageAt: Date
   let isArchived: Bool
-  let createdAt: Double
-
-  // Enriched fields from server
-  let itinerary: LinkedItinerary?
-  let guide: LinkedGuide?
-
-  struct LinkedItinerary: Codable, Hashable {
-    let id: String
-    let title: String
-  }
-
-  struct LinkedGuide: Codable, Hashable {
-    let id: String
-    let title: String
-  }
+  let createdAt: Date
 
   enum CodingKeys: String, CodingKey {
-    case id = "_id"
-    case userId = "userId"
+    case id
+    case userId = "user_id"
     case title
-    case itineraryId = "itineraryId"
-    case guideId = "guideId"
-    case context
-    case messageCount = "messageCount"
-    case lastMessageAt = "lastMessageAt"
-    case isArchived = "isArchived"
-    case createdAt = "createdAt"
-    case itinerary
-    case guide
+    case messageCount = "message_count"
+    case lastMessageAt = "last_message_at"
+    case isArchived = "is_archived"
+    case createdAt = "created_at"
   }
 
   // MARK: - Computed Properties
 
-  var lastMessageDate: Date {
-    Date(timeIntervalSince1970: lastMessageAt / 1000)
-  }
-
-  var createdDate: Date {
-    Date(timeIntervalSince1970: createdAt / 1000)
-  }
+  var lastMessageDate: Date { lastMessageAt }
+  var createdDate: Date { createdAt }
 
   var timeAgo: String {
     lastMessageDate.relativeFormatted(localeIdentifier: nil)
@@ -71,14 +45,14 @@ struct ChatSession: Codable, Identifiable, Hashable {
 
 // MARK: - Chat Message Model
 
-/// Single chat message
+/// Single chat message.
+/// Decodes the API shape: snake_case keys, numeric id, ISO8601 dates.
 struct ChatMessage: Codable, Identifiable, Hashable {
-  let id: String
-  let sessionId: String
+  let id: Int
+  let sessionId: Int
   let role: MessageRole
   let content: String
-  let metadata: MessageMetadata?
-  let createdAt: Double
+  let createdAt: Date
 
   enum MessageRole: String, Codable {
     case user
@@ -87,19 +61,16 @@ struct ChatMessage: Codable, Identifiable, Hashable {
   }
 
   enum CodingKeys: String, CodingKey {
-    case id = "_id"
-    case sessionId = "sessionId"
+    case id
+    case sessionId = "session_id"
     case role
     case content
-    case metadata
-    case createdAt = "createdAt"
+    case createdAt = "created_at"
   }
 
   // MARK: - Computed Properties
 
-  var createdDate: Date {
-    Date(timeIntervalSince1970: createdAt / 1000)
-  }
+  var createdDate: Date { createdAt }
 
   var timeString: String {
     let formatter = DateFormatter()
@@ -118,171 +89,51 @@ struct ChatMessage: Codable, Identifiable, Hashable {
   }
 }
 
-// MARK: - Message Metadata
-
-/// Rich metadata in assistant responses
-struct MessageMetadata: Codable, Hashable {
-  let pois: [RecommendedPoi]?
-  let itineraryChanges: [ItineraryChange]?
-  let quickActions: [QuickAction]?
-  let sources: [String]?
-
-  struct RecommendedPoi: Codable, Hashable, Identifiable {
-    var id: String { name }
-    let name: String
-    let type: String
-    let description: String?
-    let latitude: Double?
-    let longitude: Double?
-    let address: String?
-    let rating: Double?
-    let priceInfo: String?
-
-    var typeIcon: String {
-      switch type.lowercased() {
-      case "attraction", "scenic_spot":
-        return "mappin.circle.fill"
-      case "restaurant", "food":
-        return "fork.knife"
-      case "hotel", "accommodation":
-        return "bed.double.fill"
-      case "shopping":
-        return "bag.fill"
-      case "cafe":
-        return "cup.and.saucer.fill"
-      case "museum":
-        return "building.columns.fill"
-      case "park":
-        return "leaf.fill"
-      case "entertainment":
-        return "theatermasks.fill"
-      default:
-        return "mappin"
-      }
-    }
-  }
-
-  struct ItineraryChange: Codable, Hashable, Identifiable {
-    var id: String { "\(action)-\(poiName ?? "")-\(dayNumber ?? 0)" }
-    let action: String
-    let dayNumber: Int?
-    let poiName: String?
-    let details: String?
-
-    enum CodingKeys: String, CodingKey {
-      case action
-      case dayNumber = "dayNumber"
-      case poiName = "poiName"
-      case details
-    }
-
-    var actionIcon: String {
-      switch action.lowercased() {
-      case "add":
-        return "plus.circle.fill"
-      case "remove":
-        return "minus.circle.fill"
-      case "modify":
-        return "pencil.circle.fill"
-      case "reorder":
-        return "arrow.up.arrow.down.circle.fill"
-      default:
-        return "circle.fill"
-      }
-    }
-
-    var actionColor: String {
-      switch action.lowercased() {
-      case "add":
-        return "green"
-      case "remove":
-        return "red"
-      case "modify":
-        return "orange"
-      case "reorder":
-        return "blue"
-      default:
-        return "gray"
-      }
-    }
-  }
-
-  struct QuickAction: Codable, Hashable, Identifiable {
-    var id: String { "\(action)-\(label)" }
-    let label: String
-    let action: String
-    let payload: String?
-
-    var actionIcon: String {
-      switch action.lowercased() {
-      case "search_poi":
-        return "magnifyingglass"
-      case "modify_itinerary":
-        return "pencil"
-      case "get_tips":
-        return "lightbulb.fill"
-      case "create_itinerary":
-        return "plus.circle.fill"
-      case "show_map":
-        return "map.fill"
-      case "get_weather":
-        return "cloud.sun.fill"
-      default:
-        return "arrow.right.circle.fill"
-      }
-    }
-  }
-}
-
-// MARK: - Chat Response (from AI)
+// MARK: - Chat Response (stateless quick chat, /chat/query)
 
 struct ChatResponse: Codable {
   let content: String
-  let metadata: MessageMetadata?
 }
 
 // MARK: - API Response Types
 
-/// Session list response
+/// Session list response — `{ data: [ChatSession] }`
 struct ChatSessionListResponse: Codable {
-  let success: Bool
   let data: [ChatSession]
 }
 
-/// Single session response
+/// Single session response — `{ data: ChatSession }`
 struct ChatSessionResponse: Codable {
-  let success: Bool
   let data: ChatSession?
 }
 
-/// Message list response
+/// Message list response — `{ data: [ChatMessage] }`
 struct ChatMessageListResponse: Codable {
-  let success: Bool
   let data: [ChatMessage]
-  let cursor: String?
-  let isDone: Bool
 }
 
-/// Send message response
+/// Send message response — `{ data: { user_message, assistant_message } }`
 struct SendMessageResponse: Codable {
-  let success: Bool
   let data: SendMessageData
 
   struct SendMessageData: Codable {
-    let userMessageId: String
-    let response: ChatResponse
+    let userMessage: ChatMessage
+    let assistantMessage: ChatMessage
+
+    enum CodingKeys: String, CodingKey {
+      case userMessage = "user_message"
+      case assistantMessage = "assistant_message"
+    }
   }
 }
 
-/// Direct chat query response
+/// Direct chat query response — `{ data: ChatResponse }`
 struct ChatQueryResponse: Codable {
-  let success: Bool
   let data: ChatResponse
 }
 
-/// Create session response
+/// Create session response — `{ data: ChatSession }`
 struct CreateSessionResponse: Codable {
-  let success: Bool
   let data: ChatSession?
 }
 

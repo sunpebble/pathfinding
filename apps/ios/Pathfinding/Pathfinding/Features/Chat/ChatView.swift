@@ -156,20 +156,6 @@ private struct SessionRow: View {
         Label("\(session.messageCount)", systemImage: "bubble.left.and.bubble.right")
           .font(.caption)
           .foregroundStyle(.secondary)
-
-        if let itinerary = session.itinerary {
-          Label(itinerary.title, systemImage: "map")
-            .font(.caption)
-            .foregroundStyle(.blue)
-            .lineLimit(1)
-        }
-
-        if let guide = session.guide {
-          Label(guide.title, systemImage: "book")
-            .font(.caption)
-            .foregroundStyle(.green)
-            .lineLimit(1)
-        }
       }
     }
     .padding(.vertical, DesignTokens.Spacing.xs)
@@ -475,11 +461,6 @@ private struct MessageBubble: View {
           .foregroundStyle(message.role == .user ? .white : .primary)
           .clipShape(RoundedRectangle(cornerRadius: 16))
 
-        // Metadata (POIs, quick actions)
-        if let metadata = message.metadata {
-          MetadataView(metadata: metadata)
-        }
-
         // Timestamp
         Text(message.timeString)
           .font(.caption2)
@@ -500,112 +481,6 @@ private struct MessageBubble: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)
-  }
-}
-
-// MARK: - Metadata View
-
-private struct MetadataView: View {
-  let metadata: MessageMetadata
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      // POI Recommendations
-      if let pois = metadata.pois, !pois.isEmpty {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-          Text("chat.recommended_pois".localized)
-            .font(.caption)
-            .fontWeight(.semibold)
-            .foregroundStyle(.secondary)
-
-          ForEach(pois) { poi in
-            PoiCard(poi: poi)
-          }
-        }
-      }
-
-      // Quick Actions
-      if let actions = metadata.quickActions, !actions.isEmpty {
-        ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: DesignTokens.Spacing.sm) {
-            ForEach(actions) { action in
-              ChatQuickActionButton(action: action)
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-// MARK: - POI Card
-
-private struct PoiCard: View {
-  let poi: MessageMetadata.RecommendedPoi
-
-  var body: some View {
-    HStack(spacing: DesignTokens.Spacing.sm) {
-      Image(systemName: poi.typeIcon)
-        .foregroundStyle(.blue)
-        .frame(width: 24)
-
-      VStack(alignment: .leading, spacing: 2) {
-        Text(poi.name)
-          .font(.subheadline)
-          .fontWeight(.medium)
-
-        if let description = poi.description {
-          Text(description)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(2)
-        }
-
-        HStack(spacing: DesignTokens.Spacing.xs) {
-          if let rating = poi.rating {
-            Label(String(format: "%.1f", rating), systemImage: "star.fill")
-              .font(.caption2)
-              .foregroundStyle(.orange)
-          }
-          if let priceInfo = poi.priceInfo {
-            Text(priceInfo)
-              .font(.caption2)
-              .foregroundStyle(.green)
-          }
-        }
-      }
-
-      Spacer()
-
-      Image(systemName: "chevron.right")
-        .font(.caption)
-        .foregroundStyle(.secondary)
-    }
-    .padding(DesignTokens.Spacing.sm)
-    .background(Color(.systemBackground))
-    .clipShape(RoundedRectangle(cornerRadius: 8))
-    .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
-  }
-}
-
-// MARK: - Chat Quick Action Button
-
-private struct ChatQuickActionButton: View {
-  let action: MessageMetadata.QuickAction
-
-  var body: some View {
-    Button {
-      // Handle action
-    } label: {
-      Label(action.label, systemImage: action.actionIcon)
-        .font(.caption)
-        .padding(.horizontal, DesignTokens.Spacing.sm)
-        .padding(.vertical, DesignTokens.Spacing.xs)
-        .background(Color.blue.opacity(0.1))
-        .foregroundStyle(.blue)
-        .clipShape(Capsule())
-    }
-    .buttonStyle(.plain)
   }
 }
 

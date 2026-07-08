@@ -173,7 +173,7 @@ final class ChatStore {
       // Update local state
       if sessions.firstIndex(where: { $0.id == session.id }) != nil {
         // Create updated session (since ChatSession is a struct)
-        await fetchSessions(userId: session.userId, refresh: true)
+        await fetchSessions(userId: String(session.userId), refresh: true)
       }
 
       logger.info("Updated session title: \(session.id)")
@@ -188,7 +188,7 @@ final class ChatStore {
   // MARK: - Message Operations
 
   /// Fetch messages for current session
-  func fetchMessages(sessionId: String, refresh: Bool = false) async {
+  func fetchMessages(sessionId: Int, refresh: Bool = false) async {
     if refresh {
       messages = []
       messagesCursor = nil
@@ -218,8 +218,9 @@ final class ChatStore {
         messages.append(contentsOf: response.data)
       }
 
-      messagesCursor = response.cursor
-      messagesIsDone = response.isDone
+      // ponytail: API no longer returns cursor/isDone; load once until Task 3.1 rewires pagination.
+      messagesIsDone = true
+      messagesCursor = nil
 
       logger.info("Fetched \(response.data.count) messages for session \(sessionId)")
     } catch {
@@ -260,7 +261,7 @@ final class ChatStore {
       // Update session in list (message count changed)
       if sessions.firstIndex(where: { $0.id == session.id }) != nil {
         // Reload sessions to get updated counts
-        await fetchSessions(userId: session.userId)
+        await fetchSessions(userId: String(session.userId))
       }
 
       logger.info("Sent message and received response")
