@@ -7,6 +7,8 @@ export const TEST_JWT_SECRET = 'test-jwt-secret';
 export interface AuthTokenOptions {
   userId?: string;
   email?: string;
+  /** Additional JWT claims to merge in (e.g. `sid`, `typ: 'refresh'`). */
+  extraClaims?: Record<string, unknown>;
 }
 
 /**
@@ -32,9 +34,9 @@ export function testEnv(overrides: Partial<Env> = {}): Env {
 }
 
 export async function buildAuthToken(options: AuthTokenOptions = {}) {
-  const { userId = '1', email = 'owner@example.com' } = options;
+  const { userId = '1', email = 'owner@example.com', extraClaims = {} } = options;
 
-  return new jose.SignJWT({ sub: userId, email })
+  return new jose.SignJWT({ sub: userId, email, ...extraClaims })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('1h')
