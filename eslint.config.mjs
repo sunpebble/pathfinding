@@ -32,8 +32,6 @@ export default antfu({
     '**/.flue-vite/**',
     '**/.flue-vite.wrangler.jsonc',
     '**/.wrangler/**',
-    '.impeccable/**',
-    '**/.impeccable/**',
     'node_modules/**',
     '.nx/**',
     '.next/**',
