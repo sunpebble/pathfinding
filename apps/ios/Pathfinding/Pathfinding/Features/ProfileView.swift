@@ -164,6 +164,7 @@ struct ProfileView: View {
         }
       }
       .listStyle(.insetGrouped)
+      .sunpebbleCanvas()
       .navigationTitle("profile.title".localized)
       .sheet(isPresented: $showLogin) {
         LoginView()
@@ -217,9 +218,9 @@ struct ProfileView: View {
     let row = HStack(spacing: DesignTokens.Spacing.lg) {
       Image(systemName: "person.fill")
         .font(.system(size: 32, weight: .medium))
-        .foregroundStyle(.white)
+        .foregroundStyle(DesignTokens.Colors.textPrimary)
         .padding(DesignTokens.Spacing.lg)
-        .glassEffect(.regular.tint(.purple.opacity(0.25)), in: Circle())
+        .background(DesignTokens.Colors.textPrimary.opacity(0.08), in: Circle())
 
       VStack(alignment: .leading, spacing: 6) {
         Text(displayName)

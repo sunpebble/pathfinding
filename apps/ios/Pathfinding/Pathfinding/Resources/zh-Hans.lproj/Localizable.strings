@@ -42,6 +42,8 @@
 "itinerary.empty_description" = "手动创建，或用 AI 生成一份可编辑行程";
 "itinerary.empty.ai" = "AI 生成行程";
 "itinerary.empty.browse" = "浏览公开行程";
+"itinerary.map.no_locations" = "暂无地点";
+"itinerary.map.no_locations_hint" = "为每天添加地点，地图会显示在这里";
 "itinerary.create" = "创建行程";
 "itinerary.create.accessibility" = "新建行程";
 "itinerary.create.hint" = "创建一个新的旅行行程";

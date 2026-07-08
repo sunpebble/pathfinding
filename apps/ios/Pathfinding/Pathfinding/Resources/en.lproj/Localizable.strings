@@ -42,6 +42,8 @@
 "itinerary.empty_description" = "Create a trip manually or generate an editable plan with AI.";
 "itinerary.empty.ai" = "Generate with AI";
 "itinerary.empty.browse" = "Browse Public Itineraries";
+"itinerary.map.no_locations" = "No Locations Yet";
+"itinerary.map.no_locations_hint" = "Add places to your days and they'll appear on the map.";
 "itinerary.create" = "Create Itinerary";
 "itinerary.create.accessibility" = "New Itinerary";
 "itinerary.create.hint" = "Create a new travel itinerary";

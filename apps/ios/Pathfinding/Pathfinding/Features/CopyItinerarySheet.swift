@@ -234,6 +234,7 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
         // MARK: - Per-source Attribution Section
         source.attributionSection
       }
+      .sunpebbleCanvas()
       .navigationTitle(source.navigationTitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -326,7 +327,7 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
         Image(systemName: "doc.on.doc.fill")
-          .foregroundStyle(.blue)
+          .foregroundStyle(DesignTokens.Colors.accent)
         Text(previewTitle)
           .font(.headline)
           .lineLimit(1)
@@ -487,7 +488,7 @@ struct CopyStatsView: View {
       } else if let stats = stats {
         HStack(spacing: DesignTokens.Spacing.sm) {
           Image(systemName: "doc.on.doc")
-            .foregroundStyle(.blue)
+            .foregroundStyle(DesignTokens.Colors.accent)
 
           VStack(alignment: .leading, spacing: 2) {
             Text("copyitinerary.copy_count".localized(stats.copyCount))
@@ -504,7 +505,7 @@ struct CopyStatsView: View {
         .padding(DesignTokens.Spacing.sm)
         .background(
           RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-            .fill(Color.blue.opacity(0.1))
+            .fill(DesignTokens.Colors.accent.opacity(0.1))
         )
       } else if error != nil {
         EmptyView()
@@ -541,7 +542,7 @@ struct OriginalAuthorBadge: View {
             .aspectRatio(contentMode: .fill)
         } placeholder: {
           Circle()
-            .fill(Color(.systemGray5))
+            .fill(Sunpebble.ink.opacity(0.06))
         }
         .frame(width: 20, height: 20)
         .clipShape(Circle())
@@ -561,7 +562,7 @@ struct OriginalAuthorBadge: View {
     .padding(.vertical, DesignTokens.Spacing.xs)
     .background(
       Capsule()
-        .fill(Color(.systemGray6))
+        .fill(Sunpebble.ink.opacity(0.06))
     )
   }
 }

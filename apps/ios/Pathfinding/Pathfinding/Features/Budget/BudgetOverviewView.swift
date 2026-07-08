@@ -116,7 +116,7 @@ struct BudgetOverviewView: View {
             title: "budget.edit.total".localized,
             amount: budget.total,
             currency: budget.currency,
-            color: .blue
+            color: DesignTokens.Colors.accent
           )
 
           BudgetAmountView(
@@ -155,7 +155,7 @@ struct BudgetOverviewView: View {
           Button("budget.edit.title_new".localized) {
             showEditBudget = true
           }
-          .buttonStyle(.glassProminent)
+          .buttonStyle(.sunpebblePrimary)
         }
         .padding(.vertical, DesignTokens.Spacing.lg)
       }
@@ -299,7 +299,7 @@ struct BudgetOverviewView: View {
         } label: {
           Text("expense.view_all".localized)
             .font(.subheadline)
-            .foregroundStyle(.blue)
+            .foregroundStyle(DesignTokens.Colors.accent)
         }
       }
 
@@ -316,7 +316,7 @@ struct BudgetOverviewView: View {
           Button("expense.add".localized) {
             showAddExpense = true
           }
-          .buttonStyle(.glass)
+          .buttonStyle(.sunpebbleSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, DesignTokens.Spacing.lg)
@@ -402,7 +402,7 @@ struct BudgetProgressBar: View {
       ZStack(alignment: .leading) {
         // Background
         RoundedRectangle(cornerRadius: 4)
-          .fill(Color(.systemGray5))
+          .fill(Sunpebble.sunSoft)
 
         // Progress
         RoundedRectangle(cornerRadius: 4)
@@ -461,7 +461,7 @@ struct CategorySpendingRow: View {
         GeometryReader { geometry in
           ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 2)
-              .fill(Color(.systemGray5))
+              .fill(Sunpebble.sunSoft)
 
             RoundedRectangle(cornerRadius: 2)
               .fill(item.isOverBudget ? Color.red : item.category.swiftUIColor)
@@ -498,7 +498,7 @@ struct ExpenseRow: View {
         Image(systemName: "questionmark.circle")
           .foregroundStyle(.secondary)
           .frame(width: 32, height: 32)
-          .background(Color(.systemGray5))
+          .background(Sunpebble.sunSoft)
           .clipShape(Circle())
       }
 

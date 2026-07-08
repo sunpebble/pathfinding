@@ -45,6 +45,7 @@ struct LanguageSettingsSheet: View {
         .padding(.vertical, DesignTokens.Spacing.xs)
       }
     }
+    .sunpebbleCanvas()
     .navigationTitle("language.title".localized)
     .navigationBarTitleDisplayMode(.inline)
   }
@@ -92,7 +93,7 @@ struct LanguageMiniPreview: View {
         HStack {
           ZStack {
             Circle()
-              .fill(isActive ? DesignTokens.Colors.accent : Color.gray.opacity(0.3))
+              .fill(isActive ? DesignTokens.Colors.accent : Sunpebble.pebble.opacity(0.3))
               .frame(width: 28, height: 28)
 
             Text(title)
@@ -126,7 +127,7 @@ struct LanguageMiniPreview: View {
         .padding(.bottom, 10)
       }
       .frame(maxWidth: .infinity)
-      .cardSurface(tint: isActive ? Color.accentColor.opacity(0.3) : nil)
+      .cardSurface(tint: isActive ? DesignTokens.Colors.accent.opacity(0.3) : nil)
 
       // Label
       Text(languageCode == "zh" ? "简体中文" : "English")

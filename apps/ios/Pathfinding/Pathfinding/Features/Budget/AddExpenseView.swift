@@ -123,7 +123,7 @@ struct ExpenseForm: View {
               Image(systemName: "folder")
                 .foregroundStyle(.secondary)
                 .frame(width: 28, height: 28)
-                .background(Color(.systemGray5))
+                .background(Sunpebble.sunSoft)
                 .clipShape(Circle())
 
               Text("expense.form.pick_category".localized)

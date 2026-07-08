@@ -52,7 +52,7 @@ struct StatsView: View {
         }
         .padding()
       }
-      .background(Color(.systemGroupedBackground))
+      .sunpebbleCanvas()
       .navigationTitle("stats.title".localized)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
@@ -133,21 +133,21 @@ struct QuickStatsSection: View {
           icon: "calendar",
           title: "stats.days_count".localized,
           value: "\(stats?.totalDays ?? 0)",
-          color: .orange
+          color: DesignTokens.Colors.accent
         )
 
         QuickStatCard(
           icon: "building.2",
           title: "stats.cities_count".localized,
           value: "\(stats?.totalCities ?? 0)",
-          color: .green
+          color: DesignTokens.Colors.accent
         )
 
         QuickStatCard(
           icon: "yensign.circle",
           title: "stats.total_expenses".localized,
           value: formatCurrency(stats?.totalExpenses ?? 0),
-          color: .purple
+          color: DesignTokens.Colors.accent
         )
       }
     }
@@ -165,35 +165,29 @@ struct QuickStatCard: View {
   let icon: String
   let title: String
   let value: String
+  // ponytail: retained for call-site compat; Sunpebble mockup paints every stat icon ink, so unused.
   let color: Color
 
   var body: some View {
-    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-      HStack {
-        Image(systemName: icon)
-          .font(.title3)
-          .foregroundStyle(color)
-
-        Spacer()
-      }
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+      Image(systemName: icon)
+        .font(.system(size: 18, weight: .medium))
+        .foregroundStyle(Sunpebble.ink)
+        .frame(width: 44, height: 44)
+        .background(Sunpebble.ink.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
       Text(value)
-        .font(.title)
-        .fontWeight(.bold)
+        .font(.system(size: 30, weight: .bold, design: .serif))
+        .foregroundStyle(DesignTokens.Colors.textPrimary)
 
       Text(title)
         .font(.caption)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(DesignTokens.Colors.textSecondary)
     }
     .padding()
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface()
   }
 }
 
@@ -223,7 +217,7 @@ struct YearlyReviewSection: View {
             icon: "flag.fill",
             title: "stats.first_trip".localized,
             subtitle: "\(firstTrip.cityName) - \(firstTrip.title)",
-            color: .green
+            color: DesignTokens.Colors.accent
           )
         }
 
@@ -232,7 +226,7 @@ struct YearlyReviewSection: View {
             icon: "clock.fill",
             title: "stats.longest_trip".localized,
             subtitle: "\(longestTrip.cityName) - " + String(format: "stats.days_suffix".localized, longestTrip.days),
-            color: .orange
+            color: DesignTokens.Colors.accent
           )
         }
 
@@ -241,18 +235,12 @@ struct YearlyReviewSection: View {
             icon: "creditcard.fill",
             title: "stats.most_expensive".localized,
             subtitle: "\(mostExpensive.title) - \(Int(mostExpensive.amount))元",
-            color: .purple
+            color: DesignTokens.Colors.accent
           )
         }
       }
       .padding()
-      .background(.background)
-      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-      .shadow(
-        color: DesignTokens.Shadow.sm.color,
-        radius: DesignTokens.Shadow.sm.radius,
-        y: DesignTokens.Shadow.sm.y
-      )
+      .cardSurface()
     }
   }
 }
@@ -310,34 +298,37 @@ struct GenerateReviewCard: View {
   let onGenerate: () -> Void
 
   var body: some View {
-    VStack(spacing: DesignTokens.Spacing.md) {
-      Image(systemName: "chart.bar.doc.horizontal")
-        .font(.system(size: 48))
-        .foregroundStyle(DesignTokens.Colors.accent)
+    VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+      HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
+        Image(systemName: "chart.bar.doc.horizontal")
+          .font(.system(size: 20, weight: .medium))
+          .foregroundStyle(DesignTokens.Colors.accent)
+          .frame(width: 44, height: 44)
+          .background(Sunpebble.sunSoft)
+          .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-      Text(String(format: "stats.generate_report".localized, year))
-        .font(.headline)
+        VStack(alignment: .leading, spacing: 4) {
+          Text(String(format: "stats.generate_report".localized, year))
+            .font(.system(size: 17, weight: .semibold, design: .serif))
+            .foregroundStyle(DesignTokens.Colors.textPrimary)
 
-      Text("stats.generate_report_desc".localized)
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-        .multilineTextAlignment(.center)
+          Text("stats.generate_report_desc".localized)
+            .font(.subheadline)
+            .foregroundStyle(DesignTokens.Colors.textSecondary)
+        }
+
+        Spacer(minLength: 0)
+      }
 
       Button(action: onGenerate) {
         Text("stats.generate_button".localized)
           .fontWeight(.semibold)
       }
-      .buttonStyle(.glassProminent)
+      .buttonStyle(.sunpebblePrimary)
     }
-    .padding(DesignTokens.Spacing.xl)
+    .padding(DesignTokens.Spacing.lg)
     .frame(maxWidth: .infinity)
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
-    .shadow(
-      color: DesignTokens.Shadow.md.color,
-      radius: DesignTokens.Shadow.md.radius,
-      y: DesignTokens.Shadow.md.y
-    )
+    .cardSurface()
   }
 }
 
@@ -352,17 +343,11 @@ struct GeneratingReviewCard: View {
 
       Text("stats.analyzing".localized)
         .font(.subheadline)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(DesignTokens.Colors.textSecondary)
     }
     .padding(DesignTokens.Spacing.xl)
     .frame(maxWidth: .infinity)
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
-    .shadow(
-      color: DesignTokens.Shadow.md.color,
-      radius: DesignTokens.Shadow.md.radius,
-      y: DesignTokens.Shadow.md.y
-    )
+    .cardSurface()
   }
 }
 
@@ -415,13 +400,7 @@ struct ExpenseBreakdownSection: View {
         }
       }
       .padding()
-      .background(.background)
-      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-      .shadow(
-        color: DesignTokens.Shadow.sm.color,
-        radius: DesignTokens.Shadow.sm.radius,
-        y: DesignTokens.Shadow.sm.y
-      )
+      .cardSurface()
     }
   }
 
@@ -490,13 +469,7 @@ struct TopDestinationsSection: View {
         }
       }
       .padding()
-      .background(.background)
-      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-      .shadow(
-        color: DesignTokens.Shadow.sm.color,
-        radius: DesignTokens.Shadow.sm.radius,
-        y: DesignTokens.Shadow.sm.y
-      )
+      .cardSurface()
     }
   }
 
@@ -526,7 +499,7 @@ struct MonthlyActivitySection: View {
           x: .value("Month", monthName(month.month)),
           y: .value("Days", month.daysCount)
         )
-        .foregroundStyle(.indigo.gradient)
+        .foregroundStyle(DesignTokens.Colors.accent.gradient)
         .cornerRadius(4)
       }
       .frame(height: 180)
@@ -541,13 +514,7 @@ struct MonthlyActivitySection: View {
         }
       }
       .padding()
-      .background(.background)
-      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-      .shadow(
-        color: DesignTokens.Shadow.sm.color,
-        radius: DesignTokens.Shadow.sm.radius,
-        y: DesignTokens.Shadow.sm.y
-      )
+      .cardSurface()
     }
   }
 
@@ -589,36 +556,25 @@ struct AchievementBadge: View {
     VStack(spacing: DesignTokens.Spacing.xs) {
       ZStack {
         Circle()
-          .fill(
-            LinearGradient(
-              colors: [.yellow, .orange],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
+          .fill(Sunpebble.sun)
           .frame(width: 56, height: 56)
 
         Image(systemName: achievement.icon)
           .font(.title2)
-          .foregroundStyle(.white)
+          .foregroundStyle(Sunpebble.ink)
       }
-      .shadow(color: .orange.opacity(0.3), radius: 8, y: 4)
+      .shadow(color: Sunpebble.sun.opacity(0.3), radius: 8, y: 4)
 
       Text(achievement.title)
         .font(.caption)
         .fontWeight(.medium)
+        .foregroundStyle(DesignTokens.Colors.textPrimary)
         .multilineTextAlignment(.center)
         .lineLimit(2)
     }
     .padding(.vertical, DesignTokens.Spacing.sm)
     .frame(maxWidth: .infinity)
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-    .shadow(
-      color: DesignTokens.Shadow.sm.color,
-      radius: DesignTokens.Shadow.sm.radius,
-      y: DesignTokens.Shadow.sm.y
-    )
+    .cardSurface()
   }
 }
 

@@ -23,6 +23,7 @@ struct APISettingsSheet: View {
         Text("api.restart_hint".localized)
       }
     }
+    .sunpebbleCanvas()
     .navigationTitle("api.title".localized)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {

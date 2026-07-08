@@ -98,7 +98,7 @@ struct AnalysisErrorView: View {
         Text("common.retry".localized)
           .fontWeight(.semibold)
       }
-      .buttonStyle(.glassProminent)
+      .buttonStyle(.sunpebblePrimary)
     }
     .padding()
   }
@@ -119,7 +119,7 @@ struct AnalysisEmptyView: View {
         Text("analysis.start".localized)
           .fontWeight(.semibold)
       }
-      .buttonStyle(.glassProminent)
+      .buttonStyle(.sunpebblePrimary)
     }
   }
 }
@@ -164,7 +164,7 @@ struct AnalysisReportContent: View {
       }
       .padding()
     }
-    .background(Color(.systemGroupedBackground))
+    .background(DesignTokens.Colors.background)
   }
 }
 
@@ -283,7 +283,7 @@ struct ScoreBreakdownItem: View {
       GeometryReader { geometry in
         ZStack(alignment: .leading) {
           RoundedRectangle(cornerRadius: 2)
-            .fill(Color(.systemGray5))
+            .fill(DesignTokens.Colors.border)
             .frame(height: 4)
 
           RoundedRectangle(cornerRadius: 2)
@@ -359,14 +359,14 @@ struct TimeAnalysisCard: View {
           icon: "clock.fill",
           title: "analysis.start_time".localized,
           value: timeAnalysis.averageStartTime,
-          color: .indigo
+          color: DesignTokens.Colors.accent
         )
 
         TimeStatItem(
           icon: "clock.badge.checkmark.fill",
           title: "analysis.end_time".localized,
           value: timeAnalysis.averageEndTime,
-          color: .purple
+          color: DesignTokens.Colors.accent
         )
 
         TimeStatItem(
@@ -380,7 +380,7 @@ struct TimeAnalysisCard: View {
           icon: "car.fill",
           title: "analysis.travel_time".localized,
           value: formatMinutes(timeAnalysis.totalTravelMinutes),
-          color: .blue
+          color: DesignTokens.Colors.accent
         )
       }
 
@@ -401,17 +401,11 @@ struct TimeAnalysisCard: View {
         GeometryReader { geometry in
           ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 4)
-              .fill(Color(.systemGray5))
+              .fill(DesignTokens.Colors.border)
               .frame(height: 8)
 
             RoundedRectangle(cornerRadius: 4)
-              .fill(
-                LinearGradient(
-                  colors: [.indigo, .purple],
-                  startPoint: .leading,
-                  endPoint: .trailing
-                )
-              )
+              .fill(DesignTokens.Colors.accent)
               .frame(width: geometry.size.width * CGFloat(timeAnalysis.timeUtilization) / 100, height: 8)
           }
         }
@@ -616,7 +610,7 @@ struct DaySelectorButton: View {
       }
       .padding(.vertical, 8)
       .padding(.horizontal, 12)
-      .background(isSelected ? paceColor : Color(.systemGray6))
+      .background(isSelected ? paceColor : DesignTokens.Colors.backgroundSecondary)
       .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     .buttonStyle(.plain)
@@ -705,7 +699,7 @@ struct DayAnalysisCard: View {
         GeometryReader { geometry in
           ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 2)
-              .fill(Color(.systemGray5))
+              .fill(DesignTokens.Colors.border)
               .frame(height: 4)
 
             RoundedRectangle(cornerRadius: 2)
@@ -793,7 +787,7 @@ struct RouteOptimizationCard: View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
         Image(systemName: "arrow.triangle.2.circlepath")
-          .foregroundStyle(.blue)
+          .foregroundStyle(DesignTokens.Colors.accent)
 
         Text("analysis.route_optimization_suggestion".localized)
           .font(.headline)
@@ -814,7 +808,7 @@ struct RouteOptimizationCard: View {
 
         HStack(spacing: 4) {
           Image(systemName: "arrow.down.circle.fill")
-            .foregroundStyle(.blue)
+            .foregroundStyle(DesignTokens.Colors.accent)
 
           Text("analysis.reduce_km".localized(String(format: "%.1f", optimization.estimatedDistanceSavingKm)))
             .font(.caption)
@@ -824,7 +818,7 @@ struct RouteOptimizationCard: View {
     }
     .padding()
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(Color.blue.opacity(0.1))
+    .background(Sunpebble.sunSoft)
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
   }
 }
@@ -1166,7 +1160,7 @@ struct TopRecommendationsCard: View {
             .fontWeight(.bold)
             .foregroundStyle(.white)
             .frame(width: 20, height: 20)
-            .background(Circle().fill(.indigo))
+            .background(Circle().fill(Sunpebble.ink))
 
           Text(recommendation)
             .font(.subheadline)
@@ -1190,7 +1184,7 @@ struct RouteOptimizationsCard: View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
         Image(systemName: "arrow.triangle.2.circlepath")
-          .foregroundStyle(.blue)
+          .foregroundStyle(DesignTokens.Colors.accent)
 
         Text("analysis.route_optimizations".localized)
           .font(.headline)
@@ -1220,7 +1214,7 @@ struct RouteOptimizationsCard: View {
             HStack(spacing: 4) {
               Image(systemName: "arrow.down.circle.fill")
                 .font(.caption)
-                .foregroundStyle(.blue)
+                .foregroundStyle(DesignTokens.Colors.accent)
 
               Text("-\(String(format: "%.1f", optimization.estimatedDistanceSavingKm))km")
                 .font(.caption)
@@ -1229,7 +1223,7 @@ struct RouteOptimizationsCard: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.blue.opacity(0.05))
+        .background(Sunpebble.sunSoft)
         .clipShape(RoundedRectangle(cornerRadius: 8))
 
         if optimization.id != optimizations.last?.id {

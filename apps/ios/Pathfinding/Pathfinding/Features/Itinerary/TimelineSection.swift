@@ -16,6 +16,7 @@ struct TimelineSection: View {
     VStack(alignment: .leading, spacing: 12) {
       Label("itinerary.schedule".localized, systemImage: "map")
         .font(.headline)
+        .foregroundStyle(DesignTokens.Colors.textPrimary)
         .padding(.horizontal)
 
       GlassEffectContainer(spacing: DesignTokens.Spacing.sm) {
@@ -32,7 +33,7 @@ struct TimelineSection: View {
             selectedPoiId: $selectedPoiId,
             cameraPosition: $cameraPosition
           )
-          .cardSurface(tint: isSelected ? .accentColor.opacity(0.3) : nil)
+          .cardSurface(tint: isSelected ? DesignTokens.Colors.accent : nil)
           .glassEffectID("day-\(index)", in: glassNS)
         }
       }

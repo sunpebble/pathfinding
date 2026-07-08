@@ -44,6 +44,7 @@ struct ShareSheet: View {
         }
         .padding(DesignTokens.Spacing.md)
       }
+      .sunpebbleCanvas()
       .navigationTitle("common.share".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -213,8 +214,7 @@ struct ShareSheet: View {
           .frame(maxWidth: .infinity)
           .padding(.vertical, DesignTokens.Spacing.sm)
       }
-      .buttonStyle(.borderedProminent)
-      .tint(.indigo)
+      .buttonStyle(.sunpebblePrimary)
       .disabled(generatedImage == nil)
     }
   }
@@ -406,14 +406,14 @@ private struct SizeButton: View {
     Button(action: action) {
       VStack(spacing: 6) {
         RoundedRectangle(cornerRadius: 6)
-          .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 2)
+          .stroke(isSelected ? DesignTokens.Colors.accent : Color.secondary.opacity(0.3), lineWidth: 2)
           .aspectRatio(size.aspectRatio, contentMode: .fit)
           .frame(height: 40)
           .overlay {
             if isSelected {
               Image(systemName: "checkmark")
                 .font(.caption)
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(DesignTokens.Colors.accent)
             }
           }
 

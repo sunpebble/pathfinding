@@ -22,7 +22,7 @@ struct iCloudSyncSettingsSheet: View {
         )) {
           HStack {
             Image(systemName: "icloud.fill")
-              .foregroundStyle(.cyan)
+              .foregroundStyle(DesignTokens.Colors.accent)
             VStack(alignment: .leading, spacing: 2) {
               Text("icloud.enable_sync".localized)
               Text("icloud.enable_sync_description".localized)
@@ -40,7 +40,7 @@ struct iCloudSyncSettingsSheet: View {
           )) {
             HStack {
               Image(systemName: "arrow.triangle.2.circlepath")
-                .foregroundStyle(.blue)
+                .foregroundStyle(DesignTokens.Colors.accent)
               VStack(alignment: .leading, spacing: 2) {
                 Text("icloud.auto_sync".localized)
                 Text("icloud.auto_sync_description".localized)
@@ -64,7 +64,7 @@ struct iCloudSyncSettingsSheet: View {
           } label: {
             HStack {
               Image(systemName: "arrow.triangle.2.circlepath")
-                .foregroundStyle(.blue)
+                .foregroundStyle(DesignTokens.Colors.accent)
               Text("icloud.sync_now".localized)
               Spacer()
               if syncManager.syncStatus == .syncing {
@@ -138,6 +138,7 @@ struct iCloudSyncSettingsSheet: View {
         .padding(.vertical, DesignTokens.Spacing.xs)
       }
     }
+    .sunpebbleCanvas()
     .navigationTitle("icloud.title".localized)
     .navigationBarTitleDisplayMode(.inline)
     .sheet(isPresented: $showConflictResolver) {
@@ -200,9 +201,9 @@ private struct iCloudStatusCard: View {
     }
     switch syncManager.syncStatus {
     case .idle:
-      return .cyan
+      return DesignTokens.Colors.accent
     case .syncing:
-      return .blue
+      return DesignTokens.Colors.accent
     case .success:
       return .green
     case .error:
@@ -266,7 +267,7 @@ private struct ConflictResolverSheet: View {
                 itinerary: conflict.localItinerary,
                 modifiedAt: conflict.localModifiedAt,
                 icon: "iphone",
-                color: .blue
+                color: DesignTokens.Colors.accent
               )
 
               Text("icloud.vs".localized)
@@ -279,7 +280,7 @@ private struct ConflictResolverSheet: View {
                 itinerary: conflict.remoteItinerary,
                 modifiedAt: conflict.remoteModifiedAt,
                 icon: "icloud.fill",
-                color: .cyan
+                color: DesignTokens.Colors.accent
               )
 
               Divider()
@@ -425,9 +426,9 @@ private struct ResolutionButtonStyleModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     if isPrimary {
-      content.buttonStyle(.glassProminent)
+      content.buttonStyle(.sunpebblePrimary)
     } else {
-      content.buttonStyle(.glass)
+      content.buttonStyle(.sunpebbleSecondary)
     }
   }
 }

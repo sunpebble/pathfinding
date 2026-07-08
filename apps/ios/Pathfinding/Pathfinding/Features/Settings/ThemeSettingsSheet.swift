@@ -25,6 +25,7 @@ struct ThemeSettingsSheet: View {
           }
         }
         .pickerStyle(.inline)
+        .labelsHidden()
       }
 
       // MARK: - Accent Color Picker

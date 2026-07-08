@@ -22,12 +22,12 @@ struct DayEditSheet: View {
                   Text(poi.name).font(.headline)
                   if let type = poi.type {
                     Text(type).font(.caption).padding(.horizontal, 6).padding(.vertical, 2).background(
-                      .blue.opacity(0.1)
+                      Sunpebble.sunSoft
                     ).clipShape(Capsule())
                   }
                 }
                 if let time = poi.time {
-                  Text("⏰ \(time)").font(.caption).foregroundStyle(.blue)
+                  Text("⏰ \(time)").font(.caption).foregroundStyle(DesignTokens.Colors.accent)
                 }
                 if let desc = poi.description {
                   Text(desc).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)

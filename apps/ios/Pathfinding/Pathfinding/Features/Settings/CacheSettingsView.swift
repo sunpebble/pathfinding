@@ -51,6 +51,7 @@ struct CacheSettingsView: View {
         }
       }
     }
+    .sunpebbleCanvas()
     .navigationTitle("cache.title".localized)
   }
 }

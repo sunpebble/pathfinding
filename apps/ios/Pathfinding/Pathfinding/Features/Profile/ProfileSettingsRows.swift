@@ -22,7 +22,10 @@ struct ExplorerSettingsRow: View {
       }
     } icon: {
       Image(systemName: icon)
-        .foregroundStyle(iconColor)
+        .font(.system(size: 15, weight: .semibold))
+        .foregroundStyle(Sunpebble.onPrimary)
+        .frame(width: 30, height: 30)
+        .background(Sunpebble.primaryFill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
   }
 }
@@ -83,7 +86,10 @@ struct OfflineMapSettingsRow: View {
       }
     } icon: {
       Image(systemName: "map.fill")
-        .foregroundStyle(mapColor)
+        .font(.system(size: 15, weight: .semibold))
+        .foregroundStyle(Sunpebble.onPrimary)
+        .frame(width: 30, height: 30)
+        .background(Sunpebble.primaryFill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
   }
 
@@ -130,8 +136,22 @@ struct iCloudSyncSettingsRow: View {
       }
     } icon: {
       Image(systemName: syncStatusIcon)
-        .foregroundStyle(syncStatusColor)
+        .font(.system(size: 15, weight: .semibold))
+        .foregroundStyle(Sunpebble.onPrimary)
         .symbolEffect(.pulse, isActive: syncManager.syncStatus == .syncing)
+        .frame(width: 30, height: 30)
+        .background(syncStatusTint, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+  }
+
+  /// 状态色信号（保留语义）：错误红 / 成功绿 / 同步中阳光 / 空闲·停用墨色。
+  private var syncStatusTint: Color {
+    guard syncManager.isSyncEnabled else { return Sunpebble.primaryFill }
+    switch syncManager.syncStatus {
+    case .error: return DesignTokens.Colors.error
+    case .success: return DesignTokens.Colors.success
+    case .syncing: return DesignTokens.Colors.accent
+    case .idle: return Sunpebble.primaryFill
     }
   }
 
@@ -140,22 +160,6 @@ struct iCloudSyncSettingsRow: View {
       return "icloud.slash"
     }
     return syncManager.syncStatus.icon
-  }
-
-  private var syncStatusColor: Color {
-    if !syncManager.isSyncEnabled {
-      return .secondary
-    }
-    switch syncManager.syncStatus {
-    case .idle:
-      return .cyan
-    case .syncing:
-      return .blue
-    case .success:
-      return DesignTokens.Colors.Terrain.forest
-    case .error:
-      return .red
-    }
   }
 
   private var syncStatusText: String {

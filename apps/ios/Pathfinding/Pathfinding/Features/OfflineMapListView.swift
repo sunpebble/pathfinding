@@ -76,6 +76,7 @@ struct OfflineMapListView: View {
           }
         }
       }
+      .sunpebbleCanvas()
       .navigationTitle("map.offline".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -166,7 +167,7 @@ struct StorageInfoBar: View {
     .foregroundStyle(.secondary)
     .padding(.horizontal)
     .padding(.vertical, 8)
-    .background(Color(.systemGray6))
+    .background(DesignTokens.Colors.backgroundSecondary)
   }
 }
 
@@ -319,7 +320,7 @@ struct DownloadProgressButton: View {
     } label: {
       ZStack {
         Circle()
-          .stroke(Color.gray.opacity(0.3), lineWidth: 3)
+          .stroke(DesignTokens.Colors.border, lineWidth: 3)
           .frame(width: 32, height: 32)
 
         Circle()

@@ -16,23 +16,23 @@ struct ChatSessionListView: View {
   var body: some View {
     if !authViewModel.isAuthenticated {
       // ponytail: guest-mode users can't call chat API — gate before .task fires.
-      ContentUnavailableView {
-        Label("chat.login_required".localized, systemImage: "bubble.left.and.bubble.right.fill")
-      } description: {
-        Text("chat.login_required_description".localized)
-      } actions: {
+      ChatEmptyState(
+        glyph: "bubble.left.and.bubble.right.fill",
+        title: "chat.login_required".localized,
+        message: "chat.login_required_description".localized
+      ) {
         Button {
           appState.selectedTab = .profile
         } label: {
           Label("chat.go_login".localized, systemImage: "person.crop.circle.badge.plus")
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.sunpebblePrimary)
       }
+      .background(DesignTokens.Colors.background.ignoresSafeArea())
     } else {
       NavigationStack {
         ZStack {
-          // Explorer background
-          ExplorerPageBackground(style: .list, accentColor: .cyan)
+          DesignTokens.Colors.background.ignoresSafeArea()
 
           Group {
             if store.isLoadingSessions && store.sessions.isEmpty && store.errorMessage == nil {
@@ -136,6 +136,7 @@ struct ChatSessionListView: View {
       }
     }
     .listStyle(.insetGrouped)
+    .sunpebbleCanvas()
     .onAppear {
       guard !hasShownSwipeHint, !store.sessions.isEmpty else { return }
       Task {
@@ -176,23 +177,61 @@ private struct SessionRow: View {
   }
 }
 
+// MARK: - Empty State (Sunpebble)
+
+/// 居中空态：白卡 glyph 方块 + 衬线标题 + 卵石副文 + 主按钮（对齐 11-assistant）。
+private struct ChatEmptyState<Actions: View>: View {
+  let glyph: String
+  let title: String
+  let message: String
+  @ViewBuilder var actions: Actions
+
+  var body: some View {
+    VStack(spacing: DesignTokens.Spacing.md) {
+      Image(systemName: glyph)
+        .font(.system(size: 26, weight: .regular))
+        .foregroundStyle(DesignTokens.Colors.textSecondary)
+        .frame(width: 64, height: 64)
+        .cardSurface(cornerRadius: 18)
+
+      VStack(spacing: DesignTokens.Spacing.xs) {
+        Text(title)
+          .sunpebbleTitle(20)
+          .multilineTextAlignment(.center)
+
+        Text(message)
+          .font(.subheadline)
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
+          .multilineTextAlignment(.center)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+
+      actions
+        .frame(maxWidth: 260)
+        .padding(.top, DesignTokens.Spacing.sm)
+    }
+    .padding(DesignTokens.Spacing.xl)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+  }
+}
+
 // MARK: - Empty Sessions View
 
 private struct EmptySessionsView: View {
   let onCreateNew: () -> Void
 
   var body: some View {
-    ContentUnavailableView {
-      Label("chat.empty".localized, systemImage: "bubble.left.and.bubble.right")
-    } description: {
-      Text("chat.empty_description".localized)
-    } actions: {
+    ChatEmptyState(
+      glyph: "bubble.left.and.bubble.right",
+      title: "chat.empty".localized,
+      message: "chat.empty_description".localized
+    ) {
       Button {
         onCreateNew()
       } label: {
         Label("chat.start_new".localized, systemImage: "plus.circle.fill")
       }
-      .buttonStyle(.borderedProminent)
+      .buttonStyle(.sunpebblePrimary)
     }
   }
 }
@@ -217,16 +256,15 @@ private struct ChatErrorRetryView: View {
   let onRetry: () -> Void
 
   var body: some View {
-    ContentUnavailableView {
-      Label("error.load_failed".localized, systemImage: "exclamationmark.triangle.fill")
-    } description: {
-      Text(message)
-        .foregroundStyle(.secondary)
-    } actions: {
+    ChatEmptyState(
+      glyph: "exclamationmark.triangle.fill",
+      title: "error.load_failed".localized,
+      message: message
+    ) {
       Button(action: onRetry) {
         Label("common.retry".localized, systemImage: "arrow.clockwise")
       }
-      .buttonStyle(.borderedProminent)
+      .buttonStyle(.sunpebblePrimary)
     }
   }
 }
@@ -272,7 +310,11 @@ private struct NewSessionSheet: View {
         Section {
           HStack {
             Image(systemName: "sparkles")
-              .foregroundStyle(.yellow)
+              .font(.caption)
+              .foregroundStyle(DesignTokens.Colors.accent)
+              .frame(width: 32, height: 32)
+              .background(Sunpebble.ink)
+              .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             Text("chat.title".localized)
               .font(.headline)
           }
@@ -283,7 +325,7 @@ private struct NewSessionSheet: View {
 
           VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             FeatureRow(icon: "mappin.circle.fill", text: "chat.feature.attractions".localized, color: .red)
-            FeatureRow(icon: "calendar", text: "chat.feature.planning".localized, color: .blue)
+            FeatureRow(icon: "calendar", text: "chat.feature.planning".localized, color: DesignTokens.Colors.accent)
             FeatureRow(icon: "lightbulb.fill", text: "chat.feature.tips".localized, color: .yellow)
             FeatureRow(icon: "fork.knife", text: "chat.feature.food".localized, color: .orange)
           }
@@ -412,6 +454,7 @@ struct ChatConversationView: View {
     }
     .navigationTitle(session.title)
     .navigationBarTitleDisplayMode(.inline)
+    .background(DesignTokens.Colors.background)
     .task {
       await store.selectSession(session)
     }
@@ -446,49 +489,45 @@ private struct MessageBubble: View {
   var body: some View {
     HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
       if message.role == .assistant {
-        // AI Avatar
-        Circle()
-          .fill(LinearGradient(
-            colors: [.blue, .purple],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          ))
+        // AI Avatar — ai-star: 墨色方块 + 阳光图标
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+          .fill(Sunpebble.ink)
           .frame(width: 32, height: 32)
           .overlay {
             Image(systemName: "sparkles")
               .font(.caption)
-              .foregroundStyle(.white)
+              .foregroundStyle(DesignTokens.Colors.accent)
           }
       }
 
       VStack(alignment: message.role == .user ? .trailing : .leading, spacing: DesignTokens.Spacing.xs) {
         // Message content
         Text(message.content)
+          .foregroundStyle(message.role == .user ? Color.white : DesignTokens.Colors.textPrimary)
           .padding(DesignTokens.Spacing.sm)
-          .background(
-            message.role == .user
-              ? Color.blue
-              : Color(.systemGray6)
+          .background(message.role == .user ? Sunpebble.ink : Sunpebble.surface)
+          .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+          .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+              .stroke(message.role == .user ? Color.clear : DesignTokens.Colors.border, lineWidth: 1)
           )
-          .foregroundStyle(message.role == .user ? .white : .primary)
-          .clipShape(RoundedRectangle(cornerRadius: 16))
 
         // Timestamp
         Text(message.timeString)
           .font(.caption2)
-          .foregroundStyle(.secondary)
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
       }
       .frame(maxWidth: 280, alignment: message.role == .user ? .trailing : .leading)
 
       if message.role == .user {
-        // User Avatar
-        Circle()
-          .fill(Color.orange.gradient)
+        // User Avatar — 阳光柔和方块，与 AI 墨色 mark 成对
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+          .fill(Sunpebble.sunSoft)
           .frame(width: 32, height: 32)
           .overlay {
             Image(systemName: "person.fill")
               .font(.caption)
-              .foregroundStyle(.white)
+              .foregroundStyle(Sunpebble.ink)
           }
       }
     }
@@ -504,23 +543,19 @@ private struct TypingIndicator: View {
 
   var body: some View {
     HStack(spacing: DesignTokens.Spacing.sm) {
-      Circle()
-        .fill(LinearGradient(
-          colors: [.blue, .purple],
-          startPoint: .topLeading,
-          endPoint: .bottomTrailing
-        ))
+      RoundedRectangle(cornerRadius: 10, style: .continuous)
+        .fill(Sunpebble.ink)
         .frame(width: 32, height: 32)
         .overlay {
           Image(systemName: "sparkles")
             .font(.caption)
-            .foregroundStyle(.white)
+            .foregroundStyle(DesignTokens.Colors.accent)
         }
 
       HStack(spacing: 4) {
         ForEach(0..<3) { index in
           Circle()
-            .fill(Color.gray)
+            .fill(DesignTokens.Colors.textSecondary)
             .frame(width: 8, height: 8)
             .scaleEffect(reduceMotion ? 1.0 : (animationPhase == index ? 1.2 : 0.8))
             .animation(
@@ -532,8 +567,12 @@ private struct TypingIndicator: View {
         }
       }
       .padding(DesignTokens.Spacing.sm)
-      .background(Color(.systemGray6))
-      .clipShape(RoundedRectangle(cornerRadius: 16))
+      .background(Sunpebble.surface)
+      .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+      .overlay(
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+          .stroke(DesignTokens.Colors.border, lineWidth: 1)
+      )
 
       Spacer()
     }
@@ -561,8 +600,8 @@ private struct QuickRepliesView: View {
               .font(.subheadline)
               .padding(.horizontal, DesignTokens.Spacing.md)
               .padding(.vertical, DesignTokens.Spacing.sm)
-              .background(Color.blue.opacity(0.1))
-              .foregroundStyle(.blue)
+              .background(Sunpebble.sunSoft)
+              .foregroundStyle(DesignTokens.Colors.textPrimary)
               .clipShape(Capsule())
           }
           .buttonStyle(.plain)
@@ -571,7 +610,7 @@ private struct QuickRepliesView: View {
       .padding(.horizontal)
       .padding(.vertical, DesignTokens.Spacing.sm)
     }
-    .background(Color(.systemBackground))
+    .background(DesignTokens.Colors.background)
   }
 }
 
@@ -587,8 +626,12 @@ private struct InputBar: View {
       TextField("chat.input_placeholder".localized, text: $text, axis: .vertical)
         .lineLimit(1...4)
         .padding(DesignTokens.Spacing.sm)
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .background(DesignTokens.Colors.backgroundSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+          RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .stroke(DesignTokens.Colors.border, lineWidth: 1)
+        )
         .disabled(isSending)
 
       Button {
@@ -600,14 +643,14 @@ private struct InputBar: View {
         } else {
           Image(systemName: "arrow.up.circle.fill")
             .font(.system(size: 36))
-            .foregroundStyle(text.isEmpty ? .gray : .blue)
+            .foregroundStyle(text.isEmpty ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.accent)
         }
       }
       .disabled(text.isEmpty || isSending)
     }
     .padding(.horizontal)
     .padding(.vertical, DesignTokens.Spacing.sm)
-    .background(Color(.systemBackground))
+    .background(DesignTokens.Colors.background)
   }
 }
 

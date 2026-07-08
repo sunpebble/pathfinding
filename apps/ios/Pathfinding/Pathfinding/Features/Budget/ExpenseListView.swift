@@ -120,7 +120,7 @@ struct ExpenseListView: View {
           CategoryFilterChip(
             name: "common.all".localized,
             icon: "square.grid.2x2",
-            color: .indigo,
+            color: DesignTokens.Colors.accent,
             isSelected: selectedCategory == nil
           ) {
             selectedCategory = nil
@@ -204,7 +204,7 @@ struct ExpenseListView: View {
                 } label: {
                   Label("common.edit".localized, systemImage: "pencil")
                 }
-                .tint(.orange)
+                .tint(DesignTokens.Colors.accent)
               }
           }
         } header: {
@@ -242,12 +242,12 @@ struct ExpenseListView: View {
         Button("expense.view_all".localized) {
           selectedCategory = nil
         }
-        .buttonStyle(.glass)
+        .buttonStyle(.sunpebbleSecondary)
       } else {
         Button("expense.add".localized) {
           showAddExpense = true
         }
-        .buttonStyle(.glassProminent)
+        .buttonStyle(.sunpebblePrimary)
       }
 
       Spacer()
@@ -339,7 +339,7 @@ struct ExpenseListRow: View {
         Image(systemName: "questionmark.circle")
           .foregroundStyle(.secondary)
           .frame(width: 36, height: 36)
-          .background(Color(.systemGray5))
+          .background(Sunpebble.sunSoft)
           .clipShape(Circle())
       }
 

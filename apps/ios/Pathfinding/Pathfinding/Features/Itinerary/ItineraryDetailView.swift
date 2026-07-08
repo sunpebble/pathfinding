@@ -48,23 +48,29 @@ struct ItineraryDetailView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
-        // Map Header - Optimized for large itineraries
-        MapHeader(
-          annotations: annotations,
-          allPois: allPois,
-          cameraPosition: $cameraPosition,
-          selectedPoiId: $selectedPoiId
-        )
+        // Map Header - Optimized for large itineraries.
+        // With no geocoded POIs the map camera has nothing to frame and MapKit
+        // defaults to a meaningless region (e.g. a Tokyo trip showing China), so
+        // show a placeholder until the itinerary has at least one located POI.
+        if annotations.isEmpty {
+          mapPlaceholder
+        } else {
+          MapHeader(
+            annotations: annotations,
+            allPois: allPois,
+            cameraPosition: $cameraPosition,
+            selectedPoiId: $selectedPoiId
+          )
+        }
 
         VStack(alignment: .leading, spacing: 16) {
           // Editable Title
           TextField("itinerary.title_placeholder".localized, text: $localTitle, axis: .vertical)
-            .font(.title2)
-            .fontWeight(.bold)
+            .sunpebbleTitle(22)
             .lineLimit(nil)
             .padding(.horizontal)
             .padding(.vertical, 8)
-            .background(Color(.systemBackground))
+            .background(Color.clear)
             .overlay(
               RoundedRectangle(cornerRadius: 8)
                 .stroke(Color.clear, lineWidth: 0)
@@ -110,6 +116,7 @@ struct ItineraryDetailView: View {
         .padding(.vertical)
       }
     }
+    .sunpebbleCanvas()
     .scrollEdgeEffectStyle(.soft, for: .top)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
@@ -193,6 +200,27 @@ struct ItineraryDetailView: View {
     }) {
       DayEditSheet(localDays: $localDays, selectedDayIndex: $selectedDayIndex)
     }
+  }
+
+  // MARK: - Map Placeholder
+
+  private var mapPlaceholder: some View {
+    VStack(spacing: DesignTokens.Spacing.sm) {
+      Image(systemName: "map")
+        .font(.largeTitle)
+        .foregroundStyle(DesignTokens.Colors.textSecondary)
+      Text("itinerary.map.no_locations".localized)
+        .font(.headline)
+        .foregroundStyle(DesignTokens.Colors.textPrimary)
+      Text("itinerary.map.no_locations_hint".localized)
+        .font(.subheadline)
+        .foregroundStyle(DesignTokens.Colors.textSecondary)
+        .multilineTextAlignment(.center)
+    }
+    .frame(maxWidth: .infinity)
+    .frame(height: 200)
+    .cardSurface()
+    .padding(.horizontal)
   }
 
   private func saveChanges() {

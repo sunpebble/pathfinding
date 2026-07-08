@@ -52,7 +52,7 @@ struct VoiceItineraryView: View {
         }
         .padding()
       }
-      .background(Color(.systemGroupedBackground))
+      .sunpebbleCanvas()
       .navigationTitle("voice.title".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -113,9 +113,7 @@ struct VoiceItineraryView: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(color: DesignTokens.Shadow.sm.color, radius: DesignTokens.Shadow.sm.radius)
+    .cardSurface()
   }
 
   // MARK: - Itinerary Preview
@@ -204,7 +202,7 @@ struct VoiceItineraryView: View {
               .foregroundStyle(.secondary)
               .padding()
               .frame(maxWidth: .infinity)
-              .background(Color(.secondarySystemBackground))
+              .background(Sunpebble.ink.opacity(0.06))
               .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
           } else {
             ForEach(currentDay.pois) { poi in
@@ -217,9 +215,7 @@ struct VoiceItineraryView: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(color: DesignTokens.Shadow.sm.color, radius: DesignTokens.Shadow.sm.radius)
+    .cardSurface()
   }
 
   // MARK: - Quick Actions
@@ -262,9 +258,7 @@ struct VoiceItineraryView: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(color: DesignTokens.Shadow.sm.color, radius: DesignTokens.Shadow.sm.radius)
+    .cardSurface()
   }
 
   // MARK: - Search Results
@@ -305,16 +299,14 @@ struct VoiceItineraryView: View {
               .foregroundStyle(Color.accentColor)
           }
           .padding()
-          .background(Color(.secondarySystemBackground))
+          .background(Sunpebble.ink.opacity(0.06))
           .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
         }
         .buttonStyle(.plain)
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(color: DesignTokens.Shadow.sm.color, radius: DesignTokens.Shadow.sm.radius)
+    .cardSurface()
   }
 
   // MARK: - Command Hints
@@ -336,9 +328,7 @@ struct VoiceItineraryView: View {
       }
     }
     .padding()
-    .background(.background)
-    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    .shadow(color: DesignTokens.Shadow.sm.color, radius: DesignTokens.Shadow.sm.radius)
+    .cardSurface()
   }
 
   // MARK: - Command Handling
@@ -600,7 +590,7 @@ enum VoiceMode {
     case .idle: return .accentColor
     case .addingPOI: return .green
     case .searching: return .orange
-    case .memo: return .purple
+    case .memo: return Sunpebble.sun
     }
   }
 
@@ -642,7 +632,7 @@ struct DayChip: View {
       }
       .padding(.horizontal, 12)
       .padding(.vertical, 8)
-      .background(isSelected ? Color.accentColor : Color(.secondarySystemBackground))
+      .background(isSelected ? Color.accentColor : Sunpebble.ink.opacity(0.06))
       .foregroundStyle(isSelected ? .white : .primary)
       .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
     }
@@ -661,7 +651,7 @@ struct POIRow: View {
           if let time = poi.time {
             Text(time)
               .font(.caption)
-              .foregroundStyle(.blue)
+              .foregroundStyle(DesignTokens.Colors.accent)
               .monospacedDigit()
           }
           Text(poi.name)
@@ -684,7 +674,7 @@ struct POIRow: View {
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 8)
-    .background(Color(.secondarySystemBackground))
+    .background(Sunpebble.ink.opacity(0.06))
     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
   }
 }
@@ -706,7 +696,7 @@ private struct QuickActionButton: View {
       }
       .frame(maxWidth: .infinity)
       .padding(.vertical, 12)
-      .background(Color(.secondarySystemBackground))
+      .background(Sunpebble.ink.opacity(0.06))
       .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
     }
     .buttonStyle(.plain)

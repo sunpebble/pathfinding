@@ -7,6 +7,9 @@ struct PathfindingApp: App {
   @State private var localizationManager = LocalizationManager.shared
 
   init() {
+    MainActor.assumeIsolated {
+      Sunpebble.configureAppearance()
+    }
     applyUITestLaunchOverrides()
   }
 

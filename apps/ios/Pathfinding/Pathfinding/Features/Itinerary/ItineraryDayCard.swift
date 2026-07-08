@@ -16,19 +16,28 @@ struct ItineraryDayCard: View {
       Button {
         onSelect()
       } label: {
-        HStack {
-          Text("itinerary.day".localized(day.dayNumber))
-            .font(.headline)
-            .foregroundStyle(.primary)
+        HStack(spacing: 14) {
+          VStack(alignment: .leading, spacing: 2) {
+            Text("\(day.dayNumber)")
+              .font(.system(size: 24, weight: .bold, design: .serif))
+              .foregroundStyle(DesignTokens.Colors.textPrimary)
+            Text("itinerary.day".localized(day.dayNumber))
+              .font(.caption)
+              .foregroundStyle(DesignTokens.Colors.textSecondary)
+          }
           if let theme = day.theme {
             Text(theme)
               .font(.subheadline)
-              .foregroundStyle(.secondary)
+              .foregroundStyle(DesignTokens.Colors.textSecondary)
           }
           Spacer()
-          Image(systemName: "pencil.circle")
-            .font(.title3)
-            .foregroundStyle(.blue)
+          Image(systemName: "pencil")
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(DesignTokens.Colors.textPrimary)
+            .frame(width: 38, height: 38)
+            .background(Sunpebble.ink.opacity(0.06))
+            .clipShape(Circle())
+            .overlay(Circle().stroke(DesignTokens.Colors.border, lineWidth: 1))
         }
       }
       .buttonStyle(.plain)
@@ -41,14 +50,14 @@ struct ItineraryDayCard: View {
             // Timeline Indicator
             VStack(spacing: 0) {
               Rectangle()
-                .fill(poiIndex == 0 ? Color.clear : Color.gray.opacity(0.3))
+                .fill(poiIndex == 0 ? Color.clear : DesignTokens.Colors.border)
                 .frame(width: 2, height: 6)
               Circle()
-                .fill(isSelected ? Color.red : Color.blue)
+                .fill(isSelected ? DesignTokens.Colors.accent : DesignTokens.Colors.textSecondary)
                 .frame(width: isSelected ? 12 : 8, height: isSelected ? 12 : 8)
                 .animation(.spring, value: isSelected)
               Rectangle()
-                .fill(poiIndex == day.pois.count - 1 ? Color.clear : Color.gray.opacity(0.3))
+                .fill(poiIndex == day.pois.count - 1 ? Color.clear : DesignTokens.Colors.border)
                 .frame(width: 2)
             }
             .frame(width: 16)
@@ -57,12 +66,12 @@ struct ItineraryDayCard: View {
             VStack(alignment: .leading, spacing: 4) {
               HStack(alignment: .firstTextBaseline) {
                 if let time = poi.time {
-                  Text(time).font(.caption).monospacedDigit().foregroundStyle(.blue)
+                  Text(time).font(.caption).monospacedDigit().foregroundStyle(DesignTokens.Colors.accent)
                 }
                 Text(poi.name)
                   .font(.subheadline)
                   .fontWeight(isSelected ? .bold : .medium)
-                  .foregroundStyle(isSelected ? .red : .primary)
+                  .foregroundStyle(isSelected ? DesignTokens.Colors.accent : DesignTokens.Colors.textPrimary)
               }
               if let desc = poi.description {
                 Text(desc).font(.caption).foregroundStyle(.secondary).lineLimit(2)

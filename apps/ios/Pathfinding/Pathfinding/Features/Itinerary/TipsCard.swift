@@ -8,6 +8,7 @@ struct TipsCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       Label("tips.title".localized, systemImage: "lightbulb").font(.headline)
+        .foregroundStyle(DesignTokens.Colors.textPrimary)
       ForEach(tips, id: \.self) { tip in
         HStack(alignment: .top) {
           Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
@@ -17,7 +18,7 @@ struct TipsCard: View {
       }
     }
     .padding()
-    .cardSurface(tint: .green.opacity(0.15))
+    .cardSurface()
     .padding(.horizontal)
   }
 }

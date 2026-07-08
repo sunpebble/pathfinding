@@ -39,7 +39,7 @@ struct PreferencesView: View {
         } label: {
           HStack {
             Image(systemName: "heart.fill")
-              .foregroundStyle(.pink)
+              .foregroundStyle(DesignTokens.Colors.accent)
               .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -80,7 +80,7 @@ struct PreferencesView: View {
             icon: preferenceStore.preferences?.travelStyle.icon ?? "scale.3d",
             title: "preferences.style".localized,
             value: preferenceStore.preferences?.travelStyle.displayName ?? "preferences.not_set".localized,
-            iconColor: .indigo
+            iconColor: DesignTokens.Colors.accent
           )
         }
 
@@ -274,7 +274,7 @@ struct PreferenceSummaryCard: View {
         StyleBadge(
           icon: preferences.travelStyle.icon,
           label: preferences.travelStyle.displayName,
-          color: .indigo
+          color: DesignTokens.Colors.accent
         )
 
         StyleBadge(

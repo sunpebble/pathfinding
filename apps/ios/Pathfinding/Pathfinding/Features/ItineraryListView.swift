@@ -16,6 +16,8 @@ struct ItineraryListView: View {
           itineraryList
         }
       }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(DesignTokens.Colors.background)
       .navigationTitle("itinerary.title".localized)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) { itineraryActionsMenu }
@@ -108,7 +110,7 @@ struct ItineraryListView: View {
       Text("itinerary.empty_description".localized)
     } actions: {
       Button("itinerary.empty.ai".localized) { showAIPlanner = true }
-        .buttonStyle(.glassProminent)
+        .buttonStyle(.sunpebblePrimary)
     }
   }
 
@@ -135,6 +137,7 @@ struct ItineraryListView: View {
       }
     }
     .listStyle(.insetGrouped)
+    .scrollContentBackground(.hidden)
   }
 }
 
@@ -155,11 +158,6 @@ struct ItineraryCard: View {
     itinerary.days.count
   }
 
-  /// Gradient colors for cover placeholder
-  private var gradientColors: [Color] {
-    [.indigo, .purple]
-  }
-
   // MARK: - Body
 
   var body: some View {
@@ -177,6 +175,7 @@ struct ItineraryCard: View {
       }
     }
     .padding(DesignTokens.Spacing.sm)
+    .cardSurface()
   }
 
   // MARK: - Subviews
@@ -190,28 +189,23 @@ struct ItineraryCard: View {
           .aspectRatio(contentMode: .fill)
       } placeholder: {
         ZStack {
-          RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
-            .fill(Color.gray.opacity(0.2))
+          RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+            .fill(DesignTokens.Colors.backgroundSecondary)
           ProgressView()
         }
       }
       .frame(width: 60, height: 60)
-      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.xs))
+      .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous))
     } else {
+      // Brand mark: ink rounded square + sun map icon (aligns to design trip-mark)
       ZStack {
-        RoundedRectangle(cornerRadius: DesignTokens.Radius.xs)
-          .fill(
-            LinearGradient(
-              colors: gradientColors,
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
+        RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+          .fill(Sunpebble.ink)
           .frame(width: 60, height: 60)
 
         Image(systemName: "map.fill")
           .font(.title2)
-          .foregroundStyle(.white.opacity(0.9))
+          .foregroundStyle(DesignTokens.Colors.accent)
       }
     }
   }
@@ -220,28 +214,30 @@ struct ItineraryCard: View {
     VStack(alignment: .leading, spacing: 4) {
       HStack(spacing: DesignTokens.Spacing.xs) {
         Text(itinerary.title)
-          .font(.headline)
+          .font(.system(.headline, design: .serif))
+          .bold()
+          .foregroundStyle(DesignTokens.Colors.textPrimary)
           .lineLimit(1)
 
         // Copied badge
         if itinerary.isCopied {
           Image(systemName: "doc.on.doc.fill")
             .font(.caption2)
-            .foregroundStyle(.blue.opacity(0.8))
+            .foregroundStyle(DesignTokens.Colors.accent)
         }
       }
 
       if let dest = itinerary.destination {
         Text(dest)
           .font(.subheadline)
-          .foregroundStyle(.secondary)
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
       }
 
       // Original author attribution
       if let author = itinerary.originalAuthor?.displayName {
         Text("itinerary.from_author".localized(author))
           .font(.caption2)
-          .foregroundStyle(.blue.opacity(0.7))
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
       }
 
       HStack(spacing: DesignTokens.Spacing.sm) {
@@ -249,7 +245,7 @@ struct ItineraryCard: View {
         Label("itinerary.poi_count".localized(totalPOICount), systemImage: "mappin")
       }
       .font(.caption)
-      .foregroundStyle(.tertiary)
+      .foregroundStyle(DesignTokens.Colors.textSecondary)
     }
   }
 }
@@ -314,6 +310,7 @@ struct CreateItinerarySheet: View {
           }
         }
       }
+      .sunpebbleCanvas()
       .navigationTitle("create_trip.title".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

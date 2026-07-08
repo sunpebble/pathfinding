@@ -112,7 +112,7 @@ struct BuiltInShortcutsView: View {
         ],
         description: "siri.builtin_today_desc".localized,
         icon: "calendar.day.timeline.left",
-        iconColor: .blue
+        iconColor: DesignTokens.Colors.accent
       )
 
       ShortcutInfoRow(
@@ -136,7 +136,7 @@ struct BuiltInShortcutsView: View {
         ],
         description: "siri.builtin_list_desc".localized,
         icon: "map",
-        iconColor: .purple
+        iconColor: DesignTokens.Colors.accent
       )
 
       ShortcutInfoRow(
@@ -147,7 +147,7 @@ struct BuiltInShortcutsView: View {
         ],
         description: "siri.builtin_search_desc".localized,
         icon: "magnifyingglass",
-        iconColor: .pink
+        iconColor: DesignTokens.Colors.accent
       )
     }
     .navigationTitle("siri.builtin_shortcuts".localized)
@@ -214,7 +214,7 @@ struct CustomShortcutRow: View {
     HStack(spacing: 12) {
       Image(systemName: iconForType(shortcut.type))
         .font(.title3)
-        .foregroundStyle(.blue)
+        .foregroundStyle(DesignTokens.Colors.accent)
         .frame(width: 32, height: 32)
 
       VStack(alignment: .leading, spacing: 4) {
@@ -268,7 +268,7 @@ private struct SiriTipRow: View {
     HStack(spacing: 12) {
       Image(systemName: icon)
         .font(.title3)
-        .foregroundStyle(.blue)
+        .foregroundStyle(DesignTokens.Colors.accent)
         .frame(width: 32, height: 32)
 
       VStack(alignment: .leading, spacing: 2) {
@@ -303,7 +303,7 @@ struct AddCustomShortcutSheet: View {
           if let itinerary = itinerary {
             HStack {
               Image(systemName: "map")
-                .foregroundStyle(.blue)
+                .foregroundStyle(DesignTokens.Colors.accent)
               Text(itinerary.title)
             }
           } else if let poi = poi {

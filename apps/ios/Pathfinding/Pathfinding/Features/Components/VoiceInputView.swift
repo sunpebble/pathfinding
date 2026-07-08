@@ -102,7 +102,7 @@ struct VoiceInputView: View {
         .foregroundStyle(hasText ? .primary : .secondary)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color(.secondarySystemBackground))
+        .background(Sunpebble.ink.opacity(0.06))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
     }
     .padding(.horizontal)
@@ -356,7 +356,7 @@ struct VoiceMemoRecordingView: View {
           } label: {
             VStack(spacing: 4) {
               Circle()
-                .fill(Color(.systemGray5))
+                .fill(Sunpebble.ink.opacity(0.06))
                 .frame(width: 56, height: 56)
                 .overlay {
                   Image(systemName: "xmark")
@@ -574,7 +574,7 @@ struct VoiceMemoRow: View {
           GeometryReader { geometry in
             ZStack(alignment: .leading) {
               RoundedRectangle(cornerRadius: 2)
-                .fill(Color(.systemGray5))
+                .fill(Sunpebble.ink.opacity(0.06))
                 .frame(height: 4)
 
               RoundedRectangle(cornerRadius: 2)

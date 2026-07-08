@@ -320,7 +320,7 @@ private struct ShareCardStyleChip: View {
       .padding(.vertical, DesignTokens.Spacing.xs)
       .background(
         RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .fill(isSelected ? style.accentColor.opacity(0.15) : Color(.systemGray6))
+          .fill(isSelected ? style.accentColor.opacity(0.15) : DesignTokens.Colors.backgroundSecondary)
       )
       .overlay(
         RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
@@ -342,7 +342,7 @@ private struct ShareCardSizeChip: View {
     Button(action: action) {
       HStack(spacing: 6) {
         RoundedRectangle(cornerRadius: 2)
-          .stroke(isSelected ? Color.accentColor : Color.secondary, lineWidth: 1)
+          .stroke(isSelected ? DesignTokens.Colors.accent : Color.secondary, lineWidth: 1)
           .aspectRatio(size.aspectRatio, contentMode: .fit)
           .frame(height: 14)
 
@@ -354,11 +354,11 @@ private struct ShareCardSizeChip: View {
       .padding(.vertical, DesignTokens.Spacing.xs)
       .background(
         RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .fill(isSelected ? Color.accentColor.opacity(0.1) : Color(.systemGray6))
+          .fill(isSelected ? DesignTokens.Colors.accent.opacity(0.1) : DesignTokens.Colors.backgroundSecondary)
       )
       .overlay(
         RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-          .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 1.5)
+          .stroke(isSelected ? DesignTokens.Colors.accent : .clear, lineWidth: 1.5)
       )
     }
     .buttonStyle(.plain)

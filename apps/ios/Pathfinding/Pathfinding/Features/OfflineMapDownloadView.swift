@@ -82,7 +82,7 @@ struct MapPreviewHeader: View {
       RoundedRectangle(cornerRadius: 16)
         .fill(
           LinearGradient(
-            colors: [.indigo.opacity(0.3), .purple.opacity(0.2)],
+            colors: [Sunpebble.ink, Sunpebble.ink.opacity(0.85)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
           )
@@ -99,7 +99,7 @@ struct MapPreviewHeader: View {
       VStack(spacing: 8) {
         Image(systemName: "mappin.circle.fill")
           .font(.system(size: 44))
-          .foregroundStyle(.white)
+          .foregroundStyle(DesignTokens.Colors.accent)
           .shadow(color: .black.opacity(0.3), radius: 4)
 
         Text(region.localizedName)
@@ -161,7 +161,7 @@ struct DownloadStatusCard: View {
       if region.isDownloading || region.downloadState == .updating {
         VStack(spacing: 8) {
           ProgressView(value: region.downloadProgress)
-            .tint(.indigo)
+            .tint(DesignTokens.Colors.accent)
 
           HStack {
             Text("\(Int(region.downloadProgress * 100))%")
@@ -201,8 +201,7 @@ struct DownloadStatusCard: View {
       }
     }
     .padding()
-    .background(Color(.systemGray6))
-    .clipShape(RoundedRectangle(cornerRadius: 12))
+    .cardSurface()
   }
 
   @ViewBuilder
@@ -279,8 +278,7 @@ struct RegionDetailsCard: View {
       }
     }
     .padding()
-    .background(Color(.systemGray6))
-    .clipShape(RoundedRectangle(cornerRadius: 12))
+    .cardSurface()
   }
 }
 
@@ -348,7 +346,7 @@ struct ActionButtonsSection: View {
             Label("common.cancel".localized, systemImage: "xmark")
               .frame(maxWidth: .infinity)
               .padding()
-              .background(Color(.systemGray5))
+              .background(DesignTokens.Colors.backgroundSecondary)
               .foregroundStyle(.primary)
               .clipShape(RoundedRectangle(cornerRadius: 12))
           }
@@ -373,7 +371,7 @@ struct ActionButtonsSection: View {
             Label("common.cancel".localized, systemImage: "xmark")
               .frame(maxWidth: .infinity)
               .padding()
-              .background(Color(.systemGray5))
+              .background(DesignTokens.Colors.backgroundSecondary)
               .foregroundStyle(.primary)
               .clipShape(RoundedRectangle(cornerRadius: 12))
           }
@@ -398,7 +396,7 @@ struct ActionButtonsSection: View {
           Label("offline_download.cancel_update".localized, systemImage: "xmark")
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color(.systemGray5))
+            .background(DesignTokens.Colors.backgroundSecondary)
             .foregroundStyle(.primary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }

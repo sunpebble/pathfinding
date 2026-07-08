@@ -360,7 +360,7 @@ struct CurrencyPickerView: View {
 
               if selectedCurrency == currency {
                 Image(systemName: "checkmark")
-                  .foregroundStyle(Color.accentColor)
+                  .foregroundStyle(DesignTokens.Colors.accent)
               }
             }
             .foregroundStyle(.primary)

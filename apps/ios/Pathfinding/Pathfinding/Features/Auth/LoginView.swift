@@ -18,20 +18,20 @@ struct LoginView: View {
   @State private var headerAppeared = false
   @State private var formAppeared = false
 
-  private let brandAccent = Color(red: 0.97, green: 0.72, blue: 0.20)
-  private let brandInk = Color(red: 0.14, green: 0.15, blue: 0.20)
+  private let brandAccent = Sunpebble.sun
+  private let brandInk = Sunpebble.ink
 
   var body: some View {
     NavigationStack {
       ZStack {
-        Color(.systemGroupedBackground)
+        DesignTokens.Colors.background
           .ignoresSafeArea()
 
         LinearGradient(
           colors: [
             brandAccent.opacity(colorScheme == .dark ? 0.14 : 0.10),
             brandInk.opacity(colorScheme == .dark ? 0.10 : 0.03),
-            Color(.systemGroupedBackground)
+            DesignTokens.Colors.background
           ],
           startPoint: .top,
           endPoint: .bottom
@@ -101,14 +101,14 @@ struct LoginView: View {
                   if isLoading {
                     ProgressView()
                       .progressViewStyle(.circular)
-                      .tint(.white)
+                      .tint(Sunpebble.onPrimary)
                   }
                   Text(isLoading ? "login.signing_in".localized : "auth.login".localized)
                     .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
               }
-              .buttonStyle(.glassProminent)
+              .buttonStyle(.sunpebblePrimary)
               .accessibilityIdentifier("login-submit-button")
               .disabled(isLoginDisabled)
             }

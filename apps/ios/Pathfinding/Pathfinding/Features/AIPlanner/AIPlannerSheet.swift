@@ -48,6 +48,7 @@ struct AIPlannerSheet: View {
                     }
                     .padding()
                 }
+                .sunpebbleCanvas()
             }
             .navigationTitle("planner.title".localized)
             .navigationBarTitleDisplayMode(.inline)
@@ -77,19 +78,21 @@ struct AIPlannerSheet: View {
         VStack(alignment: .leading, spacing: 20) {
             // Header
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
+                HStack(spacing: 12) {
                     Image(systemName: "sparkles")
-                        .font(.title2)
-                        .foregroundStyle(.blue)
+                        .font(.title3)
+                        .foregroundStyle(DesignTokens.Colors.accent)
+                        .frame(width: 44, height: 44)
+                        .background(Sunpebble.ink)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                     Text("planner.header.title".localized)
-                        .font(.title2)
-                        .fontWeight(.bold)
+                        .sunpebbleTitle(20)
                 }
 
                 Text("planner.header.subtitle".localized)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Colors.textSecondary)
             }
 
             // Destination
@@ -98,8 +101,11 @@ struct AIPlannerSheet: View {
                     .font(.headline)
 
                 TextField("planner.destination.placeholder".localized, text: $destination)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain)
                     .submitLabel(.done)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 13)
+                    .cardSurface()
             }
 
             // Date Range
@@ -112,10 +118,10 @@ struct AIPlannerSheet: View {
 
                     Text("planner.days".localized(durationDays))
                         .font(.subheadline)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(DesignTokens.Colors.accent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.1))
+                        .background(Sunpebble.sunSoft)
                         .clipShape(Capsule())
                 }
 
@@ -124,11 +130,16 @@ struct AIPlannerSheet: View {
                         .labelsHidden()
 
                     Image(systemName: "arrow.right")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DesignTokens.Colors.textSecondary)
 
                     DatePicker("planner.date.end".localized, selection: $endDate, displayedComponents: .date)
                         .labelsHidden()
+
+                    Spacer(minLength: 0)
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .cardSurface()
             }
 
             Divider()
@@ -224,18 +235,18 @@ struct AIPlannerSheet: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "sparkles")
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(DesignTokens.Colors.accent)
                         Text("planner.ai_suggestion".localized)
                             .font(.headline)
                     }
 
                     Text(aiResponse)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DesignTokens.Colors.textSecondary)
                 }
                 .padding()
-                .background(Color.blue.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardSurface()
             }
 
             // Plan Preview
@@ -251,7 +262,7 @@ struct AIPlannerSheet: View {
                     Label("common.edit".localized, systemImage: "pencil")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.sunpebbleSecondary)
 
                 Button {
                     importPlan()
@@ -259,7 +270,7 @@ struct AIPlannerSheet: View {
                     Label("planner.import".localized, systemImage: "square.and.arrow.down")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.sunpebblePrimary)
             }
         }
     }
@@ -274,28 +285,26 @@ struct AIPlannerSheet: View {
 
                 Text("planner.feedback.subtitle".localized)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Colors.textSecondary)
             }
 
             TextEditor(text: $feedbackText)
+                .scrollContentBackground(.hidden)
                 .frame(height: 120)
                 .padding(8)
-                .background(Color(.systemGray6))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .cardSurface()
 
             HStack(spacing: 12) {
                 Button("common.cancel".localized) {
                     planningState = .preview
                     feedbackText = ""
                 }
-                .buttonStyle(.bordered)
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.sunpebbleSecondary)
 
                 Button("planner.feedback.submit".localized) {
                     submitFeedback()
                 }
-                .buttonStyle(.borderedProminent)
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.sunpebblePrimary)
                 .disabled(feedbackText.isEmpty)
             }
         }
@@ -323,7 +332,7 @@ struct AIPlannerSheet: View {
                 planningState = .input
                 errorMessage = nil
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.sunpebblePrimary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -353,13 +362,13 @@ struct AIPlannerSheet: View {
                         // Day Badge
                         ZStack {
                             Circle()
-                                .fill(Color.blue.opacity(0.2))
+                                .fill(Sunpebble.sunSoft)
                                 .frame(width: 40, height: 40)
 
                             Text("D\(day.dayNumber)")
                                 .font(.caption)
                                 .fontWeight(.bold)
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(DesignTokens.Colors.accent)
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
@@ -371,14 +380,13 @@ struct AIPlannerSheet: View {
 
                             Text("planner.activities.count".localized(day.activities.count))
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DesignTokens.Colors.textSecondary)
                         }
 
                         Spacer()
                     }
                     .padding()
-                    .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .cardSurface()
                 }
             }
 
@@ -386,14 +394,13 @@ struct AIPlannerSheet: View {
             if let budget = plan.estimatedBudget {
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(DesignTokens.Colors.accent)
                     Text("planner.estimated_budget".localized(budget))
                         .font(.subheadline)
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.green.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .cardSurface(tint: DesignTokens.Colors.accent)
             }
         }
     }
@@ -644,9 +651,12 @@ struct PreferenceChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(isSelected ? Color.blue : Color(.systemGray6))
-            .foregroundStyle(isSelected ? .white : .primary)
+            .background(isSelected ? Sunpebble.ink : Sunpebble.surface)
+            .foregroundStyle(isSelected ? Color.white : DesignTokens.Colors.textPrimary)
             .clipShape(Capsule())
+            .overlay(
+                Capsule().stroke(DesignTokens.Colors.border, lineWidth: isSelected ? 0 : 1)
+            )
         }
         .buttonStyle(.plain)
     }
