@@ -40,17 +40,21 @@ interface RateLimitResult {
 }
 
 const memoryStore = new Map<string, RateLimitEntry>();
+let lastSweep = 0;
 
-// Clean up expired in-memory entries every 60 s
-const cleanupTimer = setInterval(() => {
-  const now = Date.now();
+// Lazy, throttled cleanup of expired in-memory entries.
+// (No top-level setInterval — Workers forbid timers/I/O in global scope.
+// Sweep at most every 60 s, driven by traffic.)
+function sweepExpired(now: number): void {
+  if (now - lastSweep < 60_000)
+    return;
+  lastSweep = now;
   for (const [key, entry] of memoryStore) {
     if (entry.resetAt <= now) {
       memoryStore.delete(key);
     }
   }
-}, 60_000);
-cleanupTimer.unref();
+}
 
 /**
  * Check and increment the rate limit counter using the in-memory store.
@@ -58,6 +62,7 @@ cleanupTimer.unref();
  */
 function memoryFallback(key: string, max: number, windowSec: number): RateLimitResult {
   const now = Date.now();
+  sweepExpired(now);
   const entry = memoryStore.get(key);
 
   if (!entry || entry.resetAt <= now) {
