@@ -8,7 +8,7 @@
       "binding": "DB",
       "database_name": "pathfinding",
       // Replaced after `wrangler d1 create pathfinding` (Task 6.2)
-      "database_id": "REPLACE_AFTER_wrangler_d1_create",
+      "database_id": "b6344db5-bc03-465e-9625-9a42f8e42579",
       "migrations_dir": "../../packages/database/drizzle"
     }
   ],
