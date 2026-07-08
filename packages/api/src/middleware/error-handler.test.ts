@@ -115,7 +115,7 @@ describe('errorHandler', () => {
     const response = await app.request('/test');
     expect(response.status).toBe(500);
     const body = await response.json();
-    // ponytail: TEMP diagnostic — matches diagnostic body shape in error-handler.ts.
-    expect(body.error).toBe('Error: Something unexpected');
+    // In non-production mode, the actual message is exposed
+    expect(body.error).toBe('Something unexpected');
   });
 });

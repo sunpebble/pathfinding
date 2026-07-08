@@ -130,9 +130,8 @@ export function errorHandler(err: Error, c: Context) {
 
   // ── Unexpected / unknown errors ──────────────────────────
   log.error({ err }, 'Unhandled error');
-  // ponytail: TEMP diagnostic — expose error identity to pinpoint an intermittent 500 in production.
   return c.json(
-    errorBody(`${err.name}: ${err.message}`, { stack: err.stack }),
+    errorBody(isProduction ? 'Internal server error' : (err.message || 'Internal server error')),
     500,
   );
 }

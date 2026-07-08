@@ -1,23 +1,17 @@
-import * as pino from 'pino';
+import pino from 'pino';
 
-// pino 实例在模块加载期创建一次。LOG_LEVEL / NODE_ENV 均非密钥，属启动期
-// 一次性配置（日志详细度、是否启用 pino-pretty），不随请求变化，故保留
-// process.env 读取。鉴权/密钥类配置须走 c.env（见 services/auth.service.ts）。
-const isDev = process.env.NODE_ENV !== 'production';
+// pino 默认目标走 sonic-boom → fs.writeSync，在 Cloudflare Workers 的 nodejs_compat
+// 下会抛 TypeError("offset must be number")；pino-pretty 还依赖 Node worker 线程，
+// workerd 也不支持。故统一把日志写到 console（wrangler tail 可捕获 console 输出）。
+const level = process.env.LOG_LEVEL || (process.env.NODE_ENV !== 'production' ? 'debug' : 'info');
 
-export const logger = pino.pino({
-  level: process.env.LOG_LEVEL || (isDev ? 'debug' : 'info'),
-  transport: isDev
-    ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-        },
-      }
-    : undefined,
-});
+const consoleDestination: pino.DestinationStream = {
+  write(msg: string) {
+    console.log(msg);
+  },
+};
+
+export const logger = pino({ level }, consoleDestination);
 
 /**
  * Create a child logger with a specific context
