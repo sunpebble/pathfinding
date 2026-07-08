@@ -49,16 +49,16 @@ struct AIPlannerSheet: View {
                     .padding()
                 }
             }
-            .navigationTitle("AI 行程规划")
+            .navigationTitle("planner.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button("common.cancel".localized) { dismiss() }
                 }
 
                 if planningState == .input {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("生成") {
+                        Button("planner.generate".localized) {
                             generateItinerary()
                         }
                         .fontWeight(.semibold)
@@ -82,22 +82,22 @@ struct AIPlannerSheet: View {
                         .font(.title2)
                         .foregroundStyle(.blue)
 
-                    Text("AI 智能规划")
+                    Text("planner.header.title".localized)
                         .font(.title2)
                         .fontWeight(.bold)
                 }
 
-                Text("告诉我你的旅行需求，我会为你生成详细的行程安排")
+                Text("planner.header.subtitle".localized)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
 
             // Destination
             VStack(alignment: .leading, spacing: 8) {
-                Label("目的地", systemImage: "location.fill")
+                Label("planner.destination".localized, systemImage: "location.fill")
                     .font(.headline)
 
-                TextField("例如：京都", text: $destination)
+                TextField("planner.destination.placeholder".localized, text: $destination)
                     .textFieldStyle(.roundedBorder)
                     .submitLabel(.done)
             }
@@ -105,12 +105,12 @@ struct AIPlannerSheet: View {
             // Date Range
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Label("日期", systemImage: "calendar")
+                    Label("planner.date".localized, systemImage: "calendar")
                         .font(.headline)
 
                     Spacer()
 
-                    Text("\(durationDays) 天")
+                    Text("planner.days".localized(durationDays))
                         .font(.subheadline)
                         .foregroundStyle(.blue)
                         .padding(.horizontal, 12)
@@ -120,13 +120,13 @@ struct AIPlannerSheet: View {
                 }
 
                 HStack(spacing: 12) {
-                    DatePicker("开始", selection: $startDate, displayedComponents: .date)
+                    DatePicker("planner.date.start".localized, selection: $startDate, displayedComponents: .date)
                         .labelsHidden()
 
                     Image(systemName: "arrow.right")
                         .foregroundStyle(.secondary)
 
-                    DatePicker("结束", selection: $endDate, displayedComponents: .date)
+                    DatePicker("planner.date.end".localized, selection: $endDate, displayedComponents: .date)
                         .labelsHidden()
                 }
             }
@@ -135,7 +135,7 @@ struct AIPlannerSheet: View {
 
             // Travel Style
             VStack(alignment: .leading, spacing: 8) {
-                Label("旅行节奏", systemImage: "figure.walk")
+                Label("planner.style".localized, systemImage: "figure.walk")
                     .font(.headline)
 
                 Picker("Travel Style", selection: $travelStyle) {
@@ -148,7 +148,7 @@ struct AIPlannerSheet: View {
 
             // Budget Range
             VStack(alignment: .leading, spacing: 8) {
-                Label("预算范围", systemImage: "dollarsign.circle")
+                Label("planner.budget".localized, systemImage: "dollarsign.circle")
                     .font(.headline)
 
                 Picker("Budget Range", selection: $budgetRange) {
@@ -163,15 +163,15 @@ struct AIPlannerSheet: View {
 
             // Travelers Count
             VStack(alignment: .leading, spacing: 8) {
-                Label("旅行人数", systemImage: "person.2")
+                Label("planner.travelers".localized, systemImage: "person.2")
                     .font(.headline)
 
-                Stepper("\(travelersCount) 人", value: $travelersCount, in: 1...10)
+                Stepper("planner.travelers.count".localized(travelersCount), value: $travelersCount, in: 1...10)
             }
 
             // Preferences
             VStack(alignment: .leading, spacing: 8) {
-                Label("旅行偏好", systemImage: "heart.fill")
+                Label("planner.preferences".localized, systemImage: "heart.fill")
                     .font(.headline)
 
                 FlowLayout(spacing: 8) {
@@ -202,10 +202,10 @@ struct AIPlannerSheet: View {
                 .scaleEffect(1.5)
 
             VStack(spacing: 8) {
-                Text("AI 正在规划中...")
+                Text("planner.loading.title".localized)
                     .font(.headline)
 
-                Text("分析目的地特点和最佳路线")
+                Text("planner.loading.subtitle".localized)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -225,7 +225,7 @@ struct AIPlannerSheet: View {
                     HStack {
                         Image(systemName: "sparkles")
                             .foregroundStyle(.blue)
-                        Text("AI 建议")
+                        Text("planner.ai_suggestion".localized)
                             .font(.headline)
                     }
 
@@ -248,7 +248,7 @@ struct AIPlannerSheet: View {
                 Button {
                     planningState = .feedback
                 } label: {
-                    Label("修改", systemImage: "pencil")
+                    Label("common.edit".localized, systemImage: "pencil")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -256,7 +256,7 @@ struct AIPlannerSheet: View {
                 Button {
                     importPlan()
                 } label: {
-                    Label("导入行程", systemImage: "square.and.arrow.down")
+                    Label("planner.import".localized, systemImage: "square.and.arrow.down")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -269,10 +269,10 @@ struct AIPlannerSheet: View {
     private var feedbackSection: some View {
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
-                Label("修改建议", systemImage: "bubble.left.and.bubble.right")
+                Label("planner.feedback.title".localized, systemImage: "bubble.left.and.bubble.right")
                     .font(.headline)
 
-                Text("告诉我你想调整什么，我会重新优化行程")
+                Text("planner.feedback.subtitle".localized)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -284,14 +284,14 @@ struct AIPlannerSheet: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
             HStack(spacing: 12) {
-                Button("取消") {
+                Button("common.cancel".localized) {
                     planningState = .preview
                     feedbackText = ""
                 }
                 .buttonStyle(.bordered)
                 .frame(maxWidth: .infinity)
 
-                Button("提交反馈") {
+                Button("planner.feedback.submit".localized) {
                     submitFeedback()
                 }
                 .buttonStyle(.borderedProminent)
@@ -309,7 +309,7 @@ struct AIPlannerSheet: View {
                 .font(.largeTitle)
                 .foregroundStyle(.red)
 
-            Text("生成失败")
+            Text("planner.error.title".localized)
                 .font(.headline)
 
             if let error = errorMessage {
@@ -319,7 +319,7 @@ struct AIPlannerSheet: View {
                     .multilineTextAlignment(.center)
             }
 
-            Button("重试") {
+            Button("common.retry".localized) {
                 planningState = .input
                 errorMessage = nil
             }
@@ -345,7 +345,7 @@ struct AIPlannerSheet: View {
 
             // Days Summary
             VStack(alignment: .leading, spacing: 12) {
-                Text("行程概览")
+                Text("planner.overview".localized)
                     .font(.headline)
 
                 ForEach(plan.days) { day in
@@ -369,7 +369,7 @@ struct AIPlannerSheet: View {
                                     .fontWeight(.medium)
                             }
 
-                            Text("\(day.activities.count) 个活动")
+                            Text("planner.activities.count".localized(day.activities.count))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -387,7 +387,7 @@ struct AIPlannerSheet: View {
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
                         .foregroundStyle(.green)
-                    Text("预估花费：\(budget)")
+                    Text("planner.estimated_budget".localized(budget))
                         .font(.subheadline)
                 }
                 .padding()
@@ -489,7 +489,7 @@ struct AIPlannerSheet: View {
         }
 
         throw NSError(domain: "AIPlannerError", code: -1, userInfo: [
-            NSLocalizedDescriptionKey: "规划超时，请重试"
+            NSLocalizedDescriptionKey: "planner.timeout".localized
         ])
     }
 
@@ -517,8 +517,8 @@ struct AIPlannerSheet: View {
         message += "时间：\(formatter.string(from: startDate)) 至 \(formatter.string(from: endDate))\n"
         message += "天数：\(durationDays)天\n"
         message += "人数：\(travelersCount)人\n"
-        message += "旅行节奏：\(travelStyle.displayName)\n"
-        message += "预算：\(budgetRange.displayName)\n"
+        message += "旅行节奏：\(travelStyle.promptValue)\n"
+        message += "预算：\(budgetRange.promptValue)\n"
 
         if !preferences.isEmpty {
             message += "偏好：\(preferences.joined(separator: "、"))\n"
@@ -543,7 +543,18 @@ enum PlannerTravelStyle: String, CaseIterable {
     case moderate = "moderate"
     case intensive = "intensive"
 
+    /// Localized label for the UI picker.
     var displayName: String {
+        switch self {
+        case .relaxed: return "planner.style.relaxed".localized
+        case .moderate: return "planner.style.moderate".localized
+        case .intensive: return "planner.style.intensive".localized
+        }
+    }
+
+    /// Chinese label embedded in the AI planning prompt — the backend planner
+    /// expects Chinese, so this stays fixed regardless of UI language.
+    var promptValue: String {
         switch self {
         case .relaxed: return "悠闲"
         case .moderate: return "适中"
@@ -557,7 +568,17 @@ enum BudgetRange: String, CaseIterable {
     case moderate = "moderate"
     case luxury = "luxury"
 
+    /// Localized label for the UI picker.
     var displayName: String {
+        switch self {
+        case .budgetFriendly: return "planner.budget.friendly".localized
+        case .moderate: return "planner.budget.moderate".localized
+        case .luxury: return "planner.budget.luxury".localized
+        }
+    }
+
+    /// Chinese label embedded in the AI planning prompt (see PlannerTravelStyle).
+    var promptValue: String {
         switch self {
         case .budgetFriendly: return "经济"
         case .moderate: return "中等"
@@ -576,6 +597,21 @@ enum TravelPreference: String, CaseIterable {
     case adventure = "冒险"
     case relaxation = "休闲"
 
+    /// Localized chip label. The rawValue stays Chinese because it is sent to
+    /// the AI planner backend as the preference value.
+    var displayName: String {
+        switch self {
+        case .food: return "planner.pref.food".localized
+        case .culture: return "planner.pref.culture".localized
+        case .nature: return "planner.pref.nature".localized
+        case .shopping: return "planner.pref.shopping".localized
+        case .nightlife: return "planner.pref.nightlife".localized
+        case .photography: return "planner.pref.photography".localized
+        case .adventure: return "planner.pref.adventure".localized
+        case .relaxation: return "planner.pref.relaxation".localized
+        }
+    }
+
     var icon: String {
         switch self {
         case .food: return "fork.knife"
@@ -585,7 +621,7 @@ enum TravelPreference: String, CaseIterable {
         case .nightlife: return "moon.stars"
         case .photography: return "camera"
         case .adventure: return "figure.hiking"
-        case .relaxation: return "spa"
+        case .relaxation: return "beach.umbrella"
         }
     }
 }
@@ -603,7 +639,7 @@ struct PreferenceChip: View {
                 Image(systemName: preference.icon)
                     .font(.caption)
 
-                Text(preference.rawValue)
+                Text(preference.displayName)
                     .font(.caption)
             }
             .padding(.horizontal, 12)

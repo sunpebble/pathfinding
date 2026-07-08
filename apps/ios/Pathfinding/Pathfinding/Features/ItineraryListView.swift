@@ -172,11 +172,8 @@ struct ItineraryCard: View {
         itineraryInfoView
 
         Spacer()
-
-        // Chevron indicator
-        Image(systemName: "chevron.right")
-          .font(.caption)
-          .foregroundStyle(.tertiary)
+        // ponytail: no custom chevron — the enclosing NavigationLink in a List
+        // already draws the system disclosure indicator (was doubled up).
       }
     }
     .padding(DesignTokens.Spacing.sm)
