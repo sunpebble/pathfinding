@@ -34,7 +34,10 @@ actor NetworkClient {
     #endif
     self.session = URLSession(configuration: config)
 
-    self.decoder = JSONDecoder()
+    // ponytail: API serializes all dates as ISO8601 (Drizzle/Hono c.json); iso8601 is safe app-wide.
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    self.decoder = decoder
   }
 
   /// Default baseURL - points to API server for CRUD operations

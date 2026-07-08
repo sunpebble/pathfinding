@@ -16,26 +16,15 @@ final class ChatStore {
   private(set) var isSending = false
   private(set) var isCreatingSession = false
 
-  private(set) var messagesCursor: String?
-  private(set) var messagesIsDone = false
-
   var errorMessage: String?
-
-  // Temporary message for streaming UI
-  var pendingUserMessage: String?
-  var pendingAssistantMessage: String?
 
   private let apiClient = NetworkClient.shared
   private let logger = Logger(subsystem: "com.sunpebble.trips", category: "ChatStore")
 
   // MARK: - Session Operations
 
-  /// Fetch chat sessions for current user
-  func fetchSessions(userId: String, includeArchived: Bool = false, refresh: Bool = false) async {
-    if refresh {
-      sessions = []
-    }
-
+  /// Fetch chat sessions for the authenticated user (API resolves userId from JWT).
+  func fetchSessions(includeArchived: Bool = false) async {
     guard !isLoadingSessions else { return }
     isLoadingSessions = true
     errorMessage = nil
@@ -44,7 +33,6 @@ final class ChatStore {
       let response: ChatSessionListResponse = try await apiClient.fetch(
         path: "chat/sessions",
         queryItems: [
-          URLQueryItem(name: "userId", value: userId),
           URLQueryItem(name: "includeArchived", value: includeArchived ? "true" : "false"),
           URLQueryItem(name: "limit", value: "50"),
         ]
@@ -60,24 +48,17 @@ final class ChatStore {
     isLoadingSessions = false
   }
 
-  /// Create a new chat session
-  func createSession(
-    userId: String,
-    title: String? = nil,
-    itineraryId: String? = nil,
-    guideId: String? = nil,
-    context: String? = nil
-  ) async -> ChatSession? {
+  /// Create a new chat session. Body is `{ title?, context? }`; context (when non-empty) is sent
+  /// as `{ "text": <string> }` to satisfy the API's record schema.
+  func createSession(title: String? = nil, context: String? = nil) async -> ChatSession? {
     guard !isCreatingSession else { return nil }
     isCreatingSession = true
     errorMessage = nil
 
     do {
-      var body: [String: Any] = ["userId": userId]
+      var body: [String: Any] = [:]
       if let title { body["title"] = title }
-      if let itineraryId { body["itineraryId"] = itineraryId }
-      if let guideId { body["guideId"] = guideId }
-      if let context { body["context"] = context }
+      if let context, !context.isEmpty { body["context"] = ["text": context] }
 
       let response: CreateSessionResponse = try await apiClient.post(
         path: "chat/sessions",
@@ -105,29 +86,14 @@ final class ChatStore {
   func selectSession(_ session: ChatSession) async {
     currentSession = session
     messages = []
-    messagesCursor = nil
-    messagesIsDone = false
-
-    await fetchMessages(sessionId: session.id, refresh: true)
+    await fetchMessages(sessionId: session.id)
   }
 
-  /// Archive a session
+  /// Archive a session (DELETE /sessions/:id soft-deletes via is_archived).
   func archiveSession(_ session: ChatSession) async -> Bool {
     do {
-      let _: ChatSessionResponse = try await apiClient.patch(
-        path: "chat/sessions/\(session.id)",
-        body: ["isArchived": true]
-      )
-
-      // Update local state
-      if let index = sessions.firstIndex(where: { $0.id == session.id }) {
-        sessions.remove(at: index)
-      }
-      if currentSession?.id == session.id {
-        currentSession = nil
-        messages = []
-      }
-
+      try await apiClient.delete(path: "chat/sessions/\(session.id)")
+      removeSessionLocally(session.id)
       logger.info("Archived session: \(session.id)")
       return true
     } catch {
@@ -137,22 +103,11 @@ final class ChatStore {
     }
   }
 
-  /// Delete a session
+  /// Delete a session (same route/semantics as archive on the API).
   func deleteSession(_ session: ChatSession) async -> Bool {
     do {
-      try await apiClient.delete(
-        path: "chat/sessions/\(session.id)"
-      )
-
-      // Update local state
-      if let index = sessions.firstIndex(where: { $0.id == session.id }) {
-        sessions.remove(at: index)
-      }
-      if currentSession?.id == session.id {
-        currentSession = nil
-        messages = []
-      }
-
+      try await apiClient.delete(path: "chat/sessions/\(session.id)")
+      removeSessionLocally(session.id)
       logger.info("Deleted session: \(session.id)")
       return true
     } catch {
@@ -162,66 +117,21 @@ final class ChatStore {
     }
   }
 
-  /// Update session title
-  func updateSessionTitle(_ session: ChatSession, title: String) async -> Bool {
-    do {
-      let _: ChatSessionResponse = try await apiClient.patch(
-        path: "chat/sessions/\(session.id)",
-        body: ["title": title]
-      )
-
-      // Update local state
-      if sessions.firstIndex(where: { $0.id == session.id }) != nil {
-        // Create updated session (since ChatSession is a struct)
-        await fetchSessions(userId: String(session.userId), refresh: true)
-      }
-
-      logger.info("Updated session title: \(session.id)")
-      return true
-    } catch {
-      logger.error("Failed to update session title: \(error.localizedDescription)")
-      errorMessage = error.userFacingMessage
-      return false
-    }
-  }
-
   // MARK: - Message Operations
 
-  /// Fetch messages for current session
-  func fetchMessages(sessionId: Int, refresh: Bool = false) async {
-    if refresh {
-      messages = []
-      messagesCursor = nil
-      messagesIsDone = false
-    }
-
-    guard !isLoadingMessages, !messagesIsDone else { return }
+  /// Fetch messages for a session. The API has no cursor, so one shot covers it.
+  func fetchMessages(sessionId: Int) async {
+    guard !isLoadingMessages else { return }
     isLoadingMessages = true
     errorMessage = nil
 
     do {
-      var queryItems = [
-        URLQueryItem(name: "limit", value: "50")
-      ]
-      if let cursor = messagesCursor {
-        queryItems.append(URLQueryItem(name: "cursor", value: cursor))
-      }
-
       let response: ChatMessageListResponse = try await apiClient.fetch(
         path: "chat/sessions/\(sessionId)/messages",
-        queryItems: queryItems
+        queryItems: [URLQueryItem(name: "limit", value: "50")]
       )
 
-      if refresh {
-        messages = response.data
-      } else {
-        messages.append(contentsOf: response.data)
-      }
-
-      // ponytail: API no longer returns cursor/isDone; load once until Task 3.1 rewires pagination.
-      messagesIsDone = true
-      messagesCursor = nil
-
+      messages = response.data
       logger.info("Fetched \(response.data.count) messages for session \(sessionId)")
     } catch {
       logger.error("Failed to fetch messages: \(error.localizedDescription)")
@@ -231,97 +141,29 @@ final class ChatStore {
     isLoadingMessages = false
   }
 
-  /// Load more messages (pagination)
-  func loadMoreMessages() async {
-    guard let session = currentSession, !messagesIsDone else { return }
-    await fetchMessages(sessionId: session.id)
-  }
-
-  /// Send a message and get AI response
+  /// Send a message; the API persists user+assistant rows atomically and returns both.
   func sendMessage(_ content: String) async -> Bool {
     guard let session = currentSession, !isSending else { return false }
     isSending = true
     errorMessage = nil
-    pendingUserMessage = content
-    pendingAssistantMessage = nil
 
     do {
-      let _: SendMessageResponse = try await apiClient.post(
+      let response: SendMessageResponse = try await apiClient.post(
         path: "chat/sessions/\(session.id)/messages",
         body: ["content": content]
       )
 
-      // Clear pending states
-      pendingUserMessage = nil
-      pendingAssistantMessage = nil
+      messages.append(response.data.userMessage)
+      messages.append(response.data.assistantMessage)
 
-      // Refresh messages to get the new ones
-      await fetchMessages(sessionId: session.id, refresh: true)
-
-      // Update session in list (message count changed)
-      if sessions.firstIndex(where: { $0.id == session.id }) != nil {
-        // Reload sessions to get updated counts
-        await fetchSessions(userId: String(session.userId))
-      }
-
-      logger.info("Sent message and received response")
+      logger.info("Sent message and received response for session \(session.id)")
       isSending = false
       return true
     } catch {
       logger.error("Failed to send message: \(error.localizedDescription)")
       errorMessage = error.userFacingMessage
-      pendingUserMessage = nil
-      pendingAssistantMessage = nil
       isSending = false
       return false
-    }
-  }
-
-  /// Clear all messages in current session
-  func clearMessages() async -> Bool {
-    guard let session = currentSession else { return false }
-
-    do {
-      try await apiClient.delete(
-        path: "chat/sessions/\(session.id)/messages"
-      )
-
-      messages = []
-      messagesCursor = nil
-      messagesIsDone = true
-
-      logger.info("Cleared messages for session: \(session.id)")
-      return true
-    } catch {
-      logger.error("Failed to clear messages: \(error.localizedDescription)")
-      errorMessage = error.userFacingMessage
-      return false
-    }
-  }
-
-  // MARK: - Quick Chat (Stateless)
-
-  /// Send a quick chat query without session
-  func quickChat(
-    message: String,
-    context: ChatContext? = nil
-  ) async -> ChatResponse? {
-    do {
-      var body: [String: Any] = ["message": message]
-      if let context {
-        body["context"] = try JSONEncoder().encode(context)
-      }
-
-      let response: ChatQueryResponse = try await apiClient.post(
-        path: "chat/query",
-        body: body
-      )
-
-      return response.data
-    } catch {
-      logger.error("Quick chat failed: \(error.localizedDescription)")
-      errorMessage = error.userFacingMessage
-      return nil
     }
   }
 
@@ -331,9 +173,15 @@ final class ChatStore {
   func clearCurrentSession() {
     currentSession = nil
     messages = []
-    messagesCursor = nil
-    messagesIsDone = false
-    pendingUserMessage = nil
-    pendingAssistantMessage = nil
+  }
+
+  private func removeSessionLocally(_ sessionId: Int) {
+    if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
+      sessions.remove(at: index)
+    }
+    if currentSession?.id == sessionId {
+      currentSession = nil
+      messages = []
+    }
   }
 }

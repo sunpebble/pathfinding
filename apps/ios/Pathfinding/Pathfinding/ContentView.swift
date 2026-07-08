@@ -37,7 +37,7 @@ struct ContentView: View {
   var body: some View {
     TabView(selection: $appState.selectedTab) {
       SwiftUI.Tab(Tab.chat.title, systemImage: Tab.chat.icon, value: Tab.chat) {
-        ChatSessionListView(userId: AuthManager.shared.currentUserId ?? "guest")
+        ChatSessionListView()
       }
       SwiftUI.Tab(Tab.itinerary.title, systemImage: Tab.itinerary.icon, value: Tab.itinerary) {
         ItineraryListView()

@@ -11,8 +11,6 @@ struct ChatSessionListView: View {
   @State private var swipeHintOffset: CGFloat = 0
   @AppStorage("hasShownSwipeHint") private var hasShownSwipeHint = false
 
-  let userId: String
-
   var body: some View {
     NavigationStack {
       ZStack {
@@ -44,13 +42,13 @@ struct ChatSessionListView: View {
         }
       }
       .task {
-        await store.fetchSessions(userId: userId, refresh: true)
+        await store.fetchSessions()
       }
       .refreshable {
-        await store.fetchSessions(userId: userId, refresh: true)
+        await store.fetchSessions()
       }
       .sheet(isPresented: $showNewSessionSheet) {
-        NewSessionSheet(userId: userId, store: store) {
+        NewSessionSheet(store: store) {
           showNewSessionSheet = false
         }
       }
@@ -193,7 +191,6 @@ private struct LoadingView: View {
 // MARK: - New Session Sheet
 
 private struct NewSessionSheet: View {
-  let userId: String
   let store: ChatStore
   let onDismiss: () -> Void
 
@@ -264,7 +261,6 @@ private struct NewSessionSheet: View {
             Task {
               isCreating = true
               let session = await store.createSession(
-                userId: userId,
                 title: title.isEmpty ? nil : title,
                 context: context.isEmpty ? nil : context
               )
@@ -305,7 +301,6 @@ struct ChatConversationView: View {
   let store: ChatStore
 
   @State private var inputText = ""
-  @State private var showClearAlert = false
   @FocusState private var isInputFocused: Bool
 
   var body: some View {
@@ -314,37 +309,14 @@ struct ChatConversationView: View {
       ScrollViewReader { proxy in
         ScrollView {
           LazyVStack(spacing: DesignTokens.Spacing.md) {
-            // Load more indicator
-            if !store.messagesIsDone && !store.messages.isEmpty {
-              Button {
-                Task {
-                  await store.loadMoreMessages()
-                }
-              } label: {
-                if store.isLoadingMessages {
-                  ProgressView()
-                } else {
-                  Text("chat.load_more".localized)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-              }
-              .padding()
-            }
-
             // Messages
             ForEach(store.messages) { message in
               MessageBubble(message: message)
                 .id(message.id)
             }
 
-            // Pending user message
-            if let pending = store.pendingUserMessage {
-              PendingMessageBubble(content: pending, isUser: true)
-            }
-
-            // Pending assistant message (typing indicator)
-            if store.isSending && store.pendingUserMessage != nil {
+            // Typing indicator while waiting for the assistant reply
+            if store.isSending {
               TypingIndicator()
             }
           }
@@ -379,33 +351,8 @@ struct ChatConversationView: View {
     }
     .navigationTitle(session.title)
     .navigationBarTitleDisplayMode(.inline)
-    .toolbar {
-      ToolbarItem(placement: .primaryAction) {
-        Menu {
-          Button {
-            showClearAlert = true
-          } label: {
-            Label("chat.clear".localized, systemImage: "trash")
-          }
-        } label: {
-          Image(systemName: "ellipsis.circle")
-        }
-        .accessibilityLabel("chat.more_actions".localized)
-        .accessibilityHint("chat.more_actions_hint".localized)
-      }
-    }
     .task {
       await store.selectSession(session)
-    }
-    .alert("chat.clear".localized, isPresented: $showClearAlert) {
-      Button("common.cancel".localized, role: .cancel) {}
-      Button("chat.clear_confirm".localized, role: .destructive) {
-        Task {
-          _ = await store.clearMessages()
-        }
-      }
-    } message: {
-      Text("chat.clear_message".localized)
     }
   }
 
@@ -475,37 +422,6 @@ private struct MessageBubble: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)
-  }
-}
-
-// MARK: - Pending Message Bubble
-
-private struct PendingMessageBubble: View {
-  let content: String
-  let isUser: Bool
-
-  var body: some View {
-    HStack {
-      if !isUser {
-        Circle()
-          .fill(Color.gray.opacity(0.3))
-          .frame(width: 32, height: 32)
-      }
-
-      Text(content)
-        .padding(DesignTokens.Spacing.sm)
-        .background(isUser ? Color.blue.opacity(0.7) : Color(.systemGray5))
-        .foregroundStyle(isUser ? .white.opacity(0.7) : .secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-
-      if isUser {
-        Circle()
-          .fill(Color.orange.opacity(0.5))
-          .frame(width: 32, height: 32)
-      }
-    }
-    .frame(maxWidth: .infinity, alignment: isUser ? .trailing : .leading)
-    .opacity(0.7)
   }
 }
 
@@ -627,5 +543,5 @@ private struct InputBar: View {
 // MARK: - Preview
 
 #Preview {
-  ChatSessionListView(userId: "test-user")
+  ChatSessionListView()
 }
