@@ -160,6 +160,14 @@ export async function isSessionValid(db: Database, sessionId: string): Promise<b
  * A signed token can't be forged without `secret`, and its `sid` claim
  * still gates on `isSessionValid` so server-side revocation keeps working.
  *
+ * Rotation revokes the presented token: rather than re-issuing tokens
+ * bound to the same `sid`, we mint a brand-new session id and delete the
+ * old one. Because `isSessionValid` gates on session existence, both the
+ * old refresh token *and* the access token minted alongside it (they share
+ * the now-deleted `sid`) are rejected on any subsequent use. Without this,
+ * a captured refresh token would stay replayable for its full 30-day JWT
+ * lifetime even after the legitimate holder had already rotated it.
+ *
  * Returns `null` on any failure (forged/expired/malformed token, wrong
  * `typ`, revoked session, or missing user) — the route maps that to 401.
  */
@@ -194,8 +202,16 @@ export async function refreshSession(
 
   const userId = String(user.id);
   const email = user.email ?? '';
-  const token = await generateToken(userId, email, secret, payload.sid);
-  const rotatedRefreshToken = await generateRefreshToken(userId, email, secret, payload.sid);
+
+  // Rotate the server-side session so the presented refresh token cannot be
+  // replayed: issue a fresh session id, then revoke the old one. The new
+  // access + refresh tokens carry the new `sid`; the old pair carries the
+  // deleted `sid` and so fails `isSessionValid` on any later request.
+  const newSessionId = await createSession(db, userId);
+  await deleteSession(db, payload.sid);
+
+  const token = await generateToken(userId, email, secret, newSessionId);
+  const rotatedRefreshToken = await generateRefreshToken(userId, email, secret, newSessionId);
 
   return { token, refreshToken: rotatedRefreshToken, userId, email };
 }
