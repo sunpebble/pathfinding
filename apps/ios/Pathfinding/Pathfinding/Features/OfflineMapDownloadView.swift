@@ -58,7 +58,7 @@ struct OfflineMapDownloadView: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          Button("完成") {
+          Button("common.done".localized) {
             dismiss()
           }
         }
@@ -170,7 +170,7 @@ struct DownloadStatusCard: View {
 
             Spacer()
 
-            Text("\(region.downloadedTiles) / \(region.totalTiles) 瓦片")
+            Text("offline_download.tiles_count".localized(region.downloadedTiles, region.totalTiles))
               .font(.caption)
               .foregroundStyle(.secondary)
           }
@@ -181,9 +181,9 @@ struct DownloadStatusCard: View {
       HStack {
         Label {
           if region.isDownloaded {
-            Text("已下载 \(region.formattedSize)")
+            Text("profile.offline_maps_downloaded".localized(region.formattedSize))
           } else {
-            Text("预计大小 \(region.formattedSize)")
+            Text("offline_download.estimated_size".localized(region.formattedSize))
           }
         } icon: {
           Image(systemName: "internaldrive")
@@ -194,7 +194,7 @@ struct DownloadStatusCard: View {
         Spacer()
 
         if let lastUpdated = region.lastUpdated {
-          Text("更新于 \(lastUpdated, style: .relative)")
+          (Text("offline_download.updated_prefix".localized) + Text(" ") + Text(lastUpdated, style: .relative))
             .font(.caption)
             .foregroundStyle(.tertiary)
         }
@@ -232,17 +232,17 @@ struct DownloadStatusCard: View {
   private var statusText: String {
     switch region.downloadState {
     case .notDownloaded:
-      return "未下载"
+      return "offline_download.status_not_downloaded".localized
     case .downloading:
-      return "下载中..."
+      return "map.downloading".localized
     case .paused:
-      return "已暂停"
+      return "offline_download.status_paused".localized
     case .downloaded:
-      return "已下载"
+      return "offline_download.status_downloaded".localized
     case .failed:
-      return "下载失败"
+      return "map.download_failed".localized
     case .updating:
-      return "更新中..."
+      return "offline_download.status_updating".localized
     }
   }
 }
@@ -254,24 +254,24 @@ struct RegionDetailsCard: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-      Text("地图详情")
+      Text("offline_download.details_title".localized)
         .font(.headline)
 
       VStack(spacing: DesignTokens.Spacing.sm) {
-        DetailRow(label: "城市", value: region.localizedName)
-        DetailRow(label: "英文名", value: region.name)
+        DetailRow(label: "offline_download.detail_city".localized, value: region.localizedName)
+        DetailRow(label: "offline_download.detail_english_name".localized, value: region.name)
         if let province = region.province {
-          DetailRow(label: "省份", value: province)
+          DetailRow(label: "offline_download.detail_province".localized, value: province)
         }
-        DetailRow(label: "缩放级别", value: "\(region.minZoom) - \(region.maxZoom)")
+        DetailRow(label: "offline_download.detail_zoom".localized, value: "\(region.minZoom) - \(region.maxZoom)")
         DetailRow(
-          label: "覆盖范围",
+          label: "offline_download.detail_coverage".localized,
           value: String(format: "%.2f° x %.2f°",
                         region.boundingBox.maxLat - region.boundingBox.minLat,
                         region.boundingBox.maxLon - region.boundingBox.minLon)
         )
         DetailRow(
-          label: "中心坐标",
+          label: "offline_download.detail_center".localized,
           value: String(format: "%.4f, %.4f",
                         region.center.latitude,
                         region.center.longitude)
@@ -321,7 +321,7 @@ struct ActionButtonsSection: View {
         Button {
           onDownload()
         } label: {
-          Label("下载离线地图", systemImage: "arrow.down.circle.fill")
+          Label("offline_download.download_button".localized, systemImage: "arrow.down.circle.fill")
             .frame(maxWidth: .infinity)
             .padding()
             .background(DesignTokens.Colors.accent)
@@ -334,7 +334,7 @@ struct ActionButtonsSection: View {
           Button {
             onPause()
           } label: {
-            Label("暂停", systemImage: "pause.fill")
+            Label("offline_download.pause".localized, systemImage: "pause.fill")
               .frame(maxWidth: .infinity)
               .padding()
               .background(Color.orange)
@@ -345,7 +345,7 @@ struct ActionButtonsSection: View {
           Button {
             onCancel()
           } label: {
-            Label("取消", systemImage: "xmark")
+            Label("common.cancel".localized, systemImage: "xmark")
               .frame(maxWidth: .infinity)
               .padding()
               .background(Color(.systemGray5))
@@ -359,7 +359,7 @@ struct ActionButtonsSection: View {
           Button {
             onResume()
           } label: {
-            Label("继续", systemImage: "play.fill")
+            Label("offline_download.resume".localized, systemImage: "play.fill")
               .frame(maxWidth: .infinity)
               .padding()
               .background(DesignTokens.Colors.accent)
@@ -370,7 +370,7 @@ struct ActionButtonsSection: View {
           Button {
             onCancel()
           } label: {
-            Label("取消", systemImage: "xmark")
+            Label("common.cancel".localized, systemImage: "xmark")
               .frame(maxWidth: .infinity)
               .padding()
               .background(Color(.systemGray5))
@@ -383,7 +383,7 @@ struct ActionButtonsSection: View {
         Button(role: .destructive) {
           showDeleteConfirmation = true
         } label: {
-          Label("删除离线地图", systemImage: "trash")
+          Label("offline_download.delete_button".localized, systemImage: "trash")
             .frame(maxWidth: .infinity)
             .padding()
             .background(Color.red.opacity(0.1))
@@ -395,7 +395,7 @@ struct ActionButtonsSection: View {
         Button {
           onCancel()
         } label: {
-          Label("取消更新", systemImage: "xmark")
+          Label("offline_download.cancel_update".localized, systemImage: "xmark")
             .frame(maxWidth: .infinity)
             .padding()
             .background(Color(.systemGray5))
@@ -404,13 +404,13 @@ struct ActionButtonsSection: View {
         }
       }
     }
-    .alert("删除离线地图", isPresented: $showDeleteConfirmation) {
-      Button("取消", role: .cancel) {}
-      Button("删除", role: .destructive) {
+    .alert("offline_download.delete_button".localized, isPresented: $showDeleteConfirmation) {
+      Button("common.cancel".localized, role: .cancel) {}
+      Button("common.delete".localized, role: .destructive) {
         onDelete()
       }
     } message: {
-      Text("确定要删除「\(region.localizedName)」的离线地图吗？")
+      Text("offline_download.delete_confirm".localized(region.localizedName))
     }
   }
 }

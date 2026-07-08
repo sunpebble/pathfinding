@@ -629,3 +629,281 @@
 "planner.feedback.submit" = "Submit Feedback";
 "planner.error.title" = "Generation Failed";
 "planner.timeout" = "Planning timed out, please try again";
+
+
+// MARK: - analysis (Features/Analysis/ItineraryAnalysisView.swift)
+"analysis.loading_title" = "Analyzing itinerary...";
+"analysis.loading_subtitle" = "Evaluating itinerary reasonableness, scheduling, and budget";
+"analysis.error_title" = "Analysis Failed";
+"analysis.empty_title" = "Generate Itinerary Analysis Report";
+"analysis.empty_subtitle" = "Evaluate your itinerary and get optimization tips and budget analysis";
+"analysis.start" = "Start Analysis";
+"analysis.tab_overview" = "Overview";
+"analysis.tab_daily" = "Daily";
+"analysis.tab_recommendations" = "Tips";
+"analysis.city_days" = "%@ | %d days";
+"analysis.strengths" = "Strengths";
+"analysis.critical_issues" = "Needs Attention";
+"analysis.improvements" = "Improvements";
+"analysis.time_analysis" = "Time Analysis";
+"analysis.start_time" = "Start Time";
+"analysis.end_time" = "End Time";
+"analysis.activity_time" = "Activity Time";
+"analysis.travel_time" = "Travel Time";
+"analysis.time_utilization" = "Time Utilization";
+"analysis.suggested_breaks" = "Suggested Breaks";
+"analysis.duration_hm" = "%dh %dm";
+"analysis.duration_minutes" = "%d min";
+"analysis.break_after" = "After %@";
+"analysis.break_reason_duration" = "%@ (%d min)";
+"analysis.day_number" = "Day %d";
+"analysis.poi_count_value" = "%d";
+"analysis.duration" = "Duration";
+"analysis.distance" = "Distance";
+"analysis.route_efficiency" = "Route Efficiency";
+"analysis.route_optimization_suggestion" = "Route Optimization Tip";
+"analysis.save_minutes" = "Save %d min";
+"analysis.reduce_km" = "Reduce %@ km";
+"analysis.poi_analysis" = "Attraction Analysis";
+"analysis.suggested_minutes" = "Suggested %d min";
+"analysis.actual_minutes" = "Actual %d min";
+"analysis.opening_hours_conflict" = "May be outside opening hours";
+"analysis.budget_unavailable" = "Budget Analysis Unavailable";
+"analysis.budget_no_data" = "This itinerary has no budget data yet";
+"analysis.estimated_total" = "Estimated Total";
+"analysis.per_day" = "Per Day";
+"analysis.per_person" = "Per Person";
+"analysis.cost_breakdown" = "Cost Breakdown";
+"analysis.saving_suggestions" = "Saving Tips";
+"analysis.potential_saving" = "Save ¥%d";
+"analysis.core_recommendations" = "Key Recommendations";
+"analysis.route_optimizations" = "Route Optimization";
+"analysis.minus_minutes" = "-%d min";
+
+// MARK: - voice (Features/VoiceItineraryView.swift)
+"voice.title" = "Voice Planning";
+"voice.add" = "Add";
+"voice.empty_day_hint" = "Say \"Add [place name]\" to add a place";
+"voice.action_add_poi" = "Add Place";
+"voice.action_add_day" = "Add Day";
+"voice.action_previous_day" = "Previous Day";
+"voice.action_next_day" = "Next Day";
+"voice.action_memo" = "Memo";
+"voice.search_results" = "Search Results";
+"voice.clear" = "Clear";
+"voice.command_hints" = "Voice Command Hints";
+"voice.hint_add_cmd" = "Add [place name]";
+"voice.hint_add_desc" = "Add a place to the current day";
+"voice.hint_remove_cmd" = "Remove [place name]";
+"voice.hint_remove_desc" = "Remove the specified place";
+"voice.hint_navigate_cmd" = "Next / Previous";
+"voice.hint_navigate_desc" = "Switch days";
+"voice.hint_search_cmd" = "Search [keyword]";
+"voice.hint_search_desc" = "Search places";
+"voice.hint_goto_cmd" = "Day N";
+"voice.hint_goto_desc" = "Jump to a specific day";
+"voice.hint_save_cmd" = "Save itinerary";
+"voice.hint_save_desc" = "Save the current itinerary";
+"voice.feedback_jumped_to_day" = "Jumped to day %d";
+"voice.feedback_day_not_exist" = "Day %d does not exist";
+"voice.feedback_located_poi" = "Located place %d";
+"voice.feedback_itinerary_created" = "Itinerary created";
+"voice.feedback_duration_set" = "Set to a %d-day itinerary";
+"voice.feedback_day_added" = "Added day %d";
+"voice.feedback_added" = "Added: %@";
+"voice.feedback_removed" = "Removed: %@";
+"voice.feedback_not_found" = "Not found: %@";
+"voice.feedback_time_set" = "%@ time set to %@";
+"voice.feedback_last_day" = "Already the last day";
+"voice.feedback_first_day" = "Already the first day";
+"voice.feedback_found_results" = "Found %d results";
+"voice.feedback_memo_saved" = "Memo saved: %@";
+"voice.mode_idle" = "Waiting for voice input";
+"voice.mode_adding_poi" = "Add place mode";
+"voice.mode_searching" = "Search mode";
+"voice.mode_memo" = "Memo mode";
+"voice.placeholder_idle" = "Say \"Add Forbidden City\" or \"Search restaurants\"";
+"voice.placeholder_adding_poi" = "Say the place name...";
+"voice.placeholder_searching" = "Say the search keyword...";
+"voice.placeholder_memo" = "Say the memo content...";
+"voice.poi_count_short" = "%d places";
+
+// MARK: - siri (Features/SiriShortcuts/SiriShortcutsSettingsView.swift)
+"siri.builtin_shortcuts" = "Built-in Shortcuts";
+"siri.open_in_shortcuts_app" = "Open in Shortcuts App";
+"siri.section_system" = "System Shortcuts";
+"siri.footer_voice" = "Sunpebble Trips supports Siri voice control. Just say \"Hey Siri, view today's itinerary\" to quickly check today's plans.";
+"siri.empty_title" = "No Custom Shortcuts";
+"siri.empty_description" = "Create shortcuts for frequently used itineraries or places for quick voice access.";
+"siri.section_custom" = "Custom Shortcuts";
+"siri.tip_voice_title" = "Voice Trigger";
+"siri.tip_voice_desc" = "Say your wake phrase to Siri to run it quickly.";
+"siri.tip_suggest_title" = "Smart Suggestions";
+"siri.tip_suggest_desc" = "Sunpebble Trips automatically suggests shortcuts based on your usage habits.";
+"siri.tip_location_title" = "Location Awareness";
+"siri.tip_location_desc" = "While traveling, the app intelligently suggests navigating to your next stop.";
+"siri.section_tips" = "Tips";
+"siri.title" = "Siri Shortcuts";
+"siri.delete_dialog_title" = "Delete Shortcut";
+"siri.delete_confirm_message" = "Delete the \"%@\" shortcut?";
+"siri.builtin_today_title" = "View Today's Itinerary";
+"siri.builtin_today_desc" = "Show today's travel plans and list of places.";
+"siri.builtin_navigate_title" = "Navigate to Next Stop";
+"siri.builtin_navigate_desc" = "Open Maps and navigate to the next stop in your current itinerary.";
+"siri.builtin_list_title" = "View Itinerary List";
+"siri.builtin_list_desc" = "Open your list of saved itineraries.";
+"siri.builtin_search_title" = "Search Places";
+"siri.builtin_search_desc" = "Search for places in your itinerary or discover new destinations.";
+"siri.phrase_today_2" = "Today's itinerary";
+"siri.phrase_today_3" = "Show today's itinerary";
+"siri.phrase_navigate_1" = "Navigate to the next place";
+"siri.phrase_navigate_2" = "Go to the next place";
+"siri.phrase_list_1" = "View itinerary";
+"siri.phrase_list_2" = "Open my itinerary";
+"siri.phrase_list_3" = "Show itinerary list";
+"siri.phrase_search_1" = "Search places [keyword]";
+"siri.phrase_search_2" = "Find [place name]";
+"siri.wake_phrase" = "Wake Phrase";
+"siri.phrase_quoted" = "\"%@\"";
+"siri.target" = "Target";
+"siri.phrase_placeholder" = "e.g. Open Tokyo trip";
+"siri.add_footer" = "Set a short phrase; say it to Siri to open this quickly.";
+"siri.add_title" = "Add Shortcut";
+"siri.add" = "Add";
+
+// MARK: - offlinemap (Features/OfflineMapListView.swift)
+"offlinemap.tab_available" = "Available";
+"offlinemap.tab_downloaded" = "Downloaded";
+"offlinemap.delete_all" = "Delete All";
+"offlinemap.delete_alert_title" = "Delete Offline Map";
+"offlinemap.delete_confirm_message" = "Delete the offline map for 「%@」?";
+"offlinemap.delete_all_alert_title" = "Delete All Offline Maps";
+"offlinemap.delete_all_message" = "Delete all downloaded offline maps? This action cannot be undone.";
+"offlinemap.storage_used" = "Used: %@";
+"offlinemap.storage_available" = "Available: %@";
+"offlinemap.search_placeholder" = "Search cities";
+"offlinemap.no_cities_found" = "No Cities Found";
+"offlinemap.try_other_search" = "Try a different search term";
+"offlinemap.approx_size" = "About %@";
+"offlinemap.zoom_range" = "Zoom %d-%d";
+"offlinemap.empty_title" = "No Offline Maps";
+"offlinemap.empty_hint" = "Download offline maps to use them without a network connection";
+"offlinemap.update" = "Update";
+
+// MARK: - copyitinerary (Features/CopyItinerarySheet.swift)
+"copyitinerary.saved_message" = "Itinerary saved to \"My Itineraries\"";
+"copyitinerary.copied_message" = "Itinerary copied to \"My Itineraries\"";
+"copyitinerary.default_copy_title" = "%@ (Copy)";
+"copyitinerary.continue" = "Continue";
+"copyitinerary.copy_partial_toggle" = "Copy selected days only";
+"copyitinerary.copy_options" = "Copy Options";
+"copyitinerary.copy_partial_footer" = "Select the days to copy; the rest will be skipped";
+"copyitinerary.copy_all_footer" = "Will copy all %d days of the itinerary";
+"copyitinerary.preview" = "Copy Preview";
+"copyitinerary.success_title" = "Copied Successfully";
+"copyitinerary.error_title" = "Copy Failed";
+"copyitinerary.error_unknown" = "Unknown error. Please try again later.";
+"copyitinerary.select_days" = "Select Days";
+"copyitinerary.deselect_all" = "Deselect All";
+"copyitinerary.select_all" = "Select All";
+"copyitinerary.days_count" = "%d days";
+"copyitinerary.pois_count" = "%d spots";
+"copyitinerary.chip_pois" = "%d spots";
+"copyitinerary.copy_count" = "Copied %d times";
+"copyitinerary.recent_copies" = "%d recent copies";
+"copyitinerary.from_author" = "From %@";
+"copyitinerary.date_format" = "MMM d, yyyy";
+
+// MARK: - voiceinput (Features/Components/VoiceInputView.swift)
+"voiceinput.placeholder" = "Tap the microphone to start voice input";
+"voiceinput.permission_title" = "Permission Required";
+"voiceinput.open_settings" = "Open Settings";
+"voiceinput.permission_message" = "Please allow speech recognition and microphone access in Settings";
+"voiceinput.listening" = "Listening...";
+"voiceinput.recording" = "Recording";
+"voiceinput.stop" = "Stop";
+"voiceinput.record" = "Record";
+"voiceinput.memo_title_section" = "Memo Title";
+"voiceinput.memo_title_placeholder" = "Enter a title";
+"voiceinput.save_memo_title" = "Save Memo";
+"voiceinput.no_memos" = "No Memos";
+"voiceinput.no_memos_description" = "Record voice memos to review anytime";
+
+// MARK: - offline_download (Features/OfflineMapDownloadView.swift)
+"offline_download.tiles_count" = "%d / %d tiles";
+"offline_download.estimated_size" = "Estimated size %@";
+"offline_download.updated_prefix" = "Updated";
+"offline_download.status_not_downloaded" = "Not Downloaded";
+"offline_download.status_paused" = "Paused";
+"offline_download.status_downloaded" = "Downloaded";
+"offline_download.status_updating" = "Updating...";
+"offline_download.details_title" = "Map Details";
+"offline_download.detail_city" = "City";
+"offline_download.detail_english_name" = "English Name";
+"offline_download.detail_province" = "Province";
+"offline_download.detail_zoom" = "Zoom Level";
+"offline_download.detail_coverage" = "Coverage";
+"offline_download.detail_center" = "Center Coordinates";
+"offline_download.download_button" = "Download Offline Map";
+"offline_download.pause" = "Pause";
+"offline_download.resume" = "Resume";
+"offline_download.delete_button" = "Delete Offline Map";
+"offline_download.cancel_update" = "Cancel Update";
+"offline_download.delete_confirm" = "Are you sure you want to delete the offline map for \"%@\"?";
+
+// MARK: - share (Features/Share/ShareSheet.swift)
+"share.error_title" = "Share Failed";
+"share.preview" = "Preview";
+"share.generating_preview" = "Generating preview...";
+"share.style" = "Style";
+"share.size" = "Size";
+"share.share_to" = "Share to";
+"share.save_to_album" = "Save Image to Album";
+"share.copied_to_clipboard" = "Copied to clipboard";
+
+// MARK: - sharecard (Features/Share/ShareCardView.swift)
+"sharecard.scan_hint" = "Scan to view";
+"sharecard.description" = "%@ %d-day trip";
+"sharecard.style_label" = "Style";
+"sharecard.size_label" = "Size";
+
+// MARK: - visualeffects (Features/Components/VisualEffects.swift)
+"visualeffects.preview.topographic" = "Topographic Lines";
+"visualeffects.preview.compass" = "Compass Decoration";
+
+// MARK: - offlinetile (Features/Components/OfflineTileOverlay.swift)
+"offlinetile.banner.no_maps" = "Offline mode - No offline maps available";
+"offlinetile.banner.using_local" = "Offline mode - Using local maps";
+
+// MARK: - tips (Features/Itinerary/TipsCard.swift)
+"tips.title" = "Travel Tips";
+
+
+// MARK: - icloud (Features/Settings/CloudSyncSettingsSheet.swift (pre-existing undefined icloud.* keys))
+"icloud.enable_sync" = "Enable iCloud Sync";
+"icloud.enable_sync_description" = "Sync your itineraries across all your devices";
+"icloud.auto_sync" = "Auto Sync";
+"icloud.auto_sync_description" = "Automatically sync changes in the background";
+"icloud.actions" = "Actions";
+"icloud.conflicts" = "Conflicts";
+"icloud.conflicts_description" = "These itineraries were edited on more than one device. Tap to resolve.";
+"icloud.sign_in_required" = "Sign in to iCloud in Settings to enable sync";
+"icloud.account_available" = "iCloud Available";
+"icloud.no_account" = "No iCloud Account";
+"icloud.account_restricted" = "iCloud Restricted";
+"icloud.account_checking" = "Checking iCloud…";
+"icloud.account_unavailable" = "iCloud Temporarily Unavailable";
+"icloud.account_unknown" = "iCloud Status Unknown";
+"icloud.conflict_detected" = "Sync Conflict Detected";
+"icloud.conflict_explanation" = "This itinerary was changed on more than one device. Choose which version to keep.";
+"icloud.local_version" = "Local Version";
+"icloud.vs" = "vs";
+"icloud.cloud_version" = "iCloud Version";
+"icloud.choose_resolution" = "Choose How to Resolve";
+"icloud.keep_local" = "Keep This Device's Version";
+"icloud.keep_local_description" = "Use the version on this device and overwrite iCloud";
+"icloud.keep_cloud" = "Keep iCloud Version";
+"icloud.keep_cloud_description" = "Use the iCloud version and overwrite this device";
+"icloud.keep_both" = "Keep Both";
+"icloud.keep_both_description" = "Save both versions as separate itineraries";
+"icloud.resolve_conflict" = "Resolve Conflict";

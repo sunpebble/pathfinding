@@ -15,7 +15,7 @@ struct VoiceInputView: View {
   var showTranscription: Bool = true
 
   /// Placeholder text when not listening
-  var placeholder: String = "点击麦克风开始语音输入"
+  var placeholder: String = "voiceinput.placeholder".localized
 
   @State private var showPermissionAlert = false
   @State private var recognizedCommand: VoiceCommand?
@@ -51,15 +51,15 @@ struct VoiceInputView: View {
           .padding(.horizontal)
       }
     }
-    .alert("需要权限", isPresented: $showPermissionAlert) {
-      Button("去设置") {
+    .alert("voiceinput.permission_title".localized, isPresented: $showPermissionAlert) {
+      Button("voiceinput.open_settings".localized) {
         if let url = URL(string: UIApplication.openSettingsURLString) {
           UIApplication.shared.open(url)
         }
       }
-      Button("取消", role: .cancel) {}
+      Button("common.cancel".localized, role: .cancel) {}
     } message: {
-      Text("请在设置中允许语音识别和麦克风权限")
+      Text("voiceinput.permission_message".localized)
     }
     .onChange(of: speechManager.transcribedText) { _, newValue in
       if !newValue.isEmpty {
@@ -91,7 +91,7 @@ struct VoiceInputView: View {
           Circle()
             .fill(.red)
             .frame(width: 8, height: 8)
-          Text("正在聆听...")
+          Text("voiceinput.listening".localized)
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -277,15 +277,15 @@ struct CompactVoiceButton: View {
       }
     }
     .buttonStyle(.plain)
-    .alert("需要权限", isPresented: $showPermissionAlert) {
-      Button("去设置") {
+    .alert("voiceinput.permission_title".localized, isPresented: $showPermissionAlert) {
+      Button("voiceinput.open_settings".localized) {
         if let url = URL(string: UIApplication.openSettingsURLString) {
           UIApplication.shared.open(url)
         }
       }
-      Button("取消", role: .cancel) {}
+      Button("common.cancel".localized, role: .cancel) {}
     } message: {
-      Text("请在设置中允许语音识别和麦克风权限")
+      Text("voiceinput.permission_message".localized)
     }
     .onChange(of: speechManager.transcribedText) { _, newValue in
       if !newValue.isEmpty {
@@ -339,7 +339,7 @@ struct VoiceMemoRecordingView: View {
             Circle()
               .fill(.red)
               .frame(width: 8, height: 8)
-            Text("正在录音")
+            Text("voiceinput.recording".localized)
               .font(.caption)
               .foregroundStyle(.secondary)
           }
@@ -363,7 +363,7 @@ struct VoiceMemoRecordingView: View {
                     .font(.title3)
                     .foregroundStyle(.secondary)
                 }
-              Text("取消")
+              Text("common.cancel".localized)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
@@ -395,7 +395,7 @@ struct VoiceMemoRecordingView: View {
                   .frame(width: 28, height: 28)
               }
             }
-            Text(memoManager.isRecording ? "停止" : "录音")
+            Text(memoManager.isRecording ? "voiceinput.stop".localized : "voiceinput.record".localized)
               .font(.caption)
               .foregroundStyle(.primary)
           }
@@ -412,21 +412,21 @@ struct VoiceMemoRecordingView: View {
   private var saveMemoSheet: some View {
     NavigationStack {
       Form {
-        Section("备忘录标题") {
-          TextField("输入标题", text: $memoTitle)
+        Section("voiceinput.memo_title_section".localized) {
+          TextField("voiceinput.memo_title_placeholder".localized, text: $memoTitle)
         }
       }
-      .navigationTitle("保存备忘录")
+      .navigationTitle("voiceinput.save_memo_title".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Button("取消") {
+          Button("common.cancel".localized) {
             showSaveSheet = false
             memoTitle = ""
           }
         }
         ToolbarItem(placement: .topBarTrailing) {
-          Button("保存") {
+          Button("common.save".localized) {
             if let memo = memoManager.stopRecording(
               title: memoTitle.isEmpty ? nil : memoTitle,
               associatedItineraryId: associatedItineraryId
@@ -503,9 +503,9 @@ struct VoiceMemoListView: View {
     .overlay {
       if displayedMemos.isEmpty {
         ContentUnavailableView {
-          Label("暂无备忘录", systemImage: "mic.slash")
+          Label("voiceinput.no_memos".localized, systemImage: "mic.slash")
         } description: {
-          Text("录制语音备忘录以便随时回顾")
+          Text("voiceinput.no_memos_description".localized)
         }
       }
     }

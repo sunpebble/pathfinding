@@ -339,9 +339,9 @@ struct OfflineStatusBanner: View {
           .foregroundStyle(.white)
 
         if manager.downloadedRegions.isEmpty {
-          Text("离线模式 - 无可用离线地图")
+          Text("offlinetile.banner.no_maps".localized)
         } else {
-          Text("离线模式 - 使用本地地图")
+          Text("offlinetile.banner.using_local".localized)
         }
 
         Spacer()

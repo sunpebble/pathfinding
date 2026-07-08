@@ -370,7 +370,7 @@ private struct VersionCard: View {
           .lineLimit(2)
 
         HStack {
-          Label("\(itinerary.days.count) 天", systemImage: "calendar")
+          Label("itinerary.days".localized(itinerary.days.count), systemImage: "calendar")
           Spacer()
           Text(modifiedAt.formatted(date: .abbreviated, time: .shortened))
         }

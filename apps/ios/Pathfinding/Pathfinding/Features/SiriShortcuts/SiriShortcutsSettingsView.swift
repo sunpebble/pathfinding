@@ -17,27 +17,27 @@ struct SiriShortcutsSettingsView: View {
         NavigationLink {
           BuiltInShortcutsView()
         } label: {
-          Label("内置快捷指令", systemImage: "wand.and.stars")
+          Label("siri.builtin_shortcuts".localized, systemImage: "wand.and.stars")
         }
 
         Button {
           openShortcutsApp()
         } label: {
-          Label("在快捷指令App中打开", systemImage: "arrow.up.right.square")
+          Label("siri.open_in_shortcuts_app".localized, systemImage: "arrow.up.right.square")
         }
       } header: {
-        Text("系统快捷指令")
+        Text("siri.section_system".localized)
       } footer: {
-        Text("Sunpebble Trips 支持 Siri 语音控制，你可以说「嘿 Siri，查看今日行程」来快速查看今天的安排。")
+        Text("siri.footer_voice".localized)
       }
 
       // Custom Shortcuts Section
       Section {
         if siriManager.customShortcuts.isEmpty {
           ContentUnavailableView(
-            "暂无自定义快捷指令",
+            "siri.empty_title".localized,
             systemImage: "star.slash",
-            description: Text("为常用行程或景点创建快捷指令，用语音快速访问。")
+            description: Text("siri.empty_description".localized)
           )
         } else {
           ForEach(siriManager.customShortcuts) { shortcut in
@@ -48,45 +48,45 @@ struct SiriShortcutsSettingsView: View {
           }
         }
       } header: {
-        Text("自定义快捷指令")
+        Text("siri.section_custom".localized)
       }
 
       // Tips Section
       Section {
         SiriTipRow(
           icon: "mic.fill",
-          title: "语音触发",
-          description: "对Siri说出你设定的唤醒短语即可快速执行"
+          title: "siri.tip_voice_title".localized,
+          description: "siri.tip_voice_desc".localized
         )
 
         SiriTipRow(
           icon: "clock.arrow.circlepath",
-          title: "智能建议",
-          description: "Sunpebble Trips 会根据你的使用习惯自动推荐快捷指令"
+          title: "siri.tip_suggest_title".localized,
+          description: "siri.tip_suggest_desc".localized
         )
 
         SiriTipRow(
           icon: "location.fill",
-          title: "位置感知",
-          description: "在旅途中，系统会智能推荐导航到下一个景点"
+          title: "siri.tip_location_title".localized,
+          description: "siri.tip_location_desc".localized
         )
       } header: {
-        Text("使用技巧")
+        Text("siri.section_tips".localized)
       }
     }
-    .navigationTitle("Siri快捷指令")
+    .navigationTitle("siri.title".localized)
     .navigationBarTitleDisplayMode(.large)
     .confirmationDialog(
-      "删除快捷指令",
+      "siri.delete_dialog_title".localized,
       isPresented: $showDeleteConfirmation,
       presenting: shortcutToDelete
     ) { shortcut in
-      Button("删除", role: .destructive) {
+      Button("common.delete".localized, role: .destructive) {
         siriManager.deleteShortcut(shortcut)
       }
-      Button("取消", role: .cancel) {}
+      Button("common.cancel".localized, role: .cancel) {}
     } message: { shortcut in
-      Text("确定要删除「\(shortcut.phrase)」快捷指令吗？")
+      Text("siri.delete_confirm_message".localized(shortcut.phrase))
     }
   }
 
@@ -104,38 +104,53 @@ struct BuiltInShortcutsView: View {
   var body: some View {
     List {
       ShortcutInfoRow(
-        title: "查看今日行程",
-        phrases: ["查看今日行程", "今天的行程", "显示今日行程"],
-        description: "显示今天的旅行安排和景点列表",
+        title: "siri.builtin_today_title".localized,
+        phrases: [
+          "siri.builtin_today_title".localized,
+          "siri.phrase_today_2".localized,
+          "siri.phrase_today_3".localized,
+        ],
+        description: "siri.builtin_today_desc".localized,
         icon: "calendar.day.timeline.left",
         iconColor: .blue
       )
 
       ShortcutInfoRow(
-        title: "导航到下一站",
-        phrases: ["导航到下一个景点", "去下一个地点", "导航到下一站"],
-        description: "打开地图导航到当前行程中的下一个景点",
+        title: "siri.builtin_navigate_title".localized,
+        phrases: [
+          "siri.phrase_navigate_1".localized,
+          "siri.phrase_navigate_2".localized,
+          "siri.builtin_navigate_title".localized,
+        ],
+        description: "siri.builtin_navigate_desc".localized,
         icon: "location.fill",
         iconColor: .green
       )
 
       ShortcutInfoRow(
-        title: "查看行程列表",
-        phrases: ["查看行程", "打开我的行程", "显示行程列表"],
-        description: "打开已保存的行程列表",
+        title: "siri.builtin_list_title".localized,
+        phrases: [
+          "siri.phrase_list_1".localized,
+          "siri.phrase_list_2".localized,
+          "siri.phrase_list_3".localized,
+        ],
+        description: "siri.builtin_list_desc".localized,
         icon: "map",
         iconColor: .purple
       )
 
       ShortcutInfoRow(
-        title: "搜索景点",
-        phrases: ["搜索景点 [关键词]", "查找 [景点名]"],
-        description: "搜索行程中的景点或发现新目的地",
+        title: "siri.builtin_search_title".localized,
+        phrases: [
+          "siri.phrase_search_1".localized,
+          "siri.phrase_search_2".localized,
+        ],
+        description: "siri.builtin_search_desc".localized,
         icon: "magnifyingglass",
         iconColor: .pink
       )
     }
-    .navigationTitle("内置快捷指令")
+    .navigationTitle("siri.builtin_shortcuts".localized)
     .navigationBarTitleDisplayMode(.inline)
   }
 }
@@ -161,7 +176,7 @@ struct ShortcutInfoRow: View {
 
         Divider()
 
-        Text("唤醒短语")
+        Text("siri.wake_phrase".localized)
           .font(.caption)
           .foregroundStyle(.tertiary)
 
@@ -171,7 +186,7 @@ struct ShortcutInfoRow: View {
               .font(.caption)
               .foregroundStyle(.secondary)
 
-            Text("「\(phrase)」")
+            Text("siri.phrase_quoted".localized(phrase))
               .font(.subheadline)
           }
         }
@@ -206,7 +221,7 @@ struct CustomShortcutRow: View {
         Text(shortcut.title)
           .font(.headline)
 
-        Text("「\(shortcut.phrase)」")
+        Text("siri.phrase_quoted".localized(shortcut.phrase))
           .font(.subheadline)
           .foregroundStyle(.secondary)
 
@@ -299,29 +314,29 @@ struct AddCustomShortcutSheet: View {
             }
           }
         } header: {
-          Text("目标")
+          Text("siri.target".localized)
         }
 
         Section {
-          TextField("例如：打开东京之旅", text: $phrase)
+          TextField("siri.phrase_placeholder".localized, text: $phrase)
             .textInputAutocapitalization(.never)
         } header: {
-          Text("唤醒短语")
+          Text("siri.wake_phrase".localized)
         } footer: {
-          Text("设置一个简短的短语，对Siri说出这个短语即可快速打开。")
+          Text("siri.add_footer".localized)
         }
       }
-      .navigationTitle("添加快捷指令")
+      .navigationTitle("siri.add_title".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("取消") {
+          Button("common.cancel".localized) {
             dismiss()
           }
         }
 
         ToolbarItem(placement: .confirmationAction) {
-          Button("添加") {
+          Button("siri.add".localized) {
             createShortcut()
             dismiss()
           }

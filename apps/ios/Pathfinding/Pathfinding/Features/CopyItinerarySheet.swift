@@ -114,9 +114,9 @@ extension CopyableSource {
   // Defaults so sources only override what differs.
   var allowsTitleEditing: Bool { false }
   var defaultEditableTitle: String { title }
-  var titleFieldPlaceholder: String { "行程名称" }
-  var continueButtonTitle: String { "继续浏览" }
-  var successMessage: String { "行程已保存到「我的行程」" }
+  var titleFieldPlaceholder: String { "create_trip.name_placeholder".localized }
+  var continueButtonTitle: String { "itinerary.continue_browsing".localized }
+  var successMessage: String { "copyitinerary.saved_message".localized }
   var reportsCopyErrors: Bool { false }
   var basicInfoExtraContent: AnyView { AnyView(EmptyView()) }
   var attributionSection: AnyView { AnyView(EmptyView()) }
@@ -133,13 +133,13 @@ extension AiDay: CopyableDay {
 extension SavedItinerary: CopyableSource {
   var rawDays: [AiDay]? { days }
 
-  var navigationTitle: String { "复制行程" }
+  var navigationTitle: String { "itinerary.copy".localized }
   var allowsTitleEditing: Bool { true }
-  var defaultEditableTitle: String { "\(title) (副本)" }
-  var titleFieldPlaceholder: String { "行程名称" }
-  var basicInfoHeader: String { "基本信息" }
-  var continueButtonTitle: String { "继续" }
-  var successMessage: String { "行程已复制到「我的行程」" }
+  var defaultEditableTitle: String { "copyitinerary.default_copy_title".localized(title) }
+  var titleFieldPlaceholder: String { "create_trip.name_placeholder".localized }
+  var basicInfoHeader: String { "create_trip.section.basic".localized }
+  var continueButtonTitle: String { "copyitinerary.continue".localized }
+  var successMessage: String { "copyitinerary.copied_message".localized }
 
   @MainActor
   func performCopy(
@@ -197,7 +197,7 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
           }
 
           DatePicker(
-            "开始日期",
+            "itinerary.start_date".localized,
             selection: $newStartDate,
             displayedComponents: .date
           )
@@ -208,18 +208,18 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
         // MARK: - Copy Mode Section
         if !days.isEmpty {
           Section {
-            Toggle("仅复制部分天数", isOn: $isPartialCopy.animation())
+            Toggle("copyitinerary.copy_partial_toggle".localized, isOn: $isPartialCopy.animation())
 
             if isPartialCopy {
               daySelectionView
             }
           } header: {
-            Text("复制选项")
+            Text("copyitinerary.copy_options".localized)
           } footer: {
             if isPartialCopy {
-              Text("选择要复制的天数，其他天数将被跳过")
+              Text("copyitinerary.copy_partial_footer".localized)
             } else {
-              Text("将复制所有 \(days.count) 天的行程")
+              Text("copyitinerary.copy_all_footer".localized(days.count))
             }
           }
         }
@@ -228,7 +228,7 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
         Section {
           copyPreviewView
         } header: {
-          Text("复制预览")
+          Text("copyitinerary.preview".localized)
         }
 
         // MARK: - Per-source Attribution Section
@@ -238,7 +238,7 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Button("取消") {
+          Button("common.cancel".localized) {
             dismiss()
           }
           .disabled(isCopying)
@@ -251,15 +251,15 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
             if isCopying {
               ProgressView()
             } else {
-              Text("复制")
+              Text("common.copy".localized)
                 .fontWeight(.semibold)
             }
           }
           .disabled(isCopying || (isPartialCopy && selectedDays.isEmpty))
         }
       }
-      .alert("复制成功", isPresented: $showSuccess) {
-        Button("查看行程") {
+      .alert("copyitinerary.success_title".localized, isPresented: $showSuccess) {
+        Button("itinerary.view_itinerary".localized) {
           appState.selectedTab = .itinerary
           dismiss()
         }
@@ -269,10 +269,10 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
       } message: {
         Text(source.successMessage)
       }
-      .alert("复制失败", isPresented: $showError) {
-        Button("确定", role: .cancel) {}
+      .alert("copyitinerary.error_title".localized, isPresented: $showError) {
+        Button("common.ok".localized, role: .cancel) {}
       } message: {
-        Text(errorMessage ?? "未知错误，请稍后重试")
+        Text(errorMessage ?? "copyitinerary.error_unknown".localized)
       }
     }
   }
@@ -282,13 +282,13 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
   private var daySelectionView: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
-        Text("选择天数")
+        Text("copyitinerary.select_days".localized)
           .font(.subheadline)
           .foregroundStyle(.secondary)
 
         Spacer()
 
-        Button(selectedDays.count == days.count ? "取消全选" : "全选") {
+        Button(selectedDays.count == days.count ? "copyitinerary.deselect_all".localized : "copyitinerary.select_all".localized) {
           if selectedDays.count == days.count {
             selectedDays.removeAll()
           } else {
@@ -341,14 +341,14 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
         }
 
         Label {
-          Text("\(daysToBecopied)天")
+          Text("copyitinerary.days_count".localized(daysToBecopied))
         } icon: {
           Image(systemName: "clock")
             .foregroundStyle(.green)
         }
 
         Label {
-          Text("\(poisToBeCopied)景点")
+          Text("copyitinerary.pois_count".localized(poisToBeCopied))
         } icon: {
           Image(systemName: "mappin")
             .foregroundStyle(.red)
@@ -390,7 +390,7 @@ struct CopyItinerarySheet<Source: CopyableSource>: View {
 
   private func formattedDate(_ date: Date) -> String {
     let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy年M月d日"
+    formatter.dateFormat = "copyitinerary.date_format".localized
     return formatter.string(from: date)
   }
 
@@ -448,7 +448,7 @@ struct DaySelectionChip: View {
           .font(.caption)
           .fontWeight(.medium)
 
-        Text("\(poiCount)点")
+        Text("copyitinerary.chip_pois".localized(poiCount))
           .font(.caption2)
           .foregroundStyle(.secondary)
       }
@@ -480,7 +480,7 @@ struct CopyStatsView: View {
         HStack(spacing: DesignTokens.Spacing.xs) {
           ProgressView()
             .scaleEffect(0.8)
-          Text("加载中...")
+          Text("common.loading".localized)
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -490,12 +490,12 @@ struct CopyStatsView: View {
             .foregroundStyle(.blue)
 
           VStack(alignment: .leading, spacing: 2) {
-            Text("被复制 \(stats.copyCount) 次")
+            Text("copyitinerary.copy_count".localized(stats.copyCount))
               .font(.caption)
               .fontWeight(.medium)
 
             if !stats.recentCopies.isEmpty {
-              Text("最近有 \(stats.recentCopies.count) 次复制")
+              Text("copyitinerary.recent_copies".localized(stats.recentCopies.count))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
             }
@@ -552,7 +552,7 @@ struct OriginalAuthorBadge: View {
       }
 
       if let displayName = author.displayName {
-        Text("来自 \(displayName)")
+        Text("copyitinerary.from_author".localized(displayName))
           .font(.caption)
           .foregroundStyle(.secondary)
       }

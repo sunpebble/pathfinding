@@ -53,16 +53,16 @@ struct VoiceItineraryView: View {
         .padding()
       }
       .background(Color(.systemGroupedBackground))
-      .navigationTitle("语音规划行程")
+      .navigationTitle("voice.title".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Button("取消") {
+          Button("common.cancel".localized) {
             dismiss()
           }
         }
         ToolbarItem(placement: .topBarTrailing) {
-          Button("保存") {
+          Button("common.save".localized) {
             saveItinerary()
           }
           .fontWeight(.semibold)
@@ -139,7 +139,7 @@ struct VoiceItineraryView: View {
           }
         }
         Spacer()
-        Text("\(days.count)天")
+        Text("stats.days_suffix".localized(days.count))
           .font(.caption)
           .padding(.horizontal, 8)
           .padding(.vertical, 4)
@@ -166,7 +166,7 @@ struct VoiceItineraryView: View {
           } label: {
             HStack(spacing: 4) {
               Image(systemName: "plus.circle.fill")
-              Text("添加")
+              Text("voice.add".localized)
             }
             .font(.subheadline)
             .foregroundStyle(Color.accentColor)
@@ -184,7 +184,7 @@ struct VoiceItineraryView: View {
 
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
           HStack {
-            Text("第\(currentDay.dayNumber)天")
+            Text("itinerary.day".localized(currentDay.dayNumber))
               .font(.subheadline)
               .fontWeight(.medium)
             if let theme = currentDay.theme {
@@ -193,13 +193,13 @@ struct VoiceItineraryView: View {
                 .foregroundStyle(.secondary)
             }
             Spacer()
-            Text("\(currentDay.pois.count)个景点")
+            Text("itinerary.poi_count".localized(currentDay.pois.count))
               .font(.caption)
               .foregroundStyle(.tertiary)
           }
 
           if currentDay.pois.isEmpty {
-            Text("说「添加 [景点名称]」来添加景点")
+            Text("voice.empty_day_hint".localized)
               .font(.caption)
               .foregroundStyle(.secondary)
               .padding()
@@ -226,7 +226,7 @@ struct VoiceItineraryView: View {
 
   private var quickActionsSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("快捷操作")
+      Text("budget.edit.quick_actions".localized)
         .font(.subheadline)
         .fontWeight(.medium)
         .foregroundStyle(.secondary)
@@ -236,27 +236,27 @@ struct VoiceItineraryView: View {
         GridItem(.flexible()),
         GridItem(.flexible())
       ], spacing: DesignTokens.Spacing.sm) {
-        QuickActionButton(icon: "plus.circle", title: "添加景点") {
+        QuickActionButton(icon: "plus.circle", title: "voice.action_add_poi".localized) {
           currentMode = .addingPOI
         }
 
-        QuickActionButton(icon: "magnifyingglass", title: "搜索") {
+        QuickActionButton(icon: "magnifyingglass", title: "common.search".localized) {
           currentMode = .searching
         }
 
-        QuickActionButton(icon: "calendar.badge.plus", title: "添加天") {
+        QuickActionButton(icon: "calendar.badge.plus", title: "voice.action_add_day".localized) {
           addDay()
         }
 
-        QuickActionButton(icon: "arrow.left", title: "上一天") {
+        QuickActionButton(icon: "arrow.left", title: "voice.action_previous_day".localized) {
           navigateToPreviousDay()
         }
 
-        QuickActionButton(icon: "arrow.right", title: "下一天") {
+        QuickActionButton(icon: "arrow.right", title: "voice.action_next_day".localized) {
           navigateToNextDay()
         }
 
-        QuickActionButton(icon: "mic.badge.plus", title: "备忘") {
+        QuickActionButton(icon: "mic.badge.plus", title: "voice.action_memo".localized) {
           currentMode = .memo
         }
       }
@@ -272,13 +272,13 @@ struct VoiceItineraryView: View {
   private var searchResultsSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
-        Text("搜索结果")
+        Text("voice.search_results".localized)
           .font(.subheadline)
           .fontWeight(.medium)
 
         Spacer()
 
-        Button("清除") {
+        Button("voice.clear".localized) {
           searchResults = []
         }
         .font(.caption)
@@ -321,18 +321,18 @@ struct VoiceItineraryView: View {
 
   private var commandHintsSection: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("语音命令提示")
+      Text("voice.command_hints".localized)
         .font(.subheadline)
         .fontWeight(.medium)
         .foregroundStyle(.secondary)
 
       VStack(alignment: .leading, spacing: 8) {
-        CommandHint(command: "添加 [景点名称]", description: "添加景点到当前天")
-        CommandHint(command: "删除 [景点名称]", description: "删除指定景点")
-        CommandHint(command: "下一个 / 上一个", description: "切换天数")
-        CommandHint(command: "搜索 [关键词]", description: "搜索景点")
-        CommandHint(command: "第N天", description: "跳转到指定天")
-        CommandHint(command: "保存行程", description: "保存当前行程")
+        CommandHint(command: "voice.hint_add_cmd".localized, description: "voice.hint_add_desc".localized)
+        CommandHint(command: "voice.hint_remove_cmd".localized, description: "voice.hint_remove_desc".localized)
+        CommandHint(command: "voice.hint_navigate_cmd".localized, description: "voice.hint_navigate_desc".localized)
+        CommandHint(command: "voice.hint_search_cmd".localized, description: "voice.hint_search_desc".localized)
+        CommandHint(command: "voice.hint_goto_cmd".localized, description: "voice.hint_goto_desc".localized)
+        CommandHint(command: "voice.hint_save_cmd".localized, description: "voice.hint_save_desc".localized)
       }
     }
     .padding()
@@ -377,13 +377,13 @@ struct VoiceItineraryView: View {
     case .goToDay(let day):
       if day > 0 && day <= days.count {
         currentDayIndex = day - 1
-        showFeedbackMessage("已跳转到第\(day)天")
+        showFeedbackMessage("voice.feedback_jumped_to_day".localized(day))
       } else {
-        showFeedbackMessage("第\(day)天不存在")
+        showFeedbackMessage("voice.feedback_day_not_exist".localized(day))
       }
     case .goToPOI(let poi):
       // Navigate to specific POI
-      showFeedbackMessage("已定位到第\(poi)个景点")
+      showFeedbackMessage("voice.feedback_located_poi".localized(poi))
     }
   }
 
@@ -394,14 +394,14 @@ struct VoiceItineraryView: View {
         destination = dest
         itineraryTitle = "\(dest)之旅"
       }
-      showFeedbackMessage("行程已创建")
+      showFeedbackMessage("voice.feedback_itinerary_created".localized)
 
     case .setDuration(let numDays):
       // Adjust days count
       while days.count < numDays {
         addDay()
       }
-      showFeedbackMessage("已设置为\(numDays)天行程")
+      showFeedbackMessage("voice.feedback_duration_set".localized(numDays))
 
     case .save:
       saveItinerary()
@@ -433,7 +433,7 @@ struct VoiceItineraryView: View {
     let newDay = AiDay(dayNumber: days.count + 1, theme: nil, pois: [])
     days.append(newDay)
     currentDayIndex = days.count - 1
-    showFeedbackMessage("已添加第\(newDay.dayNumber)天")
+    showFeedbackMessage("voice.feedback_day_added".localized(newDay.dayNumber))
   }
 
   private func addPOI(name: String, type: String? = nil) {
@@ -449,7 +449,7 @@ struct VoiceItineraryView: View {
     )
 
     days[currentDayIndex].pois.append(poi)
-    showFeedbackMessage("已添加: \(name)")
+    showFeedbackMessage("voice.feedback_added".localized(name))
     currentMode = .idle
   }
 
@@ -467,13 +467,13 @@ struct VoiceItineraryView: View {
 
     days[currentDayIndex].pois.append(poi)
     searchResults.removeAll { $0.id == result.id }
-    showFeedbackMessage("已添加: \(result.name)")
+    showFeedbackMessage("voice.feedback_added".localized(result.name))
   }
 
   private func removePOI(_ poi: AiPoi) {
     guard days.indices.contains(currentDayIndex) else { return }
     days[currentDayIndex].pois.removeAll { $0.id == poi.id }
-    showFeedbackMessage("已删除: \(poi.name)")
+    showFeedbackMessage("voice.feedback_removed".localized(poi.name))
   }
 
   private func removePOIByName(_ name: String) {
@@ -484,9 +484,9 @@ struct VoiceItineraryView: View {
       $0.name.lowercased().contains(lowercasedName)
     }) {
       let removed = days[currentDayIndex].pois.remove(at: index)
-      showFeedbackMessage("已删除: \(removed.name)")
+      showFeedbackMessage("voice.feedback_removed".localized(removed.name))
     } else {
-      showFeedbackMessage("未找到: \(name)")
+      showFeedbackMessage("voice.feedback_not_found".localized(name))
     }
   }
 
@@ -498,25 +498,25 @@ struct VoiceItineraryView: View {
       $0.name.lowercased().contains(lowercasedName)
     }) {
       days[currentDayIndex].pois[index].time = time
-      showFeedbackMessage("\(name)时间已设为\(time)")
+      showFeedbackMessage("voice.feedback_time_set".localized(name, time))
     }
   }
 
   private func navigateToNextDay() {
     if currentDayIndex < days.count - 1 {
       currentDayIndex += 1
-      showFeedbackMessage("第\(currentDayIndex + 1)天")
+      showFeedbackMessage("itinerary.day".localized(currentDayIndex + 1))
     } else {
-      showFeedbackMessage("已是最后一天")
+      showFeedbackMessage("voice.feedback_last_day".localized)
     }
   }
 
   private func navigateToPreviousDay() {
     if currentDayIndex > 0 {
       currentDayIndex -= 1
-      showFeedbackMessage("第\(currentDayIndex + 1)天")
+      showFeedbackMessage("itinerary.day".localized(currentDayIndex + 1))
     } else {
-      showFeedbackMessage("已是第一天")
+      showFeedbackMessage("voice.feedback_first_day".localized)
     }
   }
 
@@ -536,14 +536,14 @@ struct VoiceItineraryView: View {
           SearchedPOI(id: UUID(), name: "\(query) 酒店", type: "hotel", address: "示例地址3", latitude: 31.25, longitude: 121.49)
         ]
         isSearching = false
-        showFeedbackMessage("找到\(searchResults.count)个结果")
+        showFeedbackMessage("voice.feedback_found_results".localized(searchResults.count))
       }
     }
   }
 
   private func saveMemo(_ content: String) {
     // Save voice memo associated with current itinerary
-    showFeedbackMessage("备忘已保存: \(content)")
+    showFeedbackMessage("voice.feedback_memo_saved".localized(content))
   }
 
   private func saveItinerary() {
@@ -606,19 +606,19 @@ enum VoiceMode {
 
   var description: String {
     switch self {
-    case .idle: return "等待语音输入"
-    case .addingPOI: return "添加景点模式"
-    case .searching: return "搜索模式"
-    case .memo: return "备忘模式"
+    case .idle: return "voice.mode_idle".localized
+    case .addingPOI: return "voice.mode_adding_poi".localized
+    case .searching: return "voice.mode_searching".localized
+    case .memo: return "voice.mode_memo".localized
     }
   }
 
   var placeholder: String {
     switch self {
-    case .idle: return "说「添加故宫」或「搜索餐厅」"
-    case .addingPOI: return "说出景点名称..."
-    case .searching: return "说出搜索关键词..."
-    case .memo: return "说出备忘内容..."
+    case .idle: return "voice.placeholder_idle".localized
+    case .addingPOI: return "voice.placeholder_adding_poi".localized
+    case .searching: return "voice.placeholder_searching".localized
+    case .memo: return "voice.placeholder_memo".localized
     }
   }
 }
@@ -633,10 +633,10 @@ struct DayChip: View {
   var body: some View {
     Button(action: onTap) {
       VStack(spacing: 2) {
-        Text("第\(day.dayNumber)天")
+        Text("itinerary.day".localized(day.dayNumber))
           .font(.caption)
           .fontWeight(isSelected ? .semibold : .regular)
-        Text("\(day.pois.count)景点")
+        Text("voice.poi_count_short".localized(day.pois.count))
           .font(.caption2)
           .foregroundStyle(.secondary)
       }

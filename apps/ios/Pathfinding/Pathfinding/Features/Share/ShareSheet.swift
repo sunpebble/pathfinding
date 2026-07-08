@@ -44,11 +44,11 @@ struct ShareSheet: View {
         }
         .padding(DesignTokens.Spacing.md)
       }
-      .navigationTitle("分享")
+      .navigationTitle("common.share".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Button("取消") { onDismiss() }
+          Button("common.cancel".localized) { onDismiss() }
         }
       }
       .overlay {
@@ -56,11 +56,11 @@ struct ShareSheet: View {
           copiedToast
         }
       }
-      .alert("分享失败", isPresented: .init(
+      .alert("share.error_title".localized, isPresented: .init(
         get: { shareError != nil },
         set: { if !$0 { shareError = nil } }
       )) {
-        Button("确定", role: .cancel) {}
+        Button("common.ok".localized, role: .cancel) {}
       } message: {
         if let error = shareError {
           Text(error)
@@ -79,7 +79,7 @@ struct ShareSheet: View {
 
   private var shareCardPreview: some View {
     VStack(spacing: DesignTokens.Spacing.sm) {
-      Text("预览")
+      Text("share.preview".localized)
         .font(.headline)
         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -107,7 +107,7 @@ struct ShareSheet: View {
                 Image(systemName: "photo")
                   .font(.largeTitle)
                   .foregroundStyle(.secondary)
-                Text("生成预览中...")
+                Text("share.generating_preview".localized)
                   .font(.caption)
                   .foregroundStyle(.secondary)
               }
@@ -122,7 +122,7 @@ struct ShareSheet: View {
 
   private var styleSelector: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("样式")
+      Text("share.style".localized)
         .font(.headline)
 
       ScrollView(.horizontal, showsIndicators: false) {
@@ -145,7 +145,7 @@ struct ShareSheet: View {
 
   private var sizeSelector: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("尺寸")
+      Text("share.size".localized)
         .font(.headline)
 
       ScrollView(.horizontal, showsIndicators: false) {
@@ -168,7 +168,7 @@ struct ShareSheet: View {
 
   private var platformGrid: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("分享到")
+      Text("share.share_to".localized)
         .font(.headline)
 
       LazyVGrid(columns: [
@@ -208,7 +208,7 @@ struct ShareSheet: View {
       Button {
         Task { await saveToPhotos() }
       } label: {
-        Label("保存图片到相册", systemImage: "square.and.arrow.down")
+        Label("share.save_to_album".localized, systemImage: "square.and.arrow.down")
           .font(.headline)
           .frame(maxWidth: .infinity)
           .padding(.vertical, DesignTokens.Spacing.sm)
@@ -228,7 +228,7 @@ struct ShareSheet: View {
       HStack(spacing: 8) {
         Image(systemName: "checkmark.circle.fill")
           .foregroundStyle(.green)
-        Text("已复制到剪贴板")
+        Text("share.copied_to_clipboard".localized)
       }
       .font(.subheadline)
       .fontWeight(.medium)

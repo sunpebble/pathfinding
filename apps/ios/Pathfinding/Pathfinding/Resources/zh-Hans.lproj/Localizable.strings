@@ -629,3 +629,281 @@
 "planner.feedback.submit" = "提交反馈";
 "planner.error.title" = "生成失败";
 "planner.timeout" = "规划超时，请重试";
+
+
+// MARK: - analysis (Features/Analysis/ItineraryAnalysisView.swift)
+"analysis.loading_title" = "正在分析行程...";
+"analysis.loading_subtitle" = "评估行程合理性、时间安排和预算";
+"analysis.error_title" = "分析失败";
+"analysis.empty_title" = "生成行程分析报告";
+"analysis.empty_subtitle" = "评估行程合理性、获取优化建议和预算分析";
+"analysis.start" = "开始分析";
+"analysis.tab_overview" = "概览";
+"analysis.tab_daily" = "每日";
+"analysis.tab_recommendations" = "建议";
+"analysis.city_days" = "%@ | %d天";
+"analysis.strengths" = "优势";
+"analysis.critical_issues" = "需要注意";
+"analysis.improvements" = "可改进";
+"analysis.time_analysis" = "时间分析";
+"analysis.start_time" = "开始时间";
+"analysis.end_time" = "结束时间";
+"analysis.activity_time" = "活动时间";
+"analysis.travel_time" = "交通时间";
+"analysis.time_utilization" = "时间利用率";
+"analysis.suggested_breaks" = "建议休息";
+"analysis.duration_hm" = "%d小时%d分";
+"analysis.duration_minutes" = "%d分钟";
+"analysis.break_after" = "在 %@ 后";
+"analysis.break_reason_duration" = "%@ (%d分钟)";
+"analysis.day_number" = "第 %d 天";
+"analysis.poi_count_value" = "%d个";
+"analysis.duration" = "时长";
+"analysis.distance" = "路程";
+"analysis.route_efficiency" = "路线效率";
+"analysis.route_optimization_suggestion" = "路线优化建议";
+"analysis.save_minutes" = "节省 %d 分钟";
+"analysis.reduce_km" = "减少 %@ km";
+"analysis.poi_analysis" = "景点分析";
+"analysis.suggested_minutes" = "建议 %d 分钟";
+"analysis.actual_minutes" = "实际 %d 分钟";
+"analysis.opening_hours_conflict" = "可能不在营业时间";
+"analysis.budget_unavailable" = "预算分析不可用";
+"analysis.budget_no_data" = "该行程暂无预算数据";
+"analysis.estimated_total" = "预计总费用";
+"analysis.per_day" = "日均";
+"analysis.per_person" = "人均";
+"analysis.cost_breakdown" = "费用构成";
+"analysis.saving_suggestions" = "省钱建议";
+"analysis.potential_saving" = "可节省 ¥%d";
+"analysis.core_recommendations" = "核心建议";
+"analysis.route_optimizations" = "路线优化";
+"analysis.minus_minutes" = "-%d分钟";
+
+// MARK: - voice (Features/VoiceItineraryView.swift)
+"voice.title" = "语音规划行程";
+"voice.add" = "添加";
+"voice.empty_day_hint" = "说「添加 [景点名称]」来添加景点";
+"voice.action_add_poi" = "添加景点";
+"voice.action_add_day" = "添加天";
+"voice.action_previous_day" = "上一天";
+"voice.action_next_day" = "下一天";
+"voice.action_memo" = "备忘";
+"voice.search_results" = "搜索结果";
+"voice.clear" = "清除";
+"voice.command_hints" = "语音命令提示";
+"voice.hint_add_cmd" = "添加 [景点名称]";
+"voice.hint_add_desc" = "添加景点到当前天";
+"voice.hint_remove_cmd" = "删除 [景点名称]";
+"voice.hint_remove_desc" = "删除指定景点";
+"voice.hint_navigate_cmd" = "下一个 / 上一个";
+"voice.hint_navigate_desc" = "切换天数";
+"voice.hint_search_cmd" = "搜索 [关键词]";
+"voice.hint_search_desc" = "搜索景点";
+"voice.hint_goto_cmd" = "第N天";
+"voice.hint_goto_desc" = "跳转到指定天";
+"voice.hint_save_cmd" = "保存行程";
+"voice.hint_save_desc" = "保存当前行程";
+"voice.feedback_jumped_to_day" = "已跳转到第%d天";
+"voice.feedback_day_not_exist" = "第%d天不存在";
+"voice.feedback_located_poi" = "已定位到第%d个景点";
+"voice.feedback_itinerary_created" = "行程已创建";
+"voice.feedback_duration_set" = "已设置为%d天行程";
+"voice.feedback_day_added" = "已添加第%d天";
+"voice.feedback_added" = "已添加: %@";
+"voice.feedback_removed" = "已删除: %@";
+"voice.feedback_not_found" = "未找到: %@";
+"voice.feedback_time_set" = "%@时间已设为%@";
+"voice.feedback_last_day" = "已是最后一天";
+"voice.feedback_first_day" = "已是第一天";
+"voice.feedback_found_results" = "找到%d个结果";
+"voice.feedback_memo_saved" = "备忘已保存: %@";
+"voice.mode_idle" = "等待语音输入";
+"voice.mode_adding_poi" = "添加景点模式";
+"voice.mode_searching" = "搜索模式";
+"voice.mode_memo" = "备忘模式";
+"voice.placeholder_idle" = "说「添加故宫」或「搜索餐厅」";
+"voice.placeholder_adding_poi" = "说出景点名称...";
+"voice.placeholder_searching" = "说出搜索关键词...";
+"voice.placeholder_memo" = "说出备忘内容...";
+"voice.poi_count_short" = "%d景点";
+
+// MARK: - siri (Features/SiriShortcuts/SiriShortcutsSettingsView.swift)
+"siri.builtin_shortcuts" = "内置快捷指令";
+"siri.open_in_shortcuts_app" = "在快捷指令App中打开";
+"siri.section_system" = "系统快捷指令";
+"siri.footer_voice" = "Sunpebble Trips 支持 Siri 语音控制，你可以说「嘿 Siri，查看今日行程」来快速查看今天的安排。";
+"siri.empty_title" = "暂无自定义快捷指令";
+"siri.empty_description" = "为常用行程或景点创建快捷指令，用语音快速访问。";
+"siri.section_custom" = "自定义快捷指令";
+"siri.tip_voice_title" = "语音触发";
+"siri.tip_voice_desc" = "对Siri说出你设定的唤醒短语即可快速执行";
+"siri.tip_suggest_title" = "智能建议";
+"siri.tip_suggest_desc" = "Sunpebble Trips 会根据你的使用习惯自动推荐快捷指令";
+"siri.tip_location_title" = "位置感知";
+"siri.tip_location_desc" = "在旅途中，系统会智能推荐导航到下一个景点";
+"siri.section_tips" = "使用技巧";
+"siri.title" = "Siri快捷指令";
+"siri.delete_dialog_title" = "删除快捷指令";
+"siri.delete_confirm_message" = "确定要删除「%@」快捷指令吗？";
+"siri.builtin_today_title" = "查看今日行程";
+"siri.builtin_today_desc" = "显示今天的旅行安排和景点列表";
+"siri.builtin_navigate_title" = "导航到下一站";
+"siri.builtin_navigate_desc" = "打开地图导航到当前行程中的下一个景点";
+"siri.builtin_list_title" = "查看行程列表";
+"siri.builtin_list_desc" = "打开已保存的行程列表";
+"siri.builtin_search_title" = "搜索景点";
+"siri.builtin_search_desc" = "搜索行程中的景点或发现新目的地";
+"siri.phrase_today_2" = "今天的行程";
+"siri.phrase_today_3" = "显示今日行程";
+"siri.phrase_navigate_1" = "导航到下一个景点";
+"siri.phrase_navigate_2" = "去下一个地点";
+"siri.phrase_list_1" = "查看行程";
+"siri.phrase_list_2" = "打开我的行程";
+"siri.phrase_list_3" = "显示行程列表";
+"siri.phrase_search_1" = "搜索景点 [关键词]";
+"siri.phrase_search_2" = "查找 [景点名]";
+"siri.wake_phrase" = "唤醒短语";
+"siri.phrase_quoted" = "「%@」";
+"siri.target" = "目标";
+"siri.phrase_placeholder" = "例如：打开东京之旅";
+"siri.add_footer" = "设置一个简短的短语，对Siri说出这个短语即可快速打开。";
+"siri.add_title" = "添加快捷指令";
+"siri.add" = "添加";
+
+// MARK: - offlinemap (Features/OfflineMapListView.swift)
+"offlinemap.tab_available" = "可下载";
+"offlinemap.tab_downloaded" = "已下载";
+"offlinemap.delete_all" = "全部删除";
+"offlinemap.delete_alert_title" = "删除离线地图";
+"offlinemap.delete_confirm_message" = "确定要删除「%@」的离线地图吗？";
+"offlinemap.delete_all_alert_title" = "删除全部离线地图";
+"offlinemap.delete_all_message" = "确定要删除所有已下载的离线地图吗？此操作无法撤销。";
+"offlinemap.storage_used" = "已用: %@";
+"offlinemap.storage_available" = "可用: %@";
+"offlinemap.search_placeholder" = "搜索城市";
+"offlinemap.no_cities_found" = "没有找到城市";
+"offlinemap.try_other_search" = "尝试其他搜索词";
+"offlinemap.approx_size" = "约 %@";
+"offlinemap.zoom_range" = "缩放 %d-%d";
+"offlinemap.empty_title" = "暂无离线地图";
+"offlinemap.empty_hint" = "下载离线地图后可在无网络时使用";
+"offlinemap.update" = "更新";
+
+// MARK: - copyitinerary (Features/CopyItinerarySheet.swift)
+"copyitinerary.saved_message" = "行程已保存到「我的行程」";
+"copyitinerary.copied_message" = "行程已复制到「我的行程」";
+"copyitinerary.default_copy_title" = "%@ (副本)";
+"copyitinerary.continue" = "继续";
+"copyitinerary.copy_partial_toggle" = "仅复制部分天数";
+"copyitinerary.copy_options" = "复制选项";
+"copyitinerary.copy_partial_footer" = "选择要复制的天数，其他天数将被跳过";
+"copyitinerary.copy_all_footer" = "将复制所有 %d 天的行程";
+"copyitinerary.preview" = "复制预览";
+"copyitinerary.success_title" = "复制成功";
+"copyitinerary.error_title" = "复制失败";
+"copyitinerary.error_unknown" = "未知错误，请稍后重试";
+"copyitinerary.select_days" = "选择天数";
+"copyitinerary.deselect_all" = "取消全选";
+"copyitinerary.select_all" = "全选";
+"copyitinerary.days_count" = "%d天";
+"copyitinerary.pois_count" = "%d景点";
+"copyitinerary.chip_pois" = "%d点";
+"copyitinerary.copy_count" = "被复制 %d 次";
+"copyitinerary.recent_copies" = "最近有 %d 次复制";
+"copyitinerary.from_author" = "来自 %@";
+"copyitinerary.date_format" = "yyyy年M月d日";
+
+// MARK: - voiceinput (Features/Components/VoiceInputView.swift)
+"voiceinput.placeholder" = "点击麦克风开始语音输入";
+"voiceinput.permission_title" = "需要权限";
+"voiceinput.open_settings" = "去设置";
+"voiceinput.permission_message" = "请在设置中允许语音识别和麦克风权限";
+"voiceinput.listening" = "正在聆听...";
+"voiceinput.recording" = "正在录音";
+"voiceinput.stop" = "停止";
+"voiceinput.record" = "录音";
+"voiceinput.memo_title_section" = "备忘录标题";
+"voiceinput.memo_title_placeholder" = "输入标题";
+"voiceinput.save_memo_title" = "保存备忘录";
+"voiceinput.no_memos" = "暂无备忘录";
+"voiceinput.no_memos_description" = "录制语音备忘录以便随时回顾";
+
+// MARK: - offline_download (Features/OfflineMapDownloadView.swift)
+"offline_download.tiles_count" = "%d / %d 瓦片";
+"offline_download.estimated_size" = "预计大小 %@";
+"offline_download.updated_prefix" = "更新于";
+"offline_download.status_not_downloaded" = "未下载";
+"offline_download.status_paused" = "已暂停";
+"offline_download.status_downloaded" = "已下载";
+"offline_download.status_updating" = "更新中...";
+"offline_download.details_title" = "地图详情";
+"offline_download.detail_city" = "城市";
+"offline_download.detail_english_name" = "英文名";
+"offline_download.detail_province" = "省份";
+"offline_download.detail_zoom" = "缩放级别";
+"offline_download.detail_coverage" = "覆盖范围";
+"offline_download.detail_center" = "中心坐标";
+"offline_download.download_button" = "下载离线地图";
+"offline_download.pause" = "暂停";
+"offline_download.resume" = "继续";
+"offline_download.delete_button" = "删除离线地图";
+"offline_download.cancel_update" = "取消更新";
+"offline_download.delete_confirm" = "确定要删除「%@」的离线地图吗？";
+
+// MARK: - share (Features/Share/ShareSheet.swift)
+"share.error_title" = "分享失败";
+"share.preview" = "预览";
+"share.generating_preview" = "生成预览中...";
+"share.style" = "样式";
+"share.size" = "尺寸";
+"share.share_to" = "分享到";
+"share.save_to_album" = "保存图片到相册";
+"share.copied_to_clipboard" = "已复制到剪贴板";
+
+// MARK: - sharecard (Features/Share/ShareCardView.swift)
+"sharecard.scan_hint" = "扫码查看";
+"sharecard.description" = "%@ %d日游行程";
+"sharecard.style_label" = "样式";
+"sharecard.size_label" = "尺寸";
+
+// MARK: - visualeffects (Features/Components/VisualEffects.swift)
+"visualeffects.preview.topographic" = "等高线背景";
+"visualeffects.preview.compass" = "指南针装饰";
+
+// MARK: - offlinetile (Features/Components/OfflineTileOverlay.swift)
+"offlinetile.banner.no_maps" = "离线模式 - 无可用离线地图";
+"offlinetile.banner.using_local" = "离线模式 - 使用本地地图";
+
+// MARK: - tips (Features/Itinerary/TipsCard.swift)
+"tips.title" = "旅行贴士";
+
+
+// MARK: - icloud (Features/Settings/CloudSyncSettingsSheet.swift (pre-existing undefined icloud.* keys))
+"icloud.enable_sync" = "启用 iCloud 同步";
+"icloud.enable_sync_description" = "在你的所有设备间同步行程";
+"icloud.auto_sync" = "自动同步";
+"icloud.auto_sync_description" = "在后台自动同步更改";
+"icloud.actions" = "操作";
+"icloud.conflicts" = "冲突";
+"icloud.conflicts_description" = "这些行程在多台设备上被修改过，点按以解决冲突。";
+"icloud.sign_in_required" = "请在“设置”中登录 iCloud 以启用同步";
+"icloud.account_available" = "iCloud 可用";
+"icloud.no_account" = "未登录 iCloud 账户";
+"icloud.account_restricted" = "iCloud 受限";
+"icloud.account_checking" = "正在检查 iCloud…";
+"icloud.account_unavailable" = "iCloud 暂时不可用";
+"icloud.account_unknown" = "iCloud 状态未知";
+"icloud.conflict_detected" = "检测到同步冲突";
+"icloud.conflict_explanation" = "该行程在多台设备上被修改过，请选择要保留的版本。";
+"icloud.local_version" = "本机版本";
+"icloud.vs" = "对比";
+"icloud.cloud_version" = "iCloud 版本";
+"icloud.choose_resolution" = "选择解决方式";
+"icloud.keep_local" = "保留本机版本";
+"icloud.keep_local_description" = "使用本机版本并覆盖 iCloud";
+"icloud.keep_cloud" = "保留 iCloud 版本";
+"icloud.keep_cloud_description" = "使用 iCloud 版本并覆盖本机";
+"icloud.keep_both" = "两者都保留";
+"icloud.keep_both_description" = "将两个版本保存为不同的行程";
+"icloud.resolve_conflict" = "解决冲突";

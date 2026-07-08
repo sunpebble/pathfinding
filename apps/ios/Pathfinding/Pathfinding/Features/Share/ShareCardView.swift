@@ -132,7 +132,7 @@ struct ShareCardView: View {
           .font(.caption)
           .foregroundStyle(style.secondaryTextColor)
 
-        Text("扫码查看")
+        Text("sharecard.scan_hint".localized)
           .font(.caption2)
           .foregroundStyle(style.secondaryTextColor)
       }
@@ -165,7 +165,7 @@ struct ShareCardView: View {
     switch content {
     case .itinerary(let itinerary):
       if let cityName = itinerary.cityName, let days = itinerary.daysCount {
-        return "\(cityName) \(days)日游行程"
+        return "sharecard.description".localized(cityName, days)
       }
       return nil
     case .custom(_, _, let description, _):
@@ -178,7 +178,7 @@ struct ShareCardView: View {
     case .itinerary(let itinerary):
       var stats: [(icon: String, value: String)] = []
       if let days = itinerary.daysCount {
-        stats.append(("calendar", "\(days)天"))
+        stats.append(("calendar", "stats.days_suffix".localized(days)))
       }
       stats.append(("calendar.badge.clock", formatDateRange(itinerary.startDate, itinerary.endDate)))
       return stats
@@ -251,7 +251,7 @@ struct ShareCardPreviewContainer: View {
 
       // Style selector
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text("样式")
+        Text("sharecard.style_label".localized)
           .font(.caption)
           .foregroundStyle(.secondary)
 
@@ -271,7 +271,7 @@ struct ShareCardPreviewContainer: View {
 
       // Size selector
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text("尺寸")
+        Text("sharecard.size_label".localized)
           .font(.caption)
           .foregroundStyle(.secondary)
 

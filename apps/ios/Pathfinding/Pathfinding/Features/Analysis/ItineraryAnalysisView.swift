@@ -31,7 +31,7 @@ struct ItineraryAnalysisView: View {
           }
         }
       }
-      .navigationTitle("行程分析")
+      .navigationTitle("itinerary.analysis".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
@@ -62,10 +62,10 @@ struct LoadingAnalysisView: View {
       ProgressView()
         .controlSize(.large)
 
-      Text("正在分析行程...")
+      Text("analysis.loading_title".localized)
         .font(.headline)
 
-      Text("评估行程合理性、时间安排和预算")
+      Text("analysis.loading_subtitle".localized)
         .font(.subheadline)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
@@ -86,7 +86,7 @@ struct AnalysisErrorView: View {
         .font(.system(size: 48))
         .foregroundStyle(.orange)
 
-      Text("分析失败")
+      Text("analysis.error_title".localized)
         .font(.headline)
 
       Text(error.localizedDescription)
@@ -95,7 +95,7 @@ struct AnalysisErrorView: View {
         .multilineTextAlignment(.center)
 
       Button(action: onRetry) {
-        Text("重试")
+        Text("common.retry".localized)
           .fontWeight(.semibold)
       }
       .buttonStyle(.glassProminent)
@@ -111,12 +111,12 @@ struct AnalysisEmptyView: View {
 
   var body: some View {
     ContentUnavailableView {
-      Label("生成行程分析报告", systemImage: "chart.bar.doc.horizontal")
+      Label("analysis.empty_title".localized, systemImage: "chart.bar.doc.horizontal")
     } description: {
-      Text("评估行程合理性、获取优化建议和预算分析")
+      Text("analysis.empty_subtitle".localized)
     } actions: {
       Button(action: onAnalyze) {
-        Text("开始分析")
+        Text("analysis.start".localized)
           .fontWeight(.semibold)
       }
       .buttonStyle(.glassProminent)
@@ -140,10 +140,10 @@ struct AnalysisReportContent: View {
 
         // Tab Selector
         Picker("", selection: $selectedTab) {
-          Text("概览").tag(0)
-          Text("每日").tag(1)
-          Text("预算").tag(2)
-          Text("建议").tag(3)
+          Text("analysis.tab_overview".localized).tag(0)
+          Text("analysis.tab_daily".localized).tag(1)
+          Text("itinerary.budget".localized).tag(2)
+          Text("analysis.tab_recommendations".localized).tag(3)
         }
         .pickerStyle(.segmented)
         .padding(.horizontal)
@@ -181,7 +181,7 @@ struct OverallScoreCard: View {
             .font(.headline)
             .lineLimit(2)
 
-          Text("\(report.cityName) | \(report.totalDays)天")
+          Text("analysis.city_days".localized(report.cityName, report.totalDays))
             .font(.subheadline)
             .foregroundStyle(.secondary)
 
@@ -311,7 +311,7 @@ struct OverviewTabContent: View {
         // Strengths
         if !report.strengths.isEmpty {
           InsightsCard(
-            title: "优势",
+            title: "analysis.strengths".localized,
             icon: "checkmark.circle.fill",
             iconColor: .green,
             items: report.strengths
@@ -321,7 +321,7 @@ struct OverviewTabContent: View {
         // Critical Issues
         if !report.criticalIssues.isEmpty {
           InsightsCard(
-            title: "需要注意",
+            title: "analysis.critical_issues".localized,
             icon: "exclamationmark.triangle.fill",
             iconColor: .orange,
             items: report.criticalIssues
@@ -331,7 +331,7 @@ struct OverviewTabContent: View {
         // Improvements
         if !report.improvements.isEmpty {
           InsightsCard(
-            title: "可改进",
+            title: "analysis.improvements".localized,
             icon: "lightbulb.fill",
             iconColor: .yellow,
             items: report.improvements
@@ -347,7 +347,7 @@ struct TimeAnalysisCard: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("时间分析")
+      Text("analysis.time_analysis".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
@@ -357,28 +357,28 @@ struct TimeAnalysisCard: View {
       ], spacing: DesignTokens.Spacing.sm) {
         TimeStatItem(
           icon: "clock.fill",
-          title: "开始时间",
+          title: "analysis.start_time".localized,
           value: timeAnalysis.averageStartTime,
           color: .indigo
         )
 
         TimeStatItem(
           icon: "clock.badge.checkmark.fill",
-          title: "结束时间",
+          title: "analysis.end_time".localized,
           value: timeAnalysis.averageEndTime,
           color: .purple
         )
 
         TimeStatItem(
           icon: "figure.walk",
-          title: "活动时间",
+          title: "analysis.activity_time".localized,
           value: formatMinutes(timeAnalysis.totalActivityMinutes),
           color: .green
         )
 
         TimeStatItem(
           icon: "car.fill",
-          title: "交通时间",
+          title: "analysis.travel_time".localized,
           value: formatMinutes(timeAnalysis.totalTravelMinutes),
           color: .blue
         )
@@ -387,7 +387,7 @@ struct TimeAnalysisCard: View {
       // Time Utilization Bar
       VStack(alignment: .leading, spacing: 4) {
         HStack {
-          Text("时间利用率")
+          Text("analysis.time_utilization".localized)
             .font(.caption)
             .foregroundStyle(.secondary)
 
@@ -424,7 +424,7 @@ struct TimeAnalysisCard: View {
         Divider()
           .padding(.vertical, 4)
 
-        Text("建议休息")
+        Text("analysis.suggested_breaks".localized)
           .font(.subheadline)
           .fontWeight(.medium)
 
@@ -441,9 +441,9 @@ struct TimeAnalysisCard: View {
     let hours = minutes / 60
     let mins = minutes % 60
     if hours > 0 {
-      return "\(hours)小时\(mins)分"
+      return "analysis.duration_hm".localized(hours, mins)
     }
-    return "\(mins)分钟"
+    return "analysis.duration_minutes".localized(mins)
   }
 }
 
@@ -488,10 +488,10 @@ struct BreakSuggestionRow: View {
         .frame(width: 24)
 
       VStack(alignment: .leading, spacing: 2) {
-        Text("在 \(suggestion.afterPoiName) 后")
+        Text("analysis.break_after".localized(suggestion.afterPoiName))
           .font(.subheadline)
 
-        Text("\(suggestion.reason) (\(suggestion.suggestedDuration)分钟)")
+        Text("analysis.break_reason_duration".localized(suggestion.reason, suggestion.suggestedDuration))
           .font(.caption)
           .foregroundStyle(.secondary)
       }
@@ -639,7 +639,7 @@ struct DayAnalysisCard: View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
       HStack {
         VStack(alignment: .leading, spacing: 4) {
-          Text("第 \(day.dayNumber) 天")
+          Text("analysis.day_number".localized(day.dayNumber))
             .font(.headline)
 
           Text(day.date)
@@ -671,19 +671,19 @@ struct DayAnalysisCard: View {
       ], spacing: 12) {
         DayStatItem(
           icon: "mappin.circle.fill",
-          title: "景点",
-          value: "\(day.itemCount)个"
+          title: "poi.attraction".localized,
+          value: "analysis.poi_count_value".localized(day.itemCount)
         )
 
         DayStatItem(
           icon: "clock.fill",
-          title: "时长",
+          title: "analysis.duration".localized,
           value: formatMinutes(day.totalPlannedMinutes)
         )
 
         DayStatItem(
           icon: "arrow.triangle.swap",
-          title: "路程",
+          title: "analysis.distance".localized,
           value: String(format: "%.1fkm", day.totalDistanceKm)
         )
       }
@@ -691,7 +691,7 @@ struct DayAnalysisCard: View {
       // Route Efficiency
       VStack(alignment: .leading, spacing: 4) {
         HStack {
-          Text("路线效率")
+          Text("analysis.route_efficiency".localized)
             .font(.caption)
             .foregroundStyle(.secondary)
 
@@ -760,7 +760,7 @@ struct DayAnalysisCard: View {
     if hours > 0 {
       return "\(hours)h\(mins)m"
     }
-    return "\(mins)分钟"
+    return "analysis.duration_minutes".localized(mins)
   }
 }
 
@@ -795,7 +795,7 @@ struct RouteOptimizationCard: View {
         Image(systemName: "arrow.triangle.2.circlepath")
           .foregroundStyle(.blue)
 
-        Text("路线优化建议")
+        Text("analysis.route_optimization_suggestion".localized)
           .font(.headline)
           .foregroundStyle(.secondary)
       }
@@ -808,7 +808,7 @@ struct RouteOptimizationCard: View {
           Image(systemName: "clock.badge.checkmark.fill")
             .foregroundStyle(.green)
 
-          Text("节省 \(optimization.estimatedTimeSavingMinutes) 分钟")
+          Text("analysis.save_minutes".localized(optimization.estimatedTimeSavingMinutes))
             .font(.caption)
         }
 
@@ -816,7 +816,7 @@ struct RouteOptimizationCard: View {
           Image(systemName: "arrow.down.circle.fill")
             .foregroundStyle(.blue)
 
-          Text("减少 \(String(format: "%.1f", optimization.estimatedDistanceSavingKm)) km")
+          Text("analysis.reduce_km".localized(String(format: "%.1f", optimization.estimatedDistanceSavingKm)))
             .font(.caption)
         }
       }
@@ -834,7 +834,7 @@ struct PoiAnalysisListCard: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("景点分析")
+      Text("analysis.poi_analysis".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
@@ -875,12 +875,12 @@ struct PoiAnalysisRow: View {
           .fontWeight(.medium)
 
         HStack(spacing: 8) {
-          Text("建议 \(poi.suggestedDuration) 分钟")
+          Text("analysis.suggested_minutes".localized(poi.suggestedDuration))
             .font(.caption)
             .foregroundStyle(.secondary)
 
           if let actual = poi.actualDuration {
-            Text("实际 \(actual) 分钟")
+            Text("analysis.actual_minutes".localized(actual))
               .font(.caption)
               .foregroundStyle(statusColor)
           }
@@ -891,7 +891,7 @@ struct PoiAnalysisRow: View {
             Image(systemName: "exclamationmark.triangle.fill")
               .font(.caption2)
 
-            Text("可能不在营业时间")
+            Text("analysis.opening_hours_conflict".localized)
               .font(.caption)
           }
           .foregroundStyle(.orange)
@@ -928,9 +928,9 @@ struct BudgetTabContent: View {
         }
       } else {
         ContentUnavailableView(
-          "预算分析不可用",
+          "analysis.budget_unavailable".localized,
           systemImage: "yensign.circle",
-          description: Text("该行程暂无预算数据")
+          description: Text("analysis.budget_no_data".localized)
         )
         .padding(40)
       }
@@ -945,7 +945,7 @@ struct BudgetOverviewCard: View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
       HStack {
         VStack(alignment: .leading, spacing: 4) {
-          Text("预计总费用")
+          Text("analysis.estimated_total".localized)
             .font(.subheadline)
             .foregroundStyle(.secondary)
 
@@ -973,7 +973,7 @@ struct BudgetOverviewCard: View {
 
       HStack {
         VStack(alignment: .leading, spacing: 4) {
-          Text("日均")
+          Text("analysis.per_day".localized)
             .font(.caption)
             .foregroundStyle(.secondary)
 
@@ -985,7 +985,7 @@ struct BudgetOverviewCard: View {
 
         if let perPerson = budget.perPersonAverage {
           VStack(alignment: .trailing, spacing: 4) {
-            Text("人均")
+            Text("analysis.per_person".localized)
               .font(.caption)
               .foregroundStyle(.secondary)
 
@@ -1005,7 +1005,7 @@ struct BudgetBreakdownChart: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-      Text("费用构成")
+      Text("analysis.cost_breakdown".localized)
         .font(.headline)
         .foregroundStyle(.secondary)
 
@@ -1071,7 +1071,7 @@ struct SavingOpportunitiesCard: View {
         Image(systemName: "lightbulb.fill")
           .foregroundStyle(.yellow)
 
-        Text("省钱建议")
+        Text("analysis.saving_suggestions".localized)
           .font(.headline)
           .foregroundStyle(.secondary)
       }
@@ -1088,7 +1088,7 @@ struct SavingOpportunitiesCard: View {
               .font(.subheadline)
 
             HStack {
-              Text("可节省 ¥\(Int(opportunity.potentialSaving))")
+              Text("analysis.potential_saving".localized(Int(opportunity.potentialSaving)))
                 .font(.caption)
                 .foregroundStyle(.green)
 
@@ -1154,7 +1154,7 @@ struct TopRecommendationsCard: View {
         Image(systemName: "star.fill")
           .foregroundStyle(.yellow)
 
-        Text("核心建议")
+        Text("analysis.core_recommendations".localized)
           .font(.headline)
           .foregroundStyle(.secondary)
       }
@@ -1192,14 +1192,14 @@ struct RouteOptimizationsCard: View {
         Image(systemName: "arrow.triangle.2.circlepath")
           .foregroundStyle(.blue)
 
-        Text("路线优化")
+        Text("analysis.route_optimizations".localized)
           .font(.headline)
           .foregroundStyle(.secondary)
       }
 
       ForEach(optimizations) { optimization in
         VStack(alignment: .leading, spacing: 8) {
-          Text("第 \(optimization.dayNumber) 天")
+          Text("analysis.day_number".localized(optimization.dayNumber))
             .font(.subheadline)
             .fontWeight(.semibold)
 
@@ -1213,7 +1213,7 @@ struct RouteOptimizationsCard: View {
                 .font(.caption)
                 .foregroundStyle(.green)
 
-              Text("-\(optimization.estimatedTimeSavingMinutes)分钟")
+              Text("analysis.minus_minutes".localized(optimization.estimatedTimeSavingMinutes))
                 .font(.caption)
             }
 

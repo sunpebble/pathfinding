@@ -9,8 +9,15 @@ struct OfflineMapListView: View {
   @State private var regionToDelete: OfflineMapRegion?
 
   enum MapListTab: String, CaseIterable {
-    case available = "可下载"
-    case downloaded = "已下载"
+    case available
+    case downloaded
+
+    var displayName: String {
+      switch self {
+      case .available: return "offlinemap.tab_available".localized
+      case .downloaded: return "offlinemap.tab_downloaded".localized
+      }
+    }
   }
 
   var body: some View {
@@ -19,7 +26,7 @@ struct OfflineMapListView: View {
         // Tab picker
         Picker("", selection: $selectedTab) {
           ForEach(MapListTab.allCases, id: \.self) { tab in
-            Text(tab.rawValue).tag(tab)
+            Text(tab.displayName).tag(tab)
           }
         }
         .pickerStyle(.segmented)
@@ -34,7 +41,7 @@ struct OfflineMapListView: View {
         // Content
         if manager.isLoading {
           Spacer()
-          ProgressView("加载中...")
+          ProgressView("common.loading".localized)
           Spacer()
         } else {
           switch selectedTab {
@@ -69,26 +76,26 @@ struct OfflineMapListView: View {
           }
         }
       }
-      .navigationTitle("离线地图")
+      .navigationTitle("map.offline".localized)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         if selectedTab == .downloaded && !manager.downloadedRegions.isEmpty {
           ToolbarItem(placement: .topBarTrailing) {
-            Button("全部删除") {
+            Button("offlinemap.delete_all".localized) {
               showDeleteAllConfirmation = true
             }
             .foregroundStyle(.red)
           }
         }
       }
-      .alert("删除离线地图", isPresented: .init(
+      .alert("offlinemap.delete_alert_title".localized, isPresented: .init(
         get: { regionToDelete != nil },
         set: { if !$0 { regionToDelete = nil } }
       )) {
-        Button("取消", role: .cancel) {
+        Button("common.cancel".localized, role: .cancel) {
           regionToDelete = nil
         }
-        Button("删除", role: .destructive) {
+        Button("common.delete".localized, role: .destructive) {
           if let region = regionToDelete {
             Task {
               await manager.deleteRegion(regionId: region.id)
@@ -98,18 +105,18 @@ struct OfflineMapListView: View {
         }
       } message: {
         if let region = regionToDelete {
-          Text("确定要删除「\(region.localizedName)」的离线地图吗？")
+          Text("offlinemap.delete_confirm_message".localized(region.localizedName))
         }
       }
-      .alert("删除全部离线地图", isPresented: $showDeleteAllConfirmation) {
-        Button("取消", role: .cancel) {}
-        Button("全部删除", role: .destructive) {
+      .alert("offlinemap.delete_all_alert_title".localized, isPresented: $showDeleteAllConfirmation) {
+        Button("common.cancel".localized, role: .cancel) {}
+        Button("offlinemap.delete_all".localized, role: .destructive) {
           Task {
             await manager.deleteAllRegions()
           }
         }
       } message: {
-        Text("确定要删除所有已下载的离线地图吗？此操作无法撤销。")
+        Text("offlinemap.delete_all_message".localized)
       }
       .refreshable {
         manager.loadRegions()
@@ -139,7 +146,7 @@ struct StorageInfoBar: View {
   var body: some View {
     HStack {
       Label {
-        Text("已用: \(ByteCountFormatter.string(fromByteCount: used, countStyle: .file))")
+        Text("offlinemap.storage_used".localized(ByteCountFormatter.string(fromByteCount: used, countStyle: .file)))
           .font(.caption)
       } icon: {
         Image(systemName: "internaldrive")
@@ -149,7 +156,7 @@ struct StorageInfoBar: View {
       Spacer()
 
       Label {
-        Text("可用: \(ByteCountFormatter.string(fromByteCount: available, countStyle: .file))")
+        Text("offlinemap.storage_available".localized(ByteCountFormatter.string(fromByteCount: available, countStyle: .file)))
           .font(.caption)
       } icon: {
         Image(systemName: "externaldrive")
@@ -178,7 +185,7 @@ struct AvailableRegionsListView: View {
         HStack {
           Image(systemName: "magnifyingglass")
             .foregroundStyle(.secondary)
-          TextField("搜索城市", text: $searchText)
+          TextField("offlinemap.search_placeholder".localized, text: $searchText)
             .textFieldStyle(.plain)
           if !searchText.isEmpty {
             Button {
@@ -207,9 +214,9 @@ struct AvailableRegionsListView: View {
       if regions.isEmpty {
         Section {
           ContentUnavailableView(
-            "没有找到城市",
+            "offlinemap.no_cities_found".localized,
             systemImage: "map",
-            description: Text("尝试其他搜索词")
+            description: Text("offlinemap.try_other_search".localized)
           )
         }
       }
@@ -218,7 +225,7 @@ struct AvailableRegionsListView: View {
   }
 
   private var groupedRegions: [String: [OfflineMapRegion]] {
-    Dictionary(grouping: regions, by: { $0.province ?? "其他" })
+    Dictionary(grouping: regions, by: { $0.province ?? "poi.other".localized })
   }
 }
 
@@ -249,14 +256,14 @@ struct AvailableRegionRow: View {
           .fontWeight(.medium)
 
         HStack(spacing: DesignTokens.Spacing.xs) {
-          Text("约 \(region.formattedSize)")
+          Text("offlinemap.approx_size".localized(region.formattedSize))
             .font(.caption)
             .foregroundStyle(.secondary)
 
           Text("·")
             .foregroundStyle(.secondary)
 
-          Text("缩放 \(region.minZoom)-\(region.maxZoom)")
+          Text("offlinemap.zoom_range".localized(region.minZoom, region.maxZoom))
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -339,9 +346,9 @@ struct DownloadedRegionsListView: View {
   var body: some View {
     if regions.isEmpty {
       ContentUnavailableView(
-        "暂无离线地图",
+        "offlinemap.empty_title".localized,
         systemImage: "map",
-        description: Text("下载离线地图后可在无网络时使用")
+        description: Text("offlinemap.empty_hint".localized)
       )
     } else {
       List {
@@ -407,13 +414,13 @@ struct DownloadedRegionRow: View {
         Button {
           onUpdate()
         } label: {
-          Label("更新", systemImage: "arrow.clockwise")
+          Label("offlinemap.update".localized, systemImage: "arrow.clockwise")
         }
 
         Button(role: .destructive) {
           onDelete()
         } label: {
-          Label("删除", systemImage: "trash")
+          Label("common.delete".localized, systemImage: "trash")
         }
       } label: {
         Image(systemName: "ellipsis.circle")

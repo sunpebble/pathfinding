@@ -7,7 +7,7 @@ struct TipsCard: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Label("旅行贴士", systemImage: "lightbulb").font(.headline)
+      Label("tips.title".localized, systemImage: "lightbulb").font(.headline)
       ForEach(tips, id: \.self) { tip in
         HStack(alignment: .top) {
           Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)

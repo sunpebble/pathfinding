@@ -343,7 +343,7 @@ struct ExplorerPageBackground: View {
   ScrollView {
     VStack(spacing: 24) {
       // Topographic Lines
-      Text("等高线背景")
+      Text("visualeffects.preview.topographic".localized)
         .font(.headline)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
@@ -353,7 +353,7 @@ struct ExplorerPageBackground: View {
       // Compass Rose
       ZStack {
         CompassRoseDecoration(size: 150, opacity: 0.15)
-        Text("指南针装饰")
+        Text("visualeffects.preview.compass".localized)
           .font(.headline)
       }
       .frame(maxWidth: .infinity)
@@ -371,7 +371,7 @@ struct ExplorerPageBackground: View {
   ScrollView {
     VStack(spacing: 24) {
       // Topographic Lines
-      Text("等高线背景")
+      Text("visualeffects.preview.topographic".localized)
         .font(.headline)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
