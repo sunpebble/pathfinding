@@ -56,18 +56,12 @@ chat 端点可达。本 spec 修复 iOS 客户端与 chat API 的契约分裂，
 
 - 鉴权：`authRequired()` + `requireOwnedSession(db, id, userId)`。
 - body schema（Zod）：`{ content: z.string().trim().min(1) }`。
-- 流程（**事务性**，AI 失败则回滚、不持久化任何消息、返回 503）：
-  1. `db.transaction()` 内：
-     1. 插入用户消息 `{ sessionId: id, role: 'user', content }`，取 `userMessage`。
-     2. 取该 session 最近 ≤20 条消息（含刚插入）作上下文，按 `createdAt` 升序。
-     3. 调 `deepSeekCompletion([{role:'system',content:系统提示}, ...历史, ...新消息]?, { apiKey: c.env.DEEPSEEK_API_KEY ?? '', signal: c.req.raw.signal })`。
-        - **注**：历史含本轮用户消息，故上下文数组 = system + 历史消息（role/content），不重复追加新消息。
-     4. 插入 AI 消息 `{ sessionId: id, role: 'assistant', content: 回复 }`，取 `assistantMessage`。
-     5. 更新 session `lastMessageAt = new Date()`。
-  2. 返回 `201 { data: { user_message: toChatDto(userMessage), assistant_message: toChatDto(assistantMessage) } }`。
-- **AI 失败**：`deepSeekCompletion` 抛出 → 事务回滚 → 返回 `503 { error: 'AI service unavailable' }`。
-  iOS 据此显示错误 + 重试（重试即重发，因未持久化，幂等）。
-- DeepSeek 配置缺失（`DeepSeekConfigError`）→ 同样 503（`{ error: 'AI service unavailable' }`），不暴露内部细节。
+- 流程（**先获取 AI 回复，成功才持久化**——D1 不支持跨外部 fetch 的事务；AI 失败则不写任何消息，503，重试幂等）：
+  1. 取该 session 最近 ≤20 条**已存**消息（按 `createdAt` 升序）作历史。
+  2. 调 `deepSeekCompletion([{role:'system',content:系统提示}, ...历史(role/content), {role:'user',content:新内容}]?, { apiKey: c.env.DEEPSEEK_API_KEY ?? '', signal: c.req.raw.signal })`（新内容此时**未入库**，直接传给模型）。
+  3. **成功后**才写库：插入用户消息 `{sessionId:id, role:'user', content:新内容}` → `userMessage`；插入 AI 消息 `{sessionId:id, role:'assistant', content:回复}` → `assistantMessage`；更新 session `lastMessageAt`。
+  4. 返回 `201 { data: { user_message: toChatDto(userMessage), assistant_message: toChatDto(assistantMessage) } }`。
+- **AI 失败**：`deepSeekCompletion` 抛错（含 `DeepSeekConfigError`）→ `503 { error: 'AI service unavailable' }`，**不写任何消息**。iOS 重试即重发（幂等）。
 
 **新增端点：**
 
@@ -115,7 +109,7 @@ chat 端点可达。本 spec 修复 iOS 客户端与 chat API 的契约分裂，
 
 - **API**（Vitest）：
   - `POST /sessions/:id/messages` 发送即回复：mock `deepSeekCompletion` 返回文本 + mock db → 201，body 含 `user_message/assistant_message`，两条均入库，session `lastMessageAt` 更新。
-  - AI 失败（mock 抛错）→ 503，**无消息入库**（事务回滚）。
+  - AI 失败（mock 抛错）→ 503，**无消息入库**（先获取 AI、成功才写库）。
   - 鉴权：他人会话 → 403。
   - `GET /sessions/:id/messages`：列表返回 + 鉴权 403。
   - `pnpm check` 绿，覆盖率不回退。
