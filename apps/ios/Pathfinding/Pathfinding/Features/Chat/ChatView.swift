@@ -151,12 +151,6 @@ private struct SessionRow: View {
           .font(.caption)
           .foregroundStyle(.secondary)
       }
-
-      HStack(spacing: DesignTokens.Spacing.sm) {
-        Label("\(session.messageCount)", systemImage: "bubble.left.and.bubble.right")
-          .font(.caption)
-          .foregroundStyle(.secondary)
-      }
     }
     .padding(.vertical, DesignTokens.Spacing.xs)
   }

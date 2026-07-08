@@ -8,8 +8,7 @@ struct ChatSession: Codable, Identifiable, Hashable {
   let id: Int
   let userId: Int
   let title: String
-  let messageCount: Int
-  let lastMessageAt: Date
+  let lastMessageAt: Date?
   let isArchived: Bool
   let createdAt: Date
 
@@ -17,7 +16,6 @@ struct ChatSession: Codable, Identifiable, Hashable {
     case id
     case userId = "user_id"
     case title
-    case messageCount = "message_count"
     case lastMessageAt = "last_message_at"
     case isArchived = "is_archived"
     case createdAt = "created_at"
@@ -25,7 +23,7 @@ struct ChatSession: Codable, Identifiable, Hashable {
 
   // MARK: - Computed Properties
 
-  var lastMessageDate: Date { lastMessageAt }
+  var lastMessageDate: Date { lastMessageAt ?? createdAt }
   var createdDate: Date { createdAt }
 
   var timeAgo: String {

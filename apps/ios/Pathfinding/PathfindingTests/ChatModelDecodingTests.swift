@@ -4,7 +4,7 @@ import XCTest
 final class ChatModelDecodingTests: XCTestCase {
   func testDecodesSessionList() throws {
     let json = """
-    {"data":[{"id":7,"user_id":1,"title":"杭州三日","message_count":4,
+    {"data":[{"id":7,"user_id":1,"title":"杭州三日",
     "last_message_at":"2026-07-08T10:51:16.528Z","is_archived":false,
     "created_at":"2026-07-07T08:00:00.000Z"}]}
     """.data(using: .utf8)!
@@ -14,8 +14,20 @@ final class ChatModelDecodingTests: XCTestCase {
     XCTAssertEqual(resp.data.count, 1)
     XCTAssertEqual(resp.data[0].id, 7)
     XCTAssertEqual(resp.data[0].userId, 1)
-    XCTAssertEqual(resp.data[0].messageCount, 4)
     XCTAssertFalse(resp.data[0].isArchived)
+  }
+
+  func testDecodesFreshlyCreatedSessionWithNullLastMessageAt() throws {
+    let json = """
+    {"data":[{"id":8,"user_id":1,"title":"新会话",
+    "last_message_at":null,"is_archived":false,
+    "created_at":"2026-07-08T09:00:00.000Z"}]}
+    """.data(using: .utf8)!
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let resp = try decoder.decode(ChatSessionListResponse.self, from: json)
+    XCTAssertEqual(resp.data.count, 1)
+    XCTAssertNil(resp.data[0].lastMessageAt)
   }
 
   func testDecodesSendMessageResponse() throws {
