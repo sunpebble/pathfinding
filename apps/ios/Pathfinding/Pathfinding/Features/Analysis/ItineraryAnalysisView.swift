@@ -110,14 +110,13 @@ struct AnalysisEmptyView: View {
   let onAnalyze: () -> Void
 
   var body: some View {
-    ContentUnavailableView {
-      Label("analysis.empty_title".localized, systemImage: "chart.bar.doc.horizontal")
-    } description: {
-      Text("analysis.empty_subtitle".localized)
-    } actions: {
+    SunpebbleEmptyState(
+      glyph: "chart.bar.doc.horizontal",
+      title: "analysis.empty_title".localized,
+      message: "analysis.empty_subtitle".localized
+    ) {
       Button(action: onAnalyze) {
         Text("analysis.start".localized)
-          .fontWeight(.semibold)
       }
       .buttonStyle(.sunpebblePrimary)
     }

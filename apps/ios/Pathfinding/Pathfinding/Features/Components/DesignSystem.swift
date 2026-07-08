@@ -986,3 +986,54 @@ extension ButtonStyle where Self == SunpebbleSecondaryButtonStyle {
   /// Sunpebble 发丝边次按钮（替代 `.glass`）
   static var sunpebbleSecondary: SunpebbleSecondaryButtonStyle { SunpebbleSecondaryButtonStyle() }
 }
+
+// MARK: - Empty State (Sunpebble)
+
+/// Sunpebble 居中空态：白卡 glyph 方块 + 衬线标题 + 卵石副文 + 可选主按钮。
+/// 对齐设计稿 `.empty-state`（替代系统 ContentUnavailableView，后者不符合 Sunpebble 视觉）。
+struct SunpebbleEmptyState<Actions: View>: View {
+  let glyph: String
+  let title: String
+  let message: String
+  @ViewBuilder var actions: () -> Actions
+
+  init(
+    glyph: String,
+    title: String,
+    message: String,
+    @ViewBuilder actions: @escaping () -> Actions = { EmptyView() }
+  ) {
+    self.glyph = glyph
+    self.title = title
+    self.message = message
+    self.actions = actions
+  }
+
+  var body: some View {
+    VStack(spacing: DesignTokens.Spacing.md) {
+      Image(systemName: glyph)
+        .font(.system(size: 26, weight: .regular))
+        .foregroundStyle(DesignTokens.Colors.textSecondary)
+        .frame(width: 64, height: 64)
+        .cardSurface(cornerRadius: 18)
+
+      VStack(spacing: DesignTokens.Spacing.xs) {
+        Text(title)
+          .sunpebbleTitle(20)
+          .multilineTextAlignment(.center)
+
+        Text(message)
+          .font(.subheadline)
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
+          .multilineTextAlignment(.center)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+
+      actions()
+        .frame(maxWidth: 260)
+        .padding(.top, DesignTokens.Spacing.sm)
+    }
+    .padding(DesignTokens.Spacing.xl)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+  }
+}

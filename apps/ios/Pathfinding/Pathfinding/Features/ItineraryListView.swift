@@ -104,11 +104,11 @@ struct ItineraryListView: View {
   // MARK: - Empty View
 
   private var emptyView: some View {
-    ContentUnavailableView {
-      Label("itinerary.empty".localized, systemImage: "map")
-    } description: {
-      Text("itinerary.empty_description".localized)
-    } actions: {
+    SunpebbleEmptyState(
+      glyph: "map",
+      title: "itinerary.empty".localized,
+      message: "itinerary.empty_description".localized
+    ) {
       Button("itinerary.empty.ai".localized) { showAIPlanner = true }
         .buttonStyle(.sunpebblePrimary)
     }

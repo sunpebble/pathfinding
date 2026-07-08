@@ -502,11 +502,11 @@ struct VoiceMemoListView: View {
     }
     .overlay {
       if displayedMemos.isEmpty {
-        ContentUnavailableView {
-          Label("voiceinput.no_memos".localized, systemImage: "mic.slash")
-        } description: {
-          Text("voiceinput.no_memos_description".localized)
-        }
+        SunpebbleEmptyState(
+          glyph: "mic.slash",
+          title: "voiceinput.no_memos".localized,
+          message: "voiceinput.no_memos_description".localized
+        )
       }
     }
     .onChange(of: memoManager.isPlaying) { _, isPlaying in
