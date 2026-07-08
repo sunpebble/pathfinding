@@ -8,7 +8,7 @@
   },
   "scripts": {
     "predev": "pnpm dlx wrangler@4.107.1 d1 migrations apply pathfinding --local",
-    "dev": "flue dev --target cloudflare",
+    "dev": "flue dev --target cloudflare --port 3000",
     "build": "flue build --target cloudflare",
     "build:lib": "tsdown",
     "typecheck": "tsc --noEmit",
