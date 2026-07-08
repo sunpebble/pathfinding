@@ -47,7 +47,6 @@
 		4B5CFB48FD40534D21C1ACE9 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 76E58580224B97C6B59FEFE6 /* Localizable.strings */; };
 		4E4FD8221CC0F2B6A73B1D75 /* SiriShortcutsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97EB2089F5F7061C84D20DF4 /* SiriShortcutsSettingsView.swift */; };
 		50F5BE17C918E2D75E09A2B2 /* ChatModelDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC4A210476299CDED1AE553 /* ChatModelDecodingTests.swift */; };
-		536BDCAFDDFA6368A263974D /* CommentSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2C741A2EABAB0360749520 /* CommentSectionView.swift */; };
 		53F7D531C11BA37EF79A85B9 /* WatchData.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED69B8F2CC3E08525EB73224 /* WatchData.swift */; };
 		542E3A9A66D56C78FDB2D549 /* CarPlayVoiceCommandHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FB3A141ED6A91078CE1579 /* CarPlayVoiceCommandHandler.swift */; };
 		550C122999E2B1C5660990C8 /* TipsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACACAAE6FEA74D27B6C4364F /* TipsCard.swift */; };
@@ -354,7 +353,6 @@
 				21BB48CE89EE6222D2A0D5FA /* AccentColorPersistenceTests.swift */,
 				1659CAA114BDDDB72101E180 /* AuthManagerRequestTests.swift */,
 				0CC4A210476299CDED1AE553 /* ChatModelDecodingTests.swift */,
-				FC72EE246B8EC297F7502A2D /* CityEncyclopediaReachabilityTests.swift */,
 				99ABE2634CF32E6F2522436D /* CopyableSourceTests.swift */,
 				59162E257AA1C57B68BFA460 /* ExpenseFormModelTests.swift */,
 				E0A7B59E95DA141FDAC0291B /* ItineraryDetailDestinationsTests.swift */,
@@ -885,7 +883,6 @@
 				0D4927E0381F632A56180834 /* AccentColorPersistenceTests.swift in Sources */,
 				2093E2AA2641EC6999A78046 /* AuthManagerRequestTests.swift in Sources */,
 				50F5BE17C918E2D75E09A2B2 /* ChatModelDecodingTests.swift in Sources */,
-				663381DC0D26540429E31E86 /* CityEncyclopediaReachabilityTests.swift in Sources */,
 				7D752941ACA629DFB9EBA4D6 /* CopyableSourceTests.swift in Sources */,
 				10A60D4211B9476E6E418726 /* ExpenseFormModelTests.swift in Sources */,
 				57DBF54E6DD5FC533DB54F7C /* ItineraryDetailDestinationsTests.swift in Sources */,
