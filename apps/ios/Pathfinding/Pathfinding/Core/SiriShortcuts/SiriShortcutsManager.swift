@@ -46,13 +46,6 @@ final class SiriShortcutsManager {
       )
       clearNavigationKeys()
     }
-    // Check for note creation
-    else if UserDefaults.standard.bool(forKey: "siri_create_note") {
-      let content = UserDefaults.standard.string(forKey: "siri_note_content")
-      let title = UserDefaults.standard.string(forKey: "siri_note_title")
-      action = .createNote(title: title, content: content)
-      clearNoteKeys()
-    }
     // Check for search
     else if UserDefaults.standard.bool(forKey: "siri_perform_search") {
       let query = UserDefaults.standard.string(forKey: "siri_search_query") ?? ""
@@ -144,12 +137,6 @@ final class SiriShortcutsManager {
     logger.debug("Donated search intent: \(query)")
   }
 
-  /// Donate a note creation intent
-  func donateNoteCreation() {
-    // Just log - iOS 16+ handles suggestions automatically
-    logger.debug("Donated note creation intent")
-  }
-
   // MARK: - Private Helpers
 
   private func clearNavigationKeys() {
@@ -158,12 +145,6 @@ final class SiriShortcutsManager {
     UserDefaults.standard.removeObject(forKey: "siri_navigate_poi_name")
     UserDefaults.standard.removeObject(forKey: "siri_navigate_latitude")
     UserDefaults.standard.removeObject(forKey: "siri_navigate_longitude")
-  }
-
-  private func clearNoteKeys() {
-    UserDefaults.standard.removeObject(forKey: "siri_create_note")
-    UserDefaults.standard.removeObject(forKey: "siri_note_content")
-    UserDefaults.standard.removeObject(forKey: "siri_note_title")
   }
 
   private func clearSearchKeys() {
@@ -199,7 +180,6 @@ final class SiriShortcutsManager {
 enum SiriNavigationAction: Equatable {
   case viewItinerary(id: String, day: Int?)
   case navigateToPOI(name: String, latitude: Double?, longitude: Double?)
-  case createNote(title: String?, content: String?)
   case search(query: String)
   case showItineraryList
   case searchNearby(type: String?)
@@ -223,61 +203,5 @@ struct CustomShortcut: Codable, Identifiable {
     case navigateToPOI
     case createNote
     case search
-  }
-}
-
-// MARK: - Quick Notes Manager
-
-/// Manager for quick voice notes captured via Siri
-@MainActor
-@Observable
-final class QuickNotesManager {
-  static let shared = QuickNotesManager()
-
-  private(set) var quickNotes: [QuickNote] = []
-
-  private init() {
-    loadQuickNotes()
-  }
-
-  /// Load pending quick notes
-  func loadQuickNotes() {
-    guard let data = UserDefaults.standard.data(forKey: "quick_notes"),
-      let notes = try? JSONDecoder().decode([QuickNote].self, from: data)
-    else {
-      return
-    }
-    quickNotes = notes
-  }
-
-  /// Get unsynchronized notes
-  var unsyncedNotes: [QuickNote] {
-    quickNotes.filter { !$0.syncedToNote }
-  }
-
-  /// Mark a quick note as synced
-  func markAsSynced(_ noteId: UUID, travelNoteId: String) {
-    if let index = quickNotes.firstIndex(where: { $0.id == noteId }) {
-      quickNotes[index].syncedToNote = true
-      quickNotes[index].noteId = travelNoteId
-      saveQuickNotes()
-    }
-  }
-
-  /// Delete a quick note
-  func delete(_ noteId: UUID) {
-    quickNotes.removeAll { $0.id == noteId }
-    saveQuickNotes()
-  }
-
-  /// Clear all synced notes
-  func clearSyncedNotes() {
-    quickNotes.removeAll { $0.syncedToNote }
-    saveQuickNotes()
-  }
-
-  private func saveQuickNotes() {
-    guard let data = try? JSONEncoder().encode(quickNotes) else { return }
-    UserDefaults.standard.set(data, forKey: "quick_notes")
   }
 }

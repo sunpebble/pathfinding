@@ -215,20 +215,12 @@ export default function LandingPage() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-stone-700"
-                >
-                  密码
-                </label>
-                <button
-                  type="button"
-                  className="text-xs text-amber-700 transition-colors hover:text-amber-800"
-                >
-                  忘记密码？
-                </button>
-              </div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-stone-700"
+              >
+                密码
+              </label>
               <input
                 id="password"
                 type="password"

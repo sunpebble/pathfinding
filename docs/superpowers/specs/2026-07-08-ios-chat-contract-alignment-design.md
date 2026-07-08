@@ -8,6 +8,7 @@ chat 端点可达。本 spec 修复 iOS 客户端与 chat API 的契约分裂，
 ## 0. 范围与背景
 
 **根因回顾**（系统化调试结论）：
+
 - 后端已上线，`GET /api/chat/sessions` 正常返回 `{"data":[]}`。
 - 但 iOS 客户端说的是**旧（Convex/Mongo）契约**，与现 API 几乎全维度不一致 → 解码失败、调用 404。
 - 且助手 tab **无登录门**：未登录用户直接打 doomed 请求；`fetchSessions(refresh:)` 先清空再拉，
@@ -17,36 +18,38 @@ chat 端点可达。本 spec 修复 iOS 客户端与 chat API 的契约分裂，
 助手 tab 未登录时提示登录、出错时显示重试而非永久转圈。
 
 **已确认决策**：
+
 - 对齐方向：**iOS 适配 API**（API 保持全仓一致的 `{data}` + snake_case）。
 - chat 体验：**持久会话对话**（会话内多轮、AI 带上下文回复、消息持久）。
 
 **不在范围**：
+
 - dashboard 的 `/chat` 页（走 `/api/chat` proxy，不受影响）。
 - chat UI 视觉重构、富 metadata（POI 卡片/快捷动作）消费——本期仅留空兼容。
 - 数据迁移（D1 已建表，无历史数据）。
 
 ## 1. 契约差异清单（现状）
 
-| 维度 | iOS 期望（旧） | API 实际 |
-|---|---|---|
-| 外层 | `{success, data}` | `{data}` |
-| id | `_id` | `id` |
-| 字段命名 | camelCase | snake_case（`user_id`/`created_at`/`message_count`/`last_message_at`/`is_archived`） |
-| 取消息 | `GET /sessions/:id/messages` | `GET /messages?sessionId=`（无会话作用域路由） |
-| 发消息 | `POST /sessions/:id/messages {content}`，回 `{success,data:{userMessageId,response}}` | `POST /messages {sessionId,role,content}` 仅存、不回 AI |
-| 改/删 | `PATCH /sessions/:id`；`DELETE /sessions/:id/messages` | 仅 `DELETE /sessions/:id`（归档）；无 PATCH |
-| 建会话 | `{userId,title,itineraryId,guideId,context:string}` | `{title, context:record}` |
-| AI 回复 | 会话内 | 仅无状态 `POST /query` |
+| 维度     | iOS 期望（旧）                                                                        | API 实际                                                                             |
+| -------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 外层     | `{success, data}`                                                                     | `{data}`                                                                             |
+| id       | `_id`                                                                                 | `id`                                                                                 |
+| 字段命名 | camelCase                                                                             | snake_case（`user_id`/`created_at`/`message_count`/`last_message_at`/`is_archived`） |
+| 取消息   | `GET /sessions/:id/messages`                                                          | `GET /messages?sessionId=`（无会话作用域路由）                                       |
+| 发消息   | `POST /sessions/:id/messages {content}`，回 `{success,data:{userMessageId,response}}` | `POST /messages {sessionId,role,content}` 仅存、不回 AI                              |
+| 改/删    | `PATCH /sessions/:id`；`DELETE /sessions/:id/messages`                                | 仅 `DELETE /sessions/:id`（归档）；无 PATCH                                          |
+| 建会话   | `{userId,title,itineraryId,guideId,context:string}`                                   | `{title, context:record}`                                                            |
+| AI 回复  | 会话内                                                                                | 仅无状态 `POST /query`                                                               |
 
 **功能缺口**：API 无「会话内发送→AI 上下文回复→持久化」端点。本 spec 补齐。
 
 ## 2. 方案选型
 
-| 方案 | 说明 | 取舍 | 结论 |
-|---|---|---|---|
-| **A（采用）** | iOS 适配 API；API 补一个「发送即回复」会话作用域端点 | API 保持一致；iOS 现代化契约；iOS 反正要改（韧性修复） | ✅ |
-| B | API 适配 iOS（camelCase + `_id` + `success` + 旧路由） | chat 成全仓唯一异类，维护债 | ✗ |
-| C | 两边都改成新形状 | 改动最大 | ✗ |
+| 方案          | 说明                                                   | 取舍                                                   | 结论 |
+| ------------- | ------------------------------------------------------ | ------------------------------------------------------ | ---- |
+| **A（采用）** | iOS 适配 API；API 补一个「发送即回复」会话作用域端点   | API 保持一致；iOS 现代化契约；iOS 反正要改（韧性修复） | ✅   |
+| B             | API 适配 iOS（camelCase + `_id` + `success` + 旧路由） | chat 成全仓唯一异类，维护债                            | ✗    |
+| C             | 两边都改成新形状                                       | 改动最大                                               | ✗    |
 
 ## 3. API 端 chat 契约（目标形状）
 

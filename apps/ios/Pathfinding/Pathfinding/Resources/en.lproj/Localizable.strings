@@ -32,50 +32,9 @@
 "common.ok" = "OK";
 
 // MARK: - Tab Bar
-"tab.discover" = "Discover";
 "tab.chat" = "Assistant";
 "tab.itinerary" = "Itinerary";
 "tab.profile" = "Profile";
-"tab.search" = "Search";
-
-// MARK: - Discover
-"discover.title" = "Discover";
-"discover.search_placeholder" = "Search destinations and itineraries...";
-"discover.featured" = "Featured";
-"discover.recent" = "Recent";
-"discover.hot_cities" = "Hot Cities";
-"discover.empty_title" = "No Itineraries Yet";
-"guide.ai" = "AI Assisted";
-
-// MARK: - Search
-"search.idle_title" = "Search Itineraries";
-"search.idle_description" = "Enter a destination or keyword to start exploring";
-
-// MARK: - Home
-"home.title" = "Sunpebble Trips";
-"home.welcome" = "Welcome to Sunpebble Trips";
-"home.discover" = "Discover Amazing Journeys";
-"home.popular_destinations" = "Popular Destinations";
-"home.recommended" = "Recommended for You";
-"home.recent" = "Recently Viewed";
-"home.hero_title" = "Discover Journeys";
-"home.hero_subtitle" = "Plan places, days, notes, and reminders without the noise.";
-"home.section.featured" = "Featured";
-"home.section.recent" = "Recent Itineraries";
-"home.load_failed" = "Failed to Load";
-"home.no_guides" = "No Itineraries";
-"home.pull_to_refresh" = "Pull to refresh for new content";
-
-// MARK: - Guides
-"guides.title" = "Travel Itineraries";
-"guides.empty" = "No Itineraries Available";
-"guides.empty_description" = "Create an editable itinerary first";
-"guides.search_placeholder" = "Search itineraries...";
-"guides.filter" = "Filter";
-"guides.sort" = "Sort";
-"guides.sort.latest" = "Latest";
-"guides.sort.popular" = "Popular";
-"guides.sort.rating" = "Rating";
 
 // MARK: - Itinerary
 "itinerary.title" = "My Itineraries";
@@ -117,8 +76,6 @@
 // MARK: - Profile Items
 "profile.travel_stats" = "Travel Statistics";
 "profile.travel_stats_subtitle" = "View travel reports and annual review";
-"profile.insurance" = "Travel Insurance";
-"profile.insurance_subtitle" = "Insurance recommendations and claims guide";
 "profile.theme" = "Theme";
 "profile.language" = "Language";
 "profile.language_subtitle" = "Change app display language";
@@ -146,28 +103,6 @@
 "icloud.about" = "About iCloud Sync";
 "icloud.about_description" = "When iCloud Sync is enabled, your itineraries, favorites, and preferences will automatically sync across all devices signed in with the same Apple ID. Data is stored encrypted in iCloud.";
 
-// MARK: - Follow System
-"follow.followers" = "Followers";
-"follow.following" = "Following";
-"follow.mutual" = "Mutual";
-"follow.follow_back" = "Follow Back";
-"follow.follows_you" = "Follows you";
-"follow.follow" = "Follow";
-"follow.followed" = "Following";
-"follow.unfollow" = "Unfollow";
-"follow.no_followers" = "No Followers";
-"follow.no_followers_description" = "No one is following you yet";
-"follow.no_following" = "Not Following Anyone";
-"follow.no_following_description" = "Discover interesting people to follow";
-"follow.no_mutual" = "No Mutual Follows";
-"follow.no_mutual_description" = "Follow more people to get mutual follows";
-"follow.no_recommendations" = "No Recommendations";
-"follow.no_recommendations_description" = "Follow more people to get personalized recommendations";
-"follow.recommendations" = "Recommendations";
-"follow.management" = "Follow Management";
-"follow.followers_count" = "%d Followers";
-"follow.following_count" = "%d Following";
-
 "profile.api_config" = "API Configuration";
 "profile.cache" = "Cache Management";
 "profile.cache_subtitle" = "Clear image and data cache";
@@ -175,20 +110,10 @@
 "profile.about_subtitle" = "Version info and developers";
 "profile.version" = "Version";
 "profile.environment" = "Environment";
-"profile.followers" = "Followers";
-"profile.following" = "Following";
 "profile.preferences" = "Preferences";
 "profile.preferences_subtitle" = "Personalized recommendations and travel style";
 "profile.siri_shortcuts" = "Siri Shortcuts";
 "profile.siri_shortcuts_subtitle" = "Voice control for itineraries and POI navigation";
-"profile.likes" = "Likes";
-"profile.my_favorites" = "My Favorites";
-"profile.my_likes" = "My Likes";
-"profile.favorites_count" = "%d Favorites";
-"profile.likes_count" = "%d Likes";
-"profile.collections" = "Collections";
-"profile.collections_count" = "%d Collections";
-"profile.section.likes_favorites" = "Likes & Favorites";
 
 // MARK: - Preferences
 "preferences.title" = "Preferences";
@@ -461,21 +386,12 @@
 "login.skip" = "Skip";
 "login.welcome" = "Welcome Back";
 "login.subtitle" = "Sign in to Sunpebble Trips to keep planning your trips";
-"login.method.phone" = "Phone";
-"login.method.email" = "Email";
-"login.phone" = "Phone Number";
-"login.phone_placeholder" = "Enter phone number";
-"login.code" = "Verification Code";
-"login.code_placeholder" = "Enter code";
-"login.get_code" = "Get Code";
 "login.email_placeholder" = "Enter email address";
 "login.password_placeholder" = "Enter password";
 "login.signing_in" = "Signing In...";
 "login.other_methods" = "Or continue with";
-"login.wechat" = "Sign in with WeChat";
 "login.apple" = "Sign in with Apple";
 "login.no_account" = "Don't have an account?";
-"login.invalid_phone" = "Please enter a valid phone number";
 
 // MARK: - Budget Edit
 "budget.edit.title_new" = "Set Budget";

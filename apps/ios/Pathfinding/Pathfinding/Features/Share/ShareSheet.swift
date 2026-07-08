@@ -247,17 +247,6 @@ struct ShareSheet: View {
 
   private func loadCoverImage() async {
     switch content {
-    case .blogPost(let post):
-      if let urlString = post.coverImageUrl ?? post.imageUrls?.first,
-         let url = URL(string: urlString) {
-        do {
-          let (data, _) = try await URLSession.shared.data(from: url)
-          coverImage = UIImage(data: data)
-        } catch {
-          // Ignore image loading errors
-        }
-      }
-
     case .itinerary(let itinerary):
       if let urlString = itinerary.coverImageUrl,
          let url = URL(string: urlString) {
@@ -279,14 +268,6 @@ struct ShareSheet: View {
     defer { isGeneratingImage = false }
 
     switch content {
-    case .blogPost(let post):
-      generatedImage = await imageGenerator.generateShareCard(
-        from: post,
-        style: selectedStyle,
-        size: selectedSize,
-        coverImage: coverImage
-      )
-
     case .itinerary(let itinerary):
       generatedImage = await imageGenerator.generateShareCard(
         from: itinerary,
@@ -316,9 +297,6 @@ struct ShareSheet: View {
     var shareContent: ShareContent
 
     switch content {
-    case .blogPost(let post):
-      shareContent = shareManager.buildShareContent(from: post)
-
     case .itinerary(let itinerary):
       shareContent = shareManager.buildShareContent(from: itinerary)
 
@@ -374,7 +352,6 @@ struct ShareSheet: View {
 // MARK: - Shareable Content
 
 enum ShareableContent {
-  case blogPost(BlogPost)
   case itinerary(APIItinerary)
   case custom(title: String, subtitle: String?, description: String?, stats: [(icon: String, value: String)]?)
 }

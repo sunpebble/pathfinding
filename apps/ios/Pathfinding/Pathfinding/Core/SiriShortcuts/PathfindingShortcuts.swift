@@ -35,19 +35,6 @@ struct PathfindingShortcuts: AppShortcutsProvider {
     )
 
     AppShortcut(
-      intent: RecordTravelNoteIntent(),
-      phrases: [
-        "在\(.applicationName)中记录笔记",
-        "用\(.applicationName)记录旅行笔记",
-        "用\(.applicationName)添加旅行备忘",
-        "Record a travel note in \(.applicationName)",
-        "Add a travel memo with \(.applicationName)"
-      ],
-      shortTitle: "记录笔记",
-      systemImageName: "note.text"
-    )
-
-    AppShortcut(
       intent: ViewItineraryIntent(),
       phrases: [
         "在\(.applicationName)中查看行程",

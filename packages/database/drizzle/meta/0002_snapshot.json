@@ -1,9 +1,79 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "78f29f6f-e5d4-4048-a9c8-38b3a1228b9b",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "61a49754-3fad-40d4-95ac-ae22a3feaef2",
+  "prevId": "78f29f6f-e5d4-4048-a9c8-38b3a1228b9b",
   "tables": {
+    "ai_plan_drafts": {
+      "name": "ai_plan_drafts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "draft": {
+          "name": "draft",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "ai_plan_drafts_session_user_uniq": {
+          "name": "ai_plan_drafts_session_user_uniq",
+          "columns": [
+            "session_id",
+            "user_id"
+          ],
+          "isUnique": true
+        },
+        "ai_plan_drafts_user_idx": {
+          "name": "ai_plan_drafts_user_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "auth_accounts": {
       "name": "auth_accounts",
       "columns": {

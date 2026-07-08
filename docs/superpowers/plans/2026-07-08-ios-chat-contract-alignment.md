@@ -21,17 +21,21 @@
 ## File Structure（改动地图）
 
 **API（Phase 1）**
+
 - Modify: `packages/api/src/routes/chat.ts` — 加 `GET /sessions/:id/messages`、`POST /sessions/:id/messages`（发送即回复）
 - Modify: `packages/api/src/routes/chat.test.ts` — 新端点测试
 
 **iOS 模型（Phase 2）**
+
 - Rewrite: `apps/ios/Pathfinding/Pathfinding/Models/Chat.swift` — 解码形状对齐
 - Create: `apps/ios/Pathfinding/PathfindingTests/ChatModelDecodingTests.swift` — fixture 解码测试
 
 **iOS Store（Phase 3）**
+
 - Modify: `apps/ios/Pathfinding/Pathfinding/Core/ChatStore.swift` — 路由/请求体/sendMessage
 
 **iOS 韧性（Phase 4）**
+
 - Modify: `apps/ios/Pathfinding/Pathfinding/Features/Chat/ChatView.swift` — 登录门 + 错误兜底 + 不清空 + 发送失败提示
 
 ---
@@ -43,10 +47,12 @@
 ## Task 1.1: `GET /sessions/:id/messages`（会话作用域消息列表）
 
 **Files:**
+
 - Modify: `packages/api/src/routes/chat.ts`（在 `GET /messages` 之后插入）
 - Modify: `packages/api/src/routes/chat.test.ts`
 
 **Interfaces:**
+
 - 消费：`requireOwnedSession`、`toChatDto`、`parsePositiveInt`、`parsePagination`、`authRequired()`。
 - 产出：`GET /api/chat/sessions/:id/messages?limit=` → `200 { data: [toChatDto] }`（升序），403 非所有者。
 
@@ -124,10 +130,12 @@ git commit -m "feat(api): add GET /sessions/:id/messages (session-scoped message
 ## Task 1.2: `POST /sessions/:id/messages`（发送即回复，持久对话核心）
 
 **Files:**
+
 - Modify: `packages/api/src/routes/chat.ts`
 - Modify: `packages/api/src/routes/chat.test.ts`
 
 **Interfaces:**
+
 - 消费：`requireOwnedSession`、`toChatDto`、`deepSeekCompletion(messages, { apiKey, signal })`、`DeepSeekConfigError`、`chatMessages`、`chatSessions`。
 - 产出：`POST /api/chat/sessions/:id/messages` body `{content}` → 201 `{data:{user_message, assistant_message}}`；AI 失败 → 503 不写库。
 
@@ -275,10 +283,12 @@ git commit -m "feat(api): add POST /sessions/:id/messages send-and-reply (persis
 ## Task 2.1: 重写 `Chat.swift` 解码形状 + fixture 测试
 
 **Files:**
+
 - Rewrite: `apps/ios/Pathfinding/Pathfinding/Models/Chat.swift`
 - Create: `apps/ios/Pathfinding/PathfindingTests/ChatModelDecodingTests.swift`
 
 **目标形状**（对齐 API）：
+
 - 外层去 `success`：`{ data: [...] }` / `{ data: {...} }`。
 - `ChatSession`：`id`（非 `_id`）、`user_id`、`title`、`message_count`、`last_message_at`、`is_archived`、`created_at`（均 snake_case；时间 ISO8601 字符串 → Date）。
 - 删除 `itineraryId/guideId/context` 字段、`LinkedItinerary/LinkedGuide` 及其 UI 引用。
@@ -406,9 +416,11 @@ git commit -m "refactor(ios): align Chat models to API (snake_case, id, ISO8601,
 ## Task 3.1: 重写 `ChatStore.swift` 对齐新契约
 
 **Files:**
+
 - Modify: `apps/ios/Pathfinding/Pathfinding/Core/ChatStore.swift`
 
 **规程**（逐方法）：
+
 - `id` 类型 `String` → `Int`（session/message id）。函数签名 `sessionId: String` → `Int`。
 - `fetchSessions`：路径 `chat/sessions`，query `includeArchived`、`limit=50`；**删 `userId` 查询参**（API 用 JWT）。解码 `ChatSessionListResponse`（无 success）。
 - `createSession`：body 仅 `{ title?, context? }`（`context` 用则传对象；删 `userId/itineraryId/guideId`）；解码 `CreateSessionResponse { data: ChatSession? }`（去 success）。
@@ -439,9 +451,11 @@ git commit -m "refactor(ios): align ChatStore routes/bodies to API; rewrite send
 ## Task 4.1: `ChatView.swift` 登录门 + 错误兜底 + 不清空 + 发送失败
 
 **Files:**
+
 - Modify: `apps/ios/Pathfinding/Pathfinding/Features/Chat/ChatView.swift`
 
 **规程：**
+
 - **登录门**：`ChatSessionListView.body` 顶层：
   ```swift
   if !AuthManager.shared.isAuthenticated {
@@ -487,7 +501,7 @@ git commit -m "feat(ios): chat auth gate, error fallback, no-clear-on-refresh, s
 
 - §2 方案 A（iOS 适配 API）→ 全 plan 贯穿 ✅
 - §3 API 端点（GET/POST sessions/:id/messages，先获取 AI 才写库）→ Task 1.1/1.2 ✅
-- §4 iOS 模型（snake_case、id、ISO8601、删 success/_id/Linked*、SendMessageResponse）→ Task 2.1 ✅
+- §4 iOS 模型（snake_case、id、ISO8601、删 success/\_id/Linked\*、SendMessageResponse）→ Task 2.1 ✅
 - §5 iOS Store（路由/body/sendMessage/删 PATCH·clear·loadMore）→ Task 3.1 ✅
 - §6 iOS 韧性（登录门、不清空、错误兜底、发送失败）→ Task 4.1 ✅
 - §7 测试（API vitest + iOS 解码 fixture）→ Task 1.1/1.2/2.1 ✅（ChatStore 网络 mock 因 NetworkClient actor 单例难注入，靠编译 + 冒烟；spec 已默认此取舍）

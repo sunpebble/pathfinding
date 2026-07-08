@@ -145,8 +145,6 @@ struct ShareCardView: View {
 
   private var contentTitle: String {
     switch content {
-    case .blogPost(let post):
-      return post.title
     case .itinerary(let itinerary):
       return itinerary.title
     case .custom(let title, _, _, _):
@@ -156,8 +154,6 @@ struct ShareCardView: View {
 
   private var contentSubtitle: String? {
     switch content {
-    case .blogPost(let post):
-      return post.authorName
     case .itinerary(let itinerary):
       return itinerary.cityName
     case .custom(_, let subtitle, _, _):
@@ -167,8 +163,6 @@ struct ShareCardView: View {
 
   private var contentDescription: String? {
     switch content {
-    case .blogPost(let post):
-      return post.aiSummary ?? post.summary
     case .itinerary(let itinerary):
       if let cityName = itinerary.cityName, let days = itinerary.daysCount {
         return "\(cityName) \(days)日游行程"
@@ -181,19 +175,6 @@ struct ShareCardView: View {
 
   private var contentStats: [(icon: String, value: String)]? {
     switch content {
-    case .blogPost(let post):
-      var stats: [(icon: String, value: String)] = []
-      if let duration = post.aiDuration {
-        stats.append(("clock", duration))
-      }
-      if let budget = post.aiBudget {
-        stats.append(("yensign.circle", budget))
-      }
-      if let days = post.aiDays {
-        stats.append(("map", "\(days.count)天"))
-      }
-      return stats.isEmpty ? nil : stats
-
     case .itinerary(let itinerary):
       var stats: [(icon: String, value: String)] = []
       if let days = itinerary.daysCount {
@@ -409,8 +390,6 @@ struct QuickShareButton: View {
 
   private var shareTitle: String {
     switch content {
-    case .blogPost(let post):
-      return post.title
     case .itinerary(let itinerary):
       return itinerary.title
     case .custom(let title, _, _, _):
@@ -420,8 +399,6 @@ struct QuickShareButton: View {
 
   private var shareSubtitle: String? {
     switch content {
-    case .blogPost(let post):
-      return post.authorName
     case .itinerary(let itinerary):
       return itinerary.cityName
     case .custom(_, let subtitle, _, _):

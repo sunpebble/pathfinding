@@ -31,26 +31,6 @@ function createSelectChain(result: unknown) {
   return { from, where, limit };
 }
 
-/**
- * Chain where `.offset()` is the terminal (resolves when awaited).
- * Matches: db.select().from(x).where(...).limit(n).offset(n)
- */
-function _createPaginatedSelectChain(result: unknown) {
-  const offset = vi.fn().mockResolvedValue(result);
-  const limit = vi.fn().mockReturnValue({ offset });
-  const where = vi.fn().mockReturnValue({ limit, offset });
-  const from = vi.fn().mockReturnValue({ where, limit, offset });
-
-  return { from, where, limit, offset };
-}
-
-function createCountChain(result: unknown) {
-  const where = vi.fn().mockResolvedValue(result);
-  const from = vi.fn().mockReturnValue({ where });
-
-  return { from, where };
-}
-
 describe('user routes', () => {
   beforeEach(() => {
     mockDb.select.mockReset();
@@ -66,7 +46,7 @@ describe('user routes', () => {
         { id: 1, name: 'Test User', email: 'test@example.com', image: null, createdAt: '2026-01-01' },
       ]);
       const profileChain = createSelectChain([
-        { userId: 1, displayName: 'Test Display', bio: 'Hello', avatarUrl: null, followersCount: 5, followingCount: 3 },
+        { userId: 1, displayName: 'Test Display', bio: 'Hello', avatarUrl: null },
       ]);
       mockDb.select
         .mockReturnValueOnce(userChain)
@@ -78,7 +58,6 @@ describe('user routes', () => {
       const body = await response.json();
       expect(body.data).toBeDefined();
       expect(body.data.display_name).toBe('Test Display');
-      expect(body.data.followers_count).toBe(5);
     });
 
     it('returns 404 when user does not exist', async () => {
@@ -144,158 +123,6 @@ describe('user routes', () => {
       });
 
       expect(response.status).toBe(401);
-    });
-  });
-
-  describe('gET /api/users/:id/follow/status', () => {
-    it('returns follow status', async () => {
-      const followChain = createSelectChain([
-        { followerId: 1, followingId: 2 },
-      ]);
-      mockDb.select.mockReturnValueOnce(followChain);
-
-      const response = await requestWithEnv(createApp(), '/api/users/1/follow/status?followingId=2');
-
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.is_following).toBe(true);
-    });
-
-    it('returns not following when no record', async () => {
-      const emptyChain = createSelectChain([]);
-      mockDb.select.mockReturnValueOnce(emptyChain);
-
-      const response = await requestWithEnv(createApp(), '/api/users/1/follow/status?followingId=3');
-
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.is_following).toBe(false);
-    });
-
-    it('returns 400 when followingId is missing', async () => {
-      const response = await requestWithEnv(createApp(), '/api/users/1/follow/status');
-
-      expect(response.status).toBe(400);
-    });
-  });
-
-  describe('gET /api/users/:id/followers', () => {
-    it('returns followers', async () => {
-      const chain = _createPaginatedSelectChain([
-        { id: 1, followerId: 2, followingId: 1 },
-      ]);
-      const countChain = createCountChain([{ count: 1 }]);
-      mockDb.select
-        .mockReturnValueOnce(chain)
-        .mockReturnValueOnce(countChain);
-
-      const response = await requestWithEnv(createApp(), '/api/users/1/followers');
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.data).toBeDefined();
-    });
-
-    it('returns 400 for invalid user ID', async () => {
-      const response = await requestWithEnv(createApp(), '/api/users/abc/followers');
-      expect(response.status).toBe(400);
-    });
-  });
-
-  describe('gET /api/users/:id/following', () => {
-    it('returns following users', async () => {
-      const chain = _createPaginatedSelectChain([
-        { id: 1, followerId: 1, followingId: 2 },
-      ]);
-      const countChain = createCountChain([{ count: 1 }]);
-      mockDb.select
-        .mockReturnValueOnce(chain)
-        .mockReturnValueOnce(countChain);
-
-      const response = await requestWithEnv(createApp(), '/api/users/1/following');
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.data).toBeDefined();
-    });
-
-    it('returns 400 for invalid user ID', async () => {
-      const response = await requestWithEnv(createApp(), '/api/users/abc/following');
-      expect(response.status).toBe(400);
-    });
-  });
-
-  describe('pOST /api/users/:id/follow', () => {
-    it('prevents self-follow', async () => {
-      const response = await requestWithAuth(createApp(), '/api/users/1/follow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ followingId: 1 }),
-      });
-
-      expect(response.status).toBe(400);
-      const body = await response.json();
-      expect(body.error).toBe('不能关注自己');
-    });
-
-    it('returns 409 when already following', async () => {
-      const existingChain = createSelectChain([{ followerId: 1, followingId: 2 }]);
-      mockDb.select.mockReturnValueOnce(existingChain);
-
-      const response = await requestWithAuth(createApp(), '/api/users/1/follow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ followingId: 2 }),
-      });
-
-      expect(response.status).toBe(409);
-    });
-
-    it('follows a user successfully', async () => {
-      const emptyChain = createSelectChain([]);
-      mockDb.select.mockReturnValueOnce(emptyChain);
-
-      mockDb.transaction.mockImplementation(async (callback: (tx: typeof mockDb) => Promise<void>) => {
-        await callback({
-          ...mockDb,
-          insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue([{ insertId: '1' }]) }),
-          update: vi.fn().mockReturnValue({
-            set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
-          }),
-        });
-      });
-
-      const response = await requestWithAuth(createApp(), '/api/users/1/follow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ followingId: 2 }),
-      });
-
-      expect(response.status).toBe(201);
-      const body = await response.json();
-      expect(body.success).toBe(true);
-    });
-  });
-
-  describe('dELETE /api/users/:id/follow', () => {
-    it('unfollows a user', async () => {
-      mockDb.transaction.mockImplementation(async (callback: (tx: typeof mockDb) => Promise<void>) => {
-        await callback({
-          ...mockDb,
-          delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
-          update: vi.fn().mockReturnValue({
-            set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
-          }),
-        });
-      });
-
-      const response = await requestWithAuth(createApp(), '/api/users/1/follow', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ followingId: 2 }),
-      });
-
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.success).toBe(true);
     });
   });
 });

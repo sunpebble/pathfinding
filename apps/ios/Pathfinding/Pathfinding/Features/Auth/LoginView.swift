@@ -1,38 +1,9 @@
 import SwiftUI
 
-/// Login method options
-enum LoginMethod: String, CaseIterable {
-  case phone = "phone"
-  case email = "email"
-
-  var title: String {
-    switch self {
-    case .phone: return "login.method.phone".localized
-    case .email: return "login.method.email".localized
-    }
-  }
-
-  var icon: String {
-    switch self {
-    case .phone: return "phone.fill"
-    case .email: return "envelope.fill"
-    }
-  }
-}
-
 struct LoginView: View {
   @EnvironmentObject private var authViewModel: AuthViewModel
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var colorScheme
-
-  // Login method state
-  @State private var loginMethod: LoginMethod = .phone
-
-  // Phone login state
-  @State private var phoneNumber = ""
-  @State private var verificationCode = ""
-  @State private var isCodeSent = false
-  @State private var countdown = 0
 
   // Email login state
   @State private var email = ""
@@ -40,12 +11,8 @@ struct LoginView: View {
 
   // Common state
   @State private var isLoading = false
-  @State private var isSendingCode = false
   @State private var errorMessage: String?
   @State private var showSignup = false
-
-  // Timer for countdown
-  @State private var countdownTimer: Timer?
 
   // Animation
   @State private var headerAppeared = false
@@ -103,49 +70,9 @@ struct LoginView: View {
 
             // MARK: - Form Card
             VStack(spacing: DesignTokens.Spacing.lg) {
-              // Login Method Picker
-              HStack(spacing: 0) {
-                ForEach(LoginMethod.allCases, id: \.self) { method in
-                  Button {
-                    withAnimation(DesignTokens.Animation.standard) {
-                      loginMethod = method
-                    }
-                  } label: {
-                    HStack(spacing: DesignTokens.Spacing.xs) {
-                      Image(systemName: method.icon)
-                        .font(.caption)
-                      Text(method.title)
-                        .font(.subheadline)
-                        .fontWeight(loginMethod == method ? .semibold : .regular)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, DesignTokens.Spacing.sm)
-                    .background(
-                      loginMethod == method
-                        ? DesignTokens.Colors.cardBackground
-                        : Color.clear
-                    )
-                    .foregroundStyle(
-                      loginMethod == method
-                        ? DesignTokens.Colors.textPrimary
-                        : DesignTokens.Colors.textTertiary
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-                  }
-                }
-              }
-              .padding(3)
-              .background(DesignTokens.Colors.fillQuaternary)
-              .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-              .accessibilityIdentifier("login-method-picker")
-
               // Login Form Fields
               VStack(spacing: DesignTokens.Spacing.md) {
-                if loginMethod == .phone {
-                  phoneLoginForm
-                } else {
-                  emailLoginForm
-                }
+                emailLoginForm
               }
               .transition(.opacity.combined(with: .move(edge: .leading)))
 
@@ -221,26 +148,6 @@ struct LoginView: View {
 
             // MARK: - Social Login
             VStack(spacing: DesignTokens.Spacing.sm) {
-              // WeChat Sign In
-              Button {
-                Task {
-                  await handleSocialLogin(.wechat)
-                }
-              } label: {
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                  Image(systemName: "message.fill")
-                    .font(.body)
-                  Text("login.wechat".localized)
-                    .fontWeight(.medium)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, DesignTokens.Spacing.sm)
-                .background(Color(red: 0.07, green: 0.73, blue: 0.31))
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-              }
-              .disabled(isLoading)
-
               // Apple Sign In
               Button {
                 Task {
@@ -301,9 +208,6 @@ struct LoginView: View {
         .sheet(isPresented: $showSignup) {
           SignupView()
         }
-        .onDisappear {
-          countdownTimer?.invalidate()
-        }
         .onAppear {
           withAnimation(DesignTokens.Animation.smooth.delay(0.1)) {
             headerAppeared = true
@@ -312,86 +216,6 @@ struct LoginView: View {
             formAppeared = true
           }
         }
-      }
-    }
-  }
-
-  // MARK: - Phone Login Form
-
-  private var phoneLoginForm: some View {
-    VStack(spacing: DesignTokens.Spacing.md) {
-      // Phone Number Field
-      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text("login.phone".localized)
-          .font(.subheadline)
-          .fontWeight(.medium)
-          .foregroundStyle(DesignTokens.Colors.textSecondary)
-
-        HStack(spacing: 0) {
-          Text("+86")
-            .font(.subheadline)
-            .foregroundStyle(DesignTokens.Colors.textSecondary)
-            .padding(.horizontal, DesignTokens.Spacing.sm)
-
-          Divider()
-            .frame(height: 20)
-
-          TextField("login.phone_placeholder".localized, text: $phoneNumber)
-            .textInputAutocapitalization(.never)
-            .keyboardType(.phonePad)
-            .autocorrectionDisabled()
-            .padding(.horizontal, DesignTokens.Spacing.sm)
-        }
-        .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(DesignTokens.Colors.fillQuaternary)
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-        .overlay(
-          RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-            .stroke(DesignTokens.Colors.border.opacity(0.5), lineWidth: 0.5)
-        )
-      }
-
-      // Verification Code Field
-      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text("login.code".localized)
-          .font(.subheadline)
-          .fontWeight(.medium)
-          .foregroundStyle(DesignTokens.Colors.textSecondary)
-
-        HStack {
-          TextField("login.code_placeholder".localized, text: $verificationCode)
-            .textInputAutocapitalization(.never)
-            .keyboardType(.numberPad)
-            .autocorrectionDisabled()
-            .padding(.horizontal, DesignTokens.Spacing.sm)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-
-          Button {
-            Task {
-              await sendVerificationCode()
-            }
-          } label: {
-            if isSendingCode {
-              ProgressView()
-                .progressViewStyle(.circular)
-                .frame(width: 100)
-            } else {
-              Text(countdown > 0 ? "\(countdown)s" : "login.get_code".localized)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .frame(width: 100)
-            }
-          }
-          .disabled(countdown > 0 || !isValidPhoneNumber || isSendingCode)
-          .foregroundStyle(countdown > 0 || !isValidPhoneNumber ? .secondary : brandAccent)
-          .padding(.trailing, DesignTokens.Spacing.xs)
-        }
-        .background(DesignTokens.Colors.fillQuaternary)
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
-        .overlay(
-          RoundedRectangle(cornerRadius: DesignTokens.Radius.sm)
-            .stroke(DesignTokens.Colors.border.opacity(0.5), lineWidth: 0.5)
-        )
       }
     }
   }
@@ -423,22 +247,10 @@ struct LoginView: View {
 
       // Password Field
       VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        HStack {
-          Text("auth.password".localized)
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundStyle(DesignTokens.Colors.textSecondary)
-
-          Spacer()
-
-          Button {
-            // TODO: Implement forgot password
-          } label: {
-            Text("auth.forgot_password".localized)
-              .font(.caption)
-              .foregroundStyle(brandAccent)
-          }
-        }
+        Text("auth.password".localized)
+          .font(.subheadline)
+          .fontWeight(.medium)
+          .foregroundStyle(DesignTokens.Colors.textSecondary)
 
         SecureField("login.password_placeholder".localized, text: $password)
           .textInputAutocapitalization(.never)
@@ -457,74 +269,18 @@ struct LoginView: View {
 
   // MARK: - Computed Properties
 
-  private var isValidPhoneNumber: Bool {
-    let phoneRegex = "^1[3-9]\\d{9}$"
-    return phoneNumber.range(of: phoneRegex, options: .regularExpression) != nil
-  }
-
   private var isLoginDisabled: Bool {
-    if isLoading { return true }
-
-    switch loginMethod {
-    case .phone:
-      return phoneNumber.isEmpty || verificationCode.isEmpty || verificationCode.count != 6
-    case .email:
-      return email.isEmpty || password.isEmpty
-    }
+    isLoading || email.isEmpty || password.isEmpty
   }
 
   // MARK: - Actions
-
-  private func sendVerificationCode() async {
-    guard isValidPhoneNumber else {
-      errorMessage = "login.invalid_phone".localized
-      return
-    }
-
-    isSendingCode = true
-    errorMessage = nil
-
-    do {
-      try await AuthManager.shared.requestVerificationCode(phoneNumber: phoneNumber)
-      isCodeSent = true
-      startCountdown()
-    } catch {
-      await MainActor.run {
-        errorMessage = error.localizedDescription
-      }
-    }
-
-    isSendingCode = false
-  }
-
-  private func startCountdown() {
-    countdown = 60
-    countdownTimer?.invalidate()
-    countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-      Task { @MainActor in
-        if countdown > 0 {
-          countdown -= 1
-        } else {
-          countdownTimer?.invalidate()
-        }
-      }
-    }
-  }
 
   private func handleLogin() async {
     isLoading = true
     errorMessage = nil
 
     do {
-      switch loginMethod {
-      case .phone:
-        try await AuthManager.shared.signInWithPhone(
-          phoneNumber: phoneNumber,
-          verificationCode: verificationCode
-        )
-      case .email:
-        try await AuthManager.shared.signIn(email: email, password: password)
-      }
+      try await AuthManager.shared.signIn(email: email, password: password)
 
       // Update auth state to trigger UI refresh
       await authViewModel.updateAuthState()

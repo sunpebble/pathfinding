@@ -14,13 +14,26 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getHealth } from '@/lib/api';
 
 /** React Query key for the health status query. */
 const HEALTH_QUERY_KEY = ['health'] as const;
 
 /** Polling interval in milliseconds (30 seconds). */
 const POLL_INTERVAL_MS = 30_000;
+
+/**
+ * Check the health of the dashboard backend.
+ *
+ * Returns `{ status: 'error' }` on network failures rather than throwing,
+ * making it safe for use in polling hooks.
+ */
+async function getHealth(): Promise<{ status: string }> {
+  const res = await fetch('/api/health');
+  if (!res.ok) {
+    return { status: 'error' };
+  }
+  return res.json();
+}
 
 export function useHealthStatus() {
   return useQuery({

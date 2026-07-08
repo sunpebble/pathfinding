@@ -92,3 +92,6 @@ logs/security/
 
 # Compiled Go server binary (built fresh by Dockerfile)
 apps/server/server
+
+# Local Cloudflare Workers dev secrets (never commit)
+.dev.vars

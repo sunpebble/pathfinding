@@ -2,14 +2,14 @@ import { Settings } from 'lucide-react';
 import { DashboardCard, DashboardPageHeader } from '@/components/ui/dashboard-primitives';
 
 export default function SettingsPage() {
-  const crawlerApiUrl
+  const apiUrl
     = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
   return (
     <div className="space-y-6">
       <DashboardPageHeader
         title="设置"
-        description="配置 Sunpebble Trips 控制台"
+        description="配置 Sunpebble Trips"
         icon={Settings}
       />
 
@@ -29,7 +29,7 @@ export default function SettingsPage() {
             <input
               type="text"
               id="api_url"
-              defaultValue={crawlerApiUrl}
+              defaultValue={apiUrl}
               disabled
               className="dashboard-control mt-1 block w-full bg-stone-50 text-stone-500"
             />

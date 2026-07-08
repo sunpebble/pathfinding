@@ -17,8 +17,6 @@ interface UserProfile {
   display_name: string;
   avatar_url: string | null;
   bio: string | null;
-  followers_count: number;
-  following_count: number;
   created_at: string;
 }
 
@@ -146,18 +144,6 @@ export default function ProfilePage() {
           <div>
             <h2 className="text-xl font-semibold">{profile.display_name ?? profile.name}</h2>
             <p className="text-stone-500">{profile.email}</p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="flex gap-6 border-y border-stone-200 py-4">
-          <div className="text-center">
-            <p className="text-lg font-semibold">{profile.followers_count}</p>
-            <p className="text-sm text-stone-500">粉丝</p>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-semibold">{profile.following_count}</p>
-            <p className="text-sm text-stone-500">关注</p>
           </div>
         </div>
 

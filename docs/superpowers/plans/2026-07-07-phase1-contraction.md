@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 整树删除爬虫遗留、社区壳、坏承诺与 iOS 死代码树，交付遗留表 rename 冷备脚本，使仓库表面积减半且 `pnpm check` 全绿。
+**Goal:** 整树删除爬虫遗留、社区壳、坏承诺与 iOS 死代码树，重生成干净的 D1 baseline 迁移，使仓库表面积减半且 `pnpm check` 全绿。
 
 **Architecture:** 纯删除 + 少量断链修理。顺序：先删后端路由/服务（消除对 schema 的引用）→ 再删 schema → 再清 dashboard 与 iOS 两个客户端 → 最后文档与终验。每个任务结束时编译、测试、lint 必须全绿并提交。
 
@@ -10,17 +10,18 @@
 
 **Spec:** `docs/superpowers/specs/2026-07-07-product-refocus-design.md`（决策 R1–R8；本计划只覆盖其第 9 节 Phase 1）。
 
-> **2026-07-08 更新**：后端已开始迁移 Cloudflare Workers + D1 + R2（spec：
-> `2026-07-08-backend-cloudflare-workers-migration-design.md`，实施进度约 3/8 阶段）。
-> 影响本计划三处：① 基础分支改为 `feat/backend-cloudflare-workers`；② 原 Task 5
-> 「TiDB rename 冷备脚本」作废（生产走全新 D1、无数据迁移、旧 TiDB 整体废弃），改为
-> 「重新生成 D1 baseline 迁移」；③ 当前分支 typecheck 为红（`packages/guide-shape`
-> 在 schema 切 sqlite-core 后类型损坏）——Task 1 删除该包即修复。CF 迁移剩余阶段
-> （uploads→R2、dev 切换、测试改装、CI 部署）在本计划完成后继续，受益于减半的表面积。
+> **2026-07-08 更新（执行时二次修订）**：Cloudflare Workers + D1 + R2 迁移（spec：
+> `2026-07-08-backend-cloudflare-workers-migration-design.md`）已**全部完成并合入 main**
+> （merge a81d265）：uploads 已是 R2、dev 已切 workerd、`pnpm check` 在基点为**绿**、
+> deploy workflow 已就位。影响本计划两处：① 基点改为 main 合并点 a81d265，在独立
+> worktree `pathfinding-phase1` 执行；② 原 Task 5「TiDB rename 冷备脚本」作废（生产走
+> 全新 D1、无数据迁移），改为「重新生成 D1 baseline 迁移」（现有 baseline
+> `0000_yummy_robin_chapel.sql` 含全部遗留表，需在收缩后重生成）。
 
 ## Global Constraints
 
-- 分支：`refactor/phase1-contraction`（从 `feat/backend-cloudflare-workers` 切出）。
+- 分支：`refactor/phase1-contraction`（基于 main 合并点 `a81d265`，在 worktree
+  `/Users/shikun/Developer/freelance/sunpebble/pathfinding-phase1` 中执行）。
 - **行号漂移加剧**：CF 迁移改动了大量路由/服务文件（db 注入、c.env），本计划行号以
   2026-07-07 快照为提示，执行时一律按符号名定位。
 - 提交格式：Conventional Commits（`refactor:` / `chore:` / `docs:`）。
@@ -43,13 +44,10 @@ xcodebuild -project Pathfinding.xcodeproj -scheme Pathfinding-Debug \
 
 ### Task 0: 建分支
 
-- [ ] **Step 1: 切分支**
+- [x] **Step 1: 切分支**（已完成：worktree `pathfinding-phase1`，分支
+      `refactor/phase1-contraction` @ a81d265）
 
-```bash
-git checkout feat/backend-cloudflare-workers && git checkout -b refactor/phase1-contraction
-```
-
-注意：起点分支 typecheck 为红（`guide-shape`），这是已知状态，Task 1 修复。
+基点 `pnpm check` 为绿（CF 迁移已修复 guide-shape 类型），删除仍按 spec 进行。
 
 ---
 

@@ -90,7 +90,6 @@ describe('overviewPage', () => {
   it('renders planning actions', () => {
     render(<OverviewPage />);
     expect(screen.getByText('继续规划')).toBeDefined();
-    expect(screen.getByText('整理地点')).toBeDefined();
   });
 
   it('renders view all links', () => {

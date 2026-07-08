@@ -1,5 +1,5 @@
 /**
- * Itineraries schema - itineraries, days, items, collaborators, comments, likes, etc.
+ * Itineraries schema - itineraries, days, items, collaborators, budgets, expenses.
  */
 import {
   index,
@@ -87,85 +87,6 @@ export const itineraryCollaborators = sqliteTable(
     index('itinerary_collabs_itinerary_idx').on(t.itineraryId),
     index('itinerary_collabs_user_idx').on(t.userId),
     uniqueIndex('itinerary_collabs_uniq').on(t.itineraryId, t.userId),
-  ],
-);
-
-// ── Comment Reports ────────────────────────────────────
-export const commentReports = sqliteTable(
-  'comment_reports',
-  {
-    id: id(),
-    commentId: fk('comment_id').notNull(),
-    userId: fk('user_id').notNull(),
-    reason: text('reason').notNull(),
-    description: text('description'),
-    status: text('status').notNull().default('pending'),
-    createdAt: createdAt(),
-    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
-    reviewedBy: fk('reviewed_by'),
-  },
-  t => [
-    index('comment_reports_comment_idx').on(t.commentId),
-    index('comment_reports_user_idx').on(t.userId),
-    index('comment_reports_status_idx').on(t.status),
-    uniqueIndex('comment_reports_uniq').on(t.commentId, t.userId),
-  ],
-);
-
-// ── Itinerary Likes ────────────────────────────────────
-export const itineraryLikes = sqliteTable(
-  'itinerary_likes',
-  {
-    id: id(),
-    userId: fk('user_id').notNull(),
-    itineraryId: fk('itinerary_id').notNull(),
-    createdAt: createdAt(),
-  },
-  t => [
-    index('itin_likes_user_idx').on(t.userId),
-    index('itin_likes_itinerary_idx').on(t.itineraryId),
-    uniqueIndex('itin_likes_uniq').on(t.userId, t.itineraryId),
-  ],
-);
-
-// ── Favorite Collections ───────────────────────────────
-export const favoriteCollections = sqliteTable(
-  'favorite_collections',
-  {
-    id: id(),
-    userId: fk('user_id').notNull(),
-    name: text('name').notNull(),
-    description: text('description'),
-    coverImageUrl: text('cover_image_url'),
-    isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
-    sortOrder: integer('sort_order').notNull().default(0),
-    createdAt: createdAt(),
-    updatedAt: updatedAt(),
-  },
-  t => [
-    index('fav_collections_user_idx').on(t.userId),
-    index('fav_collections_user_default_idx').on(t.userId, t.isDefault),
-    index('fav_collections_user_sort_idx').on(t.userId, t.sortOrder),
-  ],
-);
-
-// ── Itinerary Favorites ────────────────────────────────
-export const itineraryFavorites = sqliteTable(
-  'itinerary_favorites',
-  {
-    id: id(),
-    userId: fk('user_id').notNull(),
-    itineraryId: fk('itinerary_id').notNull(),
-    collectionId: fk('collection_id'),
-    notes: text('notes'),
-    createdAt: createdAt(),
-  },
-  t => [
-    index('itin_favs_user_idx').on(t.userId),
-    index('itin_favs_itinerary_idx').on(t.itineraryId),
-    index('itin_favs_collection_idx').on(t.collectionId),
-    uniqueIndex('itin_favs_uniq').on(t.userId, t.itineraryId),
-    index('itin_favs_user_collection_idx').on(t.userId, t.collectionId),
   ],
 );
 

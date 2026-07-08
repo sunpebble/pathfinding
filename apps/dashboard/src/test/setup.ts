@@ -31,6 +31,10 @@ export const mockParams = vi.fn(() => ({}));
 export const mockNotFound = vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
 });
+export const mockRedirect = vi.fn((url: string) => {
+  // Mirror Next.js: redirect() never returns, it throws to unwind the render.
+  throw new Error(`NEXT_REDIRECT:${url}`);
+});
 
 export function createMockAuthUser(overrides: Partial<User> = {}): User {
   return {
@@ -84,6 +88,7 @@ export function createMockAuthApi() {
 
 vi.mock('next/navigation', () => ({
   notFound: mockNotFound,
+  redirect: mockRedirect,
   useParams: mockParams,
   usePathname: mockPathname,
   useRouter: vi.fn(() => mockRouter),

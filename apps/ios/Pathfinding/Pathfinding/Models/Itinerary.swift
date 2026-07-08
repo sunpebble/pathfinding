@@ -318,17 +318,3 @@ struct PaginationMeta: Codable {
     case totalPages = "total_pages"
   }
 }
-
-// MARK: - Result Types
-
-/// Result for copy history query
-struct CopyHistoryResult {
-  let data: [CopyHistoryRecord]
-  let total: Int
-}
-
-/// Result for public itineraries query
-struct PublicItinerariesResult {
-  let data: [APIItinerary]
-  let total: Int
-}

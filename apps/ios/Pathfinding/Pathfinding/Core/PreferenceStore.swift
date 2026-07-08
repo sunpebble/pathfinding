@@ -181,31 +181,6 @@ final class PreferenceStore {
 
   // MARK: - Convenience Methods for Common Behaviors
 
-  /// Record viewing a guide
-  func recordGuideView(guideId: String, categories: [PreferenceCategory]? = nil, duration: Int? = nil) async {
-    var metadata: BehaviorMetadata?
-    if let duration = duration {
-      metadata = BehaviorMetadata(duration: duration)
-    }
-    await recordBehavior(
-      type: .view,
-      targetType: .guide,
-      targetId: guideId,
-      categories: categories,
-      metadata: metadata
-    )
-  }
-
-  /// Record saving a guide
-  func recordGuideSave(guideId: String, categories: [PreferenceCategory]? = nil) async {
-    await recordBehavior(
-      type: .save,
-      targetType: .guide,
-      targetId: guideId,
-      categories: categories
-    )
-  }
-
   /// Record copying an itinerary
   func recordItineraryCopy(itineraryId: String, categories: [PreferenceCategory]? = nil) async {
     await recordBehavior(

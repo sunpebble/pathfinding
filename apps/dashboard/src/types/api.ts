@@ -8,11 +8,6 @@
  * @module
  */
 
-import type {
-  TravelGuideAiDayDto,
-  TravelGuideResponseDto,
-} from '@pathfinding/types';
-
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
@@ -156,25 +151,6 @@ export interface UpdateCollaboratorInput {
 // ---------------------------------------------------------------------------
 // Travel Guides (with AI enrichment)
 // ---------------------------------------------------------------------------
-
-/** Travel guide from REST API with Dashboard camelCase AI aliases. */
-export interface GuideWithAI extends TravelGuideResponseDto {
-  _id?: string;
-  aiSummary?: string | null;
-  aiTips?: string[] | null;
-  aiBestTime?: string | null;
-  aiDuration?: string | null;
-  aiBudget?: string | null;
-  aiDays?: AiDay[] | null;
-  aiProcessedAt?: number | null;
-  ai_days?: AiDay[] | null;
-}
-
-/** A single day in an AI-generated itinerary. */
-export interface AiDay extends TravelGuideAiDayDto {
-  dayNumber?: number;
-  theme?: string;
-}
 
 /** A point of interest within an AI-generated day plan. */
 export interface AiPoi {

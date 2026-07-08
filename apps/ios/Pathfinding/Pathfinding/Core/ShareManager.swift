@@ -442,23 +442,6 @@ final class ShareManager {
 // MARK: - Share Content Builders
 
 extension ShareManager {
-  /// Build share content from a BlogPost
-  func buildShareContent(from blogPost: BlogPost, shareUrl: URL? = nil) -> ShareContent {
-    let description = blogPost.aiSummary ?? blogPost.summary ?? blogPost.content?.prefix(100).description
-
-    var hashtags = ["SunpebbleTrips", "旅行"]
-    if let destinations = blogPost.destinations {
-      hashtags.append(contentsOf: destinations.prefix(3))
-    }
-
-    return ShareContent(
-      title: blogPost.title,
-      description: description,
-      url: shareUrl,
-      hashtags: hashtags
-    )
-  }
-
   /// Build share content from an APIItinerary
   func buildShareContent(from itinerary: APIItinerary, shareUrl: URL? = nil) -> ShareContent {
     var description: String?

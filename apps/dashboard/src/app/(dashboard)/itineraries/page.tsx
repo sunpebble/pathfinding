@@ -4,8 +4,7 @@ import type { ItinerarySummary } from '@/lib/api/itineraries';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Eye, MapPin, Search, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   DashboardCard,
   DashboardEmptyState,
@@ -121,16 +120,9 @@ function ItineraryCard({ itinerary }: { itinerary: ItinerarySummary }) {
 
 export default function ItinerariesPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 20;
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace('/auth/signin');
-    }
-  }, [authLoading, isAuthenticated, router]);
 
   const result = useQuery({
     queryKey: ['itineraries', user?.id, page, pageSize],
@@ -160,10 +152,6 @@ export default function ItinerariesPage() {
     : itineraries;
 
   const isLoading = authLoading || (isAuthenticated && result.isLoading);
-
-  if (!authLoading && !isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="space-y-6">

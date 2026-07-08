@@ -1,6 +1,6 @@
 # Sunpebble Trips
 
-A focused Sunpebble travel itinerary app for planning days, places, notes, and reminders.
+A focused Sunpebble travel itinerary app for planning days, places, and notes.
 
 A mobile-first travel itinerary planning application with offline support and private trip editing.
 
@@ -8,10 +8,8 @@ A mobile-first travel itinerary planning application with offline support and pr
 
 - **Create & Manage Itineraries**: Plan trips by selecting destination cities and date ranges
 - **Add POIs**: Add attractions, restaurants, and other points of interest to your timeline
-- **Smart Recommendations**: Browse POIs sorted by rating, filtered by category
 - **Edit & Reorder**: Drag-and-drop to reorder items, edit details with undo/redo support
 - **Transport Planning**: Set transit modes between POIs with time/distance estimates
-- **Reminders**: Get push notifications before scheduled activities
 - **Offline Support**: Full offline editing with automatic sync when online
 
 ## 🏗️ Architecture
@@ -40,13 +38,8 @@ apps/
 
 packages/
 ├── api/              # Shared backend API (Hono + Flue runtime)
-├── constants/        # Shared constants
-├── crawler-types/    # Crawler type definitions
-├── database/         # TiDB schema and database access (Drizzle)
-├── logger/           # Shared logging utilities (Pino)
-├── test-utils/       # Shared test utilities
-├── types/            # Shared TypeScript types
-└── utils/            # Shared utility functions
+├── database/         # D1 (SQLite) schema and database access (Drizzle)
+└── types/            # Shared TypeScript types
 ```
 
 ## 📚 API Documentation
@@ -68,7 +61,7 @@ packages/
 All protected endpoints require JWT Bearer token from the shared auth service.
 
 ```bash
-curl -H "Authorization: Bearer <token>" http://localhost:3000/api/guides
+curl -H "Authorization: Bearer <token>" http://localhost:3000/api/itineraries
 ```
 
 ---
@@ -77,28 +70,17 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/api/guides
 
 The primary backend for data operations is the shared API service:
 
-- `/api/guides/*` - Travel guides
 - `/api/chat/sessions/*` - Chat session management
 - `/api/agent/chat/stream` - DeepSeek-backed planning chat stream
 - `/api/agent/plan/*` - DeepSeek-backed itinerary planning
 - `/agents/trips-planner/:id` - Native Flue agent endpoint
-- `/api/crawler/fetch` - Generic HTML fetch and text cleanup
 - `/api/weather/forecast` - Weather forecast proxy
 - `/api/transport/optimize` - POI route ordering helper
-- `/api/translations/*` - Translation data
 - `/api/pois/*` - Points of interest
-- `/api/follows/*` - User follows
-- `/api/travel-notes/*` - Travel notes
 - `/api/budgets/*` - Budget tracking
-- `/api/qa/*` - Q&A
-- `/api/notifications/*` - Notifications
-- `/api/comments/*` - Comments
-- `/api/collections/*` - Collections
-- `/api/share/*` - Share events
+- `/api/sharing/*` - Share links and share events
 
-See `packages/api/src/routes/` for route implementations. Mafengwo list/detail
-crawlers are disabled by default because the old browser-backed parser has not
-been migrated to the TypeScript API.
+See `packages/api/src/routes/` for route implementations.
 
 ---
 
@@ -371,8 +353,6 @@ The application uses TiDB with the following main tables:
 - **itineraryDays**: Days within an itinerary
 - **itineraryItems**: POIs added to specific days
 - **pois**: Point of interest reference data
-- **reminders**: Scheduled reminders for items
-- **travelGuides**: Crawled travel guide content with AI enrichment
 
 See `packages/database/src/schema/` for detailed schema.
 

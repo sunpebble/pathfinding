@@ -12,32 +12,15 @@ const nextConfig: NextConfig = {
       process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:3000',
   },
 
-  // Rewrites to proxy API requests to the appropriate services
+  // Rewrites to proxy API requests to the backend. Local route handlers
+  // under src/app/api/ (chat, health) take priority over this afterFiles
+  // rewrite, so they keep working.
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const aiServiceUrl
-      = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:3000';
     return [
       {
-        source: '/api/auth/:path*',
-        destination: `${apiUrl}/api/auth/:path*`,
-      },
-      {
-        source: '/api/itineraries/:path*',
-        destination: `${apiUrl}/api/itineraries/:path*`,
-      },
-      {
-        source: '/api/pois/:path*',
-        destination: `${apiUrl}/api/pois/:path*`,
-      },
-      {
-        source: '/api/itinerary-collaborators/:path*',
-        destination: `${apiUrl}/api/itinerary-collaborators/:path*`,
-      },
-      // Compatibility proxy for legacy auxiliary routes.
-      {
-        source: '/api/ai-service/:path*',
-        destination: `${aiServiceUrl}/api/:path*`,
+        source: '/api/:path*',
+        destination: `${apiUrl}/api/:path*`,
       },
     ];
   },

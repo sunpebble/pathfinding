@@ -20,7 +20,7 @@ import type { Database } from '@pathfinding/database';
  */
 import { Buffer } from 'node:buffer';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { authSessions } from '@pathfinding/database';
+import { authSessions, users } from '@pathfinding/database';
 import { and, eq, gt } from 'drizzle-orm';
 import * as jose from 'jose';
 
@@ -148,6 +148,58 @@ export async function isSessionValid(db: Database, sessionId: string): Promise<b
   return rows.length > 0;
 }
 
+/**
+ * Validate a signed refresh token and, if its session is still valid,
+ * re-mint a fresh access token *and* a rotated refresh token.
+ *
+ * The refresh token is a signed JWT (`typ: 'refresh'`, see
+ * `generateRefreshToken`) — NOT the raw `authSessions.id`. This is
+ * deliberate: an opaque auto-increment id is trivially enumerable
+ * (`{refreshToken:"1"}`, `"2"`, …), which would let an unauthenticated
+ * attacker mint access tokens for arbitrary users (account takeover).
+ * A signed token can't be forged without `secret`, and its `sid` claim
+ * still gates on `isSessionValid` so server-side revocation keeps working.
+ *
+ * Returns `null` on any failure (forged/expired/malformed token, wrong
+ * `typ`, revoked session, or missing user) — the route maps that to 401.
+ */
+export async function refreshSession(
+  db: Database,
+  refreshToken: string,
+  secret: string,
+): Promise<{ token: string; refreshToken: string; userId: string; email: string } | null> {
+  let payload: jose.JWTPayload;
+  try {
+    payload = await verifyToken(refreshToken, secret);
+  }
+  catch {
+    return null; // forged, expired, or malformed
+  }
+
+  if (payload.typ !== 'refresh' || typeof payload.sub !== 'string' || typeof payload.sid !== 'string') {
+    return null;
+  }
+
+  const valid = await isSessionValid(db, payload.sid);
+  if (!valid)
+    return null;
+
+  const [user] = await db
+    .select({ id: users.id, email: users.email })
+    .from(users)
+    .where(eq(users.id, Number(payload.sub)))
+    .limit(1);
+  if (!user)
+    return null;
+
+  const userId = String(user.id);
+  const email = user.email ?? '';
+  const token = await generateToken(userId, email, secret, payload.sid);
+  const rotatedRefreshToken = await generateRefreshToken(userId, email, secret, payload.sid);
+
+  return { token, refreshToken: rotatedRefreshToken, userId, email };
+}
+
 // ---------------------------------------------------------------------------
 // JWT token management
 // ---------------------------------------------------------------------------
@@ -179,6 +231,27 @@ export async function generateToken(
   }
 
   return new jose.SignJWT(claims)
+    .setProtectedHeader({ alg: JWT_ALGORITHM })
+    .setIssuedAt()
+    .setExpirationTime(JWT_EXPIRATION)
+    .sign(encodeSecret(secret));
+}
+
+/**
+ * Generate a signed *refresh* token (distinct from the access token).
+ *
+ * Carries `typ: 'refresh'` so `refreshSession` can reject access tokens
+ * presented at `/refresh`, plus `sub` (user) and `sid` (session, for
+ * revocation). Same 30-day lifetime and signing key as the access token —
+ * being signed is what makes it non-enumerable, unlike the raw session id.
+ */
+export async function generateRefreshToken(
+  userId: string,
+  email: string,
+  secret: string,
+  sessionId: string,
+): Promise<string> {
+  return new jose.SignJWT({ sub: userId, email, sid: sessionId, typ: 'refresh' })
     .setProtectedHeader({ alg: JWT_ALGORITHM })
     .setIssuedAt()
     .setExpirationTime(JWT_EXPIRATION)

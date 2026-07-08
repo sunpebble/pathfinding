@@ -21,41 +21,21 @@ import auxiliaryRoutes from './routes/auxiliary.js';
 
 // Travel — notes, budgets, expenses, currency
 import budgetsRoutes from './routes/budgets.js';
-// Communication — chat, notifications, push tokens
 import chatRoutes from './routes/chat.js';
 
-// Social — comments, likes, favorites, collections, sharing
-import collectionsRoutes from './routes/collections.js';
-import commentsRoutes from './routes/comments.js';
-// Admin & crawlers
-import crawlJobsRoutes from './routes/crawl-jobs.js';
-import crawlerFetchRoutes from './routes/crawler-fetch.js';
 import currencyRoutes from './routes/currency.js';
 
 import expenseSplittingRoutes from './routes/expense-splitting.js';
 import expensesRoutes from './routes/expenses.js';
-import favoritesRoutes from './routes/favorites.js';
-// Content — guides, POIs, itineraries
-import guidesRoutes from './routes/guides.js';
 // Health & system
 import healthRoutes from './routes/health.js';
 
 import itinerariesRoutes from './routes/itineraries.js';
 import itineraryCollaboratorsRoutes from './routes/itinerary-collaborators.js';
-import likesRoutes from './routes/likes.js';
-import notificationsRoutes from './routes/notifications.js';
 import poisRoutes from './routes/pois.js';
 
-import pushTokensRoutes from './routes/push-tokens.js';
-// i18n & Q&A
-import qaRoutes from './routes/qa.js';
-import qualityReportsRoutes from './routes/quality-reports.js';
-
 import sharingRoutes from './routes/sharing.js';
-import trainingDatasetsRoutes from './routes/training-datasets.js';
 
-import translationsRoutes from './routes/translations.js';
-import travelNotesRoutes from './routes/travel-notes.js';
 // Uploads
 import uploadsRoutes from './routes/uploads.js';
 
@@ -110,47 +90,26 @@ export function createApp() {
 
   // AI agent compatibility routes
   app.route('/api/agent', agentRoutes);
-  app.route('/api', agentRoutes);
   app.route('/api', auxiliaryRoutes);
-  app.route('/api/crawler', crawlerFetchRoutes);
 
   // Auth & users
   app.route('/api/auth', authRoutes);
   app.route('/api/users', usersRoutes);
 
   // Content
-  app.route('/api/guides', guidesRoutes);
   app.route('/api/pois', poisRoutes);
   app.route('/api/itineraries', itinerariesRoutes);
   app.route('/api/itinerary-collaborators', itineraryCollaboratorsRoutes);
 
-  // Social
-  app.route('/api/comments', commentsRoutes);
-  app.route('/api/collections', collectionsRoutes);
-  app.route('/api/favorites', favoritesRoutes);
-  app.route('/api/likes', likesRoutes);
   app.route('/api/sharing', sharingRoutes);
 
   // Travel
-  app.route('/api/travel-notes', travelNotesRoutes);
   app.route('/api/budgets', budgetsRoutes);
   app.route('/api/expenses', expensesRoutes);
   app.route('/api/expense-splitting', expenseSplittingRoutes);
   app.route('/api/currency', currencyRoutes);
 
-  // Communication
   app.route('/api/chat', chatRoutes);
-  app.route('/api/notifications', notificationsRoutes);
-  app.route('/api/push-tokens', pushTokensRoutes);
-
-  // i18n & Q&A
-  app.route('/api/qa', qaRoutes);
-  app.route('/api/translations', translationsRoutes);
-
-  // Admin & crawlers
-  app.route('/api/crawl-jobs', crawlJobsRoutes);
-  app.route('/api/quality-reports', qualityReportsRoutes);
-  app.route('/api/training-datasets', trainingDatasetsRoutes);
 
   // Uploads
   app.route('/api/uploads', uploadsRoutes);

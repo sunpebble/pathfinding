@@ -128,10 +128,6 @@ extension AiDay: CopyableDay {
   var poiIDs: [String] { pois.map(\.id) }
 }
 
-extension APIItineraryDay: CopyableDay {
-  var poiIDs: [String] { (items ?? []).map(\.id) }
-}
-
 // MARK: - Source Conformances
 
 extension SavedItinerary: CopyableSource {
@@ -164,132 +160,10 @@ extension SavedItinerary: CopyableSource {
   }
 }
 
-extension BlogPost: CopyableSource {
-  var rawDays: [AiDay]? { aiDays }
-
-  var navigationTitle: String { "复制到我的行程" }
-  var basicInfoHeader: String { "行程信息" }
-
-  var basicInfoExtraContent: AnyView {
-    AnyView(
-      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text(title)
-          .font(.headline)
-
-        if let author = authorName {
-          Text("作者: \(author)")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-      }
-    )
-  }
-
-  @MainActor
-  func performCopy(
-    selection: CopySelection,
-    newStartDate: Date,
-    newTitle: String?
-  ) async throws -> SavedItinerary {
-    let store = ItineraryStore.shared
-    let selectedDaysArray: [Int]? = {
-      guard let selection, !selection.isEmpty else { return nil }
-      return selection
-    }()
-    return store.copyFromGuide(
-      self,
-      selectedDays: selectedDaysArray,
-      newStartDate: newStartDate
-    )
-  }
-}
-
-extension APIItinerary: CopyableSource {
-  var rawDays: [APIItineraryDay]? { days }
-
-  var navigationTitle: String { "复制公开行程" }
-  var allowsTitleEditing: Bool { true }
-  var defaultEditableTitle: String { title }
-  var titleFieldPlaceholder: String { "新行程名称" }
-  var basicInfoHeader: String { "行程信息" }
-  var reportsCopyErrors: Bool { true }
-
-  var basicInfoExtraContent: AnyView {
-    AnyView(
-      VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-        Text(title)
-          .font(.headline)
-
-        if let author = originalAuthor?.displayName {
-          HStack(spacing: DesignTokens.Spacing.xs) {
-            Image(systemName: "person.circle.fill")
-              .foregroundStyle(.secondary)
-            Text("原作者: \(author)")
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
-        }
-
-        if let cityName = cityName {
-          HStack(spacing: DesignTokens.Spacing.xs) {
-            Image(systemName: "mappin.circle.fill")
-              .foregroundStyle(.red.opacity(0.7))
-            Text(cityName)
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
-        }
-      }
-    )
-  }
-
-  var attributionSection: AnyView {
-    guard originalAuthor != nil || copiedFromId != nil else {
-      return AnyView(EmptyView())
-    }
-    return AnyView(
-      Section {
-        HStack {
-          Image(systemName: "link")
-            .foregroundStyle(.blue)
-          Text("复制后将保留原作者信息")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-      } footer: {
-        Text("尊重原创，感谢分享")
-      }
-    )
-  }
-
-  @MainActor
-  func performCopy(
-    selection: CopySelection,
-    newStartDate: Date,
-    newTitle: String?
-  ) async throws -> SavedItinerary {
-    let store = ItineraryStore.shared
-    if let selectedDays = selection, !selectedDays.isEmpty {
-      return try await store.copyItineraryPartialFromAPI(
-        itineraryId: id,
-        newStartDate: newStartDate,
-        selectedDays: selectedDays,
-        newTitle: newTitle
-      )
-    }
-    return try await store.copyItineraryFromAPI(
-      itineraryId: id,
-      newStartDate: newStartDate
-    )
-  }
-}
-
 // MARK: - Generic Copy Itinerary Sheet
 
 /// Sheet for copying any `CopyableSource` with options for date selection and
-/// partial copy. The three former sheets (`CopyItinerarySheet`,
-/// `CopyGuideSheet`, `CopyPublicItinerarySheet`) are thin specializations of
-/// this single generic view.
+/// partial copy.
 struct CopyItinerarySheet<Source: CopyableSource>: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(AppState.self) private var appState
@@ -559,28 +433,6 @@ extension CopyItinerarySheet where Source == SavedItinerary {
   }
 }
 
-/// Sheet for copying a `BlogPost` guide. Thin specialization of the generic
-/// `CopyItinerarySheet`.
-struct CopyGuideSheet: View {
-  let guide: BlogPost
-  let onCopyComplete: (SavedItinerary) -> Void
-
-  var body: some View {
-    CopyItinerarySheet(source: guide, onCopyComplete: onCopyComplete)
-  }
-}
-
-/// Sheet for copying a public itinerary from the API. Thin specialization of
-/// the generic `CopyItinerarySheet`.
-struct CopyPublicItinerarySheet: View {
-  let itinerary: APIItinerary
-  let onCopyComplete: (SavedItinerary) -> Void
-
-  var body: some View {
-    CopyItinerarySheet(source: itinerary, onCopyComplete: onCopyComplete)
-  }
-}
-
 // MARK: - Day Selection Chip
 
 struct DaySelectionChip: View {
@@ -722,71 +574,6 @@ struct OriginalAuthorBadge: View {
       title: "东京5日游",
       destination: "东京",
       daysCount: 5
-    )
-  ) { _ in }
-    .environment(AppState())
-}
-
-#Preview("Copy Guide") {
-  CopyGuideSheet(
-    guide: BlogPost(
-      id: "1",
-      title: "京都赏樱行程",
-      authorName: "旅行达人",
-      content: nil,
-      contentHtml: nil,
-      contentMarkdown: nil,
-      summary: nil,
-      coverImageUrl: nil,
-      imageUrls: nil,
-      sourcePlatform: "xiaohongshu",
-      qualityScore: nil,
-      viewsCount: nil,
-      likesCount: nil,
-      savesCount: nil,
-      createdAt: nil,
-      destinations: nil,
-      aiSummary: nil,
-      aiTips: nil,
-      aiBestTime: nil,
-      aiDuration: nil,
-      aiBudget: nil,
-      aiDays: [
-        AiDay(dayNumber: 1, theme: "抵达", pois: []),
-        AiDay(dayNumber: 2, theme: "赏樱", pois: []),
-        AiDay(dayNumber: 3, theme: "寺庙", pois: [])
-      ],
-      aiProcessedAt: nil
-    )
-  ) { _ in }
-    .environment(AppState())
-}
-
-#Preview("Copy Public Itinerary") {
-  CopyPublicItinerarySheet(
-    itinerary: APIItinerary(
-      id: "test-id",
-      userId: "user-1",
-      title: "东京7日游",
-      cityId: "tokyo",
-      startDate: "2024-05-01",
-      endDate: "2024-05-07",
-      visibility: "public",
-      coverImageUrl: nil,
-      copiedFromId: nil,
-      cityName: "东京",
-      daysCount: 7,
-      days: [
-        APIItineraryDay(id: "d1", itineraryId: "test-id", dayNumber: 1, date: "2024-05-01", items: []),
-        APIItineraryDay(id: "d2", itineraryId: "test-id", dayNumber: 2, date: "2024-05-02", items: []),
-        APIItineraryDay(id: "d3", itineraryId: "test-id", dayNumber: 3, date: "2024-05-03", items: [])
-      ],
-      collaborators: nil,
-      originalAuthor: OriginalAuthorInfo(
-        userId: "author-1",
-        displayName: "旅行大师",
-        avatarUrl: nil
-      )
     )
   ) { _ in }
     .environment(AppState())

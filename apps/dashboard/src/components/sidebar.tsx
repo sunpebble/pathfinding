@@ -3,7 +3,6 @@
 import {
   Bot,
   LayoutDashboard,
-  MapPin,
   Menu,
   Receipt,
   Route,
@@ -18,7 +17,6 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: '总览', href: '/overview', icon: LayoutDashboard },
   { name: 'AI 助手', href: '/chat', icon: Bot },
-  { name: '兴趣点', href: '/pois', icon: MapPin },
   { name: '行程计划', href: '/itineraries', icon: Route },
   { name: '费用分摊', href: '/expenses', icon: Receipt },
 ];

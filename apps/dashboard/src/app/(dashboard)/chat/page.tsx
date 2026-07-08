@@ -30,6 +30,7 @@ import {
   ReasoningContent,
   ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
+import { getStoredAuthToken } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 
 export default function ChatPage() {
@@ -40,6 +41,10 @@ export default function ChatPage() {
       new DefaultChatTransport({
         api: '/api/chat',
         body: { sessionId },
+        headers: (): Record<string, string> => {
+          const token = getStoredAuthToken();
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        },
       }),
     [sessionId],
   );

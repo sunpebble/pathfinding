@@ -9,6 +9,12 @@
       "database_name": "pathfinding",
       // Replaced after `wrangler d1 create pathfinding` (Task 6.2)
       "database_id": "b6344db5-bc03-465e-9625-9a42f8e42579",
+      // predev (packages/api/package.json) runs `wrangler d1 migrations apply --local`
+      // via `pnpm dlx`, pinned to the SAME wrangler version @cloudflare/vite-plugin
+      // resolves here (check node_modules/.pnpm/wrangler@*). A version mismatch bundles
+      // a different workerd and writes incompatible local Durable Object storage,
+      // which fatally crashes `flue dev --target cloudflare` on next boot (confirmed).
+      // Bump the pin in lockstep when @cloudflare/vite-plugin's wrangler version changes.
       "migrations_dir": "../../packages/database/drizzle"
     }
   ],

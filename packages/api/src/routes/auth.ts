@@ -14,9 +14,11 @@ import {
   createSession,
   deleteAllSessions,
   deleteSession,
+  generateRefreshToken,
   generateToken,
   hashPassword,
   needsPasswordMigration,
+  refreshSession,
   verifyPassword,
   verifyToken,
 } from '../services/auth.service.js';
@@ -69,9 +71,11 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
 
     // Generate JWT with session ID
     const token = await generateToken(userId, email, c.env.JWT_SECRET, sessionId);
+    const refreshToken = await generateRefreshToken(userId, email, c.env.JWT_SECRET, sessionId);
 
     return c.json({
       token,
+      refreshToken,
       userId,
       email,
     });
@@ -127,11 +131,32 @@ app.post('/signin', zValidator('json', signinSchema), async (c) => {
 
   // Generate JWT with session ID
   const token = await generateToken(userId, email, c.env.JWT_SECRET, sessionId);
+  const refreshToken = await generateRefreshToken(userId, email, c.env.JWT_SECRET, sessionId);
 
   return c.json({
     token,
+    refreshToken,
     userId,
     email,
+  });
+});
+
+// ── POST /refresh — Re-mint an access token from a refresh token ──
+const refreshSchema = z.object({ refreshToken: z.string().min(1) });
+
+app.post('/refresh', zValidator('json', refreshSchema), async (c) => {
+  const { refreshToken } = c.req.valid('json');
+  const db = c.get('db');
+
+  const result = await refreshSession(db, refreshToken, c.env.JWT_SECRET);
+  if (!result)
+    return c.json({ error: 'invalid_refresh_token' }, 401);
+
+  return c.json({
+    token: result.token,
+    refreshToken: result.refreshToken,
+    userId: result.userId,
+    email: result.email,
   });
 });
 
@@ -267,9 +292,11 @@ app.post('/social', zValidator('json', socialLoginSchema), async (c) => {
   const userEmail = userRows[0]?.email ?? email ?? '';
 
   const token = await generateToken(userId, userEmail, c.env.JWT_SECRET, sessionId);
+  const refreshToken = await generateRefreshToken(userId, userEmail, c.env.JWT_SECRET, sessionId);
 
   return c.json({
     token,
+    refreshToken,
     userId,
     email: userEmail,
   });

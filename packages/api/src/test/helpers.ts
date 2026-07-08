@@ -2,7 +2,7 @@ import type { AppType } from '../app.js';
 import type { Env } from '../env.js';
 import * as jose from 'jose';
 
-const TEST_JWT_SECRET = 'test-jwt-secret';
+export const TEST_JWT_SECRET = 'test-jwt-secret';
 
 export interface AuthTokenOptions {
   userId?: string;

@@ -23,7 +23,9 @@ describe('authButton', () => {
   it('shows Sign In when unauthenticated', () => {
     render(<AuthButton />, { wrapper: Wrapper });
 
-    expect(screen.getByRole('link', { name: '登录' })).toBeInTheDocument();
+    const link = screen.getByRole('link', { name: '登录' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/');
   });
 
   it('shows the user menu when authenticated', async () => {

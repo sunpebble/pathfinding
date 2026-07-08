@@ -1,8 +1,8 @@
 /**
  * POI API client (authenticated).
  *
- * Provides access to the dashboard's `/api/pois` and `/api/guides`
- * proxy routes for querying and updating points of interest.
+ * Provides access to the dashboard's `/api/pois` proxy route for
+ * querying points of interest.
  *
  * @module
  */
@@ -11,9 +11,6 @@ import type { PaginatedResponse, Poi } from '@/types/api';
 import { createApiClient } from './client';
 
 const poisClient = createApiClient('/api/pois');
-// Guide mutations must go through the crawler proxy — there is no
-// `/api/guides` rewrite, so direct calls would 404 at the Next server.
-const guidesClient = createApiClient('/api/crawler/guides');
 
 /**
  * Build a query string suffix from a flat params object.
@@ -39,26 +36,4 @@ function buildQuerySuffix(query?: Record<string, string | number | undefined>): 
  */
 export function getPois(query?: Record<string, string | number | undefined>): Promise<PaginatedResponse<Poi>> {
   return poisClient.get<PaginatedResponse<Poi>>(`/${buildQuerySuffix(query)}`);
-}
-
-/** Input for updating a guide POI's coordinates. */
-export interface UpdateGuidePoiCoordinatesInput {
-  dayNumber: number;
-  poiIndex: number;
-  latitude: number;
-  longitude: number;
-  verifiedBy?: string;
-}
-
-/**
- * Update the geo-coordinates of a POI within a travel guide.
- *
- * @param guideId - The guide containing the POI.
- * @param input - New coordinates and verification metadata.
- */
-export function updateGuidePoiCoordinates(
-  guideId: string | number,
-  input: UpdateGuidePoiCoordinatesInput,
-): Promise<{ success: boolean }> {
-  return guidesClient.patch<{ success: boolean }>(`/${guideId}/poi-coordinates`, input);
 }

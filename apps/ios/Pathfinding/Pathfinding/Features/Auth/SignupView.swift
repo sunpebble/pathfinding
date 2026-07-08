@@ -213,26 +213,6 @@ struct SignupView: View {
 
             // MARK: - Social Signup
             VStack(spacing: DesignTokens.Spacing.sm) {
-              // WeChat Sign Up
-              Button {
-                Task {
-                  await handleSocialSignup(.wechat)
-                }
-              } label: {
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                  Image(systemName: "message.fill")
-                    .font(.body)
-                  Text("signup.wechat".localized)
-                    .fontWeight(.medium)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, DesignTokens.Spacing.sm)
-                .background(Color(red: 0.07, green: 0.73, blue: 0.31))
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-              }
-              .disabled(isLoading)
-
               // Apple Sign Up
               Button {
                 Task {

@@ -177,7 +177,7 @@ export default function SignUpPage() {
           <div className="mt-6 text-center text-sm text-stone-500">
             已有账号？
             {' '}
-            <Link href="/auth/signin" className="font-medium text-emerald-600 hover:text-emerald-700">
+            <Link href="/" className="font-medium text-emerald-600 hover:text-emerald-700">
               立即登录
             </Link>
           </div>

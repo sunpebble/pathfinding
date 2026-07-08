@@ -161,14 +161,24 @@ describe('chat routes', () => {
   });
 
   describe('pOST /api/chat/query', () => {
-    it('returns DeepSeek quick chat response', async () => {
-      stubDeepSeek('建议先确定城市和天数。');
-
+    it('rejects unauthenticated POST /api/chat/query with 401', async () => {
       const response = await requestWithEnv(createApp(), '/api/chat/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'hi' }),
+      });
+
+      expect(response.status).toBe(401);
+    });
+
+    it('returns DeepSeek quick chat response', async () => {
+      stubDeepSeek('建议先确定城市和天数。');
+
+      const response = await requestWithAuth(createApp(), '/api/chat/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: '怎么规划京都？' }),
-      }, { DEEPSEEK_API_KEY: 'test-key' });
+      }, {}, { DEEPSEEK_API_KEY: 'test-key' });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({

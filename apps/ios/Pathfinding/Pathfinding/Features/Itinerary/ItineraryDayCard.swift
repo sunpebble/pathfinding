@@ -3,9 +3,6 @@ import SwiftUI
 
 // MARK: - Day Card
 
-// NOTE: Named `ItineraryDayCard` rather than `DayCard` because the module already
-// declares an unrelated `DayCard` in `BlogDetailView.swift`. Swift has no
-// per-file namespacing, so a verbatim `DayCard` name would redeclare that type.
 struct ItineraryDayCard: View {
   let day: AiDay
   let index: Int

@@ -37,27 +37,6 @@ struct SavedItinerary: Identifiable, Codable, Hashable {
 
   // MARK: - Initializers
 
-  init(id: UUID = UUID(), from guide: BlogPost) {
-    self.id = id
-    self.blogId = guide.id
-    self.title = guide.title
-    self.coverImage = guide.coverImage
-    self.days = guide.aiDays ?? []
-    self.savedAt = Date()
-    self.startDate = Date()
-    self.authorName = guide.authorName
-    self.sourcePlatform = guide.sourcePlatform
-    self.aiSummary = guide.aiSummary
-    self.aiTips = guide.aiTips
-    self.imageUrls = guide.imageUrls
-    self.destination = nil // Default nil for imported
-    self.apiItineraryId = nil
-    self.copiedFromId = nil
-    self.originalAuthor = nil
-    self.copyType = nil
-    self.selectedDays = nil
-  }
-
   init(id: UUID = UUID(), title: String, destination: String?, daysCount: Int, startDate: Date = Date()) {
     self.id = id
     self.blogId = "manual-\(id.uuidString)"

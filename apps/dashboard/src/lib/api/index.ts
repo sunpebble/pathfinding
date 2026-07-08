@@ -14,16 +14,6 @@
 export { getCurrentUser, signIn, signOut, signUp } from './auth';
 
 // ---------------------------------------------------------------------------
-// Crawler backend proxy (server-side only)
-// ---------------------------------------------------------------------------
-export {
-  fetchBackendApi,
-  getBackendApiBaseUrl,
-  normalizeCrawlJob,
-  normalizeTravelGuide,
-} from './backend';
-
-// ---------------------------------------------------------------------------
 // Client-side authenticated API transport
 // ---------------------------------------------------------------------------
 export {
@@ -47,47 +37,6 @@ export {
 } from './collaborators';
 
 export type { InviteCollaboratorRequest } from './collaborators';
-
-// ---------------------------------------------------------------------------
-// Crawler (client-side, via Next.js proxy routes)
-// ---------------------------------------------------------------------------
-export {
-  cancelCrawlJob,
-  createBackfillJobs,
-  createCrawlJob,
-  discoverGuides,
-  executeBackfillJobs,
-  executeFullBackfill,
-  getBackfillAnalysis,
-  getCrawlJob,
-  getCrawlJobs,
-  getHealth,
-  getPOIs,
-  getSchedulerStatus,
-  getTrainingDatasets,
-  getTravelGuide,
-  getTravelGuides,
-  importGuides,
-  startCrawlJob,
-  startScheduledTask,
-  stopScheduledTask,
-} from './crawler';
-
-export type {
-  BackfillAnalysis,
-  BackfillExecutionResult,
-  CrawlJob,
-  CreateBackfillJobsInput,
-  CreateCrawlJobInput,
-  DestinationGap,
-  FieldGap,
-  FullBackfillResult,
-  PaginatedResponse,
-  PoiRecord,
-  SchedulerStatus,
-  TrainingDataset,
-  TravelGuide,
-} from './crawler';
 
 // ---------------------------------------------------------------------------
 // Itineraries
@@ -119,6 +68,4 @@ export type {
 // ---------------------------------------------------------------------------
 // POIs (authenticated)
 // ---------------------------------------------------------------------------
-export { getPois, updateGuidePoiCoordinates } from './pois';
-
-export type { UpdateGuidePoiCoordinatesInput } from './pois';
+export { getPois } from './pois';

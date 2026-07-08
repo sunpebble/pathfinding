@@ -1,6 +1,6 @@
 # Pathfinding
 
-Travel itinerary planning app. Nx monorepo: API (Hono + Drizzle + TiDB), Dashboard (Next.js + React 19 + Tailwind v4), iOS (SwiftUI), Go server.
+Travel itinerary planning app. pnpm workspace monorepo: API (Hono + Drizzle + Cloudflare D1), Dashboard (Next.js + React 19 + Tailwind v4), iOS (SwiftUI).
 
 ## Commands
 
@@ -28,7 +28,6 @@ These rules are non-negotiable. Violations are always Critical severity.
 
 - **No N+1 queries:** Never call `db.query()`/`db.select()` inside a loop. Use batch queries or an in-memory `Map` cache for repeated lookups. Reference: `.jules/bolt.md`
 - **Database-level filtering:** Use Drizzle's `.where()` with indexed columns. Never fetch all rows and filter with JS `.filter()` + `.slice()`. Reference: `.jules/bolt.md`
-- **Auxiliary tables:** When filtering by substring on a large table, check if a lightweight auxiliary table exists (e.g., `guideDestinations` for `travelGuides`). Fetch IDs from the auxiliary table first, then batch-fetch the heavy records. Reference: `.jules/bolt.md`
 
 ## UX Conventions
 
@@ -49,4 +48,4 @@ These rules are non-negotiable. Violations are always Critical severity.
 - Commit format: Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`)
 - Branch naming: `feat/xxx`, `fix/xxx`, `docs/xxx`, `refactor/xxx`, `test/xxx`, `chore/xxx`
 - API middleware order: auth → rate-limit → handler
-- Database column naming: snake_case in MySQL, camelCase in Drizzle schema definitions
+- Database column naming: snake_case in SQLite (D1), camelCase in Drizzle schema definitions

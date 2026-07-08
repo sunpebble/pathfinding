@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createMockAuthContext,
@@ -248,19 +248,5 @@ describe('itineraryDetailPage', () => {
 
     expect(screen.getByRole('button', { name: 'Invite Collaborator' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Edit Itinerary' })).toBeInTheDocument();
-  });
-
-  it('redirects unauthenticated users to sign in', async () => {
-    mockUseAuth.mockReturnValue(createMockAuthContext());
-    mockUseQuery.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-    });
-
-    render(<ItineraryDetailPage />);
-
-    await waitFor(() => {
-      expect(mockRouter.replace).toHaveBeenCalledWith('/auth/signin');
-    });
   });
 });

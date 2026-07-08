@@ -220,15 +220,9 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.8.0
         version: 0.8.0(hono@4.12.28)(zod@4.4.3)
-      '@pathfinding/crawler-types':
-        specifier: workspace:*
-        version: link:../crawler-types
       '@pathfinding/database':
         specifier: workspace:*
         version: link:../database
-      '@pathfinding/guide-shape':
-        specifier: workspace:*
-        version: link:../guide-shape
       '@pathfinding/types':
         specifier: workspace:*
         version: link:../types
@@ -279,21 +273,6 @@ importers:
         specifier: ^4.108.0
         version: 4.108.0(@cloudflare/workers-types@5.20260707.1)(bufferutil@4.1.0)
 
-  packages/crawler-types:
-    devDependencies:
-      '@types/node':
-        specifier: ^26.1.0
-        version: 26.1.0
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vite:
-        specifier: ^8.1.3
-        version: 8.1.3(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.23.0)(yaml@2.9.0)
-      vitest:
-        specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@26.1.0)(@vitest/coverage-v8@4.1.10)(jsdom@29.1.1)(vite@8.1.3(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.23.0)(yaml@2.9.0))
-
   packages/database:
     dependencies:
       '@cloudflare/workers-types':
@@ -312,28 +291,6 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
-
-  packages/guide-shape:
-    dependencies:
-      '@pathfinding/database':
-        specifier: workspace:*
-        version: link:../database
-      '@pathfinding/types':
-        specifier: workspace:*
-        version: link:../types
-    devDependencies:
-      '@types/node':
-        specifier: ^26.1.0
-        version: 26.1.0
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vite:
-        specifier: ^8.1.3
-        version: 8.1.3(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.23.0)(yaml@2.9.0)
-      vitest:
-        specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@26.1.0)(@vitest/coverage-v8@4.1.10)(jsdom@29.1.1)(vite@8.1.3(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.23.0)(yaml@2.9.0))
 
   packages/types:
     devDependencies:

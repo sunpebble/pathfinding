@@ -13,11 +13,9 @@ import {
   Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
-import { useAuthContext as useAuth } from '@/providers/auth-provider';
 
 const TRAVEL_STYLES = [
   { value: '休闲', label: '休闲' },
@@ -35,15 +33,6 @@ const BUDGET_LEVELS = [
 ] as const;
 
 export default function NewItineraryPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace('/auth/signin');
-    }
-  }, [authLoading, isAuthenticated, router]);
-
   // Form state
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');

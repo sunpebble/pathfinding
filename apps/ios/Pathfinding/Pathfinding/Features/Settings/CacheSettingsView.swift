@@ -45,7 +45,6 @@ struct CacheSettingsView: View {
         Button {
           Task {
             await NetworkClient.shared.clearCache()
-            GuideStore.shared.clearCache()
           }
         } label: {
           Text("cache.clear_api".localized)

@@ -156,7 +156,7 @@ app.post('/messages', authRequired(), zValidator('json', createMessageSchema), a
   return c.json({ id: result!.id }, 201);
 });
 
-app.post('/query', zValidator('json', quickChatSchema), async (c) => {
+app.post('/query', authRequired(), zValidator('json', quickChatSchema), async (c) => {
   const { message, context } = c.req.valid('json');
   const extra = contextText(context);
   const system = `你是 Sunpebble Trips 的旅行助手。回答简洁、具体、可执行。${extra ? `\n上下文：${extra}` : ''}`;

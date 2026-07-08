@@ -42,7 +42,6 @@ describe('sidebar', () => {
     render(<Sidebar />);
     expect(screen.getByText('总览')).toBeDefined();
     expect(screen.getByText('AI 助手')).toBeDefined();
-    expect(screen.getByText('兴趣点')).toBeDefined();
     expect(screen.getByText('行程计划')).toBeDefined();
     expect(screen.getByText('费用分摊')).toBeDefined();
   });
@@ -78,9 +77,6 @@ describe('sidebar', () => {
     expect(
       screen.getByText('总览').closest('a')?.getAttribute('href'),
     ).toBe('/overview');
-    expect(screen.getByText('兴趣点').closest('a')?.getAttribute('href')).toBe(
-      '/pois',
-    );
     expect(screen.getByText('行程计划').closest('a')?.getAttribute('href')).toBe(
       '/itineraries',
     );

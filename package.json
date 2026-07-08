@@ -49,6 +49,7 @@
     "clean:all": "pnpm clean:dist && rm -rf node_modules **/node_modules",
     "reset": "pnpm clean:all && pnpm install",
     "health": "curl -sf http://localhost:3000/health > /dev/null && echo 'API: OK' || echo 'API: DOWN'",
+    "smoke": "node scripts/smoke.mjs",
     "docker:up": "docker-compose -f docker-compose.dev.yml up -d",
     "docker:down": "docker-compose -f docker-compose.dev.yml down",
     "docker:logs": "docker-compose -f docker-compose.dev.yml logs -f",

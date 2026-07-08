@@ -40,10 +40,6 @@ function jsonError(c: Context, status: ContentfulStatusCode, error: string) {
   return c.json(fail(error), status);
 }
 
-function notMigrated(c: Context, feature: string) {
-  return jsonError(c, 501, `${feature} is not available in the TypeScript API`);
-}
-
 function speedKmH(mode: string) {
   if (mode === 'walking')
     return 5;
@@ -159,10 +155,6 @@ app.post('/transport/optimize', async (c) => {
 
   return c.json(ok(optimizeRoute(parsed.data.pois, parsed.data.transportMode)));
 });
-
-app.all('/pdf/*', c => notMigrated(c, 'PDF export'));
-app.all('/flights/*', c => notMigrated(c, 'Flight service'));
-app.all('/flights', c => notMigrated(c, 'Flight service'));
 
 app.get('/weather/forecast', async (c) => {
   const lat = parseCoordinate(c.req.query('lat'));

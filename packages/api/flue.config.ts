@@ -7,11 +7,6 @@ export default defineConfig({
 
 export const vite = defineViteConfig({
   ssr: {
-    noExternal: [
-      '@pathfinding/crawler-types',
-      '@pathfinding/database',
-      '@pathfinding/guide-shape',
-      '@pathfinding/types',
-    ],
+    noExternal: ['@pathfinding/database', '@pathfinding/types'],
   },
 });

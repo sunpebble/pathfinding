@@ -1,5 +1,7 @@
 import SwiftUI
 
+#if DEBUG
+
 // MARK: - API Settings Sheet
 
 struct APISettingsSheet: View {
@@ -34,3 +36,5 @@ struct APISettingsSheet: View {
     }
   }
 }
+
+#endif

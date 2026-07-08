@@ -120,14 +120,6 @@ struct BuiltInShortcutsView: View {
       )
 
       ShortcutInfoRow(
-        title: "记录旅行笔记",
-        phrases: ["记录旅行笔记", "添加旅行备忘", "写旅行日记"],
-        description: "快速创建一条旅行笔记或语音备忘",
-        icon: "note.text",
-        iconColor: .orange
-      )
-
-      ShortcutInfoRow(
         title: "查看行程列表",
         phrases: ["查看行程", "打开我的行程", "显示行程列表"],
         description: "打开已保存的行程列表",

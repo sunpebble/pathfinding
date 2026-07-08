@@ -55,14 +55,6 @@ export default function OverviewPage() {
           value={poisData?.pagination?.total ?? '-'}
           icon={MapPin}
           tone="amber"
-          footer={(
-            <Link
-              href="/pois"
-              className="inline-block text-sm font-medium text-amber-700 hover:underline"
-            >
-              查看全部兴趣点 →
-            </Link>
-          )}
         />
 
         <MetricCard
@@ -86,13 +78,6 @@ export default function OverviewPage() {
           <p className="mt-2 text-sm text-stone-500">创建、调整和协作编辑行程。</p>
           <Link href="/itineraries" className="mt-4 inline-block text-sm font-medium text-amber-700 hover:underline">
             打开行程计划 →
-          </Link>
-        </DashboardCard>
-        <DashboardCard className="p-6">
-          <h2 className="text-lg font-semibold text-stone-950">整理地点</h2>
-          <p className="mt-2 text-sm text-stone-500">维护行程里可复用的兴趣点。</p>
-          <Link href="/pois" className="mt-4 inline-block text-sm font-medium text-amber-700 hover:underline">
-            打开兴趣点 →
           </Link>
         </DashboardCard>
       </div>

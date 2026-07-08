@@ -14,10 +14,6 @@ final class EmailLoginFlowUITests: XCTestCase {
     app.launchEnvironment["PATHFINDING_UI_TEST_RESET_STATE"] = "1"
     app.launch()
 
-    let emailSegment = app.segmentedControls["login-method-picker"].buttons["邮箱登录"]
-    XCTAssertTrue(emailSegment.waitForExistence(timeout: 5))
-    emailSegment.tap()
-
     let emailField = app.textFields["login-email-field"]
     XCTAssertTrue(emailField.waitForExistence(timeout: 5))
     emailField.tap()

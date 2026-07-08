@@ -15,13 +15,12 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { CollaboratorPanel } from '@/components/collaborator-panel';
 import { InviteDialog } from '@/components/invite-dialog';
 import { ItineraryEditor } from '@/components/itinerary-editor';
 import { ItineraryMap } from '@/components/itinerary-map';
-import { PdfExportButton } from '@/components/pdf-export-button';
 import { getCollaborators } from '@/lib/api/collaborators';
 import {
   getItinerary,
@@ -194,17 +193,10 @@ function DaySection({ day }: { day: ItineraryDay }) {
 
 export default function ItineraryDetailPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const router = useRouter();
   const params = useParams();
   const id = params.id as string;
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace('/auth/signin');
-    }
-  }, [authLoading, isAuthenticated, router]);
 
   const itineraryResult = useQuery({
     queryKey: ['itinerary', id],
@@ -251,10 +243,6 @@ export default function ItineraryDetailPage() {
     = currentUserCollaborator?.role === 'editor'
       || currentUserCollaborator?.role === 'owner'
       || inferredOwnerFallback;
-
-  if (!authLoading && !isAuthenticated) {
-    return null;
-  }
 
   if (isLoading) {
     return (
@@ -361,7 +349,6 @@ export default function ItineraryDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <PdfExportButton itineraryId={id} />
               <VisibilityBadge visibility={itinerary.visibility} />
             </div>
           </div>

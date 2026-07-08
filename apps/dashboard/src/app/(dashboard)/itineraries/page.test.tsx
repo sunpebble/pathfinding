@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createMockAuthContext,
@@ -148,16 +148,5 @@ describe('itinerariesPage', () => {
 
     expect(screen.getByText('好友')).toBeInTheDocument();
     expect(screen.queryByText('团队')).not.toBeInTheDocument();
-  });
-
-  it('redirects unauthenticated users to sign in', async () => {
-    mockUseAuth.mockReturnValue(createMockAuthContext());
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false });
-
-    render(<ItinerariesPage />);
-
-    await waitFor(() => {
-      expect(mockRouter.replace).toHaveBeenCalledWith('/auth/signin');
-    });
   });
 });

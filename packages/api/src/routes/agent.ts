@@ -1,7 +1,10 @@
+import type { Database } from '@pathfinding/database';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import type { Env } from '../env.js';
+import type { AppContext } from '../env.js';
 import type { DeepSeekMessage } from '../lib/deepseek.js';
+import { aiPlanDrafts } from '@pathfinding/database';
+import { and, eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import {
@@ -9,6 +12,7 @@ import {
   DeepSeekConfigError,
 
 } from '../lib/deepseek.js';
+import { authRequired } from '../middleware/auth.js';
 
 interface AIPlanDraft {
   sessionId?: string;
@@ -41,8 +45,44 @@ interface AIPlanTransport {
   note?: string;
 }
 
-const app = new Hono<{ Bindings: Env }>();
-const plans = new Map<string, AIPlanDraft>();
+const app = new Hono<AppContext>();
+
+/**
+ * Load a plan draft, scoped to the owning user. Plans are keyed by
+ * `sessionId`, but session IDs are client-supplied (see `createSessionId`
+ * / `planStartSchema.sessionId`) so every read/write MUST also filter by
+ * `userId` — otherwise user A could read or overwrite user B's plan by
+ * guessing/reusing their sessionId.
+ */
+async function loadPlan(db: Database, sessionId: string, userId: number): Promise<AIPlanDraft | undefined> {
+  const rows = await db
+    .select({ draft: aiPlanDrafts.draft })
+    .from(aiPlanDrafts)
+    .where(and(eq(aiPlanDrafts.sessionId, sessionId), eq(aiPlanDrafts.userId, userId)))
+    .limit(1);
+
+  return rows[0]?.draft as AIPlanDraft | undefined;
+}
+
+/**
+ * Upsert a plan draft for (sessionId, userId) — see `loadPlan` for the
+ * ownership rationale. Single-query upsert against the
+ * `ai_plan_drafts_session_user_uniq` index: no check-then-act race (an iOS
+ * double-submit can't double-insert), and updatedAt is refreshed on write
+ * (the table has no AFTER UPDATE trigger, so we set it explicitly).
+ */
+async function savePlan(db: Database, sessionId: string, userId: number, plan: AIPlanDraft): Promise<void> {
+  await db
+    .insert(aiPlanDrafts)
+    .values({ sessionId, userId, draft: plan })
+    .onConflictDoUpdate({
+      target: [aiPlanDrafts.sessionId, aiPlanDrafts.userId],
+      set: { draft: plan, updatedAt: sql`(unixepoch())` },
+    });
+}
+
+// All routes below proxy to DeepSeek and burn paid quota — require auth.
+app.use('*', authRequired());
 
 const chatRequestSchema = z.object({
   sessionId: z.string().optional(),
@@ -206,14 +246,14 @@ function parsePlan(content: string, sessionId: string): AIPlanDraft {
   return plan;
 }
 
-async function generatePlan(sessionId: string, prompt: string, apiKey: string) {
+async function generatePlan(db: Database, userId: number, sessionId: string, prompt: string, apiKey: string) {
   const content = await deepSeekCompletion([
     { role: 'system', content: planSystemPrompt },
     { role: 'user', content: prompt },
   ], { apiKey, jsonMode: true });
 
   const plan = parsePlan(content, sessionId);
-  plans.set(sessionId, plan);
+  await savePlan(db, sessionId, userId, plan);
 
   return {
     plan,
@@ -246,9 +286,11 @@ app.post('/plan/start', async (c) => {
   }
 
   const sessionId = parsed.data.sessionId || createSessionId();
+  const userId = Number(c.get('userId'));
+  const db = c.get('db');
 
   try {
-    const { plan, response } = await generatePlan(sessionId, parsed.data.message, c.env.DEEPSEEK_API_KEY ?? '');
+    const { plan, response } = await generatePlan(db, userId, sessionId, parsed.data.message, c.env.DEEPSEEK_API_KEY ?? '');
     return c.json({
       success: true,
       sessionId,
@@ -269,14 +311,17 @@ app.post('/plan/:sessionId/feedback', async (c) => {
     return rawError(c, 400, 'Feedback is required');
   }
 
+  const userId = Number(c.get('userId'));
+  const db = c.get('db');
+
   let prompt = parsed.data.feedback;
-  const currentPlan = plans.get(sessionId);
+  const currentPlan = await loadPlan(db, sessionId, userId);
   if (currentPlan) {
     prompt = `基于这份现有行程 JSON 修改：\n${JSON.stringify(currentPlan)}\n\n用户反馈：${parsed.data.feedback}`;
   }
 
   try {
-    const { plan, response } = await generatePlan(sessionId, prompt, c.env.DEEPSEEK_API_KEY ?? '');
+    const { plan, response } = await generatePlan(db, userId, sessionId, prompt, c.env.DEEPSEEK_API_KEY ?? '');
     return c.json({
       success: true,
       sessionId,
@@ -290,9 +335,10 @@ app.post('/plan/:sessionId/feedback', async (c) => {
   }
 });
 
-app.get('/plan/:sessionId/status', (c) => {
+app.get('/plan/:sessionId/status', async (c) => {
   const sessionId = c.req.param('sessionId').trim();
-  const plan = plans.get(sessionId);
+  const userId = Number(c.get('userId'));
+  const plan = await loadPlan(c.get('db'), sessionId, userId);
   if (!plan) {
     return rawError(c, 404, 'Plan not found');
   }
@@ -309,9 +355,10 @@ app.get('/plan/:sessionId/status', (c) => {
   });
 });
 
-app.get('/plan/:sessionId/result', (c) => {
+app.get('/plan/:sessionId/result', async (c) => {
   const sessionId = c.req.param('sessionId').trim();
-  const plan = plans.get(sessionId);
+  const userId = Number(c.get('userId'));
+  const plan = await loadPlan(c.get('db'), sessionId, userId);
   if (!plan) {
     return rawError(c, 404, 'Plan not found');
   }

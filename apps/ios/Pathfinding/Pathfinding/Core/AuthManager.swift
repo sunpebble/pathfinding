@@ -103,7 +103,7 @@ actor AuthManager {
     logger.info("Sign up successful")
   }
 
-  /// Sign in with OAuth provider (Apple or WeChat)
+  /// Sign in with OAuth provider (Apple)
   func signInWithOAuth(provider: OAuthProvider) async throws {
     // OAuth flow typically requires web-based authentication
     // This is a placeholder for the OAuth URL that would be opened in a web view
@@ -116,75 +116,6 @@ actor AuthManager {
     // 2. Handling the redirect callback with auth code
     // 3. Exchanging the code for tokens
     throw AuthError.oauthNotImplemented
-  }
-
-  /// Request SMS verification code for phone login
-  func requestVerificationCode(phoneNumber: String) async throws {
-    guard isValidPhoneNumber(phoneNumber) else {
-      throw AuthError.invalidPhoneNumber
-    }
-
-    let url = apiBaseURL.appendingPathComponent("api/auth/sms/send")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    let body: [String: String] = ["phone": phoneNumber]
-    request.httpBody = try encoder.encode(body)
-
-    logger.info("Requesting verification code for phone: \(phoneNumber.prefix(3))****")
-
-    let (data, response) = try await session.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse else {
-      throw AuthError.invalidResponse
-    }
-
-    guard httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-      if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
-        throw AuthError.serverError(errorResponse.errorMessage)
-      }
-      throw AuthError.httpError(httpResponse.statusCode)
-    }
-
-    logger.info("Verification code sent successfully")
-  }
-
-  /// Sign in with phone number and verification code
-  func signInWithPhone(phoneNumber: String, verificationCode: String) async throws {
-    guard isValidPhoneNumber(phoneNumber) else {
-      throw AuthError.invalidPhoneNumber
-    }
-
-    guard verificationCode.count == 6, verificationCode.allSatisfy({ $0.isNumber }) else {
-      throw AuthError.invalidVerificationCode
-    }
-
-    let url = apiBaseURL.appendingPathComponent("api/auth/signin/phone")
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-    let body: [String: String] = [
-      "phone": phoneNumber,
-      "code": verificationCode,
-    ]
-    request.httpBody = try encoder.encode(body)
-
-    logger.info("Signing in with phone: \(phoneNumber.prefix(3))****")
-
-    let authResponse = try await performAuthRequest(request)
-    try await updateSession(from: authResponse, email: nil)
-
-    logger.info("Phone sign in successful")
-  }
-
-  /// Validate phone number format (Chinese mobile)
-  private func isValidPhoneNumber(_ phone: String) -> Bool {
-    let phoneRegex = "^1[3-9]\\d{9}$"
-    return phone.range(of: phoneRegex, options: .regularExpression) != nil
   }
 
   /// Sign out and clear session
@@ -541,7 +472,6 @@ actor AuthManager {
 
 enum OAuthProvider: String {
   case apple = "apple"
-  case wechat = "wechat"
 }
 
 enum AuthError: LocalizedError {
@@ -554,9 +484,6 @@ enum AuthError: LocalizedError {
   case noRefreshToken
   case keychainError
   case oauthNotImplemented
-  case invalidPhoneNumber
-  case invalidVerificationCode
-  case verificationCodeExpired
   case invalidPassword
 
   var errorDescription: String? {
@@ -589,12 +516,6 @@ enum AuthError: LocalizedError {
       return "无法保存登录信息"
     case .oauthNotImplemented:
       return "社交登录功能开发中"
-    case .invalidPhoneNumber:
-      return "手机号格式不正确"
-    case .invalidVerificationCode:
-      return "验证码错误"
-    case .verificationCodeExpired:
-      return "验证码已过期，请重新获取"
     case .invalidPassword:
       return "密码至少需要8个字符"
     }

@@ -13,8 +13,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   DashboardCard,
   DashboardEmptyState,
@@ -700,18 +699,10 @@ function BalanceTab({
 
 export default function ExpensesPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const router = useRouter();
 
   const [itineraryId, setItineraryId] = useState('');
   const [activeId, setActiveId] = useState(''); // committed itinerary id for queries
   const [activeTab, setActiveTab] = useState<TabKey>('members');
-
-  // Auth guard
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace('/auth/signin');
-    }
-  }, [authLoading, isAuthenticated, router]);
 
   // ---------------------------------------------------------------------------
   // Queries — only fire when activeId is set

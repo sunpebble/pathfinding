@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
-import { requestWithEnv } from '../test/helpers.js';
+import { requestWithAuth, requestWithEnv } from '../test/helpers.js';
 
 const mockDb = {
   select: vi.fn(),
@@ -16,6 +16,21 @@ vi.mock('@pathfinding/database', async () => {
     createDb: vi.fn(() => mockDb),
   };
 });
+
+// Chain-shaped stubs matching the drizzle call shapes agent.ts makes
+// (`db.select(...).from(...).where(...).limit(...)`, `db.insert(...).values(...)`).
+// Same pattern as chat.test.ts's mockDb chain helpers.
+function createSelectChain(result: unknown) {
+  const limit = vi.fn().mockResolvedValue(result);
+  const where = vi.fn().mockReturnValue({ limit });
+  const from = vi.fn().mockReturnValue({ where });
+  return { from };
+}
+
+// savePlan() upserts: db.insert(...).values(...).onConflictDoUpdate(...).
+function createInsertChain() {
+  return { values: vi.fn().mockReturnValue({ onConflictDoUpdate: vi.fn().mockResolvedValue([]) }) };
+}
 
 interface DeepSeekRequestBody {
   model?: string;
@@ -47,6 +62,12 @@ const planJSON = JSON.stringify({
   tips: ['提前预约热门餐厅'],
 });
 
+beforeEach(() => {
+  mockDb.select.mockReset();
+  mockDb.insert.mockReset();
+  mockDb.update.mockReset();
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -74,14 +95,24 @@ function stubDeepSeek(content: string, onBody?: (body: DeepSeekRequestBody) => v
 }
 
 describe('agent compatibility routes', () => {
-  it('streams chat output as SSE token events', async () => {
-    stubDeepSeek('可以，建议先确定预算和天数。');
-
+  it('rejects unauthenticated POST /api/agent/chat/stream with 401', async () => {
     const response = await requestWithEnv(createApp(), '/api/agent/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: 'chat-test', message: '帮我规划京都' }),
+      body: JSON.stringify({ messages: [] }),
     }, deepseekEnv);
+
+    expect(response.status).toBe(401);
+  });
+
+  it('streams chat output as SSE token events', async () => {
+    stubDeepSeek('可以，建议先确定预算和天数。');
+
+    const response = await requestWithAuth(createApp(), '/api/agent/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 'chat-test', message: '帮我规划京都' }),
+    }, {}, deepseekEnv);
 
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toContain('text/event-stream');
@@ -92,11 +123,14 @@ describe('agent compatibility routes', () => {
     let requestBody: DeepSeekRequestBody | undefined;
     stubDeepSeek(planJSON, body => requestBody = body);
 
-    const response = await requestWithEnv(createApp(), '/api/agent/plan/start', {
+    // start: savePlan() does a single insert().onConflictDoUpdate() upsert.
+    mockDb.insert.mockReturnValueOnce(createInsertChain());
+
+    const response = await requestWithAuth(createApp(), '/api/agent/plan/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId: 'plan-test', message: '京都三天' }),
-    }, deepseekEnv);
+    }, {}, deepseekEnv);
 
     expect(response.status).toBe(200);
     const body = await response.json() as {
@@ -116,24 +150,43 @@ describe('agent compatibility routes', () => {
     });
     expect(requestBody?.response_format).toEqual({ type: 'json_object' });
 
-    const statusResponse = await requestWithEnv(createApp(), '/api/agent/plan/plan-test/status');
+    const storedDraft = { sessionId: 'plan-test', ...JSON.parse(planJSON) };
+
+    // status/result: loadPlan() does a single select scoped by (sessionId, userId).
+    mockDb.select.mockReturnValueOnce(createSelectChain([{ draft: storedDraft }]));
+    const statusResponse = await requestWithAuth(createApp(), '/api/agent/plan/plan-test/status');
     expect(statusResponse.status).toBe(200);
     const statusBody = await statusResponse.json() as { hasFinalPlan: boolean; duration: number };
     expect(statusBody.hasFinalPlan).toBe(true);
     expect(statusBody.duration).toBe(1);
 
-    const resultResponse = await requestWithEnv(createApp(), '/api/agent/plan/plan-test/result');
+    mockDb.select.mockReturnValueOnce(createSelectChain([{ draft: storedDraft }]));
+    const resultResponse = await requestWithAuth(createApp(), '/api/agent/plan/plan-test/result');
     expect(resultResponse.status).toBe(200);
     const resultBody = await resultResponse.json() as { completed: boolean; plan: { title: string } };
     expect(resultBody.completed).toBe(true);
     expect(resultBody.plan.title).toBe('京都三日旅行');
   });
 
+  it('returns 404 for a different user\'s plan (ownership scoping)', async () => {
+    // No row matches this (sessionId, userId) pair — loadPlan() returns undefined.
+    mockDb.select.mockReturnValueOnce(createSelectChain([]));
+
+    const response = await requestWithAuth(
+      createApp(),
+      '/api/agent/plan/someone-elses-session/status',
+      {},
+      { userId: '999' },
+    );
+
+    expect(response.status).toBe(404);
+  });
+
   it('returns 503 when DeepSeek is not configured', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
-    const response = await requestWithEnv(createApp(), '/api/agent/chat/stream', {
+    const response = await requestWithAuth(createApp(), '/api/agent/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: '你好' }),

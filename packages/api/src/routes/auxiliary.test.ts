@@ -61,12 +61,4 @@ describe('auxiliary routes', () => {
       data: { cached: true },
     });
   });
-
-  it('returns 501 for non-migrated PDF and flight services', async () => {
-    const pdf = await requestWithEnv(createApp(), '/api/pdf/guide/1', { method: 'POST' });
-    const flights = await requestWithEnv(createApp(), '/api/flights');
-
-    expect(pdf.status).toBe(501);
-    expect(flights.status).toBe(501);
-  });
 });

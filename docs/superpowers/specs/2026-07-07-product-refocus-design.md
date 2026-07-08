@@ -12,6 +12,20 @@
 > 「flue beta 不动」修正为采用 flue cloudflare target。其余定位、功能清单、流程与
 > iOS 数据层设计（§3-§5、§7-§8）不受影响。
 
+> **2026-07-08 Phase 2 范围决策（R9，Phase 1 合并后据契约 recon 修订）**：深度契约摸底
+> 发现 iOS 客户端用的是 Convex 时代旧契约（`{success,data}` 信封、`/api/itineraries/:id/budget`
+> 等嵌套路径、`/v1/*` 前缀、`/api/auth/refresh`），与后端 CF 迁移后的干净 REST（`{data}`、
+> 扁平 `/api/budgets?itineraryId=`、仅 `/api/*`）系统性不匹配。由于 Phase 3 本就要重写 iOS
+> 数据层（§7 mirror+queue、CloudKit 退役），届时所有 iOS API 调用点都会重写——若 Phase 2
+> 现在照 iOS 旧契约建嵌套端点+信封+v1 就是一次性废代码。**决策：Phase 2 靶向「后端自洽 +
+> Web 端到端」**：① 后端自洽——AI 面（agent/chat）鉴权收口与去双挂载、agent plan 状态从
+> 模块级 Map 改 D1 持久化、`/api/auth/refresh` 用现有 authSessions 做 session 重签、currency
+> 接 frankfurter.app 写入方；② Dashboard 端到端——`next.config` catch-all rewrite、**客户端
+> `(dashboard)/layout.tsx` 集中守卫**（token 存 localStorage，Next 服务端 middleware 读不到，
+> 故不用 middleware.ts）、登录页收敛到 `/`；③ R4 重定义为「本地 dev 一键自动建表 + web 核心
+> 流程冒烟通过 + 端点 contract 测试绿」，iOS 端到端随 Phase 3 iOS 数据层重写达成。§4「补齐」
+> 中 budgets/expenses 嵌套 CRUD 与 `{success,data}` 信封对齐移入 Phase 3。
+
 ## 1. 背景与诊断
 
 产品于 2026-07-06（commit 3596643）从「马蜂窝攻略爬虫聚合器」转向「个人行程规划工具」，

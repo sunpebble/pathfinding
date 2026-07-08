@@ -19,6 +19,7 @@ interface RequestUIMessage {
 
 export async function POST(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization');
     const body = await req.json();
     const { messages, sessionId } = body;
 
@@ -56,6 +57,7 @@ export async function POST(req: Request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(authHeader ? { Authorization: authHeader } : {}),
       },
       body: JSON.stringify({
         sessionId: chatSessionId,

@@ -5,15 +5,7 @@ struct ProfileView: View {
   @Environment(ThemeManager.self) private var themeManager
   @Environment(\.localizationManager) private var localizationManager
   @State private var showLogin = false
-  @State private var followStore = FollowStore.shared
-  @State private var followStats: FollowStats?
-  @State private var favoriteStore = FavoriteStore.shared
   @State private var footprintStore = FootprintStore.shared
-
-  // Navigation destinations for stats
-  @State private var navigateToFavorites = false
-  @State private var navigateToLikes = false
-  @State private var navigateToFollowManagement = false
 
   /// Whether user is logged in (not guest mode)
   private var isLoggedIn: Bool {
@@ -57,64 +49,6 @@ struct ProfileView: View {
           }
         } header: {
           Text("profile.section.travel_data".localized)
-        }
-
-        // MARK: - Likes & Favorites Section
-        Section {
-          NavigationLink {
-            MyFavoritesView()
-          } label: {
-            ExplorerSettingsRow(
-              icon: "bookmark.fill",
-              title: "profile.my_favorites".localized,
-              subtitle: String(format: "profile.favorites_count".localized, favoriteStore.totalFavoritesCount),
-              iconColor: .orange,
-              terrainColor: DesignTokens.Colors.Terrain.desert
-            )
-          }
-
-          NavigationLink {
-            MyLikesView()
-          } label: {
-            ExplorerSettingsRow(
-              icon: "heart.fill",
-              title: "profile.my_likes".localized,
-              subtitle: String(format: "profile.likes_count".localized, favoriteStore.totalLikesCount),
-              iconColor: .red,
-              terrainColor: DesignTokens.Colors.Terrain.volcano
-            )
-          }
-
-          NavigationLink {
-            FavoriteCollectionsView()
-          } label: {
-            ExplorerSettingsRow(
-              icon: "folder.fill",
-              title: "profile.collections".localized,
-              subtitle: String(format: "profile.collections_count".localized, favoriteStore.collections.count),
-              iconColor: .purple,
-              terrainColor: DesignTokens.Colors.Terrain.mountain
-            )
-          }
-        } header: {
-          Text("profile.section.likes_favorites".localized)
-        }
-
-        // MARK: - Travel Services Section
-        Section {
-          NavigationLink {
-            InsuranceListView()
-          } label: {
-            ExplorerSettingsRow(
-              icon: "shield.checkered",
-              title: "profile.insurance".localized,
-              subtitle: "profile.insurance_subtitle".localized,
-              iconColor: .indigo,
-              terrainColor: DesignTokens.Colors.Terrain.glacier
-            )
-          }
-        } header: {
-          Text("profile.section.travel_services".localized)
         }
 
         // MARK: - Appearance Section
@@ -172,17 +106,19 @@ struct ProfileView: View {
             )
           }
 
-          NavigationLink {
-            APISettingsSheet()
-          } label: {
-            ExplorerSettingsRow(
-              icon: "server.rack",
-              title: "profile.api_config".localized,
-              subtitle: AppConfig.apiBaseURL,
-              iconColor: .blue,
-              terrainColor: DesignTokens.Colors.Terrain.ocean
-            )
-          }
+          #if DEBUG
+            NavigationLink {
+              APISettingsSheet()
+            } label: {
+              ExplorerSettingsRow(
+                icon: "server.rack",
+                title: "profile.api_config".localized,
+                subtitle: AppConfig.apiBaseURL,
+                iconColor: .blue,
+                terrainColor: DesignTokens.Colors.Terrain.ocean
+              )
+            }
+          #endif
 
           NavigationLink {
             CacheSettingsView()
@@ -232,18 +168,7 @@ struct ProfileView: View {
       .sheet(isPresented: $showLogin) {
         LoginView()
       }
-      .navigationDestination(isPresented: $navigateToFavorites) {
-        MyFavoritesView()
-      }
-      .navigationDestination(isPresented: $navigateToLikes) {
-        MyLikesView()
-      }
-      .navigationDestination(isPresented: $navigateToFollowManagement) {
-        FollowManagementView()
-      }
       .task {
-        await loadFollowStats()
-        await loadFavoriteStats()
         await footprintStore.loadVisitedCities()
       }
     }
@@ -261,66 +186,14 @@ struct ProfileView: View {
 
         // Stats row inline
         HStack(spacing: 0) {
-          Button { navigateToFavorites = true } label: {
-            EnhancedStatItem(
-              value: "\(favoriteStore.totalFavoritesCount)",
-              label: "profile.favorites".localized,
-              icon: "bookmark.fill",
-              color: .orange,
-              index: 0
-            )
-          }
-          .buttonStyle(.plain)
-
-          Divider().frame(height: 50)
-
-          Button { navigateToLikes = true } label: {
-            EnhancedStatItem(
-              value: "\(favoriteStore.totalLikesCount)",
-              label: "profile.likes".localized,
-              icon: "heart.fill",
-              color: .red,
-              index: 1
-            )
-          }
-          .buttonStyle(.plain)
-
-          Divider().frame(height: 50)
-
           EnhancedStatItem(
             value: "\(footprintStore.visitedCities.count)",
             label: "profile.footprints".localized,
             icon: "shoeprints.fill",
             color: DesignTokens.Colors.Terrain.forest,
-            index: 2,
+            index: 0,
             isLoading: footprintStore.isLoadingCities
           )
-
-          Divider().frame(height: 50)
-
-          Button { navigateToFollowManagement = true } label: {
-            EnhancedStatItem(
-              value: "\(followStats?.followersCount ?? 0)",
-              label: "profile.followers".localized,
-              icon: "person.2.fill",
-              color: .pink,
-              index: 3
-            )
-          }
-          .buttonStyle(.plain)
-
-          Divider().frame(height: 50)
-
-          Button { navigateToFollowManagement = true } label: {
-            EnhancedStatItem(
-              value: "\(followStats?.followingCount ?? 0)",
-              label: "profile.following".localized,
-              icon: "person.wave.2.fill",
-              color: .purple,
-              index: 4
-            )
-          }
-          .buttonStyle(.plain)
         }
       }
       .padding(DesignTokens.Spacing.md)
@@ -383,27 +256,6 @@ struct ProfileView: View {
     }
   }
 
-  // MARK: - Data Loading
-
-  private func loadFollowStats() async {
-    if let userId = AuthManager.shared.currentUserId {
-      followStats = await followStore.getFollowStats(for: userId)
-    }
-  }
-
-  private func loadFavoriteStats() async {
-    await withTaskGroup(of: Void.self) { group in
-      group.addTask {
-        await self.favoriteStore.fetchCollections()
-      }
-      group.addTask {
-        await self.favoriteStore.fetchFavoritedItineraries(refresh: true)
-      }
-      group.addTask {
-        await self.favoriteStore.fetchLikedItineraries(refresh: true)
-      }
-    }
-  }
 }
 
 #Preview {
