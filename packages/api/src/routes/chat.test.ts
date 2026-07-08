@@ -120,6 +120,30 @@ describe('chat routes', () => {
     });
   });
 
+  describe('gET /api/chat/sessions/:id/messages', () => {
+    it('lists messages for an owned session ascending by createdAt', async () => {
+      const chain = createOrderBySelectChain([
+        { id: 1, sessionId: 5, role: 'user', content: 'hi', createdAt: new Date('2026-07-08T10:00:00Z') },
+        { id: 2, sessionId: 5, role: 'assistant', content: 'hello', createdAt: new Date('2026-07-08T10:00:01Z') },
+      ]);
+      const ownChain = createSelectChain([{ userId: 1 }]);
+      mockDb.select.mockReturnValueOnce(ownChain).mockReturnValueOnce(chain);
+
+      const response = await requestWithAuth(createApp(), '/api/chat/sessions/5/messages');
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data).toHaveLength(2);
+      expect(body.data[0].content).toBe('hi');
+    });
+
+    it('rejects non-owner with 403', async () => {
+      const ownChain = createSelectChain([{ userId: 999 }]);
+      mockDb.select.mockReturnValueOnce(ownChain);
+      const response = await requestWithAuth(createApp(), '/api/chat/sessions/5/messages');
+      expect(response.status).toBe(403);
+    });
+  });
+
   describe('pOST /api/chat/messages', () => {
     it('creates a message', async () => {
       const sessionChain = createSelectChain([{ userId: 1 }]);

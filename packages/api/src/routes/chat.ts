@@ -17,6 +17,17 @@ import { ApiError } from '../middleware/error-handler.js';
 const app = new Hono<AppContext>();
 
 /**
+ * Snake-case a chat row's column names for the iOS client, but keep the
+ * `metadata` JSON blob verbatim — it stores the arbitrary caller-supplied
+ * `context` object (z.record(z.string(), z.unknown())), whose keys the shared
+ * recursive converter would mangle on round-trip (e.g. `USD` → `_u_s_d`).
+ */
+function toChatDto<T extends { metadata: unknown }>(row: T) {
+  const { metadata, ...rest } = row;
+  return { ...(convertKeysToSnakeCase(rest) as Record<string, unknown>), metadata };
+}
+
+/**
  * Verify that a chat session exists and belongs to the given user.
  * Throws ApiError(403) if not found or owned by someone else.
  */
@@ -52,7 +63,7 @@ app.get('/sessions', authRequired(), async (c) => {
     .orderBy(desc(chatSessions.lastMessageAt))
     .limit(limit);
 
-  return c.json({ data: convertKeysToSnakeCase(results) });
+  return c.json({ data: results.map(toChatDto) });
 });
 
 // ── POST /sessions — Create a new chat session ─────────
@@ -80,7 +91,7 @@ app.post('/sessions', authRequired(), zValidator('json', createSessionSchema), a
     .where(eq(chatSessions.id, result!.id))
     .limit(1);
 
-  return c.json({ data: convertKeysToSnakeCase(session[0]) }, 201);
+  return c.json({ data: toChatDto(session[0]!) }, 201);
 });
 
 // ── GET /messages — Get messages for a session ─────────
@@ -103,7 +114,29 @@ app.get('/messages', authRequired(), async (c) => {
     .orderBy(chatMessages.createdAt)
     .limit(limit);
 
-  return c.json({ data: convertKeysToSnakeCase(results) });
+  return c.json({ data: results.map(toChatDto) });
+});
+
+// ── GET /sessions/:id/messages — Messages for a session ──
+app.get('/sessions/:id/messages', authRequired(), async (c) => {
+  const userId = Number(c.get('userId'));
+  const sessionId = parsePositiveInt(c.req.param('id'));
+  if (!sessionId) {
+    return c.json({ error: '无效的会话ID' }, 400);
+  }
+
+  const db = c.get('db');
+  await requireOwnedSession(db, sessionId, userId);
+
+  const { limit } = parsePagination(c.req.query('limit'), undefined, 50);
+  const results = await db
+    .select()
+    .from(chatMessages)
+    .where(eq(chatMessages.sessionId, sessionId))
+    .orderBy(chatMessages.createdAt)
+    .limit(limit);
+
+  return c.json({ data: results.map(toChatDto) });
 });
 
 // ── POST /messages — Add a message to a session ────────
