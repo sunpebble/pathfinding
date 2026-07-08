@@ -165,7 +165,6 @@ struct QuickStatCard: View {
   let icon: String
   let title: String
   let value: String
-  // ponytail: retained for call-site compat; Sunpebble mockup paints every stat icon ink, so unused.
   let color: Color
 
   var body: some View {

@@ -12,7 +12,6 @@ final class ChatStore {
   private(set) var messages: [ChatMessage] = []
 
   private(set) var isLoadingSessions = false
-  // ponytail: write-only outside re-entry guard — private, no external readers.
   private var isLoadingMessages = false
   private(set) var isSending = false
   private(set) var isCreatingSession = false

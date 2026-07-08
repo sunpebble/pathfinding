@@ -170,7 +170,6 @@ struct ItineraryCard: View {
         itineraryInfoView
 
         Spacer()
-        // ponytail: no custom chevron — the enclosing NavigationLink in a List
         // already draws the system disclosure indicator (was doubled up).
       }
     }

@@ -15,7 +15,6 @@ const app = new Hono<AppContext>();
 
 const FRANKFURTER_URL = 'https://api.frankfurter.app/latest';
 
-// ponytail: simple on-demand daily cache — refetch happens lazily on the next
 // request once a row goes stale. No cron/scheduler. If pre-warmed rates or a
 // real trend feed are needed later, add a scheduled worker writing
 // currency_history instead of growing this endpoint.

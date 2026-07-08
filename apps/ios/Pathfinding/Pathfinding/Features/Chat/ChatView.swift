@@ -15,7 +15,6 @@ struct ChatSessionListView: View {
 
   var body: some View {
     if !authViewModel.isAuthenticated {
-      // ponytail: guest-mode users can't call chat API — gate before .task fires.
       ChatEmptyState(
         glyph: "bubble.left.and.bubble.right.fill",
         title: "chat.login_required".localized,
