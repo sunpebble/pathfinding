@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/sunpebble/pathfinding/compare/v1.5.0...v1.5.1) (2026-07-09)
+
+
+### Bug Fixes
+
+* **ios:** move profile footprints into travel-data list row ([e0c1e9d](https://github.com/sunpebble/pathfinding/commit/e0c1e9d2675b75d1c551fbaa623edf7e63abbc5b))
+
 ## [1.5.0](https://github.com/sunpebble/pathfinding/compare/v1.4.0...v1.5.0) (2026-07-08)
 
 
