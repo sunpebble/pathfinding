@@ -68,6 +68,7 @@
 "profile.favorites" = "收藏";
 "profile.trips" = "行程";
 "profile.footprints" = "足迹";
+"profile.footprints_subtitle" = "查看去过的城市与旅行轨迹";
 
 // MARK: - Profile Sections
 "profile.section.travel_data" = "旅行数据";

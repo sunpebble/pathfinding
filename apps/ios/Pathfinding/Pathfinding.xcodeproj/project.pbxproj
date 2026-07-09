@@ -37,7 +37,6 @@
 		37F44C6BAF3C43293045DB1F /* VisualEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EAD231DEED8EEC7BD672564 /* VisualEffects.swift */; };
 		38610C8194871525123CE555 /* PathfindingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F473F942F97F461ADCC99AEF /* PathfindingApp.swift */; };
 		38F3E8A19647736C8932B9EC /* CacheSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD7F9D0193A792181F97F8C /* CacheSettingsView.swift */; };
-		3A362515E77FDF5BCD89C5E8 /* ProfileStatsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33BAEDCDB9684FA080C6999 /* ProfileStatsSection.swift */; };
 		3D1376BCB3478C1D8B2397B8 /* OfflineMapListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2EDBD0AF2D1A4E15DC95B7 /* OfflineMapListView.swift */; };
 		3EFBD43296D7DC1EF547F71F /* AIPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E1881045D7F837879999BFE /* AIPlan.swift */; };
 		3FDC37F9452D153C6C569401 /* ItineraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDDD0352CE972C041C193895 /* ItineraryStore.swift */; };
@@ -256,7 +255,6 @@
 		BD78180AC253F81A20465DB4 /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 		BF8ECF98FF9859CBFB990B9E /* ItineraryAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryAnalysis.swift; sourceTree = "<group>"; };
 		C16BFE39788EB31384AB3343 /* Staging.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Staging.xcconfig; sourceTree = "<group>"; };
-		C33BAEDCDB9684FA080C6999 /* ProfileStatsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStatsSection.swift; sourceTree = "<group>"; };
 		C6B8DF9D38A5B9E78B1A00AC /* ItineraryDayCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryDayCard.swift; sourceTree = "<group>"; };
 		C80C869DF30828354D994AE2 /* ItineraryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItineraryListView.swift; sourceTree = "<group>"; };
 		C8DA87EC3936B6065F201DF1 /* Ticket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ticket.swift; sourceTree = "<group>"; };
@@ -299,7 +297,6 @@
 			isa = PBXGroup;
 			children = (
 				38B95C172DE64B3FB017DD5A /* ProfileSettingsRows.swift */,
-				C33BAEDCDB9684FA080C6999 /* ProfileStatsSection.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -834,9 +831,7 @@
 				054C17441869C64997C6885B /* PreferencesAPIClient.swift in Sources */,
 				6B56966F14CECA0527ED1888 /* PreferencesView.swift in Sources */,
 				969B2940E49322965DDCF017 /* ProfileSettingsRows.swift in Sources */,
-				3A362515E77FDF5BCD89C5E8 /* ProfileStatsSection.swift in Sources */,
-				33B39CA42A3F37F33254E162 /* ProfileView.swift in Sources */,
-				0B01D5D1D6C9A15C133BA9C9 /* SavedItinerary.swift in Sources */,
+				33B39CA42A3F37F33254E162 /* ProfileView.swift in Sources */,				0B01D5D1D6C9A15C133BA9C9 /* SavedItinerary.swift in Sources */,
 				9BCE077583ECBCC144F6BE05 /* SearchPOIIntent.swift in Sources */,
 				DB16B898A00162C29BCCA098 /* Share.swift in Sources */,
 				8436BBA8B4F950D45CBC7AEC /* ShareCardView.swift in Sources */,

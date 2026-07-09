@@ -5,7 +5,6 @@ struct ProfileView: View {
   @Environment(ThemeManager.self) private var themeManager
   @Environment(\.localizationManager) private var localizationManager
   @State private var showLogin = false
-  @State private var footprintStore = FootprintStore.shared
 
   /// Whether user is logged in (not guest mode)
   private var isLoggedIn: Bool {
@@ -24,6 +23,18 @@ struct ProfileView: View {
 
         // MARK: - Travel Stats Section
         Section {
+          NavigationLink {
+            StatsView()
+          } label: {
+            ExplorerSettingsRow(
+              icon: "shoeprints.fill",
+              title: "profile.footprints".localized,
+              subtitle: "profile.footprints_subtitle".localized,
+              iconColor: .orange,
+              terrainColor: DesignTokens.Colors.Terrain.forest
+            )
+          }
+
           NavigationLink {
             StatsView()
           } label: {
@@ -169,9 +180,6 @@ struct ProfileView: View {
       .sheet(isPresented: $showLogin) {
         LoginView()
       }
-      .task {
-        await footprintStore.loadVisitedCities()
-      }
     }
   }
 
@@ -179,26 +187,9 @@ struct ProfileView: View {
 
   private var heroView: some View {
     GlassEffectContainer {
-      VStack(spacing: DesignTokens.Spacing.md) {
-        // Avatar + name row — whole row opens login when signed out (one affordance, not two)
-        headerIdentityRow
-
-        Divider()
-
-        // Stats row inline
-        HStack(spacing: 0) {
-          EnhancedStatItem(
-            value: "\(footprintStore.visitedCities.count)",
-            label: "profile.footprints".localized,
-            icon: "shoeprints.fill",
-            color: DesignTokens.Colors.Terrain.forest,
-            index: 0,
-            isLoading: footprintStore.isLoadingCities
-          )
-        }
-      }
-      .padding(DesignTokens.Spacing.md)
-      .cardSurface()
+      headerIdentityRow
+        .padding(DesignTokens.Spacing.md)
+        .cardSurface()
     }
   }
 

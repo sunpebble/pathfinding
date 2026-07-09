@@ -68,6 +68,7 @@
 "profile.favorites" = "Favorites";
 "profile.trips" = "Trips";
 "profile.footprints" = "Footprints";
+"profile.footprints_subtitle" = "Cities you've visited and travel trails";
 
 // MARK: - Profile Sections
 "profile.section.travel_data" = "Travel Data";
