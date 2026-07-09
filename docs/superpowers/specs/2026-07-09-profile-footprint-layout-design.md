@@ -1,7 +1,7 @@
 # Profile 足迹布局优化
 
-**Date:** 2026-07-09  
-**Status:** Approved  
+**Date:** 2026-07-09
+**Status:** Approved
 **Scope:** iOS Profile 页 hero 足迹区
 
 ## Problem
@@ -34,8 +34,8 @@ Phase 1 收缩后，Profile hero 统计区只剩单独一个「足迹」`Enhance
 
 ### 3. 文案（Localizable.strings）
 
-| Key | zh-Hans | en |
-|-----|---------|-----|
+| Key                           | zh-Hans                  | en                                      |
+| ----------------------------- | ------------------------ | --------------------------------------- |
 | `profile.footprints_subtitle` | 查看去过的城市与旅行轨迹 | Cities you've visited and travel trails |
 
 已有 `profile.footprints` = 足迹 / Footprints，复用 title。

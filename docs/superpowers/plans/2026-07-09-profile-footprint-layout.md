@@ -20,6 +20,7 @@
 ### Task 1: ProfileView layout + strings + dead code
 
 **Files:**
+
 - Modify: `apps/ios/Pathfinding/Pathfinding/Features/ProfileView.swift`
 - Modify: `apps/ios/Pathfinding/Pathfinding/Resources/zh-Hans.lproj/Localizable.strings`
 - Modify: `apps/ios/Pathfinding/Pathfinding/Resources/en.lproj/Localizable.strings`
@@ -27,6 +28,7 @@
 - Possibly modify: `apps/ios/Pathfinding/Pathfinding.xcodeproj/project.pbxproj` if Swift file deleted
 
 **Interfaces:**
+
 - Consumes: existing `ExplorerSettingsRow`, `StatsView`, `DesignTokens`, localization keys
 - Produces: hero without footprint stat; travel-data first row → StatsView
 
@@ -47,6 +49,7 @@ In `en.lproj/Localizable.strings`, after `"profile.footprints" = "Footprints";` 
 - [ ] **Step 2: Slim hero + add footprints list row in ProfileView**
 
 Remove:
+
 - `@State private var footprintStore = FootprintStore.shared`
 - `.task { await footprintStore.loadVisitedCities() }`
 - In `heroView`: `Divider`, stats `HStack`/`EnhancedStatItem`; keep only `headerIdentityRow` inside the padded `VStack` + `.cardSurface()`
@@ -97,10 +100,10 @@ git commit -m "fix(ios): move profile footprints into travel-data list row"
 
 ## Spec coverage
 
-| Spec item | Task |
-|-----------|------|
-| Hero slim (no divider/stat) | Task 1 Step 2 |
-| Footprints list row → StatsView | Task 1 Step 2 |
-| Localizable subtitle | Task 1 Step 1 |
+| Spec item                            | Task            |
+| ------------------------------------ | --------------- |
+| Hero slim (no divider/stat)          | Task 1 Step 2   |
+| Footprints list row → StatsView      | Task 1 Step 2   |
+| Localizable subtitle                 | Task 1 Step 1   |
 | No Stats/FootprintStore logic change | Global + Task 1 |
-| Delete EnhancedStatItem if unused | Task 1 Step 3 |
+| Delete EnhancedStatItem if unused    | Task 1 Step 3   |
