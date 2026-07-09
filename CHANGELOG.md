@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/sunpebble/pathfinding/compare/v1.4.0...v1.5.0) (2026-07-08)
+
+
+### Features
+
+* **ios:** 套用 Sunpebble 设计系统，全 App UI 对齐设计稿 ([1716648](https://github.com/sunpebble/pathfinding/commit/1716648b91befad1590fe4d8ce6dcdf8403c6003))
+
+
+### Bug Fixes
+
+* **ios:** 空态统一为 Sunpebble 组件（白卡 glyph 方框 + 衬线标题 + 正确尺寸主按钮） ([724dd42](https://github.com/sunpebble/pathfinding/commit/724dd422ebda2af7f9ccb9a843055cb78df19f8b))
+
 ## [1.4.0](https://github.com/sunpebble/pathfinding/compare/v1.3.2...v1.4.0) (2026-07-08)
 
 
